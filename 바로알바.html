@@ -677,8 +677,14 @@ async function openApplicationsModal() {
   const body = document.getElementById('app-modal-body');
   body.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">불러오는 중...</div></div>';
 
-  const { data: workerData } = await db.from('workers').select('id').eq('kakao_uid', currentUserId).single();
-  if (!workerData) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">프로필을 찾을 수 없습니다.</div></div>'; return; }
+  let { data: workerData } = await db.from('workers').select('id').eq('kakao_uid', currentUserId).maybeSingle();
+  if (!workerData) {
+    const { data: { session } } = await db.auth.getSession();
+    const uname = session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '사용자';
+    const { data: created } = await db.from('workers').insert({ kakao_uid: currentUserId, name: uname, phone: '' }).select('id').single();
+    workerData = created;
+  }
+  if (!workerData) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">프로필 생성에 실패했습니다.</div></div>'; return; }
 
   const { data, error } = await db.from('applications')
     .select('id, status, created_at, job_postings(id, title, biz_name, current_wage, start_time, duration_hours, status)')
@@ -993,8 +999,15 @@ async function applyJob(id) {
   const { data: { session } } = await db.auth.getSession();
   if (!session) { window.location.href = './login.html'; return; }
 
-  const { data: workerData } = await db.from('workers').select('id').eq('kakao_uid', session.user.id).single();
-  if (!workerData) { showToast('⚠️ 알바생 프로필이 없습니다.'); return; }
+  let { data: workerData } = await db.from('workers').select('id').eq('kakao_uid', session.user.id).maybeSingle();
+  if (!workerData) {
+    const uname = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '사용자';
+    const { data: created, error: ce } = await db.from('workers')
+      .insert({ kakao_uid: session.user.id, name: uname, phone: '' })
+      .select('id').single();
+    if (ce) { showToast('⚠️ 프로필 생성 실패: ' + ce.message); return; }
+    workerData = created;
+  }
 
   const { error } = await db.from('applications').insert({ job_posting_id: id, worker_id: workerData.id, status: 'pending' });
   closeModalDirect();
