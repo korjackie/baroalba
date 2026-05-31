@@ -16,7 +16,7 @@
     (async () => {
       const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const { data: { session } } = await db.auth.getSession();
-      if (!session) window.location.replace('./login.html');
+      if (!session && !localStorage.getItem('baroalba_guest')) window.location.replace('./login.html');
     })();
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
