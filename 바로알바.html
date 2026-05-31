@@ -635,11 +635,13 @@ async function submitPost() {
     btn.disabled = false; btn.textContent = '⚡ 공고 등록하기'; return;
   }
 
-  const { error } = await db.from('job_postings').insert({
+  const insertRow = {
     business_id: bizData.id, biz_name: biz, title, category: selectedCategory,
     lat: center.lat, lng: center.lng, base_wage: wage, current_wage: wage,
-    needed_count: needed, start_time: startTime, duration_hours: durationHrs, status: isUrgent ? 'urgent' : 'open',
-  });
+    needed_count: needed, start_time: startTime, status: isUrgent ? 'urgent' : 'open',
+  };
+  if (durationHrs) insertRow.duration_hours = durationHrs;
+  const { error } = await db.from('job_postings').insert(insertRow);
 
   btn.disabled = false; btn.textContent = '⚡ 공고 등록하기';
   if (error) { showToast('등록 실패: ' + error.message); return; }
