@@ -35,11 +35,11 @@
     .header-top {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 10px;
     }
     .logo {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
       color: #FF4B4B;
       letter-spacing: -0.5px;
@@ -75,12 +75,12 @@
 
     /* 유저 아바타 */
     .user-avatar {
-      width: 36px;
-      height: 36px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background: #FF4B4B;
       color: #fff;
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -996,8 +996,13 @@ async function initAuth() {
   }
 
   const user = session.user;
+  // 역할 미선택 → 로그인 페이지로 보내서 역할 선택
+  if (!user.user_metadata?.baroalba_role) {
+    window.location.href = './login.html';
+    return false;
+  }
   const name = user.user_metadata?.full_name || user.email;
-  const role = user.user_metadata?.baroalba_role || 'worker';
+  const role = user.user_metadata?.baroalba_role;
   const avatarUrl = user.user_metadata?.avatar_url || '';
 
   setUserUI({ name, role, avatarUrl });
