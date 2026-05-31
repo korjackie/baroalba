@@ -612,7 +612,7 @@ async function confirmRole() {
 
 // ── 헬퍼 ──────────────────────────────────────────────────
 function getRedirectUrl() {
-  return window.location.href.replace('login.html', '바로알바.html').split('?')[0];
+  return window.location.origin + '/app.html';
 }
 function goToApp() { window.location.href = './바로알바.html'; }
 

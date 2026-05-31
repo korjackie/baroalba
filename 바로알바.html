@@ -1007,6 +1007,13 @@ async function initAuth() {
 
   setUserUI({ name, role, avatarUrl });
 
+  // workers/businesses 레코드 없으면 자동 생성
+  const table = role === 'business' ? 'businesses' : 'workers';
+  await db.from(table).upsert(
+    { kakao_uid: user.id, name: name || '', phone: user.user_metadata?.phone || '' },
+    { onConflict: 'kakao_uid' }
+  );
+
   // 외부 클릭 시 메뉴 닫기
   document.addEventListener('click', e => {
     if (!e.target.closest('#user-menu') && !e.target.closest('#user-avatar'))
