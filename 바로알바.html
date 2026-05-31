@@ -177,8 +177,8 @@
     .manage-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
     .manage-title { font-size: 15px; font-weight: 700; color: #222; }
     .manage-meta { font-size: 12px; color: #aaa; margin-top: 4px; }
-    .manage-actions { display: flex; gap: 8px; margin-top: 10px; }
-    .manage-btn { flex: 1; padding: 8px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; min-height: 36px; }
+    .manage-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .manage-btn { flex: 1; min-width: 70px; padding: 7px 6px; border-radius: 10px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; min-height: 34px; }
     .manage-btn-view { background: #f0f0f0; color: #444; }
     .manage-btn-close { background: #FFF0F0; color: #FF4B4B; }
 
@@ -245,6 +245,7 @@
   </div>
   <div class="user-menu-item" id="menu-item-worker" style="display:none" onclick="openApplicationsModal()">📋 내 지원 내역</div>
   <div class="user-menu-item" id="menu-item-business" style="display:none" onclick="openPostingsModal()">📝 내 공고 관리</div>
+  <div class="user-menu-item" id="menu-item-biz-profile" style="display:none" onclick="openBizProfile()">🏢 업체 정보</div>
   <div class="user-menu-item" id="menu-item-profile" style="display:none" onclick="openMyProfile()">👤 내 프로필</div>
   <div class="user-menu-item" onclick="document.getElementById('user-menu').classList.remove('open');goToMyLocation()">📍 내 위치로 이동</div>
   <div class="user-menu-item logout" onclick="logout()">🚪 로그아웃</div>
@@ -260,7 +261,7 @@
     <div class="logo">⚡바로알바</div>
     <div class="search-bar">
       <span class="icon">🔍</span>
-      <input type="text" placeholder="지역, 업종 검색...">
+      <input type="text" id="search-input" placeholder="업종, 업체명, 지역 검색..." oninput="searchJobs(this.value)">
     </div>
     <button class="location-btn" id="user-avatar" onclick="avatarOrGps()" title="메뉴/위치">📍</button>
   </div>
@@ -417,6 +418,35 @@
       <button class="modal-close" onclick="document.getElementById('worker-profile-modal').classList.remove('open')">✕</button>
     </div>
     <div class="page-modal-body" id="worker-profile-body"></div>
+  </div>
+</div>
+
+<!-- ── 업체 정보 편집 모달 ── -->
+<div class="page-modal-overlay" id="biz-profile-modal" onclick="closePageModal('biz-profile-modal', event)">
+  <div class="page-modal">
+    <div class="page-modal-header">
+      <div class="page-modal-title">🏢 업체 정보</div>
+      <button class="modal-close" onclick="document.getElementById('biz-profile-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="page-modal-body">
+      <div class="profile-form-group">
+        <label class="profile-form-label">업체명 *</label>
+        <input class="profile-form-input" id="biz-name" type="text" placeholder="예: 스타벅스 하단점">
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-form-label">대표자 이름</label>
+        <input class="profile-form-input" id="biz-owner-name" type="text" placeholder="이름">
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-form-label">연락처</label>
+        <input class="profile-form-input" id="biz-phone" type="tel" placeholder="010-0000-0000" inputmode="tel">
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-form-label">업체 주소</label>
+        <input class="profile-form-input" id="biz-address" type="text" placeholder="예: 부산 사하구 하단동 낙동대로 ○○">
+      </div>
+      <button class="profile-save-btn" onclick="saveBizProfile()">💾 저장하기</button>
+    </div>
   </div>
 </div>
 
@@ -578,13 +608,31 @@ function selectJob(id) {
 
 function handleCardClick(id) { selectJob(id); openModal(id); }
 
+let currentSearch = '';
+
+function searchJobs(q) {
+  currentSearch = q.trim().toLowerCase();
+  applyFilters();
+}
+
 function filterJobs(chipEl, category) {
   currentFilter = category;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
-  const filtered = category ? currentJobs.filter(j => j.category===category || j.title.includes(category)) : currentJobs;
-  renderMarkers(filtered);
-  renderCards(filtered);
+  applyFilters();
+}
+
+function applyFilters() {
+  let jobs = currentJobs;
+  if (currentFilter) jobs = jobs.filter(j => j.category === currentFilter || j.title.includes(currentFilter));
+  if (currentSearch) jobs = jobs.filter(j =>
+    j.title.toLowerCase().includes(currentSearch) ||
+    j.biz.toLowerCase().includes(currentSearch) ||
+    (j.address||'').toLowerCase().includes(currentSearch) ||
+    (j.category||'').toLowerCase().includes(currentSearch)
+  );
+  renderMarkers(jobs);
+  renderCards(jobs);
 }
 
 function goToMyLocation() {
@@ -818,22 +866,28 @@ async function loadMyPostings() {
 
   myPostingsCache = data;
   const statusLabel = { urgent:'🔥 급구', open:'모집중', filled:'마감' };
-  body.innerHTML = data.map(job => `
+  body.innerHTML = data.map(job => {
+    const elapsed = job.created_at ? elapsedLabel(job.created_at) : '';
+    const wageTag = job.current_wage > job.base_wage
+      ? `<span style="font-size:11px;color:#FF4B4B;font-weight:700;margin-left:4px;">↑ +${(job.current_wage-job.base_wage).toLocaleString()}원</span>` : '';
+    return `
     <div class="manage-card">
       <div class="manage-card-top">
-        <div>
+        <div style="flex:1;min-width:0;">
           <div class="manage-title">${job.title}</div>
-          <div class="manage-meta">${job.biz_name} · ${(job.current_wage||0).toLocaleString()}원/시 · ${job.needed_count||1}명 모집</div>
-          <div class="manage-meta">⏰ ${job.start_time ? formatStartTime(job.start_time) : '즉시'} · ⌛ ${job.duration_hours ? job.duration_hours+'시간' : '-'}</div>
+          <div class="manage-meta">${job.biz_name} · <strong>${(job.current_wage||0).toLocaleString()}원/시</strong>${wageTag} · ${job.needed_count||1}명</div>
+          <div class="manage-meta">⏰ ${job.start_time ? formatStartTime(job.start_time) : '즉시'} · ⌛ ${job.duration_hours ? job.duration_hours+'시간' : '-'} · 등록 ${elapsed}</div>
         </div>
         <span class="status-badge ${job.status==='filled'?'status-rejected':job.status==='urgent'?'status-pending':'status-accepted'}">${statusLabel[job.status]||job.status}</span>
       </div>
       <div class="manage-actions">
         <button class="manage-btn manage-btn-view" onclick="viewApplicants('${job.id}', '${job.title.replace(/'/g,"\\'")}')">지원자 보기</button>
-        ${job.status!=='filled' ? `<button class="manage-btn manage-btn-close" onclick="closePosting('${job.id}')">마감 처리</button>` : ''}
+        ${job.status!=='filled' ? `
+          <button class="manage-btn" style="background:#FFF8E6;color:#F5A623;" onclick="surgeWage('${job.id}', ${job.current_wage})">💰 시급↑</button>
+          <button class="manage-btn manage-btn-close" onclick="closePosting('${job.id}')">마감</button>` : ''}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 async function viewApplicants(jobId, jobTitle) {
@@ -932,6 +986,54 @@ async function saveMyProfile() {
   if (error) { showToast('저장 실패: ' + error.message); return; }
   document.getElementById('my-profile-modal').classList.remove('open');
   showToast('✅ 프로필이 저장됐습니다.');
+}
+
+// ── 업체 정보 편집 ────────────────────────────────────────────────────────────
+async function openBizProfile() {
+  document.getElementById('user-menu').classList.remove('open');
+  document.getElementById('biz-profile-modal').classList.add('open');
+  const { data } = await db.from('businesses').select('name, phone, address').eq('kakao_uid', currentUserId).maybeSingle();
+  if (data) {
+    document.getElementById('biz-name').value = data.name || '';
+    document.getElementById('biz-phone').value = data.phone || '';
+    document.getElementById('biz-address').value = data.address || '';
+  }
+  const { data: { session } } = await db.auth.getSession();
+  document.getElementById('biz-owner-name').value = session?.user?.user_metadata?.full_name || '';
+}
+
+async function saveBizProfile() {
+  const name = document.getElementById('biz-name').value.trim();
+  const phone = document.getElementById('biz-phone').value.trim();
+  const address = document.getElementById('biz-address').value.trim();
+  const ownerName = document.getElementById('biz-owner-name').value.trim();
+  if (!name) { showToast('⚠️ 업체명을 입력해주세요.'); return; }
+  const { error } = await db.from('businesses').update({ name, phone, address }).eq('kakao_uid', currentUserId);
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  if (ownerName) await db.auth.updateUser({ data: { full_name: ownerName } });
+  document.getElementById('biz-profile-modal').classList.remove('open');
+  showToast('✅ 업체 정보가 저장됐습니다.');
+}
+
+function elapsedLabel(isoStr) {
+  const mins = Math.floor((Date.now() - new Date(isoStr)) / 60000);
+  if (mins < 60) return `${mins}분 전`;
+  if (mins < 1440) return `${Math.floor(mins/60)}시간 전`;
+  return `${Math.floor(mins/1440)}일 전`;
+}
+
+async function surgeWage(jobId, currentWage) {
+  const amounts = [500, 1000, 2000, 3000, 5000];
+  const opts = amounts.map(a => `${a.toLocaleString()}원`).join(' / ');
+  const input = prompt(`시급 인상폭을 입력하세요 (원).\n추천: ${opts}`, '1000');
+  if (!input) return;
+  const delta = parseInt(input.replace(/,/g,''));
+  if (!delta || delta <= 0) { showToast('⚠️ 올바른 금액을 입력해주세요.'); return; }
+  const newWage = currentWage + delta;
+  const { error } = await db.from('job_postings').update({ current_wage: newWage }).eq('id', jobId);
+  if (error) { showToast('시급 변경 실패: ' + error.message); return; }
+  showToast(`✅ 시급이 ${newWage.toLocaleString()}원으로 인상됐습니다!`);
+  await loadMyPostings();
 }
 
 async function closePosting(jobId) {
@@ -1034,6 +1136,7 @@ async function initAuth() {
 
   if (role === 'business') {
     document.getElementById('menu-item-business').style.display = 'flex';
+    document.getElementById('menu-item-biz-profile').style.display = 'flex';
     document.getElementById('fab-post').style.display = 'flex';
   } else {
     document.getElementById('menu-item-worker').style.display = 'flex';
