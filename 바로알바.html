@@ -144,26 +144,6 @@
     .user-menu-item:last-child { border-bottom: none; }
     .user-menu-item:hover { background: #f9f9f9; }
     .user-menu-item.logout { color: #FF4B4B; }
-    .guest-banner {
-      background: #FFF5F5;
-      border-bottom: 1px solid #ffe0e0;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-    .guest-banner-text { color: #888; }
-    .guest-banner-btn {
-      background: #FF4B4B;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 5px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
 
     /* 필터 칩 */
     .filter-chips {
@@ -454,6 +434,7 @@
       transition: background 0.15s;
     }
     .modal-apply:hover { background: #e03333; }
+    .modal-apply:disabled { background: #ccc; cursor: default; }
 
     /* 토스트 */
     .toast {
@@ -475,6 +456,70 @@
     }
     .toast.show { opacity: 1; }
 
+    /* ── 업주 FAB ── */
+    .fab {
+      position: fixed;
+      bottom: 148px;
+      right: 16px;
+      background: #FF4B4B;
+      color: #fff;
+      border: none;
+      border-radius: 28px;
+      padding: 13px 18px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255,75,75,0.45);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .fab:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(255,75,75,0.3); }
+
+    /* ── 공고 등록 폼 ── */
+    .post-form-group { margin-bottom: 14px; }
+    .post-form-label { font-size: 12px; font-weight: 700; color: #666; margin-bottom: 6px; display: block; }
+    .post-form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #eee;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #222;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #fafafa;
+    }
+    .post-form-input:focus { border-color: #FF4B4B; background: #fff; }
+    .post-form-input::placeholder { color: #bbb; }
+    .post-cat-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .post-chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1.5px solid #ddd;
+      background: #fff;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .post-chip.selected { background: #FF4B4B; color: #fff; border-color: #FF4B4B; }
+    .post-location-box {
+      background: #f0f7ff;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: #555;
+      line-height: 1.6;
+      border: 1px solid #d0e8ff;
+    }
+    .post-row { display: flex; gap: 10px; }
+    .post-row .post-form-group { flex: 1; }
+
     /* 반응형 */
     @media (min-width: 600px) {
       .card-list { padding: 8px 20px 20px; }
@@ -493,8 +538,9 @@
       <span id="menu-provider" style="font-size:11px;color:#aaa;"></span>
     </div>
   </div>
+  <div class="user-menu-item" id="menu-item-worker" style="display:none">📋 내 지원 내역</div>
+  <div class="user-menu-item" id="menu-item-business" style="display:none">📝 내 공고 관리</div>
   <div class="user-menu-item">👤 내 프로필</div>
-  <div class="user-menu-item">📋 내 지원 내역</div>
   <div class="user-menu-item logout" onclick="logout()">🚪 로그아웃</div>
 </div>
 
@@ -527,6 +573,11 @@
 <!-- ── 지도 ── -->
 <div id="map"></div>
 
+<!-- ── 업주 공고 올리기 FAB ── -->
+<button class="fab" id="fab-post" style="display:none" onclick="openPostModal()">
+  ＋ 공고 올리기
+</button>
+
 <!-- ── 하단 패널 ── -->
 <div class="bottom-panel">
   <div class="panel-handle" onclick="togglePanel()">
@@ -548,6 +599,76 @@
   </div>
 </div>
 
+<!-- ── 공고 등록 모달 ── -->
+<div class="modal-overlay" id="post-modal-overlay" onclick="closePostModal(event)">
+  <div class="modal" style="max-height:90dvh;">
+    <div class="modal-body">
+      <div class="modal-handle"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div style="font-size:18px; font-weight:800; color:#222;">⚡ 공고 올리기</div>
+        <button class="modal-close" onclick="closePostModalDirect()">✕</button>
+      </div>
+
+      <div class="post-form-group">
+        <label class="post-form-label">업체명 *</label>
+        <input class="post-form-input" id="post-biz" type="text" placeholder="예: 스타벅스 하단점">
+      </div>
+
+      <div class="post-form-group">
+        <label class="post-form-label">공고 제목 *</label>
+        <input class="post-form-input" id="post-title" type="text" placeholder="예: 주말 홀 서빙 알바 급구">
+      </div>
+
+      <div class="post-form-group">
+        <label class="post-form-label">업종 *</label>
+        <div class="post-cat-chips" id="post-cat-chips">
+          <div class="post-chip" onclick="selectCat(this,'F&B')">음식·카페</div>
+          <div class="post-chip" onclick="selectCat(this,'물류')">물류·배달</div>
+          <div class="post-chip" onclick="selectCat(this,'판매')">판매·서비스</div>
+          <div class="post-chip" onclick="selectCat(this,'청소')">청소·관리</div>
+          <div class="post-chip" onclick="selectCat(this,'이벤트')">이벤트</div>
+        </div>
+      </div>
+
+      <div class="post-row">
+        <div class="post-form-group">
+          <label class="post-form-label">시급 (원) *</label>
+          <input class="post-form-input" id="post-wage" type="number" placeholder="10030" min="10030" inputmode="numeric">
+        </div>
+        <div class="post-form-group">
+          <label class="post-form-label">모집 인원</label>
+          <input class="post-form-input" id="post-needed" type="number" placeholder="1" min="1" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="post-row">
+        <div class="post-form-group">
+          <label class="post-form-label">시작 시간</label>
+          <input class="post-form-input" id="post-start" type="text" placeholder="즉시 / 오늘 14:00">
+        </div>
+        <div class="post-form-group">
+          <label class="post-form-label">근무 시간</label>
+          <input class="post-form-input" id="post-duration" type="text" placeholder="4시간">
+        </div>
+      </div>
+
+      <div class="post-form-group">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+          <input type="checkbox" id="post-urgent" style="width:18px;height:18px;accent-color:#FF4B4B;cursor:pointer;">
+          <span style="font-size:14px; font-weight:700; color:#FF4B4B;">🔥 급구 (긴급 모집)</span>
+        </label>
+      </div>
+
+      <div class="post-location-box">
+        📍 <strong>위치는 지도 중앙으로 자동 설정됩니다.</strong><br>
+        <span id="post-location-text">모달을 닫고 지도를 이동한 후 다시 열어주세요.</span>
+      </div>
+
+      <button class="modal-apply" id="post-submit-btn" onclick="submitPost()">⚡ 공고 등록하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
 
@@ -563,7 +684,7 @@ const JOBS = [
     baseWage: 10000,
     currentWage: 13000,
     wageHistory: [10000, 11000, 12000, 13000],
-    status: "urgent",  // urgent / open / filled
+    status: "urgent",
     startTime: "즉시",
     duration: "오늘 하루 (6h)",
     needed: 2,
@@ -686,6 +807,10 @@ let currentFilter = null;
 let selectedJobId = null;
 let markers = {};
 let map;
+let currentRole = 'worker';
+let currentUserId = null;
+let selectedCategory = null;
+let currentJobs = JOBS;
 
 // ── 지도 초기화 ───────────────────────────────────────────────────────────────
 function initMap(jobs) {
@@ -721,7 +846,6 @@ function createMarkerHtml(job) {
 }
 
 function renderMarkers(jobs) {
-  // 기존 마커 제거
   Object.values(markers).forEach(m => map.removeLayer(m));
   markers = {};
 
@@ -915,7 +1039,7 @@ function openModal(id) {
       </div>
     </div>
 
-    <button class="modal-apply" onclick="applyJob('${job.id}')" ${job.status === 'filled' ? 'disabled style="background:#ccc"' : ''}>
+    <button class="modal-apply" onclick="applyJob('${job.id}')" ${job.status === 'filled' ? 'disabled' : ''}>
       ${job.status === 'filled' ? '마감된 공고입니다' : '⚡ 바로 지원하기'}
     </button>
   `;
@@ -938,12 +1062,96 @@ function closeModal(e) {
   if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
 }
 
-// ── 지원 ──────────────────────────────────────────────────────────────────────
-function applyJob(id) {
-  const job = JOBS.find(j => j.id === id);
-  if (!job || job.status === 'filled') return;
-  closeModalDirect();
-  showToast(`✅ ${job.biz} 지원 완료! 업주 확인 후 연락드립니다.`);
+// ── 공고 등록 모달 ────────────────────────────────────────────────────────────
+function openPostModal() {
+  const center = map.getCenter();
+  document.getElementById('post-location-text').textContent =
+    `위도 ${center.lat.toFixed(4)}, 경도 ${center.lng.toFixed(4)}`;
+  document.getElementById('post-modal-overlay').classList.add('open');
+}
+
+function closePostModalDirect() {
+  document.getElementById('post-modal-overlay').classList.remove('open');
+}
+
+function closePostModal(e) {
+  if (e.target === document.getElementById('post-modal-overlay')) closePostModalDirect();
+}
+
+function selectCat(el, cat) {
+  selectedCategory = cat;
+  document.querySelectorAll('.post-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function submitPost() {
+  const biz      = document.getElementById('post-biz').value.trim();
+  const title    = document.getElementById('post-title').value.trim();
+  const wage     = parseInt(document.getElementById('post-wage').value);
+  const needed   = parseInt(document.getElementById('post-needed').value) || 1;
+  const startTime = document.getElementById('post-start').value.trim() || '즉시';
+  const duration  = document.getElementById('post-duration').value.trim() || '-';
+  const isUrgent  = document.getElementById('post-urgent').checked;
+
+  if (!biz || !title || !selectedCategory) {
+    showToast('⚠️ 업체명, 공고 제목, 업종은 필수입니다.');
+    return;
+  }
+  if (!wage || wage < 10030) {
+    showToast('⚠️ 시급은 최저시급(10,030원) 이상이어야 합니다.');
+    return;
+  }
+
+  const btn = document.getElementById('post-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '등록 중...';
+
+  const center = map.getCenter();
+
+  // businesses 테이블에서 business_id 조회
+  const { data: bizData, error: bizErr } = await db.from('businesses')
+    .select('id').eq('kakao_uid', currentUserId).single();
+
+  if (bizErr || !bizData) {
+    showToast('⚠️ 업주 프로필을 찾을 수 없습니다. 다시 로그인해주세요.');
+    btn.disabled = false;
+    btn.textContent = '⚡ 공고 등록하기';
+    return;
+  }
+
+  const { error } = await db.from('job_postings').insert({
+    business_id: bizData.id,
+    biz_name: biz,
+    title,
+    category: selectedCategory,
+    lat: center.lat,
+    lng: center.lng,
+    base_wage: wage,
+    current_wage: wage,
+    needed_count: needed,
+    start_time: startTime,
+    duration,
+    status: isUrgent ? 'urgent' : 'open',
+  });
+
+  btn.disabled = false;
+  btn.textContent = '⚡ 공고 등록하기';
+
+  if (error) {
+    showToast('등록 실패: ' + error.message);
+    return;
+  }
+
+  // 폼 초기화
+  ['post-biz','post-title','post-wage','post-needed','post-start','post-duration'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('post-urgent').checked = false;
+  selectedCategory = null;
+  document.querySelectorAll('.post-chip').forEach(c => c.classList.remove('selected'));
+
+  closePostModalDirect();
+  showToast('✅ 공고가 등록됐습니다! 지도에 바로 반영됩니다.');
 }
 
 // ── 토스트 ────────────────────────────────────────────────────────────────────
@@ -956,14 +1164,12 @@ function showToast(msg) {
 }
 
 function togglePanel() {
-  // 모바일에서 패널 접기/펼치기 (추후 구현)
+  // 모바일 패널 접기/펼치기 (추후)
 }
 
 // ── Supabase 초기화 ────────────────────────────────────────
 const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
-
-let currentJobs = JOBS; // 현재 표시 중인 공고 (DB or 목업)
 
 // ── 로그아웃 ───────────────────────────────────────────────
 async function logout() {
@@ -980,12 +1186,10 @@ function toggleUserMenu() {
 async function initAuth() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 
-  // 세션 먼저 확인 — 로그인된 경우 게스트 플래그 제거
   const { data: { session } } = await db.auth.getSession();
   if (session) {
     localStorage.removeItem('baroalba_guest');
   } else {
-    // 세션 없을 때만 게스트 모드 확인
     if (localStorage.getItem('baroalba_guest')) {
       setUserUI({ name: '게스트', role: 'worker', isGuest: true });
       document.getElementById('guest-banner').style.display = 'flex';
@@ -996,16 +1200,27 @@ async function initAuth() {
   }
 
   const user = session.user;
-  // 역할 미선택 → 로그인 페이지로 보내서 역할 선택
   if (!user.user_metadata?.baroalba_role) {
     window.location.href = './login.html';
     return false;
   }
-  const name = user.user_metadata?.full_name || user.email;
-  const role = user.user_metadata?.baroalba_role;
+
+  const name      = user.user_metadata?.full_name || user.email;
+  const role      = user.user_metadata?.baroalba_role;
   const avatarUrl = user.user_metadata?.avatar_url || '';
 
+  currentRole   = role;
+  currentUserId = user.id;
+
   setUserUI({ name, role, avatarUrl });
+
+  // 역할별 메뉴 표시
+  if (role === 'business') {
+    document.getElementById('menu-item-business').style.display = 'flex';
+    document.getElementById('fab-post').style.display = 'flex';
+  } else {
+    document.getElementById('menu-item-worker').style.display = 'flex';
+  }
 
   // workers/businesses 레코드 없으면 자동 생성
   const table = role === 'business' ? 'businesses' : 'workers';
@@ -1014,7 +1229,6 @@ async function initAuth() {
     { onConflict: 'kakao_uid' }
   );
 
-  // 외부 클릭 시 메뉴 닫기
   document.addEventListener('click', e => {
     if (!e.target.closest('#user-menu') && !e.target.closest('#user-avatar'))
       document.getElementById('user-menu').classList.remove('open');
@@ -1065,7 +1279,7 @@ async function loadJobsFromDB() {
   }));
 }
 
-// ── Realtime 구독 (시급 변동 즉시 반영) ───────────────────
+// ── Realtime 구독 ──────────────────────────────────────────
 function subscribeRealtime() {
   db.channel('job-live')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'job_postings' }, async () => {
@@ -1080,12 +1294,11 @@ function subscribeRealtime() {
     .subscribe();
 }
 
-// ── 지원하기 (실제 DB INSERT) ─────────────────────────────
+// ── 지원하기 ──────────────────────────────────────────────
 async function applyJob(id) {
   const job = currentJobs.find(j => j.id === id);
   if (!job || job.status === 'filled') return;
 
-  // 게스트 차단
   if (localStorage.getItem('baroalba_guest')) {
     closeModalDirect();
     showToast('⚠️ 지원하려면 로그인이 필요합니다.');
@@ -1093,10 +1306,14 @@ async function applyJob(id) {
     return;
   }
 
+  if (currentRole === 'business') {
+    showToast('⚠️ 업주 계정으로는 지원할 수 없습니다.');
+    return;
+  }
+
   const { data: { session } } = await db.auth.getSession();
   if (!session) { window.location.href = './login.html'; return; }
 
-  // workers 테이블에서 본인 레코드 조회
   const { data: workerData } = await db.from('workers')
     .select('id').eq('kakao_uid', session.user.id).single();
 
@@ -1127,12 +1344,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (!authResult) return;
 
   if (authResult === 'guest') {
-    // 게스트 = 샘플 데이터만
     currentJobs = JOBS;
     initMap(currentJobs);
     showToast('📋 샘플 데이터로 표시 중 · 로그인하면 실제 공고를 볼 수 있어요');
   } else {
-    // 로그인 = DB 연동
     const dbJobs = await loadJobsFromDB();
     currentJobs = dbJobs || JOBS;
     initMap(currentJobs);
