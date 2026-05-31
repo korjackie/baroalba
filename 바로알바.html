@@ -67,37 +67,37 @@
     .job-marker.cool  { border-color: #4B8BFF; background: #fff; color: #4B8BFF; }
 
     /* ── 하단 패널 ── */
-    .bottom-panel { background: #fff; border-radius: 20px 20px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.12); z-index: 1000; }
-    .panel-handle { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 4px; cursor: pointer; }
-    .handle-bar { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 4px; }
-    .panel-title { font-size: 14px; font-weight: 700; color: #222; }
-    .panel-count { font-size: 13px; color: #FF4B4B; font-weight: 600; }
-    .card-list { display: flex; gap: 12px; padding: 6px 14px 16px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .bottom-panel { background: #fff; border-radius: 16px 16px 0 0; box-shadow: 0 -3px 14px rgba(0,0,0,0.10); z-index: 1000; }
+    .panel-handle { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px 2px; cursor: pointer; }
+    .handle-bar { width: 32px; height: 3px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 3px; }
+    .panel-title { font-size: 12px; font-weight: 700; color: #222; }
+    .panel-count { font-size: 11px; color: #FF4B4B; font-weight: 600; }
+    .card-list { display: flex; gap: 10px; padding: 3px 12px 10px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .card-list::-webkit-scrollbar { display: none; }
 
     /* 개별 카드 */
-    .job-card { min-width: 210px; background: #fff; border: 1.5px solid #eee; border-radius: 14px; padding: 13px; cursor: pointer; transition: all 0.2s; position: relative; flex-shrink: 0; }
-    .job-card:hover { border-color: #FF4B4B; box-shadow: 0 4px 16px rgba(255,75,75,0.12); transform: translateY(-2px); }
-    .job-card.selected { border-color: #FF4B4B; box-shadow: 0 4px 16px rgba(255,75,75,0.2); }
-    .card-badge { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .job-card { min-width: 175px; max-width: 210px; background: #fff; border: 1.5px solid #eee; border-radius: 12px; padding: 10px 11px; cursor: pointer; transition: all 0.2s; position: relative; flex-shrink: 0; }
+    .job-card:hover { border-color: #FF4B4B; box-shadow: 0 3px 12px rgba(255,75,75,0.12); }
+    .job-card.selected { border-color: #FF4B4B; box-shadow: 0 3px 12px rgba(255,75,75,0.2); }
+    .card-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 8px; }
     .badge-urgent { background: #FFF0F0; color: #FF4B4B; }
     .badge-new    { background: #F0F7FF; color: #4B8BFF; }
     .badge-filled { background: #F0F0F0; color: #999; }
-    .card-biz { font-size: 12px; color: #888; margin-bottom: 3px; }
-    .card-title { font-size: 14px; font-weight: 700; color: #222; margin-bottom: 8px; }
-    .wage-row { display: flex; align-items: baseline; gap: 5px; margin-bottom: 6px; }
-    .wage-amount { font-size: 19px; font-weight: 800; color: #222; }
-    .wage-unit { font-size: 12px; color: #888; }
-    .wage-delta { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 6px; }
+    .card-biz { font-size: 11px; color: #888; margin-bottom: 1px; }
+    .card-title { font-size: 13px; font-weight: 700; color: #222; margin-bottom: 5px; }
+    .wage-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+    .wage-amount { font-size: 17px; font-weight: 800; color: #222; }
+    .wage-unit { font-size: 11px; color: #888; }
+    .wage-delta { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 5px; }
     .wage-delta.up   { background: #FFF0F0; color: #FF4B4B; }
     .wage-delta.down { background: #F0F5FF; color: #4B8BFF; }
     .wage-delta.flat { background: #F5F5F5; color: #999; }
-    .card-meta { display: flex; gap: 6px; font-size: 11px; color: #999; margin-bottom: 8px; flex-wrap: wrap; }
+    .card-meta { display: flex; gap: 5px; font-size: 10px; color: #999; margin-bottom: 5px; flex-wrap: wrap; }
     .card-meta span { display: flex; align-items: center; gap: 2px; }
-    .rating-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
-    .stars { color: #FFBE00; letter-spacing: -1px; }
+    .rating-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+    .stars { color: #FFBE00; letter-spacing: -1px; font-size: 10px; }
     .rating-label { color: #888; }
-    .apply-btn { background: #FF4B4B; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s; min-height: 32px; }
+    .apply-btn { background: #FF4B4B; color: #fff; border: none; border-radius: 7px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.15s; min-height: 28px; }
     .apply-btn:hover { background: #e03333; }
     .apply-btn:disabled { background: #ccc; cursor: default; }
 
