@@ -327,7 +327,17 @@
       <div class="post-row">
         <div class="post-form-group">
           <label class="post-form-label">시작 시각 *</label>
-          <input class="post-form-input" id="post-time" type="time" step="300">
+          <div style="display:flex;gap:6px">
+            <select class="post-form-input" id="post-hour" style="flex:1"></select>
+            <select class="post-form-input" id="post-minute" style="flex:0 0 72px">
+              <option value="00">00분</option><option value="05">05분</option>
+              <option value="10">10분</option><option value="15">15분</option>
+              <option value="20">20분</option><option value="25">25분</option>
+              <option value="30">30분</option><option value="35">35분</option>
+              <option value="40">40분</option><option value="45">45분</option>
+              <option value="50">50분</option><option value="55">55분</option>
+            </select>
+          </div>
         </div>
         <div class="post-form-group">
           <label class="post-form-label">근무 시간 (시)</label>
@@ -579,6 +589,7 @@ function estimatePay(job) {
 function formatStartTime(iso) {
   if (!iso) return '즉시';
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return '즉시';
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -597,8 +608,13 @@ function openPostModal() {
   document.getElementById('post-location-text').textContent = `위도 ${c.lat.toFixed(4)}, 경도 ${c.lng.toFixed(4)}`;
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('post-date').value = today;
-  const nowH = new Date().getHours().toString().padStart(2,'0');
-  document.getElementById('post-time').value = `${nowH}:00`;
+  const hourSel = document.getElementById('post-hour');
+  if (!hourSel.options.length) {
+    const labels = ['오전 12','오전 1','오전 2','오전 3','오전 4','오전 5','오전 6','오전 7','오전 8','오전 9','오전 10','오전 11',
+                    '오후 12','오후 1','오후 2','오후 3','오후 4','오후 5','오후 6','오후 7','오후 8','오후 9','오후 10','오후 11'];
+    labels.forEach((l, i) => { const o = new Option(l, String(i).padStart(2,'0')); hourSel.appendChild(o); });
+  }
+  hourSel.value = String(new Date().getHours()).padStart(2,'0');
   document.getElementById('post-modal-overlay').classList.add('open');
 }
 function closePostModalDirect() { document.getElementById('post-modal-overlay').classList.remove('open'); }
@@ -616,7 +632,7 @@ async function submitPost() {
   const wage         = parseInt(document.getElementById('post-wage').value);
   const needed       = parseInt(document.getElementById('post-needed').value) || 1;
   const dateVal      = document.getElementById('post-date').value;
-  const timeVal      = document.getElementById('post-time').value;
+  const timeVal      = document.getElementById('post-hour').value + ':' + document.getElementById('post-minute').value;
   const durationHrs  = parseFloat(document.getElementById('post-duration').value) || null;
   const isUrgent     = document.getElementById('post-urgent').checked;
   const startTime    = (dateVal && timeVal) ? new Date(`${dateVal}T${timeVal}:00`).toISOString() : null;
@@ -646,7 +662,8 @@ async function submitPost() {
   btn.disabled = false; btn.textContent = '⚡ 공고 등록하기';
   if (error) { showToast('등록 실패: ' + error.message); return; }
 
-  ['post-biz','post-title','post-wage','post-needed','post-date','post-time','post-duration'].forEach(id => document.getElementById(id).value = '');
+  ['post-biz','post-title','post-wage','post-needed','post-date','post-duration'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('post-minute').value = '00';
   document.getElementById('post-urgent').checked = false;
   selectedCategory = null;
   document.querySelectorAll('.post-chip').forEach(c => c.classList.remove('selected'));
