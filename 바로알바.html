@@ -149,9 +149,28 @@
     .app-title { font-size: 15px; font-weight: 700; color: #222; }
     .app-meta { font-size: 12px; color: #aaa; margin-top: 6px; }
     .status-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
-    .status-pending  { background: #FFF8E6; color: #F5A623; }
-    .status-accepted { background: #F0FFF4; color: #27AE60; }
-    .status-rejected { background: #FFF0F0; color: #E74C3C; }
+    .status-pending   { background: #FFF8E6; color: #F5A623; }
+    .status-doc_pass  { background: #EBF5FB; color: #2980B9; }
+    .status-interview { background: #F5EEF8; color: #8E44AD; }
+    .status-hold      { background: #F5F5F5; color: #888; }
+    .status-accepted  { background: #F0FFF4; color: #27AE60; }
+    .status-rejected  { background: #FFF0F0; color: #E74C3C; }
+
+    /* 지원자 상태 드롭다운 */
+    .status-select { border: 1.5px solid #eee; border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 700; cursor: pointer; outline: none; background: #fafafa; min-height: 32px; }
+
+    /* 지원자 프로필 모달 */
+    .profile-section { margin-bottom: 16px; }
+    .profile-section-title { font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .profile-text { font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; }
+    .profile-empty { font-size: 13px; color: #bbb; font-style: italic; }
+
+    /* 내 프로필 편집 */
+    .profile-form-group { margin-bottom: 14px; }
+    .profile-form-label { font-size: 12px; font-weight: 700; color: #666; margin-bottom: 5px; display: block; }
+    .profile-form-input { width: 100%; padding: 11px 14px; border: 1.5px solid #eee; border-radius: 10px; font-size: 15px; color: #222; outline: none; transition: border-color 0.2s; background: #fafafa; font-family: inherit; }
+    .profile-form-input:focus { border-color: #FF4B4B; background: #fff; }
+    .profile-save-btn { width: 100%; background: #FF4B4B; color: #fff; border: none; border-radius: 12px; padding: 15px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 8px; min-height: 50px; }
 
     /* 공고 관리 카드 */
     .manage-card { background: #fff; border: 1.5px solid #eee; border-radius: 14px; padding: 14px; margin-bottom: 10px; }
@@ -226,6 +245,7 @@
   </div>
   <div class="user-menu-item" id="menu-item-worker" style="display:none" onclick="openApplicationsModal()">📋 내 지원 내역</div>
   <div class="user-menu-item" id="menu-item-business" style="display:none" onclick="openPostingsModal()">📝 내 공고 관리</div>
+  <div class="user-menu-item" id="menu-item-profile" style="display:none" onclick="openMyProfile()">👤 내 프로필</div>
   <div class="user-menu-item" onclick="document.getElementById('user-menu').classList.remove('open');goToMyLocation()">📍 내 위치로 이동</div>
   <div class="user-menu-item logout" onclick="logout()">🚪 로그아웃</div>
 </div>
@@ -380,6 +400,46 @@
     </div>
     <div class="page-modal-body" id="manage-modal-body">
       <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">불러오는 중...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 지원자 프로필 모달 ── -->
+<div class="page-modal-overlay" id="worker-profile-modal" onclick="closePageModal('worker-profile-modal', event)">
+  <div class="page-modal" style="height:75dvh;">
+    <div class="page-modal-header">
+      <div class="page-modal-title" id="worker-profile-title">지원자 프로필</div>
+      <button class="modal-close" onclick="document.getElementById('worker-profile-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="page-modal-body" id="worker-profile-body"></div>
+  </div>
+</div>
+
+<!-- ── 내 프로필 편집 모달 ── -->
+<div class="page-modal-overlay" id="my-profile-modal" onclick="closePageModal('my-profile-modal', event)">
+  <div class="page-modal">
+    <div class="page-modal-header">
+      <div class="page-modal-title">👤 내 프로필</div>
+      <button class="modal-close" onclick="document.getElementById('my-profile-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="page-modal-body">
+      <div class="profile-form-group">
+        <label class="profile-form-label">이름 *</label>
+        <input class="profile-form-input" id="prof-name" type="text" placeholder="이름을 입력하세요">
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-form-label">출생연도</label>
+        <input class="profile-form-input" id="prof-year" type="number" placeholder="예: 1998" min="1950" max="2010" inputmode="numeric">
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-form-label">자기소개</label>
+        <textarea class="profile-form-input" id="prof-bio" rows="4" placeholder="간단한 자기소개를 작성해주세요.&#10;예) 성실하고 시간 약속을 잘 지킵니다. 카페 경험 2년 있습니다."></textarea>
+      </div>
+      <div class="profile-form-group">
+        <label class="profile-form-label">경력 · 경험사항</label>
+        <textarea class="profile-form-input" id="prof-exp" rows="5" placeholder="경력이나 경험을 작성해주세요.&#10;예) 2023.03~2024.06 스타벅스 파트타임&#10;2022 편의점 야간 알바 6개월"></textarea>
+      </div>
+      <button class="profile-save-btn" onclick="saveMyProfile()">💾 저장하기</button>
     </div>
   </div>
 </div>
@@ -759,22 +819,29 @@ async function viewApplicants(jobId, jobTitle) {
     return;
   }
 
-  const statusLabel = { pending:'검토 중', accepted:'합격', rejected:'불합격' };
+  const STATUS_OPTS = [
+    { v:'pending',   l:'검토 중'   },
+    { v:'doc_pass',  l:'서류합격'  },
+    { v:'interview', l:'면접 예정' },
+    { v:'hold',      l:'보류'      },
+    { v:'accepted',  l:'최종합격'  },
+    { v:'rejected',  l:'불합격'    },
+  ];
   const jt = jobTitle.replace(/'/g,"\\'");
   body.innerHTML = `
     <button onclick="loadMyPostings();document.getElementById('manage-modal-title').textContent='📝 내 공고 관리'" style="background:none;border:none;color:#FF4B4B;font-weight:700;cursor:pointer;padding:4px 0;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:4px;">← 목록으로</button>
-    ${data.map(app => `
+    ${data.map(app => {
+      const opts = STATUS_OPTS.map(o => `<option value="${o.v}" ${o.v===app.app_status?'selected':''}>${o.l}</option>`).join('');
+      const workerJson = encodeURIComponent(JSON.stringify({ name: app.worker_name, phone: app.worker_phone, bio: app.worker_bio, experience: app.worker_experience, birth_year: app.worker_birth_year }));
+      return `
         <div class="applicant-row">
-          <div>
-            <div class="applicant-name">${app.worker_name || '이름 없음'}</div>
-            <div class="applicant-phone">${app.worker_phone || '-'} · <span class="status-badge status-${app.app_status}" style="font-size:10px;">${statusLabel[app.app_status]||app.app_status}</span></div>
+          <div style="flex:1;min-width:0;">
+            <div class="applicant-name" style="cursor:pointer;color:#FF4B4B;" onclick="openWorkerProfile(decodeURIComponent('${workerJson}'))">${app.worker_name || '이름 없음'} ↗</div>
+            <div class="applicant-phone">${app.worker_phone || '-'} · ${new Date(app.applied_at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})} 지원</div>
           </div>
-          ${app.app_status === 'pending' ? `
-            <div class="applicant-btns">
-              <button class="accept-btn" onclick="updateApplicationStatus('${app.app_id}','accepted','${jobId}','${jt}')">합격</button>
-              <button class="reject-btn" onclick="updateApplicationStatus('${app.app_id}','rejected','${jobId}','${jt}')">불합격</button>
-            </div>` : ''}
-        </div>`).join('')}`;
+          <select class="status-select" onchange="updateApplicationStatus('${app.app_id}',this.value,'${jobId}','${jt}')">${opts}</select>
+        </div>`;
+    }).join('')}`;
 }
 
 async function updateApplicationStatus(appId, status, jobId, jobTitle) {
@@ -782,6 +849,58 @@ async function updateApplicationStatus(appId, status, jobId, jobTitle) {
   if (error) { showToast('업데이트 실패: ' + error.message); return; }
   showToast(status === 'accepted' ? '✅ 합격 처리됐습니다.' : '❌ 불합격 처리됐습니다.');
   await viewApplicants(jobId, jobTitle);
+}
+
+// ── 지원자 프로필 보기 ────────────────────────────────────────────────────────
+function openWorkerProfile(jsonStr) {
+  const w = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+  const age = w.birth_year ? `${new Date().getFullYear() - w.birth_year}세 (${w.birth_year}년생)` : '미입력';
+  document.getElementById('worker-profile-title').textContent = `👤 ${w.name || '지원자'}`;
+  document.getElementById('worker-profile-body').innerHTML = `
+    <div class="profile-section">
+      <div class="profile-section-title">기본 정보</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div><span style="font-size:11px;color:#aaa;">연락처</span><div style="font-size:15px;font-weight:700;margin-top:2px;">${w.phone || '미입력'}</div></div>
+        <div><span style="font-size:11px;color:#aaa;">나이</span><div style="font-size:15px;font-weight:700;margin-top:2px;">${age}</div></div>
+      </div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">자기소개</div>
+      ${w.bio ? `<div class="profile-text">${w.bio.replace(/</g,'&lt;')}</div>` : '<div class="profile-empty">자기소개를 작성하지 않았습니다.</div>'}
+    </div>
+    <div class="profile-section">
+      <div class="profile-section-title">경력 · 경험사항</div>
+      ${w.experience ? `<div class="profile-text">${w.experience.replace(/</g,'&lt;')}</div>` : '<div class="profile-empty">경력사항을 작성하지 않았습니다.</div>'}
+    </div>`;
+  document.getElementById('worker-profile-modal').classList.add('open');
+}
+
+// ── 내 프로필 편집 ────────────────────────────────────────────────────────────
+async function openMyProfile() {
+  document.getElementById('user-menu').classList.remove('open');
+  document.getElementById('my-profile-modal').classList.add('open');
+  const { data, error } = await db.rpc('get_my_worker_profile');
+  if (data?.[0]) {
+    const p = data[0];
+    document.getElementById('prof-name').value = p.name || '';
+    document.getElementById('prof-year').value = p.birth_year || '';
+    document.getElementById('prof-bio').value  = p.bio || '';
+    document.getElementById('prof-exp').value  = p.experience || '';
+  }
+}
+
+async function saveMyProfile() {
+  const name = document.getElementById('prof-name').value.trim();
+  const year = parseInt(document.getElementById('prof-year').value) || null;
+  const bio  = document.getElementById('prof-bio').value.trim();
+  const exp  = document.getElementById('prof-exp').value.trim();
+  if (!name) { showToast('⚠️ 이름을 입력해주세요.'); return; }
+  const { error } = await db.rpc('update_my_worker_profile', {
+    p_name: name, p_bio: bio, p_experience: exp, p_birth_year: year
+  });
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  document.getElementById('my-profile-modal').classList.remove('open');
+  showToast('✅ 프로필이 저장됐습니다.');
 }
 
 async function closePosting(jobId) {
@@ -887,6 +1006,7 @@ async function initAuth() {
     document.getElementById('fab-post').style.display = 'flex';
   } else {
     document.getElementById('menu-item-worker').style.display = 'flex';
+    document.getElementById('menu-item-profile').style.display = 'flex';
   }
 
   // 프로필 자동 생성 (upsert 대신 select→insert로 스키마 캐시 문제 우회)
