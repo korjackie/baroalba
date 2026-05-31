@@ -768,7 +768,7 @@ function renderCards(jobs) {
   document.getElementById('job-count').textContent = jobs.length + '개 모집 중';
 
   list.innerHTML = jobs.map(job => `
-    <div class="job-card ${selectedJobId === job.id ? 'selected' : ''}" id="card-${job.id}" onclick="handleCardClick(${job.id})">
+    <div class="job-card ${selectedJobId === job.id ? 'selected' : ''}" id="card-${job.id}" onclick="handleCardClick('${job.id}')">
       ${badgeHtml(job)}
       <div class="card-biz">${job.biz}</div>
       <div class="card-title">${job.title}</div>
@@ -787,7 +787,7 @@ function renderCards(jobs) {
           <span class="stars">${starStr(job.bizRating)}</span>
           <span class="rating-label"> ${job.bizRating} (${job.bizReviews})</span>
         </div>
-        <button class="apply-btn" ${job.status === 'filled' ? 'disabled' : ''} onclick="event.stopPropagation(); applyJob(${job.id})">
+        <button class="apply-btn" ${job.status === 'filled' ? 'disabled' : ''} onclick="event.stopPropagation(); applyJob('${job.id}')">
           ${job.status === 'filled' ? '마감' : '지원하기'}
         </button>
       </div>
@@ -804,7 +804,7 @@ function selectJob(id) {
     card.classList.add('selected');
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
-  const job = JOBS.find(j => j.id === id);
+  const job = currentJobs.find(j => j.id === id);
   if (job) map.setView([job.lat, job.lng], 16, { animate: true });
 }
 
@@ -817,7 +817,7 @@ function filterJobs(chipEl, category) {
   currentFilter = category;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
-  const filtered = category ? JOBS.filter(j => j.category === category || j.title.includes(category)) : JOBS;
+  const filtered = category ? currentJobs.filter(j => j.category === category || j.title.includes(category)) : currentJobs;
   renderMarkers(filtered);
   renderCards(filtered);
 }
@@ -833,7 +833,7 @@ function goToMyLocation() {
 
 // ── 모달 ──────────────────────────────────────────────────────────────────────
 function openModal(id) {
-  const job = JOBS.find(j => j.id === id);
+  const job = currentJobs.find(j => j.id === id);
   if (!job) return;
 
   const histHtml = job.wageHistory.map((w, i) => {
@@ -915,7 +915,7 @@ function openModal(id) {
       </div>
     </div>
 
-    <button class="modal-apply" onclick="applyJob(${job.id})" ${job.status === 'filled' ? 'disabled style="background:#ccc"' : ''}>
+    <button class="modal-apply" onclick="applyJob('${job.id}')" ${job.status === 'filled' ? 'disabled style="background:#ccc"' : ''}>
       ${job.status === 'filled' ? '마감된 공고입니다' : '⚡ 바로 지원하기'}
     </button>
   `;
@@ -1045,8 +1045,8 @@ async function loadJobsFromDB() {
     bizKindness: parseFloat(j.biz_kindness) || 0,
     workerRating: 4.0, workerRatingCount: 0,
     address: '', description: '',
-    startTime: j.start_time ? new Date(j.start_time).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) : '즉시',
-    duration: j.duration_hours ? `${j.duration_hours}시간` : '-',
+    startTime: j.start_time || '즉시',
+    duration: j.duration || '-',
   }));
 }
 
