@@ -502,7 +502,7 @@
 <div class="header">
   <div id="guest-banner" style="display:none; background:#FFF5F5; border-bottom:1px solid #ffe0e0; padding:8px 16px; align-items:center; justify-content:space-between;">
     <span style="font-size:12px; color:#888;">게스트 모드 · 지원하려면 로그인이 필요합니다</span>
-    <button onclick="window.location.href='./login.html'" style="background:#FF4B4B;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">로그인</button>
+    <button onclick="localStorage.removeItem('baroalba_guest');window.location.href='./login.html'" style="background:#FF4B4B;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">로그인</button>
   </div>
   <div class="header-top">
     <div class="logo">⚡바로알바</div>
@@ -980,17 +980,20 @@ function toggleUserMenu() {
 async function initAuth() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 
-  // 게스트 모드
-  const isGuest = localStorage.getItem('baroalba_guest');
-  if (isGuest) {
-    setUserUI({ name: '게스트', role: 'worker', isGuest: true });
-    document.getElementById('guest-banner').style.display = 'flex';
-    return true;
-  }
-
-  // Supabase 세션 확인
+  // 세션 먼저 확인 — 로그인된 경우 게스트 플래그 제거
   const { data: { session } } = await db.auth.getSession();
-  if (!session) { window.location.href = './login.html'; return false; }
+  if (session) {
+    localStorage.removeItem('baroalba_guest');
+  } else {
+    // 세션 없을 때만 게스트 모드 확인
+    if (localStorage.getItem('baroalba_guest')) {
+      setUserUI({ name: '게스트', role: 'worker', isGuest: true });
+      document.getElementById('guest-banner').style.display = 'flex';
+      return 'guest';
+    }
+    window.location.href = './login.html';
+    return false;
+  }
 
   const user = session.user;
   const name = user.user_metadata?.full_name || user.email;
@@ -1108,18 +1111,23 @@ async function applyJob(id) {
 
 // ── 시작 ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  const ok = await initAuth();
-  if (!ok) return;
+  const authResult = await initAuth();
+  if (!authResult) return;
 
-  // DB 공고 로드 시도, 없으면 목업
-  const dbJobs = await loadJobsFromDB();
-  currentJobs = dbJobs || JOBS;
-
-  initMap(currentJobs);
-  if (dbJobs) showToast(`📡 DB 연동 완료 — ${dbJobs.length}개 공고`);
-  else        showToast('📋 샘플 데이터로 표시 중');
-
-  subscribeRealtime();
+  if (authResult === 'guest') {
+    // 게스트 = 샘플 데이터만
+    currentJobs = JOBS;
+    initMap(currentJobs);
+    showToast('📋 샘플 데이터로 표시 중 · 로그인하면 실제 공고를 볼 수 있어요');
+  } else {
+    // 로그인 = DB 연동
+    const dbJobs = await loadJobsFromDB();
+    currentJobs = dbJobs || JOBS;
+    initMap(currentJobs);
+    if (dbJobs) showToast(`📡 DB 연동 완료 — ${dbJobs.length}개 공고`);
+    else        showToast('📋 샘플 데이터로 표시 중');
+    subscribeRealtime();
+  }
 });
 </script>
 </body>
