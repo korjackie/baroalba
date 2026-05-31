@@ -345,24 +345,29 @@
       </div>
       <div class="post-row">
         <div class="post-form-group">
-          <label class="post-form-label">시작 시각 *</label>
-          <div style="display:flex;gap:6px">
-            <select class="post-form-input" id="post-hour" style="flex:1"></select>
-            <select class="post-form-input" id="post-minute" style="flex:0 0 72px">
-              <option value="00">00분</option><option value="05">05분</option>
-              <option value="10">10분</option><option value="15">15분</option>
-              <option value="20">20분</option><option value="25">25분</option>
-              <option value="30">30분</option><option value="35">35분</option>
-              <option value="40">40분</option><option value="45">45분</option>
-              <option value="50">50분</option><option value="55">55분</option>
+          <label class="post-form-label">근무 시작 *</label>
+          <div style="display:flex;gap:5px">
+            <select class="post-form-input" id="post-hour" style="flex:1" onchange="calcDuration()"></select>
+            <select class="post-form-input" id="post-minute" style="flex:1" onchange="calcDuration()">
+              <option value="00">00분</option><option value="05">05분</option><option value="10">10분</option><option value="15">15분</option>
+              <option value="20">20분</option><option value="25">25분</option><option value="30">30분</option><option value="35">35분</option>
+              <option value="40">40분</option><option value="45">45분</option><option value="50">50분</option><option value="55">55분</option>
             </select>
           </div>
         </div>
         <div class="post-form-group">
-          <label class="post-form-label">근무 시간 (시)</label>
-          <input class="post-form-input" id="post-duration" type="number" placeholder="4" min="1" max="24" step="0.5" inputmode="decimal">
+          <label class="post-form-label">근무 종료 *</label>
+          <div style="display:flex;gap:5px">
+            <select class="post-form-input" id="post-end-hour" style="flex:1" onchange="calcDuration()"></select>
+            <select class="post-form-input" id="post-end-minute" style="flex:1" onchange="calcDuration()">
+              <option value="00">00분</option><option value="05">05분</option><option value="10">10분</option><option value="15">15분</option>
+              <option value="20">20분</option><option value="25">25분</option><option value="30">30분</option><option value="35">35분</option>
+              <option value="40">40분</option><option value="45">45분</option><option value="50">50분</option><option value="55">55분</option>
+            </select>
+          </div>
         </div>
       </div>
+      <div id="post-duration-display" style="font-size:13px;color:#888;background:#f8f8f8;border-radius:8px;padding:8px 12px;margin-bottom:6px;display:none;">⏱ 총 근무시간: <strong id="post-duration-text">-</strong></div>
       <div class="post-form-group">
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; min-height:44px;">
           <input type="checkbox" id="post-urgent" style="width:18px;height:18px;accent-color:#FF4B4B;cursor:pointer;">
@@ -667,17 +672,33 @@ function openPostModal() {
   document.getElementById('post-location-text').textContent = `위도 ${c.lat.toFixed(4)}, 경도 ${c.lng.toFixed(4)}`;
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('post-date').value = today;
-  const hourSel = document.getElementById('post-hour');
-  if (!hourSel.options.length) {
-    const labels = ['오전 12','오전 1','오전 2','오전 3','오전 4','오전 5','오전 6','오전 7','오전 8','오전 9','오전 10','오전 11',
-                    '오후 12','오후 1','오후 2','오후 3','오후 4','오후 5','오후 6','오후 7','오후 8','오후 9','오후 10','오후 11'];
-    labels.forEach((l, i) => { const o = new Option(l, String(i).padStart(2,'0')); hourSel.appendChild(o); });
-  }
-  hourSel.value = String(new Date().getHours()).padStart(2,'0');
+  const hourLabels = ['오전 12','오전 1','오전 2','오전 3','오전 4','오전 5','오전 6','오전 7','오전 8','오전 9','오전 10','오전 11',
+                      '오후 12','오후 1','오후 2','오후 3','오후 4','오후 5','오후 6','오후 7','오후 8','오후 9','오후 10','오후 11'];
+  ['post-hour','post-end-hour'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel.options.length) hourLabels.forEach((l,i) => sel.appendChild(new Option(l, String(i).padStart(2,'0'))));
+  });
+  const nowH = new Date().getHours();
+  document.getElementById('post-hour').value = String(nowH).padStart(2,'0');
+  document.getElementById('post-end-hour').value = String((nowH + 4) % 24).padStart(2,'0');
+  calcDuration();
   document.getElementById('post-modal-overlay').classList.add('open');
 }
 function closePostModalDirect() { document.getElementById('post-modal-overlay').classList.remove('open'); }
 function closePostModal(e) { if (e.target===document.getElementById('post-modal-overlay')) closePostModalDirect(); }
+
+function calcDuration() {
+  const sh = parseInt(document.getElementById('post-hour').value);
+  const sm = parseInt(document.getElementById('post-minute').value);
+  const eh = parseInt(document.getElementById('post-end-hour').value);
+  const em = parseInt(document.getElementById('post-end-minute').value);
+  let mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins <= 0) mins += 24 * 60; // 익일 근무
+  const hrs = (mins / 60).toFixed(1).replace(/\.0$/, '');
+  const overnight = (eh * 60 + em) <= (sh * 60 + sm) ? ' (익일)' : '';
+  document.getElementById('post-duration-text').textContent = `${hrs}시간${overnight}`;
+  document.getElementById('post-duration-display').style.display = 'block';
+}
 
 function selectCat(el, cat) {
   selectedCategory = cat;
@@ -690,15 +711,23 @@ async function submitPost() {
   const title    = document.getElementById('post-title').value.trim();
   const wage         = parseInt(document.getElementById('post-wage').value);
   const needed       = parseInt(document.getElementById('post-needed').value) || 1;
-  const dateVal      = document.getElementById('post-date').value;
-  const timeVal      = document.getElementById('post-hour').value + ':' + document.getElementById('post-minute').value;
-  const durationHrs  = parseFloat(document.getElementById('post-duration').value) || null;
-  const isUrgent     = document.getElementById('post-urgent').checked;
-  const startTime    = (dateVal && timeVal) ? new Date(`${dateVal}T${timeVal}:00`).toISOString() : null;
+  const dateVal  = document.getElementById('post-date').value;
+  const startH   = document.getElementById('post-hour').value;
+  const startM   = document.getElementById('post-minute').value;
+  const endH     = document.getElementById('post-end-hour').value;
+  const endM     = document.getElementById('post-end-minute').value;
+  const isUrgent = document.getElementById('post-urgent').checked;
+  const startTime = dateVal ? new Date(`${dateVal}T${startH}:${startM}:00`).toISOString() : null;
+  let durationHrs = null;
+  if (startH && endH) {
+    let mins = (parseInt(endH)*60+parseInt(endM)) - (parseInt(startH)*60+parseInt(startM));
+    if (mins <= 0) mins += 1440;
+    durationHrs = parseFloat((mins/60).toFixed(1));
+  }
 
   if (!biz || !title || !selectedCategory) { showToast('⚠️ 업체명, 공고 제목, 업종은 필수입니다.'); return; }
   if (!wage || wage < 10030) { showToast('⚠️ 시급은 최저시급(10,030원) 이상이어야 합니다.'); return; }
-  if (!dateVal || !timeVal) { showToast('⚠️ 근무 날짜와 시작 시각을 선택해주세요.'); return; }
+  if (!dateVal) { showToast('⚠️ 근무 날짜를 선택해주세요.'); return; }
 
   const btn = document.getElementById('post-submit-btn');
   btn.disabled = true; btn.textContent = '등록 중...';
@@ -721,8 +750,10 @@ async function submitPost() {
   btn.disabled = false; btn.textContent = '⚡ 공고 등록하기';
   if (error) { showToast('등록 실패: ' + error.message); return; }
 
-  ['post-biz','post-title','post-wage','post-needed','post-date','post-duration'].forEach(id => document.getElementById(id).value = '');
+  ['post-biz','post-title','post-wage','post-needed','post-date'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('post-minute').value = '00';
+  document.getElementById('post-end-minute').value = '00';
+  document.getElementById('post-duration-display').style.display = 'none';
   document.getElementById('post-urgent').checked = false;
   selectedCategory = null;
   document.querySelectorAll('.post-chip').forEach(c => c.classList.remove('selected'));
