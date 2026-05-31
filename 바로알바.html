@@ -320,14 +320,18 @@
           <input class="post-form-input" id="post-needed" type="number" placeholder="1" min="1" inputmode="numeric">
         </div>
       </div>
+      <div class="post-form-group">
+        <label class="post-form-label">근무 날짜 *</label>
+        <input class="post-form-input" id="post-date" type="date">
+      </div>
       <div class="post-row">
         <div class="post-form-group">
-          <label class="post-form-label">시작 시간</label>
-          <input class="post-form-input" id="post-start" type="text" placeholder="즉시 / 오늘 14:00">
+          <label class="post-form-label">시작 시각 *</label>
+          <input class="post-form-input" id="post-time" type="time">
         </div>
         <div class="post-form-group">
-          <label class="post-form-label">근무 시간</label>
-          <input class="post-form-input" id="post-duration" type="text" placeholder="4시간">
+          <label class="post-form-label">근무 시간 (시)</label>
+          <input class="post-form-input" id="post-duration" type="number" placeholder="4" min="1" max="24" step="0.5" inputmode="decimal">
         </div>
       </div>
       <div class="post-form-group">
@@ -568,8 +572,21 @@ function openModal(id) {
 }
 
 function estimatePay(job) {
-  const m = job.duration.match(/(\d+)/);
-  return m ? (job.currentWage * parseInt(m[1])).toLocaleString() + '원' : '-';
+  const m = job.duration.match(/(\d+(\.\d+)?)/);
+  return m ? (job.currentWage * parseFloat(m[1])).toLocaleString() + '원' : '-';
+}
+
+function formatStartTime(iso) {
+  if (!iso) return '즉시';
+  const d = new Date(iso);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((target - today) / 86400000);
+  const hhmm = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (diff === 0) return `오늘 ${hhmm}`;
+  if (diff === 1) return `내일 ${hhmm}`;
+  return `${d.getMonth()+1}/${d.getDate()} ${hhmm}`;
 }
 function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); }
 function closeModal(e) { if (e.target===document.getElementById('modal-overlay')) closeModalDirect(); }
@@ -578,6 +595,10 @@ function closeModal(e) { if (e.target===document.getElementById('modal-overlay')
 function openPostModal() {
   const c = map.getCenter();
   document.getElementById('post-location-text').textContent = `위도 ${c.lat.toFixed(4)}, 경도 ${c.lng.toFixed(4)}`;
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('post-date').value = today;
+  const nowH = new Date().getHours().toString().padStart(2,'0');
+  document.getElementById('post-time').value = `${nowH}:00`;
   document.getElementById('post-modal-overlay').classList.add('open');
 }
 function closePostModalDirect() { document.getElementById('post-modal-overlay').classList.remove('open'); }
@@ -592,14 +613,17 @@ function selectCat(el, cat) {
 async function submitPost() {
   const biz      = document.getElementById('post-biz').value.trim();
   const title    = document.getElementById('post-title').value.trim();
-  const wage     = parseInt(document.getElementById('post-wage').value);
-  const needed   = parseInt(document.getElementById('post-needed').value) || 1;
-  const startTime = document.getElementById('post-start').value.trim() || '즉시';
-  const duration  = document.getElementById('post-duration').value.trim() || '-';
-  const isUrgent  = document.getElementById('post-urgent').checked;
+  const wage         = parseInt(document.getElementById('post-wage').value);
+  const needed       = parseInt(document.getElementById('post-needed').value) || 1;
+  const dateVal      = document.getElementById('post-date').value;
+  const timeVal      = document.getElementById('post-time').value;
+  const durationHrs  = parseFloat(document.getElementById('post-duration').value) || null;
+  const isUrgent     = document.getElementById('post-urgent').checked;
+  const startTime    = (dateVal && timeVal) ? new Date(`${dateVal}T${timeVal}:00`).toISOString() : null;
 
   if (!biz || !title || !selectedCategory) { showToast('⚠️ 업체명, 공고 제목, 업종은 필수입니다.'); return; }
   if (!wage || wage < 10030) { showToast('⚠️ 시급은 최저시급(10,030원) 이상이어야 합니다.'); return; }
+  if (!dateVal || !timeVal) { showToast('⚠️ 근무 날짜와 시작 시각을 선택해주세요.'); return; }
 
   const btn = document.getElementById('post-submit-btn');
   btn.disabled = true; btn.textContent = '등록 중...';
@@ -614,13 +638,13 @@ async function submitPost() {
   const { error } = await db.from('job_postings').insert({
     business_id: bizData.id, biz_name: biz, title, category: selectedCategory,
     lat: center.lat, lng: center.lng, base_wage: wage, current_wage: wage,
-    needed_count: needed, start_time: startTime, duration, status: isUrgent ? 'urgent' : 'open',
+    needed_count: needed, start_time: startTime, duration_hours: durationHrs, status: isUrgent ? 'urgent' : 'open',
   });
 
   btn.disabled = false; btn.textContent = '⚡ 공고 등록하기';
   if (error) { showToast('등록 실패: ' + error.message); return; }
 
-  ['post-biz','post-title','post-wage','post-needed','post-start','post-duration'].forEach(id => document.getElementById(id).value = '');
+  ['post-biz','post-title','post-wage','post-needed','post-date','post-time','post-duration'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('post-urgent').checked = false;
   selectedCategory = null;
   document.querySelectorAll('.post-chip').forEach(c => c.classList.remove('selected'));
@@ -639,7 +663,7 @@ async function openApplicationsModal() {
   if (!workerData) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">프로필을 찾을 수 없습니다.</div></div>'; return; }
 
   const { data, error } = await db.from('applications')
-    .select('id, status, created_at, job_postings(id, title, biz_name, current_wage, start_time, duration, status)')
+    .select('id, status, created_at, job_postings(id, title, biz_name, current_wage, start_time, duration_hours, status)')
     .eq('worker_id', workerData.id)
     .order('created_at', { ascending: false });
 
@@ -659,7 +683,7 @@ async function openApplicationsModal() {
           <div><div class="app-biz">${job.biz_name || '-'}</div><div class="app-title">${job.title || '-'}</div></div>
           ${badge}
         </div>
-        <div class="app-meta">⏰ ${job.start_time||'즉시'} · ⌛ ${job.duration||'-'} · 💰 ${(job.current_wage||0).toLocaleString()}원/시 · 지원일 ${date}</div>
+        <div class="app-meta">⏰ ${job.start_time ? formatStartTime(job.start_time) : '즉시'} · ⌛ ${job.duration_hours ? job.duration_hours+'시간' : '-'} · 💰 ${(job.current_wage||0).toLocaleString()}원/시 · 지원일 ${date}</div>
       </div>`;
   }).join('');
 }
@@ -687,7 +711,7 @@ async function loadMyPostings() {
   if (!bizData) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">업주 프로필을 찾을 수 없습니다.</div></div>'; return; }
 
   const { data, error } = await db.from('job_postings')
-    .select('id, title, biz_name, current_wage, status, needed_count, created_at, start_time, duration')
+    .select('id, title, biz_name, current_wage, status, needed_count, created_at, start_time, duration_hours')
     .eq('business_id', bizData.id)
     .order('created_at', { ascending: false });
 
@@ -704,7 +728,7 @@ async function loadMyPostings() {
         <div>
           <div class="manage-title">${job.title}</div>
           <div class="manage-meta">${job.biz_name} · ${(job.current_wage||0).toLocaleString()}원/시 · ${job.needed_count||1}명 모집</div>
-          <div class="manage-meta">⏰ ${job.start_time||'즉시'} · ⌛ ${job.duration||'-'}</div>
+          <div class="manage-meta">⏰ ${job.start_time ? formatStartTime(job.start_time) : '즉시'} · ⌛ ${job.duration_hours ? job.duration_hours+'시간' : '-'}</div>
         </div>
         <span class="status-badge ${job.status==='filled'?'status-rejected':job.status==='urgent'?'status-pending':'status-accepted'}">${statusLabel[job.status]||job.status}</span>
       </div>
@@ -875,7 +899,8 @@ async function loadJobsFromDB(lat, lng) {
     status: j.status, needed: j.needed_count,
     bizRating: parseFloat(j.biz_rating)||0, bizReviews: j.biz_reviews||0, bizKindness: parseFloat(j.biz_kindness)||0,
     workerRating: 4.0, workerRatingCount: 0, address: '', description: '',
-    startTime: j.start_time||'즉시', duration: j.duration||'-',
+    startTime: j.start_time ? formatStartTime(j.start_time) : '즉시',
+    duration: j.duration_hours ? `${j.duration_hours}시간` : '-',
   }));
 }
 
