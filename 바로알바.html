@@ -226,7 +226,7 @@
   </div>
   <div class="user-menu-item" id="menu-item-worker" style="display:none" onclick="openApplicationsModal()">📋 내 지원 내역</div>
   <div class="user-menu-item" id="menu-item-business" style="display:none" onclick="openPostingsModal()">📝 내 공고 관리</div>
-  <div class="user-menu-item" onclick="showToast('👤 내 프로필 — 준비 중입니다.')">👤 내 프로필</div>
+  <div class="user-menu-item" onclick="document.getElementById('user-menu').classList.remove('open');goToMyLocation()">📍 내 위치로 이동</div>
   <div class="user-menu-item logout" onclick="logout()">🚪 로그아웃</div>
 </div>
 
@@ -242,8 +242,7 @@
       <span class="icon">🔍</span>
       <input type="text" placeholder="지역, 업종 검색...">
     </div>
-    <button class="location-btn" onclick="goToMyLocation()" title="내 위치">📍</button>
-    <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()">?</div>
+    <button class="location-btn" id="user-avatar" onclick="avatarOrGps()" title="메뉴/위치">📍</button>
   </div>
   <div class="filter-chips">
     <div class="chip active" onclick="filterJobs(this, null)">전체</div>
@@ -839,6 +838,32 @@ function toggleUserMenu() {
   document.getElementById('user-menu').classList.toggle('open');
 }
 
+// ── 역할 선택 모달 (Google 최초 로그인 시) ──────────────────
+function showRoleSelectModal(user) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:20px;padding:28px 22px;width:100%;max-width:340px;text-align:center;">
+        <div style="font-size:22px;font-weight:900;color:#222;margin-bottom:6px;">바로알바</div>
+        <div style="font-size:14px;color:#888;margin-bottom:24px;">어떤 역할로 이용하시겠어요?</div>
+        <div style="display:flex;gap:12px;margin-bottom:8px;">
+          <button id="_role_worker" style="flex:1;padding:18px 10px;border:2.5px solid #eee;border-radius:14px;font-size:15px;font-weight:700;background:#fff;cursor:pointer;">
+            👷 알바생<br><span style="font-size:11px;font-weight:400;color:#aaa;">일자리를 찾고 있어요</span>
+          </button>
+          <button id="_role_biz" style="flex:1;padding:18px 10px;border:2.5px solid #eee;border-radius:14px;font-size:15px;font-weight:700;background:#fff;cursor:pointer;">
+            🏢 업주<br><span style="font-size:11px;font-weight:400;color:#aaa;">알바를 구하고 있어요</span>
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#_role_worker').onclick = () => { document.body.removeChild(overlay); resolve('worker'); };
+    overlay.querySelector('#_role_biz').onclick    = () => { document.body.removeChild(overlay); resolve('business'); };
+    overlay.querySelector('#_role_worker').addEventListener('click', function() { this.style.borderColor='#FF4B4B'; });
+    overlay.querySelector('#_role_biz').addEventListener('click', function() { this.style.borderColor='#FF4B4B'; });
+  });
+}
+
 // ── 인증 초기화 ────────────────────────────────────────────
 async function initAuth() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
@@ -857,13 +882,17 @@ async function initAuth() {
   }
 
   const user = session.user;
-  if (!user.user_metadata?.baroalba_role) {
-    window.location.href = './login.html';
-    return false;
+  let role = user.user_metadata?.baroalba_role;
+
+  if (!role) {
+    // Google OAuth 등 role 미설정 → 역할 선택 모달 표시 후 대기
+    const chosen = await showRoleSelectModal(user);
+    if (!chosen) { window.location.href = './login.html'; return false; }
+    role = chosen;
+    await db.auth.updateUser({ data: { baroalba_role: role } });
   }
 
-  const name      = user.user_metadata?.full_name || user.email;
-  const role      = user.user_metadata?.baroalba_role;
+  const name      = user.user_metadata?.full_name || user.email?.split('@')[0] || '사용자';
   const avatarUrl = user.user_metadata?.avatar_url || '';
 
   currentRole   = role;
@@ -878,11 +907,16 @@ async function initAuth() {
     document.getElementById('menu-item-worker').style.display = 'flex';
   }
 
+  // 프로필 자동 생성 (upsert 대신 select→insert로 스키마 캐시 문제 우회)
   const table = role === 'business' ? 'businesses' : 'workers';
-  await db.from(table).upsert(
-    { kakao_uid: user.id, name: name || '', phone: user.user_metadata?.phone || '' },
-    { onConflict: 'kakao_uid' }
-  );
+  const { data: existing } = await db.from(table).select('id').eq('kakao_uid', user.id).maybeSingle();
+  if (!existing) {
+    await db.from(table).insert({
+      kakao_uid: user.id,
+      name: name,
+      phone: user.user_metadata?.phone || '',
+    });
+  }
 
   document.addEventListener('click', e => {
     if (!e.target.closest('#user-menu') && !e.target.closest('#user-avatar'))
@@ -892,12 +926,23 @@ async function initAuth() {
   return true;
 }
 
+function avatarOrGps() {
+  if (currentUserId) toggleUserMenu();
+  else goToMyLocation();
+}
+
 function setUserUI({ name, role, avatarUrl, isGuest }) {
-  const avatar = document.getElementById('user-avatar');
+  const btn = document.getElementById('user-avatar');
+  btn.style.cssText = 'width:34px;height:34px;border-radius:50%;padding:0;overflow:hidden;flex-shrink:0;';
   if (avatarUrl) {
-    avatar.innerHTML = `<img src="${avatarUrl}" alt="${name}" onerror="this.textContent='${name?.[0]||'?'}'">`;
+    btn.innerHTML = `<img src="${avatarUrl}" alt="${name[0]||'?'}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${name?.[0]||'?'}'">`;
+  } else if (!isGuest) {
+    btn.textContent = name?.[0]?.toUpperCase() || '?';
+    btn.style.fontSize = '14px';
+    btn.style.fontWeight = '700';
   } else {
-    avatar.textContent = name?.[0] || '?';
+    btn.textContent = '📍';
+    btn.style.fontSize = '18px';
   }
   document.getElementById('menu-name').textContent = isGuest ? '게스트' : name;
   document.getElementById('menu-role-badge').textContent = role === 'business' ? '업주' : '알바생';
