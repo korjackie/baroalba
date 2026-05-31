@@ -677,19 +677,7 @@ async function openApplicationsModal() {
   const body = document.getElementById('app-modal-body');
   body.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">불러오는 중...</div></div>';
 
-  let { data: workerData } = await db.from('workers').select('id').eq('kakao_uid', currentUserId).maybeSingle();
-  if (!workerData) {
-    const { data: { session } } = await db.auth.getSession();
-    const uname = session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '사용자';
-    const { data: created } = await db.from('workers').insert({ kakao_uid: currentUserId, name: uname, phone: '' }).select('id').single();
-    workerData = created;
-  }
-  if (!workerData) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">프로필 생성에 실패했습니다.</div></div>'; return; }
-
-  const { data, error } = await db.from('applications')
-    .select('id, status, created_at, job_postings(id, title, biz_name, current_wage, start_time, duration_hours, status)')
-    .eq('worker_id', workerData.id)
-    .order('created_at', { ascending: false });
+  const { data, error } = await db.rpc('get_my_applications');
 
   if (error || !data?.length) {
     body.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">지원 내역이 없습니다.</div><div class="empty-sub">주변 알바에 지원해보세요!</div></div>';
@@ -698,16 +686,15 @@ async function openApplicationsModal() {
 
   const statusLabel = { pending: '검토 중', accepted: '합격', rejected: '불합격' };
   body.innerHTML = data.map(app => {
-    const job = app.job_postings || {};
     const badge = `<span class="status-badge status-${app.status}">${statusLabel[app.status] || app.status}</span>`;
     const date = new Date(app.created_at).toLocaleDateString('ko-KR', { month:'long', day:'numeric' });
     return `
       <div class="app-card">
         <div class="app-card-top">
-          <div><div class="app-biz">${job.biz_name || '-'}</div><div class="app-title">${job.title || '-'}</div></div>
+          <div><div class="app-biz">${app.biz_name || '-'}</div><div class="app-title">${app.title || '-'}</div></div>
           ${badge}
         </div>
-        <div class="app-meta">⏰ ${job.start_time ? formatStartTime(job.start_time) : '즉시'} · ⌛ ${job.duration_hours ? job.duration_hours+'시간' : '-'} · 💰 ${(job.current_wage||0).toLocaleString()}원/시 · 지원일 ${date}</div>
+        <div class="app-meta">⏰ ${app.start_time ? formatStartTime(app.start_time) : '즉시'} · ⌛ ${app.duration_hours ? app.duration_hours+'시간' : '-'} · 💰 ${(app.current_wage||0).toLocaleString()}원/시 · 지원일 ${date}</div>
       </div>`;
   }).join('');
 }
@@ -731,13 +718,7 @@ async function loadMyPostings() {
   const body = document.getElementById('manage-modal-body');
   body.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">불러오는 중...</div></div>';
 
-  const { data: bizData } = await db.from('businesses').select('id').eq('kakao_uid', currentUserId).single();
-  if (!bizData) { body.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">업주 프로필을 찾을 수 없습니다.</div></div>'; return; }
-
-  const { data, error } = await db.from('job_postings')
-    .select('id, title, biz_name, current_wage, status, needed_count, created_at, start_time, duration_hours')
-    .eq('business_id', bizData.id)
-    .order('created_at', { ascending: false });
+  const { data, error } = await db.rpc('get_my_postings');
 
   if (error || !data?.length) {
     body.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">등록한 공고가 없습니다.</div><div class="empty-sub">공고 올리기 버튼으로 첫 공고를 올려보세요!</div></div>';
@@ -769,10 +750,7 @@ async function viewApplicants(jobId, jobTitle) {
   const body = document.getElementById('manage-modal-body');
   body.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">불러오는 중...</div></div>';
 
-  const { data, error } = await db.from('applications')
-    .select('id, status, created_at, workers(id, name, phone)')
-    .eq('job_posting_id', jobId)
-    .order('created_at', { ascending: false });
+  const { data, error } = await db.rpc('get_applicants', { posting_id: jobId });
 
   if (error || !data?.length) {
     body.innerHTML = `
@@ -782,23 +760,21 @@ async function viewApplicants(jobId, jobTitle) {
   }
 
   const statusLabel = { pending:'검토 중', accepted:'합격', rejected:'불합격' };
+  const jt = jobTitle.replace(/'/g,"\\'");
   body.innerHTML = `
     <button onclick="loadMyPostings();document.getElementById('manage-modal-title').textContent='📝 내 공고 관리'" style="background:none;border:none;color:#FF4B4B;font-weight:700;cursor:pointer;padding:4px 0;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:4px;">← 목록으로</button>
-    ${data.map(app => {
-      const w = app.workers || {};
-      return `
+    ${data.map(app => `
         <div class="applicant-row">
           <div>
-            <div class="applicant-name">${w.name || '이름 없음'}</div>
-            <div class="applicant-phone">${w.phone || '-'} · <span class="status-badge status-${app.status}" style="font-size:10px;">${statusLabel[app.status]||app.status}</span></div>
+            <div class="applicant-name">${app.worker_name || '이름 없음'}</div>
+            <div class="applicant-phone">${app.worker_phone || '-'} · <span class="status-badge status-${app.app_status}" style="font-size:10px;">${statusLabel[app.app_status]||app.app_status}</span></div>
           </div>
-          ${app.status === 'pending' ? `
+          ${app.app_status === 'pending' ? `
             <div class="applicant-btns">
-              <button class="accept-btn" onclick="updateApplicationStatus('${app.id}','accepted','${jobId}','${jobTitle.replace(/'/g,"\\'")}')">합격</button>
-              <button class="reject-btn" onclick="updateApplicationStatus('${app.id}','rejected','${jobId}','${jobTitle.replace(/'/g,"\\'")}')">불합격</button>
+              <button class="accept-btn" onclick="updateApplicationStatus('${app.app_id}','accepted','${jobId}','${jt}')">합격</button>
+              <button class="reject-btn" onclick="updateApplicationStatus('${app.app_id}','rejected','${jobId}','${jt}')">불합격</button>
             </div>` : ''}
-        </div>`;
-    }).join('')}`;
+        </div>`).join('')}`;
 }
 
 async function updateApplicationStatus(appId, status, jobId, jobTitle) {
