@@ -1,0 +1,11 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/login.html", "permanent": false }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
+}

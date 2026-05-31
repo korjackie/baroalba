@@ -1,0 +1,25 @@
+{
+  "name": "바로알바",
+  "short_name": "바로알바",
+  "description": "실시간 지도 기반 알바 매칭 서비스",
+  "start_url": "./login.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FF4B4B",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon.svg",     "sizes": "any",     "type": "image/svg+xml" }
+  ],
+  "categories": ["lifestyle", "productivity"],
+  "shortcuts": [
+    {
+      "name": "주변 알바 찾기",
+      "url": "./바로알바.html",
+      "description": "지도에서 주변 알바 탐색"
+    }
+  ]
+}
