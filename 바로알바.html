@@ -479,6 +479,18 @@
   </div>
 </div>
 
+<!-- ── 평점 모달 ── -->
+<div class="modal-overlay" id="rating-modal" onclick="closeRatingModal(event)">
+  <div class="modal"><div class="modal-body" style="text-align:center;">
+    <div style="font-size:17px;font-weight:800;color:#222;margin-bottom:18px;" id="rating-job-title">평점 남기기</div>
+    <div id="rating-stars" style="font-size:42px;cursor:pointer;letter-spacing:6px;margin-bottom:6px;"></div>
+    <div style="font-size:13px;color:#888;margin-bottom:16px;" id="rating-desc">별을 눌러 점수를 선택하세요</div>
+    <textarea id="rating-comment" class="post-form-input" rows="3" placeholder="후기를 남겨주세요 (선택사항)" style="resize:none;margin-bottom:12px;"></textarea>
+    <button onclick="submitRating()" style="width:100%;background:#FF4B4B;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;">⭐ 평점 제출</button>
+    <button onclick="document.getElementById('rating-modal').classList.remove('open')" style="width:100%;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;margin-top:10px;">취소</button>
+  </div></div>
+</div>
+
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
 
@@ -823,17 +835,21 @@ async function openApplicationsModal() {
     return;
   }
 
-  const statusLabel = { pending: '검토 중', accepted: '합격', rejected: '불합격' };
+  const STATUS_LABEL = { pending:'검토 중', doc_pass:'서류합격', interview:'면접 예정', hold:'보류', accepted:'최종합격', rejected:'불합격', completed:'완료' };
+  const STATUS_CLS   = { pending:'status-pending', doc_pass:'status-doc_pass', interview:'status-interview', hold:'status-hold', accepted:'status-accepted', rejected:'status-rejected', completed:'status-accepted' };
   body.innerHTML = data.map(app => {
-    const badge = `<span class="status-badge status-${app.status}">${statusLabel[app.status] || app.status}</span>`;
+    const badge = `<span class="status-badge ${STATUS_CLS[app.status]||'status-pending'}">${STATUS_LABEL[app.status]||app.status}</span>`;
     const date = new Date(app.created_at).toLocaleDateString('ko-KR', { month:'long', day:'numeric' });
+    const canRate = (app.status === 'accepted' || app.status === 'completed') && app.biz_uid;
+    const jt = (app.title||'').replace(/'/g,"\\'");
     return `
       <div class="app-card">
         <div class="app-card-top">
-          <div><div class="app-biz">${app.biz_name || '-'}</div><div class="app-title">${app.title || '-'}</div></div>
+          <div><div class="app-biz">${app.biz_name||'-'}</div><div class="app-title">${app.title||'-'}</div></div>
           ${badge}
         </div>
         <div class="app-meta">⏰ ${app.start_time ? formatStartTime(app.start_time) : '즉시'} · ⌛ ${app.duration_hours ? app.duration_hours+'시간' : '-'} · 💰 ${(app.current_wage||0).toLocaleString()}원/시 · 지원일 ${date}</div>
+        ${canRate ? `<button onclick="showRatingModal('${app.id}','${app.biz_uid}','${app.job_id}','${jt}')" style="margin-top:8px;background:#FFF8E6;color:#F5A623;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">⭐ 업주 평점 남기기</button>` : ''}
       </div>`;
   }).join('');
 }
@@ -1013,6 +1029,69 @@ async function saveBizProfile() {
   if (ownerName) await db.auth.updateUser({ data: { full_name: ownerName } });
   document.getElementById('biz-profile-modal').classList.remove('open');
   showToast('✅ 업체 정보가 저장됐습니다.');
+}
+
+// ── 평점 시스템 ───────────────────────────────────────────────────────────────
+let ratingState = { appId: null, targetUid: null, jobId: null, stars: 0 };
+
+function showRatingModal(appId, targetUid, jobId, jobTitle) {
+  ratingState = { appId, targetUid, jobId, stars: 0 };
+  document.getElementById('rating-job-title').textContent = `⭐ ${jobTitle}`;
+  document.getElementById('rating-comment').value = '';
+  setStars(0);
+  document.getElementById('rating-modal').classList.add('open');
+}
+
+function setStars(n) {
+  ratingState.stars = n;
+  const desc = ['별을 눌러 점수를 선택하세요','별로예요','그저그래요','보통이에요','좋아요','최고예요!'];
+  document.getElementById('rating-stars').innerHTML =
+    [1,2,3,4,5].map(i =>
+      `<span onclick="setStars(${i})" style="color:${i<=n?'#FFBE00':'#ddd'};transition:color 0.1s">★</span>`
+    ).join('');
+  document.getElementById('rating-desc').textContent = desc[n];
+}
+
+function closeRatingModal(e) {
+  if (e.target === document.getElementById('rating-modal'))
+    document.getElementById('rating-modal').classList.remove('open');
+}
+
+async function submitRating() {
+  if (!ratingState.stars) { showToast('⚠️ 별점을 선택해주세요.'); return; }
+  const comment = document.getElementById('rating-comment').value.trim();
+  const { error } = await db.from('reviews').insert({
+    reviewer_id: currentUserId,
+    reviewee_id: ratingState.targetUid,
+    reviewer_role: currentRole,
+    rating: ratingState.stars,
+    comment: comment || null,
+    job_posting_id: ratingState.jobId,
+  });
+  if (error) { showToast('제출 실패: ' + error.message); return; }
+  document.getElementById('rating-modal').classList.remove('open');
+  showToast('⭐ 평점이 제출됐습니다. 감사합니다!');
+  openApplicationsModal();
+}
+
+// ── Realtime 알림 (지원 상태 변경) ────────────────────────────────────────────
+function subscribeApplicationUpdates(workerId) {
+  if (!workerId) return;
+  const STATUS_MSG = {
+    doc_pass:  '📄 서류합격 통보가 왔습니다!',
+    interview: '📅 면접 예정 안내가 왔습니다!',
+    accepted:  '🎉 최종합격입니다! 축하합니다!',
+    hold:      '⏸ 보류 처리됐습니다.',
+    rejected:  '😢 아쉽게도 불합격 처리됐습니다.',
+  };
+  db.channel('worker-app-updates')
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'applications',
+      filter: `worker_id=eq.${workerId}`
+    }, payload => {
+      const msg = STATUS_MSG[payload.new?.status];
+      if (msg) showToast(msg);
+    }).subscribe();
 }
 
 function elapsedLabel(isoStr) {
@@ -1266,6 +1345,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     userLng = pos.lng;
   }
 
+  // 자동 시급 서지 적용 (비동기, 결과 기다리지 않음)
+  db.rpc('apply_auto_surge').then(({ data }) => {
+    if (data > 0) console.log(`[서지] ${data}개 공고 시급 자동 인상`);
+  });
+
   const dbJobs = await loadJobsFromDB(userLat, userLng);
   currentJobs = dbJobs || JOBS;
   initMap(currentJobs, userLat, userLng);
@@ -1274,6 +1358,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   else        showToast('📋 샘플 데이터로 표시 중');
 
   subscribeRealtime();
+
+  // 알바생이면 지원 상태 변경 Realtime 알림 구독
+  if (currentRole === 'worker') {
+    const { data: wData } = await db.from('workers').select('id').eq('kakao_uid', currentUserId).maybeSingle();
+    if (wData) subscribeApplicationUpdates(wData.id);
+  }
+
+  // 5분마다 자동 서지 재적용
+  setInterval(() => db.rpc('apply_auto_surge'), 5 * 60 * 1000);
 });
 </script>
 </body>
