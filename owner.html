@@ -282,12 +282,7 @@
         <div class="form-group">
           <label class="form-label">업종 *</label>
           <select class="form-select" id="f-category">
-            <option value="F&B">☕ F&B</option>
-            <option value="물류">📦 물류</option>
-            <option value="판매">🛍 판매</option>
-            <option value="청소">🧹 청소</option>
-            <option value="이벤트">🎉 이벤트</option>
-            <option value="기타">기타</option>
+            <option value="">불러오는 중...</option>
           </select>
         </div>
         <div class="form-group">
@@ -439,6 +434,35 @@
       <button onclick="logout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🚪 로그아웃</button>
       <div style="height:1px;background:#f0f0f0"></div>
       <button onclick="deleteOwnerAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
+
+      <!-- 어드민 전용: 업종 카테고리 관리 -->
+      <div id="admin-cat-section" style="display:none;border-top:1px solid #f0f0f0;padding-top:12px">
+        <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px">🔧 어드민 — 업종 카테고리 관리</div>
+        <div id="admin-cat-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="admin-cat-icon" type="text" placeholder="아이콘" style="width:48px;padding:10px;border:1.5px solid #eee;border-radius:10px;font-size:16px;text-align:center;outline:none">
+          <input id="admin-cat-name" type="text" placeholder="카테고리명" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none">
+          <button onclick="addCategory()" style="padding:10px 16px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 공유 모달 -->
+<div class="modal-overlay" id="share-overlay" onclick="if(event.target===this)this.classList.remove('open')" style="z-index:600">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">공고 공유하기</div>
+      <button onclick="document.getElementById('share-overlay').classList.remove('open')" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:13px;color:#555;word-break:break-all" id="share-url-text">-</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="copyShareUrl()" style="flex:1;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">📋 링크 복사</button>
+        <button onclick="shareKakao()" style="flex:1;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">💬 카카오톡</button>
+      </div>
+      <button onclick="shareNative()" id="share-native-btn" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">↗ 더 보내기 (SNS/문자)</button>
     </div>
   </div>
 </div>
@@ -460,6 +484,7 @@ let editingId = null;
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   buildTimeSelects();
+  loadCategories();
   const { data: { session } } = await db.auth.getSession();
   if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
@@ -856,7 +881,6 @@ async function submitPosting() {
     duration_hours: duration,
     needed_count: needed || 1,
     start_time: startTime ? startTime.toISOString() : null,
-    end_time: endTime ? endTime.toISOString() : null,
     status: surgeEnabled ? 'urgent' : 'open',
     surge_enabled:      surgeEnabled,
     surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
@@ -878,9 +902,16 @@ async function submitPosting() {
   btn.textContent = editingId ? '수정 완료' : '공고 등록하기';
 
   if (error) { showToast('오류: ' + error.message); return; }
-  showToast(editingId ? '✅ 공고가 수정됐습니다' : '✅ 공고가 등록됐습니다');
   closePostingForm();
   loadPostings();
+  if (!editingId) {
+    // 새 공고 등록 시 공유 모달 (DB에서 방금 등록된 id 조회)
+    const { data: fresh } = await db.from('job_postings')
+      .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
+    openShareModal(fresh?.id);
+  } else {
+    showToast('✅ 공고가 수정됐습니다');
+  }
 }
 
 // ── 번개 알바 토글 ────────────────────────────────────────
@@ -939,11 +970,117 @@ function setNav(el, tab) {
   else showToast('준비 중입니다');
 }
 
+// ── 공유 ───────────────────────────────────────────────────
+let _shareJobId = null;
+
+function openShareModal(jobId) {
+  _shareJobId = jobId;
+  const base = 'https://baroalba.multimove.co.kr/바로알바.html';
+  const url = jobId ? `${base}?job=${jobId}` : base;
+  document.getElementById('share-url-text').textContent = url;
+  document.getElementById('share-native-btn').style.display = navigator.share ? 'block' : 'none';
+  document.getElementById('share-overlay').classList.add('open');
+  showToast('✅ 공고가 등록됐습니다');
+}
+
+function copyShareUrl() {
+  const url = document.getElementById('share-url-text').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('✅ 링크가 복사됐습니다'));
+}
+
+function shareKakao() {
+  const url = document.getElementById('share-url-text').textContent;
+  const kakaoWebShare = `https://story.kakao.com/share?url=${encodeURIComponent(url)}`;
+  window.open(kakaoWebShare, '_blank', 'width=500,height=600');
+}
+
+function shareNative() {
+  const url = document.getElementById('share-url-text').textContent;
+  if (navigator.share) {
+    navigator.share({ title: '바로알바 공고', text: '지금 바로 지원하세요!', url });
+  }
+}
+
+// ── 카테고리 ───────────────────────────────────────────────
+const DEFAULT_CATEGORIES = [
+  { name:'F&B',     icon:'☕', display_order:1 },
+  { name:'물류',    icon:'📦', display_order:2 },
+  { name:'판매',    icon:'🛍', display_order:3 },
+  { name:'청소',    icon:'🧹', display_order:4 },
+  { name:'이벤트',  icon:'🎉', display_order:5 },
+  { name:'커플알바',icon:'💑', display_order:6 },
+  { name:'컨텐츠',  icon:'📱', display_order:7 },
+  { name:'챌린지',  icon:'🏆', display_order:8 },
+  { name:'뷰티/헤어',icon:'💅',display_order:9 },
+  { name:'유튜브/틱톡',icon:'🎬',display_order:10 },
+  { name:'모델/촬영',icon:'📸',display_order:11 },
+  { name:'기타',    icon:'📋', display_order:99 },
+];
+let categories = [...DEFAULT_CATEGORIES];
+
+async function loadCategories() {
+  try {
+    const { data, error } = await db.from('job_categories').select('*').eq('active', true).order('display_order');
+    if (!error && data?.length) categories = data;
+  } catch(e) { /* fallback to defaults */ }
+  renderCategorySelect();
+}
+
+function renderCategorySelect() {
+  const sel = document.getElementById('f-category');
+  const prev = sel.value;
+  sel.innerHTML = categories.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
+  if (prev && categories.find(c => c.name === prev)) sel.value = prev;
+}
+
+function renderAdminCatList() {
+  const list = document.getElementById('admin-cat-list');
+  if (!list) return;
+  list.innerHTML = categories.map((c, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px">
+      <span style="font-size:18px">${c.icon}</span>
+      <span style="flex:1;font-size:14px;font-weight:700">${c.name}</span>
+      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+    </div>`).join('');
+}
+
+async function addCategory() {
+  const icon = document.getElementById('admin-cat-icon').value.trim() || '📋';
+  const name = document.getElementById('admin-cat-name').value.trim();
+  if (!name) { showToast('카테고리명을 입력해주세요'); return; }
+  if (categories.find(c => c.name === name)) { showToast('이미 있는 카테고리예요'); return; }
+
+  const newOrder = Math.max(...categories.map(c => c.display_order || 0)) + 1;
+  const { error } = await db.from('job_categories').insert({ name, icon, display_order: newOrder, active: true });
+  if (error) {
+    // 테이블 없으면 로컬에만 추가
+    categories.push({ name, icon, display_order: newOrder });
+  } else {
+    categories.push({ name, icon, display_order: newOrder });
+  }
+  document.getElementById('admin-cat-icon').value = '';
+  document.getElementById('admin-cat-name').value = '';
+  renderCategorySelect();
+  renderAdminCatList();
+  showToast(`✅ '${name}' 추가됨`);
+}
+
+async function deleteCategory(name) {
+  if (!confirm(`'${name}' 카테고리를 삭제할까요?`)) return;
+  await db.from('job_categories').update({ active: false }).eq('name', name);
+  categories = categories.filter(c => c.name !== name);
+  renderCategorySelect();
+  renderAdminCatList();
+}
+
 function openOwnerSettings() {
   if (currentUser) {
     const meta = currentUser.user_metadata || {};
     document.getElementById('settings-name').textContent = bizRecord?.name || meta.full_name || '업주';
     document.getElementById('settings-email').textContent = currentUser.email || '';
+    const isAdmin = currentUser.email === 'nicepkw@gmail.com';
+    document.getElementById('admin-cat-section').style.display = isAdmin ? 'block' : 'none';
+    if (isAdmin) renderAdminCatList();
   }
   document.getElementById('settings-overlay').classList.add('open');
 }

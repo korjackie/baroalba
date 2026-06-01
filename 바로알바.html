@@ -763,7 +763,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   initMap();
   setupSheet();
   setupSearch();
-  loadJobs();
+  loadCategoriesWorker();
+  loadJobs().then(() => {
+    const jobId = new URLSearchParams(location.search).get('job');
+    if (jobId) {
+      const found = jobs.find(j => j.id === jobId || String(j.id) === jobId);
+      if (found) openDetail(found.id);
+      else showToast('해당 공고를 찾을 수 없어요');
+    }
+  });
   setupRealtime();
 });
 
@@ -789,6 +797,29 @@ function initMap() {
 }
 
 // ── 공고 불러오기 ─────────────────────────────────────────
+async function loadCategoriesWorker() {
+  try {
+    const { data } = await db.from('job_categories').select('name,icon').eq('active', true).order('display_order');
+    if (!data?.length) return;
+    const row = document.getElementById('filter-row');
+    if (!row) return;
+    // 전체 + 급구만 칩은 유지하고 중간 카테고리 칩을 교체
+    const allChip = row.querySelector('[data-cat=""]');
+    const urgentChip = row.querySelector('[data-urgent]');
+    // 기존 카테고리 칩 제거 (전체, 급구만 제외)
+    row.querySelectorAll('.chip:not([data-urgent])').forEach(c => { if (c !== allChip) c.remove(); });
+    // 새 칩 삽입 (urgentChip 앞에)
+    data.forEach(cat => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.dataset.cat = cat.name;
+      chip.textContent = `${cat.icon} ${cat.name}`;
+      chip.onclick = () => setCategory(chip, cat.name);
+      row.insertBefore(chip, urgentChip);
+    });
+  } catch(e) { /* keep hardcoded chips */ }
+}
+
 async function loadJobs() {
   try {
     const { data, error } = await db.rpc('nearby_jobs', {
