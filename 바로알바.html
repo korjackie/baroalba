@@ -709,7 +709,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     profileNav.querySelector('.nav-label').textContent = '로그인';
     profileNav.querySelector('.nav-label').style.color = 'var(--red)';
   } else {
-    location.href = '/login.html';
+    goToLogin();
     return;
   }
 
@@ -898,7 +898,7 @@ function closeDetail(e) {
 async function applyJob() {
   if (isGuest) {
     showToast('로그인 후 지원할 수 있어요');
-    setTimeout(() => location.href = '/login.html', 1500);
+    setTimeout(() => goToLogin(), 1500);
     return;
   }
   if (!currentUser) { showToast('로그인이 필요합니다'); return; }
@@ -1126,6 +1126,11 @@ function openProfile() {
 function closeProfileIfBg(e) {
   if (e.target === document.getElementById('profile-overlay'))
     document.getElementById('profile-overlay').classList.remove('open');
+}
+
+function goToLogin() {
+  localStorage.removeItem('baroalba_guest');
+  location.href = '/login.html';
 }
 
 async function doLogout() {
