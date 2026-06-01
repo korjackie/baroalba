@@ -361,6 +361,11 @@
       <span style="background:rgba(255,255,255,0.25);color:#fff;font-size:11px;font-weight:800;padding:5px 12px;border-radius:20px;white-space:nowrap;">🔥 급구</span>
       <span style="background:rgba(255,255,255,0.25);color:#fff;font-size:11px;font-weight:800;padding:5px 12px;border-radius:20px;white-space:nowrap;">⚡ 번개알바</span>
     </div>
+
+    <!-- PWA 설치 버튼 -->
+    <button id="install-btn" onclick="triggerInstall()" style="display:none;margin-top:16px;padding:10px 24px;background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.5);border-radius:24px;font-size:13px;font-weight:800;cursor:pointer;backdrop-filter:blur(8px);letter-spacing:0.3px">
+      📲 앱으로 설치하기
+    </button>
   </div>
 
   <div class="card">
@@ -754,6 +759,28 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   document.getElementById('tab-login').classList.contains('active') ? loginEmail() : signupEmail();
 });
+
+// ── PWA 설치 ──────────────────────────────────────────────
+let _installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  if (!localStorage.getItem('pwa_install_dismissed')) {
+    document.getElementById('install-btn').style.display = 'inline-block';
+  }
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-btn').style.display = 'none';
+  _installPrompt = null;
+});
+function triggerInstall() {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  _installPrompt.userChoice.then(c => {
+    if (c.outcome === 'accepted') document.getElementById('install-btn').style.display = 'none';
+    _installPrompt = null;
+  });
+}
 </script>
 </body>
 </html>
