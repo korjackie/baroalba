@@ -193,6 +193,22 @@
     .name-row { display: flex; gap: 10px; }
     .name-row .form-group { flex: 1; }
 
+    /* 회원가입 역할 선택 */
+    .signup-role-row { display: flex; gap: 10px; margin-bottom: 14px; }
+    .signup-role-card {
+      flex: 1;
+      padding: 14px 10px;
+      border: 2px solid #eee;
+      border-radius: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .signup-role-card.selected { border-color: var(--red); background: #FFF5F5; }
+    .signup-role-card .role-icon { font-size: 28px; margin-bottom: 4px; }
+    .signup-role-card .role-name { font-size: 14px; font-weight: 800; color: #222; }
+    .signup-role-card .role-desc { font-size: 11px; color: #888; margin-top: 2px; }
+
     /* ── 제출 버튼 ── */
     .submit-btn {
       width: 100%;
@@ -389,6 +405,21 @@
 
     <!-- ── 회원가입 폼 ── -->
     <div id="form-signup" style="display:none">
+      <!-- 역할 선택 -->
+      <div class="form-label" style="margin-bottom:8px;">나는 어떤 역할인가요? *</div>
+      <div class="signup-role-row">
+        <div class="signup-role-card" id="signup-role-worker" onclick="selectSignupRole('worker')">
+          <div class="role-icon">💼</div>
+          <div class="role-name">알바생</div>
+          <div class="role-desc">알바 찾기</div>
+        </div>
+        <div class="signup-role-card" id="signup-role-business" onclick="selectSignupRole('business')">
+          <div class="role-icon">🏪</div>
+          <div class="role-name">업주</div>
+          <div class="role-desc">직원 구하기</div>
+        </div>
+      </div>
+
       <div class="name-row">
         <div class="form-group">
           <label class="form-label">이름</label>
@@ -405,7 +436,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">비밀번호</label>
-        <input class="form-input" id="signup-pw" type="password" placeholder="8자 이상" autocomplete="new-password">
+        <input class="form-input" id="signup-pw" type="password" placeholder="6자 이상" autocomplete="new-password">
       </div>
       <button class="submit-btn" onclick="signupEmail()">회원가입</button>
     </div>
@@ -470,6 +501,13 @@ const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
 
 let selectedRole = null;
+let selectedSignupRole = null;
+
+function selectSignupRole(role) {
+  selectedSignupRole = role;
+  document.getElementById('signup-role-worker').classList.toggle('selected', role === 'worker');
+  document.getElementById('signup-role-business').classList.toggle('selected', role === 'business');
+}
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 db.auth.onAuthStateChange(async (event, session) => {
@@ -549,12 +587,13 @@ async function signupEmail() {
   const phone = document.getElementById('signup-phone').value.trim();
   const email = document.getElementById('signup-email').value.trim();
   const pw    = document.getElementById('signup-pw').value;
+  if (!selectedSignupRole) { showError('알바생 또는 업주를 선택해주세요.'); return; }
   if (!name || !email || !pw) { showError('이름, 이메일, 비밀번호는 필수입니다.'); return; }
   if (pw.length < 6) { showError('비밀번호는 6자 이상이어야 합니다.'); return; }
   showLoading('회원가입 중...');
   const { error } = await db.auth.signUp({
     email, password: pw,
-    options: { data: { full_name: name, phone } }
+    options: { data: { full_name: name, phone, baroalba_role: selectedSignupRole } }
   });
   if (error) {
     hideLoading();
@@ -612,7 +651,7 @@ async function confirmRole() {
 
 // ── 헬퍼 ──────────────────────────────────────────────────
 function getRedirectUrl() {
-  return window.location.href.replace('login.html', '바로알바.html').split('?')[0];
+  return window.location.origin + '/app.html';
 }
 function goToApp() { window.location.href = './바로알바.html'; }
 
