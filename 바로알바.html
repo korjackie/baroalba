@@ -11,16 +11,8 @@
 
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- 카카오맵 SDK: Promise로 로드 완료 감지 (autoload=false 미사용) -->
-  <script>
-    window.__kakaoPromise = new Promise(function(resolve, reject) {
-      var s = document.createElement('script');
-      s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + APP_CONFIG.KAKAO_JS_KEY + '&libraries=services,clusterer';
-      s.onload  = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  </script>
+  <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
+  <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -659,24 +651,8 @@ let sheetState = 'peek'; // peek | half | full
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-  // 세션 확인 + 카카오 SDK 로드를 동시에 기다림
-  let session;
-  try {
-    const [authResult] = await Promise.all([
-      db.auth.getSession(),
-      window.__kakaoPromise
-    ]);
-    session = authResult.data.session;
-  } catch(e) {
-    const msg = (e && (e.message || e.toString())) || '알 수 없는 오류';
-    document.getElementById('map-loading').innerHTML =
-      '<div style="text-align:center;padding:20px">'
-      + '<div style="color:#FF4B4B;font-weight:700;margin-bottom:8px">지도 로딩 실패</div>'
-      + '<div style="color:#666;font-size:12px;word-break:break-all">' + msg + '</div>'
-      + '</div>';
-    console.error('Map init error:', e);
-    return;
-  }
+  // 세션 확인 (카카오 SDK는 동기 로드이므로 이미 준비됨)
+  const { data: { session } } = await db.auth.getSession();
 
   if (session) {
     currentUser = session.user;
@@ -688,7 +664,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // SDK 로드 완료 → kakao.maps 바로 사용 가능 (autoload=false 미사용)
   initMap();
   setupSheet();
   setupSearch();
