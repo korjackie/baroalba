@@ -526,6 +526,7 @@ db.auth.onAuthStateChange(async (event, session) => {
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
   if (window.Kakao && APP_CONFIG.KAKAO_JS_KEY && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
+  initNaverLogin();
 
   // 이미 세션 있으면 앱으로
   const { data: { session } } = await db.auth.getSession();
@@ -563,9 +564,63 @@ async function loginGoogle() {
   if (error) { hideLoading(); showError('구글 로그인 실패: ' + error.message); }
 }
 
-// ── 네이버 로그인 (Supabase 기본 미지원 → 추후 설정) ────────
+// ── 네이버 로그인 ─────────────────────────────────────────
+let naverLoginObj = null;
+
+function initNaverLogin() {
+  if (!APP_CONFIG.NAVER_CLIENT_ID || !window.naver) return;
+  naverLoginObj = new naver.LoginWithNaverId({
+    clientId: APP_CONFIG.NAVER_CLIENT_ID,
+    callbackUrl: 'https://baroalba.multimove.co.kr/login.html',
+    isPopup: false,
+    loginButton: { color: 'green', type: 3, height: 60 }
+  });
+  naverLoginObj.init();
+
+  // 네이버 OAuth 콜백 처리 (URL 해시에 access_token 포함)
+  if (window.location.hash.includes('access_token')) {
+    showLoading('네이버 로그인 중...');
+    naverLoginObj.getLoginStatus(async function(status) {
+      if (!status) { hideLoading(); showError('네이버 로그인에 실패했습니다.'); return; }
+      await handleNaverUser();
+    });
+  }
+}
+
+async function handleNaverUser() {
+  try {
+    const user = naverLoginObj.user;
+    const naverId  = user.getId();
+    const name     = user.getName()     || '네이버사용자';
+    const email    = user.getEmail()    || `${naverId}@naver-baroalba.local`;
+    const phone    = user.getMobile()   || '';
+
+    // Supabase에 네이버 전용 패스워드로 로그인 시도 → 없으면 가입
+    const syntheticPw = `naver_${naverId}_baroalba`;
+    const { error: signInErr } = await db.auth.signInWithPassword({ email, password: syntheticPw });
+
+    if (signInErr) {
+      // 신규 가입
+      const { error: signUpErr } = await db.auth.signUp({
+        email,
+        password: syntheticPw,
+        options: { data: { full_name: name, phone, provider: 'naver', naver_id: naverId } }
+      });
+      if (signUpErr) { hideLoading(); showError('네이버 로그인 실패: ' + signUpErr.message); return; }
+      // 가입 후 다시 로그인
+      await db.auth.signInWithPassword({ email, password: syntheticPw });
+    }
+    // onAuthStateChange 가 이후 처리
+  } catch(e) {
+    hideLoading();
+    showError('네이버 로그인 오류: ' + e.message);
+  }
+}
+
 function loginNaver() {
-  showToastMsg('네이버 로그인 설정 후 이용 가능합니다. 이메일로 가입해주세요.');
+  if (!naverLoginObj) { showToastMsg('네이버 로그인을 초기화 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+  naverLoginObj.logout(); // 이전 세션 정리
+  document.getElementById('naverIdLogin').querySelector('a')?.click();
 }
 
 // ── 이메일 로그인 ──────────────────────────────────────────

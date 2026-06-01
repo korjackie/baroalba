@@ -13,7 +13,7 @@ const APP_CONFIG = {
   // ── SNS OAuth ────────────────────────────────────────────
   // (Supabase Auth 설정 후 여기는 비워도 됩니다 — Supabase가 처리)
   KAKAO_JS_KEY:     'ffcea2fab508898c168f043100b4d550',   // developers.kakao.com → JavaScript 키
-  NAVER_CLIENT_ID:  '',   // developers.naver.com → Client ID
+  NAVER_CLIENT_ID:  '9DotifcIhyF4lq8bQLU9',   // developers.naver.com → Client ID
   GOOGLE_CLIENT_ID: '',   // console.cloud.google.com → OAuth 클라이언트 ID
 
   // ── 앱 설정 ───────────────────────────────────────────────
