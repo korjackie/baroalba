@@ -226,8 +226,17 @@
       <button class="review-close" onclick="document.getElementById('account-overlay').classList.remove('open')">✕</button>
     </div>
     <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+      <button onclick="showChangePw()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🔑 비밀번호 변경</button>
       <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🚪 로그아웃</button>
+      <div style="height:1px;background:#f0f0f0;margin:4px 0"></div>
       <button onclick="deleteAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
+      <!-- 비밀번호 변경 폼 (이메일 로그인만) -->
+      <div id="change-pw-form" style="display:none;margin-top:4px;padding:14px;background:#f8f8f8;border-radius:14px;">
+        <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px">새 비밀번호</div>
+        <input id="new-pw" type="password" placeholder="6자 이상" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none">
+        <input id="new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none">
+        <button onclick="submitChangePw()" style="width:100%;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+      </div>
     </div>
   </div>
 </div>
@@ -451,7 +460,26 @@ async function deleteAccount() {
 }
 
 function showAccountMenu() {
+  document.getElementById('change-pw-form').style.display = 'none';
   document.getElementById('account-overlay').classList.add('open');
+}
+
+function showChangePw() {
+  const form = document.getElementById('change-pw-form');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitChangePw() {
+  const pw  = document.getElementById('new-pw').value;
+  const pw2 = document.getElementById('new-pw2').value;
+  if (pw.length < 6) { showToast('비밀번호는 6자 이상이어야 합니다'); return; }
+  if (pw !== pw2)    { showToast('비밀번호가 일치하지 않습니다'); return; }
+
+  const { error } = await db.auth.updateUser({ password: pw });
+  if (error) { showToast('변경 실패: ' + error.message); return; }
+  showToast('✅ 비밀번호가 변경됐습니다');
+  document.getElementById('change-pw-form').style.display = 'none';
+  document.getElementById('account-overlay').classList.remove('open');
 }
 
 let toastTimer;
