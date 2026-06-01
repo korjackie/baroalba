@@ -557,6 +557,7 @@ function renderPostings() {
             ⚡ 시급 +1,000원
           </button>
         ` : ''}
+        <button class="edit-btn" onclick="openShareModal('${p.id}')">공유</button>
         <button class="edit-btn" onclick="openEditForm('${p.id}')">수정</button>
         <button class="toggle-btn ${isOpen?'close':'open'}" onclick="toggleStatus('${p.id}','${p.status}')">
           ${isOpen ? '마감' : '재오픈'}
