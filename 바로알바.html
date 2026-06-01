@@ -686,9 +686,19 @@
           </button>
         </div>
 
-        <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">
-          로그아웃
-        </button>
+        <!-- 비밀번호 변경 (이메일 로그인 전용) -->
+        <div id="profile-pw-section" style="display:none;margin-bottom:10px">
+          <button onclick="toggleProfilePwForm()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🔑 비밀번호 변경</button>
+          <div id="profile-pw-form" style="display:none;margin-top:8px;padding:14px;background:#f8f8f8;border-radius:14px">
+            <input id="profile-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box">
+            <input id="profile-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+            <button onclick="submitProfilePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+          </div>
+        </div>
+
+        <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">🚪 로그아웃</button>
+        <div style="height:1px;background:#f0f0f0;margin-bottom:10px"></div>
+        <button onclick="deleteUserAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
       </div>
 
       <!-- 게스트/비로그인 상태 -->
@@ -1091,21 +1101,47 @@ function setSheetState(state) {
   sheetState = state;
 }
 
-// ── 검색 ──────────────────────────────────────────────────
+// ── 검색 (위치 검색 + 공고 텍스트 필터 통합) ─────────────
 function setupSearch() {
   const input = document.getElementById('search-input');
   let timer;
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      clearTimeout(timer);
+      searchLocation(input.value.trim());
+    }
+  });
+
   input.addEventListener('input', () => {
     clearTimeout(timer);
+    const q = input.value.trim();
+    if (!q) { renderList(); return; }
     timer = setTimeout(() => {
-      const q = input.value.trim();
-      if (!q) { renderList(); return; }
       const filtered = jobs.filter(j =>
         j.title.includes(q) || j.biz_name.includes(q) || j.category.includes(q)
       );
       renderFilteredList(filtered);
-    }, 300);
+    }, 400);
   });
+}
+
+async function searchLocation(q) {
+  if (!q) return;
+  try {
+    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    if (!res.ok || !data.items?.length) { showToast('검색 결과가 없어요'); return; }
+    const first = data.items[0];
+    mapCenter = { lat: first.lat, lng: first.lng };
+    kakaoMap.setCenter(new kakao.maps.LatLng(first.lat, first.lng));
+    kakaoMap.setLevel(5);
+    showToast(`📍 ${first.title} 근처로 이동`);
+    document.getElementById('search-input').blur();
+    loadJobs();
+  } catch(e) {
+    showToast('검색 중 오류가 발생했어요');
+  }
 }
 
 function renderFilteredList(filtered) {
@@ -1325,10 +1361,13 @@ function openProfile() {
   if (currentUser) {
     const meta = currentUser.user_metadata || {};
     const role = meta.baroalba_role;
+    const provider = currentUser.app_metadata?.provider || '';
     document.getElementById('profile-name').textContent = meta.full_name || currentUser.email?.split('@')[0] || '사용자';
     document.getElementById('profile-email').textContent = currentUser.email || '';
     document.getElementById('profile-role').textContent = role === 'business' ? '🏪 업주' : '💼 알바생';
     document.getElementById('profile-biz-btn').style.display = role === 'business' ? 'block' : 'none';
+    document.getElementById('profile-pw-section').style.display = provider === 'email' ? 'block' : 'none';
+    document.getElementById('profile-pw-form').style.display = 'none';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
   } else {
@@ -1341,6 +1380,35 @@ function openProfile() {
 function closeProfileIfBg(e) {
   if (e.target === document.getElementById('profile-overlay'))
     document.getElementById('profile-overlay').classList.remove('open');
+}
+
+function toggleProfilePwForm() {
+  const f = document.getElementById('profile-pw-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitProfilePw() {
+  const pw  = document.getElementById('profile-new-pw').value;
+  const pw2 = document.getElementById('profile-new-pw2').value;
+  if (pw.length < 6) { showToast('비밀번호는 6자 이상이어야 해요'); return; }
+  if (pw !== pw2)    { showToast('비밀번호가 일치하지 않아요'); return; }
+  const { error } = await db.auth.updateUser({ password: pw });
+  if (error) { showToast('변경 실패: ' + error.message); return; }
+  showToast('✅ 비밀번호가 변경됐어요');
+  document.getElementById('profile-pw-form').style.display = 'none';
+  document.getElementById('profile-new-pw').value = '';
+  document.getElementById('profile-new-pw2').value = '';
+}
+
+async function deleteUserAccount() {
+  if (!confirm('정말 탈퇴하시겠어요? 지원 이력 등 모든 데이터가 삭제됩니다.')) return;
+  const uid = currentUser?.id;
+  if (!uid) return;
+  const { error } = await db.rpc('delete_user_account', { uid });
+  if (error) { showToast('탈퇴 실패: ' + error.message); return; }
+  await db.auth.signOut();
+  localStorage.removeItem('baroalba_guest');
+  location.href = '/login.html';
 }
 
 function goToLogin() {
