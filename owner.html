@@ -312,6 +312,48 @@
         <input class="form-input" id="f-start" type="datetime-local">
       </div>
 
+      <!-- ⚡ 번개 알바 설정 -->
+      <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#FFFBF0;border:1.5px solid #FFE082;border-radius:14px;cursor:pointer" onclick="toggleSurge()">
+          <div>
+            <div style="font-size:14px;font-weight:800;color:#E65100">⚡ 번개 알바 모드</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">미충원 시 시급 자동 인상 예고 — 알바생 긴장감 ↑</div>
+          </div>
+          <div id="surge-toggle" style="width:44px;height:24px;background:#ddd;border-radius:12px;position:relative;transition:background 0.2s">
+            <div style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:left 0.2s" id="surge-knob"></div>
+          </div>
+        </div>
+        <input type="hidden" id="f-surge-enabled" value="false">
+
+        <div id="surge-settings" style="display:none;margin-top:10px;background:#f8f8f8;border-radius:14px;padding:14px;display:none">
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-group">
+              <label class="form-label">최대 시급 (원)</label>
+              <input class="form-input" id="f-surge-max" type="number" placeholder="15000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">인상 금액</label>
+              <select class="form-select" id="f-surge-amount">
+                <option value="500">+500원</option>
+                <option value="1000" selected>+1,000원</option>
+                <option value="2000">+2,000원</option>
+                <option value="3000">+3,000원</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">인상 주기</label>
+            <select class="form-select" id="f-surge-interval">
+              <option value="10">10분마다</option>
+              <option value="15">15분마다</option>
+              <option value="30" selected>30분마다</option>
+              <option value="60">1시간마다</option>
+            </select>
+          </div>
+          <div style="font-size:11px;color:#FF9500;font-weight:600;margin-top:8px" id="surge-preview"></div>
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">위치 *</label>
 
@@ -630,6 +672,13 @@ function openPostingForm() {
 
   document.getElementById('naver-url-status').style.display = 'none';
   document.getElementById('f-naver-url-input').value = '';
+  // surge 초기화
+  surgeOn = false;
+  document.getElementById('f-surge-enabled').value = 'false';
+  document.getElementById('surge-toggle').style.background = '#ddd';
+  document.getElementById('surge-knob').style.left = '2px';
+  document.getElementById('surge-settings').style.display = 'none';
+  document.getElementById('surge-preview').textContent = '';
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -774,6 +823,11 @@ async function submitPosting() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = '처리 중...';
 
+  const surgeEnabled  = document.getElementById('f-surge-enabled').value === 'true';
+  const surgeMax      = parseInt(document.getElementById('f-surge-max').value) || null;
+  const surgeAmount   = parseInt(document.getElementById('f-surge-amount').value) || 1000;
+  const surgeInterval = parseInt(document.getElementById('f-surge-interval').value) || 30;
+
   const payload = {
     business_id: bizRecord.id,
     title, category, description: desc,
@@ -783,7 +837,11 @@ async function submitPosting() {
     duration_hours: duration || null,
     needed_count: needed || 1,
     start_time: startVal ? new Date(startVal).toISOString() : null,
-    status: 'open',
+    status: surgeEnabled ? 'urgent' : 'open',
+    surge_enabled:      surgeEnabled,
+    surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
+    surge_amount:       surgeEnabled ? surgeAmount : null,
+    surge_interval_min: surgeEnabled ? surgeInterval : null,
   };
 
   let error;
@@ -803,6 +861,32 @@ async function submitPosting() {
   showToast(editingId ? '✅ 공고가 수정됐습니다' : '✅ 공고가 등록됐습니다');
   closePostingForm();
   loadPostings();
+}
+
+// ── 번개 알바 토글 ────────────────────────────────────────
+let surgeOn = false;
+function toggleSurge() {
+  surgeOn = !surgeOn;
+  document.getElementById('f-surge-enabled').value = surgeOn;
+  const knob    = document.getElementById('surge-knob');
+  const toggle  = document.getElementById('surge-toggle');
+  const settings = document.getElementById('surge-settings');
+  toggle.style.background  = surgeOn ? '#FF9500' : '#ddd';
+  knob.style.left          = surgeOn ? '22px' : '2px';
+  settings.style.display   = surgeOn ? 'block' : 'none';
+  updateSurgePreview();
+}
+
+function updateSurgePreview() {
+  const wage     = parseInt(document.getElementById('f-wage').value) || 0;
+  const max      = parseInt(document.getElementById('f-surge-max').value) || 0;
+  const amount   = parseInt(document.getElementById('f-surge-amount').value) || 1000;
+  const interval = parseInt(document.getElementById('f-surge-interval').value) || 30;
+  if (!wage) return;
+  const steps    = max ? Math.floor((max - wage) / amount) : 3;
+  const maxWage  = max || wage + amount * 3;
+  document.getElementById('surge-preview').textContent =
+    `${interval}분마다 +${amount.toLocaleString()}원 → 최대 ${maxWage.toLocaleString()}원 (최대 ${steps}회 인상)`;
 }
 
 // ── Realtime ──────────────────────────────────────────────

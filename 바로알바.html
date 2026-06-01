@@ -478,6 +478,18 @@
     }
 
     /* ── 빈 상태 ── */
+    /* ── 번개 타이머 ── */
+    .surge-timer {
+      display:flex; align-items:center; justify-content:space-between;
+      background:linear-gradient(90deg,#FFF3E0,#FFF8F0);
+      border:1px solid #FFE082; border-radius:10px;
+      padding:7px 12px; margin-bottom:8px; font-size:12px;
+    }
+    .surge-timer-label { font-weight:700; color:#E65100; }
+    .surge-timer-bar-wrap { flex:1; height:5px; background:#eee; border-radius:3px; margin:0 10px; overflow:hidden; }
+    .surge-timer-bar { height:100%; background:linear-gradient(90deg,#FF9500,#FFB300); border-radius:3px; transition:width 1s linear; }
+    .surge-timer-count { font-weight:900; color:#FF6F00; font-size:13px; min-width:45px; text-align:right; }
+
     .empty-state {
       text-align: center;
       padding: 32px 20px;
@@ -837,6 +849,8 @@ function renderList() {
     return;
   }
 
+  surgeTimerHandles.forEach(h => clearInterval(h));
+  surgeTimerHandles = [];
   list.innerHTML = jobs.map(job => {
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
@@ -845,6 +859,8 @@ function renderList() {
       ? Math.round(job.distance_m) + 'm'
       : (job.distance_m/1000).toFixed(1) + 'km';
     const startStr = job.start_time ? formatTime(job.start_time) : '미정';
+
+    const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
 
     return `
     <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')">
@@ -856,13 +872,16 @@ function renderList() {
         <div class="card-right">
           <div class="card-wage">${job.current_wage.toLocaleString()}원</div>
           ${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}
+          ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">최대 ${job.surge_max_wage.toLocaleString()}원</div>` : ''}
         </div>
       </div>
+      ${surgeTimer}
       <div class="card-tags">
         ${isUrgent ? '<span class="tag urgent-tag">🔥 급구</span>' : ''}
+        ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500">⚡ 번개</span>' : ''}
         <span class="tag ${catClass}">${job.category}</span>
-        <span class="tag">${job.duration_hours}시간</span>
-        ${job.needed_count - job.filled_count > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
+        <span class="tag">${job.duration_hours ?? '-'}시간</span>
+        ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
       </div>
       <div class="card-meta">
         <span>📍 ${dist}</span>
@@ -871,6 +890,9 @@ function renderList() {
       </div>
     </div>`;
   }).join('');
+
+  // 번개 타이머 시작
+  setTimeout(startSurgeTimers, 50);
 }
 
 // ── 공고 상세 ─────────────────────────────────────────────
@@ -1333,6 +1355,44 @@ async function doLogout() {
 }
 
 // ── 유틸 ──────────────────────────────────────────────────
+// ── 번개 알바 타이머 ──────────────────────────────────────
+let surgeTimerHandles = [];
+
+function buildSurgeTimer(job) {
+  if (!job.surge_enabled || !job.surge_interval_min) return '';
+  return `<div class="surge-timer" id="stimer-${job.id}">
+    <span class="surge-timer-label">⚡ +${(job.surge_amount||1000).toLocaleString()}원</span>
+    <div class="surge-timer-bar-wrap"><div class="surge-timer-bar" id="sbar-${job.id}" style="width:100%"></div></div>
+    <span class="surge-timer-count" id="scnt-${job.id}">--:--</span>
+  </div>`;
+}
+
+function startSurgeTimers() {
+  surgeTimerHandles.forEach(h => clearInterval(h));
+  surgeTimerHandles = [];
+  jobs.filter(j => j.surge_enabled && j.surge_interval_min).forEach(job => {
+    const intervalMs = job.surge_interval_min * 60 * 1000;
+    const updated = new Date(job.updated_at || Date.now());
+    const handle = setInterval(() => {
+      const cnt = document.getElementById(`scnt-${job.id}`);
+      const bar = document.getElementById(`sbar-${job.id}`);
+      if (!cnt) { clearInterval(handle); return; }
+      const elapsed = Date.now() - updated.getTime();
+      const remaining = intervalMs - (elapsed % intervalMs);
+      const pct = Math.max(0, (remaining / intervalMs) * 100);
+      const m = Math.floor(remaining / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      cnt.textContent = `${m}:${String(s).padStart(2,'0')}`;
+      bar.style.width = pct + '%';
+      if (remaining < 10000) {
+        cnt.style.color = '#FF4B4B';
+        bar.style.background = '#FF4B4B';
+      }
+    }, 1000);
+    surgeTimerHandles.push(handle);
+  });
+}
+
 function getCatClass(cat) {
   const map = { 'F&B': 'fnb-tag', '물류': 'logistics-tag', '판매': 'sales-tag', '청소': 'cleaning-tag', '이벤트': 'event-tag' };
   return map[cat] || '';
@@ -1366,7 +1426,7 @@ function getMockJobs() {
     { id:'4', title:'홀·카운터 보조', biz_name:'엔젤리너스 하단역점', category:'F&B', base_wage:9860, current_wage:11000, wage_delta:1140, status:'urgent', lat:35.1500, lng:128.9750, distance_m:300, start_time: new Date(Date.now()+1800000).toISOString(), duration_hours:3, needed_count:1, filled_count:0, description:'카운터 경험 없어도 됩니다. 친절한 교육 후 투입.', biz_rating:3.9, biz_kindness:3.7, biz_reviews:15 },
     { id:'5', title:'행사 진행 보조 스태프', biz_name:'하단 페스티벌 운영팀', category:'이벤트', base_wage:11500, current_wage:13500, wage_delta:2000, status:'urgent', lat:35.1535, lng:128.9742, distance_m:450, start_time: new Date(Date.now()+18000000).toISOString(), duration_hours:5, needed_count:8, filled_count:3, description:'주말 야외 페스티벌. 유니폼+식사 2회 제공.', biz_rating:4.5, biz_kindness:4.6, biz_reviews:9 },
     { id:'6', title:'아파트 입주 청소 보조', biz_name:'클린마스터 청소업체', category:'청소', base_wage:13000, current_wage:11000, wage_delta:-2000, status:'open', lat:35.1560, lng:128.9715, distance_m:720, start_time: new Date(Date.now()+64800000).toISOString(), duration_hours:8, needed_count:3, filled_count:0, description:'신축 아파트 입주 청소. 청소 도구 제공.', biz_rating:4.3, biz_kindness:4.2, biz_reviews:28 },
-    { id:'7', title:'커플 팝업스토어 도우미', biz_name:'무드마켓 팝업', category:'커플알바', base_wage:12000, current_wage:14000, wage_delta:2000, status:'urgent', lat:35.1528, lng:128.9745, distance_m:310, start_time: new Date(Date.now()+7200000).toISOString(), duration_hours:5, needed_count:4, filled_count:0, description:'커플 2인 1팀으로 진행! 드레스코드 있음. 촬영 컨텐츠 동의 시 추가 수당.', biz_rating:4.7, biz_kindness:4.9, biz_reviews:12 },
+    { id:'7', title:'커플 팝업스토어 도우미', surge_enabled:true, surge_max_wage:18000, surge_amount:1000, surge_interval_min:15, updated_at: new Date(Date.now()-7*60000).toISOString(), biz_name:'무드마켓 팝업', category:'커플알바', base_wage:12000, current_wage:14000, wage_delta:2000, status:'urgent', lat:35.1528, lng:128.9745, distance_m:310, start_time: new Date(Date.now()+7200000).toISOString(), duration_hours:5, needed_count:4, filled_count:0, description:'커플 2인 1팀으로 진행! 드레스코드 있음. 촬영 컨텐츠 동의 시 추가 수당.', biz_rating:4.7, biz_kindness:4.9, biz_reviews:12 },
     { id:'8', title:'틱톡 챌린지 영상 출연', biz_name:'바이럴컴퍼니', category:'컨텐츠', base_wage:15000, current_wage:20000, wage_delta:5000, status:'urgent', lat:35.1515, lng:128.9720, distance_m:180, start_time: new Date(Date.now()+3600000).toISOString(), duration_hours:2, needed_count:6, filled_count:1, description:'틱톡 브랜드 챌린지 영상 출연. 2시간 촬영 후 즉시 현금 지급. 외모 관계없이 누구나!', biz_rating:4.5, biz_kindness:4.6, biz_reviews:8 },
     { id:'9', title:'철봉 오래매달리기 챌린지', biz_name:'스포츠브랜드X', category:'챌린지', base_wage:10000, current_wage:30000, wage_delta:20000, status:'urgent', lat:35.1540, lng:128.9730, distance_m:420, start_time: new Date(Date.now()+1800000).toISOString(), duration_hours:1, needed_count:10, filled_count:3, description:'30초 이상 매달리면 3만원! 1분 이상은 보너스. 누구나 도전 가능. 구경꾼도 환영.', biz_rating:4.2, biz_kindness:4.1, biz_reviews:5 },
   ];
