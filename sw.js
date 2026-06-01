@@ -1,9 +1,7 @@
-const CACHE = 'baroalba-v3';
+const CACHE = 'baroalba-v4';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
 ];
 
 self.addEventListener('install', e => {
@@ -23,13 +21,16 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = e.request.url;
 
-  // API, 인증 요청은 항상 네트워크
-  if (url.includes('supabase') || url.includes('kakao') || url.includes('naver.com/v1/nid')) {
+  // http/https 이외(chrome-extension:// 등) 무시
+  if (!url.startsWith('http')) return;
+
+  // Supabase, 카카오, 네이버 API는 항상 네트워크 직접
+  if (url.includes('supabase') || url.includes('kakao') || url.includes('naver.com')) {
     e.respondWith(fetch(e.request));
     return;
   }
 
-  // HTML 파일은 항상 네트워크 우선 (인증 체크가 매번 실행되어야 함)
+  // HTML 파일은 네트워크 우선
   if (e.request.destination === 'document' || url.endsWith('.html') || url.endsWith('/')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
@@ -37,11 +38,13 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // 나머지(CSS, JS, 이미지)는 캐시 우선
+  // CSS, JS, 이미지는 캐시 우선
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
+      if (res.ok) {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
       return res;
     }))
   );
@@ -52,10 +55,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title || '바로알바', {
       body: data.body || '새로운 알림이 있습니다.',
-      icon: './icons/icon-192.png',
-      badge: './icons/icon-192.png',
+      icon: './icons/icon.svg',
       data: data.url || './바로알바.html',
-      vibrate: [200, 100, 200],
     })
   );
 });
