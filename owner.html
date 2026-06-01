@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#FF4B4B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>바로알바 — 업주</title>
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services"><\/scr'+'ipt>');</script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    :root { --red:#FF4B4B; --nav-h:64px; }
+    body { font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#f5f5f5; min-height:100vh; }
+
+    /* ── 헤더 ── */
+    .header {
+      position: sticky; top:0; z-index:100;
+      background:#fff; padding:14px 16px 12px;
+      border-bottom:1px solid #f0f0f0;
+      box-shadow:0 1px 8px rgba(0,0,0,0.06);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .header-left { display:flex; align-items:center; gap:10px; }
+    .header-logo { font-size:20px; font-weight:900; color:var(--red); letter-spacing:-0.5px; }
+    .header-badge { font-size:11px; font-weight:700; background:#FFF0F0; color:var(--red); padding:3px 8px; border-radius:8px; }
+    .header-biz { font-size:13px; color:#555; font-weight:600; }
+    .logout-btn { font-size:12px; color:#aaa; background:none; border:none; cursor:pointer; padding:6px; }
+
+    /* ── 탭 ── */
+    .tabs { display:flex; background:#fff; border-bottom:1px solid #f0f0f0; }
+    .tab-btn {
+      flex:1; padding:14px 0; font-size:14px; font-weight:700; color:#bbb;
+      border:none; background:none; cursor:pointer; border-bottom:2.5px solid transparent;
+      transition:all 0.2s;
+    }
+    .tab-btn.active { color:var(--red); border-bottom-color:var(--red); }
+
+    /* ── 컨텐츠 ── */
+    .tab-content { display:none; padding:16px; padding-bottom:calc(var(--nav-h) + 80px); }
+    .tab-content.active { display:block; }
+
+    /* ── 통계 카드 ── */
+    .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+    .stat-card { background:#fff; border-radius:14px; padding:14px; text-align:center; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+    .stat-val { font-size:22px; font-weight:900; color:var(--red); }
+    .stat-label { font-size:11px; color:#aaa; font-weight:600; margin-top:2px; }
+
+    /* ── 섹션 헤더 ── */
+    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .section-title { font-size:15px; font-weight:800; color:#222; }
+
+    /* ── 공고 카드 ── */
+    .posting-card {
+      background:#fff; border-radius:16px; padding:16px;
+      margin-bottom:12px; box-shadow:0 1px 6px rgba(0,0,0,0.06);
+      position:relative; overflow:hidden;
+    }
+    .posting-card.urgent-card { border-left:4px solid var(--red); }
+    .posting-card.closed-card { opacity:0.6; }
+
+    .posting-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .posting-title { font-size:16px; font-weight:800; color:#222; margin-bottom:3px; }
+    .posting-cat { font-size:11px; color:#aaa; font-weight:600; }
+    .posting-wage { text-align:right; }
+    .wage-val { font-size:18px; font-weight:900; color:var(--red); }
+    .wage-base { font-size:10px; color:#ccc; }
+
+    .posting-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .meta-chip {
+      font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px;
+      background:#f5f5f5; color:#666;
+    }
+    .meta-chip.urgent { background:#FFF0F0; color:var(--red); }
+    .meta-chip.open { background:#EFF6FF; color:#3B82F6; }
+    .meta-chip.closed { background:#f0f0f0; color:#aaa; }
+
+    .posting-actions { display:flex; gap:8px; }
+    .surge-btn {
+      flex:1; padding:10px; background:linear-gradient(135deg,#FF9500,#FFB800);
+      color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:800;
+      cursor:pointer; transition:transform 0.1s;
+    }
+    .surge-btn:active { transform:scale(0.97); }
+    .surge-btn:disabled { background:#e0e0e0; color:#aaa; cursor:default; }
+    .edit-btn {
+      padding:10px 14px; background:#f5f5f5; color:#555;
+      border:none; border-radius:12px; font-size:13px; font-weight:700;
+      cursor:pointer;
+    }
+    .toggle-btn {
+      padding:10px 14px; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer;
+    }
+    .toggle-btn.open  { background:#EFF6FF; color:#3B82F6; }
+    .toggle-btn.close { background:#f0f0f0; color:#888; }
+
+    .applicant-count {
+      display:flex; align-items:center; gap:4px;
+      font-size:12px; font-weight:700; color:#555; margin-bottom:8px;
+      cursor:pointer;
+    }
+    .applicant-count .count-badge {
+      background:var(--red); color:#fff; font-size:10px; font-weight:800;
+      padding:1px 6px; border-radius:10px;
+    }
+
+    /* ── FAB ── */
+    .fab {
+      position:fixed; right:20px; bottom:calc(var(--nav-h) + 16px);
+      width:56px; height:56px; border-radius:50%;
+      background:var(--red); color:#fff; border:none;
+      font-size:28px; font-weight:300; cursor:pointer;
+      box-shadow:0 4px 16px rgba(255,75,75,0.4);
+      display:flex; align-items:center; justify-content:center;
+      z-index:200; transition:transform 0.2s;
+    }
+    .fab:active { transform:scale(0.93); }
+
+    /* ── 공고 등록 바텀시트 ── */
+    .sheet-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end;
+    }
+    .sheet-overlay.open { display:flex; }
+    .form-sheet {
+      background:#fff; border-radius:24px 24px 0 0; width:100%;
+      max-height:90vh; overflow-y:auto; padding:0 0 40px;
+      animation:slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .sheet-head {
+      padding:14px 20px 12px; border-bottom:1px solid #f0f0f0;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; background:#fff; z-index:1;
+    }
+    .sheet-title { font-size:17px; font-weight:800; color:#222; }
+    .sheet-close { font-size:22px; color:#aaa; background:none; border:none; cursor:pointer; }
+
+    .form-body { padding:20px; display:flex; flex-direction:column; gap:16px; }
+    .form-row { display:flex; gap:10px; }
+    .form-row .form-group { flex:1; }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-label { font-size:12px; font-weight:700; color:#888; }
+    .form-input, .form-select, .form-textarea {
+      padding:12px 14px; border:1.5px solid #eee; border-radius:12px;
+      font-size:14px; color:#222; outline:none; background:#fafafa;
+      transition:border-color 0.2s; font-family:inherit;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color:var(--red); background:#fff;
+    }
+    .form-textarea { resize:none; height:80px; line-height:1.5; }
+
+    /* 위치 검색 */
+    .location-search { display:flex; gap:8px; }
+    .location-search .form-input { flex:1; }
+    .search-addr-btn {
+      padding:12px 16px; background:var(--red); color:#fff;
+      border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
+    }
+    #mini-map { width:100%; height:160px; border-radius:12px; margin-top:8px; display:none; }
+    .location-result {
+      font-size:12px; color:#3B82F6; font-weight:700; padding:6px 0; display:none;
+    }
+
+    .submit-btn {
+      width:100%; padding:16px; background:var(--red); color:#fff;
+      border:none; border-radius:14px; font-size:16px; font-weight:900; cursor:pointer;
+      margin-top:4px; transition:background 0.15s;
+    }
+    .submit-btn:hover { background:#e03333; }
+    .submit-btn:disabled { background:#ddd; cursor:default; }
+
+    /* ── 지원자 시트 ── */
+    .applicant-card {
+      background:#f8f8f8; border-radius:14px; padding:14px;
+      margin-bottom:10px; display:flex; align-items:center; gap:12px;
+    }
+    .applicant-avatar { width:44px; height:44px; border-radius:50%; background:#FFE0E0; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .applicant-info { flex:1; }
+    .applicant-name { font-size:14px; font-weight:800; color:#222; }
+    .applicant-meta { font-size:11px; color:#aaa; font-weight:600; margin-top:2px; }
+    .applicant-btns { display:flex; gap:6px; }
+    .accept-btn { padding:7px 12px; background:#E6FBF4; color:#10B981; border:none; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; }
+    .reject-btn { padding:7px 12px; background:#FFF0F0; color:var(--red); border:none; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; }
+    .accepted-badge { font-size:11px; font-weight:800; color:#10B981; background:#E6FBF4; padding:4px 10px; border-radius:8px; }
+    .rejected-badge { font-size:11px; font-weight:800; color:#aaa; background:#f0f0f0; padding:4px 10px; border-radius:8px; }
+
+    /* ── 빈 상태 ── */
+    .empty { text-align:center; padding:48px 20px; color:#ccc; }
+    .empty-icon { font-size:48px; margin-bottom:12px; }
+    .empty-txt { font-size:14px; font-weight:600; }
+
+    /* ── 로딩 ── */
+    .spinner { width:32px; height:32px; border:3px solid #eee; border-top-color:var(--red); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── 토스트 ── */
+    .toast { position:fixed; bottom:calc(var(--nav-h)+20px); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:700; padding:10px 18px; border-radius:20px; z-index:9999; white-space:nowrap; transition:opacity 0.3s; pointer-events:none; }
+    .toast.hidden { opacity:0; }
+
+    /* ── 하단 내비 ── */
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:#fff; border-top:1px solid #f0f0f0; display:flex; z-index:400; box-shadow:0 -2px 12px rgba(0,0,0,0.06); }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border:none; background:none; }
+    .nav-icon { font-size:22px; }
+    .nav-label { font-size:10px; font-weight:700; color:#bbb; }
+    .nav-item.active .nav-label { color:var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">⚡ 바로알바</div>
+    <div class="header-badge">업주</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="header-biz" id="biz-name">내 업체</div>
+    <button class="logout-btn" onclick="logout()">로그아웃</button>
+  </div>
+</div>
+
+<!-- 탭 -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('postings', this)">📋 내 공고</button>
+  <button class="tab-btn" onclick="switchTab('applicants', this)">👥 지원자</button>
+</div>
+
+<!-- 내 공고 탭 -->
+<div class="tab-content active" id="tab-postings">
+  <!-- 통계 -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="stat-open">-</div>
+      <div class="stat-label">모집중</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-applicants">-</div>
+      <div class="stat-label">총 지원자</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-accepted">-</div>
+      <div class="stat-label">확정</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div class="section-title">내 공고 목록</div>
+  </div>
+  <div id="postings-list"><div style="text-align:center;padding:32px"><div class="spinner"></div></div></div>
+</div>
+
+<!-- 지원자 탭 -->
+<div class="tab-content" id="tab-applicants">
+  <div class="section-head">
+    <div class="section-title">전체 지원자</div>
+  </div>
+  <div id="applicants-list"><div style="text-align:center;padding:32px"><div class="spinner"></div></div></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openPostingForm()" title="공고 등록">+</button>
+
+<!-- 공고 등록/수정 폼 시트 -->
+<div class="sheet-overlay" id="form-overlay" onclick="closeFormIfBg(event)">
+  <div class="form-sheet" id="form-sheet">
+    <div class="sheet-head">
+      <div class="sheet-title" id="form-title">공고 등록</div>
+      <button class="sheet-close" onclick="closePostingForm()">✕</button>
+    </div>
+    <div class="form-body">
+      <input type="hidden" id="editing-id">
+
+      <div class="form-group">
+        <label class="form-label">직무명 *</label>
+        <input class="form-input" id="f-title" placeholder="예: 홀 서빙 보조, 물류 입출고">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">업종 *</label>
+          <select class="form-select" id="f-category">
+            <option value="F&B">☕ F&B</option>
+            <option value="물류">📦 물류</option>
+            <option value="판매">🛍 판매</option>
+            <option value="청소">🧹 청소</option>
+            <option value="이벤트">🎉 이벤트</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">필요 인원</label>
+          <input class="form-input" id="f-needed" type="number" min="1" value="1">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">시급 (원) *</label>
+          <input class="form-input" id="f-wage" type="number" min="9860" placeholder="10000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">근무 시간</label>
+          <input class="form-input" id="f-duration" type="number" min="1" max="24" placeholder="4">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">시작 시간</label>
+        <input class="form-input" id="f-start" type="datetime-local">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">위치 *</label>
+        <div class="location-search">
+          <input class="form-input" id="f-address" placeholder="주소 입력 후 검색">
+          <button class="search-addr-btn" onclick="searchAddress()">검색</button>
+        </div>
+        <div class="location-result" id="location-result"></div>
+        <div id="mini-map"></div>
+        <input type="hidden" id="f-lat">
+        <input type="hidden" id="f-lng">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">상세 설명</label>
+        <textarea class="form-textarea" id="f-desc" placeholder="업무 내용, 우대사항, 제공 혜택 등"></textarea>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitPosting()">공고 등록하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 하단 내비 -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="setNav(this,'postings')">
+    <div class="nav-icon">📋</div>
+    <div class="nav-label">내 공고</div>
+  </button>
+  <button class="nav-item" onclick="setNav(this,'applicants')">
+    <div class="nav-icon">👥</div>
+    <div class="nav-label">지원자</div>
+  </button>
+  <button class="nav-item" onclick="setNav(this,'map')">
+    <div class="nav-icon">🗺</div>
+    <div class="nav-label">지도보기</div>
+  </button>
+  <button class="nav-item" onclick="setNav(this,'profile')">
+    <div class="nav-icon">👤</div>
+    <div class="nav-label">프로필</div>
+  </button>
+</div>
+
+<!-- 토스트 -->
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let bizRecord = null;
+let miniMap = null;
+let selectedLatLng = null;
+let postings = [];
+let editingId = null;
+
+// ── 초기화 ──────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { location.href = './login.html'; return; }
+  currentUser = session.user;
+
+  // 업주 레코드 조회
+  const { data: biz } = await db.from('businesses')
+    .select('*').eq('kakao_uid', currentUser.id).single();
+
+  if (!biz) { showToast('업주 프로필이 없습니다. 로그인을 다시 해주세요.'); return; }
+  bizRecord = biz;
+  document.getElementById('biz-name').textContent = biz.name;
+
+  loadPostings();
+  loadApplicants();
+  setupRealtime();
+});
+
+// ── 내 공고 불러오기 ─────────────────────────────────────
+async function loadPostings() {
+  const { data, error } = await db
+    .from('job_postings')
+    .select('*')
+    .eq('business_id', bizRecord.id)
+    .order('created_at', { ascending: false });
+
+  if (error) { showToast('공고 불러오기 실패'); return; }
+  postings = data || [];
+  renderPostings();
+  updateStats();
+}
+
+function renderPostings() {
+  const el = document.getElementById('postings-list');
+  if (!postings.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📝</div><div class="empty-txt">등록한 공고가 없어요<br>+ 버튼을 눌러 첫 공고를 올려보세요</div></div>';
+    return;
+  }
+  el.innerHTML = postings.map(p => {
+    const isOpen = p.status === 'open' || p.status === 'urgent';
+    const surge = p.current_wage - p.base_wage;
+    const statusLabel = p.status === 'urgent' ? '🔥 급구' : p.status === 'open' ? '모집중' : '마감';
+    const statusCls = p.status === 'urgent' ? 'urgent' : p.status === 'open' ? 'open' : 'closed';
+    const start = p.start_time ? formatTime(p.start_time) : '미정';
+
+    return `
+    <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}">
+      <div class="posting-top">
+        <div>
+          <div class="posting-title">${p.title}</div>
+          <div class="posting-cat">${p.category}</div>
+        </div>
+        <div class="posting-wage">
+          <div class="wage-val">${p.current_wage.toLocaleString()}원</div>
+          ${surge > 0 ? `<div style="font-size:10px;color:#FF9500;font-weight:700">↑${surge.toLocaleString()}원</div>` : ''}
+          <div class="wage-base">${surge !== 0 ? '기본 '+p.base_wage.toLocaleString()+'원' : ''}</div>
+        </div>
+      </div>
+      <div class="posting-meta">
+        <span class="meta-chip ${statusCls}">${statusLabel}</span>
+        <span class="meta-chip">⏰ ${start}</span>
+        <span class="meta-chip">⏱ ${p.duration_hours}시간</span>
+        <span class="meta-chip">👥 ${p.filled_count}/${p.needed_count}명</span>
+      </div>
+      <div class="applicant-count" onclick="showPostingApplicants('${p.id}','${p.title}')">
+        지원자 보기 <span class="count-badge" id="app-count-${p.id}">...</span> →
+      </div>
+      <div class="posting-actions">
+        ${isOpen ? `
+          <button class="surge-btn" onclick="surgeWage('${p.id}',${p.current_wage})" ${p.status==='closed'?'disabled':''}>
+            ⚡ 시급 +1,000원
+          </button>
+        ` : ''}
+        <button class="edit-btn" onclick="openEditForm('${p.id}')">수정</button>
+        <button class="toggle-btn ${isOpen?'close':'open'}" onclick="toggleStatus('${p.id}','${p.status}')">
+          ${isOpen ? '마감' : '재오픈'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 지원자 수 비동기 로드
+  postings.forEach(p => loadApplicantCount(p.id));
+}
+
+async function loadApplicantCount(jobId) {
+  const { count } = await db.from('applications')
+    .select('id', { count: 'exact', head: true })
+    .eq('job_posting_id', jobId);
+  const el = document.getElementById(`app-count-${jobId}`);
+  if (el) el.textContent = count || 0;
+}
+
+async function updateStats() {
+  const open = postings.filter(p => p.status === 'open' || p.status === 'urgent').length;
+  document.getElementById('stat-open').textContent = open;
+
+  const { count: total } = await db.from('applications')
+    .select('id', { count: 'exact', head: true })
+    .in('job_posting_id', postings.map(p => p.id));
+  document.getElementById('stat-applicants').textContent = total || 0;
+
+  const { count: accepted } = await db.from('applications')
+    .select('id', { count: 'exact', head: true })
+    .in('job_posting_id', postings.map(p => p.id))
+    .eq('status', 'accepted');
+  document.getElementById('stat-accepted').textContent = accepted || 0;
+}
+
+// ── 시급 서지 ─────────────────────────────────────────────
+async function surgeWage(jobId, currentWage) {
+  const newWage = currentWage + 1000;
+  const { error } = await db.from('job_postings')
+    .update({ current_wage: newWage, status: 'urgent' })
+    .eq('id', jobId);
+  if (error) { showToast('시급 인상 실패: ' + error.message); return; }
+  showToast(`⚡ 시급 ${newWage.toLocaleString()}원으로 인상!`);
+  loadPostings();
+}
+
+// ── 상태 토글 ─────────────────────────────────────────────
+async function toggleStatus(jobId, currentStatus) {
+  const isOpen = currentStatus === 'open' || currentStatus === 'urgent';
+  const newStatus = isOpen ? 'closed' : 'open';
+  const { error } = await db.from('job_postings').update({ status: newStatus }).eq('id', jobId);
+  if (error) { showToast('상태 변경 실패'); return; }
+  showToast(isOpen ? '공고가 마감됐습니다' : '공고가 재오픈됐습니다');
+  loadPostings();
+}
+
+// ── 지원자 불러오기 ──────────────────────────────────────
+async function loadApplicants() {
+  if (!bizRecord || !postings.length) return;
+  const jobIds = postings.map(p => p.id);
+  if (!jobIds.length) {
+    document.getElementById('applicants-list').innerHTML =
+      '<div class="empty"><div class="empty-icon">👥</div><div class="empty-txt">지원자가 없어요</div></div>';
+    return;
+  }
+
+  const { data, error } = await db.from('applications')
+    .select('*, workers(name, phone, rating, review_count, skills), job_postings(title)')
+    .in('job_posting_id', jobIds)
+    .order('applied_at', { ascending: false });
+
+  if (error) { showToast('지원자 불러오기 실패'); return; }
+  renderApplicants(data || []);
+}
+
+function renderApplicants(apps) {
+  const el = document.getElementById('applicants-list');
+  if (!apps.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div class="empty-txt">아직 지원자가 없어요</div></div>';
+    return;
+  }
+  el.innerHTML = apps.map(a => {
+    const w = a.workers;
+    const statusHtml = a.status === 'accepted'
+      ? '<span class="accepted-badge">✅ 수락</span>'
+      : a.status === 'rejected'
+      ? '<span class="rejected-badge">거절됨</span>'
+      : `<div class="applicant-btns">
+          <button class="accept-btn" onclick="updateApplication('${a.id}','accepted')">수락</button>
+          <button class="reject-btn" onclick="updateApplication('${a.id}','rejected')">거절</button>
+        </div>`;
+    return `
+    <div class="applicant-card">
+      <div class="applicant-avatar">👤</div>
+      <div class="applicant-info">
+        <div class="applicant-name">${w?.name || '이름없음'}</div>
+        <div class="applicant-meta">
+          ★ ${w?.rating || '-'} · ${a.job_postings?.title || ''}
+          ${w?.phone ? ' · ' + w.phone : ''}
+        </div>
+      </div>
+      ${statusHtml}
+    </div>`;
+  }).join('');
+}
+
+async function showPostingApplicants(jobId, title) {
+  const { data } = await db.from('applications')
+    .select('*, workers(name, phone, rating)')
+    .eq('job_posting_id', jobId)
+    .order('applied_at', { ascending: false });
+  switchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
+  renderApplicants(data || []);
+}
+
+async function updateApplication(appId, status) {
+  const { error } = await db.from('applications').update({ status }).eq('id', appId);
+  if (error) { showToast('처리 실패'); return; }
+  showToast(status === 'accepted' ? '✅ 수락했습니다' : '거절했습니다');
+  loadApplicants();
+  loadPostings();
+}
+
+// ── 공고 등록/수정 폼 ────────────────────────────────────
+function openPostingForm() {
+  editingId = null;
+  document.getElementById('editing-id').value = '';
+  document.getElementById('form-title').textContent = '공고 등록';
+  document.getElementById('submit-btn').textContent = '공고 등록하기';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-category').value = 'F&B';
+  document.getElementById('f-wage').value = '';
+  document.getElementById('f-duration').value = '';
+  document.getElementById('f-needed').value = 1;
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-address').value = '';
+  document.getElementById('f-lat').value = '';
+  document.getElementById('f-lng').value = '';
+  document.getElementById('location-result').style.display = 'none';
+  document.getElementById('mini-map').style.display = 'none';
+
+  const now = new Date(); now.setMinutes(0,0,0);
+  now.setHours(now.getHours() + 1);
+  document.getElementById('f-start').value = now.toISOString().slice(0,16);
+
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function openEditForm(jobId) {
+  const p = postings.find(x => x.id === jobId);
+  if (!p) return;
+  editingId = jobId;
+  document.getElementById('editing-id').value = jobId;
+  document.getElementById('form-title').textContent = '공고 수정';
+  document.getElementById('submit-btn').textContent = '수정 완료';
+  document.getElementById('f-title').value = p.title;
+  document.getElementById('f-category').value = p.category;
+  document.getElementById('f-wage').value = p.base_wage;
+  document.getElementById('f-duration').value = p.duration_hours;
+  document.getElementById('f-needed').value = p.needed_count;
+  document.getElementById('f-desc').value = p.description || '';
+  document.getElementById('f-lat').value = p.lat;
+  document.getElementById('f-lng').value = p.lng;
+  if (p.start_time) document.getElementById('f-start').value = p.start_time.slice(0,16);
+  if (p.lat && p.lng) showMiniMap(p.lat, p.lng, p.address || '');
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
+function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
+
+// ── 주소 검색 ─────────────────────────────────────────────
+function searchAddress() {
+  const query = document.getElementById('f-address').value.trim();
+  if (!query) { showToast('주소를 입력해주세요'); return; }
+  const geocoder = new kakao.maps.services.Geocoder();
+  geocoder.addressSearch(query, (result, status) => {
+    if (status === kakao.maps.services.Status.OK && result.length > 0) {
+      const r = result[0];
+      selectedLatLng = { lat: parseFloat(r.y), lng: parseFloat(r.x) };
+      document.getElementById('f-lat').value = selectedLatLng.lat;
+      document.getElementById('f-lng').value = selectedLatLng.lng;
+      const addr = r.address_name;
+      document.getElementById('location-result').textContent = '📍 ' + addr;
+      document.getElementById('location-result').style.display = 'block';
+      showMiniMap(selectedLatLng.lat, selectedLatLng.lng, addr);
+    } else {
+      showToast('주소를 찾을 수 없어요. 다시 입력해주세요.');
+    }
+  });
+}
+
+function showMiniMap(lat, lng, addr) {
+  const el = document.getElementById('mini-map');
+  el.style.display = 'block';
+  const pos = new kakao.maps.LatLng(lat, lng);
+  if (!miniMap) {
+    miniMap = new kakao.maps.Map(el, { center: pos, level: 4 });
+  } else {
+    miniMap.setCenter(pos);
+  }
+  new kakao.maps.Marker({ position: pos, map: miniMap });
+}
+
+// ── 공고 제출 ─────────────────────────────────────────────
+async function submitPosting() {
+  const title = document.getElementById('f-title').value.trim();
+  const category = document.getElementById('f-category').value;
+  const wage = parseInt(document.getElementById('f-wage').value);
+  const duration = parseFloat(document.getElementById('f-duration').value);
+  const needed = parseInt(document.getElementById('f-needed').value);
+  const lat = parseFloat(document.getElementById('f-lat').value);
+  const lng = parseFloat(document.getElementById('f-lng').value);
+  const desc = document.getElementById('f-desc').value.trim();
+  const startVal = document.getElementById('f-start').value;
+
+  if (!title) { showToast('직무명을 입력해주세요'); return; }
+  if (!wage || wage < 9860) { showToast('시급은 최저임금(9,860원) 이상이어야 해요'); return; }
+  if (!lat || !lng) { showToast('위치를 검색해서 선택해주세요'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '처리 중...';
+
+  const payload = {
+    business_id: bizRecord.id,
+    title, category, description: desc,
+    base_wage: editingId ? undefined : wage,
+    current_wage: wage,
+    lat, lng,
+    duration_hours: duration || null,
+    needed_count: needed || 1,
+    start_time: startVal ? new Date(startVal).toISOString() : null,
+    status: 'open',
+  };
+
+  let error;
+  if (editingId) {
+    delete payload.base_wage;
+    delete payload.business_id;
+    ({ error } = await db.from('job_postings').update(payload).eq('id', editingId));
+  } else {
+    payload.base_wage = wage;
+    ({ error } = await db.from('job_postings').insert(payload));
+  }
+
+  btn.disabled = false;
+  btn.textContent = editingId ? '수정 완료' : '공고 등록하기';
+
+  if (error) { showToast('오류: ' + error.message); return; }
+  showToast(editingId ? '✅ 공고가 수정됐습니다' : '✅ 공고가 등록됐습니다');
+  closePostingForm();
+  loadPostings();
+}
+
+// ── Realtime ──────────────────────────────────────────────
+function setupRealtime() {
+  db.channel('owner-updates')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'applications' }, () => {
+      showToast('🔔 새 지원자가 있습니다!');
+      loadApplicants();
+      loadPostings();
+    })
+    .subscribe();
+}
+
+// ── 유틸 ──────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'applicants' && bizRecord) loadApplicants();
+}
+
+function setNav(el, tab) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  if (tab === 'map') { location.href = './바로알바.html'; return; }
+  if (tab === 'postings') switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
+  else if (tab === 'applicants') switchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
+  else showToast('준비 중입니다');
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = d - now;
+  if (diff < 0) return '진행중';
+  if (diff < 3600000) return Math.round(diff/60000) + '분 후';
+  if (diff < 86400000) return Math.round(diff/3600000) + '시간 후';
+  return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+async function logout() {
+  await db.auth.signOut();
+  localStorage.removeItem('baroalba_guest');
+  location.href = './login.html';
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+}
+</script>
+</body>
+</html>

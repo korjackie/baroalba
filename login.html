@@ -514,7 +514,7 @@ db.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session) {
     const role = session.user.user_metadata?.baroalba_role;
     if (role) {
-      goToApp();
+      goToApp(role);
     } else {
       hideLoading();
       const name = session.user.user_metadata?.full_name || session.user.email;
@@ -701,14 +701,21 @@ async function confirmRole() {
     { onConflict: 'kakao_uid' }
   );
 
-  goToApp();
+  window._pendingRole = selectedRole;
+  goToApp(selectedRole);
 }
 
 // ── 헬퍼 ──────────────────────────────────────────────────
 function getRedirectUrl() {
   return window.location.origin + '/app.html';
 }
-function goToApp() { window.location.href = './바로알바.html'; }
+function goToApp(role) {
+  const r = role || currentUserRole();
+  window.location.href = r === 'business' ? './owner.html' : './바로알바.html';
+}
+function currentUserRole() {
+  return window._pendingRole || '';
+}
 
 function switchTab(tab) {
   const isLogin = tab === 'login';
