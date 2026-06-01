@@ -362,10 +362,22 @@
       <span style="background:rgba(255,255,255,0.25);color:#fff;font-size:11px;font-weight:800;padding:5px 12px;border-radius:20px;white-space:nowrap;">⚡ 번개알바</span>
     </div>
 
-    <!-- PWA 설치 버튼 -->
-    <button id="install-btn" onclick="triggerInstall()" style="display:none;margin-top:16px;padding:10px 24px;background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.5);border-radius:24px;font-size:13px;font-weight:800;cursor:pointer;backdrop-filter:blur(8px);letter-spacing:0.3px">
-      📲 앱으로 설치하기
-    </button>
+    <!-- PWA 설치 영역 -->
+    <div id="install-area" style="margin-top:16px;display:none;flex-direction:column;align-items:center;gap:8px">
+      <!-- Android: beforeinstallprompt 버튼 -->
+      <button id="install-btn" onclick="triggerInstall()"
+        style="padding:10px 28px;background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.6);border-radius:24px;font-size:13px;font-weight:800;cursor:pointer;backdrop-filter:blur(8px)">
+        📲 앱으로 설치하기
+      </button>
+      <!-- iOS: 수동 안내 -->
+      <div id="ios-install-guide" style="display:none;background:rgba(255,255,255,0.18);border-radius:16px;padding:12px 16px;text-align:center;backdrop-filter:blur(8px)">
+        <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:6px">📲 홈 화면에 추가하기</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.6">
+          Safari 하단 <strong>공유 버튼(⎙)</strong> 탭 →<br>
+          <strong>"홈 화면에 추가"</strong> 선택
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -541,6 +553,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
   if (window.Kakao && APP_CONFIG.KAKAO_JS_KEY && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
   initNaverLogin();
+  initInstallUI();
 
   // 인앱 브라우저 감지 시 상단 배너 표시
   if (isInAppBrowser()) {
@@ -793,22 +806,48 @@ document.addEventListener('keydown', e => {
 
 // ── PWA 설치 ──────────────────────────────────────────────
 let _installPrompt = null;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isAndroid = /Android/.test(navigator.userAgent);
+
+function initInstallUI() {
+  // 이미 설치된 앱 안에서 실행 중이면 숨김
+  if (isStandalone) return;
+  // 인앱 브라우저에서는 설치 불가
+  if (isInAppBrowser()) return;
+
+  const area = document.getElementById('install-area');
+
+  if (isIOS) {
+    // iOS Safari: 수동 안내 표시
+    area.style.display = 'flex';
+    document.getElementById('install-btn').style.display = 'none';
+    document.getElementById('ios-install-guide').style.display = 'block';
+  }
+  // Android: beforeinstallprompt 이벤트 대기 (이벤트 오면 버튼 표시)
+}
+
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _installPrompt = e;
-  if (!localStorage.getItem('pwa_install_dismissed')) {
-    document.getElementById('install-btn').style.display = 'inline-block';
-  }
+  const area = document.getElementById('install-area');
+  area.style.display = 'flex';
+  document.getElementById('install-btn').style.display = 'block';
+  document.getElementById('ios-install-guide').style.display = 'none';
 });
+
 window.addEventListener('appinstalled', () => {
-  document.getElementById('install-btn').style.display = 'none';
+  document.getElementById('install-area').style.display = 'none';
   _installPrompt = null;
 });
+
 function triggerInstall() {
   if (!_installPrompt) return;
   _installPrompt.prompt();
   _installPrompt.userChoice.then(c => {
-    if (c.outcome === 'accepted') document.getElementById('install-btn').style.display = 'none';
+    if (c.outcome === 'accepted') {
+      document.getElementById('install-area').style.display = 'none';
+    }
     _installPrompt = null;
   });
 }
