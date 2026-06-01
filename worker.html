@@ -212,10 +212,24 @@
     <div class="nav-icon">🔔</div>
     <div class="nav-label">알림</div>
   </button>
-  <button class="nav-item" onclick="doLogout()">
-    <div class="nav-icon">🚪</div>
-    <div class="nav-label">로그아웃</div>
+  <button class="nav-item" onclick="showAccountMenu()">
+    <div class="nav-icon">⚙️</div>
+    <div class="nav-label">설정</div>
   </button>
+</div>
+
+<!-- 설정 시트 -->
+<div class="modal-overlay" id="account-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="review-sheet" style="padding-bottom:32px">
+    <div class="review-head">
+      <div class="review-title">계정 설정</div>
+      <button class="review-close" onclick="document.getElementById('account-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+      <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🚪 로그아웃</button>
+      <button onclick="deleteAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast hidden" id="toast"></div>
@@ -415,6 +429,29 @@ async function doLogout() {
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
   location.href = '/login.html';
+}
+
+async function deleteAccount() {
+  if (!confirm('정말 탈퇴하시겠어요?\n지원 내역과 평점이 모두 삭제됩니다.')) return;
+  if (!confirm('마지막 확인입니다. 탈퇴 후 복구가 불가능합니다.')) return;
+
+  try {
+    // workers 레코드 삭제 (cascade로 applications도 삭제됨)
+    if (workerRecord) {
+      await db.from('workers').delete().eq('id', workerRecord.id);
+    }
+    // Supabase Auth 계정 삭제 (anon key로는 불가 → 로그아웃 후 안내)
+    await db.auth.signOut();
+    localStorage.removeItem('baroalba_guest');
+    alert('탈퇴가 완료됐습니다. 이용해주셔서 감사합니다.');
+    location.href = '/login.html';
+  } catch(e) {
+    showToast('탈퇴 처리 중 오류가 발생했습니다: ' + e.message);
+  }
+}
+
+function showAccountMenu() {
+  document.getElementById('account-overlay').classList.add('open');
 }
 
 let toastTimer;

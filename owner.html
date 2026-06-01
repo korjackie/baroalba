@@ -313,15 +313,18 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">위치 *</label>
+        <label class="form-label">위치 * <span style="font-size:10px;color:#aaa;font-weight:400">— 상호명 또는 주소로 검색</span></label>
         <div class="location-search">
-          <input class="form-input" id="f-address" placeholder="주소 입력 후 검색">
-          <button class="search-addr-btn" onclick="searchAddress()">검색</button>
+          <input class="form-input" id="f-address" placeholder="예: 스타벅스 하단점, 강남역 2번 출구">
+          <button class="search-addr-btn" onclick="searchNaverPlace()">🔍 검색</button>
         </div>
+        <!-- 검색 결과 목록 -->
+        <div id="place-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;"></div>
         <div class="location-result" id="location-result"></div>
         <div id="mini-map"></div>
         <input type="hidden" id="f-lat">
         <input type="hidden" id="f-lng">
+        <input type="hidden" id="f-naver-link">
       </div>
 
       <div class="form-group">
@@ -614,23 +617,74 @@ function openEditForm(jobId) {
 function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
-// ── 주소 검색 ─────────────────────────────────────────────
-function searchAddress() {
+// ── 네이버 플레이스 검색 ─────────────────────────────────
+async function searchNaverPlace() {
   const query = document.getElementById('f-address').value.trim();
-  if (!query) { showToast('주소를 입력해주세요'); return; }
+  if (!query) { showToast('업체명이나 주소를 입력해주세요'); return; }
+
+  const btn = document.querySelector('.search-addr-btn');
+  btn.textContent = '검색 중...'; btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    if (!res.ok || !data.items?.length) {
+      // 네이버 검색 실패 시 카카오 지오코더 폴백
+      searchKakaoFallback(query);
+      return;
+    }
+    renderPlaceResults(data.items);
+  } catch(e) {
+    searchKakaoFallback(query);
+  } finally {
+    btn.textContent = '🔍 검색'; btn.disabled = false;
+  }
+}
+
+function renderPlaceResults(items) {
+  const box = document.getElementById('place-results');
+  box.style.display = 'block';
+  box.innerHTML = items.map((item, i) => `
+    <div onclick="selectPlace(${i})" data-idx="${i}" style="padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="font-size:13px;font-weight:800;color:#222">${item.title}</span>
+        ${item.link ? '<span style="font-size:10px;font-weight:700;background:#E6F4EA;color:#1a7d3b;padding:2px 6px;border-radius:6px">N 플레이스</span>' : ''}
+      </div>
+      <div style="font-size:11px;color:#aaa">${item.roadAddress || item.address}</div>
+    </div>`).join('');
+
+  // 전역 임시 저장
+  window._naverPlaceItems = items;
+}
+
+function selectPlace(idx) {
+  const item = window._naverPlaceItems[idx];
+  document.getElementById('f-lat').value = item.lat;
+  document.getElementById('f-lng').value = item.lng;
+  document.getElementById('f-naver-link').value = item.link || '';
+  document.getElementById('f-address').value = item.title;
+  document.getElementById('location-result').textContent = `📍 ${item.roadAddress || item.address}`;
+  document.getElementById('location-result').style.display = 'block';
+  document.getElementById('place-results').style.display = 'none';
+  if (item.link) {
+    document.getElementById('location-result').textContent += '  ✅ 네이버 플레이스 인증';
+  }
+  showMiniMap(item.lat, item.lng);
+}
+
+function searchKakaoFallback(query) {
   const geocoder = new kakao.maps.services.Geocoder();
   geocoder.addressSearch(query, (result, status) => {
     if (status === kakao.maps.services.Status.OK && result.length > 0) {
       const r = result[0];
-      selectedLatLng = { lat: parseFloat(r.y), lng: parseFloat(r.x) };
-      document.getElementById('f-lat').value = selectedLatLng.lat;
-      document.getElementById('f-lng').value = selectedLatLng.lng;
-      const addr = r.address_name;
-      document.getElementById('location-result').textContent = '📍 ' + addr;
+      document.getElementById('f-lat').value = r.y;
+      document.getElementById('f-lng').value = r.x;
+      document.getElementById('location-result').textContent = '📍 ' + r.address_name;
       document.getElementById('location-result').style.display = 'block';
-      showMiniMap(selectedLatLng.lat, selectedLatLng.lng, addr);
+      document.getElementById('place-results').style.display = 'none';
+      showMiniMap(parseFloat(r.y), parseFloat(r.x));
     } else {
-      showToast('주소를 찾을 수 없어요. 다시 입력해주세요.');
+      showToast('장소를 찾을 수 없어요. 다시 입력해주세요.');
     }
   });
 }
