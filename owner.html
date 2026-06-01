@@ -313,12 +313,20 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">위치 * <span style="font-size:10px;color:#aaa;font-weight:400">— 상호명으로 검색</span></label>
+        <label class="form-label">위치 *</label>
+
+        <!-- 방법 1: 텍스트 검색 -->
         <div class="location-search">
-          <input class="form-input" id="f-address" placeholder="업체명 입력 (예: 스타벅스하단점)">
+          <input class="form-input" id="f-address" placeholder="시·구·업체명 입력 (예: 부산 사하구 스타벅스)">
           <button class="search-addr-btn" onclick="searchNaverPlace()">🔍 검색</button>
         </div>
-        <div id="region-hint" style="font-size:11px;color:#3B82F6;font-weight:700;padding:4px 2px;display:none"></div>
+
+        <!-- 방법 2: 네이버 플레이스 URL -->
+        <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+          <input class="form-input" id="f-naver-url-input" placeholder="또는 네이버 플레이스 URL 붙여넣기" oninput="handleNaverUrl(this.value)" style="flex:1;font-size:13px">
+        </div>
+        <div id="naver-url-status" style="font-size:11px;font-weight:700;padding:4px 2px;display:none"></div>
+
         <!-- 검색 결과 목록 -->
         <div id="place-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;"></div>
         <div class="location-result" id="location-result"></div>
@@ -592,8 +600,8 @@ function openPostingForm() {
   now.setHours(now.getHours() + 1);
   document.getElementById('f-start').value = now.toISOString().slice(0,16);
 
-  document.getElementById('region-hint').style.display = 'none';
-  detectUserRegion();
+  document.getElementById('naver-url-status').style.display = 'none';
+  document.getElementById('f-naver-url-input').value = '';
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -620,36 +628,25 @@ function openEditForm(jobId) {
 function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
-// ── 현재 위치 기반 지역명 (구/동) ────────────────────────
-let userRegion2 = ''; // 예: "사하구"
-let userRegion3 = ''; // 예: "하단동"
-
-function detectUserRegion() {
-  if (!navigator.geolocation || !window.kakao) return;
-  navigator.geolocation.getCurrentPosition(pos => {
-    const geocoder = new kakao.maps.services.Geocoder();
-    geocoder.coord2RegionCode(pos.coords.longitude, pos.coords.latitude, (result, status) => {
-      if (status !== kakao.maps.services.Status.OK) return;
-      const r = result[0];
-      userRegion2 = r.region_2depth_name || ''; // 사하구
-      userRegion3 = r.region_3depth_name || ''; // 하단동
-      const hint = document.getElementById('region-hint');
-      if (hint && userRegion2) {
-        hint.textContent = `📍 현재 위치: ${r.region_1depth_name} ${userRegion2} ${userRegion3} — 업체명만 입력하면 자동으로 이 지역 기준 검색합니다`;
-        hint.style.display = 'block';
-      }
-    });
-  }, () => {});
+// ── 네이버 플레이스 URL 감지 ─────────────────────────────
+function handleNaverUrl(val) {
+  const status = document.getElementById('naver-url-status');
+  const isNaverUrl = /naver\.me|map\.naver\.com|m\.place\.naver\.com/.test(val);
+  if (!val) { status.style.display = 'none'; document.getElementById('f-naver-link').value = ''; return; }
+  if (isNaverUrl) {
+    document.getElementById('f-naver-link').value = val;
+    status.textContent = '✅ 네이버 플레이스 URL 인식됨 — 위 검색창에서 업체명도 검색해 좌표를 설정해주세요';
+    status.style.cssText = 'display:block;color:#1a7d3b;font-size:11px;font-weight:700;padding:4px 2px';
+  } else {
+    status.textContent = '⚠️ 네이버 플레이스 URL 형식이 아닙니다';
+    status.style.cssText = 'display:block;color:#FF9500;font-size:11px;font-weight:700;padding:4px 2px';
+  }
 }
 
 // ── 네이버 플레이스 검색 ─────────────────────────────────
 async function searchNaverPlace() {
-  const raw = document.getElementById('f-address').value.trim();
-  if (!raw) { showToast('업체명을 입력해주세요'); return; }
-
-  // 지역명이 포함되지 않은 짧은 검색어면 현재 위치 자동 추가
-  const hasRegion = /[가-힣]{1,4}[시군구동읍면]/.test(raw);
-  const query = (!hasRegion && userRegion2) ? `${userRegion2} ${raw}` : raw;
+  const query = document.getElementById('f-address').value.trim();
+  if (!query) { showToast('시·구·업체명을 입력해주세요\n예: 부산 사하구 스타벅스'); return; }
 
   const btn = document.querySelector('.search-addr-btn');
   btn.textContent = '검색 중...'; btn.disabled = true;
@@ -658,12 +655,12 @@ async function searchNaverPlace() {
     const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`);
     const data = await res.json();
     if (!res.ok || !data.items?.length) {
-      searchKakaoFallback(raw);
+      searchKakaoFallback(query);
       return;
     }
     renderPlaceResults(data.items, query);
   } catch(e) {
-    searchKakaoFallback(raw);
+    searchKakaoFallback(query);
   } finally {
     btn.textContent = '🔍 검색'; btn.disabled = false;
   }
