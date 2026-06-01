@@ -2,6 +2,10 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <script>window.location.replace('./바로알바.html');</script>
+  <script>
+    // OAuth 콜백 파라미터(?code=, #access_token= 등)를 잃지 않고 전달
+    var dest = './바로알바.html' + window.location.search + window.location.hash;
+    window.location.replace(dest);
+  </script>
 </head>
 </html>

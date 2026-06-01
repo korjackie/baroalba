@@ -639,23 +639,29 @@ async function handleNaverUser() {
     const user = naverLoginObj.user;
     const naverId  = user.getId();
     const name     = user.getName()     || '네이버사용자';
-    const email    = user.getEmail()    || `${naverId}@naver-baroalba.local`;
+    const email    = user.getEmail()    || `naver.${naverId}@baroalba.kr`;
     const phone    = user.getMobile()   || '';
 
     // Supabase에 네이버 전용 패스워드로 로그인 시도 → 없으면 가입
-    const syntheticPw = `naver_${naverId}_baroalba`;
+    const syntheticPw = `naver_${naverId}_baro2024!`;
     const { error: signInErr } = await db.auth.signInWithPassword({ email, password: syntheticPw });
 
     if (signInErr) {
-      // 신규 가입
-      const { error: signUpErr } = await db.auth.signUp({
+      // 신규 가입 (이메일 확인 생략 — emailRedirectTo 없음)
+      const { data: signUpData, error: signUpErr } = await db.auth.signUp({
         email,
         password: syntheticPw,
-        options: { data: { full_name: name, phone, provider: 'naver', naver_id: naverId } }
+        options: {
+          emailRedirectTo: undefined,
+          data: { full_name: name, phone, provider: 'naver', naver_id: naverId, baroalba_role: '' }
+        }
       });
       if (signUpErr) { hideLoading(); showError('네이버 로그인 실패: ' + signUpErr.message); return; }
-      // 가입 후 다시 로그인
-      await db.auth.signInWithPassword({ email, password: syntheticPw });
+      // 가입 직후 세션이 있으면 바로 사용, 없으면 다시 로그인
+      if (!signUpData.session) {
+        const { error: si2 } = await db.auth.signInWithPassword({ email, password: syntheticPw });
+        if (si2) { hideLoading(); showError('네이버 로그인 실패: ' + si2.message); return; }
+      }
     }
     // onAuthStateChange 가 이후 처리
   } catch(e) {
