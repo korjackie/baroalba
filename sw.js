@@ -1,7 +1,9 @@
-const CACHE = 'baroalba-v4';
+const CACHE = 'baroalba-v5';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
 ];
 
 self.addEventListener('install', e => {
