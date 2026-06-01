@@ -11,8 +11,15 @@
 
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="text/javascript"
-    src="//dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services,clusterer"></script>
+  <!-- 카카오맵 SDK: appkey를 config.js에서 읽어 동적 로드 -->
+  <script>
+    (function() {
+      var s = document.createElement('script');
+      s.type = 'text/javascript';
+      s.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=' + APP_CONFIG.KAKAO_JS_KEY + '&autoload=false&libraries=services,clusterer';
+      document.head.appendChild(s);
+    })();
+  </script>
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
