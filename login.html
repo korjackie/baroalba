@@ -542,6 +542,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (window.Kakao && APP_CONFIG.KAKAO_JS_KEY && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
   initNaverLogin();
 
+  // 인앱 브라우저 감지 시 상단 배너 표시
+  if (isInAppBrowser()) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;font-size:12px;font-weight:700;text-align:center;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
+    banner.innerHTML = `<span>📱 더 나은 경험을 위해 Chrome에서 열어주세요</span>
+      <a href="${location.href}" target="_blank" rel="noopener" style="background:#FF4B4B;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;text-decoration:none">Chrome으로 열기</a>`;
+    document.body.prepend(banner);
+  }
+
   // 이미 세션 있으면 앱으로
   const { data: { session } } = await db.auth.getSession();
   if (session) return; // onAuthStateChange 가 처리
@@ -569,7 +578,18 @@ async function loginKakao() {
 }
 
 // ── 구글 로그인 ────────────────────────────────────────────
+function isInAppBrowser() {
+  const ua = navigator.userAgent;
+  return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line|MicroMessenger/i.test(ua) ||
+    (ua.includes('Android') && /; wv\)/.test(ua));
+}
+
 async function loginGoogle() {
+  // 인앱 브라우저(카카오톡, 네이버 등)에서는 구글 OAuth가 차단됨
+  if (isInAppBrowser()) {
+    showError('구글 로그인은 Chrome 브라우저에서만 가능합니다.\n우측 상단 메뉴 → Chrome으로 열기를 눌러주세요.', 'info');
+    return;
+  }
   showLoading('구글 로그인 중...');
   const { error } = await db.auth.signInWithOAuth({
     provider: 'google',
@@ -742,7 +762,18 @@ function switchTab(tab) {
   clearError();
 }
 
-function showError(msg)  { const el = document.getElementById('error-msg'); el.textContent = msg; el.classList.add('show'); }
+function showError(msg, type)  {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('show');
+  if (type === 'info') {
+    el.style.background = '#EFF6FF';
+    el.style.color = '#1D4ED8';
+  } else {
+    el.style.background = '';
+    el.style.color = '';
+  }
+}
 function clearError()    { const el = document.getElementById('error-msg'); el.classList.remove('show'); el.style = ''; }
 function showLoading(t)  { document.getElementById('loading-text').textContent = t || '처리 중...'; document.getElementById('loading').classList.add('show'); }
 function hideLoading()   { document.getElementById('loading').classList.remove('show'); }
