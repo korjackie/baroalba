@@ -213,7 +213,10 @@
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
-    <div class="header-logo">⚡ 바로알바</div>
+    <div class="header-logo" style="display:flex;align-items:center;gap:6px">
+      <img src="icons/icon.svg" width="24" height="24" style="border-radius:6px;vertical-align:middle">
+      바로알바
+    </div>
     <div class="header-badge">업주</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -976,8 +979,8 @@ let _shareJobId = null;
 
 function openShareModal(jobId) {
   _shareJobId = jobId;
-  const base = 'https://baroalba.multimove.co.kr/바로알바.html';
-  const url = jobId ? `${base}?job=${jobId}` : base;
+  const base = 'https://baroalba.multimove.co.kr/%EB%B0%94%EB%A1%9C%EC%95%8C%EB%B0%94.html';
+  const url = jobId ? `${base}?job=${encodeURIComponent(jobId)}` : base;
   document.getElementById('share-url-text').textContent = url;
   document.getElementById('share-native-btn').style.display = navigator.share ? 'block' : 'none';
   document.getElementById('share-overlay').classList.add('open');
