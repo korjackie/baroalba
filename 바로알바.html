@@ -514,6 +514,9 @@
     <div class="chip" data-cat="판매" onclick="setCategory(this, '판매')">🛍 판매</div>
     <div class="chip" data-cat="청소" onclick="setCategory(this, '청소')">🧹 청소</div>
     <div class="chip" data-cat="이벤트" onclick="setCategory(this, '이벤트')">🎉 이벤트</div>
+    <div class="chip" data-cat="커플알바" onclick="setCategory(this, '커플알바')">💑 커플알바</div>
+    <div class="chip" data-cat="컨텐츠" onclick="setCategory(this, '컨텐츠')">📱 컨텐츠</div>
+    <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">🏆 챌린지</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">🔥 급구만</div>
   </div>
 </div>
@@ -605,19 +608,38 @@
   </div>
 </div>
 
+<!-- ── 스와이프 모드 ── -->
+<div id="swipe-screen" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);background:#f0f0f5;z-index:250;flex-direction:column;align-items:center;justify-content:center;">
+
+  <div style="width:100%;padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:18px;font-weight:900;color:#222">⚡ 바로지원</div>
+    <div id="swipe-counter" style="font-size:13px;color:#aaa;font-weight:700"></div>
+  </div>
+
+  <!-- 카드 스택 -->
+  <div id="swipe-stack" style="position:relative;width:calc(100% - 32px);flex:1;max-height:68vh;"></div>
+
+  <!-- 액션 버튼 -->
+  <div style="display:flex;gap:20px;align-items:center;justify-content:center;padding:16px 0 20px;">
+    <button onclick="swipeAction('left')" style="width:60px;height:60px;border-radius:50%;background:#fff;border:2px solid #FFE0E0;font-size:26px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;">❌</button>
+    <button onclick="swipeAction('up')" style="width:50px;height:50px;border-radius:50%;background:#fff;border:2px solid #FFF3E0;font-size:22px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;">⚡</button>
+    <button onclick="swipeAction('right')" style="width:60px;height:60px;border-radius:50%;background:var(--red);border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(255,75,75,0.4);display:flex;align-items:center;justify-content:center;">✅</button>
+  </div>
+</div>
+
 <!-- 하단 내비게이션 -->
 <div class="bottom-nav">
   <button class="nav-item active" onclick="setNav(this, 'map')">
     <div class="nav-icon">🗺</div>
     <div class="nav-label">지도</div>
   </button>
+  <button class="nav-item" onclick="setNav(this, 'swipe')">
+    <div class="nav-icon">💘</div>
+    <div class="nav-label">스와이프</div>
+  </button>
   <button class="nav-item" onclick="setNav(this, 'list')">
     <div class="nav-icon">📋</div>
     <div class="nav-label">목록</div>
-  </button>
-  <button class="nav-item" onclick="setNav(this, 'notify')">
-    <div class="nav-icon">🔔</div>
-    <div class="nav-label">알림</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'profile')">
     <div class="nav-icon">👤</div>
@@ -1100,10 +1122,168 @@ function setupRealtime() {
 function setNav(el, tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
-  if (tab === 'list') setSheetState('full');
-  else if (tab === 'map') setSheetState('peek');
-  else if (tab === 'profile') openProfile();
-  else showToast('준비 중입니다');
+  const swipeScreen = document.getElementById('swipe-screen');
+  if (tab === 'swipe') {
+    swipeScreen.style.display = 'flex';
+    initSwipe();
+  } else {
+    swipeScreen.style.display = 'none';
+    if (tab === 'list') setSheetState('full');
+    else if (tab === 'map') setSheetState('peek');
+    else if (tab === 'profile') openProfile();
+    else showToast('준비 중입니다');
+  }
+}
+
+// ── 스와이프 ─────────────────────────────────────────────
+let swipeJobs = [];
+let swipeIdx = 0;
+
+function initSwipe() {
+  swipeJobs = [...jobs].sort(() => Math.random() - 0.5);
+  swipeIdx = 0;
+  renderSwipeStack();
+}
+
+const CAT_EMOJI = { 'F&B':'☕','물류':'📦','판매':'🛍','청소':'🧹','이벤트':'🎉','커플알바':'💑','컨텐츠':'📱','챌린지':'🏆' };
+const CAT_BG = { 'F&B':'#FFF8E1','물류':'#F3F0FF','판매':'#E6FBF4','청소':'#F3F4F6','이벤트':'#FDF2F8','커플알바':'#FFF0F5','컨텐츠':'#F0F4FF','챌린지':'#FFF3E0' };
+
+function renderSwipeStack() {
+  const stack = document.getElementById('swipe-stack');
+  stack.innerHTML = '';
+  const remaining = swipeJobs.length - swipeIdx;
+  document.getElementById('swipe-counter').textContent = remaining > 0 ? `${remaining}개 남음` : '';
+
+  if (remaining === 0) {
+    stack.innerHTML = `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;text-align:center;gap:12px">
+      <div style="font-size:56px">🎉</div>
+      <div style="font-size:18px;font-weight:800;color:#555">주변 알바 다 봤어요!</div>
+      <div style="font-size:13px">반경을 넓히거나 내일 다시 확인해보세요</div>
+      <button onclick="swipeIdx=0;renderSwipeStack()" style="margin-top:8px;padding:12px 24px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer">다시 보기</button>
+    </div>`;
+    return;
+  }
+
+  // 뒷 카드 2장 미리 렌더 (stack 효과)
+  for (let i = Math.min(swipeIdx + 2, swipeJobs.length - 1); i >= swipeIdx; i--) {
+    const card = makeSwipeCard(swipeJobs[i], i === swipeIdx);
+    stack.appendChild(card);
+    const offset = (i - swipeIdx) * 6;
+    card.style.transform = `translateY(${offset}px) scale(${1 - (i - swipeIdx) * 0.04})`;
+    card.style.zIndex = 10 - (i - swipeIdx);
+    card.style.opacity = i === swipeIdx ? '1' : '0.85';
+  }
+
+  // 최상단 카드에 드래그 바인딩
+  const top = stack.querySelector('[data-top="true"]');
+  if (top) bindSwipeDrag(top);
+}
+
+function makeSwipeCard(job, isTop) {
+  const card = document.createElement('div');
+  card.dataset.top = isTop;
+  card.dataset.jobId = job.id;
+  const bg = CAT_BG[job.category] || '#fff';
+  const emoji = CAT_EMOJI[job.category] || '💼';
+  const tags = [job.status === 'urgent' ? '🔥 급구' : null, job.wage_delta > 0 ? `↑${job.wage_delta.toLocaleString()}원` : null].filter(Boolean);
+  const dist = job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
+
+  card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden;cursor:grab;touch-action:none;user-select:none;transition:box-shadow 0.2s;`;
+  card.innerHTML = `
+    <!-- 상단 컬러 배너 -->
+    <div style="background:${bg};padding:28px 24px 20px;text-align:center;">
+      <div style="font-size:64px;margin-bottom:8px">${emoji}</div>
+      <div style="font-size:12px;font-weight:800;color:#888;letter-spacing:1px;text-transform:uppercase">${job.category}</div>
+    </div>
+
+    <!-- 내용 -->
+    <div style="padding:20px 24px;">
+      <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">🏪 ${job.biz_name}</div>
+      <div style="font-size:22px;font-weight:900;color:#111;line-height:1.3;margin-bottom:12px">${job.title}</div>
+
+      <div style="font-size:30px;font-weight:900;color:var(--red);margin-bottom:4px">${job.current_wage.toLocaleString()}<span style="font-size:16px">원</span></div>
+      ${job.wage_delta > 0 ? `<div style="font-size:12px;color:#FF9500;font-weight:800;margin-bottom:12px">↑ ${job.wage_delta.toLocaleString()}원 인상됨</div>` : '<div style="margin-bottom:12px"></div>'}
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        ${tags.map(t=>`<span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">${t}</span>`).join('')}
+        <span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">📍 ${dist}</span>
+        <span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">⏱ ${job.duration_hours}시간</span>
+        <span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">★ ${job.biz_rating}</span>
+      </div>
+
+      <div style="font-size:13px;color:#888;line-height:1.6">${(job.description||'').slice(0,60)}${job.description?.length>60?'…':''}</div>
+    </div>
+
+    <!-- 스와이프 오버레이 -->
+    <div class="sw-overlay-left" style="position:absolute;inset:0;background:rgba(255,75,75,0.15);display:flex;align-items:center;justify-content:flex-end;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
+      <div style="font-size:48px;font-weight:900;color:#FF4B4B;border:4px solid #FF4B4B;border-radius:12px;padding:8px 16px;transform:rotate(15deg)">패스</div>
+    </div>
+    <div class="sw-overlay-right" style="position:absolute;inset:0;background:rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:flex-start;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
+      <div style="font-size:48px;font-weight:900;color:#10B981;border:4px solid #10B981;border-radius:12px;padding:8px 16px;transform:rotate(-15deg)">지원!</div>
+    </div>
+    <div class="sw-overlay-up" style="position:absolute;inset:0;background:rgba(255,149,0,0.15);display:flex;align-items:flex-end;justify-content:center;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
+      <div style="font-size:36px;font-weight:900;color:#FF9500;border:4px solid #FF9500;border-radius:12px;padding:8px 20px">⚡ 번개지원</div>
+    </div>`;
+  return card;
+}
+
+function bindSwipeDrag(card) {
+  let startX = 0, startY = 0, isDragging = false;
+
+  const onStart = (cx, cy) => { startX = cx; startY = cy; isDragging = true; card.style.transition = 'none'; };
+  const onMove = (cx, cy) => {
+    if (!isDragging) return;
+    const dx = cx - startX, dy = cy - startY;
+    const rot = dx / 18;
+    card.style.transform = `translate(${dx}px,${dy}px) rotate(${rot}deg)`;
+    const absX = Math.abs(dx), absY = Math.abs(dy);
+    card.querySelector('.sw-overlay-left').style.opacity  = dx < -40 ? Math.min(1,(absX-40)/80) : 0;
+    card.querySelector('.sw-overlay-right').style.opacity = dx > 40  ? Math.min(1,(absX-40)/80) : 0;
+    card.querySelector('.sw-overlay-up').style.opacity    = dy < -60 && absY > absX ? Math.min(1,(Math.abs(dy)-60)/60) : 0;
+  };
+  const onEnd = (cx, cy) => {
+    if (!isDragging) return;
+    isDragging = false;
+    const dx = cx - startX, dy = cy - startY;
+    card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    if (dx > 80)       flyCard(card, 'right');
+    else if (dx < -80) flyCard(card, 'left');
+    else if (dy < -100 && Math.abs(dy) > Math.abs(dx)) flyCard(card, 'up');
+    else { card.style.transform = ''; }
+  };
+
+  card.addEventListener('touchstart', e => onStart(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+  card.addEventListener('touchmove',  e => onMove(e.touches[0].clientX, e.touches[0].clientY),  { passive: true });
+  card.addEventListener('touchend',   e => onEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY), { passive: true });
+  card.addEventListener('mousedown',  e => onStart(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => { if (isDragging) onMove(e.clientX, e.clientY); });
+  window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientX, e.clientY); });
+}
+
+function flyCard(card, dir) {
+  const targets = { left:[-1200,100,'-30deg'], right:[1200,100,'30deg'], up:[0,-1200,'0deg'] };
+  const [tx, ty, rot] = targets[dir];
+  card.style.transform = `translate(${tx}px,${ty}px) rotate(${rot})`;
+  card.style.opacity = '0';
+
+  const job = swipeJobs[swipeIdx];
+  if (dir === 'right')  { showToast('⚡ 지원됐습니다!'); applySwipeJob(job); }
+  else if (dir === 'up'){ showToast('🔥 번개 지원!'); applySwipeJob(job); }
+  else                  { showToast('패스'); }
+
+  setTimeout(() => { swipeIdx++; renderSwipeStack(); }, 350);
+}
+
+function swipeAction(dir) {
+  const top = document.querySelector('[data-top="true"]');
+  if (top) { top.style.transition = 'transform 0.3s ease, opacity 0.3s ease'; flyCard(top, dir); }
+}
+
+async function applySwipeJob(job) {
+  if (isGuest || !currentUser) return;
+  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!worker) return;
+  await db.from('applications').insert({ job_posting_id: job.id, worker_id: worker.id }).catch(()=>{});
 }
 
 function openProfile() {
@@ -1173,6 +1353,9 @@ function getMockJobs() {
     { id:'4', title:'홀·카운터 보조', biz_name:'엔젤리너스 하단역점', category:'F&B', base_wage:9860, current_wage:11000, wage_delta:1140, status:'urgent', lat:35.1500, lng:128.9750, distance_m:300, start_time: new Date(Date.now()+1800000).toISOString(), duration_hours:3, needed_count:1, filled_count:0, description:'카운터 경험 없어도 됩니다. 친절한 교육 후 투입.', biz_rating:3.9, biz_kindness:3.7, biz_reviews:15 },
     { id:'5', title:'행사 진행 보조 스태프', biz_name:'하단 페스티벌 운영팀', category:'이벤트', base_wage:11500, current_wage:13500, wage_delta:2000, status:'urgent', lat:35.1535, lng:128.9742, distance_m:450, start_time: new Date(Date.now()+18000000).toISOString(), duration_hours:5, needed_count:8, filled_count:3, description:'주말 야외 페스티벌. 유니폼+식사 2회 제공.', biz_rating:4.5, biz_kindness:4.6, biz_reviews:9 },
     { id:'6', title:'아파트 입주 청소 보조', biz_name:'클린마스터 청소업체', category:'청소', base_wage:13000, current_wage:11000, wage_delta:-2000, status:'open', lat:35.1560, lng:128.9715, distance_m:720, start_time: new Date(Date.now()+64800000).toISOString(), duration_hours:8, needed_count:3, filled_count:0, description:'신축 아파트 입주 청소. 청소 도구 제공.', biz_rating:4.3, biz_kindness:4.2, biz_reviews:28 },
+    { id:'7', title:'커플 팝업스토어 도우미', biz_name:'무드마켓 팝업', category:'커플알바', base_wage:12000, current_wage:14000, wage_delta:2000, status:'urgent', lat:35.1528, lng:128.9745, distance_m:310, start_time: new Date(Date.now()+7200000).toISOString(), duration_hours:5, needed_count:4, filled_count:0, description:'커플 2인 1팀으로 진행! 드레스코드 있음. 촬영 컨텐츠 동의 시 추가 수당.', biz_rating:4.7, biz_kindness:4.9, biz_reviews:12 },
+    { id:'8', title:'틱톡 챌린지 영상 출연', biz_name:'바이럴컴퍼니', category:'컨텐츠', base_wage:15000, current_wage:20000, wage_delta:5000, status:'urgent', lat:35.1515, lng:128.9720, distance_m:180, start_time: new Date(Date.now()+3600000).toISOString(), duration_hours:2, needed_count:6, filled_count:1, description:'틱톡 브랜드 챌린지 영상 출연. 2시간 촬영 후 즉시 현금 지급. 외모 관계없이 누구나!', biz_rating:4.5, biz_kindness:4.6, biz_reviews:8 },
+    { id:'9', title:'철봉 오래매달리기 챌린지', biz_name:'스포츠브랜드X', category:'챌린지', base_wage:10000, current_wage:30000, wage_delta:20000, status:'urgent', lat:35.1540, lng:128.9730, distance_m:420, start_time: new Date(Date.now()+1800000).toISOString(), duration_hours:1, needed_count:10, filled_count:3, description:'30초 이상 매달리면 3만원! 1분 이상은 보너스. 누구나 도전 가능. 구경꾼도 환영.', biz_rating:4.2, biz_kindness:4.1, biz_reviews:5 },
   ];
 }
 
