@@ -11,12 +11,16 @@
 
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- 카카오맵 SDK: appkey를 config.js에서 읽어 동적 로드 -->
+  <!-- 카카오맵 SDK: appkey를 config.js에서 읽어 동적 로드, onload로 앱 초기화 동기화 -->
   <script>
+    window.__kakaoReady = false;
     (function() {
       var s = document.createElement('script');
-      s.type = 'text/javascript';
       s.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=' + APP_CONFIG.KAKAO_JS_KEY + '&autoload=false&libraries=services,clusterer';
+      s.onload = function() {
+        window.__kakaoReady = true;
+        if (window.__onKakaoReady) window.__onKakaoReady();
+      };
       document.head.appendChild(s);
     })();
   </script>
@@ -670,14 +674,22 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // 카카오맵 로드
-  kakao.maps.load(() => {
-    initMap();
-    setupSheet();
-    setupSearch();
-    loadJobs();
-    setupRealtime();
-  });
+  // 카카오맵 SDK 로드 완료 후 앱 시작 (race condition 방지)
+  function startKakaoMap() {
+    kakao.maps.load(() => {
+      initMap();
+      setupSheet();
+      setupSearch();
+      loadJobs();
+      setupRealtime();
+    });
+  }
+
+  if (window.__kakaoReady) {
+    startKakaoMap();
+  } else {
+    window.__onKakaoReady = startKakaoMap;
+  }
 });
 
 // ── 카카오맵 초기화 ───────────────────────────────────────
