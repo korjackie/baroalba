@@ -611,8 +611,11 @@
 <!-- ── 스와이프 모드 ── -->
 <div id="swipe-screen" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);background:#f0f0f5;z-index:250;flex-direction:column;align-items:center;justify-content:center;">
 
-  <div style="width:100%;padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between;">
-    <div style="font-size:18px;font-weight:900;color:#222">⚡ 바로지원</div>
+  <div style="width:100%;padding:14px 20px 6px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-size:20px;font-weight:900;color:#222">🎯 바로지원</div>
+      <div style="font-size:11px;color:#aaa;font-weight:600;margin-top:1px">오른쪽=지원 · 왼쪽=패스 · 위=번개지원</div>
+    </div>
     <div id="swipe-counter" style="font-size:13px;color:#aaa;font-weight:700"></div>
   </div>
 
@@ -1123,11 +1126,21 @@ function setNav(el, tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
   const swipeScreen = document.getElementById('swipe-screen');
+  const topBar      = document.querySelector('.top-bar');
+  const bottomSheet = document.getElementById('bottom-sheet');
+  const radiusBadge = document.getElementById('radius-badge');
+
   if (tab === 'swipe') {
     swipeScreen.style.display = 'flex';
+    topBar.style.display      = 'none';
+    bottomSheet.style.display = 'none';
+    radiusBadge.style.display = 'none';
     initSwipe();
   } else {
     swipeScreen.style.display = 'none';
+    topBar.style.display      = '';
+    bottomSheet.style.display = '';
+    radiusBadge.style.display = '';
     if (tab === 'list') setSheetState('full');
     else if (tab === 'map') setSheetState('peek');
     else if (tab === 'profile') openProfile();
