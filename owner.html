@@ -8,6 +8,7 @@
   <title>바로알바 — 업주</title>
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services"><\/scr'+'ipt>');</script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -213,10 +214,7 @@
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
-    <div class="header-logo" style="display:flex;align-items:center;gap:6px">
-      <img src="icons/icon.svg" width="24" height="24" style="border-radius:6px;vertical-align:middle">
-      바로알바
-    </div>
+    <div class="header-logo">⚡ 바로알바</div>
     <div class="header-badge">업주</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -994,8 +992,18 @@ function copyShareUrl() {
 
 function shareKakao() {
   const url = document.getElementById('share-url-text').textContent;
-  const kakaoWebShare = `https://story.kakao.com/share?url=${encodeURIComponent(url)}`;
-  window.open(kakaoWebShare, '_blank', 'width=500,height=600');
+  if (!window.Kakao) { showToast('카카오 SDK 로딩 중입니다'); return; }
+  if (!Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
+  Kakao.Share.sendDefault({
+    objectType: 'feed',
+    content: {
+      title: '바로알바 — 지금 바로 지원하세요!',
+      description: '실시간 지도 기반 알바 매칭. 지금 공고를 확인해보세요.',
+      imageUrl: 'https://baroalba.multimove.co.kr/icons/og-image.png',
+      link: { mobileWebUrl: url, webUrl: url },
+    },
+    buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }],
+  });
 }
 
 function shareNative() {
