@@ -313,11 +313,12 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">위치 * <span style="font-size:10px;color:#aaa;font-weight:400">— 상호명 또는 주소로 검색</span></label>
+        <label class="form-label">위치 * <span style="font-size:10px;color:#aaa;font-weight:400">— 상호명으로 검색</span></label>
         <div class="location-search">
-          <input class="form-input" id="f-address" placeholder="예: 스타벅스 하단점, 강남역 2번 출구">
+          <input class="form-input" id="f-address" placeholder="업체명 입력 (예: 스타벅스하단점)">
           <button class="search-addr-btn" onclick="searchNaverPlace()">🔍 검색</button>
         </div>
+        <div id="region-hint" style="font-size:11px;color:#3B82F6;font-weight:700;padding:4px 2px;display:none"></div>
         <!-- 검색 결과 목록 -->
         <div id="place-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;"></div>
         <div class="location-result" id="location-result"></div>
@@ -591,6 +592,8 @@ function openPostingForm() {
   now.setHours(now.getHours() + 1);
   document.getElementById('f-start').value = now.toISOString().slice(0,16);
 
+  document.getElementById('region-hint').style.display = 'none';
+  detectUserRegion();
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -617,10 +620,36 @@ function openEditForm(jobId) {
 function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
+// ── 현재 위치 기반 지역명 (구/동) ────────────────────────
+let userRegion2 = ''; // 예: "사하구"
+let userRegion3 = ''; // 예: "하단동"
+
+function detectUserRegion() {
+  if (!navigator.geolocation || !window.kakao) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const geocoder = new kakao.maps.services.Geocoder();
+    geocoder.coord2RegionCode(pos.coords.longitude, pos.coords.latitude, (result, status) => {
+      if (status !== kakao.maps.services.Status.OK) return;
+      const r = result[0];
+      userRegion2 = r.region_2depth_name || ''; // 사하구
+      userRegion3 = r.region_3depth_name || ''; // 하단동
+      const hint = document.getElementById('region-hint');
+      if (hint && userRegion2) {
+        hint.textContent = `📍 현재 위치: ${r.region_1depth_name} ${userRegion2} ${userRegion3} — 업체명만 입력하면 자동으로 이 지역 기준 검색합니다`;
+        hint.style.display = 'block';
+      }
+    });
+  }, () => {});
+}
+
 // ── 네이버 플레이스 검색 ─────────────────────────────────
 async function searchNaverPlace() {
-  const query = document.getElementById('f-address').value.trim();
-  if (!query) { showToast('업체명이나 주소를 입력해주세요'); return; }
+  const raw = document.getElementById('f-address').value.trim();
+  if (!raw) { showToast('업체명을 입력해주세요'); return; }
+
+  // 지역명이 포함되지 않은 짧은 검색어면 현재 위치 자동 추가
+  const hasRegion = /[가-힣]{1,4}[시군구동읍면]/.test(raw);
+  const query = (!hasRegion && userRegion2) ? `${userRegion2} ${raw}` : raw;
 
   const btn = document.querySelector('.search-addr-btn');
   btn.textContent = '검색 중...'; btn.disabled = true;
@@ -629,22 +658,22 @@ async function searchNaverPlace() {
     const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`);
     const data = await res.json();
     if (!res.ok || !data.items?.length) {
-      // 네이버 검색 실패 시 카카오 지오코더 폴백
-      searchKakaoFallback(query);
+      searchKakaoFallback(raw);
       return;
     }
-    renderPlaceResults(data.items);
+    renderPlaceResults(data.items, query);
   } catch(e) {
-    searchKakaoFallback(query);
+    searchKakaoFallback(raw);
   } finally {
     btn.textContent = '🔍 검색'; btn.disabled = false;
   }
 }
 
-function renderPlaceResults(items) {
+function renderPlaceResults(items, usedQuery) {
   const box = document.getElementById('place-results');
   box.style.display = 'block';
-  box.innerHTML = items.map((item, i) => `
+  const header = usedQuery ? `<div style="padding:8px 14px;font-size:11px;color:#888;border-bottom:1px solid #eee">"${usedQuery}" 검색 결과 ${items.length}개</div>` : '';
+  box.innerHTML = header + items.map((item, i) => `
     <div onclick="selectPlace(${i})" data-idx="${i}" style="padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
         <span style="font-size:13px;font-weight:800;color:#222">${item.title}</span>
