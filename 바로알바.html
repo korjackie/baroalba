@@ -269,11 +269,10 @@
   </div>
   <div class="header-top">
     <div class="logo">⚡바로알바</div>
-    <div class="search-bar">
+    <div class="search-bar" style="margin-right:48px;">
       <span class="icon">🔍</span>
       <input type="text" id="search-input" placeholder="업종, 업체명, 지역 검색..." oninput="searchJobs(this.value)">
     </div>
-    <button class="location-btn" onclick="goToMyLocation()" title="내 위치">📍</button>
   </div>
   <div class="filter-chips">
     <div class="chip active" onclick="filterJobs(this, null)">전체</div>
@@ -472,17 +471,32 @@
         <label class="profile-form-label">이름 *</label>
         <input class="profile-form-input" id="prof-name" type="text" placeholder="이름을 입력하세요">
       </div>
+      <div style="display:flex;gap:10px;">
+        <div class="profile-form-group" style="flex:1;">
+          <label class="profile-form-label">출생연도</label>
+          <input class="profile-form-input" id="prof-year" type="number" placeholder="예: 1998" min="1950" max="2010" inputmode="numeric">
+        </div>
+        <div class="profile-form-group" style="flex:1;">
+          <label class="profile-form-label">성별</label>
+          <select class="profile-form-input" id="prof-gender">
+            <option value="">선택 안 함</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+      </div>
       <div class="profile-form-group">
-        <label class="profile-form-label">출생연도</label>
-        <input class="profile-form-input" id="prof-year" type="number" placeholder="예: 1998" min="1950" max="2010" inputmode="numeric">
+        <label class="profile-form-label">거주 지역</label>
+        <input class="profile-form-input" id="prof-region" type="text" placeholder="예: 부산 사하구">
       </div>
       <div class="profile-form-group">
         <label class="profile-form-label">자기소개</label>
-        <textarea class="profile-form-input" id="prof-bio" rows="4" placeholder="간단한 자기소개를 작성해주세요.&#10;예) 성실하고 시간 약속을 잘 지킵니다. 카페 경험 2년 있습니다."></textarea>
+        <textarea class="profile-form-input" id="prof-bio" rows="3" placeholder="간단한 자기소개를 작성해주세요.&#10;예) 성실하고 시간 약속을 잘 지킵니다. 카페 경험 2년 있습니다."></textarea>
       </div>
       <div class="profile-form-group">
         <label class="profile-form-label">경력 · 경험사항</label>
-        <textarea class="profile-form-input" id="prof-exp" rows="5" placeholder="경력이나 경험을 작성해주세요.&#10;예) 2023.03~2024.06 스타벅스 파트타임&#10;2022 편의점 야간 알바 6개월"></textarea>
+        <textarea class="profile-form-input" id="prof-exp" rows="4" placeholder="경력이나 경험을 작성해주세요.&#10;예) 2023.03~2024.06 스타벅스 파트타임&#10;2022 편의점 야간 알바 6개월"></textarea>
       </div>
       <button class="profile-save-btn" onclick="saveMyProfile()">💾 저장하기</button>
     </div>
@@ -708,9 +722,12 @@ function openModal(id) {
       <div class="rating-detail-row"><span class="rating-detail-label">업주 친절도</span><div class="rating-detail-val"><span class="big-star">★</span><span class="rating-num">${job.bizKindness}</span></div></div>
       <div class="rating-detail-row"><span class="rating-detail-label">알바생 평점</span><div class="rating-detail-val"><span class="big-star">★</span><span class="rating-num">${job.workerRating}</span><span class="review-count">(${job.workerRatingCount}명)</span></div></div>
     </div>
-    <button class="modal-apply" onclick="applyJob('${job.id}')" ${job.status==='filled'?'disabled':''}>
-      ${job.status==='filled'?'마감된 공고입니다':'⚡ 바로 지원하기'}
-    </button>
+    ${currentRole === 'business'
+      ? `<button class="modal-apply" disabled style="background:#888;cursor:default;">업주 계정으로는 지원할 수 없습니다</button>`
+      : `<button class="modal-apply" onclick="applyJob('${job.id}')" ${job.status==='filled'?'disabled':''}>
+          ${job.status==='filled'?'마감된 공고입니다':'⚡ 바로 지원하기'}
+         </button>`
+    }
   `;
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -943,12 +960,26 @@ async function viewApplicants(jobId, jobTitle) {
     <button onclick="loadMyPostings();document.getElementById('manage-modal-title').textContent='📝 내 공고 관리'" style="background:none;border:none;color:#FF4B4B;font-weight:700;cursor:pointer;padding:4px 0;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:4px;">← 목록으로</button>
     ${data.map(app => {
       const opts = STATUS_OPTS.map(o => `<option value="${o.v}" ${o.v===app.app_status?'selected':''}>${o.l}</option>`).join('');
-      const workerJson = encodeURIComponent(JSON.stringify({ name: app.worker_name, phone: app.worker_phone, bio: app.worker_bio, experience: app.worker_experience, birth_year: app.worker_birth_year }));
+      const age = app.worker_birth_year ? `${new Date().getFullYear() - app.worker_birth_year}세` : null;
+      const gender = app.worker_gender === 'male' ? '남' : app.worker_gender === 'female' ? '여' : null;
+      const tags = [age, gender, app.worker_region].filter(Boolean).join(' · ');
+      const rating = app.worker_rating > 0 ? `★ ${parseFloat(app.worker_rating).toFixed(1)}` : '평점없음';
+      const bioSnippet = app.worker_bio ? app.worker_bio.slice(0, 40) + (app.worker_bio.length > 40 ? '…' : '') : null;
+      const workerJson = encodeURIComponent(JSON.stringify({
+        name: app.worker_name, phone: app.worker_phone, bio: app.worker_bio,
+        experience: null, birth_year: app.worker_birth_year,
+        gender: app.worker_gender, region: app.worker_region, rating: app.worker_rating
+      }));
       return `
-        <div class="applicant-row">
+        <div class="applicant-row" style="align-items:flex-start;padding:14px 0;">
           <div style="flex:1;min-width:0;">
-            <div class="applicant-name" style="cursor:pointer;color:#FF4B4B;" onclick="openWorkerProfile(decodeURIComponent('${workerJson}'))">${app.worker_name || '이름 없음'} ↗</div>
-            <div class="applicant-phone">${app.worker_phone || '-'} · ${new Date(app.applied_at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})} 지원</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+              <span class="applicant-name" style="cursor:pointer;color:#FF4B4B;" onclick="openWorkerProfile(decodeURIComponent('${workerJson}'))">${app.worker_name || '이름 없음'} ↗</span>
+              <span style="font-size:11px;color:#FFBE00;font-weight:700;">${rating}</span>
+            </div>
+            ${tags ? `<div style="font-size:12px;color:#666;margin-bottom:3px;">${tags}</div>` : ''}
+            ${bioSnippet ? `<div style="font-size:11px;color:#999;">"${bioSnippet}"</div>` : ''}
+            <div class="applicant-phone" style="margin-top:4px;">${app.worker_phone || '-'} · ${new Date(app.applied_at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})} 지원</div>
           </div>
           <select class="status-select" onchange="updateApplicationStatus('${app.app_id}',this.value,'${jobId}','${jt}')">${opts}</select>
         </div>`;
@@ -993,21 +1024,26 @@ async function openMyProfile() {
   const { data, error } = await db.rpc('get_my_worker_profile');
   if (data?.[0]) {
     const p = data[0];
-    document.getElementById('prof-name').value = p.name || '';
-    document.getElementById('prof-year').value = p.birth_year || '';
-    document.getElementById('prof-bio').value  = p.bio || '';
-    document.getElementById('prof-exp').value  = p.experience || '';
+    document.getElementById('prof-name').value   = p.name || '';
+    document.getElementById('prof-year').value   = p.birth_year || '';
+    document.getElementById('prof-gender').value = p.gender || '';
+    document.getElementById('prof-region').value = p.region || '';
+    document.getElementById('prof-bio').value    = p.bio || '';
+    document.getElementById('prof-exp').value    = p.experience || '';
   }
 }
 
 async function saveMyProfile() {
-  const name = document.getElementById('prof-name').value.trim();
-  const year = parseInt(document.getElementById('prof-year').value) || null;
-  const bio  = document.getElementById('prof-bio').value.trim();
-  const exp  = document.getElementById('prof-exp').value.trim();
+  const name   = document.getElementById('prof-name').value.trim();
+  const year   = parseInt(document.getElementById('prof-year').value) || null;
+  const gender = document.getElementById('prof-gender').value || null;
+  const region = document.getElementById('prof-region').value.trim() || null;
+  const bio    = document.getElementById('prof-bio').value.trim();
+  const exp    = document.getElementById('prof-exp').value.trim();
   if (!name) { showToast('⚠️ 이름을 입력해주세요.'); return; }
   const { error } = await db.rpc('update_my_worker_profile', {
-    p_name: name, p_bio: bio, p_experience: exp, p_birth_year: year
+    p_name: name, p_bio: bio, p_experience: exp, p_birth_year: year,
+    p_gender: gender, p_region: region
   });
   if (error) { showToast('저장 실패: ' + error.message); return; }
   document.getElementById('my-profile-modal').classList.remove('open');
