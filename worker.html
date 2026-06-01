@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#FF4B4B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>바로알바 — 내 활동</title>
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    :root { --red:#FF4B4B; --nav-h:64px; }
+    body { font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#f5f5f5; min-height:100vh; }
+
+    /* ── 헤더 ── */
+    .header {
+      position:sticky; top:0; z-index:100;
+      background:#fff; padding:14px 16px 12px;
+      border-bottom:1px solid #f0f0f0;
+      box-shadow:0 1px 8px rgba(0,0,0,0.06);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .header-logo { font-size:20px; font-weight:900; color:var(--red); }
+    .header-name { font-size:13px; color:#555; font-weight:600; }
+    .back-btn { font-size:13px; color:var(--red); font-weight:700; background:none; border:none; cursor:pointer; }
+
+    /* ── 프로필 카드 ── */
+    .profile-card {
+      margin:16px; background:#fff; border-radius:20px;
+      padding:20px; box-shadow:0 1px 8px rgba(0,0,0,0.06);
+      display:flex; align-items:center; gap:16px;
+    }
+    .avatar { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#FF4B4B,#ff7b7b); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
+    .profile-info .name { font-size:18px; font-weight:900; color:#222; }
+    .profile-info .sub { font-size:12px; color:#aaa; margin-top:3px; }
+    .rating-badge { display:flex; align-items:center; gap:4px; background:#FFF8E1; color:#F59E0B; font-size:13px; font-weight:800; padding:4px 10px; border-radius:10px; margin-top:6px; width:fit-content; }
+
+    /* ── 통계 ── */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:0 16px 16px; }
+    .stat-card { background:#fff; border-radius:14px; padding:12px 8px; text-align:center; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+    .stat-val { font-size:20px; font-weight:900; color:var(--red); }
+    .stat-label { font-size:10px; color:#aaa; font-weight:600; margin-top:2px; }
+
+    /* ── 필터 탭 ── */
+    .filter-tabs { display:flex; gap:6px; padding:0 16px 12px; overflow-x:auto; scrollbar-width:none; }
+    .filter-tabs::-webkit-scrollbar { display:none; }
+    .ftab { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid #e0e0e0; background:#fff; font-size:12px; font-weight:700; color:#888; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+    .ftab.active { background:var(--red); border-color:var(--red); color:#fff; }
+
+    /* ── 지원 카드 ── */
+    .content { padding:0 16px; padding-bottom:calc(var(--nav-h)+16px); }
+    .app-card {
+      background:#fff; border-radius:16px; padding:16px;
+      margin-bottom:12px; box-shadow:0 1px 6px rgba(0,0,0,0.06);
+      border-left:4px solid #eee;
+    }
+    .app-card.pending  { border-left-color:#F59E0B; }
+    .app-card.accepted { border-left-color:#10B981; }
+    .app-card.rejected { border-left-color:#e0e0e0; opacity:0.7; }
+    .app-card.completed { border-left-color:#3B82F6; }
+
+    .card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .card-biz { font-size:11px; color:#aaa; font-weight:600; margin-bottom:3px; }
+    .card-title { font-size:15px; font-weight:800; color:#222; }
+    .status-chip { font-size:11px; font-weight:800; padding:3px 10px; border-radius:10px; flex-shrink:0; }
+    .chip-pending  { background:#FFF8E1; color:#F59E0B; }
+    .chip-accepted { background:#E6FBF4; color:#10B981; }
+    .chip-rejected { background:#f0f0f0; color:#aaa; }
+    .chip-completed{ background:#EFF6FF; color:#3B82F6; }
+
+    .card-meta { display:flex; gap:10px; font-size:11px; color:#aaa; font-weight:600; margin-bottom:12px; }
+    .card-wage { font-size:16px; font-weight:900; color:var(--red); margin-bottom:8px; }
+
+    .card-actions { display:flex; gap:8px; }
+    .cancel-btn { padding:9px 14px; background:#f5f5f5; color:#888; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; }
+    .review-btn { flex:1; padding:9px; background:linear-gradient(135deg,#F59E0B,#FFD60A); color:#fff; border:none; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; }
+    .reviewed-badge { font-size:11px; font-weight:700; color:#aaa; padding:6px 0; }
+
+    /* ── 평점 모달 ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end; }
+    .modal-overlay.open { display:flex; }
+    .review-sheet { background:#fff; border-radius:24px 24px 0 0; width:100%; padding:0 0 40px; animation:slideUp 0.3s ease; }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .review-head { padding:14px 20px 12px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; }
+    .review-title { font-size:17px; font-weight:800; color:#222; }
+    .review-close { font-size:22px; color:#aaa; background:none; border:none; cursor:pointer; }
+    .review-body { padding:20px; }
+    .review-biz { font-size:14px; font-weight:700; color:#555; margin-bottom:20px; text-align:center; }
+
+    .stars-section { margin-bottom:20px; }
+    .stars-label { font-size:12px; font-weight:700; color:#888; margin-bottom:10px; }
+    .stars-row { display:flex; gap:8px; justify-content:center; }
+    .star-btn { font-size:32px; cursor:pointer; transition:transform 0.1s; }
+    .star-btn:active { transform:scale(0.9); }
+
+    .review-textarea { width:100%; padding:12px 14px; border:1.5px solid #eee; border-radius:12px; font-size:14px; color:#222; outline:none; resize:none; height:90px; font-family:inherit; margin-bottom:16px; }
+    .review-textarea:focus { border-color:var(--red); }
+    .submit-review-btn { width:100%; padding:15px; background:var(--red); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:900; cursor:pointer; }
+
+    /* ── 빈 상태 ── */
+    .empty { text-align:center; padding:48px 20px; color:#ccc; }
+    .empty-icon { font-size:48px; margin-bottom:12px; }
+    .empty-txt { font-size:14px; font-weight:600; line-height:1.6; }
+
+    /* ── 로딩 ── */
+    .spinner { width:36px; height:36px; border:3px solid #eee; border-top-color:var(--red); border-radius:50%; animation:spin 0.7s linear infinite; margin:32px auto; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── 토스트 ── */
+    .toast { position:fixed; bottom:calc(var(--nav-h)+16px); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:700; padding:10px 18px; border-radius:20px; z-index:9999; white-space:nowrap; transition:opacity 0.3s; pointer-events:none; }
+    .toast.hidden { opacity:0; }
+
+    /* ── 하단 내비 ── */
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:#fff; border-top:1px solid #f0f0f0; display:flex; z-index:400; box-shadow:0 -2px 12px rgba(0,0,0,0.06); }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border:none; background:none; }
+    .nav-icon { font-size:22px; }
+    .nav-label { font-size:10px; font-weight:700; color:#bbb; }
+    .nav-item.active .nav-label { color:var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <button class="back-btn" onclick="location.href='./바로알바.html'">← 지도</button>
+  <div class="header-logo">⚡ 내 활동</div>
+  <div class="header-name" id="h-name"></div>
+</div>
+
+<!-- 프로필 카드 -->
+<div class="profile-card">
+  <div class="avatar">💼</div>
+  <div class="profile-info">
+    <div class="name" id="p-name">-</div>
+    <div class="sub" id="p-email">-</div>
+    <div class="rating-badge">★ <span id="p-rating">-</span> (<span id="p-reviews">0</span>개 평가)</div>
+  </div>
+</div>
+
+<!-- 통계 -->
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-val" id="s-total">-</div><div class="stat-label">총 지원</div></div>
+  <div class="stat-card"><div class="stat-val" id="s-pending">-</div><div class="stat-label">검토중</div></div>
+  <div class="stat-card"><div class="stat-val" id="s-accepted">-</div><div class="stat-label">수락</div></div>
+  <div class="stat-card"><div class="stat-val" id="s-completed">-</div><div class="stat-label">완료</div></div>
+</div>
+
+<!-- 필터 탭 -->
+<div class="filter-tabs">
+  <div class="ftab active" onclick="filterApps('all', this)">전체</div>
+  <div class="ftab" onclick="filterApps('pending', this)">⏳ 검토중</div>
+  <div class="ftab" onclick="filterApps('accepted', this)">✅ 수락</div>
+  <div class="ftab" onclick="filterApps('rejected', this)">❌ 거절</div>
+  <div class="ftab" onclick="filterApps('completed', this)">🏁 완료</div>
+</div>
+
+<!-- 지원 목록 -->
+<div class="content">
+  <div id="app-list"><div class="spinner"></div></div>
+</div>
+
+<!-- 평점 모달 -->
+<div class="modal-overlay" id="review-overlay" onclick="closeReviewIfBg(event)">
+  <div class="review-sheet">
+    <div class="review-head">
+      <div class="review-title">업주 평점 남기기</div>
+      <button class="review-close" onclick="closeReview()">✕</button>
+    </div>
+    <div class="review-body">
+      <div class="review-biz" id="r-biz-name"></div>
+
+      <div class="stars-section">
+        <div class="stars-label">전체 만족도</div>
+        <div class="stars-row" id="stars-rating">
+          <span class="star-btn" onclick="setStar('rating',1)">☆</span>
+          <span class="star-btn" onclick="setStar('rating',2)">☆</span>
+          <span class="star-btn" onclick="setStar('rating',3)">☆</span>
+          <span class="star-btn" onclick="setStar('rating',4)">☆</span>
+          <span class="star-btn" onclick="setStar('rating',5)">☆</span>
+        </div>
+      </div>
+
+      <div class="stars-section">
+        <div class="stars-label">친절도</div>
+        <div class="stars-row" id="stars-kindness">
+          <span class="star-btn" onclick="setStar('kindness',1)">☆</span>
+          <span class="star-btn" onclick="setStar('kindness',2)">☆</span>
+          <span class="star-btn" onclick="setStar('kindness',3)">☆</span>
+          <span class="star-btn" onclick="setStar('kindness',4)">☆</span>
+          <span class="star-btn" onclick="setStar('kindness',5)">☆</span>
+        </div>
+      </div>
+
+      <textarea class="review-textarea" id="r-comment" placeholder="업주에 대한 솔직한 후기를 남겨주세요 (선택)"></textarea>
+      <button class="submit-review-btn" onclick="submitReview()">평점 제출하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 하단 내비 -->
+<div class="bottom-nav">
+  <button class="nav-item" onclick="location.href='./바로알바.html'">
+    <div class="nav-icon">🗺</div>
+    <div class="nav-label">지도</div>
+  </button>
+  <button class="nav-item active">
+    <div class="nav-icon">💼</div>
+    <div class="nav-label">내 활동</div>
+  </button>
+  <button class="nav-item" onclick="showToast('준비 중입니다')">
+    <div class="nav-icon">🔔</div>
+    <div class="nav-label">알림</div>
+  </button>
+  <button class="nav-item" onclick="doLogout()">
+    <div class="nav-icon">🚪</div>
+    <div class="nav-label">로그아웃</div>
+  </button>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let workerRecord = null;
+let allApps = [];
+let currentFilter = 'all';
+let reviewingApp = null;
+let reviewRating = 0;
+let reviewKindness = 0;
+
+// ── 초기화 ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { location.href = './login.html'; return; }
+  currentUser = session.user;
+
+  const meta = currentUser.user_metadata || {};
+  document.getElementById('h-name').textContent = meta.full_name || '';
+  document.getElementById('p-name').textContent = meta.full_name || '알바생';
+  document.getElementById('p-email').textContent = currentUser.email || '';
+
+  // 알바생 레코드 조회
+  const { data: worker } = await db.from('workers')
+    .select('*').eq('kakao_uid', currentUser.id).single();
+
+  if (worker) {
+    workerRecord = worker;
+    document.getElementById('p-rating').textContent = worker.rating || '-';
+    document.getElementById('p-reviews').textContent = worker.review_count || 0;
+    loadApplications();
+  } else {
+    document.getElementById('app-list').innerHTML =
+      '<div class="empty"><div class="empty-icon">💼</div><div class="empty-txt">알바생 프로필이 없어요<br>지도에서 공고에 지원하면 자동 생성됩니다</div></div>';
+  }
+});
+
+// ── 지원 내역 로드 ──────────────────────────────────────
+async function loadApplications() {
+  const { data, error } = await db.from('applications')
+    .select(`
+      *,
+      job_postings (
+        id, title, category, current_wage, start_time, duration_hours, status,
+        businesses (id, name, rating, kindness_rating)
+      )
+    `)
+    .eq('worker_id', workerRecord.id)
+    .order('applied_at', { ascending: false });
+
+  if (error) { showToast('불러오기 실패'); return; }
+  allApps = data || [];
+  updateStats();
+  renderApps();
+}
+
+function updateStats() {
+  document.getElementById('s-total').textContent = allApps.length;
+  document.getElementById('s-pending').textContent = allApps.filter(a => a.status === 'pending').length;
+  document.getElementById('s-accepted').textContent = allApps.filter(a => a.status === 'accepted').length;
+  document.getElementById('s-completed').textContent = allApps.filter(a => a.status === 'completed').length;
+}
+
+function filterApps(filter, el) {
+  currentFilter = filter;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderApps();
+}
+
+function renderApps() {
+  const filtered = currentFilter === 'all' ? allApps : allApps.filter(a => a.status === currentFilter);
+  const el = document.getElementById('app-list');
+
+  if (!filtered.length) {
+    const labels = { all:'지원한 공고가 없어요\n지도에서 주변 공고를 찾아보세요', pending:'검토중인 지원이 없어요', accepted:'수락된 지원이 없어요', rejected:'거절된 지원이 없어요', completed:'완료된 근무가 없어요' };
+    el.innerHTML = `<div class="empty"><div class="empty-icon">${currentFilter==='all'?'📋':'🔍'}</div><div class="empty-txt">${labels[currentFilter]}</div></div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(a => {
+    const jp = a.job_postings;
+    const biz = jp?.businesses;
+    const statusMap = { pending:'검토중', accepted:'수락됨', rejected:'거절됨', completed:'근무완료', cancelled:'취소됨' };
+    const chipMap  = { pending:'chip-pending', accepted:'chip-accepted', rejected:'chip-rejected', completed:'chip-completed', cancelled:'chip-rejected' };
+    const start = jp?.start_time ? formatTime(jp.start_time) : '미정';
+
+    const hasReview = a.status === 'accepted' || a.status === 'completed';
+    const actionHtml = hasReview
+      ? `<div class="card-actions">
+          ${a.status === 'pending' ? `<button class="cancel-btn" onclick="cancelApp('${a.id}')">지원 취소</button>` : ''}
+          <button class="review-btn" onclick="openReview('${a.id}','${biz?.id}','${biz?.name||''}')">★ 업주 평점 남기기</button>
+        </div>`
+      : a.status === 'pending'
+      ? `<button class="cancel-btn" onclick="cancelApp('${a.id}')">지원 취소</button>`
+      : '';
+
+    return `
+    <div class="app-card ${a.status}">
+      <div class="card-top">
+        <div>
+          <div class="card-biz">🏪 ${biz?.name || '-'}</div>
+          <div class="card-title">${jp?.title || '-'}</div>
+        </div>
+        <span class="status-chip ${chipMap[a.status]}">${statusMap[a.status]}</span>
+      </div>
+      <div class="card-wage">${jp?.current_wage?.toLocaleString() || '-'}원/시간</div>
+      <div class="card-meta">
+        <span>⏰ ${start}</span>
+        <span>⏱ ${jp?.duration_hours || '-'}시간</span>
+        <span>${jp?.category || ''}</span>
+      </div>
+      ${actionHtml}
+    </div>`;
+  }).join('');
+}
+
+// ── 지원 취소 ──────────────────────────────────────────
+async function cancelApp(appId) {
+  if (!confirm('지원을 취소하시겠어요?')) return;
+  const { error } = await db.from('applications').update({ status: 'cancelled' }).eq('id', appId);
+  if (error) { showToast('취소 실패'); return; }
+  showToast('지원이 취소됐습니다');
+  loadApplications();
+}
+
+// ── 평점 ───────────────────────────────────────────────
+function openReview(appId, bizId, bizName) {
+  reviewingApp = { appId, bizId };
+  reviewRating = 0; reviewKindness = 0;
+  document.getElementById('r-biz-name').textContent = bizName;
+  document.getElementById('r-comment').value = '';
+  renderStars('rating', 0);
+  renderStars('kindness', 0);
+  document.getElementById('review-overlay').classList.add('open');
+}
+
+function closeReview() { document.getElementById('review-overlay').classList.remove('open'); }
+function closeReviewIfBg(e) { if (e.target === document.getElementById('review-overlay')) closeReview(); }
+
+function setStar(type, val) {
+  if (type === 'rating') reviewRating = val;
+  else reviewKindness = val;
+  renderStars(type, val);
+}
+
+function renderStars(type, val) {
+  const row = document.getElementById('stars-' + type);
+  row.querySelectorAll('.star-btn').forEach((s, i) => {
+    s.textContent = i < val ? '★' : '☆';
+    s.style.color = i < val ? '#F59E0B' : '#ddd';
+  });
+}
+
+async function submitReview() {
+  if (!reviewRating) { showToast('별점을 선택해주세요'); return; }
+  if (!reviewingApp) return;
+
+  const { error } = await db.from('reviews').insert({
+    job_posting_id: null,
+    application_id: reviewingApp.appId,
+    reviewer_id: workerRecord.id,
+    reviewee_id: reviewingApp.bizId,
+    reviewer_role: 'worker',
+    rating: reviewRating,
+    kindness_rating: reviewKindness || reviewRating,
+    comment: document.getElementById('r-comment').value.trim() || null
+  });
+
+  if (error) {
+    if (error.code === '23505') showToast('이미 평점을 남기셨습니다');
+    else showToast('오류: ' + error.message);
+    return;
+  }
+  showToast('✅ 평점이 등록됐습니다!');
+  closeReview();
+  loadApplications();
+}
+
+// ── 유틸 ───────────────────────────────────────────────
+function formatTime(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = d - now;
+  if (diff < 0) return `${d.getMonth()+1}/${d.getDate()} 근무`;
+  if (diff < 3600000) return Math.round(diff/60000) + '분 후';
+  if (diff < 86400000) return Math.round(diff/3600000) + '시간 후';
+  return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  localStorage.removeItem('baroalba_guest');
+  location.href = './login.html';
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+}
+</script>
+</body>
+</html>
