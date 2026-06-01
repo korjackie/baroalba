@@ -296,20 +296,27 @@
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">시급 (원) *</label>
-          <input class="form-input" id="f-wage" type="number" min="9860" placeholder="10000">
-        </div>
-        <div class="form-group">
-          <label class="form-label">근무 시간</label>
-          <input class="form-input" id="f-duration" type="number" min="1" max="24" placeholder="4">
+      <div class="form-group">
+        <label class="form-label">시급 (원) *</label>
+        <input class="form-input" id="f-wage" type="number" min="9860" placeholder="10000">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">시작 시간 *</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" id="f-start-date" type="date" style="flex:1.6;min-width:0">
+          <select class="form-select" id="f-start-hour" style="flex:1;min-width:0"></select>
+          <select class="form-select" id="f-start-min" style="flex:0.9;min-width:0"></select>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">시작 시간</label>
-        <input class="form-input" id="f-start" type="datetime-local">
+        <label class="form-label">종료 시간 *</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-select" id="f-end-hour" style="flex:1;min-width:0"></select>
+          <select class="form-select" id="f-end-min" style="flex:0.9;min-width:0"></select>
+          <span id="f-duration-display" style="font-size:13px;color:#888;white-space:nowrap;min-width:36px;text-align:right"></span>
+        </div>
       </div>
 
       <!-- ⚡ 번개 알바 설정 -->
@@ -452,6 +459,7 @@ let editingId = null;
 
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  buildTimeSelects();
   const { data: { session } } = await db.auth.getSession();
   if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
@@ -657,7 +665,6 @@ function openPostingForm() {
   document.getElementById('f-title').value = '';
   document.getElementById('f-category').value = 'F&B';
   document.getElementById('f-wage').value = '';
-  document.getElementById('f-duration').value = '';
   document.getElementById('f-needed').value = 1;
   document.getElementById('f-desc').value = '';
   document.getElementById('f-address').value = '';
@@ -666,9 +673,14 @@ function openPostingForm() {
   document.getElementById('location-result').style.display = 'none';
   document.getElementById('mini-map').style.display = 'none';
 
-  const now = new Date(); now.setMinutes(0,0,0);
+  const now = new Date();
+  const roundMin = Math.ceil(now.getMinutes() / 5) * 5;
+  now.setMinutes(roundMin === 60 ? 0 : roundMin, 0, 0);
+  if (roundMin === 60) now.setHours(now.getHours() + 1);
   now.setHours(now.getHours() + 1);
-  document.getElementById('f-start').value = now.toISOString().slice(0,16);
+  setTimeSelects('start', now);
+  const end = new Date(now.getTime() + 4 * 3600000);
+  setTimeSelects('end', end);
 
   document.getElementById('naver-url-status').style.display = 'none';
   document.getElementById('f-naver-url-input').value = '';
@@ -692,12 +704,16 @@ function openEditForm(jobId) {
   document.getElementById('f-title').value = p.title;
   document.getElementById('f-category').value = p.category;
   document.getElementById('f-wage').value = p.base_wage;
-  document.getElementById('f-duration').value = p.duration_hours;
   document.getElementById('f-needed').value = p.needed_count;
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat;
   document.getElementById('f-lng').value = p.lng;
-  if (p.start_time) document.getElementById('f-start').value = p.start_time.slice(0,16);
+  if (p.start_time) {
+    const s = new Date(p.start_time);
+    setTimeSelects('start', s);
+    const endMs = p.end_time ? new Date(p.end_time) : new Date(s.getTime() + (p.duration_hours || 4) * 3600000);
+    setTimeSelects('end', endMs);
+  }
   if (p.lat && p.lng) showMiniMap(p.lat, p.lng, p.address || '');
   document.getElementById('form-overlay').classList.add('open');
 }
@@ -809,15 +825,18 @@ async function submitPosting() {
   const title = document.getElementById('f-title').value.trim();
   const category = document.getElementById('f-category').value;
   const wage = parseInt(document.getElementById('f-wage').value);
-  const duration = parseFloat(document.getElementById('f-duration').value);
   const needed = parseInt(document.getElementById('f-needed').value);
   const lat = parseFloat(document.getElementById('f-lat').value);
   const lng = parseFloat(document.getElementById('f-lng').value);
   const desc = document.getElementById('f-desc').value.trim();
-  const startVal = document.getElementById('f-start').value;
+  const startTime = getTimeValue('start');
+  const endTime = getTimeValue('end');
+  const duration = startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null;
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
   if (!wage || wage < 9860) { showToast('시급은 최저임금(9,860원) 이상이어야 해요'); return; }
+  if (!startTime) { showToast('시작 시간을 입력해주세요'); return; }
+  if (!endTime || endTime <= startTime) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
   if (!lat || !lng) { showToast('위치를 검색해서 선택해주세요'); return; }
 
   const btn = document.getElementById('submit-btn');
@@ -834,9 +853,10 @@ async function submitPosting() {
     base_wage: editingId ? undefined : wage,
     current_wage: wage,
     lat, lng,
-    duration_hours: duration || null,
+    duration_hours: duration,
     needed_count: needed || 1,
-    start_time: startVal ? new Date(startVal).toISOString() : null,
+    start_time: startTime ? startTime.toISOString() : null,
+    end_time: endTime ? endTime.toISOString() : null,
     status: surgeEnabled ? 'urgent' : 'open',
     surge_enabled:      surgeEnabled,
     surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
@@ -955,6 +975,77 @@ async function deleteOwnerAccount() {
   localStorage.removeItem('baroalba_guest');
   alert('탈퇴가 완료됐습니다.');
   location.href = '/login.html';
+}
+
+// ── 시작/종료 시간 셀렉트 헬퍼 ──────────────────────────────
+function buildTimeSelects() {
+  ['f-start-hour','f-end-hour'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.options.length) return;
+    for (let h = 0; h < 24; h++) {
+      const o = document.createElement('option');
+      o.value = h;
+      o.textContent = String(h).padStart(2,'0') + '시';
+      el.appendChild(o);
+    }
+  });
+  ['f-start-min','f-end-min'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.options.length) return;
+    for (let m = 0; m < 60; m += 5) {
+      const o = document.createElement('option');
+      o.value = m;
+      o.textContent = String(m).padStart(2,'0') + '분';
+      el.appendChild(o);
+    }
+  });
+  ['f-start-hour','f-start-min','f-end-hour','f-end-min'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', updateDurationDisplay);
+  });
+}
+
+function setTimeSelects(prefix, date) {
+  const d = document.getElementById('f-start-date');
+  if (prefix === 'start' && d) {
+    const y = date.getFullYear();
+    const mo = String(date.getMonth()+1).padStart(2,'0');
+    const day = String(date.getDate()).padStart(2,'0');
+    d.value = `${y}-${mo}-${day}`;
+  }
+  const h = document.getElementById(`f-${prefix}-hour`);
+  const m = document.getElementById(`f-${prefix}-min`);
+  if (h) h.value = date.getHours();
+  if (m) m.value = Math.round(date.getMinutes() / 5) * 5 % 60;
+  updateDurationDisplay();
+}
+
+function getTimeValue(prefix) {
+  const dateEl = document.getElementById('f-start-date');
+  const h = parseInt(document.getElementById(`f-${prefix}-hour`)?.value ?? 0);
+  const m = parseInt(document.getElementById(`f-${prefix}-min`)?.value ?? 0);
+  const dateStr = dateEl?.value;
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+function updateDurationDisplay() {
+  const s = getTimeValue('start');
+  const e = getTimeValue('end');
+  const el = document.getElementById('f-duration-display');
+  if (!el) return;
+  if (s && e && e > s) {
+    const mins = Math.round((e - s) / 60000);
+    const h = Math.floor(mins / 60), min = mins % 60;
+    el.textContent = min ? `${h}시간 ${min}분` : `${h}시간`;
+    el.style.color = '#333';
+  } else if (s && e && e <= s) {
+    el.textContent = '⚠️';
+    el.style.color = '#E53935';
+  } else {
+    el.textContent = '';
+  }
 }
 
 function formatTime(iso) {
