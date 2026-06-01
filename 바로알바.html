@@ -534,7 +534,7 @@
 <!-- 게스트 배너 -->
 <div class="guest-banner" id="guest-banner">
   <span>로그인하면 바로 지원할 수 있어요</span>
-  <button class="guest-login-btn" onclick="location.href='./login.html'">로그인</button>
+  <button class="guest-login-btn" onclick="location.href='/login.html'">로그인</button>
 </div>
 
 <!-- 하단 시트 -->
@@ -644,7 +644,7 @@
         </div>
 
         <div id="profile-biz-btn" style="display:none;margin-bottom:10px">
-          <button onclick="location.href='./owner.html'" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">
+          <button onclick="location.href='/owner.html'" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">
             🏪 업주 대시보드로 이동
           </button>
         </div>
@@ -660,7 +660,7 @@
           <div style="font-size:48px;margin-bottom:12px">⚡</div>
           <div style="font-size:16px;font-weight:800;color:#222;margin-bottom:6px">로그인하고 바로 지원하세요</div>
           <div style="font-size:13px;color:#aaa;margin-bottom:24px">카카오, 네이버, 구글로 3초 로그인</div>
-          <button onclick="location.href='./login.html'" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer">
+          <button onclick="location.href='/login.html'" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer">
             로그인 / 회원가입
           </button>
         </div>
@@ -709,7 +709,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     profileNav.querySelector('.nav-label').textContent = '로그인';
     profileNav.querySelector('.nav-label').style.color = 'var(--red)';
   } else {
-    location.href = './login.html';
+    location.href = '/login.html';
     return;
   }
 
@@ -898,7 +898,7 @@ function closeDetail(e) {
 async function applyJob() {
   if (isGuest) {
     showToast('로그인 후 지원할 수 있어요');
-    setTimeout(() => location.href = './login.html', 1500);
+    setTimeout(() => location.href = '/login.html', 1500);
     return;
   }
   if (!currentUser) { showToast('로그인이 필요합니다'); return; }
@@ -1131,7 +1131,7 @@ function closeProfileIfBg(e) {
 async function doLogout() {
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
-  location.href = './login.html';
+  location.href = '/login.html';
 }
 
 // ── 유틸 ──────────────────────────────────────────────────

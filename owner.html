@@ -371,7 +371,7 @@ let editingId = null;
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await db.auth.getSession();
-  if (!session) { location.href = './login.html'; return; }
+  if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
 
   // 업주 레코드 조회
@@ -720,7 +720,7 @@ function switchTab(name, btn) {
 function setNav(el, tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
-  if (tab === 'map') { location.href = './바로알바.html'; return; }
+  if (tab === 'map') { location.href = '/바로알바.html'; return; }
   if (tab === 'postings') switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
   else if (tab === 'applicants') switchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
   else showToast('준비 중입니다');
@@ -739,7 +739,7 @@ function formatTime(iso) {
 async function logout() {
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
-  location.href = './login.html';
+  location.href = '/login.html';
 }
 
 let toastTimer;

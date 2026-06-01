@@ -711,7 +711,7 @@ function getRedirectUrl() {
 }
 function goToApp(role) {
   const r = role || currentUserRole();
-  window.location.href = r === 'business' ? './owner.html' : './바로알바.html';
+  window.location.href = r === 'business' ? '/owner.html' : '/바로알바.html';
 }
 function currentUserRole() {
   return window._pendingRole || '';

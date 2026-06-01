@@ -123,7 +123,7 @@
 
 <!-- 헤더 -->
 <div class="header">
-  <button class="back-btn" onclick="location.href='./바로알바.html'">← 지도</button>
+  <button class="back-btn" onclick="location.href='/바로알바.html'">← 지도</button>
   <div class="header-logo">⚡ 내 활동</div>
   <div class="header-name" id="h-name"></div>
 </div>
@@ -200,7 +200,7 @@
 
 <!-- 하단 내비 -->
 <div class="bottom-nav">
-  <button class="nav-item" onclick="location.href='./바로알바.html'">
+  <button class="nav-item" onclick="location.href='/바로알바.html'">
     <div class="nav-icon">🗺</div>
     <div class="nav-label">지도</div>
   </button>
@@ -235,7 +235,7 @@ let reviewKindness = 0;
 // ── 초기화 ─────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await db.auth.getSession();
-  if (!session) { location.href = './login.html'; return; }
+  if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
 
   const meta = currentUser.user_metadata || {};
@@ -414,7 +414,7 @@ function formatTime(iso) {
 async function doLogout() {
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
-  location.href = './login.html';
+  location.href = '/login.html';
 }
 
 let toastTimer;
