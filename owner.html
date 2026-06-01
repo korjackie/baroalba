@@ -117,12 +117,12 @@
     }
     .fab:active { transform:scale(0.93); }
 
-    /* ── 공고 등록 바텀시트 ── */
-    .sheet-overlay {
+    /* ── 공고 등록 바텀시트 + 공용 모달 오버레이 ── */
+    .sheet-overlay, .modal-overlay {
       display:none; position:fixed; inset:0;
       background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end;
     }
-    .sheet-overlay.open { display:flex; }
+    .sheet-overlay.open, .modal-overlay.open { display:flex; }
     .form-sheet {
       background:#fff; border-radius:24px 24px 0 0; width:100%;
       max-height:90vh; overflow-y:auto; padding:0 0 40px;
@@ -557,7 +557,7 @@ function renderPostings() {
             ⚡ 시급 +1,000원
           </button>
         ` : ''}
-        <button class="edit-btn" onclick="openShareModal('${p.id}')">공유</button>
+        <button class="edit-btn" onclick="openShareModal('${p.id}')" title="공유" style="font-size:16px;padding:10px 12px">⤴</button>
         <button class="edit-btn" onclick="openEditForm('${p.id}')">수정</button>
         <button class="toggle-btn ${isOpen?'close':'open'}" onclick="toggleStatus('${p.id}','${p.status}')">
           ${isOpen ? '마감' : '재오픈'}
