@@ -935,7 +935,18 @@ async function loadJobs() {
     jobs = getMockJobs();
     renderMarkers();
     renderList();
+    showMockBanner();
   }
+}
+
+function showMockBanner() {
+  if (document.getElementById('mock-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'mock-banner';
+  banner.style.cssText = 'position:fixed;top:88px;left:50%;transform:translateX(-50%);background:#FF9500;color:#fff;font-size:11px;font-weight:800;padding:6px 14px;border-radius:20px;z-index:350;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15)';
+  banner.textContent = '🧪 테스트 데이터 표시 중 — 실제 공고가 없습니다';
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 6000);
 }
 
 // ── 마커 렌더링 ───────────────────────────────────────────
