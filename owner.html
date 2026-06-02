@@ -514,9 +514,23 @@ window.addEventListener('DOMContentLoaded', async () => {
   const { data: biz } = await db.from('businesses')
     .select('*').eq('kakao_uid', currentUser.id).single();
 
-  if (!biz) { showToast('업주 프로필이 없습니다. 로그인을 다시 해주세요.'); return; }
-  bizRecord = biz;
-  document.getElementById('biz-name').textContent = biz.name;
+  if (!biz) {
+    // businesses 레코드 자동 생성
+    const meta = currentUser.user_metadata || {};
+    const newName = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '내 업체';
+    const { data: created, error: createErr } = await db.from('businesses')
+      .insert({ kakao_uid: currentUser.id, name: newName })
+      .select().single();
+    if (createErr || !created) {
+      document.getElementById('postings-list').innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:32px;margin-bottom:8px">⚠️</div><div>업주 프로필 생성 실패<br>로그아웃 후 다시 로그인해주세요</div></div>';
+      document.getElementById('applicants-list').innerHTML = '';
+      return;
+    }
+    bizRecord = created;
+  } else {
+    bizRecord = biz;
+  }
+  document.getElementById('biz-name').textContent = bizRecord.name;
 
   loadPostings();
   loadApplicants();

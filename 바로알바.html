@@ -780,6 +780,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (session) {
     currentUser = session.user;
+    if (currentUser.user_metadata?.baroalba_role === 'business') {
+      location.href = '/owner.html';
+      return;
+    }
   } else if (localStorage.getItem('baroalba_guest')) {
     isGuest = true;
     document.getElementById('guest-banner').classList.add('show');
