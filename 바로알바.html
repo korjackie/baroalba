@@ -399,6 +399,29 @@
     .nav-label { font-size: 10px; font-weight: 700; color: #bbb; }
     .nav-item.active .nav-label { color: var(--red); }
     .nav-item.active .nav-icon  { filter: none; }
+    .nav-item { position: relative; }
+    .nav-badge {
+      position: absolute; top: 4px; right: calc(50% - 18px);
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: var(--red); color: #fff; border-radius: 8px;
+      font-size: 10px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+
+    /* ── 내지원 / 채팅 패널 ── */
+    .full-panel {
+      position: fixed; inset: 0; bottom: var(--nav-h);
+      background: #f5f5f5; z-index: 300; display: none;
+      flex-direction: column; overflow-y: auto;
+    }
+    .full-panel.show { display: flex; }
+    .panel-header {
+      background: #fff; padding: 16px 20px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 18px; font-weight: 900; color: #222;
+      position: sticky; top: 0; z-index: 1; flex-shrink: 0;
+    }
 
     /* ── 로딩 ── */
     .map-loading {
@@ -664,14 +687,35 @@
     <div class="nav-icon">💘</div>
     <div class="nav-label">스와이프</div>
   </button>
-  <button class="nav-item" onclick="setNav(this, 'list')">
+  <button class="nav-item" onclick="setNav(this, 'applications')">
     <div class="nav-icon">📋</div>
-    <div class="nav-label">목록</div>
+    <div class="nav-label">내 지원</div>
+  </button>
+  <button class="nav-item" id="nav-chats" onclick="setNav(this, 'chats')">
+    <div class="nav-icon">💬</div>
+    <div class="nav-label">채팅</div>
+    <div class="nav-badge" id="chat-unread-badge" style="display:none">0</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'profile')">
     <div class="nav-icon">👤</div>
     <div class="nav-label">프로필</div>
   </button>
+</div>
+
+<!-- 내 지원 패널 -->
+<div class="full-panel" id="panel-applications">
+  <div class="panel-header">📋 내 지원 현황</div>
+  <div style="padding:16px" id="my-applications-list">
+    <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- 채팅 패널 -->
+<div class="full-panel" id="panel-chats">
+  <div class="panel-header">💬 채팅</div>
+  <div style="padding:16px" id="my-chats-list">
+    <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
+  </div>
 </div>
 
 <!-- 프로필 시트 -->
@@ -1182,6 +1226,113 @@ function closeWChat() {
   _wchatAppId = null;
 }
 
+// ── 내 지원 현황 ──────────────────────────────────────────
+async function loadMyApplications() {
+  if (isGuest || !currentUser) return;
+  const el = document.getElementById('my-applications-list');
+  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+
+  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!worker) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:36px;margin-bottom:10px">👤</div><div style="font-weight:700">알바생 프로필이 없어요</div></div>';
+    return;
+  }
+
+  const { data: apps } = await db.from('applications')
+    .select('*, job_postings(title, wage, category, businesses(name))')
+    .eq('worker_id', worker.id)
+    .order('applied_at', { ascending: false });
+
+  if (!apps || !apps.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:15px;font-weight:700">아직 지원한 공고가 없어요</div><div style="font-size:13px;margin-top:6px">지도에서 공고를 찾아 지원해보세요!</div></div>';
+    return;
+  }
+
+  const STATUS = { pending: { label: '검토중', color: '#888', bg: '#f5f5f5' }, accepted: { label: '✅ 수락', color: '#16a34a', bg: '#f0fdf4' }, rejected: { label: '❌ 거절', color: '#dc2626', bg: '#fef2f2' } };
+  el.innerHTML = apps.map(a => {
+    const job = a.job_postings || {};
+    const biz = job.businesses || {};
+    const s = STATUS[a.status] || STATUS.pending;
+    return `
+    <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:3px">${job.title || '공고'}</div>
+          <div style="font-size:13px;color:#888;margin-bottom:6px">${biz.name || ''}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--red)">${job.wage ? job.wage.toLocaleString() + '원/시' : ''}</div>
+        </div>
+        <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">${s.label}</div>
+      </div>
+      ${a.status === 'accepted' ? `<button onclick="openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">💬 업주에게 문의하기</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── 채팅 목록 ─────────────────────────────────────────────
+async function loadMyChatList() {
+  if (isGuest || !currentUser) return;
+  const el = document.getElementById('my-chats-list');
+  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+
+  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!worker) { el.innerHTML = ''; return; }
+
+  const { data: apps } = await db.from('applications')
+    .select('id, job_postings(title, businesses(name))')
+    .eq('worker_id', worker.id);
+
+  if (!apps || !apps.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원 후 업주와 채팅할 수 있어요</div></div>';
+    return;
+  }
+
+  const appIds = apps.map(a => a.id);
+  const { data: messages } = await db.from('messages')
+    .select('*').in('application_id', appIds)
+    .order('created_at', { ascending: false });
+
+  const latestMsg = {}, unreadCnt = {};
+  (messages || []).forEach(m => {
+    if (!latestMsg[m.application_id]) latestMsg[m.application_id] = m;
+    if (!m.is_read && m.sender_id !== currentUser.id)
+      unreadCnt[m.application_id] = (unreadCnt[m.application_id] || 0) + 1;
+  });
+
+  const totalUnread = Object.values(unreadCnt).reduce((s, v) => s + v, 0);
+  const badge = document.getElementById('chat-unread-badge');
+  if (totalUnread > 0) { badge.textContent = totalUnread; badge.style.display = 'flex'; }
+  else badge.style.display = 'none';
+
+  const chats = apps.filter(a => latestMsg[a.id]);
+  if (!chats.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원 후 업주와 채팅할 수 있어요</div></div>';
+    return;
+  }
+
+  el.innerHTML = chats.map(a => {
+    const msg = latestMsg[a.id];
+    const unread = unreadCnt[a.id] || 0;
+    const isMine = msg.sender_id === currentUser.id;
+    const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    const bizName = a.job_postings?.businesses?.name || '업주';
+    return `
+    <div onclick="openWChat('${a.id}','${bizName}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏪</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+          <div style="font-size:14px;font-weight:800;color:#222">${bizName}</div>
+          <div style="font-size:11px;color:#bbb">${time}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
+          ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
+        </div>
+        <div style="font-size:11px;color:#bbb;margin-top:2px">${a.job_postings?.title || ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function loadWChatMessages() {
   const { data } = await db.from('messages')
     .select('*').eq('application_id', _wchatAppId)
@@ -1458,22 +1609,38 @@ function setNav(el, tab) {
   const topBar      = document.querySelector('.top-bar');
   const bottomSheet = document.getElementById('bottom-sheet');
   const radiusBadge = document.getElementById('radius-badge');
+  const panelApps   = document.getElementById('panel-applications');
+  const panelChats  = document.getElementById('panel-chats');
+
+  // 모든 패널 숨기기
+  swipeScreen.style.display = 'none';
+  panelApps.classList.remove('show');
+  panelChats.classList.remove('show');
 
   if (tab === 'swipe') {
-    swipeScreen.style.display = 'flex';
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
+    swipeScreen.style.display = 'flex';
     initSwipe();
+  } else if (tab === 'applications') {
+    topBar.style.display      = 'none';
+    bottomSheet.style.display = 'none';
+    radiusBadge.style.display = 'none';
+    panelApps.classList.add('show');
+    loadMyApplications();
+  } else if (tab === 'chats') {
+    topBar.style.display      = 'none';
+    bottomSheet.style.display = 'none';
+    radiusBadge.style.display = 'none';
+    panelChats.classList.add('show');
+    loadMyChatList();
   } else {
-    swipeScreen.style.display = 'none';
     topBar.style.display      = '';
     bottomSheet.style.display = '';
     radiusBadge.style.display = '';
-    if (tab === 'list') setSheetState('full');
-    else if (tab === 'map') setSheetState('peek');
+    if (tab === 'map') setSheetState('peek');
     else if (tab === 'profile') openProfile();
-    else showToast('준비 중입니다');
   }
 }
 
