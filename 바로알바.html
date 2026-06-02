@@ -1083,6 +1083,10 @@ function closeDetail(e) {
   }
 }
 
+function isRealJobId(id) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
+
 async function applyJob() {
   if (isGuest) {
     showToast('로그인 후 지원할 수 있어요');
@@ -1091,6 +1095,10 @@ async function applyJob() {
   }
   if (!currentUser) { showToast('로그인이 필요합니다'); return; }
   if (!selectedJobId) return;
+  if (!isRealJobId(selectedJobId)) {
+    showToast('테스트 공고입니다. 실제 공고에만 지원할 수 있어요.');
+    return;
+  }
 
   const btn = document.getElementById('d-apply-btn');
   btn.textContent = '지원 중...';
@@ -1216,7 +1224,7 @@ async function markWMessagesRead(appId) {
 
 // 공고 상세 열 때 이미 지원했으면 채팅 버튼으로
 async function checkAlreadyApplied(jobId) {
-  if (!currentUser || isGuest) return;
+  if (!currentUser || isGuest || !isRealJobId(jobId)) return;
   try {
     const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
     if (!worker) return;
