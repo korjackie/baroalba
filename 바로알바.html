@@ -1170,9 +1170,16 @@ async function applyJob() {
   btn.disabled = true;
 
   try {
-    // workers 테이블에서 내 ID 조회
-    const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-    if (!worker) { showToast('프로필 설정이 필요합니다'); btn.textContent = '⚡ 바로 지원하기'; btn.disabled = false; return; }
+    // workers 레코드 조회, 없으면 자동 생성
+    let { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!worker) {
+      const meta = currentUser.user_metadata || {};
+      const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
+      const { data: created, error: ce } = await db.from('workers')
+        .insert({ kakao_uid: currentUser.id, name }).select('id').single();
+      if (ce || !created) { showToast('프로필 생성 실패'); btn.textContent = '⚡ 바로 지원하기'; btn.disabled = false; return; }
+      worker = created;
+    }
 
     const { data: appData, error } = await db.from('applications').insert({
       job_posting_id: selectedJobId,
@@ -1824,8 +1831,14 @@ function swipeAction(dir) {
 
 async function applySwipeJob(job) {
   if (isGuest || !currentUser) return;
-  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!worker) return;
+  let { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!worker) {
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
+    const { data: created } = await db.from('workers').insert({ kakao_uid: currentUser.id, name }).select('id').single();
+    if (!created) return;
+    worker = created;
+  }
   await db.from('applications').insert({ job_posting_id: job.id, worker_id: worker.id }).catch(()=>{});
 }
 
