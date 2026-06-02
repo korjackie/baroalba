@@ -558,9 +558,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 인앱 브라우저 감지 시 상단 배너 표시
   if (isInAppBrowser()) {
     const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;font-size:12px;font-weight:700;text-align:center;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
-    banner.innerHTML = `<span>📱 더 나은 경험을 위해 Chrome에서 열어주세요</span>
-      <a href="${location.href}" target="_blank" rel="noopener" style="background:#FF4B4B;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;text-decoration:none">Chrome으로 열기</a>`;
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;font-size:12px;font-weight:700;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
+    banner.innerHTML = `<span>더 나은 경험을 위해 Chrome에서 열어주세요</span>
+      <button onclick="openInChrome()" style="background:#FF4B4B;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:800">Chrome으로 열기</button>`;
     document.body.prepend(banner);
   }
 
@@ -595,6 +595,23 @@ function isInAppBrowser() {
   const ua = navigator.userAgent;
   return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line|MicroMessenger/i.test(ua) ||
     (ua.includes('Android') && /; wv\)/.test(ua));
+}
+
+function openInChrome() {
+  const url = location.href;
+  if (/Android/i.test(navigator.userAgent)) {
+    // Android: intent 스킴으로 Chrome 강제 실행
+    location.href = 'intent://' + url.replace(/^https?:\/\//, '') +
+      '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' +
+      encodeURIComponent(url) + ';end';
+  } else {
+    // iOS: 클립보드에 복사 후 안내
+    navigator.clipboard?.writeText(url).then(() => {
+      alert('주소가 복사됐습니다.\nSafari 또는 Chrome을 열고 붙여넣기 해주세요.');
+    }).catch(() => {
+      alert('Chrome 앱을 열고 아래 주소를 입력해주세요:\n' + url);
+    });
+  }
 }
 
 async function loginGoogle() {

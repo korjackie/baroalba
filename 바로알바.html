@@ -727,6 +727,27 @@
   </div>
 </div>
 
+<!-- 채팅 모달 -->
+<div class="detail-overlay" id="wchat-overlay" onclick="if(event.target===this)closeWChat()">
+  <div class="detail-sheet" style="height:80vh;display:flex;flex-direction:column;padding:0">
+    <div class="detail-handle" style="flex-shrink:0"></div>
+    <div style="padding:12px 20px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
+      </div>
+      <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div id="wchat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:12px 16px;border-top:1px solid #f0f0f0;display:flex;gap:8px;flex-shrink:0">
+      <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
+        style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
+      <button onclick="sendWChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer">전송</button>
+    </div>
+  </div>
+</div>
+
 <!-- 토스트 -->
 <div class="toast hidden" id="toast"></div>
 
@@ -1041,7 +1062,15 @@ function openDetail(jobId) {
     document.getElementById('d-base-wage').textContent = '';
   }
 
+  // 지원하기 버튼 초기화
+  const applyBtn = document.getElementById('d-apply-btn');
+  applyBtn.style.background = '';
+  applyBtn.textContent = '⚡ 바로 지원하기';
+  applyBtn.disabled = false;
+  applyBtn.onclick = applyJob;
+
   document.getElementById('detail-overlay').classList.add('open');
+  checkAlreadyApplied(jobId);
 
   // 지도 해당 위치로 이동
   kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
@@ -1072,25 +1101,129 @@ async function applyJob() {
     const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
     if (!worker) { showToast('프로필 설정이 필요합니다'); btn.textContent = '⚡ 바로 지원하기'; btn.disabled = false; return; }
 
-    const { error } = await db.from('applications').insert({
+    const { data: appData, error } = await db.from('applications').insert({
       job_posting_id: selectedJobId,
       worker_id: worker.id
-    });
+    }).select('id').single();
 
     if (error?.code === '23505') {
+      // 이미 지원 — 기존 application_id 조회 후 채팅 버튼 표시
+      const { data: existing } = await db.from('applications')
+        .select('id').eq('job_posting_id', selectedJobId).eq('worker_id', worker.id).single();
+      if (existing) showAppliedState(existing.id);
       showToast('이미 지원한 공고입니다');
     } else if (error) {
       showToast('오류가 발생했습니다: ' + error.message);
+      btn.textContent = '⚡ 바로 지원하기'; btn.disabled = false;
     } else {
       showToast('✅ 지원 완료!');
-      document.getElementById('detail-overlay').classList.remove('open');
+      showAppliedState(appData.id);
     }
   } catch(e) {
     showToast('오류: ' + e.message);
+    btn.textContent = '⚡ 바로 지원하기'; btn.disabled = false;
   }
+}
 
-  btn.textContent = '⚡ 바로 지원하기';
+function showAppliedState(applicationId) {
+  const btn = document.getElementById('d-apply-btn');
+  btn.style.background = '#3B82F6';
+  btn.textContent = '💬 업주와 채팅하기';
   btn.disabled = false;
+  btn.onclick = () => openWChat(applicationId, jobs.find(j=>j.id===selectedJobId)?.biz_name || '업주');
+}
+
+
+// ── 채팅 (알바생) ─────────────────────────────────────────
+let _wchatAppId = null, _wchatSub = null;
+
+async function openWChat(applicationId, bizName) {
+  _wchatAppId = applicationId;
+  document.getElementById('wchat-title').textContent = bizName;
+  document.getElementById('wchat-sub').textContent = '업주와 실시간 대화';
+  document.getElementById('wchat-overlay').classList.add('open');
+  document.getElementById('wchat-input').value = '';
+  await loadWChatMessages();
+  subscribeWChatMessages();
+  markWMessagesRead(applicationId);
+}
+
+function closeWChat() {
+  document.getElementById('wchat-overlay').classList.remove('open');
+  if (_wchatSub) { _wchatSub.unsubscribe(); _wchatSub = null; }
+  _wchatAppId = null;
+}
+
+async function loadWChatMessages() {
+  const { data } = await db.from('messages')
+    .select('*').eq('application_id', _wchatAppId)
+    .order('created_at', { ascending: true });
+  renderWChatMessages(data || []);
+}
+
+function renderWChatMessages(msgs) {
+  const el = document.getElementById('wchat-messages');
+  if (!msgs.length) {
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>업주에게 먼저 인사해보세요 👋</div>';
+    return;
+  }
+  el.innerHTML = msgs.map(m => {
+    const isMine = m.sender_id === currentUser?.id;
+    const time = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+    return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px">
+      <div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${m.content}</div>
+      <div style="font-size:10px;color:#bbb">${time}${isMine && m.is_read ? ' · 읽음' : ''}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function subscribeWChatMessages() {
+  if (_wchatSub) _wchatSub.unsubscribe();
+  _wchatSub = db.channel('wchat-' + _wchatAppId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages',
+      filter: `application_id=eq.${_wchatAppId}` }, payload => {
+      const el = document.getElementById('wchat-messages');
+      const msg = payload.new;
+      const isMine = msg.sender_id === currentUser?.id;
+      const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+      const div = document.createElement('div');
+      div.style.cssText = `display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px`;
+      div.innerHTML = `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${msg.content}</div>
+        <div style="font-size:10px;color:#bbb">${time}</div>`;
+      el.appendChild(div);
+      el.scrollTop = el.scrollHeight;
+      if (!isMine) markWMessagesRead(_wchatAppId);
+    }).subscribe();
+}
+
+async function sendWChatMessage() {
+  const input = document.getElementById('wchat-input');
+  const content = input.value.trim();
+  if (!content || !_wchatAppId) return;
+  input.value = '';
+  await db.from('messages').insert({
+    application_id: _wchatAppId,
+    sender_id: currentUser.id,
+    content,
+  });
+}
+
+async function markWMessagesRead(appId) {
+  await db.from('messages').update({ is_read: true })
+    .eq('application_id', appId).neq('sender_id', currentUser?.id || '');
+}
+
+// 공고 상세 열 때 이미 지원했으면 채팅 버튼으로
+async function checkAlreadyApplied(jobId) {
+  if (!currentUser || isGuest) return;
+  try {
+    const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!worker) return;
+    const { data: app } = await db.from('applications')
+      .select('id').eq('job_posting_id', jobId).eq('worker_id', worker.id).single();
+    if (app) showAppliedState(app.id);
+  } catch(e) {}
 }
 
 // ── 내 위치로 이동 ────────────────────────────────────────
