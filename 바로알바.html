@@ -1152,7 +1152,7 @@ async function applyJob() {
 function showAppliedState(applicationId) {
   const btn = document.getElementById('d-apply-btn');
   btn.style.background = '#3B82F6';
-  btn.textContent = '💬 업주와 채팅하기';
+  btn.textContent = '💬 업주에게 문의하기';
   btn.disabled = false;
   btn.onclick = () => openWChat(applicationId, jobs.find(j=>j.id===selectedJobId)?.biz_name || '업주');
 }
@@ -1188,7 +1188,7 @@ async function loadWChatMessages() {
 function renderWChatMessages(msgs) {
   const el = document.getElementById('wchat-messages');
   if (!msgs.length) {
-    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>업주에게 먼저 인사해보세요 👋</div>';
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>업주에게 궁금한 점을 남겨보세요 ✉️</div>';
     return;
   }
   el.innerHTML = msgs.map(m => {

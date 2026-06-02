@@ -1025,7 +1025,7 @@ async function loadChatMessages() {
 function renderChatMessages(msgs) {
   const el = document.getElementById('chat-messages');
   if (!msgs.length) {
-    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>먼저 인사를 건네보세요 👋</div>';
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>지원자에게 먼저 연락해보세요 💬</div>';
     return;
   }
   el.innerHTML = msgs.map(m => {
