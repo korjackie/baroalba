@@ -551,44 +551,111 @@ function renderPostings() {
     const start = p.start_time ? formatTime(p.start_time) : '미정';
 
     return `
-    <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}">
-      <div class="posting-top">
-        <div>
-          <div class="posting-title">${p.title}</div>
-          <div class="posting-cat">${p.category}</div>
+    <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}">
+
+      <!-- ── 항상 보이는 요약 행 (클릭 시 펼침) ── -->
+      <div onclick="toggleCard('${p.id}')" style="cursor:pointer">
+        <div class="posting-top" style="margin-bottom:8px">
+          <div>
+            <div class="posting-title">${p.title}</div>
+            <div class="posting-cat">${p.category}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="wage-val">${p.current_wage.toLocaleString()}원</div>
+            ${surge > 0 ? `<div style="font-size:10px;color:#FF9500;font-weight:700">↑${surge.toLocaleString()}원</div>` : ''}
+          </div>
         </div>
-        <div class="posting-wage">
-          <div class="wage-val">${p.current_wage.toLocaleString()}원</div>
-          ${surge > 0 ? `<div style="font-size:10px;color:#FF9500;font-weight:700">↑${surge.toLocaleString()}원</div>` : ''}
-          <div class="wage-base">${surge !== 0 ? '기본 '+p.base_wage.toLocaleString()+'원' : ''}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span class="meta-chip ${statusCls}">${statusLabel}</span>
+            <span class="meta-chip">⏰ ${start}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:12px;font-weight:700;color:#555">👥 지원자 <span id="app-count-${p.id}" style="color:var(--red)">...</span>명</span>
+            <span id="chevron-${p.id}" style="font-size:12px;color:#bbb;transition:transform 0.2s">▼</span>
+          </div>
         </div>
       </div>
-      <div class="posting-meta">
-        <span class="meta-chip ${statusCls}">${statusLabel}</span>
-        <span class="meta-chip">⏰ ${start}</span>
-        <span class="meta-chip">⏱ ${p.duration_hours ?? '-'}시간</span>
-        <span class="meta-chip">👥 ${p.filled_count ?? 0}/${p.needed_count ?? 1}명</span>
-      </div>
-      <div class="applicant-count" onclick="showPostingApplicants('${p.id}','${p.title}')">
-        지원자 보기 <span class="count-badge" id="app-count-${p.id}">...</span> →
-      </div>
-      <div class="posting-actions">
-        ${isOpen ? `
-          <button class="surge-btn" onclick="surgeWage('${p.id}',${p.current_wage})" ${p.status==='closed'?'disabled':''}>
-            ⚡ 시급 +1,000원
+
+      <!-- ── 펼쳐지는 상세 영역 ── -->
+      <div id="detail-${p.id}" style="display:none;margin-top:12px;border-top:1px solid #f0f0f0;padding-top:12px">
+        <div class="posting-meta" style="margin-bottom:12px">
+          <span class="meta-chip">⏱ ${p.duration_hours ?? '-'}시간</span>
+          <span class="meta-chip">👥 ${p.filled_count ?? 0}/${p.needed_count ?? 1}명</span>
+          ${surge > 0 ? `<span class="meta-chip urgent">↑${surge.toLocaleString()}원 서지</span>` : ''}
+        </div>
+
+        <!-- 지원자 목록 -->
+        <div id="applicants-inline-${p.id}" style="margin-bottom:12px"></div>
+
+        <!-- 액션 버튼 -->
+        <div class="posting-actions">
+          ${isOpen ? `<button class="surge-btn" onclick="event.stopPropagation();surgeWage('${p.id}',${p.current_wage})">⚡ 시급 +1,000원</button>` : ''}
+          <button class="edit-btn" onclick="event.stopPropagation();openShareModal('${p.id}')" title="공유" style="font-size:16px;padding:10px 12px">⤴</button>
+          <button class="edit-btn" onclick="event.stopPropagation();openEditForm('${p.id}')">수정</button>
+          <button class="edit-btn" style="background:#FFF0F0;color:#FF4B4B" onclick="event.stopPropagation();deletePosting('${p.id}')">삭제</button>
+          <button class="toggle-btn ${isOpen?'close':'open'}" onclick="event.stopPropagation();toggleStatus('${p.id}','${p.status}')">
+            ${isOpen ? '마감' : '재오픈'}
           </button>
-        ` : ''}
-        <button class="edit-btn" onclick="openShareModal('${p.id}')" title="공유" style="font-size:16px;padding:10px 12px">⤴</button>
-        <button class="edit-btn" onclick="openEditForm('${p.id}')">수정</button>
-        <button class="toggle-btn ${isOpen?'close':'open'}" onclick="toggleStatus('${p.id}','${p.status}')">
-          ${isOpen ? '마감' : '재오픈'}
-        </button>
+        </div>
       </div>
     </div>`;
   }).join('');
 
-  // 지원자 수 비동기 로드
   postings.forEach(p => loadApplicantCount(p.id));
+}
+
+function toggleCard(jobId) {
+  const detail = document.getElementById(`detail-${jobId}`);
+  const chevron = document.getElementById(`chevron-${jobId}`);
+  const isOpen = detail.style.display === 'none';
+  detail.style.display = isOpen ? 'block' : 'none';
+  chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
+  if (isOpen) loadInlineApplicants(jobId);
+}
+
+async function loadInlineApplicants(jobId) {
+  const el = document.getElementById(`applicants-inline-${jobId}`);
+  if (!el) return;
+  const { data: apps } = await db.from('applications')
+    .select('*, workers(name, phone, rating)')
+    .eq('job_posting_id', jobId)
+    .order('applied_at', { ascending: false });
+  if (!apps?.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0">아직 지원자가 없어요</div>';
+    return;
+  }
+  el.innerHTML = apps.map(a => {
+    const w = a.workers;
+    const statusHtml = a.status === 'accepted'
+      ? '<span class="accepted-badge">✅ 수락</span>'
+      : a.status === 'rejected'
+      ? '<span class="rejected-badge">거절됨</span>'
+      : `<div class="applicant-btns">
+          <button class="accept-btn" onclick="updateApplication('${a.id}','accepted')">수락</button>
+          <button class="reject-btn" onclick="updateApplication('${a.id}','rejected')">거절</button>
+        </div>`;
+    return `
+    <div class="applicant-card">
+      <div class="applicant-avatar">👤</div>
+      <div class="applicant-info">
+        <div class="applicant-name">${w?.name || '이름없음'}</div>
+        <div class="applicant-meta">★ ${w?.rating || '-'}${w?.phone ? ' · ' + w.phone : ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        ${statusHtml}
+        <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:6px 12px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 채팅</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deletePosting(jobId) {
+  if (!confirm('이 공고를 삭제하면 지원자 데이터도 함께 삭제됩니다. 정말 삭제할까요?')) return;
+  const { error } = await db.from('job_postings').delete().eq('id', jobId);
+  if (error) { showToast('삭제 실패: ' + error.message); return; }
+  showToast('✅ 공고가 삭제됐습니다');
+  loadPostings();
 }
 
 async function loadApplicantCount(jobId) {
