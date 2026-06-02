@@ -849,6 +849,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   await loadJobs();
   if (deepJobId) openDeepLink(deepJobId);
   setupRealtime();
+  setupMessageNotifications();
 });
 
 // ── 카카오맵 초기화 ───────────────────────────────────────
@@ -1206,6 +1207,39 @@ function showAppliedState(applicationId) {
 }
 
 
+// ── 채팅 알림 (전역) ─────────────────────────────────────
+async function setupMessageNotifications() {
+  if (isGuest || !currentUser) return;
+  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!worker) return;
+
+  const { data: apps } = await db.from('applications').select('id').eq('worker_id', worker.id);
+  if (!apps || !apps.length) return;
+
+  const myAppIds = new Set(apps.map(a => a.id));
+
+  db.channel('global-msg-notify')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+      const msg = payload.new;
+      if (!myAppIds.has(msg.application_id)) return;
+      if (msg.sender_id === currentUser.id) return;
+
+      // 채팅창 열려있으면 건너뜀
+      const chatOpen = document.getElementById('wchat-overlay')?.classList.contains('open');
+      if (chatOpen && _wchatAppId === msg.application_id) return;
+
+      // 탭 뱃지 업데이트
+      const badge = document.getElementById('chat-unread-badge');
+      const cnt = parseInt(badge.textContent || '0') + 1;
+      badge.textContent = cnt;
+      badge.style.display = 'flex';
+
+      // 토스트 알림
+      showToast('💬 새 메시지: ' + msg.content.slice(0, 20) + (msg.content.length > 20 ? '…' : ''));
+    })
+    .subscribe();
+}
+
 // ── 채팅 (알바생) ─────────────────────────────────────────
 let _wchatAppId = null, _wchatSub = null;
 
@@ -1234,7 +1268,7 @@ async function loadMyApplications() {
 
   const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
   if (!worker) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:36px;margin-bottom:10px">👤</div><div style="font-weight:700">알바생 프로필이 없어요</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">👤</div><div style="font-size:15px;font-weight:700;margin-bottom:6px">알바생 프로필이 없어요</div><div style="font-size:13px;line-height:1.6">공고에 처음 지원하면 프로필이 생성됩니다.<br>지도 탭에서 공고를 찾아 지원해보세요!</div></div>';
     return;
   }
 
