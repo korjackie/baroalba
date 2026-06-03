@@ -213,6 +213,9 @@
     .nav-label { font-size:10px; font-weight:700; color:#bbb; }
     .nav-item.active .nav-label { color:var(--red); }
     .owner-nav-badge { position:absolute; top:4px; right:calc(50% - 18px); min-width:16px; height:16px; padding:0 4px; background:var(--red); color:#fff; border-radius:8px; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; line-height:1; }
+    .full-panel { position:fixed; inset:0; bottom:var(--nav-h); background:#f5f5f5; z-index:300; display:none; flex-direction:column; overflow-y:auto; }
+    .full-panel.show { display:flex; }
+    .panel-header { background:#fff; padding:16px 20px 12px; border-bottom:1px solid #f0f0f0; font-size:18px; font-weight:900; color:#222; position:sticky; top:0; z-index:1; flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -422,6 +425,11 @@
     <div class="nav-label">지원자</div>
     <span class="owner-nav-badge" id="owner-chat-badge"></span>
   </button>
+  <button class="nav-item" id="nav-owner-chats" onclick="setNav(this,'chats')">
+    <div class="nav-icon">💬</div>
+    <div class="nav-label">채팅</div>
+    <span class="owner-nav-badge" id="owner-msg-badge" style="display:none"></span>
+  </button>
   <button class="nav-item" onclick="setNav(this,'map')">
     <div class="nav-icon">🗺</div>
     <div class="nav-label">지도보기</div>
@@ -430,6 +438,14 @@
     <div class="nav-icon">⚙️</div>
     <div class="nav-label">설정</div>
   </button>
+</div>
+
+<!-- 채팅 목록 패널 -->
+<div class="full-panel" id="panel-owner-chats">
+  <div class="panel-header">💬 대화 목록</div>
+  <div style="padding:16px" id="owner-chats-list">
+    <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
+  </div>
 </div>
 
 <!-- 설정 시트 -->
@@ -1165,6 +1181,69 @@ async function setupOwnerChatNotify() {
     .subscribe();
 }
 
+// ── 업주 채팅 목록 ────────────────────────────────────────
+async function loadOwnerChatList() {
+  const el = document.getElementById('owner-chats-list');
+  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+  if (!bizRecord) return;
+
+  const jobIds = postings.map(p => p.id);
+  if (!jobIds.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-weight:700">등록한 공고가 없어요</div></div>';
+    return;
+  }
+
+  const { data: apps } = await db.from('applications')
+    .select('id, status, workers(name, phone), job_postings(title)')
+    .in('job_posting_id', jobIds);
+
+  if (!apps?.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-weight:700">아직 대화가 없어요</div></div>';
+    return;
+  }
+
+  const appIds = apps.map(a => a.id);
+  const { data: msgs } = await db.from('messages')
+    .select('*').in('application_id', appIds)
+    .order('created_at', { ascending: false });
+
+  const latestMsg = {}, unreadCnt = {};
+  (msgs || []).forEach(m => {
+    if (!latestMsg[m.application_id]) latestMsg[m.application_id] = m;
+    if (!m.is_read && m.sender_id !== currentUser.id)
+      unreadCnt[m.application_id] = (unreadCnt[m.application_id] || 0) + 1;
+  });
+
+  const chats = apps.filter(a => latestMsg[a.id]);
+  if (!chats.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원자를 수락하면 채팅이 시작됩니다</div></div>';
+    return;
+  }
+
+  el.innerHTML = chats.map(a => {
+    const msg = latestMsg[a.id];
+    const unread = unreadCnt[a.id] || 0;
+    const isMine = msg.sender_id === currentUser.id;
+    const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+    const workerName = a.workers?.name || '지원자';
+    return `
+    <div onclick="openChat('${a.id}','${workerName}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👤</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+          <div style="font-size:14px;font-weight:800;color:#222">${workerName}</div>
+          <div style="font-size:11px;color:#bbb">${time}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
+          ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
+        </div>
+        <div style="font-size:11px;color:#bbb;margin-top:2px">${a.job_postings?.title || ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // ── 유틸 ──────────────────────────────────────────────────
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1177,14 +1256,23 @@ function switchTab(name, btn) {
 function setNav(el, tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
-  if (tab === 'map') { location.href = '/바로알바.html'; return; }
+  const panelChats = document.getElementById('panel-owner-chats');
+  panelChats.classList.remove('show');
+
+  if (tab === 'map') { location.href = '/바로알바.html?browse=1'; return; }
   if (tab === 'postings') switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
   else if (tab === 'applicants') {
-    // 채팅 badge 초기화
     const badge = document.getElementById('owner-chat-badge');
-    badge.textContent = '0';
-    badge.style.display = 'none';
+    badge.textContent = '0'; badge.style.display = 'none';
     switchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
+  }
+  else if (tab === 'chats') {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    panelChats.classList.add('show');
+    const msgBadge = document.getElementById('owner-msg-badge');
+    if (msgBadge) { msgBadge.style.display = 'none'; }
+    loadOwnerChatList();
   }
   else if (tab === 'settings') openOwnerSettings();
   else showToast('준비 중입니다');
