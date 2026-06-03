@@ -676,6 +676,7 @@ let naverLoginObj = null;
 
 function initNaverLogin() {
   if (!APP_CONFIG.NAVER_CLIENT_ID || !window.naver) return;
+  // SDK는 로그인 버튼 렌더링에만 사용
   naverLoginObj = new naver.LoginWithNaverId({
     clientId: APP_CONFIG.NAVER_CLIENT_ID,
     callbackUrl: 'https://baroalba.multimove.co.kr/login.html',
@@ -684,74 +685,48 @@ function initNaverLogin() {
   });
   naverLoginObj.init();
 
-  // 미리 저장된 해시로 Naver 콜백 판별 (Supabase가 이미 지웠을 수 있음)
+  // 콜백 처리 — SDK getLoginStatus 대신 서버 API 직접 호출
   if (_isNaverCallback) {
-    showLoading('네이버 로그인 중...');
-    setTimeout(() => {
-      naverLoginObj.getLoginStatus(async function(status) {
-        if (!status) { hideLoading(); showError('네이버 로그인에 실패했습니다.\n다시 시도해주세요.'); return; }
-        await handleNaverUser();
-      });
-    }, 500);
+    const naverToken = _hashParams.get('access_token');
+    // URL 해시 즉시 제거 (긴 URL 노출 방지)
+    history.replaceState({}, document.title, window.location.pathname);
+    if (naverToken) handleNaverCallback(naverToken);
   }
 }
 
-async function handleNaverUser() {
-  try {
-    const user        = naverLoginObj.user;
-    const naverId     = user.getId();
-    const name        = user.getName()   || '네이버사용자';
-    const naverEmail  = user.getEmail();                          // 실제 네이버 이메일
-    const email       = naverEmail || `naver_${naverId}@baroalba.kr`;
-    const phone       = user.getMobile() || '';
-    const syntheticPw = `naver_${naverId}_baro2024!`;
-    const meta        = { full_name: name, phone, provider: 'naver', naver_id: naverId, baroalba_role: '' };
+async function handleNaverCallback(naverToken) {
+  showLoading('네이버 로그인 중...');
 
-    // 1단계: 기존 계정 로그인 시도
-    const { error: signInErr } = await db.auth.signInWithPassword({ email, password: syntheticPw });
-    if (!signInErr) return; // 성공 → onAuthStateChange 처리
-
-    const notConfirmed = signInErr.message?.toLowerCase().includes('email not confirmed');
-    const invalidCred  = signInErr.message?.toLowerCase().includes('invalid login');
-
-    // 2단계: 이메일 미확인 — 추가 발송 없이 안내만 표시 (rate limit 방지)
-    if (notConfirmed) {
-      hideLoading();
-      showNaverEmailNotice(naverEmail || email);
-      return;
-    }
-
-    // 3단계: 신규 사용자 최초 가입 (이메일 1회만 발송)
-    if (invalidCred) {
-      const { data: sd, error: se } = await db.auth.signUp({
-        email, password: syntheticPw, options: { data: meta }
-      });
-      if (se?.message?.toLowerCase().includes('rate limit')) {
-        hideLoading();
-        showNaverEmailNotice(naverEmail || email);
-        return;
-      }
-      if (se) { hideLoading(); showError('네이버 로그인 실패: ' + se.message); return; }
-      if (sd?.session) return; // 이메일 확인 OFF이면 바로 성공
-      // 가입 완료 → 확인 이메일 발송됨 → 안내 표시
-      hideLoading();
-      showNaverEmailNotice(naverEmail || email);
-      return;
-    }
-
+  // 5초 안에 응답 없으면 강제 취소
+  const timer = setTimeout(() => {
     hideLoading();
-    showError('네이버 로그인 실패: ' + signInErr.message);
+    showError('네이버 로그인 시간이 초과됐습니다.\n다시 시도해주세요.');
+  }, 5000);
+
+  try {
+    const res  = await fetch(`/api/naver-auth?access_token=${encodeURIComponent(naverToken)}`);
+    const data = await res.json();
+    clearTimeout(timer);
+
+    if (!res.ok || data.error) {
+      hideLoading();
+      showError('네이버 로그인 실패: ' + (data.error || '서버 오류'));
+      return;
+    }
+
+    // 서버에서 받은 세션을 Supabase에 설정
+    const { error } = await db.auth.setSession({
+      access_token:  data.session.access_token,
+      refresh_token: data.session.refresh_token
+    });
+    if (error) { hideLoading(); showError('세션 설정 실패: ' + error.message); return; }
+    // onAuthStateChange → goToApp / showRoleModal 처리
 
   } catch(e) {
+    clearTimeout(timer);
     hideLoading();
     showError('네이버 로그인 오류: ' + e.message);
   }
-}
-
-function showNaverEmailNotice(email) {
-  document.getElementById('naver-magic-email').textContent = email;
-  document.getElementById('screen-login').style.display = 'none';
-  document.getElementById('screen-naver-magic').style.display = 'flex';
 }
 
 function loginNaver() {
