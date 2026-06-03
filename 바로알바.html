@@ -596,6 +596,16 @@
     <div class="sheet-count">주변 공고 <span id="job-count">0</span>개</div>
     <div class="sheet-sort" onclick="toggleSort()">⇅ <span id="sort-label">거리순</span></div>
   </div>
+  <!-- 공고 키워드 검색 -->
+  <div style="padding:0 14px 10px">
+    <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:12px;padding:9px 12px">
+      <span style="font-size:14px;color:#bbb">🔍</span>
+      <input id="job-search-input" type="text" placeholder="공고명, 업체명, 업종 검색"
+        style="flex:1;border:none;background:transparent;outline:none;font-size:13px;color:#222;font-family:inherit"
+        oninput="filterJobsByKeyword(this.value)">
+      <button onclick="document.getElementById('job-search-input').value='';filterJobsByKeyword('')" style="background:none;border:none;color:#bbb;font-size:14px;cursor:pointer;padding:0;line-height:1">✕</button>
+    </div>
+  </div>
   <div class="job-list" id="job-list">
     <div class="empty-state">
       <div class="empty-icon">🗺</div>
@@ -651,7 +661,16 @@
 
     <div class="detail-desc" id="d-desc"></div>
 
-    <button class="detail-apply-btn" id="d-apply-btn" onclick="applyJob()">⚡ 바로 지원하기</button>
+    <!-- 당일정산 배지 -->
+    <div id="d-same-day" style="display:none;margin:0 20px 12px">
+      <span style="display:inline-flex;align-items:center;gap:6px;background:#F0FDF4;color:#16a34a;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px">💴 당일정산 — 근무 당일 현금 지급</span>
+    </div>
+
+    <div style="display:flex;gap:10px;margin:0 20px">
+      <button class="detail-apply-btn" id="d-apply-btn" onclick="applyJob()" style="flex:1;margin:0">⚡ 바로 지원하기</button>
+      <button id="d-bookmark-btn" onclick="toggleBookmark(selectedJobId)" title="북마크"
+        style="width:52px;height:52px;flex-shrink:0;background:#f5f5f5;border:none;border-radius:16px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">🔖</button>
+    </div>
   </div>
 </div>
 
@@ -705,7 +724,15 @@
 <!-- 내 지원 패널 -->
 <div class="full-panel" id="panel-applications">
   <div class="panel-header">📋 내 지원 현황</div>
+  <!-- 서브탭 -->
+  <div style="display:flex;background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button id="subtab-status" onclick="switchAppSubtab('status')" style="flex:1;padding:12px 0;font-size:14px;font-weight:700;color:var(--red);border:none;background:none;cursor:pointer;border-bottom:2.5px solid var(--red)">지원 현황</button>
+    <button id="subtab-bookmarks" onclick="switchAppSubtab('bookmarks')" style="flex:1;padding:12px 0;font-size:14px;font-weight:700;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent">🔖 북마크</button>
+  </div>
   <div style="padding:16px" id="my-applications-list">
+    <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
+  </div>
+  <div style="padding:16px;display:none" id="my-bookmarks-list">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
   </div>
 </div>
@@ -749,6 +776,18 @@
             <input id="profile-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box">
             <input id="profile-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
             <button onclick="submitProfilePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+          </div>
+        </div>
+
+        <!-- 언어 토글 -->
+        <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:14px;font-weight:800;color:#222">🌐 언어 / Language</div>
+            <div style="font-size:11px;color:#aaa;margin-top:2px" id="lang-desc">현재: 한국어</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button id="lang-ko-btn" onclick="setLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">한국어</button>
+            <button id="lang-en-btn" onclick="setLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">English</button>
           </div>
         </div>
 
@@ -844,6 +883,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   initMap();
   setupSheet();
   setupSearch();
+  applyLang();
   loadCategoriesWorker();
   const deepJobId = new URLSearchParams(location.search).get('job');
   await loadJobs();
@@ -1077,6 +1117,7 @@ function renderList() {
       <div class="card-tags">
         ${isUrgent ? '<span class="tag urgent-tag">🔥 급구</span>' : ''}
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500">⚡ 번개</span>' : ''}
+        ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a">💴 당일정산</span>' : ''}
         <span class="tag ${catClass}">${job.category}</span>
         <span class="tag">${job.duration_hours ?? '-'}시간</span>
         ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
@@ -1127,6 +1168,9 @@ function openDetail(jobId) {
     document.getElementById('d-base-wage').textContent = '';
   }
 
+  // 당일정산 배지
+  document.getElementById('d-same-day').style.display = job.same_day_payment ? 'block' : 'none';
+
   // 지원하기 버튼 초기화
   const applyBtn = document.getElementById('d-apply-btn');
   applyBtn.style.background = '';
@@ -1134,8 +1178,12 @@ function openDetail(jobId) {
   applyBtn.disabled = false;
   applyBtn.onclick = applyJob;
 
+  // 북마크 버튼 상태 초기화
+  document.getElementById('d-bookmark-btn').textContent = '🔖';
+
   document.getElementById('detail-overlay').classList.add('open');
   checkAlreadyApplied(jobId);
+  checkBookmarkState(jobId);
 
   // 지도 해당 위치로 이동
   kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
@@ -1289,7 +1337,7 @@ async function loadMyApplications() {
     return;
   }
 
-  const STATUS = { pending: { label: '검토중', color: '#888', bg: '#f5f5f5' }, accepted: { label: '✅ 수락', color: '#16a34a', bg: '#f0fdf4' }, rejected: { label: '❌ 거절', color: '#dc2626', bg: '#fef2f2' } };
+  const STATUS = { pending: { label: '검토중', color: '#888', bg: '#f5f5f5' }, accepted: { label: '✅ 수락', color: '#16a34a', bg: '#f0fdf4' }, rejected: { label: '❌ 거절', color: '#dc2626', bg: '#fef2f2' }, cancelled: { label: '취소됨', color: '#aaa', bg: '#f0f0f0' } };
   el.innerHTML = apps.map(a => {
     const job = a.job_postings || {};
     const biz = job.businesses || {};
@@ -1305,8 +1353,222 @@ async function loadMyApplications() {
         <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">${s.label}</div>
       </div>
       ${a.status === 'accepted' ? `<button onclick="openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">💬 업주에게 문의하기</button>` : ''}
+      ${a.status === 'pending' ? `<button onclick="cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
   }).join('');
+}
+
+async function cancelApplication(appId) {
+  if (!confirm('지원을 취소하시겠어요?')) return;
+  const { error } = await db.from('applications').update({ status: 'cancelled' }).eq('id', appId);
+  if (error) { showToast('취소 실패: ' + error.message); return; }
+  showToast('✅ 지원이 취소됐습니다');
+  loadMyApplications();
+}
+
+// ── 내 지원 서브탭 ────────────────────────────────────────
+function switchAppSubtab(tab) {
+  const statusEl    = document.getElementById('my-applications-list');
+  const bookmarkEl  = document.getElementById('my-bookmarks-list');
+  const btnStatus   = document.getElementById('subtab-status');
+  const btnBookmark = document.getElementById('subtab-bookmarks');
+
+  if (tab === 'status') {
+    statusEl.style.display   = 'block';
+    bookmarkEl.style.display = 'none';
+    btnStatus.style.color = 'var(--red)';
+    btnStatus.style.borderBottom = '2.5px solid var(--red)';
+    btnBookmark.style.color = '#bbb';
+    btnBookmark.style.borderBottom = '2.5px solid transparent';
+    loadMyApplications();
+  } else {
+    statusEl.style.display   = 'none';
+    bookmarkEl.style.display = 'block';
+    btnStatus.style.color = '#bbb';
+    btnStatus.style.borderBottom = '2.5px solid transparent';
+    btnBookmark.style.color = 'var(--red)';
+    btnBookmark.style.borderBottom = '2.5px solid var(--red)';
+    loadBookmarks();
+  }
+}
+
+// ── 북마크 ────────────────────────────────────────────────
+async function loadBookmarks() {
+  if (isGuest || !currentUser) return;
+  const el = document.getElementById('my-bookmarks-list');
+  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+
+  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!worker) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">🔖</div><div style="font-size:15px;font-weight:700">북마크가 없어요</div></div>';
+    return;
+  }
+
+  const { data: bookmarks } = await db.from('bookmarks')
+    .select('*, job_postings(id, title, current_wage, category, status, businesses(name))')
+    .eq('worker_id', worker.id)
+    .order('created_at', { ascending: false });
+
+  if (!bookmarks || !bookmarks.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">🔖</div><div style="font-size:15px;font-weight:700">북마크한 공고가 없어요</div><div style="font-size:13px;margin-top:6px">공고 상세에서 북마크 버튼을 눌러보세요</div></div>';
+    return;
+  }
+
+  el.innerHTML = bookmarks.map(bm => {
+    const job = bm.job_postings || {};
+    const biz = job.businesses || {};
+    const isOpen = job.status === 'open' || job.status === 'urgent';
+    return `
+    <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1;min-width:0;cursor:pointer" onclick="openDetail('${job.id}')">
+          <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:3px">${job.title || '공고'}</div>
+          <div style="font-size:13px;color:#888;margin-bottom:4px">${biz.name || ''}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원/시' : ''}</div>
+        </div>
+        <button onclick="toggleBookmark('${job.id}')" style="padding:6px 12px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">북마크 해제</button>
+      </div>
+      <div style="margin-top:8px;font-size:11px;font-weight:700;display:inline-block;padding:3px 8px;border-radius:8px;background:${isOpen ? '#EFF6FF' : '#f0f0f0'};color:${isOpen ? '#3B82F6' : '#aaa'}">${job.status === 'urgent' ? '🔥 급구' : isOpen ? '모집중' : '마감'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleBookmark(jobId) {
+  if (isGuest || !currentUser) { showToast('로그인 후 북마크할 수 있어요'); return; }
+  if (!jobId || !isRealJobId(jobId)) { showToast('🧪 테스트 공고는 북마크할 수 없어요'); return; }
+
+  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!worker) { showToast('프로필이 없어요. 먼저 공고에 지원해주세요'); return; }
+
+  const { data: existing } = await db.from('bookmarks')
+    .select('id').eq('worker_id', worker.id).eq('job_id', jobId).single();
+
+  if (existing) {
+    await db.from('bookmarks').delete().eq('id', existing.id);
+    showToast('북마크가 해제됐어요');
+    document.getElementById('d-bookmark-btn').textContent = '🔖';
+  } else {
+    const { error } = await db.from('bookmarks').insert({ worker_id: worker.id, job_id: jobId });
+    if (error) { showToast('북마크 실패: ' + error.message); return; }
+    showToast('🔖 북마크에 추가됐어요');
+    document.getElementById('d-bookmark-btn').textContent = '🔖✅';
+  }
+}
+
+async function checkBookmarkState(jobId) {
+  if (isGuest || !currentUser || !isRealJobId(jobId)) return;
+  try {
+    const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!worker) return;
+    const { data: bm } = await db.from('bookmarks')
+      .select('id').eq('worker_id', worker.id).eq('job_id', jobId).single();
+    document.getElementById('d-bookmark-btn').textContent = bm ? '🔖✅' : '🔖';
+  } catch(e) {}
+}
+
+// ── 공고 키워드 검색 ──────────────────────────────────────
+function filterJobsByKeyword(keyword) {
+  const q = (keyword || '').trim();
+  if (!q) { renderList(); return; }
+  const filtered = jobs.filter(j =>
+    (j.title || '').includes(q) ||
+    (j.biz_name || '').includes(q) ||
+    (j.category || '').includes(q)
+  );
+  const tempJobs = jobs;
+  document.getElementById('job-count').textContent = filtered.length;
+  const list = document.getElementById('job-list');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-txt">"${q}" 검색 결과가 없어요</div></div>`;
+    return;
+  }
+  jobs = filtered;
+  renderList();
+  jobs = tempJobs;
+}
+
+// ── 한국어/영어 전환 ──────────────────────────────────────
+const TRANSLATIONS = {
+  ko: {
+    nav_map: '지도', nav_swipe: '스와이프', nav_applications: '내 지원', nav_chats: '채팅', nav_profile: '프로필',
+    tab_status: '지원 현황', tab_bookmarks: '🔖 북마크',
+    status_pending: '검토중', status_accepted: '✅ 수락', status_rejected: '❌ 거절', status_cancelled: '취소됨',
+    apply_btn: '⚡ 바로 지원하기', apply_chat_btn: '💬 업주에게 문의하기',
+    cat_all: '전체', cat_urgent: '🔥 급구만',
+    loading: '지도 불러오는 중...',
+    search_placeholder: '지역, 업종 검색',
+    job_search_placeholder: '공고명, 업체명, 업종 검색',
+    lang_desc: '현재: 한국어',
+  },
+  en: {
+    nav_map: 'Map', nav_swipe: 'Swipe', nav_applications: 'Applied', nav_chats: 'Chat', nav_profile: 'Profile',
+    tab_status: 'Applications', tab_bookmarks: '🔖 Bookmarks',
+    status_pending: 'Pending', status_accepted: '✅ Accepted', status_rejected: '❌ Rejected', status_cancelled: 'Cancelled',
+    apply_btn: '⚡ Apply Now', apply_chat_btn: '💬 Message Owner',
+    cat_all: 'All', cat_urgent: '🔥 Urgent',
+    loading: 'Loading map...',
+    search_placeholder: 'Search by area, category',
+    job_search_placeholder: 'Search title, biz, category',
+    lang_desc: 'Current: English',
+  }
+};
+
+let currentLang = localStorage.getItem('baroalba_lang') || 'ko';
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] || TRANSLATIONS['ko'])[key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('baroalba_lang', lang);
+  applyLang();
+}
+
+function applyLang() {
+  const ko = currentLang === 'ko';
+
+  // 하단 내비 레이블
+  const navLabels = document.querySelectorAll('.nav-label');
+  const navKeys = ['nav_map', 'nav_swipe', 'nav_applications', 'nav_chats', 'nav_profile'];
+  navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
+
+  // 서브탭
+  const btnStatus   = document.getElementById('subtab-status');
+  const btnBookmark = document.getElementById('subtab-bookmarks');
+  if (btnStatus)   btnStatus.textContent   = t('tab_status');
+  if (btnBookmark) btnBookmark.textContent = t('tab_bookmarks');
+
+  // 검색 placeholder
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) searchInput.placeholder = t('search_placeholder');
+  const jobSearchInput = document.getElementById('job-search-input');
+  if (jobSearchInput) jobSearchInput.placeholder = t('job_search_placeholder');
+
+  // 지도 로딩
+  const loadingTxt = document.querySelector('.loading-txt');
+  if (loadingTxt) loadingTxt.textContent = t('loading');
+
+  // 카테고리 전체/급구 칩
+  const allChip = document.querySelector('[data-cat=""]');
+  if (allChip) allChip.textContent = t('cat_all');
+  const urgentChip = document.querySelector('[data-urgent]');
+  if (urgentChip) urgentChip.textContent = t('cat_urgent');
+
+  // 언어 버튼 상태
+  const koBt = document.getElementById('lang-ko-btn');
+  const enBt = document.getElementById('lang-en-btn');
+  if (koBt) { koBt.style.background = ko ? 'var(--red)' : '#f0f0f0'; koBt.style.color = ko ? '#fff' : '#666'; }
+  if (enBt) { enBt.style.background = !ko ? 'var(--red)' : '#f0f0f0'; enBt.style.color = !ko ? '#fff' : '#666'; }
+  const langDesc = document.getElementById('lang-desc');
+  if (langDesc) langDesc.textContent = t('lang_desc');
+
+  // 지원 버튼 텍스트 (열려있으면)
+  const applyBtn = document.getElementById('d-apply-btn');
+  if (applyBtn && applyBtn.textContent.includes('지원') || applyBtn?.textContent.includes('Apply')) {
+    const isChat = applyBtn?.style.background === 'rgb(59, 130, 246)';
+    if (applyBtn && !isChat) applyBtn.textContent = t('apply_btn');
+  }
 }
 
 // ── 채팅 목록 ─────────────────────────────────────────────
@@ -1669,7 +1931,7 @@ function setNav(el, tab) {
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
     panelApps.classList.add('show');
-    loadMyApplications();
+    switchAppSubtab('status');
   } else if (tab === 'chats') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
