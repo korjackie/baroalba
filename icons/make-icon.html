@@ -37,14 +37,14 @@ function drawIcon(size) {
   g.fillStyle = '#FF4B4B';
   g.fill();
 
-  // 과녁 원
-  const cx = 96 * s, cy = 100 * s;
+  // 과녁 원 — 외곽 56px로 축소해 20px 패딩 확보 (잘림 방지)
+  const cx = 96 * s, cy = 96 * s;
   const rings = [
-    { r: 68, c: '#ffffff' },
-    { r: 52, c: '#FF4B4B' },
-    { r: 36, c: '#ffffff' },
-    { r: 20, c: '#FF4B4B' },
-    { r: 8,  c: '#ffffff' },
+    { r: 56, c: '#ffffff' },
+    { r: 43, c: '#FF4B4B' },
+    { r: 30, c: '#ffffff' },
+    { r: 17, c: '#FF4B4B' },
+    { r: 7,  c: '#ffffff' },
   ];
   rings.forEach(({ r, c }) => {
     g.beginPath();
@@ -54,8 +54,8 @@ function drawIcon(size) {
   });
 
   // 화살 좌표
-  const x1 = 152 * s, y1 = 40 * s;
-  const x2 = 96 * s,  y2 = 100 * s;
+  const x1 = 148 * s, y1 = 38 * s;
+  const x2 = 96 * s,  y2 = 96 * s;
   const angle = Math.atan2(y2 - y1, x2 - x1);
 
   // 깃털 함수

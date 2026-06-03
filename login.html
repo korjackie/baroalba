@@ -521,6 +521,19 @@
 <!-- 네이버 SDK 렌더링 영역 (숨김) -->
 <div id="naverIdLogin"></div>
 
+<!-- 네이버 매직링크 안내 화면 -->
+<div id="screen-naver-magic" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:40px 24px;background:#fff;text-align:center">
+  <div style="font-size:56px;margin-bottom:20px">📧</div>
+  <div style="font-size:22px;font-weight:900;color:#222;margin-bottom:10px">이메일을 확인해주세요</div>
+  <div style="font-size:14px;color:#666;line-height:1.7;margin-bottom:8px">아래 이메일로 로그인 링크를 보냈습니다</div>
+  <div id="naver-magic-email" style="font-size:15px;font-weight:800;color:#FF4B4B;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:24px;word-break:break-all"></div>
+  <div style="font-size:13px;color:#888;line-height:1.8;margin-bottom:32px">
+    📌 이메일에서 <b>"로그인"</b> 버튼을 클릭하면<br>자동으로 로그인됩니다<br>
+    <span style="font-size:12px;color:#aaa">(스팸함도 확인해주세요 · 링크 유효시간 1시간)</span>
+  </div>
+  <button onclick="document.getElementById('screen-naver-magic').style.display='none';document.getElementById('screen-login').style.display='flex'" style="width:100%;max-width:320px;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">← 로그인 화면으로 돌아가기</button>
+</div>
+
 <script>
 // ── Supabase 초기화 ────────────────────────────────────────
 const { createClient } = supabase;
@@ -653,13 +666,13 @@ function initNaverLogin() {
   });
   naverLoginObj.init();
 
-  // 네이버 OAuth 콜백 처리 (URL 해시에 access_token 포함)
-  if (window.location.hash.includes('access_token')) {
+  // Supabase 매직링크 콜백이면 Naver 처리 건너뜀 (Supabase가 자동 처리)
+  const hash = window.location.hash;
+  if (hash.includes('access_token') && !hash.includes('type=magiclink') && !hash.includes('type=recovery')) {
     showLoading('네이버 로그인 중...');
-    // SDK init이 토큰을 파싱할 시간 확보
     setTimeout(() => {
       naverLoginObj.getLoginStatus(async function(status) {
-        if (!status) { hideLoading(); showError('네이버 로그인에 실패했습니다.\n(토큰 파싱 실패 — 다시 시도해주세요)'); return; }
+        if (!status) { hideLoading(); showError('네이버 로그인에 실패했습니다.\n다시 시도해주세요.'); return; }
         await handleNaverUser();
       });
     }, 300);
@@ -668,64 +681,49 @@ function initNaverLogin() {
 
 async function handleNaverUser() {
   try {
-    const user = naverLoginObj.user;
-    const naverId  = user.getId();
-    const name     = user.getName()     || '네이버사용자';
-    const email    = user.getEmail()    || `naver.${naverId}@baroalba.kr`;
-    const phone    = user.getMobile()   || '';
+    const user        = naverLoginObj.user;
+    const naverId     = user.getId();
+    const name        = user.getName()   || '네이버사용자';
+    const naverEmail  = user.getEmail();                          // 실제 네이버 이메일
+    const email       = naverEmail || `naver_${naverId}@baroalba.kr`;
+    const phone       = user.getMobile() || '';
     const syntheticPw = `naver_${naverId}_baro2024!`;
+    const meta        = { full_name: name, phone, provider: 'naver', naver_id: naverId, baroalba_role: '' };
 
-    // 1단계: 기존 계정으로 로그인 시도
+    // 1단계: 기존 계정 로그인 시도
     const { error: signInErr } = await db.auth.signInWithPassword({ email, password: syntheticPw });
+    if (!signInErr) return; // 성공 → onAuthStateChange 처리
 
-    if (!signInErr) return; // 로그인 성공 → onAuthStateChange 처리
+    const notConfirmed = signInErr.message?.toLowerCase().includes('email not confirmed');
+    const invalidCred  = signInErr.message?.toLowerCase().includes('invalid login');
 
-    // "email not confirmed" = 가입은 됐지만 이메일 미확인 상태
-    if (signInErr.message?.toLowerCase().includes('email not confirmed')) {
-      // 이미 가입된 사용자 — Supabase 대시보드에서 Email Confirmation을 꺼야 근본 해결됨
-      // 코드 레벨에서는 OTP 자동 승인 처리 시도
-      const { error: otpErr } = await db.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: false },
+    // 2단계: 신규 사용자 가입
+    if (invalidCred || !notConfirmed) {
+      const { data: sd, error: se } = await db.auth.signUp({
+        email, password: syntheticPw, options: { data: meta }
       });
-      if (!otpErr) {
-        // OTP 발송 성공 → 실제로는 이메일 확인 필요하나 일단 재가입으로 우회
-      }
-      // 재가입 시도 (Supabase가 기존 계정 업데이트하며 새 세션 발급하는 경우 있음)
-      const { data: reSignUp, error: reErr } = await db.auth.signUp({
-        email, password: syntheticPw,
-        options: { data: { full_name: name, phone, provider: 'naver', naver_id: naverId, baroalba_role: '' } }
-      });
-      if (reSignUp?.session) return; // 세션 발급됨
-      if (!reErr) {
-        // 재가입은 됐지만 세션 없음 → 이메일 확인 안내
-        hideLoading();
-        showError('네이버 이메일(' + email + ')로 확인 메일이 발송됐습니다.\n메일을 확인하거나, 관리자에게 문의해주세요.\n\n[임시 해결: Supabase Email Confirmation 비활성화 필요]');
-        return;
-      }
+      if (se) { hideLoading(); showError('네이버 로그인 실패: ' + se.message); return; }
+      if (sd?.session) return; // 이메일 확인 OFF이면 바로 성공
+      // 세션 없음 → 아래 매직링크 단계로 계속
+    }
+
+    // 3단계: 이메일 확인 필요 → 실제 네이버 이메일로 매직링크 발송
+    if (!naverEmail) {
       hideLoading();
-      showError('로그인 실패: 이메일 미확인 상태입니다. 잠시 후 다시 시도해주세요.');
+      showError('네이버 계정의 이메일 정보를 가져올 수 없습니다.\n네이버 앱 → 내 정보 → 연동 서비스에서\n이메일 제공을 허용해주세요.');
       return;
     }
 
-    // 2단계: 신규 가입
-    const { data: signUpData, error: signUpErr } = await db.auth.signUp({
-      email, password: syntheticPw,
-      options: { data: { full_name: name, phone, provider: 'naver', naver_id: naverId, baroalba_role: '' } }
+    await db.auth.signInWithOtp({
+      email: naverEmail,
+      options: { shouldCreateUser: false, emailRedirectTo: 'https://baroalba.multimove.co.kr/login.html' }
     });
-    if (signUpErr) { hideLoading(); showError('네이버 로그인 실패: ' + signUpErr.message); return; }
 
-    // 가입 후 세션 확인
-    if (signUpData?.session) return; // 이메일 확인 OFF 상태면 바로 세션 발급
-
-    // 세션 없음 = 이메일 확인 필요 → 재로그인 시도
-    const { error: si2 } = await db.auth.signInWithPassword({ email, password: syntheticPw });
-    if (si2?.message?.toLowerCase().includes('email not confirmed')) {
-      hideLoading();
-      showError('가입이 완료됐지만 이메일 확인이 필요합니다.\n\n' + email + '\n\n위 이메일로 확인 링크를 보냈습니다. 확인 후 다시 로그인해주세요.\n\n(관리자: Supabase → Auth → Settings → Email Confirmations 비활성화 권장)');
-      return;
-    }
-    if (si2) { hideLoading(); showError('네이버 로그인 실패: ' + si2.message); return; }
+    hideLoading();
+    // 매직링크 안내 UI 표시
+    document.getElementById('naver-magic-email').textContent = naverEmail;
+    document.getElementById('screen-login').style.display = 'none';
+    document.getElementById('screen-naver-magic').style.display = 'flex';
 
   } catch(e) {
     hideLoading();
