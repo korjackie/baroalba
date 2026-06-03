@@ -1100,23 +1100,33 @@ async function submitPosting() {
     same_day_payment:   sameDayPayment,
   };
 
+  // Supabase 클라이언트 우회 — REST API 직접 호출
+  const { data: { session: _sess } } = await db.auth.getSession();
+  if (!_sess) {
+    btn.disabled = false; btn.textContent = editingId ? '수정 완료' : '공고 등록하기';
+    showToast('로그인이 만료됐습니다. 새로고침 후 다시 로그인해주세요.'); return;
+  }
+  const _headers = {
+    'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + _sess.access_token,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal',
+  };
+
   let error;
-  const reqTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('네트워크 응답 없음 (15초). 연결을 확인해주세요.')), 15000));
   try {
+    let res;
     if (editingId) {
       delete payload.base_wage;
       delete payload.business_id;
-      ({ error } = await Promise.race([
-        db.from('job_postings').update(payload).eq('id', editingId),
-        reqTimeout,
-      ]));
+      res = await fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + editingId,
+        { method: 'PATCH', headers: _headers, body: JSON.stringify(payload) });
     } else {
       payload.base_wage = wage;
-      ({ error } = await Promise.race([
-        db.from('job_postings').insert(payload),
-        reqTimeout,
-      ]));
+      res = await fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings',
+        { method: 'POST', headers: _headers, body: JSON.stringify(payload) });
     }
+    if (!res.ok) error = { message: 'HTTP ' + res.status + ': ' + (await res.text()) };
   } catch(e) {
     error = { message: e.message };
   }
