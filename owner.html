@@ -842,7 +842,16 @@ async function showPostingApplicants(jobId, title) {
 async function updateApplication(appId, status) {
   const { error } = await db.from('applications').update({ status }).eq('id', appId);
   if (error) { showToast('처리 실패'); return; }
-  showToast(status === 'accepted' ? '✅ 수락했습니다' : '거절했습니다');
+  if (status === 'accepted') {
+    await db.from('messages').insert({
+      application_id: appId,
+      sender_id: currentUser.id,
+      content: '🎉 축하합니다! 최종 합격하셨습니다. 곧 상세 안내 드리겠습니다.',
+    }).catch(() => {});
+    showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+  } else {
+    showToast('거절 처리됐습니다');
+  }
   loadApplicants();
   loadPostings();
 }
@@ -1395,7 +1404,16 @@ async function openWorkerProfile() {
 
 async function updateApplicationFromProfile(appId, status) {
   await db.from('applications').update({ status }).eq('id', appId);
-  showToast(status === 'accepted' ? '✅ 수락했습니다' : '거절했습니다');
+  if (status === 'accepted') {
+    await db.from('messages').insert({
+      application_id: appId,
+      sender_id: currentUser.id,
+      content: '🎉 축하합니다! 최종 합격하셨습니다. 곧 상세 안내 드리겠습니다.',
+    }).catch(() => {});
+    showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+  } else {
+    showToast('거절 처리됐습니다');
+  }
   document.getElementById('worker-profile-overlay').classList.remove('open');
   loadApplicants(); loadPostings();
 }
