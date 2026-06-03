@@ -521,18 +521,18 @@
 <!-- 네이버 SDK 렌더링 영역 (숨김) -->
 <div id="naverIdLogin"></div>
 
-<!-- 네이버 매직링크 안내 화면 -->
-<div id="screen-naver-magic" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:40px 24px;background:#fff;text-align:center">
+<!-- 네이버 이메일 확인 안내 오버레이 -->
+<div id="screen-naver-magic" style="display:none;position:fixed;inset:0;z-index:2000;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;background:#fff;text-align:center;overflow-y:auto">
   <div style="font-size:56px;margin-bottom:20px">📧</div>
   <div style="font-size:22px;font-weight:900;color:#222;margin-bottom:10px">이메일을 확인해주세요</div>
-  <div style="font-size:14px;color:#666;line-height:1.7;margin-bottom:8px">아래 이메일로 로그인 링크를 보냈습니다</div>
-  <div id="naver-magic-email" style="font-size:15px;font-weight:800;color:#FF4B4B;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:24px;word-break:break-all"></div>
-  <div style="font-size:13px;color:#888;line-height:1.8;margin-bottom:32px">
-    📌 이메일에서 <b>"Confirm your email"</b> 버튼을<br>클릭하면 가입이 완료됩니다<br>
+  <div style="font-size:14px;color:#666;line-height:1.7;margin-bottom:12px">아래 이메일로 가입 확인 메일을 보냈습니다</div>
+  <div id="naver-magic-email" style="font-size:15px;font-weight:800;color:#FF4B4B;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:20px;word-break:break-all;max-width:320px"></div>
+  <div style="font-size:13px;color:#888;line-height:1.9;margin-bottom:32px;max-width:300px">
+    📌 이메일에서 <b>"Confirm your email"</b><br>버튼을 클릭하면 가입 완료됩니다<br>
     이후 네이버 로그인이 정상 작동합니다<br>
-    <span style="font-size:12px;color:#aaa">(스팸함도 확인 · 최초 1회만 필요)</span>
+    <span style="font-size:12px;color:#bbb">(스팸함도 확인 · 최초 1회만 필요)</span>
   </div>
-  <button onclick="document.getElementById('screen-naver-magic').style.display='none';document.getElementById('screen-login').style.display='flex'" style="width:100%;max-width:320px;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">← 로그인 화면으로 돌아가기</button>
+  <button onclick="document.getElementById('screen-naver-magic').style.display='none'" style="width:100%;max-width:320px;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">← 로그인 화면으로 돌아가기</button>
 </div>
 
 <script>
