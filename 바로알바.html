@@ -2323,7 +2323,7 @@ function showQuickGradeModal(type, data = {}) {
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:24px 24px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;text-align:center" onclick="event.stopPropagation()">
       ${content}
-      <button onclick="this.closest('[style*=\"fixed\"]').remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
+      <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
     </div>`;
   overlay.addEventListener('click', () => overlay.remove());
   document.body.appendChild(overlay);
@@ -2452,7 +2452,7 @@ function showGradeInfoModal() {
       </div>
 
       <div style="font-size:11px;color:#aaa;margin-bottom:16px;text-align:center">노쇼 1회 발생 시 번개등급 즉시 박탈</div>
-      <button onclick="this.closest('[style*=\"fixed\"]').remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
+      <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
     </div>`;
   overlay.addEventListener('click', () => overlay.remove());
   document.body.appendChild(overlay);
