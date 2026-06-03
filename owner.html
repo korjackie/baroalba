@@ -830,6 +830,21 @@ async function deleteApplication(appId) {
 
 async function deletePosting(jobId) {
   if (!confirm('이 공고를 삭제하면 지원자 데이터도 함께 삭제됩니다. 정말 삭제할까요?')) return;
+
+  // 1. 해당 공고의 application ID 목록 조회
+  const { data: apps } = await db.from('applications')
+    .select('id').eq('job_posting_id', jobId);
+
+  if (apps?.length) {
+    const appIds = apps.map(a => a.id);
+    // 2. 메시지 삭제 (FK: messages.application_id → applications.id)
+    await db.from('messages').delete().in('application_id', appIds);
+    // 3. 지원서 삭제
+    const { error: appErr } = await db.from('applications').delete().eq('job_posting_id', jobId);
+    if (appErr) { showToast('지원 데이터 삭제 실패: ' + appErr.message); return; }
+  }
+
+  // 4. 공고 삭제
   const { error } = await db.from('job_postings').delete().eq('id', jobId);
   if (error) { showToast('삭제 실패: ' + error.message); return; }
   showToast('✅ 공고가 삭제됐습니다');
