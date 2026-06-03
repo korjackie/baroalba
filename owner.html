@@ -226,9 +226,9 @@
       .bottom-nav { left:50%; right:auto; transform:translateX(-50%); width:480px; }
       .fab { right:calc(50% - 220px); }
 
-      /* 폼 시트: 바텀시트 → 중앙 팝업, 양쪽 여백으로 좁게 */
+      /* 폼 시트: 바텀시트 → 중앙 팝업 (animation 제거 — 포인터 이벤트 간섭 방지) */
       .sheet-overlay { align-items:center; justify-content:center; }
-      .form-sheet { width:380px; border-radius:20px; animation:pcFadeIn 0.2s ease; }
+      .form-sheet { width:380px; border-radius:20px; animation:none; }
 
       /* 지원자 프로필 / 채팅 모달: 중앙 팝업 */
       #worker-profile-overlay { align-items:center; justify-content:center; }
@@ -242,8 +242,6 @@
 
       /* 지도/채팅목록 패널: 전체화면 유지 */
       .full-panel { left:0; right:0; width:100%; transform:none; }
-
-      @keyframes pcFadeIn { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
     }
   </style>
 </head>
@@ -1053,14 +1051,16 @@ function searchKakaoFallback(query) {
 function showMiniMap(lat, lng, addr) {
   const el = document.getElementById('mini-map');
   el.style.display = 'block';
-  const pos = new kakao.maps.LatLng(lat, lng);
-  if (!miniMap) {
-    miniMap = new kakao.maps.Map(el, { center: pos, level: 4 });
-  } else {
-    miniMap.relayout();
-    miniMap.setCenter(pos);
-  }
-  new kakao.maps.Marker({ position: pos, map: miniMap });
+  requestAnimationFrame(() => {
+    const pos = new kakao.maps.LatLng(lat, lng);
+    if (!miniMap) {
+      miniMap = new kakao.maps.Map(el, { center: pos, level: 4 });
+    } else {
+      miniMap.relayout();
+      miniMap.setCenter(pos);
+    }
+    new kakao.maps.Marker({ position: pos, map: miniMap });
+  });
 }
 
 // ── 공고 제출 ─────────────────────────────────────────────
@@ -1082,36 +1082,37 @@ async function submitPosting() {
   if (!endTime || endTime <= startTime) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
   if (!lat || !lng) { showToast('위치를 검색해서 선택해주세요'); return; }
 
+  // 세션 체크 — btn 비활성화 전에 먼저 (동기 즉시 확인)
+  const sess = currentSession;
+  if (!sess) { showToast('로그인이 만료됐습니다. 새로고침 후 다시 로그인해주세요.'); return; }
+
+  const surgeEnabled  = document.getElementById('f-surge-enabled').value === 'true';
+  const surgeMax      = parseInt(document.getElementById('f-surge-max').value) || null;
+  const surgeAmount   = parseInt(document.getElementById('f-surge-amount').value) || 1000;
+  const surgeInterval = parseInt(document.getElementById('f-surge-interval').value) || 30;
+  const sameDayPayment = document.getElementById('f-same-day-on').value === 'true';
+
+  const payload = {
+    business_id: bizRecord.id,
+    title, category, description: desc,
+    current_wage: wage,
+    lat, lng,
+    duration_hours: duration,
+    needed_count: needed || 1,
+    start_time: startTime.toISOString(),
+    status: surgeEnabled ? 'urgent' : 'open',
+    surge_enabled:      surgeEnabled,
+    surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
+    surge_amount:       surgeEnabled ? surgeAmount : null,
+    surge_interval_min: surgeEnabled ? surgeInterval : null,
+    same_day_payment:   sameDayPayment,
+  };
+
   const btn = document.getElementById('submit-btn');
   const btnOrigText = editingId ? '수정 완료' : '공고 등록하기';
   btn.disabled = true; btn.textContent = '저장 중...';
 
   try {
-    const surgeEnabled  = document.getElementById('f-surge-enabled').value === 'true';
-    const surgeMax      = parseInt(document.getElementById('f-surge-max').value) || null;
-    const surgeAmount   = parseInt(document.getElementById('f-surge-amount').value) || 1000;
-    const surgeInterval = parseInt(document.getElementById('f-surge-interval').value) || 30;
-    const sameDayPayment = document.getElementById('f-same-day-on').value === 'true';
-
-    const payload = {
-      business_id: bizRecord.id,
-      title, category, description: desc,
-      current_wage: wage,
-      lat, lng,
-      duration_hours: duration,
-      needed_count: needed || 1,
-      start_time: startTime.toISOString(),
-      status: surgeEnabled ? 'urgent' : 'open',
-      surge_enabled:      surgeEnabled,
-      surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
-      surge_amount:       surgeEnabled ? surgeAmount : null,
-      surge_interval_min: surgeEnabled ? surgeInterval : null,
-      same_day_payment:   sameDayPayment,
-    };
-
-    // 세션은 init에서 저장한 값 사용 (getSession() 호출 없이 즉시)
-    const sess = currentSession;
-    if (!sess) { showToast('로그인이 만료됐습니다. 새로고침 후 다시 로그인해주세요.'); return; }
 
     const headers = {
       'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
