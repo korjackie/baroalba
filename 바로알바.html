@@ -1137,10 +1137,13 @@ function renderMarkers() {
     const hasSurge = job.wage_delta > 0;
     const wageStr = (job.current_wage / 10000).toFixed(1) + '만';
 
-    // 출근시간 포맷 (HH:MM)
-    const startFmt = job.start_time
-      ? (() => { const d = new Date(job.start_time); return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); })()
-      : '시간미정';
+    // 출근시간 포맷 (HH:MM) — 유효하지 않으면 빈 문자열
+    const startFmt = (() => {
+      if (!job.start_time) return '';
+      const d = new Date(job.start_time);
+      if (isNaN(d.getTime())) return '';
+      return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    })();
     const bizName = (job.biz_name || job.title || '').slice(0, 8);
 
     const surgeHtml = hasSurge
@@ -1154,7 +1157,7 @@ function renderMarkers() {
         <div class="marker-bubble ${statusCls}">
           <span class="mk-wage">${wageStr}</span>
           <span class="mk-sub">${bizName}</span>
-          <span class="mk-sub">⏰ ${startFmt}</span>
+          ${startFmt ? `<span class="mk-sub">⏰ ${startFmt}</span>` : ''}
         </div>
         <div class="marker-tail ${tailCls}"></div>
       </div>`;
