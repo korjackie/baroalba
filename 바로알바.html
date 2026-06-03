@@ -2231,7 +2231,7 @@ function bindSwipeDrag(card) {
   window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientX, e.clientY); });
 }
 
-function flyCard(card, dir) {
+async function flyCard(card, dir) {
   const targets = { left:[-1200,100,'-30deg'], right:[1200,100,'30deg'], up:[0,-1200,'0deg'] };
   const [tx, ty, rot] = targets[dir];
   card.style.transform = `translate(${tx}px,${ty}px) rotate(${rot})`;
