@@ -538,11 +538,13 @@
 <script>
 // ── 해시 최우선 캡처 (Supabase가 지우기 전에) ─────────────
 const _initHash = window.location.hash;
-// Naver 콜백: access_token + state= 있고 type= 없음
-// Supabase 콜백: access_token + type=magiclink/signup 등
-const _isNaverCallback = _initHash.includes('access_token') &&
-                         _initHash.includes('state=') &&
-                         !_initHash.includes('type=');
+// URLSearchParams로 정확히 파싱 (token_type= 와 type= 혼동 방지)
+const _hashParams = new URLSearchParams(_initHash.slice(1));
+// Naver 콜백: access_token + state 있음, type 키 없음
+// Supabase 콜백: access_token + type=magiclink/signup/recovery 있음
+const _isNaverCallback = _hashParams.has('access_token') &&
+                         _hashParams.has('state') &&
+                         !_hashParams.has('type');
 
 // ── Supabase 초기화 ────────────────────────────────────────
 const { createClient } = supabase;
