@@ -7,12 +7,12 @@
   <circle cx="96" cy="100" r="36" fill="white"/>
   <circle cx="96" cy="100" r="20" fill="#FF4B4B"/>
   <circle cx="96" cy="100" r="8"  fill="white"/>
-  <!-- 화살 깃털 -->
-  <rect x="118" y="40" width="10" height="24" rx="3" fill="#FFD600" transform="rotate(45 123 52)"/>
-  <rect x="130" y="40" width="10" height="24" rx="3" fill="#FFD600" transform="rotate(45 135 52)"/>
+  <!-- 화살 깃털 (파란/보라) -->
+  <rect x="118" y="40" width="10" height="24" rx="3" fill="#7C4DFF" transform="rotate(45 123 52)"/>
+  <rect x="130" y="40" width="10" height="24" rx="3" fill="#5C6BC0" transform="rotate(45 135 52)"/>
   <!-- 화살대 -->
-  <line x1="152" y1="40" x2="96" y2="100" stroke="#4A2800" stroke-width="7" stroke-linecap="round"/>
+  <line x1="152" y1="40" x2="96" y2="100" stroke="#1A237E" stroke-width="7" stroke-linecap="round"/>
   <!-- 화살촉 -->
-  <circle cx="96" cy="100" r="5" fill="#4A2800"/>
-  <polygon points="152,40 140,34 146,52" fill="#4A2800"/>
+  <circle cx="96" cy="100" r="5" fill="#1A237E"/>
+  <polygon points="152,40 140,34 146,52" fill="#1A237E"/>
 </svg>

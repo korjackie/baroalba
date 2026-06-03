@@ -440,6 +440,27 @@
   </button>
 </div>
 
+<!-- 지원자 프로필 모달 -->
+<div class="modal-overlay" id="worker-profile-overlay" onclick="if(event.target===this)this.classList.remove('open')" style="z-index:800;align-items:flex-end">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">지원자 프로필</div>
+      <button onclick="document.getElementById('worker-profile-overlay').classList.remove('open')" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div id="worker-profile-content" style="padding:20px"></div>
+  </div>
+</div>
+
+<!-- 지도 오버레이 (업주용 주변 공고 조회) -->
+<div id="owner-map-overlay" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);z-index:350;flex-direction:column;background:#f5f5f5">
+  <div style="background:#fff;padding:12px 16px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="font-size:16px;font-weight:800;color:#222">🗺 주변 공고 현황</div>
+    <button onclick="closeOwnerMap()" style="padding:8px 16px;background:var(--red);color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer">✕ 닫기</button>
+  </div>
+  <div id="owner-map-container" style="flex:1;width:100%"></div>
+  <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
+</div>
+
 <!-- 채팅 목록 패널 -->
 <div class="full-panel" id="panel-owner-chats">
   <div class="panel-header">💬 대화 목록</div>
@@ -509,9 +530,9 @@
 <div class="modal-overlay" id="chat-overlay" onclick="if(event.target===this)closeChat()" style="z-index:700;align-items:flex-end">
   <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;height:80vh;display:flex;flex-direction:column;animation:slideUp 0.3s ease">
     <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-      <div>
+      <div onclick="openWorkerProfile()" style="cursor:pointer">
         <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
+        <div style="font-size:11px;color:var(--red);margin-top:2px" id="chat-sub">👤 프로필 보기 ›</div>
       </div>
       <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
     </div>
@@ -1259,7 +1280,7 @@ function setNav(el, tab) {
   const panelChats = document.getElementById('panel-owner-chats');
   panelChats.classList.remove('show');
 
-  if (tab === 'map') { location.href = '/바로알바.html?browse=1'; return; }
+  if (tab === 'map') { openOwnerMap(); return; }
   if (tab === 'postings') switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
   else if (tab === 'applicants') {
     const badge = document.getElementById('owner-chat-badge');
@@ -1280,6 +1301,95 @@ function setNav(el, tab) {
 
 // ── 채팅 ───────────────────────────────────────────────────
 let _chatAppId = null, _chatSub = null;
+
+// ── 지도 오버레이 (업주용 주변 공고 조회) ─────────────────
+let _ownerMap = null;
+
+function openOwnerMap() {
+  const overlay = document.getElementById('owner-map-overlay');
+  overlay.style.display = 'flex';
+  if (_ownerMap) return;
+  setTimeout(() => {
+    const container = document.getElementById('owner-map-container');
+    const center = bizRecord?.lat
+      ? new kakao.maps.LatLng(bizRecord.lat, bizRecord.lng)
+      : new kakao.maps.LatLng(37.5665, 126.9780);
+    _ownerMap = new kakao.maps.Map(container, { center, level: 5 });
+    loadOwnerMapJobs();
+  }, 100);
+}
+
+function closeOwnerMap() {
+  document.getElementById('owner-map-overlay').style.display = 'none';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('.nav-item').classList.add('active');
+}
+
+async function loadOwnerMapJobs() {
+  if (!_ownerMap) return;
+  const center = _ownerMap.getCenter();
+  const { data } = await db.rpc('nearby_jobs', {
+    user_lat: center.getLat(), user_lng: center.getLng(),
+    radius_meters: 5000, job_category: null
+  }).catch(() => ({ data: [] }));
+
+  (data || []).forEach(job => {
+    const pos = new kakao.maps.LatLng(job.lat, job.lng);
+    const content = `<div style="background:${job.status==='urgent'?'#FF4B4B':'#333'};color:#fff;padding:4px 8px;border-radius:12px;font-size:11px;font-weight:800;white-space:nowrap">${job.current_wage.toLocaleString()}원</div>`;
+    const overlay = new kakao.maps.CustomOverlay({ position: pos, content, yAnchor: 1 });
+    overlay.setMap(_ownerMap);
+    kakao.maps.event.addListener(overlay, 'click', () => {
+      document.getElementById('owner-map-info').innerHTML =
+        `<b>${job.biz_name}</b> — ${job.title} · ${job.current_wage.toLocaleString()}원/시 · ${job.status==='urgent'?'🔥급구':'모집중'}`;
+    });
+  });
+
+  kakao.maps.event.addListener(_ownerMap, 'dragend', loadOwnerMapJobs);
+}
+
+// ── 지원자 프로필 ─────────────────────────────────────────
+let _chatWorkerId = null;
+
+async function openWorkerProfile() {
+  if (!_chatAppId) return;
+  const { data: app } = await db.from('applications')
+    .select('*, workers(name, phone, rating, review_count, skills), job_postings(title)')
+    .eq('id', _chatAppId).single();
+  if (!app) return;
+  const w = app.workers || {};
+  const STATUS = { pending:'⏳ 검토중', accepted:'✅ 수락', rejected:'❌ 거절', completed:'🏁 완료', cancelled:'취소' };
+  document.getElementById('worker-profile-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div style="width:56px;height:56px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">👤</div>
+      <div>
+        <div style="font-size:18px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
+        <div style="font-size:13px;color:#888;margin-top:3px">★ ${w.rating || '-'} · 리뷰 ${w.review_count || 0}개</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:#f8f8f8;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">연락처</div>
+        <div style="font-size:15px;font-weight:700;color:#222">${w.phone || '미입력'}</div>
+      </div>
+      <div style="background:#f8f8f8;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">지원 공고</div>
+        <div style="font-size:14px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div>
+        <div style="font-size:12px;color:#888;margin-top:4px">지원 상태: ${STATUS[app.status] || app.status}</div>
+      </div>
+      ${w.skills?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">보유 스킬</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1px solid #eee;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">${s}</span>`).join('')}</div></div>` : ''}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      ${app.status==='pending'?`<button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 수락</button><button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 거절</button>`:''}
+    </div>`;
+  document.getElementById('worker-profile-overlay').classList.add('open');
+}
+
+async function updateApplicationFromProfile(appId, status) {
+  await db.from('applications').update({ status }).eq('id', appId);
+  showToast(status === 'accepted' ? '✅ 수락했습니다' : '거절했습니다');
+  document.getElementById('worker-profile-overlay').classList.remove('open');
+  loadApplicants(); loadPostings();
+}
 
 async function openChat(applicationId, workerName) {
   _chatAppId = applicationId;
