@@ -217,31 +217,21 @@
     .full-panel.show { display:flex; }
     .panel-header { background:#fff; padding:16px 20px 12px; border-bottom:1px solid #f0f0f0; font-size:18px; font-weight:900; color:#222; position:sticky; top:0; z-index:1; flex-shrink:0; }
 
-    /* ── PC: 모바일 프레임 레이아웃 ── */
+    /* ── PC: 팝업/모달만 적당한 너비로 제한 (전체 레이아웃은 그대로) ── */
     @media (min-width: 600px) {
-      html { background:#d0d0d0; }
-      body { max-width:480px; margin:0 auto; box-shadow:0 0 60px rgba(0,0,0,0.18); }
-
-      /* fixed 요소: 컨테이너 폭에 맞게 중앙 정렬 */
-      .bottom-nav { left:50%; right:auto; transform:translateX(-50%); width:480px; }
-      .fab { right:calc(50% - 220px); }
-
-      /* 폼 시트: 바텀시트 → 중앙 팝업 (animation 제거 — 포인터 이벤트 간섭 방지) */
+      /* 폼 시트: 바텀시트 → 중앙 팝업 */
       .sheet-overlay { align-items:center; justify-content:center; }
-      .form-sheet { width:380px; border-radius:20px; animation:none; }
+      .form-sheet { width:480px; max-width:90vw; border-radius:20px; animation:none; }
 
-      /* 지원자 프로필 / 채팅 모달: 중앙 팝업 */
+      /* 지원자 프로필 / 채팅 모달 */
       #worker-profile-overlay { align-items:center; justify-content:center; }
-      #worker-profile-overlay > div { border-radius:20px; width:380px; max-height:85vh; overflow-y:auto; }
+      #worker-profile-overlay > div { border-radius:20px; width:480px; max-width:90vw; max-height:85vh; overflow-y:auto; }
       #chat-overlay { align-items:center; justify-content:center; }
-      #chat-overlay > div { border-radius:20px; width:380px; max-height:85vh; }
+      #chat-overlay > div { border-radius:20px; width:480px; max-width:90vw; max-height:85vh; }
 
-      /* 설정 / 공유 모달: 컨텐츠 폭 제한 */
+      /* 설정 / 공유 모달 */
       #settings-overlay > div,
-      #share-overlay > div { width:380px; max-width:380px; }
-
-      /* 지도/채팅목록 패널: 전체화면 유지 */
-      .full-panel { left:0; right:0; width:100%; transform:none; }
+      #share-overlay > div { width:480px; max-width:90vw; }
     }
   </style>
 </head>
@@ -1277,8 +1267,8 @@ async function setupOwnerChatNotify() {
 
       showToast('💬 새 메시지: ' + msg.content.slice(0, 20) + (msg.content.length > 20 ? '…' : ''));
 
-      // 지원자 탭 nav badge 업데이트
-      const badge = document.getElementById('owner-chat-badge');
+      // 채팅 탭 nav badge 업데이트
+      const badge = document.getElementById('owner-msg-badge');
       const cnt = parseInt(badge.textContent || '0') + 1;
       badge.textContent = cnt;
       badge.style.display = 'flex';
@@ -1377,7 +1367,7 @@ function setNav(el, tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     panelChats.classList.add('show');
     const msgBadge = document.getElementById('owner-msg-badge');
-    if (msgBadge) { msgBadge.style.display = 'none'; }
+    if (msgBadge) { msgBadge.textContent = '0'; msgBadge.style.display = 'none'; }
     loadOwnerChatList();
   }
   else if (tab === 'settings') openOwnerSettings();
