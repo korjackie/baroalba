@@ -1078,8 +1078,8 @@ async function submitPosting() {
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
   if (!wage || wage < 9860) { showToast('시급은 최저임금(9,860원) 이상이어야 해요'); return; }
-  if (!startTime) { showToast('시작 시간을 입력해주세요'); return; }
-  if (!endTime || endTime <= startTime) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
+  if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
+  if (!endTime || isNaN(endTime.getTime()) || endTime <= startTime) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
   if (!lat || !lng) { showToast('위치를 검색해서 선택해주세요'); return; }
 
   // 세션 체크 — btn 비활성화 전에 먼저 (동기 즉시 확인)
@@ -1770,11 +1770,12 @@ function setTimeSelects(prefix, date) {
 
 function getTimeValue(prefix) {
   const dateEl = document.getElementById('f-start-date');
-  const h = parseInt(document.getElementById(`f-${prefix}-hour`)?.value ?? 0);
-  const m = parseInt(document.getElementById(`f-${prefix}-min`)?.value ?? 0);
+  const h = parseInt(document.getElementById(`f-${prefix}-hour`)?.value) || 0;
+  const m = parseInt(document.getElementById(`f-${prefix}-min`)?.value) || 0;
   const dateStr = dateEl?.value;
   if (!dateStr) return null;
   const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
   d.setHours(h, m, 0, 0);
   return d;
 }
