@@ -1072,14 +1072,21 @@ async function submitPosting() {
   };
 
   let error;
+  const reqTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('네트워크 응답 없음 (15초). 연결을 확인해주세요.')), 15000));
   try {
     if (editingId) {
       delete payload.base_wage;
       delete payload.business_id;
-      ({ error } = await db.from('job_postings').update(payload).eq('id', editingId));
+      ({ error } = await Promise.race([
+        db.from('job_postings').update(payload).eq('id', editingId),
+        reqTimeout,
+      ]));
     } else {
       payload.base_wage = wage;
-      ({ error } = await db.from('job_postings').insert(payload));
+      ({ error } = await Promise.race([
+        db.from('job_postings').insert(payload),
+        reqTimeout,
+      ]));
     }
   } catch(e) {
     error = { message: e.message };
