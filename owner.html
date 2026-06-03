@@ -344,8 +344,54 @@
         <input class="form-input" id="f-wage" type="number" min="9860" placeholder="10000">
       </div>
 
+      <!-- 근무형태 -->
       <div class="form-group">
-        <label class="form-label">시작 시간 *</label>
+        <label class="form-label">근무형태 *</label>
+        <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="work-type-tabs">
+          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">⚡ 스팟</button>
+          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">📅 단기</button>
+          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔄 정기</button>
+        </div>
+        <input type="hidden" id="f-work-type" value="spot">
+        <div style="font-size:11px;color:#aaa;margin-top:6px" id="wt-desc">1회성 단발 근무 (날짜·시간 1회 지정)</div>
+      </div>
+
+      <!-- 단기/정기: 근무 요일 + 기간 -->
+      <div id="f-schedule-section" style="display:none">
+        <div class="form-group">
+          <label class="form-label">근무 요일 *</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="f-days-wrap">
+            ${['월','화','수','목','금','토','일'].map(d => `<button type="button" data-day="${d}" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">${d}</button>`).join('')}
+          </div>
+          <input type="hidden" id="f-work-days" value="">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">시작일 *</label>
+            <input class="form-input" id="f-period-start" type="date">
+          </div>
+          <div class="form-group" id="f-period-end-wrap">
+            <label class="form-label">종료일 <span id="f-period-end-label" style="color:#aaa;font-size:11px">(단기만)</span></label>
+            <input class="form-input" id="f-period-end" type="date">
+          </div>
+        </div>
+        <div class="form-group" id="f-holiday-pay-wrap" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:12px;cursor:pointer" onclick="toggleHolidayPay()">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#16a34a">💰 주휴수당 포함</div>
+              <div style="font-size:11px;color:#888;margin-top:1px">주 15시간 이상 시 법적 지급 의무</div>
+            </div>
+            <div id="holiday-pay-track" style="width:40px;height:22px;background:#ddd;border-radius:11px;position:relative;transition:background 0.2s">
+              <div style="position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left 0.2s" id="holiday-pay-knob"></div>
+            </div>
+          </div>
+          <input type="hidden" id="f-holiday-pay" value="false">
+        </div>
+      </div>
+
+      <!-- 근무 시간 (공통) -->
+      <div class="form-group">
+        <label class="form-label" id="f-time-label">시작 시간 *</label>
         <div style="display:flex;gap:8px;align-items:center">
           <input class="form-input" id="f-start-date" type="date" style="flex:1.6;min-width:0">
           <select class="form-select" id="f-start-hour" style="flex:1;min-width:0"></select>
@@ -751,23 +797,7 @@ async function loadInlineApplicants(jobId) {
   }
   el.innerHTML = apps.map(a => {
     const w = a.workers;
-    const statusHtml = a.status === 'accepted'
-      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-           <span class="accepted-badge">✅ 합격확정</span>
-           <div style="display:flex;gap:4px">
-             <button onclick="updateApplication('${a.id}','pending')" style="padding:4px 8px;background:#FFF3E0;color:#E65100;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 취소</button>
-             <button onclick="deleteApplication('${a.id}')" style="padding:4px 8px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 삭제</button>
-           </div>
-         </div>`
-      : a.status === 'rejected'
-      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-           <span class="rejected-badge">❌ 거절됨</span>
-           <button onclick="deleteApplication('${a.id}')" style="padding:4px 8px;background:#f5f5f5;color:#aaa;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 삭제</button>
-         </div>`
-      : `<div class="applicant-btns">
-           <button class="accept-btn" onclick="updateApplication('${a.id}','accepted')">수락</button>
-           <button class="reject-btn" onclick="updateApplication('${a.id}','rejected')">거절</button>
-         </div>`;
+    const statusHtml = buildStatusHtml(a, false);
     return `
     <div class="applicant-card" id="app-card-${a.id}">
       <div class="applicant-avatar">👤</div>
@@ -798,6 +828,45 @@ async function deletePosting(jobId) {
   if (error) { showToast('삭제 실패: ' + error.message); return; }
   showToast('✅ 공고가 삭제됐습니다');
   loadPostings();
+}
+
+// ── 지원자 상태 뱃지/버튼 빌더 ──────────────────────────────
+function buildStatusHtml(a, stopProp) {
+  const sp = stopProp ? 'event.stopPropagation();' : '';
+  const STATUS_BADGE = {
+    pending:   { bg:'#EFF6FF', color:'#3B82F6', label:'📥 접수' },
+    reviewing: { bg:'#FFF7ED', color:'#F59E0B', label:'🔍 검토중' },
+    accepted:  { bg:'#DCFCE7', color:'#16a34a', label:'✅ 합격' },
+    rejected:  { bg:'#FEF2F2', color:'#EF4444', label:'❌ 거절' },
+    cancelled: { bg:'#f5f5f5', color:'#aaa',    label:'🚫 지원취소' },
+  };
+  const b = STATUS_BADGE[a.status] || STATUS_BADGE.pending;
+  const badge = `<span style="background:${b.bg};color:${b.color};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">${b.label}</span>`;
+
+  if (a.status === 'cancelled') {
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${badge}</div>`;
+  }
+  if (a.status === 'accepted') {
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+      ${badge}
+      <button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#FFF3E0;color:#E65100;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 검토로</button>
+    </div>`;
+  }
+  if (a.status === 'rejected') {
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+      ${badge}
+      <button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 재검토</button>
+    </div>`;
+  }
+  // pending or reviewing
+  return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+    ${badge}
+    <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+      ${a.status === 'pending' ? `<button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#FFF7ED;color:#F59E0B;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🔍 검토</button>` : ''}
+      <button onclick="${sp}updateApplication('${a.id}','accepted')" style="padding:5px 10px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">✅ 합격</button>
+      <button onclick="${sp}updateApplication('${a.id}','rejected')" style="padding:5px 10px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">❌ 거절</button>
+    </div>
+  </div>`;
 }
 
 async function loadApplicantCount(jobId) {
@@ -872,23 +941,7 @@ function renderApplicants(apps) {
   }
   el.innerHTML = apps.map(a => {
     const w = a.workers;
-    const statusHtml = a.status === 'accepted'
-      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-           <span style="background:#DCFCE7;color:#16a34a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:900">✅ 최종확정</span>
-           <div style="display:flex;gap:4px">
-             <button onclick="event.stopPropagation();updateApplication('${a.id}','pending')" style="padding:4px 8px;background:#FFF3E0;color:#E65100;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 취소</button>
-             <button onclick="event.stopPropagation();deleteApplication('${a.id}')" style="padding:4px 8px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑</button>
-           </div>
-         </div>`
-      : a.status === 'rejected'
-      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-           <span style="background:#f5f5f5;color:#aaa;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">❌ 탈락</span>
-           <button onclick="event.stopPropagation();deleteApplication('${a.id}')" style="padding:4px 8px;background:#f5f5f5;color:#aaa;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 삭제</button>
-         </div>`
-      : `<div class="applicant-btns">
-           <button class="accept-btn" onclick="event.stopPropagation();updateApplication('${a.id}','accepted')">수락</button>
-           <button class="reject-btn" onclick="event.stopPropagation();updateApplication('${a.id}','rejected')">거절</button>
-         </div>`;
+    const statusHtml = buildStatusHtml(a, true);
     return `
     <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
       <div class="applicant-avatar">👤</div>
@@ -993,6 +1046,43 @@ function openPostingForm() {
   // 당일정산 초기화
   setSameDay(false);
   document.getElementById('form-overlay').classList.add('open');
+}
+
+// ── 근무형태 선택 ─────────────────────────────────────────
+function setWorkType(type) {
+  document.getElementById('f-work-type').value = type;
+  const btns = { spot:'wt-spot', short:'wt-short', regular:'wt-regular' };
+  const descs = { spot:'⚡ 1회성 단발 근무 (날짜·시간 1회 지정)', short:'📅 기간제 단기 근무 (시작일~종료일 + 요일 지정)', regular:'🔄 장기 정기 근무 (요일 고정 + 주휴수당 설정)' };
+  Object.keys(btns).forEach(k => {
+    const el = document.getElementById(btns[k]);
+    el.style.background = k === type ? '#fff' : 'transparent';
+    el.style.color = k === type ? '#FF4B4B' : '#888';
+    el.style.boxShadow = k === type ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
+  });
+  document.getElementById('wt-desc').textContent = descs[type];
+  const showSched = type !== 'spot';
+  document.getElementById('f-schedule-section').style.display = showSched ? 'block' : 'none';
+  document.getElementById('f-start-date').closest('.form-group').style.display = showSched ? 'none' : 'block';
+  document.getElementById('f-time-label').textContent = showSched ? '일일 근무 시간 *' : '시작 시간 *';
+  document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
+  document.getElementById('f-period-end-wrap').style.opacity = type === 'short' ? '1' : '0.4';
+}
+
+function toggleDay(btn) {
+  const active = btn.style.background === 'rgb(255, 75, 75)';
+  btn.style.background = active ? '#fff' : '#FF4B4B';
+  btn.style.color = active ? '#888' : '#fff';
+  btn.style.borderColor = active ? '#eee' : '#FF4B4B';
+  const days = Array.from(document.querySelectorAll('#f-days-wrap button'))
+    .filter(b => b.style.background === 'rgb(255, 75, 75)').map(b => b.dataset.day);
+  document.getElementById('f-work-days').value = days.join(',');
+}
+
+function toggleHolidayPay() {
+  const on = document.getElementById('f-holiday-pay').value !== 'true';
+  document.getElementById('f-holiday-pay').value = on;
+  document.getElementById('holiday-pay-track').style.background = on ? '#22c55e' : '#ddd';
+  document.getElementById('holiday-pay-knob').style.left = on ? '20px' : '2px';
 }
 
 function openEditForm(jobId) {
@@ -1159,6 +1249,11 @@ async function submitPosting() {
   const surgeInterval = parseInt(document.getElementById('f-surge-interval').value) || 30;
   const sameDayPayment = document.getElementById('f-same-day-on').value === 'true';
 
+  const workType   = document.getElementById('f-work-type').value || 'spot';
+  const workDays   = document.getElementById('f-work-days').value || '';
+  const periodEnd  = document.getElementById('f-period-end').value || null;
+  const holidayPay = document.getElementById('f-holiday-pay').value === 'true';
+
   const payload = {
     business_id: bizRecord.id,
     title, category, description: desc,
@@ -1173,6 +1268,10 @@ async function submitPosting() {
     surge_amount:       surgeEnabled ? surgeAmount : null,
     surge_interval_min: surgeEnabled ? surgeInterval : null,
     same_day_payment:   sameDayPayment,
+    work_type:          workType,
+    work_days:          workDays || null,
+    work_end_date:      workType === 'short' ? periodEnd : null,
+    holiday_pay:        workType === 'regular' ? holidayPay : false,
   };
 
   const btn = document.getElementById('submit-btn');
