@@ -29,14 +29,10 @@ function drawIcon(size) {
   const r = 38 * s;
   g.beginPath();
   g.moveTo(r, 0);
-  g.lineTo(size - r, 0);
-  g.quadraticCurveTo(size, 0, size, r);
-  g.lineTo(size, size - r);
-  g.quadraticCurveTo(size, size, size - r, size);
-  g.lineTo(r, size);
-  g.quadraticCurveTo(0, size, 0, size - r);
-  g.lineTo(0, r);
-  g.quadraticCurveTo(0, 0, r, 0);
+  g.arcTo(size, 0,    size, size, r);
+  g.arcTo(size, size, 0,    size, r);
+  g.arcTo(0,    size, 0,    0,    r);
+  g.arcTo(0,    0,    size, 0,    r);
   g.closePath();
   g.fillStyle = '#FF4B4B';
   g.fill();

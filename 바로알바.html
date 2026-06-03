@@ -2088,35 +2088,86 @@ function makeSwipeCard(job, isTop) {
   const card = document.createElement('div');
   card.dataset.top = isTop;
   card.dataset.jobId = job.id;
-  const bg = CAT_BG[job.category] || '#fff';
+  const bg = CAT_BG[job.category] || '#f5f5f5';
   const emoji = CAT_EMOJI[job.category] || '💼';
-  const tags = [job.status === 'urgent' ? '🔥 급구' : null, job.wage_delta > 0 ? `↑${job.wage_delta.toLocaleString()}원` : null].filter(Boolean);
   const dist = job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
 
-  card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden;cursor:grab;touch-action:none;user-select:none;transition:box-shadow 0.2s;`;
+  // 날짜/시간 포맷
+  let dateStr = '날짜 미정', timeStr = '';
+  if (job.start_time) {
+    const d = new Date(job.start_time);
+    const days = ['일','월','화','수','목','금','토'];
+    dateStr = (d.getMonth()+1) + '월 ' + d.getDate() + '일(' + days[d.getDay()] + ')';
+    timeStr = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  const endTime = job.start_time && job.duration_hours
+    ? (() => { const e = new Date(new Date(job.start_time).getTime() + job.duration_hours*3600000); return String(e.getHours()).padStart(2,'0')+':'+String(e.getMinutes()).padStart(2,'0'); })()
+    : '';
+  const timeRange = timeStr ? `${timeStr}${endTime ? ' ~ '+endTime : ''}` : '시간 미정';
+
+  const isUrgent = job.status === 'urgent';
+  const hasSurge = job.wage_delta > 0;
+  const neededLeft = (job.needed_count||1) - (job.filled_count||0);
+
+  card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden;cursor:grab;touch-action:none;user-select:none;display:flex;flex-direction:column;`;
   card.innerHTML = `
-    <!-- 상단 컬러 배너 -->
-    <div style="background:${bg};padding:28px 24px 20px;text-align:center;">
-      <div style="font-size:64px;margin-bottom:8px">${emoji}</div>
-      <div style="font-size:12px;font-weight:800;color:#888;letter-spacing:1px;text-transform:uppercase">${job.category}</div>
+    <!-- 상단 컬러 헤더: 카테고리 + 업체명 -->
+    <div style="background:${bg};padding:22px 20px 16px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:44px;line-height:1">${emoji}</div>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:3px">${job.category}</div>
+          <div style="font-size:16px;font-weight:900;color:#111">${job.biz_name || ''}</div>
+        </div>
+        ${isUrgent ? '<span style="margin-left:auto;background:#FF4B4B;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap">🔥 급구</span>' : ''}
+      </div>
+      <div style="font-size:20px;font-weight:900;color:#111;line-height:1.3">${job.title}</div>
     </div>
 
-    <!-- 내용 -->
-    <div style="padding:20px 24px;">
-      <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">🏪 ${job.biz_name}</div>
-      <div style="font-size:22px;font-weight:900;color:#111;line-height:1.3;margin-bottom:12px">${job.title}</div>
+    <!-- 핵심 정보 블록 -->
+    <div style="padding:16px 20px;flex:1;display:flex;flex-direction:column;justify-content:space-between">
 
-      <div style="font-size:30px;font-weight:900;color:var(--red);margin-bottom:4px">${job.current_wage.toLocaleString()}<span style="font-size:16px">원</span></div>
-      ${job.wage_delta > 0 ? `<div style="font-size:12px;color:#FF9500;font-weight:800;margin-bottom:12px">↑ ${job.wage_delta.toLocaleString()}원 인상됨</div>` : '<div style="margin-bottom:12px"></div>'}
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-        ${tags.map(t=>`<span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">${t}</span>`).join('')}
-        <span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">📍 ${dist}</span>
-        <span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">⏱ ${job.duration_hours}시간</span>
-        <span style="background:#f5f5f5;color:#555;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px">★ ${job.biz_rating}</span>
+      <!-- 시급 + 서지 -->
+      <div style="background:#FFF5F5;border-radius:14px;padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-size:36px;font-weight:900;color:var(--red)">${job.current_wage.toLocaleString()}</span>
+          <span style="font-size:16px;font-weight:700;color:var(--red)">원/시</span>
+          ${hasSurge ? `<span style="font-size:12px;font-weight:800;color:#FF9500;background:#FFF3E0;padding:3px 8px;border-radius:8px;margin-left:4px">↑ ${job.wage_delta.toLocaleString()}원</span>` : ''}
+        </div>
+        ${job.duration_hours ? `<div style="font-size:13px;color:#888;font-weight:700;margin-top:4px">총 ${Math.round(job.current_wage * job.duration_hours).toLocaleString()}원 예상</div>` : ''}
       </div>
 
-      <div style="font-size:13px;color:#888;line-height:1.6">${(job.description||'').slice(0,60)}${job.description?.length>60?'…':''}</div>
+      <!-- 날짜/시간/거리/인원 그리드 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:#f8f8f8;border-radius:12px;padding:10px 12px">
+          <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:3px">📅 근무일</div>
+          <div style="font-size:13px;font-weight:800;color:#222">${dateStr}</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:10px 12px">
+          <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:3px">⏰ 근무시간</div>
+          <div style="font-size:13px;font-weight:800;color:#222">${timeRange}</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:10px 12px">
+          <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:3px">📍 거리</div>
+          <div style="font-size:13px;font-weight:800;color:#222">${dist}</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:10px 12px">
+          <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:3px">👥 모집인원</div>
+          <div style="font-size:13px;font-weight:800;color:${neededLeft<=1?'#FF4B4B':'#222'}">${neededLeft > 0 ? neededLeft + '명 남음' : '마감임박'}</div>
+        </div>
+      </div>
+
+      <!-- 설명 -->
+      <div style="font-size:13px;color:#666;line-height:1.6;background:#f8f8f8;border-radius:12px;padding:10px 12px">
+        ${(job.description||'업무 내용을 확인하려면 탭해보세요.').slice(0,70)}${(job.description||'').length>70?'…':''}
+      </div>
+    </div>
+
+    <!-- 스와이프 힌트 -->
+    <div style="padding:10px 20px;border-top:1px solid #f0f0f0;display:flex;justify-content:space-between;font-size:11px;color:#ccc;font-weight:700;flex-shrink:0">
+      <span>← 패스</span>
+      <span>★ ${job.biz_rating || '-'} · ${job.biz_reviews||0}리뷰</span>
+      <span>지원 →</span>
     </div>
 
     <!-- 스와이프 오버레이 -->

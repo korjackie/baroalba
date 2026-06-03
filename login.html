@@ -341,7 +341,7 @@
 
 <!-- ── 스플래시 ── -->
 <div id="splash">
-  <div class="splash-icon"><img src="./icons/icon-192.png" style="width:80px;height:80px;border-radius:20px"></div>
+  <div class="splash-icon"><img src="./icons/icon.svg" style="width:80px;height:80px;border-radius:20px"></div>
   <div class="splash-name">바로알바</div>
   <div class="splash-sub">지금 이 순간, 내 주변 알바</div>
 </div>
@@ -349,7 +349,7 @@
 <!-- ── 로그인 화면 ── -->
 <div id="screen-login" class="screen">
   <div class="hero">
-    <div class="hero-icon"><img src="./icons/icon-192.png" style="width:72px;height:72px;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,0.2)"></div>
+    <div class="hero-icon"><img src="./icons/icon.svg" style="width:72px;height:72px;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,0.2)"></div>
     <div class="hero-name">바로알바</div>
     <div class="hero-sub">틱톡 출연 · 커플알바 · 철봉챌린지<br>이색 알바부터 급구 알바까지</div>
 
@@ -656,10 +656,13 @@ function initNaverLogin() {
   // 네이버 OAuth 콜백 처리 (URL 해시에 access_token 포함)
   if (window.location.hash.includes('access_token')) {
     showLoading('네이버 로그인 중...');
-    naverLoginObj.getLoginStatus(async function(status) {
-      if (!status) { hideLoading(); showError('네이버 로그인에 실패했습니다.'); return; }
-      await handleNaverUser();
-    });
+    // SDK init이 토큰을 파싱할 시간 확보
+    setTimeout(() => {
+      naverLoginObj.getLoginStatus(async function(status) {
+        if (!status) { hideLoading(); showError('네이버 로그인에 실패했습니다.\n(토큰 파싱 실패 — 다시 시도해주세요)'); return; }
+        await handleNaverUser();
+      });
+    }, 300);
   }
 }
 
@@ -732,8 +735,9 @@ async function handleNaverUser() {
 
 function loginNaver() {
   if (!naverLoginObj) { showToastMsg('네이버 로그인을 초기화 중입니다. 잠시 후 다시 시도해주세요.'); return; }
-  naverLoginObj.logout(); // 이전 세션 정리
-  document.getElementById('naverIdLogin').querySelector('a')?.click();
+  const link = document.getElementById('naverIdLogin').querySelector('a');
+  if (!link) { showToastMsg('네이버 로그인 버튼을 불러오는 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+  link.click();
 }
 
 // ── 이메일 로그인 ──────────────────────────────────────────
