@@ -569,10 +569,12 @@ db.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session) {
     const role = session.user.user_metadata?.baroalba_role;
     if (role) {
+      showLoading('앱으로 이동 중...');
       goToApp(role);
     } else {
       hideLoading();
       const name = session.user.user_metadata?.full_name || session.user.email;
+      showLoginScreen();       // 로그인 화면 확실히 보이게
       showRoleModal(name);
     }
   }

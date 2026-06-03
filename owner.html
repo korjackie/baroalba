@@ -269,15 +269,15 @@
 <div class="tab-content active" id="tab-postings">
   <!-- 통계 -->
   <div class="stats-row">
-    <div class="stat-card">
+    <div class="stat-card" style="cursor:pointer" onclick="setNav(document.querySelectorAll('.nav-item')[0],'postings');switchTab('postings',document.querySelectorAll('.tab-btn')[0])">
       <div class="stat-val" id="stat-open">-</div>
       <div class="stat-label">모집중</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="cursor:pointer" onclick="setNav(document.querySelectorAll('.nav-item')[1],'applicants');switchTab('applicants',document.querySelectorAll('.tab-btn')[1]);filterApplicants('all')">
       <div class="stat-val" id="stat-applicants">-</div>
       <div class="stat-label">총 지원자</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="cursor:pointer" onclick="setNav(document.querySelectorAll('.nav-item')[1],'applicants');switchTab('applicants',document.querySelectorAll('.tab-btn')[1]);filterApplicants('accepted')">
       <div class="stat-val" id="stat-accepted">-</div>
       <div class="stat-label">확정</div>
     </div>
@@ -920,6 +920,17 @@ async function toggleStatus(jobId, currentStatus) {
   loadPostings();
 }
 
+// ── 지원자 필터 (대시보드 클릭) ──────────────────────────
+let _allApplicants = [];
+function filterApplicants(status) {
+  if (!_allApplicants.length) return;
+  const filtered = status === 'all' ? _allApplicants : _allApplicants.filter(a => a.status === status);
+  renderApplicants(filtered);
+  // 필터 안내 토스트
+  const labels = { all:'전체 지원자', accepted:'합격 확정', pending:'접수', reviewing:'검토중', rejected:'거절', cancelled:'지원취소' };
+  showToast(`${labels[status] || status} ${filtered.length}명`);
+}
+
 // ── 지원자 불러오기 ──────────────────────────────────────
 async function loadApplicants() {
   if (!bizRecord || !postings.length) return;
@@ -936,7 +947,8 @@ async function loadApplicants() {
     .order('applied_at', { ascending: false });
 
   if (error) { showToast('지원자 불러오기 실패'); return; }
-  renderApplicants(data || []);
+  _allApplicants = data || [];
+  renderApplicants(_allApplicants);
 }
 
 function renderApplicants(apps) {
