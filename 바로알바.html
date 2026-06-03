@@ -1480,14 +1480,14 @@ async function toggleBookmark(jobId) {
   if (!worker) { showToast('프로필이 없어요. 먼저 공고에 지원해주세요'); return; }
 
   const { data: existing } = await db.from('bookmarks')
-    .select('id').eq('worker_id', worker.id).eq('job_id', jobId).single();
+    .select('id').eq('worker_id', worker.id).eq('job_posting_id', jobId).single();
 
   if (existing) {
     await db.from('bookmarks').delete().eq('id', existing.id);
     showToast('북마크가 해제됐어요');
     document.getElementById('d-bookmark-btn').textContent = '🔖';
   } else {
-    const { error } = await db.from('bookmarks').insert({ worker_id: worker.id, job_id: jobId });
+    const { error } = await db.from('bookmarks').insert({ worker_id: worker.id, job_posting_id: jobId });
     if (error) { showToast('북마크 실패: ' + error.message); return; }
     showToast('🔖 북마크에 추가됐어요');
     document.getElementById('d-bookmark-btn').textContent = '🔖✅';
@@ -1500,7 +1500,7 @@ async function checkBookmarkState(jobId) {
     const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
     if (!worker) return;
     const { data: bm } = await db.from('bookmarks')
-      .select('id').eq('worker_id', worker.id).eq('job_id', jobId).single();
+      .select('id').eq('worker_id', worker.id).eq('job_posting_id', jobId).single();
     document.getElementById('d-bookmark-btn').textContent = bm ? '🔖✅' : '🔖';
   } catch(e) {}
 }

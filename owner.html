@@ -865,17 +865,37 @@ async function updateApplication(appId, status) {
   const { error } = await db.from('applications').update({ status }).eq('id', appId);
   if (error) { showToast('처리 실패'); return; }
   if (status === 'accepted') {
-    await db.from('messages').insert({
-      application_id: appId,
-      sender_id: currentUser.id,
-      content: '🎉 축하합니다! 최종 합격하셨습니다. 곧 상세 안내 드리겠습니다.',
-    }).catch(() => {});
+    await sendAcceptMessage(appId);
     showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
   } else {
     showToast('거절 처리됐습니다');
   }
   loadApplicants();
   loadPostings();
+}
+
+async function sendAcceptMessage(appId) {
+  const sess = currentSession;
+  if (!sess) return;
+  try {
+    const res = await fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/messages', {
+      method: 'POST',
+      headers: {
+        'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + sess.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        application_id: appId,
+        sender_id: currentUser.id,
+        content: '🎉 축하합니다! 최종 합격하셨습니다. 곧 상세 안내 드리겠습니다.',
+      }),
+    });
+    if (!res.ok) console.error('합격 메시지 전송 실패:', res.status, await res.text().catch(() => ''));
+  } catch(e) {
+    console.error('합격 메시지 전송 오류:', e);
+  }
 }
 
 // ── 공고 등록/수정 폼 ────────────────────────────────────
@@ -1470,11 +1490,7 @@ async function openWorkerProfile() {
 async function updateApplicationFromProfile(appId, status) {
   await db.from('applications').update({ status }).eq('id', appId);
   if (status === 'accepted') {
-    await db.from('messages').insert({
-      application_id: appId,
-      sender_id: currentUser.id,
-      content: '🎉 축하합니다! 최종 합격하셨습니다. 곧 상세 안내 드리겠습니다.',
-    }).catch(() => {});
+    await sendAcceptMessage(appId);
     showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
   } else {
     showToast('거절 처리됐습니다');
