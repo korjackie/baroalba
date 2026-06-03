@@ -794,7 +794,7 @@ async function loadInlineApplicants(jobId) {
   const el = document.getElementById(`applicants-inline-${jobId}`);
   if (!el) return;
   const { data: apps } = await db.from('applications')
-    .select('*, workers(name, phone, rating)')
+    .select('*, workers(id, name, phone, rating, review_count, noshow_count)')
     .eq('job_posting_id', jobId)
     .order('applied_at', { ascending: false });
   if (!apps?.length) {
@@ -854,12 +854,15 @@ async function deletePosting(jobId) {
 // ── 지원자 상태 뱃지/버튼 빌더 ──────────────────────────────
 function buildStatusHtml(a, stopProp) {
   const sp = stopProp ? 'event.stopPropagation();' : '';
+  const wid = a.workers?.id || '';
   const STATUS_BADGE = {
     pending:   { bg:'#EFF6FF', color:'#3B82F6', label:'📥 접수' },
     reviewing: { bg:'#FFF7ED', color:'#F59E0B', label:'🔍 검토중' },
     accepted:  { bg:'#DCFCE7', color:'#16a34a', label:'✅ 합격' },
     rejected:  { bg:'#FEF2F2', color:'#EF4444', label:'❌ 거절' },
     cancelled: { bg:'#f5f5f5', color:'#aaa',    label:'🚫 지원취소' },
+    completed: { bg:'#F0FDF4', color:'#15803d', label:'🏁 근무완료' },
+    noshow:    { bg:'#FFF1F2', color:'#BE123C', label:'😓 노쇼' },
   };
   const b = STATUS_BADGE[a.status] || STATUS_BADGE.pending;
   const badge = `<span style="background:${b.bg};color:${b.color};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">${b.label}</span>`;
@@ -867,10 +870,25 @@ function buildStatusHtml(a, stopProp) {
   if (a.status === 'cancelled') {
     return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${badge}</div>`;
   }
+  if (a.status === 'completed') {
+    const stars = a.worker_rating ? '⭐'.repeat(a.worker_rating) : '';
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+      ${badge}
+      ${stars ? `<span style="font-size:11px;color:#888">${stars}</span>` : ''}
+      ${a.worker_review ? `<span style="font-size:11px;color:#888;max-width:120px;text-align:right;word-break:break-all">"${a.worker_review.slice(0,30)}"</span>` : ''}
+    </div>`;
+  }
+  if (a.status === 'noshow') {
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${badge}</div>`;
+  }
   if (a.status === 'accepted') {
     return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
       ${badge}
-      <button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#FFF3E0;color:#E65100;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 검토로</button>
+      <div style="display:flex;gap:4px">
+        <button onclick="${sp}showRatingModal('${a.id}','${wid}')" style="padding:5px 10px;background:#3B82F6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">🏁 완료</button>
+        <button onclick="${sp}markNoshow('${a.id}','${wid}')" style="padding:5px 10px;background:#FFF1F2;color:#BE123C;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">😓 노쇼</button>
+      </div>
+      <button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 검토로</button>
     </div>`;
   }
   if (a.status === 'rejected') {
@@ -935,6 +953,99 @@ async function toggleStatus(jobId, currentStatus) {
   loadPostings();
 }
 
+// ── 근무완료 평점 모달 ─────────────────────────────────────
+function showRatingModal(appId, workerId) {
+  let selectedRating = 0;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:flex-end;justify-content:center';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px" onclick="event.stopPropagation()">
+      <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:6px">🏁 근무 완료 처리</div>
+      <div style="font-size:13px;color:#aaa;margin-bottom:20px">알바생에 대한 평점과 후기를 남겨주세요</div>
+
+      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:20px" id="star-row">
+        ${[1,2,3,4,5].map(i => `
+          <span data-star="${i}" onclick="selectStar(${i})" style="font-size:40px;cursor:pointer;transition:transform 0.1s">☆</span>
+        `).join('')}
+      </div>
+      <div id="rating-label" style="text-align:center;font-size:14px;font-weight:700;color:#888;margin-bottom:16px">별점을 선택해주세요</div>
+
+      <textarea id="review-text" placeholder="후기를 남겨주세요 (선택)" maxlength="200"
+        style="width:100%;padding:12px;border:1.5px solid #eee;border-radius:12px;font-size:14px;resize:none;height:80px;box-sizing:border-box;font-family:inherit;outline:none"></textarea>
+
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+        <button id="submit-rating-btn" onclick="submitRating('${appId}','${workerId}')"
+          style="flex:2;padding:14px;background:#3B82F6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">완료 처리</button>
+      </div>
+    </div>`;
+
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+}
+
+function selectStar(n) {
+  const labels = ['','별로예요','아쉬워요','괜찮아요','좋아요','최고예요!'];
+  document.querySelectorAll('#star-row span').forEach((el, i) => {
+    el.textContent = i < n ? '⭐' : '☆';
+    el.style.transform = i < n ? 'scale(1.1)' : 'scale(1)';
+  });
+  document.getElementById('rating-label').textContent = labels[n];
+  document.getElementById('rating-label').style.color = '#FF9500';
+  window._selectedRating = n;
+}
+
+async function submitRating(appId, workerId) {
+  const rating = window._selectedRating || 0;
+  const review = document.getElementById('review-text')?.value.trim() || '';
+  if (!rating) { showToast('별점을 선택해주세요'); return; }
+
+  const btn = document.getElementById('submit-rating-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
+  // 1. 지원서 완료 처리
+  const { error: appErr } = await db.from('applications').update({
+    status: 'completed',
+    worker_rating: rating,
+    worker_review: review || null,
+    completed_at: new Date().toISOString()
+  }).eq('id', appId);
+  if (appErr) { showToast('처리 실패: ' + appErr.message); return; }
+
+  // 2. 워커 평점/완료횟수 업데이트
+  if (workerId) {
+    const { data: w } = await db.from('workers').select('rating, review_count').eq('id', workerId).single();
+    const oldCount  = w?.review_count || 0;
+    const newCount  = oldCount + 1;
+    const newRating = ((w?.rating || 0) * oldCount + rating) / newCount;
+    await db.from('workers').update({ rating: Math.round(newRating * 10) / 10, review_count: newCount }).eq('id', workerId);
+  }
+
+  document.querySelector('[style*="fixed"][style*="3000"]')?.remove();
+  window._selectedRating = 0;
+  showToast('🏁 근무 완료 처리됐습니다');
+  loadApplicants(); loadPostings();
+}
+
+async function markNoshow(appId, workerId) {
+  if (!confirm('노쇼 처리하시겠습니까?\n해당 알바생의 번개등급이 박탈됩니다.')) return;
+
+  const { error } = await db.from('applications').update({
+    status: 'noshow', noshow: true
+  }).eq('id', appId);
+  if (error) { showToast('처리 실패: ' + error.message); return; }
+
+  // 워커 노쇼 카운트 증가
+  if (workerId) {
+    const { data: w } = await db.from('workers').select('noshow_count').eq('id', workerId).single();
+    await db.from('workers').update({ noshow_count: (w?.noshow_count || 0) + 1 }).eq('id', workerId);
+  }
+
+  showToast('😓 노쇼 처리됐습니다');
+  loadApplicants(); loadPostings();
+}
+
 // ── 지원자 필터 (대시보드 클릭) ──────────────────────────
 let _allApplicants = [];
 function filterApplicants(status) {
@@ -957,7 +1068,7 @@ async function loadApplicants() {
   }
 
   const { data, error } = await db.from('applications')
-    .select('*, workers(name, phone, rating, review_count, skills), job_postings(title)')
+    .select('*, workers(id, name, phone, rating, review_count, noshow_count, skills), job_postings(title)')
     .in('job_posting_id', jobIds)
     .order('applied_at', { ascending: false });
 
@@ -995,7 +1106,7 @@ function renderApplicants(apps) {
 
 async function showPostingApplicants(jobId, title) {
   const { data } = await db.from('applications')
-    .select('*, workers(name, phone, rating)')
+    .select('*, workers(id, name, phone, rating, review_count, noshow_count)')
     .eq('job_posting_id', jobId)
     .order('applied_at', { ascending: false });
   switchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
