@@ -1279,6 +1279,7 @@ function setNav(el, tab) {
   el.classList.add('active');
   const panelChats = document.getElementById('panel-owner-chats');
   panelChats.classList.remove('show');
+  document.getElementById('owner-map-overlay').style.display = 'none';
 
   if (tab === 'map') { openOwnerMap(); return; }
   if (tab === 'postings') switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
