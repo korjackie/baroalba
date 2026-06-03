@@ -1515,31 +1515,81 @@ async function openWorkerProfile() {
   if (!app) return;
   const w = app.workers || {};
   const STATUS = { pending:'⏳ 검토중', accepted:'✅ 수락', rejected:'❌ 거절', completed:'🏁 완료', cancelled:'취소' };
-  const infoRow = (label, value) => value
-    ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${label}</div><div style="font-size:14px;font-weight:700;color:#222;line-height:1.5">${value}</div></div>`
-    : '';
+
+  const infoRow = (label, value, extra = '') => `
+    <div style="background:#f8f8f8;border-radius:12px;padding:14px">
+      <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${label}</div>
+      ${value
+        ? `<div style="font-size:14px;font-weight:700;color:#222;line-height:1.5">${value}</div>${extra}`
+        : `<div style="font-size:13px;color:#ccc;font-weight:600">미입력</div>`}
+    </div>`;
+
+  const phoneRow = w.phone
+    ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">📞 연락처</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:16px;font-weight:800;color:#222">${w.phone}</div>
+          <a href="tel:${w.phone}" style="background:#22c55e;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:8px;text-decoration:none">📞 전화</a>
+        </div>
+      </div>`
+    : infoRow('📞 연락처', null);
+
+  const emailRow = w.email
+    ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">✉️ 이메일</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:13px;font-weight:700;color:#222">${w.email}</div>
+          <a href="mailto:${w.email}" style="background:#4B82FF;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:8px;text-decoration:none">메일</a>
+        </div>
+      </div>`
+    : infoRow('✉️ 이메일', null);
+
   document.getElementById('worker-profile-content').innerHTML = `
+    <!-- 헤더 -->
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="width:60px;height:60px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">👤</div>
-      <div>
-        <div style="font-size:19px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
-        ${w.age ? `<div style="font-size:13px;color:#555;margin-top:2px">만 ${w.age}세</div>` : ''}
-        <div style="font-size:13px;color:#aaa;margin-top:2px">★ ${w.rating || '-'} · 리뷰 ${w.review_count || 0}개</div>
+      <div style="width:64px;height:64px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0">👤</div>
+      <div style="flex:1">
+        <div style="font-size:20px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          ${w.age ? `<span style="background:#FFF0F0;color:#FF4B4B;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">만 ${w.age}세</span>` : '<span style="background:#f5f5f5;color:#bbb;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">나이 미입력</span>'}
+          ${w.gender ? `<span style="background:#EFF6FF;color:#3B82F6;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">${w.gender}</span>` : ''}
+          <span style="background:#f5f5f5;color:#888;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">★ ${w.rating || '-'} · ${w.review_count || 0}건</span>
+        </div>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${infoRow('연락처', w.phone)}
-      ${infoRow('자기소개', w.bio)}
-      ${infoRow('경력 / 특기', w.experience)}
-      ${w.skills?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">보유 스킬</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1px solid #eee;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">${s}</span>`).join('')}</div></div>` : ''}
-      <div style="background:#f8f8f8;border-radius:12px;padding:14px">
-        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">지원 공고</div>
-        <div style="font-size:14px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div>
-        <div style="font-size:12px;margin-top:4px"><span style="font-weight:700;color:#555">지원 상태:</span> ${STATUS[app.status] || app.status}</div>
-      </div>
+
+    <!-- 연락처 블록 -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      ${phoneRow}
+      ${emailRow}
     </div>
-    <div style="display:flex;gap:8px;margin-top:16px">
-      ${app.status==='pending'?`<button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 수락</button><button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 거절</button>`:''}
+
+    <!-- 상세 정보 -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      ${infoRow('📝 자기소개', w.bio)}
+      ${infoRow('💼 경력 / 특기', w.experience)}
+      ${w.skills?.length
+        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
+            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">🏷️ 보유 스킬</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1.5px solid #eee;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#444">${s}</span>`).join('')}</div>
+           </div>`
+        : infoRow('🏷️ 보유 스킬', null)
+      }
+    </div>
+
+    <!-- 지원 정보 -->
+    <div style="background:#FFF5F5;border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">📋 지원 공고</div>
+      <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:4px">${app.job_postings?.title || '-'}</div>
+      <div style="font-size:12px;color:#666">지원 상태: <span style="font-weight:800">${STATUS[app.status] || app.status}</span></div>
+    </div>
+
+    <!-- 액션 버튼 -->
+    <div style="display:flex;gap:8px">
+      ${app.status==='pending'
+        ? `<button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 수락</button>
+           <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 거절</button>`
+        : ''}
     </div>`;
   document.getElementById('worker-profile-overlay').classList.add('open');
 }
