@@ -361,7 +361,13 @@
         <div class="form-group">
           <label class="form-label">근무 요일 *</label>
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="f-days-wrap">
-            ${['월','화','수','목','금','토','일'].map(d => `<button type="button" data-day="${d}" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">${d}</button>`).join('')}
+            <button type="button" data-day="월" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">월</button>
+            <button type="button" data-day="화" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">화</button>
+            <button type="button" data-day="수" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">수</button>
+            <button type="button" data-day="목" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">목</button>
+            <button type="button" data-day="금" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">금</button>
+            <button type="button" data-day="토" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer;color:#3B82F6">토</button>
+            <button type="button" data-day="일" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;cursor:pointer;color:#FF4B4B">일</button>
           </div>
           <input type="hidden" id="f-work-days" value="">
         </div>
