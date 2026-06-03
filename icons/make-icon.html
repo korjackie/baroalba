@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>바로알바 아이콘 생성기</title>
+<style>
+  body { font-family: sans-serif; background:#1a1a1a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:24px; }
+  canvas { border-radius:20px; box-shadow:0 8px 40px rgba(0,0,0,0.5); }
+  .btns { display:flex; gap:12px; }
+  button { padding:12px 28px; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; }
+  .dl192 { background:#FF4B4B; color:#fff; }
+  .dl512 { background:#0096C7; color:#fff; }
+</style>
+</head>
+<body>
+<h2>바로알바 아이콘 미리보기 (512×512)</h2>
+<canvas id="c" width="512" height="512"></canvas>
+<div class="btns">
+  <button class="dl192" onclick="download(192)">⬇ icon-192.png 저장</button>
+  <button class="dl512" onclick="download(512)">⬇ icon-512.png 저장</button>
+</div>
+
+<script>
+function drawIcon(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  const s = size / 192;
+
+  // 배경 라운드 사각형
+  const r = 38 * s;
+  g.beginPath();
+  g.moveTo(r, 0);
+  g.lineTo(size - r, 0);
+  g.quadraticCurveTo(size, 0, size, r);
+  g.lineTo(size, size - r);
+  g.quadraticCurveTo(size, size, size - r, size);
+  g.lineTo(r, size);
+  g.quadraticCurveTo(0, size, 0, size - r);
+  g.lineTo(0, r);
+  g.quadraticCurveTo(0, 0, r, 0);
+  g.closePath();
+  g.fillStyle = '#FF4B4B';
+  g.fill();
+
+  // 과녁 원
+  const cx = 96 * s, cy = 100 * s;
+  const rings = [
+    { r: 68, c: '#ffffff' },
+    { r: 52, c: '#FF4B4B' },
+    { r: 36, c: '#ffffff' },
+    { r: 20, c: '#FF4B4B' },
+    { r: 8,  c: '#ffffff' },
+  ];
+  rings.forEach(({ r, c }) => {
+    g.beginPath();
+    g.arc(cx, cy, r * s, 0, Math.PI * 2);
+    g.fillStyle = c;
+    g.fill();
+  });
+
+  // 화살 좌표
+  const x1 = 152 * s, y1 = 40 * s;
+  const x2 = 96 * s,  y2 = 100 * s;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+
+  // 깃털 함수
+  function drawFeather(ox, oy, color) {
+    const bx = x1 + ox * s, by = y1 + oy * s;
+    const perp = angle + Math.PI / 2;
+    const len = 22 * s, w = 9 * s;
+    g.save();
+    g.translate(bx, by);
+    g.rotate(angle);
+    g.beginPath();
+    g.moveTo(0, 0);
+    g.lineTo(-w, len * 0.45);
+    g.lineTo(0, len);
+    g.lineTo(w, len * 0.45);
+    g.closePath();
+    g.fillStyle = color;
+    g.fill();
+    g.restore();
+  }
+
+  drawFeather(0, 0, '#00BCD4');       // 청록
+  drawFeather(-9, -9, '#4FC3F7');     // 하늘
+
+  // 화살대
+  g.save();
+  g.strokeStyle = '#039BE5';
+  g.lineWidth = 6.5 * s;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(x1, y1);
+  g.lineTo(x2, y2);
+  g.stroke();
+  g.restore();
+
+  // 화살촉 (삼각형)
+  g.save();
+  g.translate(x1, y1);
+  g.rotate(angle);
+  g.beginPath();
+  g.moveTo(0, 0);
+  g.lineTo(-11 * s, 6 * s);
+  g.lineTo(-3 * s, 16 * s);
+  g.closePath();
+  g.fillStyle = '#0277BD';
+  g.fill();
+  g.restore();
+
+  // 화살 끝 원
+  g.beginPath();
+  g.arc(x2, y2, 5 * s, 0, Math.PI * 2);
+  g.fillStyle = '#0277BD';
+  g.fill();
+
+  return c;
+}
+
+// 미리보기
+const preview = document.getElementById('c');
+const pg = preview.getContext('2d');
+const src = drawIcon(512);
+pg.drawImage(src, 0, 0);
+
+function download(size) {
+  const c = drawIcon(size);
+  const a = document.createElement('a');
+  a.download = `icon-${size}.png`;
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+</script>
+</body>
+</html>

@@ -6,6 +6,11 @@
   <meta name="theme-color" content="#FF4B4B">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>바로알바 — 업주</title>
+  <meta property="og:title" content="바로알바 — 실시간 알바 매칭">
+  <meta property="og:description" content="지도 기반 실시간 단기 알바 매칭 서비스">
+  <meta property="og:image" content="https://baroalba.multimove.co.kr/icons/logo-share.png">
+  <meta property="og:type" content="website">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
@@ -240,8 +245,10 @@
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
-    <div class="header-logo" style="display:flex;align-items:center;gap:6px">
-      <img src="./icons/icon-192.png" style="width:28px;height:28px;border-radius:7px">
+    <div class="header-logo" style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="setNav(document.querySelector('.nav-item'),this.dataset.tab||'postings');switchTab('postings',document.querySelectorAll('.tab-btn')[0])">
+      <div style="width:28px;height:28px;border-radius:7px;overflow:hidden;flex-shrink:0">
+        <img src="./icons/icon-192.png" style="width:28px;height:auto;margin-top:-1px;object-fit:cover">
+      </div>
       바로알바
     </div>
     <div class="header-badge">업주</div>
@@ -302,9 +309,20 @@
     </div>
     <div class="form-body">
       <input type="hidden" id="editing-id">
+      <input type="hidden" id="f-job-type" value="alba">
+
+      <!-- 공고 유형 탭 -->
+      <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="job-type-tabs">
+        <button type="button" class="job-type-tab active" data-type="alba" onclick="setJobType('alba')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">👷 일반 알바</button>
+        <button type="button" class="job-type-tab" data-type="technical" onclick="setJobType('technical')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔧 전문기술직</button>
+        <button type="button" class="job-type-tab" data-type="care" onclick="setJobType('care')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🤝 돌봄·케어</button>
+      </div>
 
       <div class="form-group">
-        <label class="form-label">직무명 *</label>
+        <label class="form-label" id="f-title-label">직무명 *</label>
         <input class="form-input" id="f-title" placeholder="예: 홀 서빙 보조, 물류 입출고">
       </div>
 
@@ -643,6 +661,13 @@ function renderPostings() {
     const statusLabel = p.status === 'urgent' ? '🔥 급구' : p.status === 'open' ? '모집중' : '마감';
     const statusCls = p.status === 'urgent' ? 'urgent' : p.status === 'open' ? 'open' : 'closed';
     const start = p.start_time ? formatTime(p.start_time) : '미정';
+    // 공고 유형 배지
+    const cat = p.category || '';
+    const jobTypeBadge = cat.startsWith('🔧')||cat.startsWith('⚡')||cat.startsWith('🏠')||cat.startsWith('🚚')||cat.startsWith('🛋')||cat.startsWith('🔑')||cat.startsWith('🧽')||cat.startsWith('🔨')
+      ? '<span style="font-size:10px;font-weight:800;background:#EEF2FF;color:#4F46E5;padding:2px 6px;border-radius:6px">🔧 기술직</span>'
+      : cat.startsWith('🐶')||cat.startsWith('🐾')||cat.startsWith('👶')||cat.startsWith('👴')||cat.startsWith('🏥')||cat.startsWith('🏡')
+      ? '<span style="font-size:10px;font-weight:800;background:#F0FDF4;color:#16a34a;padding:2px 6px;border-radius:6px">🤝 돌봄</span>'
+      : '';
 
     return `
     <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}">
@@ -651,7 +676,10 @@ function renderPostings() {
       <div onclick="toggleCard('${p.id}')" style="cursor:pointer">
         <div class="posting-top" style="margin-bottom:8px">
           <div>
-            <div class="posting-title">${p.title}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <div class="posting-title">${p.title}</div>
+              ${jobTypeBadge}
+            </div>
             <div class="posting-cat">${p.category}</div>
           </div>
           <div style="text-align:right">
@@ -724,15 +752,24 @@ async function loadInlineApplicants(jobId) {
   el.innerHTML = apps.map(a => {
     const w = a.workers;
     const statusHtml = a.status === 'accepted'
-      ? '<span class="accepted-badge">✅ 수락</span>'
+      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+           <span class="accepted-badge">✅ 합격확정</span>
+           <div style="display:flex;gap:4px">
+             <button onclick="updateApplication('${a.id}','pending')" style="padding:4px 8px;background:#FFF3E0;color:#E65100;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 취소</button>
+             <button onclick="deleteApplication('${a.id}')" style="padding:4px 8px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 삭제</button>
+           </div>
+         </div>`
       : a.status === 'rejected'
-      ? '<span class="rejected-badge">거절됨</span>'
+      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+           <span class="rejected-badge">❌ 거절됨</span>
+           <button onclick="deleteApplication('${a.id}')" style="padding:4px 8px;background:#f5f5f5;color:#aaa;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 삭제</button>
+         </div>`
       : `<div class="applicant-btns">
-          <button class="accept-btn" onclick="updateApplication('${a.id}','accepted')">수락</button>
-          <button class="reject-btn" onclick="updateApplication('${a.id}','rejected')">거절</button>
-        </div>`;
+           <button class="accept-btn" onclick="updateApplication('${a.id}','accepted')">수락</button>
+           <button class="reject-btn" onclick="updateApplication('${a.id}','rejected')">거절</button>
+         </div>`;
     return `
-    <div class="applicant-card">
+    <div class="applicant-card" id="app-card-${a.id}">
       <div class="applicant-avatar">👤</div>
       <div class="applicant-info">
         <div class="applicant-name">${w?.name || '이름없음'}</div>
@@ -744,6 +781,15 @@ async function loadInlineApplicants(jobId) {
       </div>
     </div>`;
   }).join('');
+}
+
+async function deleteApplication(appId) {
+  if (!confirm('지원자를 삭제하면 복구할 수 없습니다. 삭제할까요?')) return;
+  const { error } = await db.from('applications').delete().eq('id', appId);
+  if (error) { showToast('삭제 실패: ' + error.message); return; }
+  document.getElementById('app-card-' + appId)?.remove();
+  showToast('✅ 지원자가 삭제됐습니다');
+  loadPostings();
 }
 
 async function deletePosting(jobId) {
@@ -867,6 +913,8 @@ async function updateApplication(appId, status) {
   if (status === 'accepted') {
     await sendAcceptMessage(appId);
     showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+  } else if (status === 'pending') {
+    showToast('↩ 합격 취소 — 검토중으로 변경됐습니다');
   } else {
     showToast('거절 처리됐습니다');
   }
@@ -905,7 +953,7 @@ function openPostingForm() {
   document.getElementById('form-title').textContent = '공고 등록';
   document.getElementById('submit-btn').textContent = '공고 등록하기';
   document.getElementById('f-title').value = '';
-  document.getElementById('f-category').value = 'F&B';
+  setJobType('alba');  // 유형 탭 초기화
   document.getElementById('f-wage').value = '';
   document.getElementById('f-needed').value = 1;
   document.getElementById('f-desc').value = '';
@@ -1621,20 +1669,73 @@ function shareNative() {
 
 // ── 카테고리 ───────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [
-  { name:'F&B',     icon:'☕', display_order:1 },
-  { name:'물류',    icon:'📦', display_order:2 },
-  { name:'판매',    icon:'🛍', display_order:3 },
-  { name:'청소',    icon:'🧹', display_order:4 },
-  { name:'이벤트',  icon:'🎉', display_order:5 },
-  { name:'커플알바',icon:'💑', display_order:6 },
-  { name:'컨텐츠',  icon:'📱', display_order:7 },
-  { name:'챌린지',  icon:'🏆', display_order:8 },
-  { name:'뷰티/헤어',icon:'💅',display_order:9 },
+  { name:'F&B',       icon:'☕', display_order:1 },
+  { name:'물류',      icon:'📦', display_order:2 },
+  { name:'판매',      icon:'🛍', display_order:3 },
+  { name:'청소',      icon:'🧹', display_order:4 },
+  { name:'이벤트',    icon:'🎉', display_order:5 },
+  { name:'커플알바',  icon:'💑', display_order:6 },
+  { name:'컨텐츠',    icon:'📱', display_order:7 },
+  { name:'뷰티/헤어', icon:'💅', display_order:9 },
   { name:'유튜브/틱톡',icon:'🎬',display_order:10 },
-  { name:'모델/촬영',icon:'📸',display_order:11 },
-  { name:'기타',    icon:'📋', display_order:99 },
+  { name:'모델/촬영', icon:'📸', display_order:11 },
+  { name:'기타',      icon:'📋', display_order:99 },
 ];
+
+// 전문기술직(바로기사) 카테고리
+const TECHNICAL_CATEGORIES = [
+  { name:'수리/배관',   icon:'🔧' },
+  { name:'전기/전자',   icon:'⚡' },
+  { name:'인테리어',    icon:'🏠' },
+  { name:'이사/운반',   icon:'🚚' },
+  { name:'가구/설치',   icon:'🛋' },
+  { name:'자물쇠/도어락',icon:'🔑' },
+  { name:'청소/방역',   icon:'🧽' },
+  { name:'기타 기술직', icon:'🔨' },
+];
+
+// 돌봄·케어(바로돌봄) 카테고리
+const CARE_CATEGORIES = [
+  { name:'펫시팅/산책', icon:'🐶' },
+  { name:'반려동물케어', icon:'🐾' },
+  { name:'아이돌봄',    icon:'👶' },
+  { name:'어르신돌봄',  icon:'👴' },
+  { name:'병원동행',    icon:'🏥' },
+  { name:'가사도우미',  icon:'🏡' },
+];
+
 let categories = [...DEFAULT_CATEGORIES];
+
+// 공고 유형별 라벨/플레이스홀더
+const JOB_TYPE_META = {
+  alba:      { label:'일반 알바', placeholder:'예: 홀 서빙 보조, 물류 입출고', wageLabel:'시급 (원) *' },
+  technical: { label:'전문기술직', placeholder:'예: 싱크대 막힘 수리, 도어락 교체', wageLabel:'작업비 (원) *' },
+  care:      { label:'돌봄·케어',  placeholder:'예: 강아지 3시간 펫시팅, 아이 하원 돌봄', wageLabel:'시급/건당 (원) *' },
+};
+
+function setJobType(type) {
+  document.getElementById('f-job-type').value = type;
+
+  // 탭 스타일 업데이트
+  document.querySelectorAll('.job-type-tab').forEach(btn => {
+    const active = btn.dataset.type === type;
+    btn.style.background = active ? '#fff' : 'transparent';
+    btn.style.color = active ? '#FF4B4B' : '#888';
+    btn.style.boxShadow = active ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
+  });
+
+  // 카테고리 업데이트
+  const sel = document.getElementById('f-category');
+  const list = type === 'technical' ? TECHNICAL_CATEGORIES : type === 'care' ? CARE_CATEGORIES : categories;
+  sel.innerHTML = list.map(c => `<option value="${c.icon} ${c.name}">${c.icon} ${c.name}</option>`).join('');
+
+  // 라벨/플레이스홀더 업데이트
+  const meta = JOB_TYPE_META[type];
+  document.getElementById('f-title').placeholder = meta.placeholder;
+  document.getElementById('f-title-label').textContent = meta.label + ' 직무명 *';
+  const wageLabel = document.querySelector('label[for="f-wage"], #f-wage')?.previousElementSibling;
+  if (wageLabel) wageLabel.textContent = meta.wageLabel;
+}
 
 async function loadCategories() {
   try {
