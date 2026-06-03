@@ -949,6 +949,11 @@ function openEditForm(jobId) {
     setTimeSelects('start', s);
     const endMs = p.end_time ? new Date(p.end_time) : new Date(s.getTime() + (p.duration_hours || 4) * 3600000);
     setTimeSelects('end', endMs);
+  } else {
+    // 시간 미정 공고: 내일 오전 9시 기본값 세팅 (유효성 검사 통과용)
+    const def = new Date(); def.setDate(def.getDate() + 1); def.setHours(9, 0, 0, 0);
+    setTimeSelects('start', def);
+    setTimeSelects('end', new Date(def.getTime() + 4 * 3600000));
   }
   if (p.lat && p.lng) showMiniMap(p.lat, p.lng, p.address || '');
   setSameDay(p.same_day_payment || false);
@@ -1052,6 +1057,7 @@ function showMiniMap(lat, lng, addr) {
   if (!miniMap) {
     miniMap = new kakao.maps.Map(el, { center: pos, level: 4 });
   } else {
+    miniMap.relayout();
     miniMap.setCenter(pos);
   }
   new kakao.maps.Marker({ position: pos, map: miniMap });
