@@ -918,7 +918,7 @@ async function openDeepLink(jobId) {
       .select(`id, title, category, base_wage, current_wage, status, lat, lng,
                start_time, duration_hours, needed_count, filled_count,
                description, surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
-               businesses!inner(name, rating, kindness_rating, reviews_count)`)
+               businesses!inner(name, rating, kindness_rating, review_count)`)
       .eq('id', jobId).single();
     if (!data) { showToast('해당 공고를 찾을 수 없어요'); return; }
     const b = data.businesses;
