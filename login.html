@@ -536,9 +536,22 @@
 </div>
 
 <script>
+// ── 해시 최우선 캡처 (Supabase가 지우기 전에) ─────────────
+const _initHash = window.location.hash;
+// Naver 콜백: access_token + state= 있고 type= 없음
+// Supabase 콜백: access_token + type=magiclink/signup 등
+const _isNaverCallback = _initHash.includes('access_token') &&
+                         _initHash.includes('state=') &&
+                         !_initHash.includes('type=');
+
 // ── Supabase 초기화 ────────────────────────────────────────
 const { createClient } = supabase;
-const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
+const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
+  auth: {
+    // Naver 콜백이면 Supabase가 해시를 건드리지 못하게 함
+    detectSessionInUrl: !_isNaverCallback
+  }
+});
 
 let selectedRole = null;
 let selectedSignupRole = null;
@@ -667,16 +680,15 @@ function initNaverLogin() {
   });
   naverLoginObj.init();
 
-  // Supabase 매직링크 콜백이면 Naver 처리 건너뜀 (Supabase가 자동 처리)
-  const hash = window.location.hash;
-  if (hash.includes('access_token') && !hash.includes('type=magiclink') && !hash.includes('type=recovery')) {
+  // 미리 저장된 해시로 Naver 콜백 판별 (Supabase가 이미 지웠을 수 있음)
+  if (_isNaverCallback) {
     showLoading('네이버 로그인 중...');
     setTimeout(() => {
       naverLoginObj.getLoginStatus(async function(status) {
         if (!status) { hideLoading(); showError('네이버 로그인에 실패했습니다.\n다시 시도해주세요.'); return; }
         await handleNaverUser();
       });
-    }, 300);
+    }, 500);
   }
 }
 
