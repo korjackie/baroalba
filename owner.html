@@ -226,19 +226,19 @@
       .bottom-nav { left:50%; right:auto; transform:translateX(-50%); width:480px; }
       .fab { right:calc(50% - 220px); }
 
-      /* 폼 시트: 바텀시트 → 중앙 팝업 */
+      /* 폼 시트: 바텀시트 → 중앙 팝업, 양쪽 여백으로 좁게 */
       .sheet-overlay { align-items:center; justify-content:center; }
-      .form-sheet { width:460px; border-radius:24px; animation:pcFadeIn 0.2s ease; }
+      .form-sheet { width:380px; border-radius:20px; animation:pcFadeIn 0.2s ease; }
 
       /* 지원자 프로필 / 채팅 모달: 중앙 팝업 */
       #worker-profile-overlay { align-items:center; justify-content:center; }
-      #worker-profile-overlay > div { border-radius:24px; width:460px; max-height:85vh; overflow-y:auto; }
+      #worker-profile-overlay > div { border-radius:20px; width:380px; max-height:85vh; overflow-y:auto; }
       #chat-overlay { align-items:center; justify-content:center; }
-      #chat-overlay > div { border-radius:24px; width:460px; max-height:85vh; }
+      #chat-overlay > div { border-radius:20px; width:380px; max-height:85vh; }
 
       /* 설정 / 공유 모달: 컨텐츠 폭 제한 */
       #settings-overlay > div,
-      #share-overlay > div { width:460px; max-width:460px; }
+      #share-overlay > div { width:380px; max-width:380px; }
 
       /* 지도/채팅목록 패널: 전체화면 유지 */
       .full-panel { left:0; right:0; width:100%; transform:none; }
@@ -587,6 +587,7 @@ const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let bizRecord = null;
+let currentSession = null;
 let miniMap = null;
 let selectedLatLng = null;
 let postings = [];
@@ -599,6 +600,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await db.auth.getSession();
   if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
+  currentSession = session;
 
   // 업주 레코드 조회
   const { data: biz } = await db.from('businesses')
@@ -1075,75 +1077,88 @@ async function submitPosting() {
   if (!lat || !lng) { showToast('위치를 검색해서 선택해주세요'); return; }
 
   const btn = document.getElementById('submit-btn');
-  btn.disabled = true; btn.textContent = '처리 중...';
+  const btnOrigText = editingId ? '수정 완료' : '공고 등록하기';
+  btn.disabled = true; btn.textContent = '저장 중...';
 
-  const surgeEnabled  = document.getElementById('f-surge-enabled').value === 'true';
-  const surgeMax      = parseInt(document.getElementById('f-surge-max').value) || null;
-  const surgeAmount   = parseInt(document.getElementById('f-surge-amount').value) || 1000;
-  const surgeInterval = parseInt(document.getElementById('f-surge-interval').value) || 30;
-  const sameDayPayment = document.getElementById('f-same-day-on').value === 'true';
-
-  const payload = {
-    business_id: bizRecord.id,
-    title, category, description: desc,
-    base_wage: editingId ? undefined : wage,
-    current_wage: wage,
-    lat, lng,
-    duration_hours: duration,
-    needed_count: needed || 1,
-    start_time: startTime ? startTime.toISOString() : null,
-    status: surgeEnabled ? 'urgent' : 'open',
-    surge_enabled:      surgeEnabled,
-    surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
-    surge_amount:       surgeEnabled ? surgeAmount : null,
-    surge_interval_min: surgeEnabled ? surgeInterval : null,
-    same_day_payment:   sameDayPayment,
-  };
-
-  // Supabase 클라이언트 우회 — REST API 직접 호출
-  const { data: { session: _sess } } = await db.auth.getSession();
-  if (!_sess) {
-    btn.disabled = false; btn.textContent = editingId ? '수정 완료' : '공고 등록하기';
-    showToast('로그인이 만료됐습니다. 새로고침 후 다시 로그인해주세요.'); return;
-  }
-  const _headers = {
-    'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
-    'Authorization': 'Bearer ' + _sess.access_token,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=minimal',
-  };
-
-  let error;
   try {
+    const surgeEnabled  = document.getElementById('f-surge-enabled').value === 'true';
+    const surgeMax      = parseInt(document.getElementById('f-surge-max').value) || null;
+    const surgeAmount   = parseInt(document.getElementById('f-surge-amount').value) || 1000;
+    const surgeInterval = parseInt(document.getElementById('f-surge-interval').value) || 30;
+    const sameDayPayment = document.getElementById('f-same-day-on').value === 'true';
+
+    const payload = {
+      business_id: bizRecord.id,
+      title, category, description: desc,
+      current_wage: wage,
+      lat, lng,
+      duration_hours: duration,
+      needed_count: needed || 1,
+      start_time: startTime.toISOString(),
+      status: surgeEnabled ? 'urgent' : 'open',
+      surge_enabled:      surgeEnabled,
+      surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
+      surge_amount:       surgeEnabled ? surgeAmount : null,
+      surge_interval_min: surgeEnabled ? surgeInterval : null,
+      same_day_payment:   sameDayPayment,
+    };
+
+    // 세션은 init에서 저장한 값 사용 (getSession() 호출 없이 즉시)
+    const sess = currentSession;
+    if (!sess) { showToast('로그인이 만료됐습니다. 새로고침 후 다시 로그인해주세요.'); return; }
+
+    const headers = {
+      'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + sess.access_token,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    };
+
+    // 10초 타임아웃
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 10000);
+
     let res;
-    if (editingId) {
-      delete payload.base_wage;
-      delete payload.business_id;
-      res = await fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + editingId,
-        { method: 'PATCH', headers: _headers, body: JSON.stringify(payload) });
-    } else {
-      payload.base_wage = wage;
-      res = await fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings',
-        { method: 'POST', headers: _headers, body: JSON.stringify(payload) });
+    try {
+      if (editingId) {
+        res = await fetch(
+          APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + editingId,
+          { method: 'PATCH', headers, body: JSON.stringify(payload), signal: ctrl.signal }
+        );
+      } else {
+        payload.base_wage = wage;
+        res = await fetch(
+          APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings',
+          { method: 'POST', headers, body: JSON.stringify(payload), signal: ctrl.signal }
+        );
+      }
+      clearTimeout(tid);
+    } catch(fetchErr) {
+      clearTimeout(tid);
+      console.error('fetch error:', fetchErr);
+      showToast('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return;
     }
-    if (!res.ok) error = { message: 'HTTP ' + res.status + ': ' + (await res.text()) };
-  } catch(e) {
-    error = { message: e.message };
-  }
 
-  btn.disabled = false;
-  btn.textContent = editingId ? '수정 완료' : '공고 등록하기';
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.error('save failed', res.status, errBody);
+      showToast('저장 실패 (' + res.status + ')');
+      return;
+    }
 
-  if (error) { showToast('저장 실패: ' + error.message); console.error('submitPosting error:', error); return; }
-  closePostingForm();
-  loadPostings();
-  if (!editingId) {
-    // 새 공고 등록 시 공유 모달 (DB에서 방금 등록된 id 조회)
-    const { data: fresh } = await db.from('job_postings')
-      .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
-    openShareModal(fresh?.id);
-  } else {
-    showToast('✅ 공고가 수정됐습니다');
+    closePostingForm();
+    loadPostings();
+    if (!editingId) {
+      const { data: fresh } = await db.from('job_postings')
+        .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
+      openShareModal(fresh?.id);
+    } else {
+      showToast('✅ 공고가 수정됐습니다');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = btnOrigText;
   }
 }
 
