@@ -873,15 +873,24 @@ function renderApplicants(apps) {
   el.innerHTML = apps.map(a => {
     const w = a.workers;
     const statusHtml = a.status === 'accepted'
-      ? '<span style="background:#DCFCE7;color:#16a34a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:900">✅ 최종확정</span>'
+      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+           <span style="background:#DCFCE7;color:#16a34a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:900">✅ 최종확정</span>
+           <div style="display:flex;gap:4px">
+             <button onclick="event.stopPropagation();updateApplication('${a.id}','pending')" style="padding:4px 8px;background:#FFF3E0;color:#E65100;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 취소</button>
+             <button onclick="event.stopPropagation();deleteApplication('${a.id}')" style="padding:4px 8px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑</button>
+           </div>
+         </div>`
       : a.status === 'rejected'
-      ? '<span style="background:#f5f5f5;color:#aaa;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">❌ 탈락</span>'
+      ? `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+           <span style="background:#f5f5f5;color:#aaa;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">❌ 탈락</span>
+           <button onclick="event.stopPropagation();deleteApplication('${a.id}')" style="padding:4px 8px;background:#f5f5f5;color:#aaa;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 삭제</button>
+         </div>`
       : `<div class="applicant-btns">
-          <button class="accept-btn" onclick="event.stopPropagation();updateApplication('${a.id}','accepted')">수락</button>
-          <button class="reject-btn" onclick="event.stopPropagation();updateApplication('${a.id}','rejected')">거절</button>
-        </div>`;
+           <button class="accept-btn" onclick="event.stopPropagation();updateApplication('${a.id}','accepted')">수락</button>
+           <button class="reject-btn" onclick="event.stopPropagation();updateApplication('${a.id}','rejected')">거절</button>
+         </div>`;
     return `
-    <div class="applicant-card" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
+    <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
       <div class="applicant-avatar">👤</div>
       <div class="applicant-info">
         <div class="applicant-name">${w?.name || '이름없음'}</div>

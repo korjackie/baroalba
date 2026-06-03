@@ -31,17 +31,35 @@
       --cleaning: #6B7280;
       --event: #EC4899;
       --nav-h: 64px;
+      --header-h: 50px;
       --sheet-peek: 120px;
     }
     html, body { height: 100%; overflow: hidden; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f5f5f5; }
 
+    /* ── 앱 헤더 ── */
+    .app-header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+      background: #fff; z-index: 300;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid #f0f0f0;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .app-header-logo {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; text-decoration: none;
+    }
+    .app-header-logo span {
+      font-size: 18px; font-weight: 900; color: var(--red); letter-spacing: -0.5px;
+    }
+
     /* ── 지도 ── */
-    #map { position: fixed; inset: 0; bottom: var(--nav-h); }
+    #map { position: fixed; top: var(--header-h); left: 0; right: 0; bottom: var(--nav-h); }
 
     /* ── 상단 검색바 ── */
     .top-bar {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: var(--header-h); left: 0; right: 0;
       z-index: 200;
       padding: 12px 14px 0;
       pointer-events: none;
@@ -530,6 +548,17 @@
 </head>
 <body>
 
+<!-- 앱 헤더 -->
+<div class="app-header">
+  <div class="app-header-logo" onclick="setNav(document.querySelector('.nav-item'),null);setNav(document.querySelectorAll('.nav-item')[0],'map')">
+    <div style="width:28px;height:28px;border-radius:7px;overflow:hidden;flex-shrink:0">
+      <img src="./icons/icon-192.png" style="width:28px;height:auto;object-fit:cover">
+    </div>
+    <span>바로알바</span>
+  </div>
+  <div id="header-user-info" style="font-size:13px;color:#555;font-weight:600"></div>
+</div>
+
 <!-- 로딩 -->
 <div class="map-loading" id="map-loading">
   <div class="spinner"></div>
@@ -898,6 +927,11 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (session) {
     currentUser = session.user;
+    // 헤더 사용자 이름 표시
+    const _meta = currentUser.user_metadata || {};
+    const _uname = _meta.full_name || _meta.name || currentUser.email?.split('@')[0] || '';
+    const _hdr = document.getElementById('header-user-info');
+    if (_hdr && _uname) _hdr.textContent = _uname;
     const isBrowseMode = !!new URLSearchParams(location.search).get('browse');
     if (currentUser.user_metadata?.baroalba_role === 'business') {
       if (!isBrowseMode) { location.href = '/owner.html'; return; }
@@ -1372,7 +1406,7 @@ async function loadMyApplications() {
   }
 
   const { data: apps } = await db.from('applications')
-    .select('*, job_postings(title, wage, category, businesses(name))')
+    .select('*, job_postings(title, current_wage, category, businesses(name))')
     .eq('worker_id', worker.id)
     .order('applied_at', { ascending: false });
 
@@ -1392,7 +1426,7 @@ async function loadMyApplications() {
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:3px">${job.title || '공고'}</div>
           <div style="font-size:13px;color:#888;margin-bottom:6px">${biz.name || ''}</div>
-          <div style="font-size:14px;font-weight:700;color:var(--red)">${job.wage ? job.wage.toLocaleString() + '원/시' : ''}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원/시' : ''}</div>
         </div>
         <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">${s.label}</div>
       </div>
