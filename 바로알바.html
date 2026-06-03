@@ -808,6 +808,18 @@
           </div>
         </div>
 
+        <!-- 회원 등급 (worker 역할만 표시) -->
+        <div id="worker-grade-section" style="display:none;margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:14px;padding:14px">
+            <div>
+              <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">내 등급</div>
+              <div id="worker-grade-badge" style="font-size:16px;font-weight:900"></div>
+            </div>
+            <button onclick="showGradeInfoModal()" style="padding:8px 14px;background:#fff;border:1.5px solid #eee;border-radius:10px;font-size:12px;font-weight:700;color:#555;cursor:pointer">등급 안내 ℹ️</button>
+          </div>
+          <div id="worker-grade-progress" style="margin-top:8px;padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#888;line-height:1.8"></div>
+        </div>
+
         <!-- 알바생 프로필 편집 (worker 역할만 표시) -->
         <div id="worker-profile-edit" style="display:none;margin-bottom:14px">
           <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">📋 내 프로필</div>
@@ -2226,9 +2238,18 @@ function flyCard(card, dir) {
   card.style.opacity = '0';
 
   const job = swipeJobs[swipeIdx];
-  if (dir === 'right')  { showToast('⚡ 지원됐습니다!'); applySwipeJob(job); }
-  else if (dir === 'up'){ showToast('🔥 번개 지원!'); applySwipeJob(job); }
-  else                  { showToast('패스'); }
+  if (dir === 'right') {
+    showToast('✅ 지원됐습니다!');
+    applySwipeJob(job, false);
+  } else if (dir === 'up') {
+    // 번개지원 자격 검사
+    const eligible = await checkQuickApplyEligible();
+    if (!eligible) return; // 내부에서 토스트/모달 처리
+    showToast('⚡ 번개 지원!');
+    applySwipeJob(job, true);
+  } else {
+    showToast('패스');
+  }
 
   setTimeout(() => { swipeIdx++; renderSwipeStack(); }, 350);
 }
@@ -2238,7 +2259,73 @@ function swipeAction(dir) {
   if (top) { top.style.transition = 'transform 0.3s ease, opacity 0.3s ease'; flyCard(top, dir); }
 }
 
-async function applySwipeJob(job) {
+// ── 번개지원 자격 체크 ─────────────────────────────────────
+const QUICK_GRADE = { minRating: 4.3, minReviews: 3 };
+
+async function checkQuickApplyEligible() {
+  if (isGuest || !currentUser) { showToast('로그인 후 이용 가능합니다'); return false; }
+
+  // 오늘 이미 사용했는지 확인 (localStorage)
+  const today = new Date().toISOString().slice(0, 10);
+  const usedDate = localStorage.getItem('quick_apply_date_' + currentUser.id);
+  if (usedDate === today) {
+    showQuickGradeModal('limit');
+    return false;
+  }
+
+  // 워커 데이터 조회
+  const { data: w } = await db.from('workers')
+    .select('rating, review_count').eq('kakao_uid', currentUser.id).single();
+
+  const rating  = w?.rating     || 0;
+  const reviews = w?.review_count || 0;
+  const isEligible = rating >= QUICK_GRADE.minRating && reviews >= QUICK_GRADE.minReviews;
+
+  if (!isEligible) {
+    showQuickGradeModal('not_eligible', { rating, reviews });
+    return false;
+  }
+  return true;
+}
+
+function showQuickGradeModal(type, data = {}) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:flex-end;justify-content:center';
+
+  let content = '';
+  if (type === 'limit') {
+    content = `
+      <div style="font-size:40px;margin-bottom:12px">⚡</div>
+      <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:8px">오늘 번개지원을 이미 사용했어요</div>
+      <div style="font-size:13px;color:#888;line-height:1.7">번개지원은 하루 1회만 사용 가능합니다.<br>내일 다시 사용할 수 있어요.</div>`;
+  } else {
+    const rOk = data.rating >= QUICK_GRADE.minRating;
+    const rCnt = data.reviews >= QUICK_GRADE.minReviews;
+    content = `
+      <div style="font-size:40px;margin-bottom:12px">⚡</div>
+      <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:12px">번개등급 자격이 필요해요</div>
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:16px;text-align:left;width:100%">
+        <div style="font-size:12px;color:#aaa;font-weight:700;margin-bottom:8px">번개등급 달성 조건</div>
+        <div style="font-size:14px;color:${rOk?'#22c55e':'#EF4444'};font-weight:700;margin-bottom:6px">
+          ${rOk?'✅':'❌'} 평점 ${QUICK_GRADE.minRating}점 이상 (현재 ${data.rating ? data.rating.toFixed(1) : '없음'})
+        </div>
+        <div style="font-size:14px;color:${rCnt?'#22c55e':'#EF4444'};font-weight:700">
+          ${rCnt?'✅':'❌'} 완료 알바 ${QUICK_GRADE.minReviews}회 이상 (현재 ${data.reviews}회)
+        </div>
+      </div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:16px">성실하게 알바를 완료하면 번개등급을 획득할 수 있어요!</div>`;
+  }
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;text-align:center" onclick="event.stopPropagation()">
+      ${content}
+      <button onclick="this.closest('[style*=\"fixed\"]').remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
+    </div>`;
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+}
+
+async function applySwipeJob(job, isQuick = false) {
   if (isGuest || !currentUser) return;
   let { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
   if (!worker) {
@@ -2249,6 +2336,11 @@ async function applySwipeJob(job) {
     worker = created;
   }
   await db.from('applications').insert({ job_posting_id: job.id, worker_id: worker.id }).catch(()=>{});
+  // 번개지원이면 오늘 날짜 저장
+  if (isQuick) {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem('quick_apply_date_' + currentUser.id, today);
+  }
 }
 
 function openProfile() {
@@ -2263,9 +2355,10 @@ function openProfile() {
     document.getElementById('profile-pw-section').style.display = provider === 'email' ? 'block' : 'none';
     document.getElementById('profile-pw-form').style.display = 'none';
     document.getElementById('worker-profile-edit').style.display = role === 'business' ? 'none' : 'block';
+    document.getElementById('worker-grade-section').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
-    if (role !== 'business') loadWorkerProfileForm();
+    if (role !== 'business') { loadWorkerProfileForm(); loadWorkerGrade(); }
   } else {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
@@ -2282,6 +2375,78 @@ async function loadWorkerProfileForm() {
   document.getElementById('worker-phone').value = w.phone || '';
   document.getElementById('worker-bio').value = w.bio || '';
   document.getElementById('worker-experience').value = w.experience || '';
+}
+
+async function loadWorkerGrade() {
+  if (!currentUser) return;
+  const { data: w } = await db.from('workers')
+    .select('rating, review_count').eq('kakao_uid', currentUser.id).single();
+
+  const rating  = w?.rating      || 0;
+  const reviews = w?.review_count || 0;
+  const isQuick = rating >= QUICK_GRADE.minRating && reviews >= QUICK_GRADE.minReviews;
+
+  const badge = document.getElementById('worker-grade-badge');
+  const progress = document.getElementById('worker-grade-progress');
+
+  if (isQuick) {
+    badge.innerHTML = '⚡ 번개등급';
+    badge.style.color = '#F59E0B';
+    progress.innerHTML = `<span style="color:#22c55e;font-weight:700">✅ 번개지원 사용 가능</span> · 하루 1회 제한`;
+  } else {
+    badge.innerHTML = '🪪 일반등급';
+    badge.style.color = '#888';
+    const rOk = rating >= QUICK_GRADE.minRating;
+    const cOk = reviews >= QUICK_GRADE.minReviews;
+    progress.innerHTML = `
+      <div style="font-weight:700;color:#555;margin-bottom:4px">번개등급까지 남은 조건</div>
+      <div style="color:${rOk?'#22c55e':'#EF4444'}">
+        ${rOk?'✅':'❌'} 평점 ${QUICK_GRADE.minRating}이상 (현재 ${rating ? rating.toFixed(1) : '없음'})
+      </div>
+      <div style="color:${cOk?'#22c55e':'#EF4444'}">
+        ${cOk?'✅':'❌'} 완료 알바 ${QUICK_GRADE.minReviews}회 이상 (현재 ${reviews}회)
+      </div>`;
+  }
+}
+
+function showGradeInfoModal() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px" onclick="event.stopPropagation()">
+      <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:20px">⚡ 번개등급 안내</div>
+
+      <div style="background:#FFF9E6;border:1.5px solid #FCD34D;border-radius:14px;padding:16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:900;color:#D97706;margin-bottom:8px">⚡ 번개등급 자격 조건</div>
+        <div style="font-size:13px;color:#555;line-height:2">
+          ✅ 평점 <b>${QUICK_GRADE.minRating}점</b> 이상<br>
+          ✅ 완료된 알바 <b>${QUICK_GRADE.minReviews}회</b> 이상<br>
+          ✅ 노쇼 <b>0회</b>
+        </div>
+      </div>
+
+      <div style="background:#FFF0F0;border-radius:14px;padding:16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:900;color:#FF4B4B;margin-bottom:8px">⚡ 번개지원 혜택</div>
+        <div style="font-size:13px;color:#555;line-height:2">
+          🔝 업주 지원자 목록 <b>최상단</b> 노출<br>
+          ⚡ 번개지원 배지 표시<br>
+          🚀 하루 1회 사용 가능
+        </div>
+      </div>
+
+      <div style="background:#F0FFF4;border-radius:14px;padding:16px;margin-bottom:20px">
+        <div style="font-size:13px;font-weight:900;color:#16a34a;margin-bottom:8px">🪪 일반등급</div>
+        <div style="font-size:13px;color:#555;line-height:2">
+          · 오른쪽 스와이프로 일반 지원<br>
+          · 번개등급 조건 달성 시 자동 승급
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:#aaa;margin-bottom:16px;text-align:center">노쇼 1회 발생 시 번개등급 즉시 박탈</div>
+      <button onclick="this.closest('[style*=\"fixed\"]').remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
+    </div>`;
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
 }
 
 async function saveWorkerProfile() {
