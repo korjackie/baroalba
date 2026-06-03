@@ -828,7 +828,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       location.href = '/owner.html';
       return;
     }
-  } else if (localStorage.getItem('baroalba_guest')) {
+  } else if (localStorage.getItem('baroalba_guest') || new URLSearchParams(location.search).get('job')) {
     isGuest = true;
     document.getElementById('guest-banner').classList.add('show');
     // 프로필 탭을 "로그인"으로 강조
