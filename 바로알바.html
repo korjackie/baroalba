@@ -769,6 +769,30 @@
           </div>
         </div>
 
+        <!-- 알바생 프로필 편집 (worker 역할만 표시) -->
+        <div id="worker-profile-edit" style="display:none;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">📋 내 프로필</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">나이</label>
+              <input id="worker-age" type="number" min="15" max="80" placeholder="만 나이" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">연락처</label>
+              <input id="worker-phone" type="tel" placeholder="010-0000-0000" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+            </div>
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">자기소개</div>
+              <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
+            </div>
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">경력/특기</div>
+              <textarea id="worker-experience" placeholder="관련 경력이나 보유 스킬을 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
+            </div>
+            <button onclick="saveWorkerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+          </div>
+        </div>
+
         <div id="profile-biz-btn" style="display:none;margin-bottom:10px">
           <button onclick="location.href='/owner.html'" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">
             🏪 업주 대시보드로 이동
@@ -2130,13 +2154,40 @@ function openProfile() {
     document.getElementById('profile-biz-btn').style.display = role === 'business' ? 'block' : 'none';
     document.getElementById('profile-pw-section').style.display = provider === 'email' ? 'block' : 'none';
     document.getElementById('profile-pw-form').style.display = 'none';
+    document.getElementById('worker-profile-edit').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
+    if (role !== 'business') loadWorkerProfileForm();
   } else {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
   }
   document.getElementById('profile-overlay').classList.add('open');
+}
+
+async function loadWorkerProfileForm() {
+  if (!currentUser) return;
+  const { data: w } = await db.from('workers').select('name, phone, age, bio, experience')
+    .eq('kakao_uid', currentUser.id).single();
+  if (!w) return;
+  document.getElementById('worker-age').value = w.age || '';
+  document.getElementById('worker-phone').value = w.phone || '';
+  document.getElementById('worker-bio').value = w.bio || '';
+  document.getElementById('worker-experience').value = w.experience || '';
+}
+
+async function saveWorkerProfile() {
+  if (!currentUser) return;
+  const age = parseInt(document.getElementById('worker-age').value) || null;
+  const phone = document.getElementById('worker-phone').value.trim();
+  const bio = document.getElementById('worker-bio').value.trim();
+  const experience = document.getElementById('worker-experience').value.trim();
+  const meta = currentUser.user_metadata || {};
+  const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
+  const { error } = await db.from('workers')
+    .upsert({ kakao_uid: currentUser.id, name, age, phone, bio, experience }, { onConflict: 'kakao_uid' });
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  showToast('✅ 프로필이 저장됐습니다');
 }
 
 function closeProfileIfBg(e) {
