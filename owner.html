@@ -805,15 +805,15 @@ function renderApplicants(apps) {
   el.innerHTML = apps.map(a => {
     const w = a.workers;
     const statusHtml = a.status === 'accepted'
-      ? '<span class="accepted-badge">✅ 수락</span>'
+      ? '<span style="background:#DCFCE7;color:#16a34a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:900">✅ 최종확정</span>'
       : a.status === 'rejected'
-      ? '<span class="rejected-badge">거절됨</span>'
+      ? '<span style="background:#f5f5f5;color:#aaa;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">❌ 탈락</span>'
       : `<div class="applicant-btns">
-          <button class="accept-btn" onclick="updateApplication('${a.id}','accepted')">수락</button>
-          <button class="reject-btn" onclick="updateApplication('${a.id}','rejected')">거절</button>
+          <button class="accept-btn" onclick="event.stopPropagation();updateApplication('${a.id}','accepted')">수락</button>
+          <button class="reject-btn" onclick="event.stopPropagation();updateApplication('${a.id}','rejected')">거절</button>
         </div>`;
     return `
-    <div class="applicant-card">
+    <div class="applicant-card" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
       <div class="applicant-avatar">👤</div>
       <div class="applicant-info">
         <div class="applicant-name">${w?.name || '이름없음'}</div>
@@ -822,7 +822,7 @@ function renderApplicants(apps) {
           ${w?.phone ? ' · ' + w.phone : ''}
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end" onclick="event.stopPropagation()">
         ${statusHtml}
         <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:6px 12px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 채팅</button>
       </div>
@@ -1350,6 +1350,11 @@ async function loadOwnerMapJobs() {
 
 // ── 지원자 프로필 ─────────────────────────────────────────
 let _chatWorkerId = null;
+
+async function openWorkerProfileDirect(appId) {
+  _chatAppId = appId;
+  await openWorkerProfile();
+}
 
 async function openWorkerProfile() {
   if (!_chatAppId) return;
