@@ -1072,19 +1072,23 @@ async function submitPosting() {
   };
 
   let error;
-  if (editingId) {
-    delete payload.base_wage;
-    delete payload.business_id;
-    ({ error } = await db.from('job_postings').update(payload).eq('id', editingId));
-  } else {
-    payload.base_wage = wage;
-    ({ error } = await db.from('job_postings').insert(payload));
+  try {
+    if (editingId) {
+      delete payload.base_wage;
+      delete payload.business_id;
+      ({ error } = await db.from('job_postings').update(payload).eq('id', editingId));
+    } else {
+      payload.base_wage = wage;
+      ({ error } = await db.from('job_postings').insert(payload));
+    }
+  } catch(e) {
+    error = { message: e.message };
   }
 
   btn.disabled = false;
   btn.textContent = editingId ? '수정 완료' : '공고 등록하기';
 
-  if (error) { showToast('오류: ' + error.message); return; }
+  if (error) { showToast('저장 실패: ' + error.message); console.error('submitPosting error:', error); return; }
   closePostingForm();
   loadPostings();
   if (!editingId) {
