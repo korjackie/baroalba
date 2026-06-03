@@ -576,6 +576,12 @@
   <button class="guest-login-btn" onclick="goToLogin()">로그인</button>
 </div>
 
+<!-- 업주 지도 열람 모드 배너 -->
+<div id="owner-browse-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#FF4B4B;color:#fff;padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px">
+  <span style="font-size:13px;font-weight:700">🗺 지도 열람 중</span>
+  <button onclick="location.href='/owner.html'" style="padding:7px 14px;background:#fff;color:#FF4B4B;border:none;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">← 업주 대시보드</button>
+</div>
+
 <!-- PWA 설치 배너 -->
 <div id="install-banner" style="display:none;position:fixed;bottom:calc(var(--nav-h) + 12px);left:14px;right:14px;background:#1a1a1a;color:#fff;border-radius:16px;padding:12px 16px;display:none;align-items:center;gap:12px;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
   <span style="font-size:26px">⚡</span>
@@ -863,10 +869,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (session) {
     currentUser = session.user;
-    if (currentUser.user_metadata?.baroalba_role === 'business' &&
-        !new URLSearchParams(location.search).get('browse')) {
-      location.href = '/owner.html';
-      return;
+    const isBrowseMode = !!new URLSearchParams(location.search).get('browse');
+    if (currentUser.user_metadata?.baroalba_role === 'business') {
+      if (!isBrowseMode) { location.href = '/owner.html'; return; }
+      // 업주 지도 열람 모드: 배너 표시 + 내지원/채팅 탭 숨김
+      const banner = document.getElementById('owner-browse-banner');
+      if (banner) banner.style.display = 'flex';
+      document.querySelectorAll('.nav-item').forEach((btn, i) => {
+        if (i === 2 || i === 3) btn.style.display = 'none'; // 내지원, 채팅 숨김
+      });
+      // 지도가 배너 아래에 가리지 않도록 여백
+      const topBar = document.querySelector('.top-bar');
+      if (topBar) topBar.style.marginTop = '40px';
     }
   } else if (localStorage.getItem('baroalba_guest') || new URLSearchParams(location.search).get('job')) {
     isGuest = true;
