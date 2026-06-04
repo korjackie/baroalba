@@ -1275,8 +1275,8 @@ function handleNaverUrl(val) {
   }
 }
 
-// ── 카카오 플레이스 검색 (15개씩 페이징) ────────────────
-function searchNaverPlace(page = 1) {
+// ── 네이버 플레이스 검색 (5개씩 start 페이징) ──────────
+async function searchNaverPlace(start = 1) {
   const query = document.getElementById('f-address').value.trim();
   if (!query) { showToast('시·구·업체명을 입력해주세요\n예: 부산 사하구 스타벅스'); return; }
 
@@ -1284,57 +1284,50 @@ function searchNaverPlace(page = 1) {
   btn.textContent = '검색 중...'; btn.disabled = true;
 
   try {
-    const ps = new kakao.maps.services.Places();
-    ps.keywordSearch(query, (results, status, pagination) => {
-      btn.textContent = '🔍 검색'; btn.disabled = false;
-      if (status !== kakao.maps.services.Status.OK) {
-        showToast('검색 결과가 없어요. 더 구체적인 키워드로 시도해보세요.');
-        return;
-      }
-      const items = results.map(r => ({
-        title:       r.place_name,
-        address:     r.address_name,
-        roadAddress: r.road_address_name,
-        telephone:   r.phone,
-        lat:         parseFloat(r.y),
-        lng:         parseFloat(r.x),
-        link:        r.place_url,
-      }));
-      renderPlaceResults(items, query, pagination.current, pagination.last);
-    }, { size: 15, page });
+    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}&start=${start}`);
+    const data = await res.json();
+    if (!res.ok || !data.items?.length) {
+      if (start === 1) showToast('검색 결과가 없어요.\n지역명+업체명으로 검색해보세요\n예: 서울 신라스테이');
+      else showToast('마지막 페이지입니다');
+      return;
+    }
+    renderPlaceResults(data.items, query, start, data.total || 0);
   } catch(e) {
-    btn.textContent = '🔍 검색'; btn.disabled = false;
     showToast('검색 중 오류가 발생했어요');
+  } finally {
+    btn.textContent = '🔍 검색'; btn.disabled = false;
   }
 }
 
-function renderPlaceResults(items, usedQuery, page = 1, totalPages = 1) {
+function renderPlaceResults(items, usedQuery, start = 1, total = 0) {
   const box = document.getElementById('place-results');
   box.style.display = 'block';
   window._naverPlaceItems = items;
 
-  const hasPrev = page > 1;
-  const hasNext = page < totalPages;
-  const header = usedQuery
-    ? `<div style="padding:8px 14px;font-size:11px;color:#888;border-bottom:1px solid #eee">"${usedQuery}" ${page}/${totalPages}페이지 · ${items.length}개</div>`
+  const end = start + items.length - 1;
+  const hasPrev = start > 1;
+  const hasNext = total > end;
+  const tip = total > 20
+    ? `<div style="padding:6px 14px;font-size:11px;color:#F59E0B;background:#FFFBEB;border-bottom:1px solid #FDE68A">💡 결과가 많아요. 지역+업체명으로 검색하면 더 정확해요 (예: 서울 ${usedQuery})</div>`
     : '';
+  const header = `<div style="padding:8px 14px;font-size:11px;color:#888;border-bottom:1px solid #eee">"${usedQuery}" 총 ${total}개 · ${start}~${end}번째</div>`;
 
   const pageBar = (hasPrev || hasNext) ? `
     <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-top:1px solid #eee;background:#fafafa">
       ${hasPrev
-        ? `<button onclick="searchNaverPlace(${page - 1})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">◀ 이전</button>`
+        ? `<button onclick="searchNaverPlace(${Math.max(1, start - 5)})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">◀ 이전</button>`
         : `<div style="flex:1"></div>`}
-      <span style="font-size:11px;color:#bbb;flex-shrink:0">${page} / ${totalPages}p</span>
+      <span style="font-size:11px;color:#bbb;flex-shrink:0">${Math.ceil(start/5)} / ${Math.ceil(total/5)}p</span>
       ${hasNext
-        ? `<button onclick="searchNaverPlace(${page + 1})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">다음 ▶</button>`
+        ? `<button onclick="searchNaverPlace(${start + 5})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">다음 ▶</button>`
         : `<div style="flex:1"></div>`}
     </div>` : '';
 
-  box.innerHTML = header + items.map((item, i) => `
+  box.innerHTML = header + tip + items.map((item, i) => `
     <div onclick="selectPlace(${i})" data-idx="${i}" style="padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
         <span style="font-size:13px;font-weight:800;color:#222">${item.title}</span>
-        ${item.link ? '<span style="font-size:10px;font-weight:700;background:#E8F0FE;color:#1a73e8;padding:2px 6px;border-radius:6px">K 플레이스</span>' : ''}
+        ${item.link ? '<span style="font-size:10px;font-weight:700;background:#E6F4EA;color:#1a7d3b;padding:2px 6px;border-radius:6px">N 플레이스</span>' : ''}
       </div>
       <div style="font-size:11px;color:#aaa">${item.roadAddress || item.address}</div>
     </div>`).join('') + pageBar;
