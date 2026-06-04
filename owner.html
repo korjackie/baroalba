@@ -506,6 +506,10 @@
 
 <!-- 하단 내비 -->
 <div class="bottom-nav">
+  <button class="nav-item" onclick="setNav(this,'map')">
+    <div class="nav-icon">🗺</div>
+    <div class="nav-label">지도</div>
+  </button>
   <button class="nav-item active" onclick="setNav(this,'postings')">
     <div class="nav-icon">📋</div>
     <div class="nav-label">내 공고</div>
@@ -519,10 +523,6 @@
     <div class="nav-icon">💬</div>
     <div class="nav-label">채팅</div>
     <span class="owner-nav-badge" id="owner-msg-badge" style="display:none"></span>
-  </button>
-  <button class="nav-item" onclick="setNav(this,'map')">
-    <div class="nav-icon">🗺</div>
-    <div class="nav-label">지도보기</div>
   </button>
   <button class="nav-item" onclick="setNav(this,'settings')">
     <div class="nav-icon">👤</div>

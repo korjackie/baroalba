@@ -58,7 +58,11 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title || '바로알바', {
       body: data.body || '새로운 알림이 있습니다.',
-      icon: './icons/icon.svg',
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: 'baroalba-msg',
+      renotify: true,
       data: data.url || './바로알바.html',
     })
   );
