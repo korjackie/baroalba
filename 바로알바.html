@@ -840,6 +840,17 @@
               <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">연락처</label>
               <input id="worker-phone" type="tel" placeholder="010-0000-0000" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
             </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">성별</label>
+              <div style="display:flex;gap:6px">
+                <button id="gender-male-btn" onclick="setGender('male')" style="padding:8px 16px;border:1.5px solid #eee;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">남성</button>
+                <button id="gender-female-btn" onclick="setGender('female')" style="padding:8px 16px;border:1.5px solid #eee;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">여성</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">거주지</label>
+              <input id="worker-region" type="text" placeholder="예: 서울 강남구" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+            </div>
             <div>
               <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">자기소개</div>
               <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
@@ -2380,7 +2391,10 @@ function openProfile() {
   if (currentUser) {
     const meta = currentUser.user_metadata || {};
     const role = meta.baroalba_role;
-    const provider = currentUser.app_metadata?.provider || '';
+    // identities 배열 우선 (Google/Kakao OAuth), 없으면 user_metadata (네이버 커스텀), 최후 app_metadata
+    const identities = currentUser.identities || [];
+    const oauthProvider = identities.find(i => i.provider !== 'email')?.provider;
+    const provider = oauthProvider || meta.provider || currentUser.app_metadata?.provider || '';
     document.getElementById('profile-name').textContent = meta.full_name || currentUser.email?.split('@')[0] || '사용자';
     document.getElementById('profile-email').textContent = currentUser.email || '';
     document.getElementById('profile-role').textContent = role === 'business' ? '🏪 업주' : '💼 알바생';
@@ -2413,9 +2427,21 @@ function openProfile() {
   document.getElementById('profile-overlay').classList.add('open');
 }
 
+let _workerGender = null;
+
+function setGender(val) {
+  _workerGender = val;
+  const mBtn = document.getElementById('gender-male-btn');
+  const fBtn = document.getElementById('gender-female-btn');
+  const activeStyle = 'padding:8px 16px;border:1.5px solid var(--red);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--red);color:#fff';
+  const idleStyle   = 'padding:8px 16px;border:1.5px solid #eee;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555';
+  mBtn.style.cssText = val === 'male'   ? activeStyle : idleStyle;
+  fBtn.style.cssText = val === 'female' ? activeStyle : idleStyle;
+}
+
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   const birthEl = document.getElementById('worker-birth');
@@ -2428,6 +2454,8 @@ async function loadWorkerProfileForm() {
   document.getElementById('worker-phone').value = w.phone || '';
   document.getElementById('worker-bio').value = w.bio || '';
   document.getElementById('worker-experience').value = w.experience || '';
+  document.getElementById('worker-region').value = w.region || '';
+  if (w.gender) setGender(w.gender);
 }
 
 async function loadWorkerGrade() {
@@ -2531,10 +2559,12 @@ async function saveWorkerProfile() {
   const phone = document.getElementById('worker-phone').value.trim();
   const bio = document.getElementById('worker-bio').value.trim();
   const experience = document.getElementById('worker-experience').value.trim();
+  const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
-  const { error } = await db.from('workers')
-    .upsert({ kakao_uid: currentUser.id, name, age, phone, bio, experience }, { onConflict: 'kakao_uid' });
+  const payload = { kakao_uid: currentUser.id, name, age, phone, bio, experience, region };
+  if (_workerGender) payload.gender = _workerGender;
+  const { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error) { showToast('저장 실패: ' + error.message); return; }
   showToast('✅ 프로필이 저장됐습니다');
 }
