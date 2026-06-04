@@ -1232,6 +1232,9 @@ function setWorkType(type) {
   document.getElementById('f-errand-section').style.display = isErrand ? 'block' : 'none';
   document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
   document.getElementById('f-period-end-wrap').style.opacity = type === 'short' ? '1' : '0.4';
+  document.getElementById('f-address').placeholder = isErrand
+    ? '주소 직접 입력 가능 (예: 서울 마포구 합정동 123)'
+    : '시·구·업체명 입력 (예: 부산 사하구 스타벅스)';
   renderCategorySelect();
 }
 
@@ -1432,7 +1435,34 @@ async function submitPosting() {
   if (!wage || (!isErrand && wage < 9860)) { showToast(isErrand ? '건당 금액을 입력해주세요' : '시급은 최저임금(9,860원) 이상이어야 해요'); return; }
   if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
   if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
-  if (!lat || !lng) { showToast('위치를 검색해서 선택해주세요'); return; }
+  // 심부름: 좌표 없으면 입력된 텍스트로 카카오 지오코딩 시도, 실패 시 업체 위치 사용
+  if (!lat || !lng) {
+    if (isErrand) {
+      const addrText = document.getElementById('f-address').value.trim();
+      if (!addrText) { showToast('위치를 입력해주세요'); return; }
+      const geocoded = await new Promise(resolve => {
+        try {
+          new kakao.maps.services.Geocoder().addressSearch(addrText, (r, s) => {
+            if (s === kakao.maps.services.Status.OK && r[0]) resolve({ lat: parseFloat(r[0].y), lng: parseFloat(r[0].x) });
+            else resolve(null);
+          });
+        } catch { resolve(null); }
+      });
+      if (geocoded) {
+        document.getElementById('f-lat').value = geocoded.lat;
+        document.getElementById('f-lng').value = geocoded.lng;
+      } else if (bizRecord?.lat && bizRecord?.lng) {
+        // 지오코딩 실패 시 업체 위치 사용
+        document.getElementById('f-lat').value = bizRecord.lat;
+        document.getElementById('f-lng').value = bizRecord.lng;
+        showToast('📍 정확한 좌표를 찾지 못해 업체 위치로 등록해요');
+      } else {
+        showToast('주소를 찾을 수 없어요. 검색 버튼을 눌러 위치를 선택해주세요'); return;
+      }
+    } else {
+      showToast('위치를 검색해서 선택해주세요'); return;
+    }
+  }
 
   // 세션 체크 — btn 비활성화 전에 먼저 (동기 즉시 확인)
   const sess = currentSession;
