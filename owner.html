@@ -474,32 +474,49 @@
       <div class="form-group">
         <label class="form-label">위치 *</label>
 
-        <!-- 방법 1: 네이버 플레이스 검색 -->
-        <div class="location-search">
-          <input class="form-input" id="f-address" placeholder="시·구·업체명 입력 (예: 부산 사하구 스타벅스)">
-          <button class="search-addr-btn" onclick="searchNaverPlace()">🔍 검색</button>
+        <!-- 위치 입력 방식 탭 -->
+        <div style="display:flex;gap:4px;background:#f5f5f5;border-radius:10px;padding:3px;margin-bottom:10px">
+          <button type="button" id="loc-tab-1" onclick="setLocTab(1)"
+            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 3px rgba(0,0,0,0.1)">🏪 플레이스</button>
+          <button type="button" id="loc-tab-2" onclick="setLocTab(2)"
+            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🗺 주소 검색</button>
+          <button type="button" id="loc-tab-3" onclick="setLocTab(3)"
+            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">✏️ 직접 입력</button>
         </div>
 
-        <!-- 방법 2: 네이버 플레이스 URL -->
-        <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
-          <input class="form-input" id="f-naver-url-input" placeholder="또는 네이버 플레이스 URL 붙여넣기" oninput="handleNaverUrl(this.value)" style="flex:1;font-size:13px">
-        </div>
-        <div id="naver-url-status" style="font-size:11px;font-weight:700;padding:4px 2px;display:none"></div>
-
-        <!-- 방법 3: 직접 주소 입력 (플레이스 없는 경우) -->
-        <div style="margin-top:8px">
-          <button type="button" onclick="toggleDirectAddr()" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline">📍 네이버 플레이스에 없나요? 주소 직접 입력</button>
-          <div id="direct-addr-section" style="display:none;margin-top:8px">
-            <div style="display:flex;gap:6px">
-              <input class="form-input" id="f-direct-addr" placeholder="예: 서울 마포구 합정동 123-45 (도로명/지번 모두 가능)" style="flex:1;font-size:13px">
-              <button type="button" onclick="applyDirectAddr()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">적용</button>
-            </div>
-            <div style="font-size:11px;color:#aaa;margin-top:4px">주소 입력 후 적용 버튼을 눌러주세요</div>
+        <!-- 탭1: 네이버 플레이스 검색 -->
+        <div id="loc-panel-1">
+          <div class="location-search">
+            <input class="form-input" id="f-address" placeholder="업체명 입력 (예: 부산 사하구 스타벅스)">
+            <button class="search-addr-btn" onclick="searchNaverPlace()">🔍 검색</button>
           </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <input class="form-input" id="f-naver-url-input" placeholder="또는 네이버 플레이스 URL 붙여넣기" oninput="handleNaverUrl(this.value)" style="flex:1;font-size:13px">
+          </div>
+          <div id="naver-url-status" style="font-size:11px;font-weight:700;padding:4px 2px;display:none"></div>
+          <div id="place-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;"></div>
         </div>
 
-        <!-- 검색 결과 목록 -->
-        <div id="place-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;"></div>
+        <!-- 탭2: 주소 검색 (도로명/지번) -->
+        <div id="loc-panel-2" style="display:none">
+          <div style="display:flex;gap:6px">
+            <input class="form-input" id="f-addr-search" placeholder="도로명 또는 지번 주소 입력 (예: 마포구 합정동 123)">
+            <button type="button" onclick="searchAddress()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">검색</button>
+          </div>
+          <div id="addr-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;max-height:200px;overflow-y:auto"></div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px">도로명·지번 주소를 입력하면 자동으로 좌표를 찾아요</div>
+        </div>
+
+        <!-- 탭3: 직접 텍스트 입력 -->
+        <div id="loc-panel-3" style="display:none">
+          <div style="display:flex;gap:6px">
+            <input class="form-input" id="f-direct-addr" placeholder="예: 2호선 합정역 3번출구 앞, 처음하우스 동암역점">
+            <button type="button" onclick="applyDirectAddr()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">적용</button>
+          </div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px">키워드로 위치를 찾아 지도에 표시해요. 찾지 못하면 업체 위치로 등록돼요.</div>
+        </div>
+
+        <!-- 공통: 선택된 위치 표시 -->
         <div class="location-result" id="location-result"></div>
         <div id="mini-map"></div>
         <input type="hidden" id="f-lat">
@@ -1297,34 +1314,83 @@ function openEditForm(jobId) {
 function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
-function toggleDirectAddr() {
-  const sec = document.getElementById('direct-addr-section');
-  sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+function setLocTab(n) {
+  [1, 2, 3].forEach(i => {
+    const tab = document.getElementById(`loc-tab-${i}`);
+    const panel = document.getElementById(`loc-panel-${i}`);
+    const active = i === n;
+    tab.style.background = active ? '#fff' : 'transparent';
+    tab.style.color = active ? '#FF4B4B' : '#888';
+    tab.style.boxShadow = active ? '0 1px 3px rgba(0,0,0,0.1)' : 'none';
+    panel.style.display = active ? 'block' : 'none';
+  });
 }
 
-async function applyDirectAddr() {
-  const addr = document.getElementById('f-direct-addr').value.trim();
-  if (!addr) { showToast('주소를 입력해주세요'); return; }
+function setLocationResult(lat, lng, label) {
+  document.getElementById('f-lat').value = lat;
+  document.getElementById('f-lng').value = lng;
+  document.getElementById('f-address').value = label;
+  document.getElementById('location-result').textContent = '📍 ' + label;
+  document.getElementById('location-result').style.display = 'block';
+  document.getElementById('addr-results').style.display = 'none';
+  showMiniMap(lat, lng);
+  showToast('✅ 위치가 설정됐어요');
+}
+
+// 탭2: 주소 검색
+async function searchAddress() {
+  const query = document.getElementById('f-addr-search').value.trim();
+  if (!query) { showToast('주소를 입력해주세요'); return; }
   const btn = event.target;
   btn.textContent = '검색 중...'; btn.disabled = true;
-  const geocoded = await new Promise(resolve => {
+  const results = await new Promise(resolve => {
     try {
-      new kakao.maps.services.Geocoder().addressSearch(addr, (r, s) => {
-        if (s === kakao.maps.services.Status.OK && r[0]) resolve({ lat: parseFloat(r[0].y), lng: parseFloat(r[0].x), name: r[0].address_name });
-        else resolve(null);
+      new kakao.maps.services.Geocoder().addressSearch(query, (r, s) => {
+        resolve(s === kakao.maps.services.Status.OK ? r : []);
+      });
+    } catch { resolve([]); }
+  });
+  btn.textContent = '검색'; btn.disabled = false;
+  if (!results.length) { showToast('주소를 찾을 수 없어요. 더 자세히 입력해주세요'); return; }
+  const box = document.getElementById('addr-results');
+  box.style.display = 'block';
+  box.innerHTML = results.slice(0, 5).map((r, i) => `
+    <div onclick="setLocationResult(${r.y},${r.x},'${(r.road_address?.address_name || r.address_name).replace(/'/g, '')}')"
+      style="padding:10px 14px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px"
+      onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
+      <div style="font-weight:700;color:#222">${r.road_address?.address_name || r.address_name}</div>
+      ${r.road_address ? `<div style="font-size:11px;color:#aaa">${r.address_name}</div>` : ''}
+    </div>`).join('');
+}
+
+// 탭3: 직접 텍스트 입력 (키워드 검색으로 근사 좌표)
+async function applyDirectAddr() {
+  const text = document.getElementById('f-direct-addr').value.trim();
+  if (!text) { showToast('위치를 입력해주세요'); return; }
+  const btn = event.target;
+  btn.textContent = '검색 중...'; btn.disabled = true;
+  // 키워드 검색으로 근사 좌표 시도
+  const found = await new Promise(resolve => {
+    try {
+      new kakao.maps.services.Places().keywordSearch(text, (r, s) => {
+        resolve(s === kakao.maps.services.Status.OK && r[0] ? r[0] : null);
       });
     } catch { resolve(null); }
   });
   btn.textContent = '적용'; btn.disabled = false;
-  if (!geocoded) { showToast('주소를 찾을 수 없어요. 더 자세한 주소를 입력해주세요'); return; }
-  document.getElementById('f-lat').value = geocoded.lat;
-  document.getElementById('f-lng').value = geocoded.lng;
-  document.getElementById('f-address').value = addr;
-  document.getElementById('location-result').textContent = '📍 ' + geocoded.name;
-  document.getElementById('location-result').style.display = 'block';
-  document.getElementById('place-results').style.display = 'none';
-  showMiniMap(geocoded.lat, geocoded.lng);
-  showToast('✅ 위치가 설정됐어요');
+  if (found) {
+    setLocationResult(parseFloat(found.y), parseFloat(found.x), text);
+  } else if (bizRecord?.lat && bizRecord?.lng) {
+    document.getElementById('f-lat').value = bizRecord.lat;
+    document.getElementById('f-lng').value = bizRecord.lng;
+    document.getElementById('f-address').value = text;
+    document.getElementById('location-result').textContent = '📍 ' + text + ' (업체 위치 기준)';
+    document.getElementById('location-result').style.display = 'block';
+    showMiniMap(bizRecord.lat, bizRecord.lng);
+    showToast('📍 정확한 좌표를 못 찾아 업체 위치로 등록해요');
+  } else {
+    showToast('위치를 찾을 수 없어요. 더 구체적으로 입력해주세요');
+  }
 }
 
 // ── 네이버 플레이스 URL 감지 ─────────────────────────────
