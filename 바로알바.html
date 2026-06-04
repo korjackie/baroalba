@@ -762,7 +762,7 @@
   </button>
   <button class="nav-item" onclick="setNav(this, 'profile')">
     <div class="nav-icon">👤</div>
-    <div class="nav-label">프로필</div>
+    <div class="nav-label">마이페이지</div>
   </button>
 </div>
 
@@ -795,7 +795,7 @@
   <div class="detail-sheet" style="padding-bottom:32px">
     <div class="detail-handle"></div>
     <div style="padding:0 20px 20px">
-      <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:20px">내 프로필</div>
+      <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:20px">마이페이지</div>
 
       <!-- 로그인 상태 -->
       <div id="profile-logged-in" style="display:none">
@@ -804,7 +804,10 @@
           <div>
             <div style="font-size:16px;font-weight:800;color:#222" id="profile-name">-</div>
             <div style="font-size:12px;color:#aaa;margin-top:2px" id="profile-email">-</div>
-            <div style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--red);padding:2px 8px;border-radius:6px;display:inline-block;margin-top:4px" id="profile-role">-</div>
+            <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+              <div style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--red);padding:2px 8px;border-radius:6px" id="profile-role">-</div>
+              <div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:none" id="profile-provider"></div>
+            </div>
           </div>
         </div>
 
@@ -825,8 +828,13 @@
           <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">📋 내 프로필</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;gap:8px;align-items:center">
-              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">나이</label>
-              <input id="worker-age" type="number" min="15" max="80" placeholder="만 나이" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">생년월일</label>
+              <div style="flex:1;position:relative">
+                <input id="worker-birth" type="text" inputmode="numeric" maxlength="6" placeholder="950315 (YYMMDD)"
+                  oninput="updateAgePreview(this.value)"
+                  style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+                <span id="age-preview" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#FF4B4B;font-weight:700"></span>
+              </div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">연락처</label>
@@ -848,6 +856,26 @@
           <button onclick="location.href='/owner.html'" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">
             🏪 업주 대시보드로 이동
           </button>
+        </div>
+
+        <!-- 업주 프로필 편집 (business 역할만 표시) -->
+        <div id="owner-profile-edit" style="display:none;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">🏪 업체 정보</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">업체명</label>
+              <input id="owner-biz-name" type="text" placeholder="업체 이름을 입력해주세요" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">연락처</label>
+              <input id="owner-biz-phone" type="tel" placeholder="010-0000-0000" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+            </div>
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">업체 소개</div>
+              <textarea id="owner-biz-desc" placeholder="업체나 사업장을 간단히 소개해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
+            </div>
+            <button onclick="saveOwnerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+          </div>
         </div>
 
         <!-- 비밀번호 변경 (이메일 로그인 전용) -->
@@ -874,7 +902,7 @@
 
         <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">🚪 로그아웃</button>
         <div style="height:1px;background:#f0f0f0;margin-bottom:10px"></div>
-        <button onclick="deleteUserAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
+        <button onclick="deleteUserAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:center">⚠️ 회원 탈퇴</button>
       </div>
 
       <!-- 게스트/비로그인 상태 -->
@@ -1598,7 +1626,7 @@ function filterJobsByKeyword(keyword) {
 // ── 한국어/영어 전환 ──────────────────────────────────────
 const TRANSLATIONS = {
   ko: {
-    nav_map: '지도', nav_swipe: '스와이프', nav_applications: '내 지원', nav_chats: '채팅', nav_profile: '프로필',
+    nav_map: '지도', nav_swipe: '스와이프', nav_applications: '내 지원', nav_chats: '채팅', nav_profile: '마이페이지',
     tab_status: '지원 현황', tab_bookmarks: '🔖 북마크',
     status_pending: '검토중', status_accepted: '✅ 수락', status_rejected: '❌ 거절', status_cancelled: '취소됨',
     apply_btn: '⚡ 바로 지원하기', apply_chat_btn: '💬 업주에게 문의하기',
@@ -1609,7 +1637,7 @@ const TRANSLATIONS = {
     lang_desc: '현재: 한국어',
   },
   en: {
-    nav_map: 'Map', nav_swipe: 'Swipe', nav_applications: 'Applied', nav_chats: 'Chat', nav_profile: 'Profile',
+    nav_map: 'Map', nav_swipe: 'Swipe', nav_applications: 'Applied', nav_chats: 'Chat', nav_profile: 'My Page',
     tab_status: 'Applications', tab_bookmarks: '🔖 Bookmarks',
     status_pending: 'Pending', status_accepted: '✅ Accepted', status_rejected: '❌ Rejected', status_cancelled: 'Cancelled',
     apply_btn: '⚡ Apply Now', apply_chat_btn: '💬 Message Owner',
@@ -2321,11 +2349,12 @@ function showQuickGradeModal(type, data = {}) {
   }
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:24px 24px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;text-align:center" onclick="event.stopPropagation()">
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;text-align:center">
       ${content}
-      <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
+      <button class="modal-close-btn" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
     </div>`;
-  overlay.addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector('.modal-close-btn').addEventListener('click', () => overlay.remove());
   document.body.appendChild(overlay);
 }
 
@@ -2355,14 +2384,28 @@ function openProfile() {
     document.getElementById('profile-name').textContent = meta.full_name || currentUser.email?.split('@')[0] || '사용자';
     document.getElementById('profile-email').textContent = currentUser.email || '';
     document.getElementById('profile-role').textContent = role === 'business' ? '🏪 업주' : '💼 알바생';
+    const providerMap = {
+      email:  { label: '📧 이메일', bg: '#f0f0f0', color: '#555' },
+      kakao:  { label: '💛 카카오', bg: '#FEE500', color: '#3C1E1E' },
+      naver:  { label: '🟢 네이버', bg: '#03C75A', color: '#fff' },
+      google: { label: '🔵 구글',   bg: '#4285F4', color: '#fff' }
+    };
+    const pInfo = providerMap[provider] || { label: '🔑 소셜', bg: '#f0f0f0', color: '#555' };
+    const pEl = document.getElementById('profile-provider');
+    pEl.textContent = pInfo.label;
+    pEl.style.background = pInfo.bg;
+    pEl.style.color = pInfo.color;
+    pEl.style.display = 'block';
     document.getElementById('profile-biz-btn').style.display = role === 'business' ? 'block' : 'none';
     document.getElementById('profile-pw-section').style.display = provider === 'email' ? 'block' : 'none';
     document.getElementById('profile-pw-form').style.display = 'none';
     document.getElementById('worker-profile-edit').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('worker-grade-section').style.display = role === 'business' ? 'none' : 'block';
+    document.getElementById('owner-profile-edit').style.display = role === 'business' ? 'block' : 'none';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
     if (role !== 'business') { loadWorkerProfileForm(); loadWorkerGrade(); }
+    else { loadOwnerProfileForm(); }
   } else {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
@@ -2372,10 +2415,16 @@ function openProfile() {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, bio, experience')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
-  document.getElementById('worker-age').value = w.age || '';
+  const birthEl = document.getElementById('worker-birth');
+  if (w.birth_date) {
+    birthEl.value = w.birth_date;
+    updateAgePreview(w.birth_date);
+  } else if (w.age) {
+    birthEl.placeholder = `저장된 나이: 만 ${w.age}세 (생년월일 입력 시 갱신)`;
+  }
   document.getElementById('worker-phone').value = w.phone || '';
   document.getElementById('worker-bio').value = w.bio || '';
   document.getElementById('worker-experience').value = w.experience || '';
@@ -2422,9 +2471,8 @@ function showGradeInfoModal() {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px" onclick="event.stopPropagation()">
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px">
       <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:20px">⚡ 번개등급 안내</div>
-
       <div style="background:#FFF9E6;border:1.5px solid #FCD34D;border-radius:14px;padding:16px;margin-bottom:16px">
         <div style="font-size:13px;font-weight:900;color:#D97706;margin-bottom:8px">⚡ 번개등급 자격 조건</div>
         <div style="font-size:13px;color:#555;line-height:2">
@@ -2433,7 +2481,6 @@ function showGradeInfoModal() {
           ✅ 노쇼 <b>0회</b>
         </div>
       </div>
-
       <div style="background:#FFF0F0;border-radius:14px;padding:16px;margin-bottom:16px">
         <div style="font-size:13px;font-weight:900;color:#FF4B4B;margin-bottom:8px">⚡ 번개지원 혜택</div>
         <div style="font-size:13px;color:#555;line-height:2">
@@ -2442,7 +2489,6 @@ function showGradeInfoModal() {
           🚀 하루 1회 사용 가능
         </div>
       </div>
-
       <div style="background:#F0FFF4;border-radius:14px;padding:16px;margin-bottom:20px">
         <div style="font-size:13px;font-weight:900;color:#16a34a;margin-bottom:8px">🪪 일반등급</div>
         <div style="font-size:13px;color:#555;line-height:2">
@@ -2450,17 +2496,38 @@ function showGradeInfoModal() {
           · 번개등급 조건 달성 시 자동 승급
         </div>
       </div>
-
       <div style="font-size:11px;color:#aaa;margin-bottom:16px;text-align:center">노쇼 1회 발생 시 번개등급 즉시 박탈</div>
-      <button onclick="this.parentElement.parentElement.remove()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
+      <button class="modal-close-btn" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
     </div>`;
-  overlay.addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector('.modal-close-btn').addEventListener('click', () => overlay.remove());
   document.body.appendChild(overlay);
+}
+
+function updateAgePreview(val) {
+  const preview = document.getElementById('age-preview');
+  if (val.length !== 6) { preview.textContent = ''; return; }
+  const age = calcAgeFromBirth(val);
+  preview.textContent = age ? `만 ${age}세` : '';
+}
+
+function calcAgeFromBirth(yymmdd) {
+  if (!yymmdd || yymmdd.length !== 6) return null;
+  const yy = parseInt(yymmdd.slice(0,2));
+  const mm = parseInt(yymmdd.slice(2,4));
+  const dd = parseInt(yymmdd.slice(4,6));
+  if (!mm || !dd || mm > 12 || dd > 31) return null;
+  const fullYear = yy <= new Date().getFullYear() % 100 ? 2000 + yy : 1900 + yy;
+  const today = new Date();
+  let age = today.getFullYear() - fullYear;
+  if (today.getMonth() + 1 < mm || (today.getMonth() + 1 === mm && today.getDate() < dd)) age--;
+  return age > 0 && age < 120 ? age : null;
 }
 
 async function saveWorkerProfile() {
   if (!currentUser) return;
-  const age = parseInt(document.getElementById('worker-age').value) || null;
+  const birthVal = document.getElementById('worker-birth').value.trim();
+  const age = calcAgeFromBirth(birthVal) || null;
   const phone = document.getElementById('worker-phone').value.trim();
   const bio = document.getElementById('worker-bio').value.trim();
   const experience = document.getElementById('worker-experience').value.trim();
@@ -2470,6 +2537,28 @@ async function saveWorkerProfile() {
     .upsert({ kakao_uid: currentUser.id, name, age, phone, bio, experience }, { onConflict: 'kakao_uid' });
   if (error) { showToast('저장 실패: ' + error.message); return; }
   showToast('✅ 프로필이 저장됐습니다');
+}
+
+async function loadOwnerProfileForm() {
+  if (!currentUser) return;
+  const { data: biz } = await db.from('businesses')
+    .select('name, phone, description').eq('kakao_uid', currentUser.id).single();
+  if (!biz) return;
+  document.getElementById('owner-biz-name').value = biz.name || '';
+  document.getElementById('owner-biz-phone').value = biz.phone || '';
+  document.getElementById('owner-biz-desc').value = biz.description || '';
+}
+
+async function saveOwnerProfile() {
+  if (!currentUser) return;
+  const name = document.getElementById('owner-biz-name').value.trim();
+  const phone = document.getElementById('owner-biz-phone').value.trim();
+  const description = document.getElementById('owner-biz-desc').value.trim();
+  if (!name) { showToast('업체명을 입력해주세요'); return; }
+  const { error } = await db.from('businesses')
+    .update({ name, phone, description }).eq('kakao_uid', currentUser.id);
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  showToast('✅ 업체 정보가 저장됐습니다');
 }
 
 function closeProfileIfBg(e) {
