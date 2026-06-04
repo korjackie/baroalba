@@ -1206,8 +1206,8 @@ function setWorkType(type) {
   document.getElementById('wt-desc').textContent = descs[type];
   const showSched = type !== 'spot';
   document.getElementById('f-schedule-section').style.display = showSched ? 'block' : 'none';
-  document.getElementById('f-start-date').closest('.form-group').style.display = showSched ? 'none' : 'block';
-  document.getElementById('f-time-label').textContent = showSched ? '일일 근무 시간 *' : '시작 시간 *';
+  document.getElementById('f-start-date').style.display = showSched ? 'none' : '';
+  document.getElementById('f-time-label').textContent = showSched ? '일일 근무 시작 시간 *' : '시작 시간 *';
   document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
   document.getElementById('f-period-end-wrap').style.opacity = type === 'short' ? '1' : '0.4';
 }
@@ -1278,7 +1278,7 @@ function handleNaverUrl(val) {
 }
 
 // ── 네이버 플레이스 검색 ─────────────────────────────────
-async function searchNaverPlace() {
+async function searchNaverPlace(start = 1) {
   const query = document.getElementById('f-address').value.trim();
   if (!query) { showToast('시·구·업체명을 입력해주세요\n예: 부산 사하구 스타벅스'); return; }
 
@@ -1286,24 +1286,45 @@ async function searchNaverPlace() {
   btn.textContent = '검색 중...'; btn.disabled = true;
 
   try {
-    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`);
+    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}&start=${start}`);
     const data = await res.json();
     if (!res.ok || !data.items?.length) {
-      searchKakaoFallback(query);
+      if (start === 1) searchKakaoFallback(query);
+      else showToast('마지막 페이지입니다');
       return;
     }
-    renderPlaceResults(data.items, query);
+    renderPlaceResults(data.items, query, start, data.total || 0);
   } catch(e) {
-    searchKakaoFallback(query);
+    if (start === 1) searchKakaoFallback(query);
   } finally {
     btn.textContent = '🔍 검색'; btn.disabled = false;
   }
 }
 
-function renderPlaceResults(items, usedQuery) {
+function renderPlaceResults(items, usedQuery, start = 1, total = 0) {
   const box = document.getElementById('place-results');
   box.style.display = 'block';
-  const header = usedQuery ? `<div style="padding:8px 14px;font-size:11px;color:#888;border-bottom:1px solid #eee">"${usedQuery}" 검색 결과 ${items.length}개</div>` : '';
+  window._naverPlaceItems = items;
+
+  const end = start + items.length - 1;
+  const hasPrev = start > 1;
+  const hasNext = total > end;
+  const totalStr = total ? `총 ${total.toLocaleString()}개 중 ` : '';
+  const header = usedQuery
+    ? `<div style="padding:8px 14px;font-size:11px;color:#888;border-bottom:1px solid #eee">"${usedQuery}" ${totalStr}${start}~${end}번째</div>`
+    : '';
+
+  const pageBar = (hasPrev || hasNext) ? `
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-top:1px solid #eee;background:#fafafa">
+      ${hasPrev
+        ? `<button onclick="searchNaverPlace(${Math.max(1, start - 5)})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">◀ 이전</button>`
+        : `<div style="flex:1"></div>`}
+      <span style="font-size:11px;color:#bbb;flex-shrink:0">${Math.ceil(start/5)} / ${Math.ceil(total/5)}p</span>
+      ${hasNext
+        ? `<button onclick="searchNaverPlace(${start + 5})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">다음 ▶</button>`
+        : `<div style="flex:1"></div>`}
+    </div>` : '';
+
   box.innerHTML = header + items.map((item, i) => `
     <div onclick="selectPlace(${i})" data-idx="${i}" style="padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
@@ -1311,10 +1332,7 @@ function renderPlaceResults(items, usedQuery) {
         ${item.link ? '<span style="font-size:10px;font-weight:700;background:#E6F4EA;color:#1a7d3b;padding:2px 6px;border-radius:6px">N 플레이스</span>' : ''}
       </div>
       <div style="font-size:11px;color:#aaa">${item.roadAddress || item.address}</div>
-    </div>`).join('');
-
-  // 전역 임시 저장
-  window._naverPlaceItems = items;
+    </div>`).join('') + pageBar;
 }
 
 function selectPlace(idx) {
@@ -1373,8 +1391,17 @@ async function submitPosting() {
   const lat = parseFloat(document.getElementById('f-lat').value);
   const lng = parseFloat(document.getElementById('f-lng').value);
   const desc = document.getElementById('f-desc').value.trim();
+  const wt = document.getElementById('f-work-type').value || 'spot';
+  const isScheduled = wt !== 'spot';
+  if (isScheduled && !document.getElementById('f-period-start').value) {
+    showToast('시작일을 입력해주세요'); return;
+  }
   const startTime = getTimeValue('start');
-  const endTime = getTimeValue('end');
+  let endTime = getTimeValue('end');
+  // 익일 근무: 종료 시간이 시작 시간보다 이를 경우 다음날로 간주
+  if (isScheduled && startTime && endTime && endTime <= startTime) {
+    endTime = new Date(endTime.getTime() + 86400000);
+  }
   const duration = startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null;
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
@@ -2178,10 +2205,13 @@ function setTimeSelects(prefix, date) {
 }
 
 function getTimeValue(prefix) {
-  const dateEl = document.getElementById('f-start-date');
   const h = parseInt(document.getElementById(`f-${prefix}-hour`)?.value) || 0;
   const m = parseInt(document.getElementById(`f-${prefix}-min`)?.value) || 0;
-  const dateStr = dateEl?.value;
+  const workType = document.getElementById('f-work-type')?.value || 'spot';
+  const isScheduled = workType !== 'spot';
+  const dateStr = isScheduled
+    ? document.getElementById('f-period-start')?.value
+    : document.getElementById('f-start-date')?.value;
   if (!dateStr) return null;
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;

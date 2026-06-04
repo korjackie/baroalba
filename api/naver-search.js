@@ -13,7 +13,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(query)}&display=5&sort=random`;
+    const start = Math.max(1, parseInt(req.query.start) || 1);
+    const url = `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(query)}&display=5&start=${start}&sort=comment`;
     const response = await fetch(url, {
       headers: {
         'X-Naver-Client-Id':     clientId,
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
       lng:         item.mapx / 10000000,
     }));
 
-    res.json({ items });
+    res.json({ items, total: data.total || 0, start });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
