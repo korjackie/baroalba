@@ -1091,14 +1091,15 @@ async function openDeepLink(jobId) {
   let job = jobs.find(j => j.id === jobId);
   if (!job) {
     // 없으면 DB에서 직접 조회 (다른 지역 공고)
-    const { data } = await db.from('job_postings')
+    const { data, error: dlErr } = await db.from('job_postings')
       .select(`id, title, category, base_wage, current_wage, status, lat, lng,
                start_time, duration_hours, needed_count, filled_count,
                description, surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
-               businesses!inner(name, rating, kindness_rating, review_count)`)
+               work_type, same_day_payment,
+               businesses(name, rating, kindness_rating, review_count)`)
       .eq('id', jobId).single();
-    if (!data) { showToast('해당 공고를 찾을 수 없어요'); return; }
-    const b = data.businesses;
+    if (!data) { showToast('해당 공고를 찾을 수 없어요' + (dlErr ? ': ' + dlErr.message : '')); return; }
+    const b = data.businesses || {};
     job = {
       ...data,
       wage_delta: data.current_wage - data.base_wage,
