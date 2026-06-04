@@ -340,7 +340,7 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">시급 (원) *</label>
+        <label class="form-label" id="f-wage-label">시급 (원) *</label>
         <input class="form-input" id="f-wage" type="number" min="9860" placeholder="10000">
       </div>
 
@@ -348,9 +348,10 @@
       <div class="form-group">
         <label class="form-label">근무형태 *</label>
         <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="work-type-tabs">
-          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">⚡ 스팟</button>
-          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">📅 단기</button>
-          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔄 정기</button>
+          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">⚡ 스팟</button>
+          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">📅 단기</button>
+          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔄 정기</button>
+          <button type="button" onclick="setWorkType('errand')"  id="wt-errand"    style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🏃 심부름</button>
         </div>
         <input type="hidden" id="f-work-type" value="spot">
         <div style="font-size:11px;color:#aaa;margin-top:6px" id="wt-desc">1회성 단발 근무 (날짜·시간 1회 지정)</div>
@@ -405,13 +406,26 @@
         </div>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="f-end-time-group">
         <label class="form-label">종료 시간 *</label>
         <div style="display:flex;gap:8px;align-items:center">
           <select class="form-select" id="f-end-hour" style="flex:1;min-width:0"></select>
           <select class="form-select" id="f-end-min" style="flex:0.9;min-width:0"></select>
           <span id="f-duration-display" style="font-size:13px;color:#888;white-space:nowrap;min-width:36px;text-align:right"></span>
         </div>
+      </div>
+
+      <!-- 🏃 심부름 전용: 예상 소요시간 -->
+      <div class="form-group" id="f-errand-section" style="display:none">
+        <label class="form-label">예상 소요시간 *</label>
+        <select class="form-select" id="f-errand-duration">
+          <option value="0.5">30분 이내</option>
+          <option value="1" selected>약 1시간</option>
+          <option value="2">약 2시간</option>
+          <option value="3">약 3시간</option>
+          <option value="0">미정 / 협의</option>
+        </select>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">🏃 심부름은 건당 금액 기준으로 매칭돼요</div>
       </div>
 
       <!-- ⚡ 번개 알바 설정 -->
@@ -1193,21 +1207,34 @@ function openPostingForm() {
 // ── 근무형태 선택 ─────────────────────────────────────────
 function setWorkType(type) {
   document.getElementById('f-work-type').value = type;
-  const btns = { spot:'wt-spot', short:'wt-short', regular:'wt-regular' };
-  const descs = { spot:'⚡ 1회성 단발 근무 (날짜·시간 1회 지정)', short:'📅 기간제 단기 근무 (시작일~종료일 + 요일 지정)', regular:'🔄 장기 정기 근무 (요일 고정 + 주휴수당 설정)' };
+  const btns = { spot:'wt-spot', short:'wt-short', regular:'wt-regular', errand:'wt-errand' };
+  const descs = {
+    spot:    '⚡ 1회성 단발 근무 (날짜·시간 1회 지정)',
+    short:   '📅 기간제 단기 근무 (시작일~종료일 + 요일 지정)',
+    regular: '🔄 장기 정기 근무 (요일 고정 + 주휴수당 설정)',
+    errand:  '🏃 단순 심부름 (건당 금액, 예상 소요시간 지정)',
+  };
   Object.keys(btns).forEach(k => {
     const el = document.getElementById(btns[k]);
+    if (!el) return;
     el.style.background = k === type ? '#fff' : 'transparent';
     el.style.color = k === type ? '#FF4B4B' : '#888';
     el.style.boxShadow = k === type ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
   });
-  document.getElementById('wt-desc').textContent = descs[type];
-  const showSched = type !== 'spot';
+  document.getElementById('wt-desc').textContent = descs[type] || '';
+  const isErrand = type === 'errand';
+  const showSched = type !== 'spot' && !isErrand;
   document.getElementById('f-schedule-section').style.display = showSched ? 'block' : 'none';
   document.getElementById('f-start-date').style.display = showSched ? 'none' : '';
-  document.getElementById('f-time-label').textContent = showSched ? '일일 근무 시작 시간 *' : '시작 시간 *';
+  document.getElementById('f-time-label').textContent = showSched ? '일일 근무 시작 시간 *' : (isErrand ? '심부름 가능 시간 *' : '시작 시간 *');
+  document.getElementById('f-end-time-group').style.display = isErrand ? 'none' : 'block';
+  document.getElementById('f-errand-section').style.display = isErrand ? 'block' : 'none';
   document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
   document.getElementById('f-period-end-wrap').style.opacity = type === 'short' ? '1' : '0.4';
+  document.getElementById('f-wage-label').textContent = isErrand ? '건당 금액 (원) *' : '시급 (원) *';
+  document.getElementById('f-wage').min = isErrand ? '1000' : '9860';
+  document.getElementById('f-wage').placeholder = isErrand ? '20000' : '10000';
+  renderCategorySelect();
 }
 
 function toggleDay(btn) {
@@ -1390,22 +1417,23 @@ async function submitPosting() {
   const lng = parseFloat(document.getElementById('f-lng').value);
   const desc = document.getElementById('f-desc').value.trim();
   const wt = document.getElementById('f-work-type').value || 'spot';
-  const isScheduled = wt !== 'spot';
+  const isErrand = wt === 'errand';
+  const isScheduled = wt !== 'spot' && !isErrand;
   if (isScheduled && !document.getElementById('f-period-start').value) {
     showToast('시작일을 입력해주세요'); return;
   }
   const startTime = getTimeValue('start');
-  let endTime = getTimeValue('end');
-  // 익일 근무: 종료 시간이 시작 시간보다 이를 경우 다음날로 간주
-  if (isScheduled && startTime && endTime && endTime <= startTime) {
+  let endTime = isErrand ? null : getTimeValue('end');
+  if (!isErrand && isScheduled && startTime && endTime && endTime <= startTime) {
     endTime = new Date(endTime.getTime() + 86400000);
   }
-  const duration = startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null;
+  const errandDuration = isErrand ? (parseFloat(document.getElementById('f-errand-duration').value) || null) : null;
+  const duration = isErrand ? errandDuration : (startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null);
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
-  if (!wage || wage < 9860) { showToast('시급은 최저임금(9,860원) 이상이어야 해요'); return; }
+  if (!wage || (!isErrand && wage < 9860)) { showToast(isErrand ? '건당 금액을 입력해주세요' : '시급은 최저임금(9,860원) 이상이어야 해요'); return; }
   if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
-  if (!endTime || isNaN(endTime.getTime()) || endTime <= startTime) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
+  if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
   if (!lat || !lng) { showToast('위치를 검색해서 선택해주세요'); return; }
 
   // 세션 체크 — btn 비활성화 전에 먼저 (동기 즉시 확인)
@@ -2074,6 +2102,17 @@ const CARE_CATEGORIES = [
   { name:'가사도우미',  icon:'🏡' },
 ];
 
+const ERRAND_CATEGORIES = [
+  { name: '물건 픽업/전달', icon: '📦', display_order: 1 },
+  { name: '대리 줄서기',   icon: '🧍', display_order: 2 },
+  { name: '서류/우편',     icon: '📮', display_order: 3 },
+  { name: '쇼핑 대행',     icon: '🛒', display_order: 4 },
+  { name: '반려동물 산책', icon: '🐕', display_order: 5 },
+  { name: '이사/짐 보조',  icon: '🚚', display_order: 6 },
+  { name: '음식 배달',     icon: '🍱', display_order: 7 },
+  { name: '기타 심부름',   icon: '🏃', display_order: 99 },
+];
+
 let categories = [...DEFAULT_CATEGORIES];
 
 // 공고 유형별 라벨/플레이스홀더
@@ -2116,10 +2155,12 @@ async function loadCategories() {
 }
 
 function renderCategorySelect() {
+  const wt = document.getElementById('f-work-type')?.value || 'spot';
+  const cats = wt === 'errand' ? ERRAND_CATEGORIES : categories;
   const sel = document.getElementById('f-category');
   const prev = sel.value;
-  sel.innerHTML = categories.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
-  if (prev && categories.find(c => c.name === prev)) sel.value = prev;
+  sel.innerHTML = cats.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
+  if (prev && cats.find(c => c.name === prev)) sel.value = prev;
 }
 
 function renderAdminCatList() {
@@ -2249,7 +2290,7 @@ function getTimeValue(prefix) {
   const h = parseInt(document.getElementById(`f-${prefix}-hour`)?.value) || 0;
   const m = parseInt(document.getElementById(`f-${prefix}-min`)?.value) || 0;
   const workType = document.getElementById('f-work-type')?.value || 'spot';
-  const isScheduled = workType !== 'spot';
+  const isScheduled = workType !== 'spot' && workType !== 'errand';
   const dateStr = isScheduled
     ? document.getElementById('f-period-start')?.value
     : document.getElementById('f-start-date')?.value;

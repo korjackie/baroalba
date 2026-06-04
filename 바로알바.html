@@ -592,6 +592,7 @@
     <div class="chip" data-cat="커플알바" onclick="setCategory(this, '커플알바')">💑 커플알바</div>
     <div class="chip" data-cat="컨텐츠" onclick="setCategory(this, '컨텐츠')">📱 컨텐츠</div>
     <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">🏆 챌린지</div>
+    <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">🏃 심부름</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">🔥 급구만</div>
   </div>
 </div>
@@ -964,6 +965,7 @@ let kakaoMap = null;
 let mapCenter = { lat: APP_CONFIG.DEFAULT_LAT, lng: APP_CONFIG.DEFAULT_LNG };
 let currentRadius = APP_CONFIG.DEFAULT_RADIUS_M;
 let currentCategory = '';
+let currentWorkType = '';
 let urgentOnly = false;
 let sortByWage = false;
 let jobs = [];
@@ -1148,6 +1150,7 @@ async function loadJobs() {
     if (error) throw error;
 
     let result = data || [];
+    if (currentWorkType === 'errand') result = result.filter(j => j.work_type === 'errand');
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
     if (sortByWage) result = result.sort((a,b) => b.current_wage - a.current_wage);
 
@@ -1256,18 +1259,19 @@ function renderList() {
           <div class="card-title">${job.title}</div>
         </div>
         <div class="card-right">
-          <div class="card-wage">${job.current_wage.toLocaleString()}원</div>
+          <div class="card-wage">${job.current_wage.toLocaleString()}원${job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
           ${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}
           ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">최대 ${job.surge_max_wage.toLocaleString()}원</div>` : ''}
         </div>
       </div>
       ${surgeTimer}
       <div class="card-tags">
+        ${job.work_type === 'errand' ? '<span class="tag" style="background:#FFF0F5;color:#E91E8C;font-weight:900">🏃 심부름</span>' : ''}
         ${isUrgent ? '<span class="tag urgent-tag">🔥 급구</span>' : ''}
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500">⚡ 번개</span>' : ''}
         ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a">💴 당일정산</span>' : ''}
         <span class="tag ${catClass}">${job.category}</span>
-        <span class="tag">${job.duration_hours ?? '-'}시간</span>
+        <span class="tag">${job.work_type === 'errand' ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
         ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
       </div>
       <div class="card-meta">
@@ -1872,7 +1876,13 @@ function moveToMyLocation(silent = false) {
 function setCategory(el, cat) {
   document.querySelectorAll('#filter-row .chip:not([data-urgent])').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  currentCategory = cat;
+  if (cat === '__errand__') {
+    currentCategory = '';
+    currentWorkType = 'errand';
+  } else {
+    currentCategory = cat;
+    currentWorkType = '';
+  }
   loadJobs();
 }
 
