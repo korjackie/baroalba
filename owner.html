@@ -314,11 +314,13 @@
       <!-- 공고 유형 탭 -->
       <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="job-type-tabs">
         <button type="button" class="job-type-tab active" data-type="alba" onclick="setJobType('alba')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">👷 일반 알바</button>
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">👷 일반 알바</button>
+        <button type="button" class="job-type-tab" data-type="errand" onclick="setJobType('errand')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🏃 심부름</button>
         <button type="button" class="job-type-tab" data-type="technical" onclick="setJobType('technical')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔧 전문기술직</button>
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔧 전문기술직</button>
         <button type="button" class="job-type-tab" data-type="care" onclick="setJobType('care')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🤝 돌봄·케어</button>
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🤝 돌봄·케어</button>
       </div>
 
       <div class="form-group">
@@ -345,13 +347,12 @@
       </div>
 
       <!-- 근무형태 -->
-      <div class="form-group">
+      <div class="form-group" id="work-type-group">
         <label class="form-label">근무형태 *</label>
         <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="work-type-tabs">
-          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">⚡ 스팟</button>
-          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">📅 단기</button>
-          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔄 정기</button>
-          <button type="button" onclick="setWorkType('errand')"  id="wt-errand"    style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">🏃 심부름</button>
+          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">⚡ 스팟</button>
+          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">📅 단기</button>
+          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔄 정기</button>
         </div>
         <input type="hidden" id="f-work-type" value="spot">
         <div style="font-size:11px;color:#aaa;margin-top:6px" id="wt-desc">1회성 단발 근무 (날짜·시간 1회 지정)</div>
@@ -1231,9 +1232,6 @@ function setWorkType(type) {
   document.getElementById('f-errand-section').style.display = isErrand ? 'block' : 'none';
   document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
   document.getElementById('f-period-end-wrap').style.opacity = type === 'short' ? '1' : '0.4';
-  document.getElementById('f-wage-label').textContent = isErrand ? '건당 금액 (원) *' : '시급 (원) *';
-  document.getElementById('f-wage').min = isErrand ? '1000' : '9860';
-  document.getElementById('f-wage').placeholder = isErrand ? '20000' : '10000';
   renderCategorySelect();
 }
 
@@ -2117,13 +2115,15 @@ let categories = [...DEFAULT_CATEGORIES];
 
 // 공고 유형별 라벨/플레이스홀더
 const JOB_TYPE_META = {
-  alba:      { label:'일반 알바', placeholder:'예: 홀 서빙 보조, 물류 입출고', wageLabel:'시급 (원) *' },
-  technical: { label:'전문기술직', placeholder:'예: 싱크대 막힘 수리, 도어락 교체', wageLabel:'작업비 (원) *' },
+  alba:      { label:'일반 알바',  placeholder:'예: 홀 서빙 보조, 물류 입출고',           wageLabel:'시급 (원) *' },
+  errand:    { label:'심부름',     placeholder:'예: 서류 우체국 제출, 물건 픽업/전달',     wageLabel:'건당 금액 (원) *' },
+  technical: { label:'전문기술직', placeholder:'예: 싱크대 막힘 수리, 도어락 교체',       wageLabel:'작업비 (원) *' },
   care:      { label:'돌봄·케어',  placeholder:'예: 강아지 3시간 펫시팅, 아이 하원 돌봄', wageLabel:'시급/건당 (원) *' },
 };
 
 function setJobType(type) {
   document.getElementById('f-job-type').value = type;
+  const isErrand = type === 'errand';
 
   // 탭 스타일 업데이트
   document.querySelectorAll('.job-type-tab').forEach(btn => {
@@ -2133,17 +2133,30 @@ function setJobType(type) {
     btn.style.boxShadow = active ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
   });
 
+  // 심부름: 근무형태 탭 숨기고 errand 모드 활성화
+  document.getElementById('work-type-group').style.display = isErrand ? 'none' : 'block';
+  if (isErrand) {
+    setWorkType('errand');
+  } else {
+    // 비심부름: 근무형태 스팟으로 초기화
+    if (document.getElementById('f-work-type').value === 'errand') setWorkType('spot');
+  }
+
   // 카테고리 업데이트
   const sel = document.getElementById('f-category');
-  const list = type === 'technical' ? TECHNICAL_CATEGORIES : type === 'care' ? CARE_CATEGORIES : categories;
-  sel.innerHTML = list.map(c => `<option value="${c.icon} ${c.name}">${c.icon} ${c.name}</option>`).join('');
+  const list = isErrand ? ERRAND_CATEGORIES
+    : type === 'technical' ? TECHNICAL_CATEGORIES
+    : type === 'care' ? CARE_CATEGORIES
+    : categories;
+  sel.innerHTML = list.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
 
   // 라벨/플레이스홀더 업데이트
   const meta = JOB_TYPE_META[type];
   document.getElementById('f-title').placeholder = meta.placeholder;
   document.getElementById('f-title-label').textContent = meta.label + ' 직무명 *';
-  const wageLabel = document.querySelector('label[for="f-wage"], #f-wage')?.previousElementSibling;
-  if (wageLabel) wageLabel.textContent = meta.wageLabel;
+  document.getElementById('f-wage-label').textContent = meta.wageLabel;
+  document.getElementById('f-wage').min = isErrand ? '1000' : '9860';
+  document.getElementById('f-wage').placeholder = isErrand ? '20000' : '10000';
 }
 
 async function loadCategories() {
