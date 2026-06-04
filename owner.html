@@ -474,7 +474,7 @@
       <div class="form-group">
         <label class="form-label">위치 *</label>
 
-        <!-- 방법 1: 텍스트 검색 -->
+        <!-- 방법 1: 네이버 플레이스 검색 -->
         <div class="location-search">
           <input class="form-input" id="f-address" placeholder="시·구·업체명 입력 (예: 부산 사하구 스타벅스)">
           <button class="search-addr-btn" onclick="searchNaverPlace()">🔍 검색</button>
@@ -485,6 +485,18 @@
           <input class="form-input" id="f-naver-url-input" placeholder="또는 네이버 플레이스 URL 붙여넣기" oninput="handleNaverUrl(this.value)" style="flex:1;font-size:13px">
         </div>
         <div id="naver-url-status" style="font-size:11px;font-weight:700;padding:4px 2px;display:none"></div>
+
+        <!-- 방법 3: 직접 주소 입력 (플레이스 없는 경우) -->
+        <div style="margin-top:8px">
+          <button type="button" onclick="toggleDirectAddr()" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline">📍 네이버 플레이스에 없나요? 주소 직접 입력</button>
+          <div id="direct-addr-section" style="display:none;margin-top:8px">
+            <div style="display:flex;gap:6px">
+              <input class="form-input" id="f-direct-addr" placeholder="예: 서울 마포구 합정동 123-45 (도로명/지번 모두 가능)" style="flex:1;font-size:13px">
+              <button type="button" onclick="applyDirectAddr()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">적용</button>
+            </div>
+            <div style="font-size:11px;color:#aaa;margin-top:4px">주소 입력 후 적용 버튼을 눌러주세요</div>
+          </div>
+        </div>
 
         <!-- 검색 결과 목록 -->
         <div id="place-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;"></div>
@@ -1232,9 +1244,6 @@ function setWorkType(type) {
   document.getElementById('f-errand-section').style.display = isErrand ? 'block' : 'none';
   document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
   document.getElementById('f-period-end-wrap').style.opacity = type === 'short' ? '1' : '0.4';
-  document.getElementById('f-address').placeholder = isErrand
-    ? '주소 직접 입력 가능 (예: 서울 마포구 합정동 123)'
-    : '시·구·업체명 입력 (예: 부산 사하구 스타벅스)';
   renderCategorySelect();
 }
 
@@ -1287,6 +1296,36 @@ function openEditForm(jobId) {
 
 function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
+
+function toggleDirectAddr() {
+  const sec = document.getElementById('direct-addr-section');
+  sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+}
+
+async function applyDirectAddr() {
+  const addr = document.getElementById('f-direct-addr').value.trim();
+  if (!addr) { showToast('주소를 입력해주세요'); return; }
+  const btn = event.target;
+  btn.textContent = '검색 중...'; btn.disabled = true;
+  const geocoded = await new Promise(resolve => {
+    try {
+      new kakao.maps.services.Geocoder().addressSearch(addr, (r, s) => {
+        if (s === kakao.maps.services.Status.OK && r[0]) resolve({ lat: parseFloat(r[0].y), lng: parseFloat(r[0].x), name: r[0].address_name });
+        else resolve(null);
+      });
+    } catch { resolve(null); }
+  });
+  btn.textContent = '적용'; btn.disabled = false;
+  if (!geocoded) { showToast('주소를 찾을 수 없어요. 더 자세한 주소를 입력해주세요'); return; }
+  document.getElementById('f-lat').value = geocoded.lat;
+  document.getElementById('f-lng').value = geocoded.lng;
+  document.getElementById('f-address').value = addr;
+  document.getElementById('location-result').textContent = '📍 ' + geocoded.name;
+  document.getElementById('location-result').style.display = 'block';
+  document.getElementById('place-results').style.display = 'none';
+  showMiniMap(geocoded.lat, geocoded.lng);
+  showToast('✅ 위치가 설정됐어요');
+}
 
 // ── 네이버 플레이스 URL 감지 ─────────────────────────────
 function handleNaverUrl(val) {
@@ -1435,32 +1474,26 @@ async function submitPosting() {
   if (!wage || (!isErrand && wage < 9860)) { showToast(isErrand ? '건당 금액을 입력해주세요' : '시급은 최저임금(9,860원) 이상이어야 해요'); return; }
   if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
   if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
-  // 심부름: 좌표 없으면 입력된 텍스트로 카카오 지오코딩 시도, 실패 시 업체 위치 사용
+  // 좌표 없으면 직접 입력 주소로 지오코딩 시도
   if (!lat || !lng) {
-    if (isErrand) {
-      const addrText = document.getElementById('f-address').value.trim();
-      if (!addrText) { showToast('위치를 입력해주세요'); return; }
-      const geocoded = await new Promise(resolve => {
-        try {
-          new kakao.maps.services.Geocoder().addressSearch(addrText, (r, s) => {
-            if (s === kakao.maps.services.Status.OK && r[0]) resolve({ lat: parseFloat(r[0].y), lng: parseFloat(r[0].x) });
-            else resolve(null);
-          });
-        } catch { resolve(null); }
-      });
-      if (geocoded) {
-        document.getElementById('f-lat').value = geocoded.lat;
-        document.getElementById('f-lng').value = geocoded.lng;
-      } else if (bizRecord?.lat && bizRecord?.lng) {
-        // 지오코딩 실패 시 업체 위치 사용
-        document.getElementById('f-lat').value = bizRecord.lat;
-        document.getElementById('f-lng').value = bizRecord.lng;
-        showToast('📍 정확한 좌표를 찾지 못해 업체 위치로 등록해요');
-      } else {
-        showToast('주소를 찾을 수 없어요. 검색 버튼을 눌러 위치를 선택해주세요'); return;
-      }
+    const directAddr = document.getElementById('f-direct-addr').value.trim();
+    const addrText = directAddr || document.getElementById('f-address').value.trim();
+    if (!addrText) { showToast('위치를 입력하거나 검색해주세요'); return; }
+    const geocoded = await new Promise(resolve => {
+      try {
+        new kakao.maps.services.Geocoder().addressSearch(addrText, (r, s) => {
+          if (s === kakao.maps.services.Status.OK && r[0]) resolve({ lat: parseFloat(r[0].y), lng: parseFloat(r[0].x) });
+          else resolve(null);
+        });
+      } catch { resolve(null); }
+    });
+    if (geocoded) {
+      document.getElementById('f-lat').value = geocoded.lat;
+      document.getElementById('f-lng').value = geocoded.lng;
+      document.getElementById('location-result').textContent = '📍 ' + addrText;
+      document.getElementById('location-result').style.display = 'block';
     } else {
-      showToast('위치를 검색해서 선택해주세요'); return;
+      showToast('주소를 찾을 수 없어요.\n검색 버튼을 눌러 위치를 선택하거나\n더 정확한 주소를 입력해주세요'); return;
     }
   }
 
