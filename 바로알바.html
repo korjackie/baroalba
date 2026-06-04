@@ -1024,6 +1024,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (deepJobId) openDeepLink(deepJobId);
   setupRealtime();
   setupMessageNotifications();
+  if (!isGuest) subscribePush();
 });
 
 // ── 카카오맵 초기화 ───────────────────────────────────────
@@ -2634,6 +2635,37 @@ async function doLogout() {
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
   location.href = '/login.html';
+}
+
+// ── Web Push 구독 ─────────────────────────────────────────
+const VAPID_PUBLIC_KEY = 'BN_xKMN7kQXYE0EhEIVQ2tK-Ne_CfH0bCKubl3vBuJxywN_BMCAZV7tA0E2ryYfnOr1uSb3M5GvirNrNzblp8JA';
+
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const base64 = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribePush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!currentUser) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    await db.from('push_subscriptions')
+      .upsert({ user_id: currentUser.id, subscription: sub.toJSON() }, { onConflict: 'user_id' });
+  } catch(e) {
+    console.log('Push 구독 실패:', e.message);
+  }
 }
 
 // ── 유틸 ──────────────────────────────────────────────────

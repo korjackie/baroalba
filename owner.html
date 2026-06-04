@@ -1720,7 +1720,7 @@ function setNav(el, tab) {
 }
 
 // ── 채팅 ───────────────────────────────────────────────────
-let _chatAppId = null, _chatSub = null;
+let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerName = '';
 
 // ── 지도 오버레이 (업주용 주변 공고 조회) ─────────────────
 let _ownerMap = null;
@@ -1876,10 +1876,16 @@ async function updateApplicationFromProfile(appId, status) {
 
 async function openChat(applicationId, workerName) {
   _chatAppId = applicationId;
+  _chatWorkerName = workerName;
+  _chatWorkerUserId = null;
   document.getElementById('chat-title').textContent = workerName + '님과 채팅';
   document.getElementById('chat-sub').textContent = '지원자와 실시간 대화';
   document.getElementById('chat-overlay').classList.add('open');
   document.getElementById('chat-input').value = '';
+  // 알바생 user_id(kakao_uid) 조회 — Push 알림 전송에 사용
+  const { data: app } = await db.from('applications')
+    .select('workers(kakao_uid)').eq('id', applicationId).single();
+  if (app?.workers?.kakao_uid) _chatWorkerUserId = app.workers.kakao_uid;
   await loadChatMessages();
   subscribeChatMessages();
   markMessagesRead(applicationId);
@@ -1889,6 +1895,7 @@ function closeChat() {
   document.getElementById('chat-overlay').classList.remove('open');
   if (_chatSub) { _chatSub.unsubscribe(); _chatSub = null; }
   _chatAppId = null;
+  _chatWorkerUserId = null;
 }
 
 async function loadChatMessages() {
@@ -1944,6 +1951,19 @@ async function sendChatMessage() {
     sender_id: currentUser.id,
     content,
   });
+  // 알바생에게 Push 알림 전송
+  if (_chatWorkerUserId) {
+    fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: _chatWorkerUserId,
+        title: `💬 바로알바 - ${bizRecord?.name || '업주'} 메시지`,
+        body: content.length > 40 ? content.slice(0, 40) + '…' : content,
+        url: '/바로알바.html'
+      })
+    }).catch(() => {}); // 실패해도 채팅은 정상 동작
+  }
 }
 
 async function markMessagesRead(appId) {
