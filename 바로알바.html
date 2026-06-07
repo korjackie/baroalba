@@ -1625,11 +1625,20 @@ async function loadMyApplications() {
     return;
   }
 
-  const STATUS = { pending: { label: '검토중', color: '#888', bg: '#f5f5f5' }, accepted: { label: '✅ 수락', color: '#16a34a', bg: '#f0fdf4' }, rejected: { label: '❌ 거절', color: '#dc2626', bg: '#fef2f2' }, cancelled: { label: '취소됨', color: '#aaa', bg: '#f0f0f0' } };
+  const STATUS = {
+    pending:   { label: '검토중',    color: '#888',    bg: '#f5f5f5' },
+    reviewing: { label: '검토중',    color: '#888',    bg: '#f5f5f5' },
+    accepted:  { label: '✅ 합격',   color: '#16a34a', bg: '#f0fdf4' },
+    rejected:  { label: '❌ 거절',   color: '#dc2626', bg: '#fef2f2' },
+    cancelled: { label: '취소됨',    color: '#aaa',    bg: '#f0f0f0' },
+    completed: { label: '🏁 완료',   color: '#3B82F6', bg: '#EFF6FF' },
+  };
   el.innerHTML = apps.map(a => {
     const job = a.job_postings || {};
     const biz = job.businesses || {};
-    const s = STATUS[a.status] || STATUS.pending;
+    const s = STATUS[a.status] || { label: a.status || '검토중', color: '#888', bg: '#f5f5f5' };
+    const canCancel  = a.status === 'pending' || a.status === 'reviewing';
+    const isAccepted = a.status === 'accepted';
     return `
     <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.05)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
@@ -1640,8 +1649,8 @@ async function loadMyApplications() {
         </div>
         <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">${s.label}</div>
       </div>
-      ${a.status === 'accepted' ? `<button onclick="openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">💬 업주에게 문의하기</button>` : ''}
-      ${a.status === 'pending' ? `<button onclick="cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
+      ${isAccepted ? `<button onclick="openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">💬 업주에게 문의하기</button>` : ''}
+      ${canCancel ? `<button onclick="cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
   }).join('');
 }
