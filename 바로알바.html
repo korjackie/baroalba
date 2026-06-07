@@ -1241,7 +1241,7 @@ function renderMarkers() {
         <div class="marker-bubble ${statusCls}">
           <span class="mk-wage">${wageStr}<span style="font-size:10px;font-weight:700">${wageUnit}</span></span>
           <span class="mk-sub">${subLabel}</span>
-          ${!isErrand && startFmt ? `<span class="mk-sub">${startFmt}</span>` : ''}
+          ${!isErrand && startFmt ? `<span class="mk-sub">⏰ ${startFmt}</span>` : ''}
         </div>
         <div class="marker-tail ${tailCls}"></div>
       </div>`;

@@ -1945,10 +1945,11 @@ function closeOwnerMap() {
 async function loadOwnerMapJobs() {
   if (!_ownerMap) return;
   const center = _ownerMap.getCenter();
-  const { data } = await db.rpc('nearby_jobs', {
+  const { data, error: mapErr } = await db.rpc('nearby_jobs', {
     user_lat: center.getLat(), user_lng: center.getLng(),
     radius_meters: 5000, job_category: null
-  }).catch(() => ({ data: [] }));
+  });
+  if (mapErr) { console.error('[ownerMap] nearby_jobs error:', mapErr); }
 
   (data || []).forEach(job => {
     const pos = new kakao.maps.LatLng(job.lat, job.lng);
