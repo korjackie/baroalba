@@ -153,12 +153,12 @@
     }
     .marker-bubble {
       background: #fff;
-      border-radius: 10px;
-      padding: 5px 9px 4px;
-      border: 2.5px solid var(--red);
+      border-radius: 14px;
+      padding: 11px 18px 10px;
+      border: 3px solid var(--red);
       white-space: nowrap;
       line-height: 1.2;
-      min-width: 72px;
+      min-width: 110px;
       text-align: center;
     }
     .marker-bubble.urgent { background: var(--red); border-color: var(--red); }
@@ -167,20 +167,20 @@
     .marker-bubble.open   { border-color: var(--open); }
     .marker-bubble.open .mk-wage { color: var(--open); }
     .marker-bubble.open .mk-sub  { color: #888; }
-    .marker-bubble.errand { background: #F3E8FF; border-color: #9333EA; }
-    .marker-bubble.errand .mk-wage { color: #7C3AED; }
-    .marker-bubble.errand .mk-sub  { color: #9333EA; }
-    .mk-wage { font-size: 13px; font-weight: 900; color: var(--red); display: block; }
-    .mk-sub  { font-size: 9px; font-weight: 700; color: #888; display: block; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+    .marker-bubble.errand { background: #7C3AED; border-color: #7C3AED; }
+    .marker-bubble.errand .mk-wage { color: #fff; }
+    .marker-bubble.errand .mk-sub  { color: rgba(255,255,255,0.85); }
+    .mk-wage { font-size: 20px; font-weight: 900; color: var(--red); display: block; }
+    .mk-sub  { font-size: 12px; font-weight: 700; color: #888; display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
     .marker-tail {
       width: 0; height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-      border-top: 8px solid var(--red);
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 11px solid var(--red);
       margin-top: -1px;
     }
     .marker-tail.open   { border-top-color: var(--open); }
-    .marker-tail.errand { border-top-color: #9333EA; }
+    .marker-tail.errand { border-top-color: #7C3AED; }
     .surge-badge {
       position: absolute;
       top: -8px; right: -8px;
@@ -673,7 +673,10 @@
         <span class="detail-status" id="d-status"></span>
         <span class="detail-cat" id="d-cat"></span>
       </div>
-      <div class="detail-title" id="d-title"></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span id="d-type-badge"></span>
+        <div class="detail-title" id="d-title" style="margin:0"></div>
+      </div>
       <div class="detail-biz">
         <span id="d-biz"></span>
         <span>·</span>
@@ -1310,6 +1313,16 @@ function openDetail(jobId) {
   document.getElementById('d-status').className = `detail-status ${isUrgent ? 'status-urgent' : 'status-open'}`;
   document.getElementById('d-cat').textContent = job.category;
   document.getElementById('d-title').textContent = job.title;
+  const typeBadgeEl = document.getElementById('d-type-badge');
+  if (job.category === '심부름') {
+    typeBadgeEl.innerHTML = '<span style="background:#F3E8FF;color:#7C3AED;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">💜 심부름</span>';
+  } else if (job.work_type === 'short') {
+    typeBadgeEl.innerHTML = '<span style="background:#EFF6FF;color:#3B82F6;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">📅 단기</span>';
+  } else if (job.work_type === 'regular') {
+    typeBadgeEl.innerHTML = '<span style="background:#F0FFF4;color:#16a34a;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">🔄 정기</span>';
+  } else {
+    typeBadgeEl.innerHTML = '';
+  }
   document.getElementById('d-biz').textContent = job.biz_name;
   document.getElementById('d-rating').textContent = `★ ${job.biz_rating || '-'} (${job.biz_reviews || 0}개)`;
   document.getElementById('d-wage').textContent = job.current_wage.toLocaleString() + '원';
