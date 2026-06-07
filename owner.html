@@ -126,9 +126,10 @@
     /* ── 공고 등록 바텀시트 + 공용 모달 오버레이 ── */
     .sheet-overlay, .modal-overlay {
       display:none; position:fixed; inset:0;
-      background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end;
+      background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end; justify-content:center;
     }
     .sheet-overlay.open, .modal-overlay.open { display:flex; }
+    .sheet-overlay > div, .modal-overlay > div { max-width:600px; width:100%; }
     .form-sheet {
       background:#fff; border-radius:24px 24px 0 0; width:100%;
       max-height:90vh; overflow-y:auto; padding:0 0 40px;
@@ -658,6 +659,25 @@
         <div style="font-size:12px;color:#aaa;font-weight:700;margin-bottom:4px">업주 계정</div>
         <div style="font-size:15px;font-weight:800;color:#222" id="settings-name">-</div>
         <div style="font-size:12px;color:#aaa;margin-top:2px" id="settings-email">-</div>
+      </div>
+      <!-- 업체 정보 편집 -->
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">🏪 업체 정보</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">업체명</label>
+            <input id="settings-biz-name" type="text" placeholder="업체 이름" style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;background:#fff">
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">연락처</label>
+            <input id="settings-biz-phone" type="tel" placeholder="010-0000-0000" style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;background:#fff">
+          </div>
+          <div>
+            <label style="font-size:12px;color:#888;font-weight:700;display:block;margin-bottom:4px">업체 소개</label>
+            <textarea id="settings-biz-desc" placeholder="업체를 간단히 소개해주세요" maxlength="200" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;box-sizing:border-box;font-family:inherit;background:#fff"></textarea>
+          </div>
+          <button onclick="saveOwnerSettingsProfile()" style="width:100%;padding:11px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+        </div>
       </div>
       <!-- 비밀번호 변경 -->
       <button onclick="toggleOwnerPwForm()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🔑 비밀번호 변경</button>
@@ -2541,11 +2561,30 @@ function openOwnerSettings() {
     const meta = currentUser.user_metadata || {};
     document.getElementById('settings-name').textContent = bizRecord?.name || meta.full_name || '업주';
     document.getElementById('settings-email').textContent = currentUser.email || '';
+    // 업체 정보 미리 채우기
+    document.getElementById('settings-biz-name').value  = bizRecord?.name || '';
+    document.getElementById('settings-biz-phone').value = bizRecord?.phone || '';
+    document.getElementById('settings-biz-desc').value  = bizRecord?.description || '';
     const isAdmin = currentUser.email === 'nicepkw@gmail.com';
     document.getElementById('admin-cat-section').style.display = isAdmin ? 'block' : 'none';
     if (isAdmin) renderAdminCatList();
   }
   document.getElementById('settings-overlay').classList.add('open');
+}
+
+async function saveOwnerSettingsProfile() {
+  if (!bizRecord) return;
+  const name  = document.getElementById('settings-biz-name').value.trim();
+  const phone = document.getElementById('settings-biz-phone').value.trim();
+  const desc  = document.getElementById('settings-biz-desc').value.trim();
+  const { error } = await db.from('businesses')
+    .update({ name: name || bizRecord.name, phone, description: desc })
+    .eq('id', bizRecord.id);
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  bizRecord = { ...bizRecord, name: name || bizRecord.name, phone, description: desc };
+  document.getElementById('biz-name').textContent = bizRecord.name;
+  document.getElementById('settings-name').textContent = bizRecord.name;
+  showToast('✅ 업체 정보가 저장됐습니다');
 }
 
 function toggleOwnerPwForm() {
