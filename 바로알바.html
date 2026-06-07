@@ -1389,7 +1389,7 @@ function renderList() {
   renderTodayPick();
 
   if (jobs.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">😅</div><div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내 공고가 없어요</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">😅</div><div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내 공고가 없어요<br><span style="font-size:10px;color:#bbb">📍${mapCenter.lat.toFixed(4)},${mapCenter.lng.toFixed(4)} / 반경${(currentRadius/1000).toFixed(0)}km</span></div></div>`;
     return;
   }
 
