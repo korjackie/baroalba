@@ -534,6 +534,11 @@
 </div>
 
 <script>
+// ── 잔여 쿼리파라미터 정리 (auth_type=reprompt 등 Naver가 반환한 쿼리 제거) ──
+if (window.location.search) {
+  history.replaceState({}, '', window.location.pathname + window.location.hash);
+}
+
 // ── 해시 최우선 캡처 (Supabase가 지우기 전에) ─────────────
 const _initHash = window.location.hash;
 // URLSearchParams로 정확히 파싱 (token_type= 와 type= 혼동 방지)
