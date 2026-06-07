@@ -773,6 +773,9 @@ function renderPostings() {
         <div class="posting-top" style="margin-bottom:8px">
           <div>
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              ${p.work_type === 'errand'  ? '<span style="font-size:10px;font-weight:900;background:#7C3AED;color:#fff;padding:2px 7px;border-radius:6px;white-space:nowrap">🏃 심부름</span>' : ''}
+              ${p.work_type === 'short'   ? '<span style="font-size:10px;font-weight:900;background:#EFF6FF;color:#3B82F6;padding:2px 7px;border-radius:6px;white-space:nowrap">📅 단기</span>' : ''}
+              ${p.work_type === 'regular' ? '<span style="font-size:10px;font-weight:900;background:#F0FFF4;color:#16a34a;padding:2px 7px;border-radius:6px;white-space:nowrap">🔄 정기</span>' : ''}
               <div class="posting-title">${p.title}</div>
               ${jobTypeBadge}
             </div>
