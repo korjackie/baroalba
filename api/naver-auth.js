@@ -36,14 +36,15 @@ export default async function handler(req, res) {
     // 네이버 성별: 'M'→'male', 'F'→'female', 'U'→미제공
     const gender = naverGender === 'M' ? 'male' : naverGender === 'F' ? 'female' : null;
 
-    // ── 2. 기존 계정 로그인 시도 (가장 빠른 경로) ────────────
+    // ── 2. 기존 계정 확인 (비밀번호 로그인은 클라이언트에서 SDK로 처리) ────
     const siRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: 'POST',
       headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     const siData = await siRes.json();
-    if (siData.access_token) return res.json({ session: siData });
+    // 기존 계정 로그인 성공 → 클라이언트가 signInWithPassword 로 직접 처리
+    if (siData.access_token) return res.json({ email, password });
 
     // ── 3. Admin API로 기존 유저 찾기 ────────────────────────
     const adminHeaders = {
@@ -92,17 +93,9 @@ export default async function handler(req, res) {
       if (!crRes.ok) return res.status(500).json({ error: '계정 생성 실패: ' + JSON.stringify(crData) });
     }
 
-    // ── 4. 확인된 계정으로 최종 로그인 ──────────────────────
-    const si2Res  = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const si2Data = await si2Res.json();
-
-    if (si2Data.access_token) return res.json({ session: si2Data });
-
-    return res.status(500).json({ error: '최종 로그인 실패: ' + JSON.stringify(si2Data) });
+    // ── 4. 계정 준비 완료 → 클라이언트가 signInWithPassword로 직접 처리
+    // (setSession 대신 SDK 직접 로그인으로 403 문제 해결)
+    return res.json({ email, password });
 
   } catch (e) {
     console.error('naver-auth error:', e);
