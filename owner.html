@@ -950,10 +950,12 @@ function renderPostings() {
             <span class="meta-chip ${statusCls}">${statusLabel}</span>
             ${isExpired ? `<span class="meta-chip" style="background:#FEF2F2;color:#EF4444;font-weight:800">⏰ 기간만료</span>` : `<span class="meta-chip">⏰ ${start}</span>`}
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:12px;font-weight:700;color:#555">👥 지원자 <span id="app-count-${p.id}" style="color:var(--red)">...</span>명</span>
-            <span style="font-size:14px;color:#bbb">›</span>
-          </div>
+          <!-- 지원자 수 칩: 클릭 시 인라인 펼침 (카드 상세와 별도) -->
+          <button onclick="event.stopPropagation();toggleApplicantInline('${p.id}')"
+            style="display:flex;align-items:center;gap:5px;background:#f5f5f5;border:none;border-radius:20px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;color:#555">
+            👥 <span id="app-count-${p.id}" style="color:var(--red)">...</span>명
+            <span id="chevron-app-${p.id}" style="font-size:11px;color:#bbb;transition:transform 0.2s">▼</span>
+          </button>
         </div>
         <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
           ${createdStr ? `<span style="font-size:11px;color:#aaa;font-weight:600">📌 ${createdStr}</span>` : ''}
@@ -962,10 +964,24 @@ function renderPostings() {
           ${workDaysStr ? `<span style="font-size:11px;color:#16a34a;font-weight:700">🔄 ${workDaysStr}</span>` : ''}
         </div>
       </div>
+
+      <!-- 인라인 지원자 목록 (토글) -->
+      <div id="inline-apps-${p.id}" style="display:none;border-top:1px solid #f5f5f5;padding-top:12px;margin-top:10px">
+        <div id="inline-apps-body-${p.id}"></div>
+      </div>
     </div>`;
   }).join('');
 
   postings.forEach(p => loadApplicantCount(p.id));
+}
+
+function toggleApplicantInline(jobId) {
+  const box     = document.getElementById(`inline-apps-${jobId}`);
+  const chevron = document.getElementById(`chevron-app-${jobId}`);
+  const isOpen  = box.style.display === 'none';
+  box.style.display = isOpen ? 'block' : 'none';
+  chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
+  if (isOpen) loadInlineApplicants(jobId, `inline-apps-body-${jobId}`);
 }
 
 function openPostingDetail(jobId) {
@@ -1108,8 +1124,9 @@ async function loadPostingDetailApplicants(jobId) {
   }).join('');
 }
 
-async function loadInlineApplicants(jobId) {
-  const el = document.getElementById(`applicants-inline-${jobId}`);
+async function loadInlineApplicants(jobId, targetId) {
+  const elId = targetId || `applicants-inline-${jobId}`;
+  const el = document.getElementById(elId);
   if (!el) return;
   const { data: apps } = await db.from('applications')
     .select('*, workers(id, name, phone, rating, review_count, noshow_count)')
