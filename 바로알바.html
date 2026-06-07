@@ -898,6 +898,29 @@
         <div id="worker-profile-edit" style="display:none;margin-bottom:14px">
           <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">📋 내 프로필</div>
           <div style="display:flex;flex-direction:column;gap:8px">
+            <!-- 프로필 사진 -->
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
+              <div id="avatar-preview" style="width:64px;height:64px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:6px">프로필 사진</div>
+                <label style="display:inline-block;padding:7px 14px;background:var(--red);color:#fff;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">
+                  사진 변경
+                  <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                </label>
+              </div>
+            </div>
+            <!-- 보건증 -->
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
+              <div style="font-size:28px;flex-shrink:0">📋</div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:2px">보건증 <span style="font-size:10px;color:#aaa;font-weight:600">(업주에게만 공개)</span></div>
+                <div id="health-cert-status" style="font-size:11px;color:#aaa;margin-bottom:6px">미등록</div>
+                <label style="display:inline-block;padding:7px 14px;background:#f0f0f0;color:#555;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">
+                  파일 업로드
+                  <input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadHealthCert(this)">
+                </label>
+              </div>
+            </div>
             <div style="display:flex;gap:8px;align-items:center">
               <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">생년월일</label>
               <div style="flex:1;position:relative">
@@ -1237,6 +1260,19 @@ async function loadJobs() {
     if (error) throw error;
 
     let result = data || [];
+
+    // 이미 지원한 공고 제외
+    if (currentUser && !isGuest) {
+      const { data: myApps } = await db.from('applications')
+        .select('job_posting_id')
+        .eq('worker_id', (await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single()).data?.id || '')
+        .not('status', 'in', '("cancelled")');
+      if (myApps?.length) {
+        const appliedIds = new Set(myApps.map(a => a.job_posting_id));
+        result = result.filter(j => !appliedIds.has(j.id));
+      }
+    }
+
     if (currentWorkType === 'errand') result = result.filter(j => j.work_type === 'errand');
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
     if (sortByWage) result = result.sort((a,b) => b.current_wage - a.current_wage);
@@ -1644,7 +1680,7 @@ async function loadMyApplications() {
   }
 
   const { data: apps } = await db.from('applications')
-    .select('*, job_postings(title, current_wage, category, businesses(name))')
+    .select('*, job_postings(title, current_wage, duration_hours, start_time, work_type, work_end_date, work_days, category, businesses(name, phone))')
     .eq('worker_id', worker.id)
     .order('applied_at', { ascending: false });
 
@@ -1668,16 +1704,38 @@ async function loadMyApplications() {
     const s = STATUS[a.status] || { label: a.status || '검토중', color: '#888', bg: '#f5f5f5' };
     const canCancel  = a.status === 'pending' || a.status === 'reviewing';
     const isAccepted = a.status === 'accepted';
+    // 금액 표기: 시급 × 시간
+    const wageStr = job.current_wage
+      ? job.duration_hours
+        ? `${job.current_wage.toLocaleString()}원/시 · ${job.duration_hours}시간 (총 ${(job.current_wage * job.duration_hours).toLocaleString()}원 예상)`
+        : `${job.current_wage.toLocaleString()}원/시`
+      : '';
+    // 근무일시
+    const startStr = (() => {
+      if (!job.start_time) return '';
+      const d = new Date(job.start_time);
+      return `${d.getMonth()+1}/${d.getDate()}(${['일','월','화','수','목','금','토'][d.getDay()]}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    })();
+    const workEndStr = job.work_end_date ? `~${job.work_end_date.slice(5).replace('-','/')}` : '';
+    const workDaysStr = job.work_days || '';
+    const appliedStr = a.applied_at ? (() => { const d = new Date(a.applied_at); return `${d.getMonth()+1}/${d.getDate()} 지원`; })() : '';
     return `
     <div onclick="openApplicationJobDetail('${a.job_posting_id}')" style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:3px">${job.title || '공고'}</div>
-          <div style="font-size:13px;color:#888;margin-bottom:6px">${biz.name || ''}</div>
-          <div style="font-size:14px;font-weight:700;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원/시' : ''}</div>
+          <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:2px">${job.title || '공고'}</div>
+          <div style="font-size:13px;color:#888">${biz.name || ''}</div>
         </div>
         <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">${s.label}</div>
       </div>
+      <div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px">${wageStr}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px">
+        ${startStr ? `<span style="font-size:12px;color:#555;font-weight:700;background:#f8f8f8;padding:4px 8px;border-radius:8px">🕐 ${startStr}</span>` : ''}
+        ${workEndStr ? `<span style="font-size:12px;color:#3B82F6;font-weight:700;background:#EFF6FF;padding:4px 8px;border-radius:8px">📅 ${workEndStr}까지</span>` : ''}
+        ${workDaysStr ? `<span style="font-size:12px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:4px 8px;border-radius:8px">🔄 ${workDaysStr}</span>` : ''}
+        ${appliedStr ? `<span style="font-size:11px;color:#aaa;font-weight:600;padding:4px 0">📌 ${appliedStr}</span>` : ''}
+      </div>
+      ${biz.phone ? `<div style="font-size:12px;color:#888;margin-top:4px">📞 ${biz.phone}</div>` : ''}
       ${isAccepted ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">💬 업주에게 문의하기</button>` : ''}
       ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
@@ -2732,9 +2790,18 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills, photo_url')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
+  // 프로필 사진
+  if (w.photo_url) {
+    const preview = document.getElementById('avatar-preview');
+    if (preview) preview.innerHTML = `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover">`;
+  }
+  // 보건증 상태 확인
+  const { data: certFiles } = await db.storage.from('health-certs').list(currentUser.id);
+  const certEl = document.getElementById('health-cert-status');
+  if (certEl && certFiles?.length) { certEl.textContent = '✅ 등록됨'; certEl.style.color = '#16a34a'; }
   const birthEl = document.getElementById('worker-birth');
   if (w.birth_date) {
     birthEl.value = w.birth_date;
@@ -2794,6 +2861,12 @@ async function loadWorkerGrade() {
     badge.style.color = '#F59E0B';
     progress.innerHTML = `<span style="color:#22c55e;font-weight:700">✅ 번개지원 사용 가능</span> · 하루 1회 제한`;
     if (inlineBadge) { inlineBadge.textContent = '⚡ 번개'; inlineBadge.style.cssText += ';background:#FEF3C7;color:#D97706;display:inline-block'; }
+    // 번개등급 신규 달성 감지 → 알림
+    const gradeKey = `quick_grade_notified_${currentUser?.id}`;
+    if (!localStorage.getItem(gradeKey)) {
+      localStorage.setItem(gradeKey, '1');
+      setTimeout(() => showToast('⚡ 축하합니다! 번개등급을 달성했습니다!'), 800);
+    }
   } else {
     badge.innerHTML = '🪪 일반등급';
     badge.style.color = '#888';
@@ -2856,6 +2929,40 @@ function updateAgePreview(val) {
   if (val.length !== 6) { preview.textContent = ''; return; }
   const age = calcAgeFromBirth(val);
   preview.textContent = age ? `만 ${age}세` : '';
+}
+
+// ── Storage 업로드 ────────────────────────────────────
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  if (!file || !currentUser) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('5MB 이하 이미지만 업로드 가능합니다'); return; }
+  showToast('업로드 중...');
+  const ext = file.name.split('.').pop();
+  const path = `${currentUser.id}/avatar.${ext}`;
+  const { error } = await db.storage.from('avatars').upload(path, file, { upsert: true });
+  if (error) { showToast('업로드 실패: ' + error.message); return; }
+  const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
+  await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
+  const preview = document.getElementById('avatar-preview');
+  if (preview) { preview.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`; }
+  // 헤더 아바타도 갱신
+  const hdr = document.getElementById('profile-avatar');
+  if (hdr) hdr.src = publicUrl + '?t=' + Date.now();
+  showToast('✅ 프로필 사진이 업데이트됐습니다');
+}
+
+async function uploadHealthCert(input) {
+  const file = input.files[0];
+  if (!file || !currentUser) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 파일만 업로드 가능합니다'); return; }
+  showToast('업로드 중...');
+  const ext = file.name.split('.').pop();
+  const path = `${currentUser.id}/health-cert.${ext}`;
+  const { error } = await db.storage.from('health-certs').upload(path, file, { upsert: true });
+  if (error) { showToast('업로드 실패: ' + error.message); return; }
+  const statusEl = document.getElementById('health-cert-status');
+  if (statusEl) { statusEl.textContent = '✅ 등록됨'; statusEl.style.color = '#16a34a'; }
+  showToast('✅ 보건증이 등록됐습니다');
 }
 
 // ── 스킬 태그 ──────────────────────────────────────────
