@@ -1114,6 +1114,7 @@ async function loadApplicants() {
   const { data, error } = await db.from('applications')
     .select('*, workers(id, name, phone, rating, review_count, noshow_count, skills), job_postings(title)')
     .in('job_posting_id', jobIds)
+    .order('is_quick', { ascending: false })
     .order('applied_at', { ascending: false });
 
   if (error) { showToast('지원자 불러오기 실패'); return; }
@@ -1134,7 +1135,9 @@ function renderApplicants(apps) {
     <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
       <div class="applicant-avatar">👤</div>
       <div class="applicant-info">
-        <div class="applicant-name">${w?.name || '이름없음'}</div>
+        <div class="applicant-name">
+          ${a.is_quick ? '<span style="font-size:11px;font-weight:900;background:#FFF9E6;color:#D97706;padding:2px 7px;border-radius:6px;margin-right:4px">⚡ 번개지원</span>' : ''}${w?.name || '이름없음'}
+        </div>
         <div class="applicant-meta">
           ★ ${w?.rating || '-'} · ${a.job_postings?.title || ''}
           ${w?.phone ? ' · ' + w.phone : ''}

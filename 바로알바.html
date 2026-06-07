@@ -167,6 +167,9 @@
     .marker-bubble.open   { border-color: var(--open); }
     .marker-bubble.open .mk-wage { color: var(--open); }
     .marker-bubble.open .mk-sub  { color: #888; }
+    .marker-bubble.errand { background: #F3E8FF; border-color: #9333EA; }
+    .marker-bubble.errand .mk-wage { color: #7C3AED; }
+    .marker-bubble.errand .mk-sub  { color: #9333EA; }
     .mk-wage { font-size: 13px; font-weight: 900; color: var(--red); display: block; }
     .mk-sub  { font-size: 9px; font-weight: 700; color: #888; display: block; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
     .marker-tail {
@@ -176,7 +179,8 @@
       border-top: 8px solid var(--red);
       margin-top: -1px;
     }
-    .marker-tail.open { border-top-color: var(--open); }
+    .marker-tail.open   { border-top-color: var(--open); }
+    .marker-tail.errand { border-top-color: #9333EA; }
     .surge-badge {
       position: absolute;
       top: -8px; right: -8px;
@@ -1202,18 +1206,19 @@ function renderMarkers() {
     })();
     const bizName = (job.biz_name || job.title || '').slice(0, 8);
 
+    const isErrand = job.work_type === 'errand';
     const surgeHtml = hasSurge
       ? `<div class="surge-badge">↑${(job.wage_delta/1000).toFixed(0)}k</div>` : '';
-    const statusCls = isUrgent ? 'urgent' : 'open';
-    const tailCls   = isUrgent ? '' : 'open';
+    const statusCls = isErrand ? 'errand' : (isUrgent ? 'urgent' : 'open');
+    const tailCls   = isErrand ? 'errand' : (isUrgent ? '' : 'open');
 
     const content = `
       <div class="marker-wrap" onclick="openDetail('${job.id}')">
         ${surgeHtml}
         <div class="marker-bubble ${statusCls}">
-          <span class="mk-wage">${wageStr}</span>
-          <span class="mk-sub">${bizName}</span>
-          ${startFmt ? `<span class="mk-sub">⏰ ${startFmt}</span>` : ''}
+          <span class="mk-wage">${wageStr}${isErrand ? '<span style="font-size:8px">/건</span>' : ''}</span>
+          <span class="mk-sub">${isErrand ? '🏃 ' : ''}${bizName}</span>
+          ${!isErrand && startFmt ? `<span class="mk-sub">⏰ ${startFmt}</span>` : ''}
         </div>
         <div class="marker-tail ${tailCls}"></div>
       </div>`;
@@ -1267,7 +1272,9 @@ function renderList() {
       </div>
       ${surgeTimer}
       <div class="card-tags">
-        ${job.work_type === 'errand' ? '<span class="tag" style="background:#FFF0F5;color:#E91E8C;font-weight:900">🏃 심부름</span>' : ''}
+        ${job.work_type === 'errand'  ? '<span class="tag" style="background:#FFF0F5;color:#E91E8C;font-weight:900">🏃 심부름</span>' : ''}
+        ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:900">📅 단기</span>' : ''}
+        ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:900">🔄 정기</span>' : ''}
         ${isUrgent ? '<span class="tag urgent-tag">🔥 급구</span>' : ''}
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500">⚡ 번개</span>' : ''}
         ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a">💴 당일정산</span>' : ''}
