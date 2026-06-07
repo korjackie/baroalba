@@ -698,8 +698,27 @@
         </div>
         <!-- 장소 추가 폼 (숨김) -->
         <div id="add-place-form" style="display:none;margin-top:10px;padding:12px;background:#fff;border-radius:12px;border:1.5px solid #f0f0f0">
-          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">네이버 플레이스 URL로 추가</div>
-          <input id="place-naver-url" type="url" placeholder="https://naver.me/... 또는 map.naver.com/place/..." style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">업체 장소 추가</div>
+          <!-- 네이버 플레이스 검색 -->
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <input id="place-search-q" placeholder="업체명 검색 (예: 부산 사하구 스타벅스)"
+                   onkeydown="if(event.key==='Enter')searchNaverPlaceForAdd()"
+                   style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
+            <button id="place-search-add-btn" onclick="searchNaverPlaceForAdd()" style="padding:9px 12px;background:#1DB954;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+          </div>
+          <div id="place-add-results" style="display:none;background:#f8f8f8;border-radius:10px;margin-bottom:8px;overflow:hidden;max-height:220px;overflow-y:auto"></div>
+          <div id="place-add-selected" style="display:none;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+            <div style="font-size:11px;color:#3B82F6;font-weight:700;margin-bottom:2px">✅ 선택된 장소</div>
+            <div id="place-add-selected-name" style="font-size:13px;font-weight:800;color:#222"></div>
+            <div id="place-add-selected-addr" style="font-size:11px;color:#888;margin-top:2px"></div>
+          </div>
+          <!-- 구분선 -->
+          <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+            <div style="flex:1;height:1px;background:#eee"></div>
+            <span style="font-size:11px;color:#bbb;font-weight:700">또는 직접 입력</span>
+            <div style="flex:1;height:1px;background:#eee"></div>
+          </div>
+          <input id="place-naver-url" type="url" placeholder="네이버 플레이스 URL (https://naver.me/...)" style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:6px">
           <input id="place-name" type="text" placeholder="장소 이름 (예: 바로알바 본사)" style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:6px">
           <div style="display:flex;gap:6px;margin-bottom:4px">
             <input id="place-address" type="text" placeholder="기본주소 검색 (구·동·번지)" style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
@@ -2675,12 +2694,77 @@ function renderMyPlacesList() {
 
 function showAddPlaceForm() {
   document.getElementById('add-place-form').style.display = 'block';
+  document.getElementById('place-search-q').value = '';
+  document.getElementById('place-add-results').style.display = 'none';
+  document.getElementById('place-add-selected').style.display = 'none';
   document.getElementById('place-naver-url').value = '';
   document.getElementById('place-name').value = '';
   document.getElementById('place-address').value = '';
   document.getElementById('place-address-detail').value = '';
   document.getElementById('place-coords-preview').style.display = 'none';
   _addPlaceLat = null; _addPlaceLng = null;
+}
+
+async function searchNaverPlaceForAdd(start = 1) {
+  const query = document.getElementById('place-search-q').value.trim();
+  if (!query) { showToast('업체명을 입력해주세요\n예: 부산 사하구 스타벅스'); return; }
+  const btn = document.getElementById('place-search-add-btn');
+  btn.textContent = '검색 중...'; btn.disabled = true;
+  try {
+    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}&start=${start}`, { cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok || !data.items?.length) {
+      if (start === 1) showToast('검색 결과가 없어요.\n지역명+업체명으로 검색해보세요\n예: 서울 강남 스타벅스');
+      else showToast('마지막 페이지입니다');
+      return;
+    }
+    renderPlaceAddResults(data.items, query, start, data.total || 0);
+  } catch(e) {
+    showToast('검색 중 오류가 발생했어요');
+  } finally {
+    btn.textContent = '🔍 검색'; btn.disabled = false;
+  }
+}
+
+function renderPlaceAddResults(items, query, start = 1, total = 0) {
+  const box = document.getElementById('place-add-results');
+  box.style.display = 'block';
+  window._naverPlaceAddItems = items;
+  const end = start + items.length - 1;
+  const hasPrev = start > 1;
+  const hasNext = total > end;
+  const header = `<div style="padding:7px 12px;font-size:11px;color:#888;border-bottom:1px solid #eee">"${query}" ${total}개 · ${start}~${end}번째</div>`;
+  const pageBar = (hasPrev || hasNext) ? `
+    <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-top:1px solid #eee;background:#fafafa">
+      ${hasPrev ? `<button onclick="searchNaverPlaceForAdd(${Math.max(1,start-5)})" style="flex:1;padding:6px;border:1.5px solid #ddd;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:#fff">◀ 이전</button>` : `<div style="flex:1"></div>`}
+      <span style="font-size:10px;color:#bbb">${Math.ceil(start/5)}/${Math.ceil(total/5)}p</span>
+      ${hasNext ? `<button onclick="searchNaverPlaceForAdd(${start+5})" style="flex:1;padding:6px;border:1.5px solid #ddd;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:#fff">다음 ▶</button>` : `<div style="flex:1"></div>`}
+    </div>` : '';
+  box.innerHTML = header + items.map((item, i) => `
+    <div onclick="selectPlaceForAdd(${i})" style="padding:10px 12px;border-bottom:1px solid #eee;cursor:pointer" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+        <span style="font-size:13px;font-weight:800;color:#222">${item.title}</span>
+        ${item.link ? '<span style="font-size:10px;font-weight:700;background:#E6F4EA;color:#1a7d3b;padding:2px 5px;border-radius:5px">N</span>' : ''}
+      </div>
+      <div style="font-size:11px;color:#aaa">${item.roadAddress || item.address || ''}</div>
+    </div>`).join('') + pageBar;
+}
+
+function selectPlaceForAdd(idx) {
+  const item = window._naverPlaceAddItems[idx];
+  _addPlaceLat = item.lat;
+  _addPlaceLng = item.lng;
+  document.getElementById('place-name').value = item.title;
+  document.getElementById('place-naver-url').value = item.link || '';
+  document.getElementById('place-address').value = item.roadAddress || item.address || '';
+  document.getElementById('place-add-results').style.display = 'none';
+  const selBox = document.getElementById('place-add-selected');
+  selBox.style.display = 'block';
+  document.getElementById('place-add-selected-name').textContent = item.title;
+  document.getElementById('place-add-selected-addr').textContent = item.roadAddress || item.address || '';
+  const preview = document.getElementById('place-coords-preview');
+  preview.textContent = `✅ ${item.roadAddress || item.address}`;
+  preview.style.display = 'block';
 }
 
 function geocodePlaceAddress() {
@@ -2713,7 +2797,7 @@ async function savePlaceToList() {
   const address    = detailAddr ? `${baseAddr} ${detailAddr}` : baseAddr;
   const naverUrl   = document.getElementById('place-naver-url').value.trim();
   if (!name) { showToast('장소 이름을 입력해주세요'); return; }
-  if (!_addPlaceLat || !_addPlaceLng) { showToast('기본주소 찾기를 먼저 해주세요'); return; }
+  if (!_addPlaceLat || !_addPlaceLng) { showToast('업체명 검색으로 장소를 선택하거나\n기본주소 📍찾기를 해주세요'); return; }
 
   const isFirst = _bizPlaces.length === 0;
   const { error } = await db.from('business_places').insert({
