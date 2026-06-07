@@ -886,6 +886,13 @@ function renderPostings() {
     const statusLabel = p.status === 'urgent' ? '🔥 급구' : p.status === 'open' ? '모집중' : '마감';
     const statusCls = p.status === 'urgent' ? 'urgent' : p.status === 'open' ? 'open' : 'closed';
     const start = p.start_time ? formatTime(p.start_time) : '미정';
+    // 날짜 표시 헬퍼
+    const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
+    const fmtDay  = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}`; };
+    const createdStr = p.created_at ? fmtDay(p.created_at) + ' 등록' : '';
+    const workTimeStr = p.start_time ? fmtDate(p.start_time) : '';
+    const workRangeStr = p.work_end_date ? `~${p.work_end_date.slice(5).replace('-','/')}` : '';
+    const workDaysStr = p.work_days || '';
     // 공고 유형 배지
     const cat = p.category || '';
     const jobTypeBadge = cat.startsWith('🔧')||cat.startsWith('⚡')||cat.startsWith('🏠')||cat.startsWith('🚚')||cat.startsWith('🛋')||cat.startsWith('🔑')||cat.startsWith('🧽')||cat.startsWith('🔨')
@@ -924,6 +931,12 @@ function renderPostings() {
             <span style="font-size:12px;font-weight:700;color:#555">👥 지원자 <span id="app-count-${p.id}" style="color:var(--red)">...</span>명</span>
             <span id="chevron-${p.id}" style="font-size:12px;color:#bbb;transition:transform 0.2s">▼</span>
           </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+          ${createdStr ? `<span style="font-size:11px;color:#aaa;font-weight:600">📌 ${createdStr}</span>` : ''}
+          ${workTimeStr ? `<span style="font-size:11px;color:#666;font-weight:700">🕐 ${workTimeStr}</span>` : ''}
+          ${workRangeStr ? `<span style="font-size:11px;color:#3B82F6;font-weight:700">📅 ${workRangeStr}까지</span>` : ''}
+          ${workDaysStr ? `<span style="font-size:11px;color:#16a34a;font-weight:700">🔄 ${workDaysStr}</span>` : ''}
         </div>
       </div>
 

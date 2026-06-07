@@ -882,6 +882,18 @@
           <div id="worker-grade-progress" style="margin-top:8px;padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#888;line-height:1.8"></div>
         </div>
 
+        <!-- 프로필 완성도 게이지 -->
+        <div id="profile-completion-wrap" style="display:none;margin-bottom:14px;background:#f8f8f8;border-radius:14px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:800;color:#555">📊 프로필 완성도</span>
+            <span id="completion-pct" style="font-size:13px;font-weight:900;color:var(--red)">0%</span>
+          </div>
+          <div style="height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden">
+            <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s ease;width:0%"></div>
+          </div>
+          <div id="completion-items" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+
         <!-- 알바생 프로필 편집 (worker 역할만 표시) -->
         <div id="worker-profile-edit" style="display:none;margin-bottom:14px">
           <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">📋 내 프로필</div>
@@ -917,6 +929,16 @@
             <div>
               <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">경력/특기</div>
               <textarea id="worker-experience" placeholder="관련 경력이나 보유 스킬을 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
+            </div>
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:6px">🏷️ 보유 스킬 태그</div>
+              <div id="skill-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:28px"></div>
+              <div style="display:flex;gap:6px">
+                <input id="skill-input" type="text" placeholder="스킬 입력 후 추가 (예: 바리스타)" maxlength="20"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();addSkillTag()}"
+                  style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
+                <button onclick="addSkillTag()" style="padding:9px 14px;background:#f0f0f0;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#555">추가</button>
+              </div>
             </div>
             <button onclick="saveWorkerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
           </div>
@@ -2710,7 +2732,7 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   const birthEl = document.getElementById('worker-birth');
@@ -2720,6 +2742,8 @@ async function loadWorkerProfileForm() {
   } else if (w.age) {
     birthEl.placeholder = `저장된 나이: 만 ${w.age}세 (생년월일 입력 시 갱신)`;
   }
+  _workerSkills = Array.isArray(w.skills) ? [...w.skills] : [];
+  renderSkillTags();
   const meta = currentUser?.user_metadata || {};
   const rawPhone = w.phone || meta.phone || '';
   document.getElementById('worker-phone').value = rawPhone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3');
@@ -2834,6 +2858,57 @@ function updateAgePreview(val) {
   preview.textContent = age ? `만 ${age}세` : '';
 }
 
+// ── 스킬 태그 ──────────────────────────────────────────
+let _workerSkills = [];
+
+function renderSkillTags() {
+  const el = document.getElementById('skill-tags');
+  if (!el) return;
+  el.innerHTML = _workerSkills.map((s, i) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid #eee;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;color:#444">
+      ${s}
+      <button onclick="removeSkillTag(${i})" style="background:none;border:none;color:#bbb;cursor:pointer;font-size:14px;line-height:1;padding:0">×</button>
+    </span>`
+  ).join('');
+  updateProfileCompletion();
+}
+
+function addSkillTag() {
+  const input = document.getElementById('skill-input');
+  const val = input.value.trim();
+  if (!val || _workerSkills.includes(val) || _workerSkills.length >= 15) return;
+  _workerSkills.push(val);
+  input.value = '';
+  renderSkillTags();
+}
+
+function removeSkillTag(idx) {
+  _workerSkills.splice(idx, 1);
+  renderSkillTags();
+}
+
+function updateProfileCompletion() {
+  const wrap = document.getElementById('profile-completion-wrap');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  const checks = [
+    { label: '생년월일', ok: !!document.getElementById('worker-birth')?.value },
+    { label: '연락처',   ok: !!document.getElementById('worker-phone')?.value },
+    { label: '성별',     ok: !!window._workerGender },
+    { label: '거주지',   ok: !!document.getElementById('worker-region')?.value },
+    { label: '자기소개', ok: !!(document.getElementById('worker-bio')?.value?.length > 10) },
+    { label: '경력/특기',ok: !!document.getElementById('worker-experience')?.value },
+    { label: '스킬 태그',ok: _workerSkills.length > 0 },
+  ];
+  const done = checks.filter(c => c.ok).length;
+  const pct = Math.round(done / checks.length * 100);
+  document.getElementById('completion-pct').textContent = pct + '%';
+  document.getElementById('completion-bar').style.width = pct + '%';
+  document.getElementById('completion-items').innerHTML = checks.map(c =>
+    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'#16a34a':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
+  ).join('');
+}
+
 function calcAgeFromBirth(yymmdd) {
   if (!yymmdd || yymmdd.length !== 6) return null;
   const yy = parseInt(yymmdd.slice(0,2));
@@ -2857,11 +2932,13 @@ async function saveWorkerProfile() {
   const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
-  const payload = { kakao_uid: currentUser.id, name, age, phone, bio, experience, region };
+  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills };
   if (_workerGender) payload.gender = _workerGender;
   const { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error) { showToast('저장 실패: ' + error.message); return; }
   showToast('✅ 프로필이 저장됐습니다');
+  loadWorkerGrade();
+  updateProfileCompletion();
 }
 
 async function loadOwnerProfileForm() {
