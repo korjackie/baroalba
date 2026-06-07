@@ -1262,6 +1262,11 @@ async function loadCategoriesWorker() {
 
 async function loadJobs() {
   try {
+    // 지도가 초기화되었으면 현재 시각적 중심 사용 (저장값 override)
+    if (kakaoMap) {
+      const c = kakaoMap.getCenter();
+      mapCenter = { lat: c.getLat(), lng: c.getLng() };
+    }
     const { data, error } = await db.rpc('nearby_jobs', {
       user_lat: mapCenter.lat,
       user_lng: mapCenter.lng,

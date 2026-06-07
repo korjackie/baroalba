@@ -18,7 +18,7 @@ const APP_CONFIG = {
 
   // ── 앱 설정 ───────────────────────────────────────────────
   APP_NAME:    '바로알바',
-  DEFAULT_LAT: 35.1520,   // 지도 기본 위치 (부산 하단동)
-  DEFAULT_LNG: 128.9731,
+  DEFAULT_LAT: 37.5445,   // 지도 기본 위치 (성수역)
+  DEFAULT_LNG: 127.0560,
   DEFAULT_RADIUS_M: 10000, // 기본 반경 10km
 };
