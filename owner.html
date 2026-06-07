@@ -585,14 +585,10 @@
   </div>
 </div>
 
-<!-- 지도 오버레이 (업주용 주변 공고 조회) -->
-<div id="owner-map-overlay" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);z-index:350;flex-direction:column;background:#f5f5f5">
-  <div style="background:#fff;padding:12px 16px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-    <div style="font-size:16px;font-weight:800;color:#222">🗺 주변 공고 현황</div>
-    <button onclick="closeOwnerMap()" style="padding:8px 16px;background:var(--red);color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer">✕ 닫기</button>
-  </div>
+<!-- 지도 탭 패널 -->
+<div class="full-panel" id="panel-owner-map">
   <div id="owner-map-container" style="flex:1;width:100%"></div>
-  <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
+  <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center;flex-shrink:0">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
 </div>
 
 <!-- 채팅 목록 패널 -->
@@ -732,8 +728,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 새로고침 시 마지막 활성 탭 복원
   const savedTab = sessionStorage.getItem('ownerActiveTab');
-  if (savedTab === 'map') {
-    setNav(document.querySelectorAll('.nav-item')[0], 'map');
+  if (savedTab && savedTab !== 'postings') {
+    const navIdx = { map:0, postings:1, applicants:2, chats:3, settings:4 };
+    const idx = navIdx[savedTab] ?? 1;
+    setNav(document.querySelectorAll('.nav-item')[idx], savedTab);
   }
 });
 
@@ -1900,39 +1898,40 @@ function setNav(el, tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
   sessionStorage.setItem('ownerActiveTab', tab);
-  const panelChats = document.getElementById('panel-owner-chats');
-  panelChats.classList.remove('show');
-  document.getElementById('owner-map-overlay').style.display = 'none';
 
-  if (tab === 'map') { openOwnerMap(); return; }
-  if (tab === 'postings') switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
-  else if (tab === 'applicants') {
+  // 모든 패널 숨기기
+  document.getElementById('panel-owner-chats').classList.remove('show');
+  document.getElementById('panel-owner-map').classList.remove('show');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+  if (tab === 'map') {
+    document.getElementById('panel-owner-map').classList.add('show');
+    initOwnerMap();
+  } else if (tab === 'postings') {
+    switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
+  } else if (tab === 'applicants') {
     const badge = document.getElementById('owner-chat-badge');
     badge.textContent = '0'; badge.style.display = 'none';
     switchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
-  }
-  else if (tab === 'chats') {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    panelChats.classList.add('show');
+  } else if (tab === 'chats') {
+    document.getElementById('panel-owner-chats').classList.add('show');
     const msgBadge = document.getElementById('owner-msg-badge');
     if (msgBadge) { msgBadge.textContent = '0'; msgBadge.style.display = 'none'; }
     loadOwnerChatList();
+  } else if (tab === 'settings') {
+    openOwnerSettings();
   }
-  else if (tab === 'settings') openOwnerSettings();
-  else showToast('준비 중입니다');
 }
 
 // ── 채팅 ───────────────────────────────────────────────────
 let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerName = '';
 
-// ── 지도 오버레이 (업주용 주변 공고 조회) ─────────────────
+// ── 지도 탭 (업주용 주변 공고 조회) ──────────────────────
 let _ownerMap = null;
 
-function openOwnerMap() {
-  const overlay = document.getElementById('owner-map-overlay');
-  overlay.style.display = 'flex';
-  if (_ownerMap) return;
+function initOwnerMap() {
+  if (_ownerMap) { loadOwnerMapJobs(); return; }
   setTimeout(() => {
     const container = document.getElementById('owner-map-container');
     const center = bizRecord?.lat
@@ -1941,13 +1940,6 @@ function openOwnerMap() {
     _ownerMap = new kakao.maps.Map(container, { center, level: 5 });
     loadOwnerMapJobs();
   }, 100);
-}
-
-function closeOwnerMap() {
-  document.getElementById('owner-map-overlay').style.display = 'none';
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.nav-item')[1].classList.add('active');
-  sessionStorage.setItem('ownerActiveTab', 'postings');
 }
 
 async function loadOwnerMapJobs() {
