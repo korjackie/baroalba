@@ -1178,7 +1178,7 @@ async function deletePosting(jobId) {
         'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
         'Authorization': 'Bearer ' + sess.access_token,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'return=representation'  // 삭제된 행 반환 → 0건이면 RLS 차단
       }
     }
   );
@@ -1186,6 +1186,11 @@ async function deletePosting(jobId) {
     let msg = '삭제 실패';
     try { const err = await res.json(); msg += ': ' + (err.message || err.details || JSON.stringify(err)); } catch {}
     showToast(msg);
+    return;
+  }
+  const deleted = await res.json();
+  if (!deleted?.length) {
+    showToast('삭제 실패: 권한이 없거나 이미 삭제된 공고입니다\n(Supabase에서 DELETE 정책을 확인해주세요)');
     return;
   }
   showToast('✅ 공고가 삭제됐습니다');
