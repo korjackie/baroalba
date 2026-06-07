@@ -1317,6 +1317,52 @@ function renderList() {
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">😅</div><div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내 공고가 없어요</div></div>`;
     return;
   }
+
+  surgeTimerHandles.forEach(h => clearInterval(h));
+  surgeTimerHandles = [];
+  list.innerHTML = jobs.map(job => {
+    const isUrgent = job.status === 'urgent';
+    const hasSurge = job.wage_delta > 0;
+    const catClass = getCatClass(job.category);
+    const dist = job.distance_m < 1000
+      ? Math.round(job.distance_m) + 'm'
+      : (job.distance_m/1000).toFixed(1) + 'km';
+    const startStr = job.start_time ? formatTime(job.start_time) : '미정';
+    const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
+    return `
+    <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')">
+      <div class="card-top">
+        <div class="card-left">
+          <div class="card-biz">🏪 ${job.biz_name}</div>
+          <div class="card-title">${job.title}</div>
+        </div>
+        <div class="card-right">
+          <div class="card-wage">${job.current_wage.toLocaleString()}원${job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
+          ${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}
+          ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">최대 ${job.surge_max_wage.toLocaleString()}원</div>` : ''}
+        </div>
+      </div>
+      ${surgeTimer}
+      <div class="card-tags">
+        ${job.work_type === 'errand'  ? '<span class="tag" style="background:#FFF0F5;color:#E91E8C;font-weight:900">🏃 심부름</span>' : ''}
+        ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:900">📅 단기</span>' : ''}
+        ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:900">🔄 정기</span>' : ''}
+        ${isUrgent ? '<span class="tag urgent-tag">🔥 급구</span>' : ''}
+        ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500">⚡ 번개</span>' : ''}
+        ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a">💴 당일정산</span>' : ''}
+        <span class="tag ${catClass}">${job.category}</span>
+        <span class="tag">${job.work_type === 'errand' ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
+        ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
+      </div>
+      <div class="card-meta">
+        <span>📍 ${dist}</span>
+        <span>⏰ ${startStr}</span>
+        <span class="card-star">★ ${job.biz_rating || '-'}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  setTimeout(startSurgeTimers, 50);
 }
 
 function renderUrgentFeed() {
@@ -1364,58 +1410,6 @@ function renderTodayPick() {
   document.getElementById('today-pick-wage').textContent = (pick.current_wage/10000).toFixed(1) + '만원/시';
   document.getElementById('today-pick-dist').textContent = '📍 ' + dist;
   card.style.display = 'block';
-}
-
-  // renderList 나머지 로직은 아래에서 계속 (더미 라인, 삭제 가능)
-
-  surgeTimerHandles.forEach(h => clearInterval(h));
-  surgeTimerHandles = [];
-  list.innerHTML = jobs.map(job => {
-    const isUrgent = job.status === 'urgent';
-    const hasSurge = job.wage_delta > 0;
-    const catClass = getCatClass(job.category);
-    const dist = job.distance_m < 1000
-      ? Math.round(job.distance_m) + 'm'
-      : (job.distance_m/1000).toFixed(1) + 'km';
-    const startStr = job.start_time ? formatTime(job.start_time) : '미정';
-
-    const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
-
-    return `
-    <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')">
-      <div class="card-top">
-        <div class="card-left">
-          <div class="card-biz">🏪 ${job.biz_name}</div>
-          <div class="card-title">${job.title}</div>
-        </div>
-        <div class="card-right">
-          <div class="card-wage">${job.current_wage.toLocaleString()}원${job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
-          ${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}
-          ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">최대 ${job.surge_max_wage.toLocaleString()}원</div>` : ''}
-        </div>
-      </div>
-      ${surgeTimer}
-      <div class="card-tags">
-        ${job.work_type === 'errand'  ? '<span class="tag" style="background:#FFF0F5;color:#E91E8C;font-weight:900">🏃 심부름</span>' : ''}
-        ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:900">📅 단기</span>' : ''}
-        ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:900">🔄 정기</span>' : ''}
-        ${isUrgent ? '<span class="tag urgent-tag">🔥 급구</span>' : ''}
-        ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500">⚡ 번개</span>' : ''}
-        ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a">💴 당일정산</span>' : ''}
-        <span class="tag ${catClass}">${job.category}</span>
-        <span class="tag">${job.work_type === 'errand' ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
-        ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
-      </div>
-      <div class="card-meta">
-        <span>📍 ${dist}</span>
-        <span>⏰ ${startStr}</span>
-        <span class="card-star">★ ${job.biz_rating || '-'}</span>
-      </div>
-    </div>`;
-  }).join('');
-
-  // 번개 타이머 시작
-  setTimeout(startSurgeTimers, 50);
 }
 
 // ── 공고 상세 ─────────────────────────────────────────────
