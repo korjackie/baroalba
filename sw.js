@@ -27,8 +27,8 @@ self.addEventListener('fetch', e => {
   // http/https 이외(chrome-extension:// 등) 무시
   if (!url.startsWith('http')) return;
 
-  // Supabase, 카카오, 네이버 API는 항상 네트워크 직접
-  if (url.includes('supabase') || url.includes('kakao') || url.includes('naver.com')) {
+  // API 서버리스 함수, Supabase, 카카오, 네이버 API는 항상 네트워크 직접
+  if (url.includes('/api/') || url.includes('supabase') || url.includes('kakao') || url.includes('naver.com')) {
     e.respondWith(fetch(e.request));
     return;
   }
