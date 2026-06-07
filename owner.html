@@ -276,6 +276,10 @@
     <div class="header-badge">업주</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <button id="owner-noti-bell" onclick="openOwnerNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1;display:none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span id="owner-noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#FF4B4B;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+    </button>
     <div class="header-biz" id="biz-name">내 업체</div>
     <button class="logout-btn" onclick="logout()">로그아웃</button>
   </div>
@@ -846,6 +850,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   loadPostings();
   loadApplicants();
   setupRealtime();
+  setTimeout(updateOwnerNotiBadge, 1500);
 
   // 새로고침 시 마지막 활성 탭 복원
   const savedTab = sessionStorage.getItem('ownerActiveTab');
@@ -2968,6 +2973,118 @@ function showToast(msg) {
   t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+}
+
+// ── 업주 알림 시스템 ─────────────────────────────────────
+function _ownerNotiKey() { return 'owner_noti_last_seen_' + (currentUser?.id || 'guest'); }
+function _ownerTimeAgo(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return '방금'; if (m < 60) return `${m}분 전`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}시간 전`;
+  const d = Math.floor(h / 24);
+  return d < 7 ? `${d}일 전` : new Date(iso).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+}
+
+async function _fetchOwnerNotifications() {
+  if (!currentUser || !bizRecord) return [];
+  // 내 공고의 최근 지원자 이벤트
+  const { data: apps } = await db.from('applications')
+    .select('id, status, applied_at, updated_at, workers(name), job_postings(title)')
+    .eq('job_postings.businesses.kakao_uid', currentUser.id)
+    .order('applied_at', { ascending: false })
+    .limit(40);
+
+  // bizRecord.id로 직접 조회 (FK join 복잡도 우회)
+  const { data: myPostings } = await db.from('job_postings').select('id').eq('business_id', bizRecord.id);
+  const postingIds = (myPostings || []).map(p => p.id);
+  if (!postingIds.length) return [];
+
+  const { data: recentApps } = await db.from('applications')
+    .select('id, status, applied_at, updated_at, workers(name), job_postings(title)')
+    .in('job_posting_id', postingIds)
+    .order('applied_at', { ascending: false })
+    .limit(40);
+
+  const items = [];
+  (recentApps || []).forEach(app => {
+    const name = app.workers?.name || '지원자';
+    const title = app.job_postings?.title || '공고';
+    if (app.status === 'pending') {
+      items.push({ icon: '📥', color: '#3B82F6', title: `${name}님이 지원했어요`, body: `"${title}"`, time: app.applied_at });
+    } else if (app.status === 'cancelled') {
+      items.push({ icon: '🚫', color: '#aaa', title: `${name}님이 지원 취소했어요`, body: `"${title}"`, time: app.updated_at });
+    } else if (app.status === 'completed') {
+      items.push({ icon: '🏁', color: '#16a34a', title: `${name}님 근무 완료`, body: `"${title}"`, time: app.updated_at });
+    }
+  });
+  return items;
+}
+
+async function updateOwnerNotiBadge() {
+  if (!currentUser) return;
+  const items = await _fetchOwnerNotifications();
+  const lastSeen = parseInt(localStorage.getItem(_ownerNotiKey()) || '0');
+  const unread = items.filter(it => it.time && new Date(it.time).getTime() > lastSeen).length;
+  const badge = document.getElementById('owner-noti-badge');
+  const bell = document.getElementById('owner-noti-bell');
+  if (bell) bell.style.display = 'block';
+  if (!badge) return;
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.style.display = 'flex'; }
+  else badge.style.display = 'none';
+}
+
+async function openOwnerNotifications() {
+  const lastSeen = parseInt(localStorage.getItem(_ownerNotiKey()) || '0');
+  localStorage.setItem(_ownerNotiKey(), Date.now().toString());
+  const badge = document.getElementById('owner-noti-badge');
+  if (badge) badge.style.display = 'none';
+
+  const existing = document.getElementById('owner-noti-overlay');
+  if (existing) { existing.remove(); return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'owner-noti-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;display:flex;align-items:flex-end';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div style="font-size:17px;font-weight:900">🔔 알림</div>
+        <button onclick="document.getElementById('owner-noti-overlay').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+      </div>
+      <div id="owner-noti-list" style="overflow-y:auto;padding:10px 16px 40px;flex:1">
+        <div style="text-align:center;padding:24px"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const items = await _fetchOwnerNotifications();
+  const listEl = document.getElementById('owner-noti-list');
+  if (!listEl) return;
+
+  if (!items.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#aaa"><div style="font-size:36px;margin-bottom:10px">🔕</div><div style="font-size:14px;font-weight:700">아직 알림이 없어요</div><div style="font-size:12px;margin-top:4px">공고를 등록하면 지원자 알림을 받아요</div></div>';
+    return;
+  }
+
+  listEl.innerHTML = items.map(it => {
+    const isNew = it.time && new Date(it.time).getTime() > lastSeen;
+    return `
+      <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f8f8f8;align-items:flex-start">
+        <div style="width:40px;height:40px;border-radius:50%;background:${it.color}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${it.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <div style="font-size:14px;font-weight:800;color:#222;line-height:1.4">${it.title}</div>
+            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#FF4B4B;flex-shrink:0;display:inline-block"></span>' : ''}
+          </div>
+          ${it.body ? `<div style="font-size:12px;color:#888">${it.body}</div>` : ''}
+          ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_ownerTimeAgo(it.time)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
 }
 </script>
 </body>

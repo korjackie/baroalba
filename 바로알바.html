@@ -565,7 +565,13 @@
     </div>
     <span>바로알바</span>
   </div>
-  <div id="header-user-info" style="font-size:13px;color:#555;font-weight:600"></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button id="noti-bell-btn" onclick="openNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1;display:none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span id="noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#FF4B4B;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+    </button>
+    <div id="header-user-info" style="font-size:13px;color:#555;font-weight:600"></div>
+  </div>
 </div>
 
 <!-- 로딩 -->
@@ -1046,6 +1052,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     const _uname = _meta.full_name || _meta.name || currentUser.email?.split('@')[0] || '';
     const _hdr = document.getElementById('header-user-info');
     if (_hdr && _uname) _hdr.textContent = _uname;
+    // 알림 배지 초기화
+    setTimeout(updateNotiBadge, 1500);
     const isBrowseMode = !!new URLSearchParams(location.search).get('browse');
     if (currentUser.user_metadata?.baroalba_role === 'business') {
       if (!isBrowseMode) { location.href = '/owner.html'; return; }
@@ -3039,6 +3047,135 @@ function getMockJobs() {
 document.getElementById('map').addEventListener('click', () => {
   document.getElementById('radius-popup').classList.remove('open');
 });
+
+// ── 알림 시스템 ──────────────────────────────────────────
+function _notiKey() { return 'noti_last_seen_' + (currentUser?.id || 'guest'); }
+
+async function _fetchWorkerNotifications() {
+  if (!currentUser) return [];
+  const { data: w } = await db.from('workers').select('id, rating, review_count, noshow_count').eq('kakao_uid', currentUser.id).single();
+  if (!w) return [];
+
+  const { data: apps } = await db.from('applications')
+    .select('id, status, updated_at, completed_at, worker_rating, worker_review, job_postings(title, businesses(name))')
+    .eq('worker_id', w.id)
+    .not('status', 'in', '("pending","reviewing")')
+    .order('updated_at', { ascending: false })
+    .limit(40);
+
+  const items = [];
+
+  // 등급 업 조건 달성 알림 (번개등급)
+  const QUICK = { minRating: 4.3, minReviews: 3 };
+  if ((w.rating || 0) >= QUICK.minRating && (w.review_count || 0) >= QUICK.minReviews && (w.noshow_count || 0) === 0) {
+    items.push({ id: 'grade_up', icon: '⚡', color: '#F59E0B', title: '번개등급 달성 조건을 충족했어요!', body: '마이페이지에서 등급을 확인하세요', time: null, isGrade: true });
+  }
+
+  (apps || []).forEach(app => {
+    const biz = app.job_postings?.businesses?.name || '업체';
+    const jobTitle = app.job_postings?.title || '공고';
+    const t = app.updated_at;
+    if (app.status === 'accepted') {
+      items.push({ id: app.id + '_acc', icon: '✅', color: '#16a34a', title: `${biz} 합격 확정!`, body: `"${jobTitle}" 공고에서 합격됐어요`, time: t });
+    } else if (app.status === 'rejected') {
+      items.push({ id: app.id + '_rej', icon: '❌', color: '#EF4444', title: `${biz} 지원 거절`, body: `"${jobTitle}"`, time: t });
+    } else if (app.status === 'completed' && app.worker_rating) {
+      const stars = '★'.repeat(Math.round(app.worker_rating));
+      items.push({ id: app.id + '_rev', icon: '⭐', color: '#F59E0B', title: `${biz}에서 평점 ${app.worker_rating.toFixed(1)}점!`, body: app.worker_review ? `"${app.worker_review}"` : `${stars}`, time: t });
+    } else if (app.status === 'completed') {
+      items.push({ id: app.id + '_done', icon: '🏁', color: '#3B82F6', title: `${biz} 근무 완료`, body: `"${jobTitle}"`, time: t });
+    } else if (app.status === 'noshow') {
+      items.push({ id: app.id + '_ns', icon: '⚠️', color: '#BE123C', title: `${biz}에서 노쇼 처리됐어요`, body: `"${jobTitle}"`, time: t });
+    }
+  });
+
+  return items;
+}
+
+function _timeAgo(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return '방금';
+  if (m < 60) return `${m}분 전`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}시간 전`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}일 전`;
+  return new Date(iso).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+}
+
+async function updateNotiBadge() {
+  if (!currentUser || isGuest) return;
+  const items = await _fetchWorkerNotifications();
+  const lastSeen = parseInt(localStorage.getItem(_notiKey()) || '0');
+  const unread = items.filter(it => it.isGrade ? !localStorage.getItem('noti_grade_seen_' + (currentUser?.id || '')) : (it.time && new Date(it.time).getTime() > lastSeen)).length;
+  const badge = document.getElementById('noti-badge');
+  const bell = document.getElementById('noti-bell-btn');
+  if (bell) bell.style.display = 'block';
+  if (!badge) return;
+  if (unread > 0) {
+    badge.textContent = unread > 9 ? '9+' : unread;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function openNotifications() {
+  const lastSeen = parseInt(localStorage.getItem(_notiKey()) || '0');
+  // 등급 알림 읽음 처리
+  if (currentUser) localStorage.setItem('noti_grade_seen_' + currentUser.id, '1');
+  // 읽음 시각 업데이트
+  localStorage.setItem(_notiKey(), Date.now().toString());
+  document.getElementById('noti-badge').style.display = 'none';
+
+  const existing = document.getElementById('noti-overlay');
+  if (existing) { existing.remove(); return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'noti-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;display:flex;align-items:flex-end';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div style="font-size:17px;font-weight:900">🔔 알림</div>
+        <button onclick="document.getElementById('noti-overlay').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+      </div>
+      <div id="noti-list-inner" style="overflow-y:auto;padding:10px 16px 40px;flex:1">
+        <div style="text-align:center;padding:24px"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const items = await _fetchWorkerNotifications();
+  const listEl = document.getElementById('noti-list-inner');
+  if (!listEl) return;
+
+  if (!items.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#aaa"><div style="font-size:36px;margin-bottom:10px">🔕</div><div style="font-size:14px;font-weight:700">아직 알림이 없어요</div><div style="font-size:12px;margin-top:4px">공고에 지원하면 합격/거절 소식을 받아요</div></div>';
+    return;
+  }
+
+  listEl.innerHTML = items.map(it => {
+    const isNew = it.isGrade
+      ? !localStorage.getItem('noti_grade_seen_' + (currentUser?.id || ''))
+      : (it.time && new Date(it.time).getTime() > lastSeen);
+    return `
+      <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f8f8f8;align-items:flex-start">
+        <div style="width:40px;height:40px;border-radius:50%;background:${it.color}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${it.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <div style="font-size:14px;font-weight:800;color:#222;line-height:1.4">${it.title}</div>
+            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#FF4B4B;flex-shrink:0;display:inline-block"></span>' : ''}
+          </div>
+          ${it.body ? `<div style="font-size:12px;color:#888;line-height:1.5">${it.body}</div>` : ''}
+          ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_timeAgo(it.time)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
