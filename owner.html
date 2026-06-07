@@ -236,8 +236,7 @@
       #chat-overlay { align-items:center; justify-content:center; }
       #chat-overlay > div { border-radius:20px; width:480px; max-width:90vw; max-height:85vh; }
 
-      /* 설정 / 공유 모달 */
-      #settings-overlay > div,
+      /* 공유 모달 */
       #share-overlay > div { width:480px; max-width:90vw; }
     }
     /* ── 업주 지도 필터 칩 ── */
@@ -658,14 +657,13 @@
   </div>
 </div>
 
-<!-- 설정 시트 -->
-<div class="modal-overlay" id="settings-overlay" onclick="if(event.target===this)this.classList.remove('open')">
-  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
-    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:17px;font-weight:800;color:#222">계정 설정</div>
-      <button onclick="document.getElementById('settings-overlay').classList.remove('open')" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
-    </div>
-    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+<!-- 마이페이지 패널 -->
+<div class="full-panel" id="panel-owner-settings">
+  <div class="panel-header" style="display:flex;align-items:center;gap:10px">
+    <button onclick="setNav(document.querySelectorAll('.nav-item')[0],'postings')" style="background:none;border:none;font-size:22px;cursor:pointer;line-height:1;color:#555;padding:0 4px 0 0">←</button>
+    <span>마이페이지</span>
+  </div>
+  <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
       <!-- 내 정보 -->
       <div style="background:#f8f8f8;border-radius:14px;padding:14px">
         <div style="font-size:12px;color:#aaa;font-weight:700;margin-bottom:4px">업주 계정</div>
@@ -758,7 +756,6 @@
         </div>
       </div>
     </div>
-  </div>
 </div>
 
 <!-- 공유 모달 -->
@@ -2054,6 +2051,7 @@ function setNav(el, tab) {
   // 모든 패널 숨기기
   document.getElementById('panel-owner-chats').classList.remove('show');
   document.getElementById('panel-owner-map').classList.remove('show');
+  document.getElementById('panel-owner-settings').classList.remove('show');
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
@@ -2642,7 +2640,7 @@ function openOwnerSettings() {
     if (isAdmin) renderAdminCatList();
     loadMyPlaces();
   }
-  document.getElementById('settings-overlay').classList.add('open');
+  document.getElementById('panel-owner-settings').classList.add('show');
 }
 
 // ── 내 업체 장소 관리 ─────────────────────────────────────
@@ -2864,7 +2862,7 @@ async function submitOwnerPw() {
   if (error) { showToast('변경 실패: ' + error.message); return; }
   showToast('✅ 비밀번호가 변경됐습니다');
   document.getElementById('owner-pw-form').style.display = 'none';
-  document.getElementById('settings-overlay').classList.remove('open');
+  document.getElementById('panel-owner-settings').classList.remove('show');
 }
 
 async function deleteOwnerAccount() {
