@@ -721,9 +721,21 @@ async function handleNaverCallback(naverToken) {
     }
 
     console.log('[Naver] signInWithPassword:', data.email);
-    const { error: loginError } = await db.auth.signInWithPassword({ email: data.email, password: data.password });
+    const { error: loginError, data: loginData } = await db.auth.signInWithPassword({ email: data.email, password: data.password });
 
     if (loginError) { hideLoading(); showError('네이버 로그인 실패: ' + loginError.message); return; }
+
+    // 네이버 프로필(이름/연락처/성별) → workers 테이블 자동 반영
+    if (loginData?.user) {
+      const meta = loginData.user.user_metadata || {};
+      const profileUpdate = {};
+      if (meta.full_name) profileUpdate.name  = meta.full_name;
+      if (meta.phone)     profileUpdate.phone = meta.phone;
+      if (meta.gender)    profileUpdate.gender = meta.gender;
+      if (Object.keys(profileUpdate).length > 0) {
+        await db.from('workers').update(profileUpdate).eq('kakao_uid', loginData.user.id);
+      }
+    }
 
   } catch(e) {
     clearTimeout(timer);
