@@ -238,6 +238,23 @@
       #settings-overlay > div,
       #share-overlay > div { width:480px; max-width:90vw; }
     }
+    /* ── 지도 마커 (알바생 앱과 동일) ── */
+    .marker-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25)); }
+    .om-bubble { background:#fff; border-radius:14px; padding:9px 16px 8px; border:3px solid #FF4B4B; white-space:nowrap; line-height:1.2; min-width:100px; text-align:center; }
+    .om-bubble.urgent  { background:#FF4B4B; border-color:#FF4B4B; }
+    .om-bubble.urgent  .om-wage { color:#fff; }
+    .om-bubble.urgent  .om-sub  { color:rgba(255,255,255,0.85); }
+    .om-bubble.open    { border-color:#22c55e; }
+    .om-bubble.open    .om-wage { color:#16a34a; }
+    .om-bubble.open    .om-sub  { color:#888; }
+    .om-bubble.errand  { background:#7C3AED; border-color:#7C3AED; }
+    .om-bubble.errand  .om-wage { color:#fff; }
+    .om-bubble.errand  .om-sub  { color:rgba(255,255,255,0.85); }
+    .om-wage { font-size:16px; font-weight:900; color:#FF4B4B; display:block; }
+    .om-sub  { font-size:11px; font-weight:700; color:#888; display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
+    .om-tail { width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:11px solid #FF4B4B; margin-top:-1px; }
+    .om-tail.open   { border-top-color:#22c55e; }
+    .om-tail.errand { border-top-color:#7C3AED; }
   </style>
 </head>
 <body>
@@ -1928,7 +1945,7 @@ function setNav(el, tab) {
 let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerName = '';
 
 // ── 지도 탭 (업주용 주변 공고 조회) ──────────────────────
-let _ownerMap = null;
+let _ownerMap = null, _ownerOverlays = [], _ownerMapDragBound = false;
 
 function initOwnerMap() {
   if (_ownerMap) { loadOwnerMapJobs(); return; }
@@ -1951,18 +1968,71 @@ async function loadOwnerMapJobs() {
   });
   if (mapErr) { console.error('[ownerMap] nearby_jobs error:', mapErr); }
 
+  const ERRAND_ICON_MAP = {
+    '물건 픽업/전달':'📦','대리 줄서기':'🧍','서류/우편':'📮','쇼핑 대행':'🛒',
+    '벌레 퇴치':'🪲','반려동물 산책':'🐕','이사/짐 보조':'🚚','음식 배달':'🍱',
+    '차량 이동/주차':'🚗','약국/병원 대행':'💊','장보기 대행':'🥬','기타 심부름':'🏃'
+  };
+  const ERRAND_CATS = new Set(Object.keys(ERRAND_ICON_MAP));
+
+  (_ownerOverlays || []).forEach(o => o.setMap(null));
+  _ownerOverlays = [];
+
   (data || []).forEach(job => {
-    const pos = new kakao.maps.LatLng(job.lat, job.lng);
-    const content = `<div style="background:${job.status==='urgent'?'#FF4B4B':'#333'};color:#fff;padding:4px 8px;border-radius:12px;font-size:11px;font-weight:800;white-space:nowrap">${job.current_wage.toLocaleString()}원</div>`;
-    const overlay = new kakao.maps.CustomOverlay({ position: pos, content, yAnchor: 1 });
-    overlay.setMap(_ownerMap);
-    kakao.maps.event.addListener(overlay, 'click', () => {
-      document.getElementById('owner-map-info').innerHTML =
-        `<b>${job.biz_name}</b> — ${job.title} · ${job.current_wage.toLocaleString()}원/시 · ${job.status==='urgent'?'🔥급구':'모집중'}`;
+    const isUrgent = job.status === 'urgent';
+    const isErrand = job.work_type === 'errand' || ERRAND_CATS.has(job.category);
+    const wageStr  = (job.current_wage / 10000).toFixed(1) + '만';
+    const wageUnit = isErrand ? '/건' : '/시간';
+    const catIcon  = isErrand ? (ERRAND_ICON_MAP[job.category] || '🏃') : '';
+    const subLabel = isErrand
+      ? `${catIcon} ${job.category || '심부름'}`
+      : (job.biz_name || job.title || '').slice(0, 8);
+
+    const startFmt = (() => {
+      if (!job.start_time) return '';
+      const d = new Date(job.start_time);
+      if (isNaN(d.getTime())) return '';
+      return (d.getMonth()+1) + '/' + d.getDate() + ' ' +
+        String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    })();
+
+    const statusCls = isErrand ? 'errand' : (isUrgent ? 'urgent' : 'open');
+    const tailCls   = isErrand ? 'errand' : (isUrgent ? '' : 'open');
+
+    const content = `
+      <div class="marker-wrap" onclick="ownerMapInfo('${job.id}')">
+        <div class="om-bubble ${statusCls}">
+          <span class="om-wage">${wageStr}<span style="font-size:10px;font-weight:700">${wageUnit}</span></span>
+          <span class="om-sub">${subLabel}</span>
+          ${!isErrand && startFmt ? `<span class="om-sub">⏰ ${startFmt}</span>` : ''}
+        </div>
+        <div class="om-tail ${tailCls}"></div>
+      </div>`;
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(job.lat, job.lng),
+      content, yAnchor: 1.1
     });
+    overlay.setMap(_ownerMap);
+    _ownerOverlays.push(overlay);
   });
 
-  kakao.maps.event.addListener(_ownerMap, 'dragend', loadOwnerMapJobs);
+  if (!_ownerMapDragBound) {
+    kakao.maps.event.addListener(_ownerMap, 'dragend', loadOwnerMapJobs);
+    _ownerMapDragBound = true;
+  }
+}
+
+function ownerMapInfo(jobId) {
+  const infoEl = document.getElementById('owner-map-info');
+  // RPC 결과는 jobs 배열에 없으므로 간단히 표시
+  infoEl.innerHTML = '<span style="color:#aaa">공고 정보 불러오는 중...</span>';
+  db.from('job_postings').select('title, biz_name, current_wage, status, category, work_type')
+    .eq('id', jobId).single().then(({ data: j }) => {
+      if (!j) return;
+      const isErrand = j.work_type === 'errand' || j.category?.includes('심부름') || j.category?.includes('퇴치') || j.category?.includes('배달') || j.category?.includes('대행') || j.category?.includes('산책') || j.category?.includes('보조');
+      infoEl.innerHTML = `<b>${j.biz_name || ''}</b> · ${j.title} · <b style="color:#FF4B4B">${j.current_wage.toLocaleString()}원/${isErrand?'건':'시간'}</b> · ${j.status==='urgent'?'🔥 급구':'모집중'}`;
+    });
 }
 
 // ── 지원자 프로필 ─────────────────────────────────────────
