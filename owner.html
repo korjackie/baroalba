@@ -880,6 +880,8 @@ function renderPostings() {
   }
   el.innerHTML = postings.map(p => {
     const isOpen = p.status === 'open' || p.status === 'urgent';
+    const today = new Date().toISOString().slice(0, 10);
+    const isExpired = p.work_end_date && p.work_end_date < today;
     const surge = p.current_wage - p.base_wage;
     const statusLabel = p.status === 'urgent' ? '🔥 급구' : p.status === 'open' ? '모집중' : '마감';
     const statusCls = p.status === 'urgent' ? 'urgent' : p.status === 'open' ? 'open' : 'closed';
@@ -916,7 +918,7 @@ function renderPostings() {
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             <span class="meta-chip ${statusCls}">${statusLabel}</span>
-            <span class="meta-chip">⏰ ${start}</span>
+            ${isExpired ? `<span class="meta-chip" style="background:#FEF2F2;color:#EF4444;font-weight:800">⏰ 기간만료</span>` : `<span class="meta-chip">⏰ ${start}</span>`}
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:12px;font-weight:700;color:#555">👥 지원자 <span id="app-count-${p.id}" style="color:var(--red)">...</span>명</span>
