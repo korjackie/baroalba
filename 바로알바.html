@@ -1200,21 +1200,36 @@ function renderMarkers() {
   overlays.forEach(o => o.setMap(null));
   markers = []; overlays = [];
 
+  // 심부름 카테고리 → 아이콘 매핑 (work_type 없는 구공고 fallback용)
+  const ERRAND_ICON_MAP = {
+    '물건 픽업/전달':'📦','대리 줄서기':'🧍','서류/우편':'📮','쇼핑 대행':'🛒',
+    '벌레 퇴치':'🪲','반려동물 산책':'🐕','이사/짐 보조':'🚚','음식 배달':'🍱',
+    '차량 이동/주차':'🚗','약국/병원 대행':'💊','장보기 대행':'🥬','기타 심부름':'🏃'
+  };
+  const ERRAND_CAT_NAMES = new Set(Object.keys(ERRAND_ICON_MAP));
+
   jobs.forEach(job => {
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
     const wageStr = (job.current_wage / 10000).toFixed(1) + '만';
 
-    // 출근시간 포맷 (HH:MM) — 유효하지 않으면 빈 문자열
+    // work_type 없는 구공고는 카테고리로 심부름 판별
+    const isErrand = job.work_type === 'errand' || ERRAND_CAT_NAMES.has(job.category);
+
+    // 출근시간 포맷
     const startFmt = (() => {
       if (!job.start_time) return '';
       const d = new Date(job.start_time);
       if (isNaN(d.getTime())) return '';
       return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
     })();
-    const bizName = (job.biz_name || job.title || '').slice(0, 8);
 
-    const isErrand = job.work_type === 'errand';
+    const bizName = (job.biz_name || '').slice(0, 8);
+    // 심부름: 카테고리 아이콘+이름 표시 / 일반: 업체명
+    const catIcon  = isErrand ? (ERRAND_ICON_MAP[job.category] || '🏃') : (CAT_EMOJI[job.category] || '');
+    const subLabel = isErrand ? `${catIcon} ${job.category || '심부름'}` : `${catIcon ? catIcon+' ' : ''}${bizName}`;
+    const wageUnit = isErrand ? '/건' : '/시';
+
     const surgeHtml = hasSurge
       ? `<div class="surge-badge">↑${(job.wage_delta/1000).toFixed(0)}k</div>` : '';
     const statusCls = isErrand ? 'errand' : (isUrgent ? 'urgent' : 'open');
@@ -1224,8 +1239,8 @@ function renderMarkers() {
       <div class="marker-wrap" onclick="openDetail('${job.id}')">
         ${surgeHtml}
         <div class="marker-bubble ${statusCls}">
-          <span class="mk-wage">${wageStr}${isErrand ? '<span style="font-size:8px">/건</span>' : ''}</span>
-          <span class="mk-sub">${isErrand ? '🏃 ' : ''}${bizName}</span>
+          <span class="mk-wage">${wageStr}<span style="font-size:10px;font-weight:700">${wageUnit}</span></span>
+          <span class="mk-sub">${subLabel}</span>
           ${!isErrand && startFmt ? `<span class="mk-sub">⏰ ${startFmt}</span>` : ''}
         </div>
         <div class="marker-tail ${tailCls}"></div>
