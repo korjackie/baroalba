@@ -238,6 +238,9 @@
       #settings-overlay > div,
       #share-overlay > div { width:480px; max-width:90vw; }
     }
+    /* ── 업주 지도 필터 칩 ── */
+    .om-chip { background:#fff; border:none; border-radius:20px; padding:6px 13px; font-size:12px; font-weight:700; color:#555; cursor:pointer; white-space:nowrap; box-shadow:0 1px 6px rgba(0,0,0,0.13); }
+    .om-chip.active { background:#222; color:#fff; }
     /* ── 지도 마커 (알바생 앱과 동일) ── */
     .marker-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25)); }
     .om-bubble { background:#fff; border-radius:14px; padding:9px 16px 8px; border:3px solid #FF4B4B; white-space:nowrap; line-height:1.2; min-width:100px; text-align:center; }
@@ -604,17 +607,31 @@
 
 <!-- 지도 탭 패널 -->
 <div class="full-panel" id="panel-owner-map" style="position:relative">
-  <!-- 검색바 (지도 위에 float) -->
-  <div style="position:absolute;top:12px;left:12px;right:12px;z-index:10;display:flex;gap:8px;pointer-events:all">
-    <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.15)">
-      <span style="font-size:16px;color:#999">🔍</span>
-      <input id="owner-map-search" type="text" placeholder="지역, 장소 검색 후 Enter"
-        style="flex:1;border:none;outline:none;font-size:14px;color:#222;background:transparent"
-        onkeydown="if(event.key==='Enter')searchOwnerLocation(this.value.trim())">
-      <button onclick="document.getElementById('owner-map-search').value=''" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;line-height:1;padding:0">✕</button>
+  <!-- 검색바 + 필터칩 (지도 위에 float) -->
+  <div style="position:absolute;top:12px;left:12px;right:12px;z-index:10;display:flex;flex-direction:column;gap:8px;pointer-events:all">
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.15)">
+        <span style="font-size:16px;color:#999">🔍</span>
+        <input id="owner-map-search" type="text" placeholder="지역, 장소 검색 후 Enter"
+          style="flex:1;border:none;outline:none;font-size:14px;color:#222;background:transparent"
+          onkeydown="if(event.key==='Enter')searchOwnerLocation(this.value.trim())">
+        <button onclick="document.getElementById('owner-map-search').value=''" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;line-height:1;padding:0">✕</button>
+      </div>
+      <button onclick="ownerMapMyLocation()" title="내 위치로"
+        style="width:44px;height:44px;background:#fff;border:none;border-radius:12px;font-size:20px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.15);flex-shrink:0">📍</button>
     </div>
-    <button onclick="ownerMapMyLocation()" title="내 위치로"
-      style="width:44px;height:44px;background:#fff;border:none;border-radius:12px;font-size:20px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.15);flex-shrink:0">📍</button>
+    <!-- 필터 칩 -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
+      <button class="om-chip active" onclick="setOwnerMapFilter(this,'','')">전체</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'','errand')">🏃 심부름</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'F&B','')">☕ F&B</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'물류','')">📦 물류</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'판매','')">🛍 판매</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'청소','')">🧹 청소</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'이벤트','')">🎉 이벤트</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'컨텐츠','')">📱 컨텐츠</button>
+      <button class="om-chip" data-urgent onclick="setOwnerMapUrgent(this)">🔥 급구만</button>
+    </div>
   </div>
   <div id="owner-map-container" style="flex:1;width:100%"></div>
   <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center;flex-shrink:0">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
@@ -1958,6 +1975,7 @@ let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerNam
 
 // ── 지도 탭 (업주용 주변 공고 조회) ──────────────────────
 let _ownerMap = null, _ownerOverlays = [], _ownerMapDragBound = false;
+let _ownerMapCat = '', _ownerMapWorkType = '', _ownerMapUrgentOnly = false;
 
 function initOwnerMap() {
   if (_ownerMap) { loadOwnerMapJobs(); return; }
@@ -1976,7 +1994,7 @@ async function loadOwnerMapJobs() {
   const center = _ownerMap.getCenter();
   const { data, error: mapErr } = await db.rpc('nearby_jobs', {
     user_lat: center.getLat(), user_lng: center.getLng(),
-    radius_meters: 5000, job_category: null
+    radius_meters: 5000, job_category: _ownerMapCat || null
   });
   if (mapErr) { console.error('[ownerMap] nearby_jobs error:', mapErr); }
 
@@ -1990,7 +2008,11 @@ async function loadOwnerMapJobs() {
   (_ownerOverlays || []).forEach(o => o.setMap(null));
   _ownerOverlays = [];
 
-  (data || []).forEach(job => {
+  let jobs = data || [];
+  if (_ownerMapWorkType === 'errand') jobs = jobs.filter(j => j.work_type === 'errand' || ERRAND_CATS.has(j.category));
+  if (_ownerMapUrgentOnly) jobs = jobs.filter(j => j.status === 'urgent');
+
+  jobs.forEach(job => {
     const isUrgent = job.status === 'urgent';
     const isErrand = job.work_type === 'errand' || ERRAND_CATS.has(job.category);
     const wageStr  = (job.current_wage / 10000).toFixed(1) + '만';
@@ -2033,6 +2055,20 @@ async function loadOwnerMapJobs() {
     kakao.maps.event.addListener(_ownerMap, 'dragend', loadOwnerMapJobs);
     _ownerMapDragBound = true;
   }
+}
+
+function setOwnerMapFilter(el, cat, workType) {
+  document.querySelectorAll('.om-chip:not([data-urgent])').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  _ownerMapCat = cat;
+  _ownerMapWorkType = workType;
+  loadOwnerMapJobs();
+}
+
+function setOwnerMapUrgent(el) {
+  _ownerMapUrgentOnly = !_ownerMapUrgentOnly;
+  el.classList.toggle('active', _ownerMapUrgentOnly);
+  loadOwnerMapJobs();
 }
 
 async function searchOwnerLocation(q) {
