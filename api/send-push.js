@@ -1,4 +1,4 @@
-import webpush from 'web-push';
+const webpush = require('web-push');
 
 const SUPABASE_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
 
