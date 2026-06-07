@@ -969,7 +969,12 @@ const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
 
 let kakaoMap = null;
-let mapCenter = { lat: APP_CONFIG.DEFAULT_LAT, lng: APP_CONFIG.DEFAULT_LNG };
+const _savedCenter = JSON.parse(localStorage.getItem('mapCenter') || 'null');
+let mapCenter = _savedCenter || { lat: APP_CONFIG.DEFAULT_LAT, lng: APP_CONFIG.DEFAULT_LNG };
+function saveMapCenter(lat, lng) {
+  mapCenter = { lat, lng };
+  localStorage.setItem('mapCenter', JSON.stringify(mapCenter));
+}
 let currentRadius = APP_CONFIG.DEFAULT_RADIUS_M;
 let currentCategory = '';
 let currentWorkType = '';
@@ -1048,7 +1053,7 @@ function initMap() {
   // 지도 이동 시 재검색
   kakao.maps.event.addListener(kakaoMap, 'dragend', () => {
     const c = kakaoMap.getCenter();
-    mapCenter = { lat: c.getLat(), lng: c.getLng() };
+    saveMapCenter(c.getLat(), c.getLng());
     loadJobs();
   });
 
@@ -1116,7 +1121,7 @@ async function openDeepLink(jobId) {
     };
     jobs = [job, ...jobs];
     // 지도 해당 위치로 이동
-    mapCenter = { lat: job.lat, lng: job.lng };
+    saveMapCenter(job.lat, job.lng);
     kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
     renderMarkers();
   }
@@ -1885,7 +1890,7 @@ async function checkAlreadyApplied(jobId) {
 function moveToMyLocation(silent = false) {
   if (!navigator.geolocation) { if (!silent) showToast('위치 정보를 사용할 수 없습니다'); return; }
   navigator.geolocation.getCurrentPosition(pos => {
-    mapCenter = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    saveMapCenter(pos.coords.latitude, pos.coords.longitude);
     kakaoMap.setCenter(new kakao.maps.LatLng(mapCenter.lat, mapCenter.lng));
     loadJobs();
   }, () => {
@@ -2037,7 +2042,7 @@ async function searchLocation(q) {
     const data = await res.json();
     if (!res.ok || !data.items?.length) { showToast('검색 결과가 없어요'); return; }
     const first = data.items[0];
-    mapCenter = { lat: first.lat, lng: first.lng };
+    saveMapCenter(first.lat, first.lng);
     kakaoMap.setCenter(new kakao.maps.LatLng(first.lat, first.lng));
     kakaoMap.setLevel(5);
     showToast(`📍 ${first.title} 근처로 이동`);
