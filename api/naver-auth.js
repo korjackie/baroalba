@@ -28,11 +28,13 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: '네이버 프로필 조회 실패: ' + (profileData.message || 'unknown') });
     }
 
-    const { id: naverId, email: naverEmail, name, mobile } = profileData.response;
+    const { id: naverId, email: naverEmail, name, mobile, gender: naverGender } = profileData.response;
     const email       = naverEmail || `naver_${naverId}@baroalba.kr`;
     const password    = `naver_${naverId}_baro2024!`;
     const phone       = (mobile || '').replace(/-/g, '');
     const displayName = name || '네이버사용자';
+    // 네이버 성별: 'M'→'male', 'F'→'female', 'U'→미제공
+    const gender = naverGender === 'M' ? 'male' : naverGender === 'F' ? 'female' : null;
 
     // ── 2. 기존 계정 로그인 시도 (가장 빠른 경로) ────────────
     const siRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
@@ -83,7 +85,7 @@ export default async function handler(req, res) {
         headers: adminHeaders,
         body: JSON.stringify({
           email, password, email_confirm: true,
-          user_metadata: { full_name: displayName, phone, provider: 'naver', naver_id: naverId, baroalba_role: '' }
+          user_metadata: { full_name: displayName, phone, gender, provider: 'naver', naver_id: naverId, baroalba_role: '' }
         })
       });
       const crData = await crRes.json();

@@ -2503,11 +2503,13 @@ async function loadWorkerProfileForm() {
   } else if (w.age) {
     birthEl.placeholder = `저장된 나이: 만 ${w.age}세 (생년월일 입력 시 갱신)`;
   }
-  document.getElementById('worker-phone').value = w.phone || '';
+  const meta = currentUser?.user_metadata || {};
+  document.getElementById('worker-phone').value = w.phone || meta.phone || '';
   document.getElementById('worker-bio').value = w.bio || '';
   document.getElementById('worker-experience').value = w.experience || '';
   document.getElementById('worker-region').value = w.region || '';
   if (w.gender) setGender(w.gender);
+  else if (meta.gender) setGender(meta.gender); // 네이버 제공 성별 자동 적용
 }
 
 async function loadWorkerGrade() {

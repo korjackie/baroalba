@@ -768,6 +768,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   document.getElementById('biz-name').textContent = bizRecord.name;
 
+  autoCloseExpiredPostings();
   loadPostings();
   loadApplicants();
   setupRealtime();
@@ -1785,6 +1786,11 @@ function copyPosting(jobId) {
   document.getElementById('surge-settings').style.display = 'none';
   document.getElementById('surge-preview').textContent = '';
   setSameDay(p.same_day_payment || false);
+  // 공고 유형(심부름/일반알바 등) 복사
+  const jobType = p.work_type === 'errand' ? 'errand' : 'alba';
+  setJobType(jobType);
+  // 근무형태(스팟/단기/정기) 복사 — 심부름이 아닐 때만
+  if (p.work_type && p.work_type !== 'errand') setWorkType(p.work_type);
   document.getElementById('location-result').style.display = 'none';
   document.getElementById('naver-url-status').style.display = 'none';
   document.getElementById('f-naver-url-input').value = '';
@@ -1804,6 +1810,19 @@ function updateSurgePreview() {
 }
 
 // ── Realtime ──────────────────────────────────────────────
+// ── 만료 공고 자동 마감 ───────────────────────────────────
+async function autoCloseExpiredPostings() {
+  if (!bizRecord) return;
+  const today = new Date().toISOString().slice(0, 10);
+  // work_end_date가 오늘 이전이고 아직 open/urgent 상태인 내 공고 자동 closed
+  await db.from('job_postings')
+    .update({ status: 'closed' })
+    .eq('business_id', bizRecord.id)
+    .in('status', ['open', 'urgent'])
+    .not('work_end_date', 'is', null)
+    .lt('work_end_date', today);
+}
+
 function setupRealtime() {
   db.channel('owner-updates')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'applications' }, () => {
@@ -2161,7 +2180,7 @@ async function openWorkerProfile() {
         <div style="font-size:20px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
         <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${w.age ? `<span style="background:#FFF0F0;color:#FF4B4B;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">만 ${w.age}세</span>` : '<span style="background:#f5f5f5;color:#bbb;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">나이 미입력</span>'}
-          ${w.gender ? `<span style="background:#EFF6FF;color:#3B82F6;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">${w.gender}</span>` : ''}
+          ${w.gender ? `<span style="background:#EFF6FF;color:#3B82F6;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
           <span style="background:#f5f5f5;color:#888;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">★ ${w.rating || '-'} · ${w.review_count || 0}건</span>
         </div>
       </div>
