@@ -824,12 +824,11 @@
   </div>
 </div>
 
-<!-- 프로필 시트 -->
-<div class="detail-overlay" id="profile-overlay" onclick="closeProfileIfBg(event)">
-  <div class="detail-sheet" style="padding-bottom:32px">
-    <div class="detail-handle"></div>
-    <div style="padding:0 20px 20px">
-      <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:20px">마이페이지</div>
+<!-- 마이페이지 풀페이지 패널 -->
+<div class="full-panel" id="panel-profile">
+  <div class="panel-header">마이페이지</div>
+  <div style="padding:16px 20px 60px;overflow-y:auto;flex:1">
+    <div>
 
       <!-- 로그인 상태 -->
       <div id="profile-logged-in" style="display:none">
@@ -980,7 +979,6 @@
             로그인 / 회원가입
           </button>
         </div>
-      </div>
     </div>
   </div>
 </div>
@@ -1657,7 +1655,7 @@ async function loadMyApplications() {
 }
 
 function goToMyApplications() {
-  document.getElementById('profile-overlay').classList.remove('open');
+  document.getElementById('panel-profile').classList.remove('show');
   const navEl = document.querySelectorAll('.nav-item')[2]; // 내 지원 탭
   setNav(navEl, 'applications');
 }
@@ -2277,14 +2275,16 @@ function setNav(el, tab) {
   const swipeScreen = document.getElementById('swipe-screen');
   const topBar      = document.querySelector('.top-bar');
   const bottomSheet = document.getElementById('bottom-sheet');
-  const radiusBadge = document.getElementById('radius-badge');
-  const panelApps   = document.getElementById('panel-applications');
-  const panelChats  = document.getElementById('panel-chats');
+  const radiusBadge   = document.getElementById('radius-badge');
+  const panelApps     = document.getElementById('panel-applications');
+  const panelChats    = document.getElementById('panel-chats');
+  const panelProfile  = document.getElementById('panel-profile');
 
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
   panelApps.classList.remove('show');
   panelChats.classList.remove('show');
+  panelProfile.classList.remove('show');
 
   if (tab === 'swipe') {
     topBar.style.display      = 'none';
@@ -2304,12 +2304,17 @@ function setNav(el, tab) {
     radiusBadge.style.display = 'none';
     panelChats.classList.add('show');
     loadMyChatList();
+  } else if (tab === 'profile') {
+    topBar.style.display      = 'none';
+    bottomSheet.style.display = 'none';
+    radiusBadge.style.display = 'none';
+    panelProfile.classList.add('show');
+    openProfile();
   } else {
     topBar.style.display      = '';
     bottomSheet.style.display = '';
     radiusBadge.style.display = '';
     if (tab === 'map') setSheetState('peek');
-    else if (tab === 'profile') openProfile();
   }
 }
 
@@ -2680,8 +2685,8 @@ function openProfile() {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
   }
-  document.getElementById('profile-overlay').classList.add('open');
 }
+
 
 let _workerGender = null;
 
@@ -2874,8 +2879,8 @@ async function saveOwnerProfile() {
 }
 
 function closeProfileIfBg(e) {
-  if (e.target === document.getElementById('profile-overlay'))
-    document.getElementById('profile-overlay').classList.remove('open');
+  // 더 이상 사용하지 않음 (profile → full-panel 전환)
+  void e;
 }
 
 function toggleProfilePwForm() {
