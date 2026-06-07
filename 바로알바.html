@@ -2708,7 +2708,8 @@ async function loadWorkerProfileForm() {
     birthEl.placeholder = `저장된 나이: 만 ${w.age}세 (생년월일 입력 시 갱신)`;
   }
   const meta = currentUser?.user_metadata || {};
-  document.getElementById('worker-phone').value = w.phone || meta.phone || '';
+  const rawPhone = w.phone || meta.phone || '';
+  document.getElementById('worker-phone').value = rawPhone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3');
   document.getElementById('worker-bio').value = w.bio || '';
   document.getElementById('worker-experience').value = w.experience || '';
   document.getElementById('worker-region').value = w.region || '';
@@ -2837,7 +2838,7 @@ async function saveWorkerProfile() {
   if (!currentUser) return;
   const birthVal = document.getElementById('worker-birth').value.trim();
   const age = calcAgeFromBirth(birthVal) || null;
-  const phone = document.getElementById('worker-phone').value.trim();
+  const phone = document.getElementById('worker-phone').value.trim().replace(/-/g, '');
   const bio = document.getElementById('worker-bio').value.trim();
   const experience = document.getElementById('worker-experience').value.trim();
   const region = document.getElementById('worker-region').value.trim();
