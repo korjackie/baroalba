@@ -495,6 +495,13 @@
       <div class="form-group">
         <label class="form-label">위치 *</label>
 
+        <!-- 등록된 내 장소에서 선택 -->
+        <div id="my-places-quick" style="display:none;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:#888;margin-bottom:6px">📍 내 등록 장소에서 선택</div>
+          <div id="my-places-quick-list" style="display:flex;flex-direction:column;gap:5px"></div>
+          <div style="margin-top:6px;height:1px;background:#f0f0f0"></div>
+        </div>
+
         <!-- 위치 입력 방식 탭 -->
         <div style="display:flex;gap:4px;background:#f5f5f5;border-radius:10px;padding:3px;margin-bottom:10px">
           <button type="button" id="loc-tab-1" onclick="setLocTab(1)"
@@ -679,6 +686,30 @@
           <button onclick="saveOwnerSettingsProfile()" style="width:100%;padding:11px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
         </div>
       </div>
+      <!-- 내 장소 관리 -->
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:800;color:#222">📍 내 업체 장소</div>
+          <button onclick="showAddPlaceForm()" style="font-size:12px;font-weight:800;background:#FF4B4B;color:#fff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">+ 추가</button>
+        </div>
+        <div id="my-places-list" style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;color:#bbb;text-align:center;padding:8px">장소를 추가하면 공고 등록 시 바로 선택할 수 있어요</div>
+        </div>
+        <!-- 장소 추가 폼 (숨김) -->
+        <div id="add-place-form" style="display:none;margin-top:10px;padding:12px;background:#fff;border-radius:12px;border:1.5px solid #f0f0f0">
+          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">네이버 플레이스 URL로 추가</div>
+          <input id="place-naver-url" type="url" placeholder="https://naver.me/... 또는 map.naver.com/place/..." style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:6px">
+          <input id="place-name" type="text" placeholder="장소 이름 (직접 입력)" style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:6px">
+          <input id="place-address" type="text" placeholder="주소 (직접 입력)" style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:8px">
+          <div style="font-size:11px;color:#aaa;margin-bottom:8px">위도/경도는 URL 입력 후 자동 조회되거나 주소 검색으로 지정</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="geocodePlaceAddress()" style="flex:1;padding:9px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer">📍 주소로 위치 찾기</button>
+            <button onclick="savePlaceToList()" style="flex:1;padding:9px;background:#FF4B4B;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer">저장</button>
+            <button onclick="document.getElementById('add-place-form').style.display='none'" style="padding:9px 12px;background:#f5f5f5;color:#888;border:none;border-radius:9px;font-size:12px;cursor:pointer">취소</button>
+          </div>
+          <div id="place-coords-preview" style="font-size:11px;color:#16a34a;margin-top:6px;display:none"></div>
+        </div>
+      </div>
       <!-- 비밀번호 변경 -->
       <button onclick="toggleOwnerPwForm()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🔑 비밀번호 변경</button>
       <div id="owner-pw-form" style="display:none;padding:14px;background:#f8f8f8;border-radius:14px">
@@ -789,6 +820,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('biz-name').textContent = bizRecord.name;
 
   autoCloseExpiredPostings();
+  loadMyPlaces();
   loadPostings();
   loadApplicants();
   setupRealtime();
@@ -1308,6 +1340,12 @@ function openPostingForm() {
   document.getElementById('surge-preview').textContent = '';
   // 당일정산 초기화
   setSameDay(false);
+  renderMyPlacesQuick();
+  // 기본 장소가 있으면 자동 적용
+  const defaultPlace = _bizPlaces.find(p => p.is_default);
+  if (defaultPlace && !document.getElementById('f-lat').value) {
+    applyPlaceToForm(defaultPlace.id);
+  }
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -1814,6 +1852,7 @@ function copyPosting(jobId) {
   document.getElementById('location-result').style.display = 'none';
   document.getElementById('naver-url-status').style.display = 'none';
   document.getElementById('f-naver-url-input').value = '';
+  renderMyPlacesQuick();
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -2568,8 +2607,123 @@ function openOwnerSettings() {
     const isAdmin = currentUser.email === 'nicepkw@gmail.com';
     document.getElementById('admin-cat-section').style.display = isAdmin ? 'block' : 'none';
     if (isAdmin) renderAdminCatList();
+    loadMyPlaces();
   }
   document.getElementById('settings-overlay').classList.add('open');
+}
+
+// ── 내 업체 장소 관리 ─────────────────────────────────────
+let _bizPlaces = [];
+let _addPlaceLat = null, _addPlaceLng = null;
+
+function renderMyPlacesQuick() {
+  const wrap = document.getElementById('my-places-quick');
+  const list  = document.getElementById('my-places-quick-list');
+  if (!wrap || !list) return;
+  if (!_bizPlaces.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = _bizPlaces.map(p => `
+    <button type="button" onclick="applyPlaceToForm('${p.id}')"
+      style="width:100%;text-align:left;padding:9px 12px;background:${p.is_default?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${p.is_default?'#FF4B4B':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
+      <span style="font-size:16px">📍</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:#FF4B4B">(기본)</span>':''}</div>
+        <div style="font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.address||''}</div>
+      </div>
+    </button>`).join('');
+}
+
+function applyPlaceToForm(placeId) {
+  const p = _bizPlaces.find(x => x.id === placeId);
+  if (!p) return;
+  document.getElementById('f-lat').value = p.lat;
+  document.getElementById('f-lng').value = p.lng;
+  if (p.naver_url) document.getElementById('f-naver-link').value = p.naver_url;
+  showMiniMap(p.lat, p.lng, p.address || p.name);
+  document.getElementById('location-result').textContent = '📍 ' + p.name + (p.address ? ' · ' + p.address : '');
+  document.getElementById('location-result').style.display = 'block';
+  showToast(`📍 ${p.name} 선택됨`);
+}
+
+async function loadMyPlaces() {
+  if (!bizRecord) return;
+  const { data } = await db.from('business_places')
+    .select('*').eq('business_id', bizRecord.id).order('created_at');
+  _bizPlaces = data || [];
+  renderMyPlacesList();
+}
+
+function renderMyPlacesList() {
+  const el = document.getElementById('my-places-list');
+  if (!_bizPlaces.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#bbb;text-align:center;padding:8px">장소를 추가하면 공고 등록 시 바로 선택할 수 있어요</div>';
+    return;
+  }
+  el.innerHTML = _bizPlaces.map(p => `
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:10px 12px;border:1.5px solid ${p.is_default?'#FF4B4B':'#f0f0f0'}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#222">${p.name}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${p.address||''}</div>
+      </div>
+      ${p.is_default ? '<span style="font-size:10px;font-weight:800;color:#FF4B4B;background:#FFF0F0;padding:2px 6px;border-radius:6px;white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:#888;background:#f5f5f5;border:none;border-radius:6px;padding:3px 7px;cursor:pointer">기본 설정</button>`}
+      <button onclick="deletePlace('${p.id}')" style="font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;line-height:1;flex-shrink:0">✕</button>
+    </div>`).join('');
+}
+
+function showAddPlaceForm() {
+  document.getElementById('add-place-form').style.display = 'block';
+  document.getElementById('place-naver-url').value = '';
+  document.getElementById('place-name').value = '';
+  document.getElementById('place-address').value = '';
+  document.getElementById('place-coords-preview').style.display = 'none';
+  _addPlaceLat = null; _addPlaceLng = null;
+}
+
+async function geocodePlaceAddress() {
+  const addr = document.getElementById('place-address').value.trim();
+  if (!addr) { showToast('주소를 입력해주세요'); return; }
+  if (!window.kakao?.maps?.services) { showToast('지도 서비스 로딩 중...'); return; }
+  const geocoder = new kakao.maps.services.Geocoder();
+  geocoder.addressSearch(addr, (result, status) => {
+    if (status !== kakao.maps.services.Status.OK) { showToast('주소를 찾을 수 없어요'); return; }
+    _addPlaceLat = parseFloat(result[0].y);
+    _addPlaceLng = parseFloat(result[0].x);
+    const preview = document.getElementById('place-coords-preview');
+    preview.textContent = `✅ 위치 확인: ${result[0].address_name}`;
+    preview.style.display = 'block';
+  });
+}
+
+async function savePlaceToList() {
+  const name    = document.getElementById('place-name').value.trim();
+  const address = document.getElementById('place-address').value.trim();
+  const naverUrl = document.getElementById('place-naver-url').value.trim();
+  if (!name) { showToast('장소 이름을 입력해주세요'); return; }
+  if (!_addPlaceLat || !_addPlaceLng) { showToast('주소로 위치 찾기를 먼저 해주세요'); return; }
+
+  const isFirst = _bizPlaces.length === 0;
+  const { error } = await db.from('business_places').insert({
+    business_id: bizRecord.id,
+    name, address, lat: _addPlaceLat, lng: _addPlaceLng,
+    naver_url: naverUrl || null,
+    is_default: isFirst
+  });
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  document.getElementById('add-place-form').style.display = 'none';
+  showToast('✅ 장소가 추가됐습니다');
+  await loadMyPlaces();
+}
+
+async function setDefaultPlace(placeId) {
+  await db.from('business_places').update({ is_default: false }).eq('business_id', bizRecord.id);
+  await db.from('business_places').update({ is_default: true }).eq('id', placeId);
+  await loadMyPlaces();
+}
+
+async function deletePlace(placeId) {
+  if (!confirm('장소를 삭제할까요?')) return;
+  await db.from('business_places').delete().eq('id', placeId);
+  await loadMyPlaces();
 }
 
 async function saveOwnerSettingsProfile() {

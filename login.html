@@ -697,16 +697,18 @@ function initNaverLogin() {
 async function handleNaverCallback(naverToken) {
   showLoading('네이버 로그인 중...');
 
-  // 5초 안에 응답 없으면 강제 취소
+  // 15초 타임아웃 (admin API 호출이 느릴 수 있음)
   const timer = setTimeout(() => {
     hideLoading();
     showError('네이버 로그인 시간이 초과됐습니다.\n다시 시도해주세요.');
-  }, 5000);
+  }, 15000);
 
   try {
     const res  = await fetch(`/api/naver-auth?access_token=${encodeURIComponent(naverToken)}`);
     const data = await res.json();
     clearTimeout(timer);
+
+    console.log('[Naver] API response:', JSON.stringify(data).slice(0, 200));
 
     if (!res.ok || data.error) {
       hideLoading();
@@ -714,13 +716,23 @@ async function handleNaverCallback(naverToken) {
       return;
     }
 
-    // 서버에서 받은 세션을 Supabase에 설정
-    const { error } = await db.auth.setSession({
-      access_token:  data.session.access_token,
-      refresh_token: data.session.refresh_token
-    });
+    // 세션 객체 추출 — 응답 구조 두 가지 모두 처리
+    // 구조1: { session: { access_token, refresh_token } }
+    // 구조2: { access_token, refresh_token } (직접 반환)
+    const sess = data.session || data;
+    const accessToken  = sess.access_token;
+    const refreshToken = sess.refresh_token;
+
+    console.log('[Naver] tokens present:', !!accessToken, !!refreshToken);
+
+    if (!accessToken || !refreshToken) {
+      hideLoading();
+      showError('네이버 로그인 실패: 세션 토큰을 받지 못했습니다. 다시 시도해주세요.');
+      return;
+    }
+
+    const { error } = await db.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
     if (error) { hideLoading(); showError('세션 설정 실패: ' + error.message); return; }
-    // onAuthStateChange → goToApp / showRoleModal 처리
 
   } catch(e) {
     clearTimeout(timer);
