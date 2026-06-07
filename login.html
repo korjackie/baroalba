@@ -716,19 +716,29 @@ async function handleNaverCallback(naverToken) {
       return;
     }
 
-    // 서버가 { email, password } 반환 → SDK signInWithPassword로 직접 로그인
-    // (setSession은 Supabase 신버전에서 403 문제 있음)
-    const { email: naverEmail, password: naverPw } = data;
-    console.log('[Naver] signing in with email:', naverEmail);
+    // 응답에서 로그인 처리 — 두 가지 형식 지원
+    // 형식A: { email, password }  → signInWithPassword (신버전)
+    // 형식B: { session: { access_token, refresh_token } } → setSession (구버전 호환)
+    let loginError = null;
 
-    if (!naverEmail || !naverPw) {
+    if (data.email && data.password) {
+      console.log('[Naver] signInWithPassword:', data.email);
+      const { error } = await db.auth.signInWithPassword({ email: data.email, password: data.password });
+      loginError = error;
+    } else if (data.session?.access_token) {
+      console.log('[Naver] setSession fallback');
+      const { error } = await db.auth.setSession({
+        access_token:  data.session.access_token,
+        refresh_token: data.session.refresh_token
+      });
+      loginError = error;
+    } else {
       hideLoading();
-      showError('네이버 로그인 실패: 계정 정보를 받지 못했습니다. 다시 시도해주세요.');
+      showError('네이버 로그인 실패: 응답 형식 오류. 잠시 후 다시 시도해주세요.');
       return;
     }
 
-    const { error } = await db.auth.signInWithPassword({ email: naverEmail, password: naverPw });
-    if (error) { hideLoading(); showError('네이버 로그인 실패: ' + error.message); return; }
+    if (loginError) { hideLoading(); showError('네이버 로그인 실패: ' + loginError.message); return; }
 
   } catch(e) {
     clearTimeout(timer);
