@@ -36,17 +36,7 @@ module.exports = async function handler(req, res) {
     // 네이버 성별: 'M'→'male', 'F'→'female', 'U'→미제공
     const gender = naverGender === 'M' ? 'male' : naverGender === 'F' ? 'female' : null;
 
-    // ── 2. 기존 계정 확인 (비밀번호 로그인은 클라이언트에서 SDK로 처리) ────
-    const siRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const siData = await siRes.json();
-    // 기존 계정 로그인 성공 → 클라이언트가 signInWithPassword 로 직접 처리
-    if (siData.access_token) return res.json({ email, password });
-
-    // ── 3. Admin API로 기존 유저 찾기 ────────────────────────
+    // ── 2. Admin API로 기존 유저 찾기 (항상 메타데이터 최신화) ──────────
     const adminHeaders = {
       'apikey': serviceKey,
       'Authorization': `Bearer ${serviceKey}`,
@@ -58,43 +48,39 @@ module.exports = async function handler(req, res) {
     const listData = await listRes.json();
     const existing = (listData.users || []).find(u => u.email === email);
 
+    // 공통 메타데이터 (Naver 최신 프로필 항상 반영)
+    const userMeta = {
+      full_name: displayName,
+      phone,
+      gender,
+      provider: 'naver',
+      naver_id: naverId,
+      baroalba_role: existing?.user_metadata?.baroalba_role || ''
+    };
+
     if (existing) {
-      // 이메일 확인 + 비밀번호 재설정
+      // 기존 유저: 비밀번호 + 메타데이터 업데이트 (name/phone/gender 항상 최신화)
       const upRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${existing.id}`, {
         method: 'PUT',
         headers: adminHeaders,
-        body: JSON.stringify({
-          email_confirm: true,
-          password,
-          user_metadata: {
-            full_name: displayName,
-            phone,
-            provider: 'naver',
-            naver_id: naverId,
-            baroalba_role: existing.user_metadata?.baroalba_role || ''
-          }
-        })
+        body: JSON.stringify({ email_confirm: true, password, user_metadata: userMeta })
       });
       if (!upRes.ok) {
         const err = await upRes.json();
         return res.status(500).json({ error: '계정 업데이트 실패: ' + JSON.stringify(err) });
       }
     } else {
-      // 신규 계정 생성 (이메일 자동 확인)
+      // 신규 유저: 계정 생성 (이메일 자동 확인)
       const crRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
         method: 'POST',
         headers: adminHeaders,
-        body: JSON.stringify({
-          email, password, email_confirm: true,
-          user_metadata: { full_name: displayName, phone, gender, provider: 'naver', naver_id: naverId, baroalba_role: '' }
-        })
+        body: JSON.stringify({ email, password, email_confirm: true, user_metadata: userMeta })
       });
       const crData = await crRes.json();
       if (!crRes.ok) return res.status(500).json({ error: '계정 생성 실패: ' + JSON.stringify(crData) });
     }
 
-    // ── 4. 계정 준비 완료 → 클라이언트가 signInWithPassword로 직접 처리
-    // (setSession 대신 SDK 직접 로그인으로 403 문제 해결)
+    // ── 3. 계정 준비 완료 → 클라이언트가 signInWithPassword로 직접 처리
     return res.json({ email, password });
 
   } catch (e) {
