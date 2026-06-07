@@ -729,6 +729,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   loadPostings();
   loadApplicants();
   setupRealtime();
+
+  // 새로고침 시 마지막 활성 탭 복원
+  const savedTab = sessionStorage.getItem('ownerActiveTab');
+  if (savedTab === 'map') {
+    setNav(document.querySelectorAll('.nav-item')[0], 'map');
+  }
 });
 
 // ── 내 공고 불러오기 ─────────────────────────────────────
@@ -1893,6 +1899,7 @@ function switchTab(name, btn) {
 function setNav(el, tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
+  sessionStorage.setItem('ownerActiveTab', tab);
   const panelChats = document.getElementById('panel-owner-chats');
   panelChats.classList.remove('show');
   document.getElementById('owner-map-overlay').style.display = 'none';
@@ -1939,7 +1946,8 @@ function openOwnerMap() {
 function closeOwnerMap() {
   document.getElementById('owner-map-overlay').style.display = 'none';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector('.nav-item').classList.add('active');
+  document.querySelectorAll('.nav-item')[1].classList.add('active');
+  sessionStorage.setItem('ownerActiveTab', 'postings');
 }
 
 async function loadOwnerMapJobs() {
