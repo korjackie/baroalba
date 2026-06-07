@@ -746,14 +746,7 @@ function loginNaver() {
   if (!naverLoginObj) { showToastMsg('네이버 로그인을 초기화 중입니다. 잠시 후 다시 시도해주세요.'); return; }
   const link = document.getElementById('naverIdLogin').querySelector('a');
   if (!link) { showToastMsg('네이버 로그인 버튼을 불러오는 중입니다. 잠시 후 다시 시도해주세요.'); return; }
-  try {
-    // auth_type=reprompt: 기존 동의 있어도 선택 항목 동의 화면 재표시 (연락처/성별 수집용)
-    const url = new URL(link.href);
-    url.searchParams.set('auth_type', 'reprompt');
-    window.location.href = url.toString();
-  } catch(e) {
-    link.click();
-  }
+  link.click();
 }
 
 // ── 이메일 로그인 ──────────────────────────────────────────
