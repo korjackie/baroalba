@@ -702,7 +702,7 @@ async function handleNaverCallback(naverToken) {
   }, 15000);
 
   try {
-    const res  = await fetch(`/api/naver-auth?access_token=${encodeURIComponent(naverToken)}`, { cache: 'no-store' });
+    const res  = await fetch(`/api/naver-auth?access_token=${encodeURIComponent(naverToken)}&_t=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     clearTimeout(timer);
 

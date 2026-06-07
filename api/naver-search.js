@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const start = Math.max(1, parseInt(req.query.start) || 1);
-    const url = `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(query)}&display=5&start=${start}&sort=comment`;
+    const url = `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(query)}&display=10&start=${start}&sort=random`;
     const response = await fetch(url, {
       headers: {
         'X-Naver-Client-Id':     clientId,
