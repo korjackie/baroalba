@@ -15,6 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services"><\/scr'+'ipt>');</script>
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     :root { --red:#FF4B4B; --nav-h:64px; }
@@ -2682,19 +2683,27 @@ function showAddPlaceForm() {
   _addPlaceLat = null; _addPlaceLng = null;
 }
 
-async function geocodePlaceAddress() {
-  const addr = document.getElementById('place-address').value.trim();
-  if (!addr) { showToast('주소를 입력해주세요'); return; }
-  if (!window.kakao?.maps?.services) { showToast('지도 서비스 로딩 중...'); return; }
-  const geocoder = new kakao.maps.services.Geocoder();
-  geocoder.addressSearch(addr, (result, status) => {
-    if (status !== kakao.maps.services.Status.OK) { showToast('주소를 찾을 수 없어요'); return; }
-    _addPlaceLat = parseFloat(result[0].y);
-    _addPlaceLng = parseFloat(result[0].x);
-    const preview = document.getElementById('place-coords-preview');
-    preview.textContent = `✅ 위치 확인: ${result[0].address_name}`;
-    preview.style.display = 'block';
-  });
+function geocodePlaceAddress() {
+  if (!window.daum?.Postcode) { showToast('주소 검색 서비스 로딩 중...'); return; }
+  new daum.Postcode({
+    oncomplete(data) {
+      // 도로명 주소 우선, 없으면 지번 주소
+      const addr = data.roadAddress || data.jibunAddress;
+      document.getElementById('place-address').value = addr;
+      document.getElementById('place-address-detail').focus();
+
+      // 카카오 지오코딩으로 위도/경도 자동 획득
+      if (!window.kakao?.maps?.services) { showToast('좌표 변환 서비스 로딩 중...'); return; }
+      new kakao.maps.services.Geocoder().addressSearch(addr, (result, status) => {
+        if (status !== kakao.maps.services.Status.OK) { showToast('좌표 변환 실패. 다시 시도해주세요'); return; }
+        _addPlaceLat = parseFloat(result[0].y);
+        _addPlaceLng = parseFloat(result[0].x);
+        const preview = document.getElementById('place-coords-preview');
+        preview.textContent = `✅ ${addr}`;
+        preview.style.display = 'block';
+      });
+    }
+  }).open();
 }
 
 async function savePlaceToList() {
