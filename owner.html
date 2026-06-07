@@ -603,7 +603,19 @@
 </div>
 
 <!-- 지도 탭 패널 -->
-<div class="full-panel" id="panel-owner-map">
+<div class="full-panel" id="panel-owner-map" style="position:relative">
+  <!-- 검색바 (지도 위에 float) -->
+  <div style="position:absolute;top:12px;left:12px;right:12px;z-index:10;display:flex;gap:8px;pointer-events:all">
+    <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.15)">
+      <span style="font-size:16px;color:#999">🔍</span>
+      <input id="owner-map-search" type="text" placeholder="지역, 장소 검색 후 Enter"
+        style="flex:1;border:none;outline:none;font-size:14px;color:#222;background:transparent"
+        onkeydown="if(event.key==='Enter')searchOwnerLocation(this.value.trim())">
+      <button onclick="document.getElementById('owner-map-search').value=''" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;line-height:1;padding:0">✕</button>
+    </div>
+    <button onclick="ownerMapMyLocation()" title="내 위치로"
+      style="width:44px;height:44px;background:#fff;border:none;border-radius:12px;font-size:20px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.15);flex-shrink:0">📍</button>
+  </div>
   <div id="owner-map-container" style="flex:1;width:100%"></div>
   <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center;flex-shrink:0">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
 </div>
@@ -2021,6 +2033,31 @@ async function loadOwnerMapJobs() {
     kakao.maps.event.addListener(_ownerMap, 'dragend', loadOwnerMapJobs);
     _ownerMapDragBound = true;
   }
+}
+
+async function searchOwnerLocation(q) {
+  if (!q) return;
+  try {
+    const res  = await fetch(`/api/naver-search?query=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    if (!res.ok || !data.items?.length) { showToast('검색 결과가 없어요'); return; }
+    const first = data.items[0];
+    _ownerMap.setCenter(new kakao.maps.LatLng(first.lat, first.lng));
+    _ownerMap.setLevel(5);
+    showToast(`📍 ${first.title} 근처로 이동`);
+    document.getElementById('owner-map-search').blur();
+    loadOwnerMapJobs();
+  } catch(e) {
+    showToast('검색 중 오류가 발생했어요');
+  }
+}
+
+function ownerMapMyLocation() {
+  if (!navigator.geolocation) { showToast('위치 정보를 사용할 수 없습니다'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    _ownerMap.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+    loadOwnerMapJobs();
+  }, () => showToast('위치 권한이 필요합니다'));
 }
 
 function ownerMapInfo(jobId) {
