@@ -735,6 +735,7 @@ async function handleNaverCallback(naverToken) {
       const meta = loginData.user.user_metadata || {};
       const payload = { kakao_uid: loginData.user.id };
       payload.name = meta.full_name || loginData.user.email?.split('@')[0] || '알바생';
+      if (loginData.user.email) payload.email = loginData.user.email;
       if (meta.phone)  payload.phone  = meta.phone;
       if (meta.gender) payload.gender = meta.gender;
       await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
@@ -828,7 +829,7 @@ async function confirmRole() {
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || '사용자';
   const table = selectedRole === 'worker' ? 'workers' : 'businesses';
   await db.from(table).upsert(
-    { kakao_uid: user.id, name: displayName, phone: user.user_metadata?.phone || '' },
+    { kakao_uid: user.id, name: displayName, email: user.email || '', phone: user.user_metadata?.phone || '' },
     { onConflict: 'kakao_uid' }
   );
 

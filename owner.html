@@ -975,15 +975,16 @@ async function loadInlineApplicants(jobId) {
   }
   el.innerHTML = apps.map(a => {
     const w = a.workers;
-    const statusHtml = buildStatusHtml(a, false);
+    const statusHtml = buildStatusHtml(a, true);
+    const fmtPhone = w?.phone ? w.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') : '';
     return `
-    <div class="applicant-card" id="app-card-${a.id}">
+    <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
       <div class="applicant-avatar">👤</div>
       <div class="applicant-info">
         <div class="applicant-name">${w?.name || '이름없음'}</div>
-        <div class="applicant-meta">★ ${w?.rating || '-'}${w?.phone ? ' · ' + w.phone : ''}</div>
+        <div class="applicant-meta">★ ${w?.rating || '-'}${fmtPhone ? ' · ' + fmtPhone : ''}</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end" onclick="event.stopPropagation()">
         ${statusHtml}
         <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:6px 12px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 채팅</button>
       </div>
@@ -2219,7 +2220,7 @@ async function openWorkerProfileDirect(appId) {
 async function openWorkerProfile() {
   if (!_chatAppId) return;
   const { data: app } = await db.from('applications')
-    .select('*, workers(name, phone, age, bio, experience, rating, review_count, skills), job_postings(title)')
+    .select('*, workers(name, phone, email, age, bio, experience, rating, review_count, skills), job_postings(title)')
     .eq('id', _chatAppId).single();
   if (!app) return;
   const w = app.workers || {};
@@ -2237,7 +2238,7 @@ async function openWorkerProfile() {
     ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
         <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">📞 연락처</div>
         <div style="display:flex;align-items:center;justify-content:space-between">
-          <div style="font-size:16px;font-weight:800;color:#222">${w.phone}</div>
+          <div style="font-size:16px;font-weight:800;color:#222">${w.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3')}</div>
           <a href="tel:${w.phone}" style="background:#22c55e;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:8px;text-decoration:none">📞 전화</a>
         </div>
       </div>`
