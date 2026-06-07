@@ -1037,7 +1037,7 @@ function buildStatusHtml(a, stopProp) {
     pending:   { bg:'#EFF6FF', color:'#3B82F6', label:'📥 접수' },
     reviewing: { bg:'#FFF7ED', color:'#F59E0B', label:'🔍 검토중' },
     accepted:  { bg:'#DCFCE7', color:'#16a34a', label:'✅ 합격' },
-    rejected:  { bg:'#FEF2F2', color:'#EF4444', label:'❌ 거절' },
+    rejected:  { bg:'#FEF2F2', color:'#EF4444', label:'❌ 탈락' },
     cancelled: { bg:'#f5f5f5', color:'#aaa',    label:'🚫 지원취소' },
     completed: { bg:'#F0FDF4', color:'#15803d', label:'🏁 근무완료' },
     noshow:    { bg:'#FFF1F2', color:'#BE123C', label:'😓 노쇼' },
@@ -1081,7 +1081,7 @@ function buildStatusHtml(a, stopProp) {
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
       ${a.status === 'pending' ? `<button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#FFF7ED;color:#F59E0B;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🔍 검토</button>` : ''}
       <button onclick="${sp}updateApplication('${a.id}','accepted')" style="padding:5px 10px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">✅ 합격</button>
-      <button onclick="${sp}updateApplication('${a.id}','rejected')" style="padding:5px 10px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">❌ 거절</button>
+      <button onclick="${sp}updateApplication('${a.id}','rejected')" style="padding:5px 10px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">❌ 탈락</button>
     </div>
   </div>`;
 }
@@ -1231,7 +1231,7 @@ function filterApplicants(status) {
   const filtered = status === 'all' ? _allApplicants : _allApplicants.filter(a => a.status === status);
   renderApplicants(filtered);
   // 필터 안내 토스트
-  const labels = { all:'전체 지원자', accepted:'합격 확정', pending:'접수', reviewing:'검토중', rejected:'거절', cancelled:'지원취소' };
+  const labels = { all:'전체 지원자', accepted:'합격 확정', pending:'접수', reviewing:'검토중', rejected:'탈락', cancelled:'지원취소' };
   showToast(`${labels[status] || status} ${filtered.length}명`);
 }
 
@@ -1303,7 +1303,7 @@ async function updateApplication(appId, status) {
   } else if (status === 'pending') {
     showToast('↩ 합격 취소 — 검토중으로 변경됐습니다');
   } else {
-    showToast('거절 처리됐습니다');
+    showToast('탈락 처리됐습니다');
   }
   loadApplicants();
   loadPostings();
@@ -2225,11 +2225,11 @@ async function openWorkerProfileDirect(appId) {
 async function openWorkerProfile() {
   if (!_chatAppId) return;
   const { data: app } = await db.from('applications')
-    .select('*, workers(name, phone, email, age, bio, experience, rating, review_count, skills), job_postings(title)')
+    .select('*, workers(name, phone, email, gender, age, bio, experience, rating, review_count, skills), job_postings(title)')
     .eq('id', _chatAppId).single();
   if (!app) return;
   const w = app.workers || {};
-  const STATUS = { pending:'⏳ 검토중', accepted:'✅ 수락', rejected:'❌ 거절', completed:'🏁 완료', cancelled:'취소' };
+  const STATUS = { pending:'⏳ 접수중', reviewing:'🔍 검토중', accepted:'✅ 합격', rejected:'❌ 탈락', completed:'🏁 완료', cancelled:'취소' };
 
   const infoRow = (label, value, extra = '') => `
     <div style="background:#f8f8f8;border-radius:12px;padding:14px">
@@ -2300,10 +2300,13 @@ async function openWorkerProfile() {
     </div>
 
     <!-- 액션 버튼 -->
-    <div style="display:flex;gap:8px">
-      ${app.status==='pending'
-        ? `<button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 수락</button>
-           <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 거절</button>`
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${(app.status==='pending'||app.status==='reviewing')
+        ? `${app.status==='pending'
+            ? `<button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;min-width:90px;padding:13px;background:#FFF7ED;color:#F59E0B;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">🔍 검토 진행</button>`
+            : ''}
+           <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;min-width:90px;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 합격</button>
+           <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;min-width:90px;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>`
         : ''}
     </div>`;
   document.getElementById('worker-profile-overlay').classList.add('open');
@@ -2314,8 +2317,10 @@ async function updateApplicationFromProfile(appId, status) {
   if (status === 'accepted') {
     await sendAcceptMessage(appId);
     showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+  } else if (status === 'reviewing') {
+    showToast('🔍 검토 진행 중으로 변경됐습니다');
   } else {
-    showToast('거절 처리됐습니다');
+    showToast('탈락 처리됐습니다');
   }
   document.getElementById('worker-profile-overlay').classList.remove('open');
   loadApplicants(); loadPostings();
