@@ -170,7 +170,7 @@
     .marker-bubble.errand { background: #7C3AED; border-color: #7C3AED; }
     .marker-bubble.errand .mk-wage { color: #fff; }
     .marker-bubble.errand .mk-sub  { color: rgba(255,255,255,0.85); }
-    .mk-wage { font-size: 20px; font-weight: 900; color: var(--red); display: block; }
+    .mk-wage { font-size: 16px; font-weight: 900; color: var(--red); display: block; }
     .mk-sub  { font-size: 12px; font-weight: 700; color: #888; display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
     .marker-tail {
       width: 0; height: 0;
@@ -1226,9 +1226,9 @@ function renderMarkers() {
 
     const bizName = (job.biz_name || '').slice(0, 8);
     // 심부름: 카테고리 아이콘+이름 표시 / 일반: 업체명
-    const catIcon  = isErrand ? (ERRAND_ICON_MAP[job.category] || '🏃') : (CAT_EMOJI[job.category] || '');
-    const subLabel = isErrand ? `${catIcon} ${job.category || '심부름'}` : `${catIcon ? catIcon+' ' : ''}${bizName}`;
-    const wageUnit = isErrand ? '/건' : '/시';
+    const catIcon  = isErrand ? (ERRAND_ICON_MAP[job.category] || '🏃') : '';
+    const subLabel = isErrand ? `${catIcon} ${job.category || '심부름'}` : bizName;
+    const wageUnit = isErrand ? '/건' : '/시간';
 
     const surgeHtml = hasSurge
       ? `<div class="surge-badge">↑${(job.wage_delta/1000).toFixed(0)}k</div>` : '';
@@ -1241,7 +1241,7 @@ function renderMarkers() {
         <div class="marker-bubble ${statusCls}">
           <span class="mk-wage">${wageStr}<span style="font-size:10px;font-weight:700">${wageUnit}</span></span>
           <span class="mk-sub">${subLabel}</span>
-          ${!isErrand && startFmt ? `<span class="mk-sub">⏰ ${startFmt}</span>` : ''}
+          ${!isErrand && startFmt ? `<span class="mk-sub">${startFmt}</span>` : ''}
         </div>
         <div class="marker-tail ${tailCls}"></div>
       </div>`;
