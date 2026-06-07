@@ -1680,7 +1680,7 @@ async function loadMyApplications() {
   }
 
   const { data: apps } = await db.from('applications')
-    .select('*, job_postings(title, current_wage, duration_hours, start_time, work_type, work_end_date, work_days, category, businesses(name, phone))')
+    .select('*, job_postings(title, current_wage, duration_hours, start_time, work_type, work_end_date, work_days, category, address, businesses(name, phone))')
     .eq('worker_id', worker.id)
     .order('applied_at', { ascending: false });
 
@@ -1690,52 +1690,86 @@ async function loadMyApplications() {
   }
 
   const STATUS = {
-    pending:   { label: '검토중',      color: '#888',    bg: '#f5f5f5' },
-    reviewing: { label: '검토중',      color: '#888',    bg: '#f5f5f5' },
-    accepted:  { label: '✅ 합격',     color: '#16a34a', bg: '#f0fdf4' },
-    rejected:  { label: '❌ 거절',     color: '#dc2626', bg: '#fef2f2' },
-    cancelled: { label: '취소됨',      color: '#aaa',    bg: '#f0f0f0' },
-    completed: { label: '🏁 완료',     color: '#3B82F6', bg: '#EFF6FF' },
-    noshow:    { label: '⚠️ 노쇼',    color: '#D97706', bg: '#FEF3C7' },
+    pending:   { label: '검토중',   color: '#888',    bg: '#f5f5f5' },
+    reviewing: { label: '🔍 검토중', color: '#F59E0B', bg: '#FFF7ED' },
+    accepted:  { label: '✅ 합격',  color: '#16a34a', bg: '#f0fdf4' },
+    rejected:  { label: '❌ 탈락',  color: '#dc2626', bg: '#fef2f2' },
+    cancelled: { label: '취소됨',   color: '#aaa',    bg: '#f0f0f0' },
+    completed: { label: '🏁 완료',  color: '#3B82F6', bg: '#EFF6FF' },
+    noshow:    { label: '⚠️ 노쇼', color: '#D97706', bg: '#FEF3C7' },
   };
+  const WORK_TYPE = {
+    spot:    { label: '스팟',   emoji: '⚡', bg: '#f8f8f8',  color: '#666' },
+    short:   { label: '단기',   emoji: '📅', bg: '#EFF6FF',  color: '#3B82F6' },
+    regular: { label: '정기',   emoji: '🔄', bg: '#F0FDF4',  color: '#16a34a' },
+    errand:  { label: '심부름', emoji: '🏃', bg: '#F3E8FF',  color: '#7C3AED' },
+  };
+  const fmtPhone = p => p ? p.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
+
   el.innerHTML = apps.map(a => {
     const job = a.job_postings || {};
     const biz = job.businesses || {};
-    const s = STATUS[a.status] || { label: a.status || '검토중', color: '#888', bg: '#f5f5f5' };
+    const s  = STATUS[a.status]  || { label: a.status || '검토중', color: '#888', bg: '#f5f5f5' };
+    const wt = WORK_TYPE[job.work_type] || WORK_TYPE.spot;
     const canCancel  = a.status === 'pending' || a.status === 'reviewing';
     const isAccepted = a.status === 'accepted';
-    // 금액 표기: 시급 × 시간
+
     const wageStr = job.current_wage
       ? job.duration_hours
         ? `${job.current_wage.toLocaleString()}원/시 · ${job.duration_hours}시간 (총 ${(job.current_wage * job.duration_hours).toLocaleString()}원 예상)`
         : `${job.current_wage.toLocaleString()}원/시`
       : '';
-    // 근무일시
+
     const startStr = (() => {
       if (!job.start_time) return '';
       const d = new Date(job.start_time);
       return `${d.getMonth()+1}/${d.getDate()}(${['일','월','화','수','목','금','토'][d.getDay()]}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
     })();
-    const workEndStr = job.work_end_date ? `~${job.work_end_date.slice(5).replace('-','/')}` : '';
+    const workEndStr  = job.work_end_date ? `~${job.work_end_date.slice(5).replace('-','/')}` : '';
     const workDaysStr = job.work_days || '';
-    const appliedStr = a.applied_at ? (() => { const d = new Date(a.applied_at); return `${d.getMonth()+1}/${d.getDate()} 지원`; })() : '';
+    const appliedStr  = a.applied_at ? (() => { const d = new Date(a.applied_at); return `${d.getMonth()+1}/${d.getDate()} 지원`; })() : '';
+
+    // 주소: 시/구 단위까지만 축약
+    const addrShort = (() => {
+      const addr = job.address || '';
+      if (!addr) return '';
+      const parts = addr.split(' ');
+      return parts.slice(0, Math.min(3, parts.length)).join(' ');
+    })();
+
     return `
     <div onclick="openApplicationJobDetail('${a.job_posting_id}')" style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:2px">${job.title || '공고'}</div>
-          <div style="font-size:13px;color:#888">${biz.name || ''}</div>
+      <!-- 헤더: 공고 유형 + 상태 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;background:${wt.bg};color:${wt.color}">${wt.emoji} ${wt.label}</span>
+          ${job.category ? `<span style="font-size:11px;color:#aaa;font-weight:600">${job.category}</span>` : ''}
         </div>
-        <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">${s.label}</div>
+        <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:3px 10px;border-radius:20px;white-space:nowrap">${s.label}</div>
       </div>
+
+      <!-- 공고명 + 업체명 -->
+      <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:2px">${job.title || '공고'}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:13px;color:#666;font-weight:700">${biz.name || ''}</span>
+        ${addrShort ? `<span style="font-size:12px;color:#aaa">📍 ${addrShort}</span>` : ''}
+      </div>
+
+      <!-- 시급 -->
       <div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px">${wageStr}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px">
-        ${startStr ? `<span style="font-size:12px;color:#555;font-weight:700;background:#f8f8f8;padding:4px 8px;border-radius:8px">🕐 ${startStr}</span>` : ''}
-        ${workEndStr ? `<span style="font-size:12px;color:#3B82F6;font-weight:700;background:#EFF6FF;padding:4px 8px;border-radius:8px">📅 ${workEndStr}까지</span>` : ''}
-        ${workDaysStr ? `<span style="font-size:12px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:4px 8px;border-radius:8px">🔄 ${workDaysStr}</span>` : ''}
-        ${appliedStr ? `<span style="font-size:11px;color:#aaa;font-weight:600;padding:4px 0">📌 ${appliedStr}</span>` : ''}
+
+      <!-- 날짜/시간 칩 -->
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
+        ${startStr    ? `<span style="font-size:11px;color:#555;font-weight:700;background:#f8f8f8;padding:4px 9px;border-radius:8px">🕐 ${startStr}</span>` : ''}
+        ${workEndStr  ? `<span style="font-size:11px;color:#3B82F6;font-weight:700;background:#EFF6FF;padding:4px 9px;border-radius:8px">📅 ${workEndStr}까지</span>` : ''}
+        ${workDaysStr ? `<span style="font-size:11px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:4px 9px;border-radius:8px">🔄 ${workDaysStr}</span>` : ''}
+        ${appliedStr  ? `<span style="font-size:11px;color:#bbb;font-weight:600;padding:4px 0">📌 ${appliedStr}</span>` : ''}
       </div>
-      ${biz.phone ? `<div style="font-size:12px;color:#888;margin-top:4px">📞 ${biz.phone}</div>` : ''}
+
+      <!-- 업체 연락처 -->
+      ${biz.phone ? `<div style="font-size:12px;color:#888;margin-top:2px">📞 ${fmtPhone(biz.phone)}</div>` : ''}
+
+      <!-- 액션 버튼 -->
       ${isAccepted ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">💬 업주에게 문의하기</button>` : ''}
       ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
     </div>`;

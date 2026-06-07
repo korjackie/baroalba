@@ -1504,7 +1504,14 @@ function openEditForm(jobId) {
     setTimeSelects('start', def);
     setTimeSelects('end', new Date(def.getTime() + 4 * 3600000));
   }
-  if (p.lat && p.lng) showMiniMap(p.lat, p.lng, p.address || '');
+  if (p.lat && p.lng) {
+    showMiniMap(p.lat, p.lng, p.address || '');
+    if (p.address) {
+      document.getElementById('f-address').value = p.address;
+      document.getElementById('location-result').textContent = '📍 ' + p.address;
+      document.getElementById('location-result').style.display = 'block';
+    }
+  }
   setSameDay(p.same_day_payment || false);
   document.getElementById('form-overlay').classList.add('open');
 }
@@ -1794,11 +1801,15 @@ async function submitPosting() {
   const periodEnd  = document.getElementById('f-period-end').value || null;
   const holidayPay = document.getElementById('f-holiday-pay').value === 'true';
 
+  const addrText = document.getElementById('f-address')?.value.trim()
+    || document.getElementById('f-direct-addr')?.value.trim() || null;
+
   const payload = {
     business_id: bizRecord.id,
     title, category, description: desc,
     current_wage: wage,
     lat, lng,
+    address: addrText,
     duration_hours: duration,
     needed_count: needed || 1,
     start_time: startTime.toISOString(),
