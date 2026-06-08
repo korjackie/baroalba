@@ -1022,15 +1022,21 @@ function openPostingDetail(jobId) {
       </div>
 
       <!-- 근무 정보 그리드 -->
+      ${(() => {
+        const endStr = (p.start_time && p.duration_hours) ? (() => {
+          const e = new Date(p.start_time); e.setHours(e.getHours() + p.duration_hours); return fmtDate(e.toISOString());
+        })() : null;
+        return `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 시작</div>
           <div style="font-size:13px;font-weight:800;color:#333">${p.start_time ? fmtDate(p.start_time) : '미정'}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 시간</div>
-          <div style="font-size:13px;font-weight:800;color:#333">${p.duration_hours ?? '-'}시간</div>
-        </div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 종료</div>
+          <div style="font-size:13px;font-weight:800;color:#333">${endStr || (p.duration_hours ? p.duration_hours + '시간' : '-')}</div>
+        </div>`;
+      })()}
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">필요 인원</div>
           <div style="font-size:13px;font-weight:800;color:#333">${p.filled_count ?? 0}/${p.needed_count ?? 1}명 (${p.needed_count - p.filled_count}명 모집 중)</div>
@@ -1050,9 +1056,9 @@ function openPostingDetail(jobId) {
         <span style="font-size:20px">📍</span>
         <div>
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:2px">위치</div>
-          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.4">${p.address}</div>
+          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${p.address}</div>
         </div>
-      </div>` : ''}
+      </div>` : '<div style="background:#FFF7ED;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#F59E0B;font-weight:700">📍 위치 정보 없음 — 수정 탭에서 위치를 설정해주세요</div>'}
 
       <!-- 공고 설명 -->
       ${p.description ? `<div style="background:#fffef0;border-radius:12px;padding:14px;margin-bottom:20px;border-left:3px solid #F59E0B">
@@ -1827,8 +1833,10 @@ function selectPlace(idx) {
   document.getElementById('f-lat').value = pLat;
   document.getElementById('f-lng').value = pLng;
   document.getElementById('f-naver-link').value = item.link || '';
-  document.getElementById('f-address').value = item.title;
-  const locLabel = `📍 ${item.roadAddress || item.address}${item.link ? '  ✅ 네이버 플레이스 인증' : ''}`;
+  const roadAddr = item.roadAddress || item.address || '';
+  // DB에 장소명 + 도로명 주소 모두 저장
+  document.getElementById('f-address').value = item.title + (roadAddr ? '\n' + roadAddr : '');
+  const locLabel = `📍 ${item.title}${roadAddr ? ' · ' + roadAddr : ''}${item.link ? '  ✅' : ''}`;
   document.getElementById('location-result').textContent = locLabel;
   document.getElementById('location-result').style.display = 'block';
   document.getElementById('place-results').style.display = 'none';

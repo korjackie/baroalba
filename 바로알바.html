@@ -1277,15 +1277,19 @@ async function loadJobs() {
 
     let result = data || [];
 
-    // 이미 지원한 공고 제외
+    // 이미 지원한 공고 → 제외하지 않고 applied_status 마킹 (그레이 표시용)
     if (currentUser && !isGuest) {
-      const { data: myApps } = await db.from('applications')
-        .select('job_posting_id')
-        .eq('worker_id', (await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single()).data?.id || '')
-        .not('status', 'in', '("cancelled")');
-      if (myApps?.length) {
-        const appliedIds = new Set(myApps.map(a => a.job_posting_id));
-        result = result.filter(j => !appliedIds.has(j.id));
+      const wRes = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+      const wid = wRes.data?.id || '';
+      if (wid) {
+        const { data: myApps } = await db.from('applications')
+          .select('job_posting_id, status')
+          .eq('worker_id', wid)
+          .not('status', 'in', '("cancelled")');
+        if (myApps?.length) {
+          const appliedMap = new Map(myApps.map(a => [a.job_posting_id, a.status]));
+          result = result.map(j => ({ ...j, applied_status: appliedMap.get(j.id) || null }));
+        }
       }
     }
 
@@ -1394,7 +1398,7 @@ function renderList() {
   renderTodayPick();
 
   if (jobs.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">😅</div><div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내 공고가 없어요<br><span style="font-size:10px;color:#bbb">📍${mapCenter.lat.toFixed(4)},${mapCenter.lng.toFixed(4)} / 반경${(currentRadius/1000).toFixed(0)}km</span></div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">😅</div><div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내 공고가 없어요</div></div>`;
     return;
   }
 
@@ -1409,11 +1413,14 @@ function renderList() {
       : (job.distance_m/1000).toFixed(1) + 'km';
     const startStr = job.start_time ? formatTime(job.start_time) : '미정';
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
+    const appSt = job.applied_status;
+    const APP_LABEL = { pending:'검토중', reviewing:'🔍 검토중', accepted:'✅ 합격', completed:'🏁 완료' };
+    const appliedBadge = appSt ? `<span style="font-size:11px;font-weight:800;color:#888;background:#f0f0f0;padding:2px 8px;border-radius:10px;margin-left:auto">${APP_LABEL[appSt] || '지원완료'}</span>` : '';
     return `
-    <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')">
+    <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')" style="${appSt ? 'opacity:0.65;' : ''}">
       <div class="card-top">
         <div class="card-left">
-          <div class="card-biz">🏪 ${job.biz_name}</div>
+          <div class="card-biz">🏪 ${job.biz_name}${appliedBadge}</div>
           <div class="card-title">${job.title}</div>
         </div>
         <div class="card-right">
@@ -1930,8 +1937,8 @@ async function openApplicationJobDetail(jobPostingId) {
           <div style="font-size:13px;font-weight:800;color:#333">${fmtDate(j.start_time)}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 시간</div>
-          <div style="font-size:13px;font-weight:800;color:#333">${j.duration_hours ?? '-'}시간</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 종료</div>
+          <div style="font-size:13px;font-weight:800;color:#333">${(() => { if (!j.start_time || !j.duration_hours) return j.duration_hours ? j.duration_hours + '시간' : '-'; const e = new Date(j.start_time); e.setHours(e.getHours() + j.duration_hours); return fmtDate(e.toISOString()); })()}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">모집 인원</div>
@@ -1952,7 +1959,7 @@ async function openApplicationJobDetail(jobPostingId) {
         <span style="font-size:20px">📍</span>
         <div>
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:2px">업체 위치</div>
-          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.4">${j.address}</div>
+          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${j.address}</div>
         </div>
       </div>` : ''}
 
