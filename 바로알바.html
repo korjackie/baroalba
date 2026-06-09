@@ -127,13 +127,14 @@
     }
     .chip.active { background: var(--red); border-color: var(--red); color: #fff; }
 
-    .v-chip, .s-chip {
+    .v-chip, .s-chip, .l-chip {
       padding: 7px 12px; border-radius: 20px; border: 1.5px solid #e5e7eb;
       background: #f8f8f8; color: #555; font-size: 12px; font-weight: 700;
       cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
     .v-chip.active { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; }
     .s-chip.active { background: #FFF5F5; border-color: var(--red); color: var(--red); }
+    .l-chip.active { background: #F0FDF4; border-color: #16a34a; color: #16a34a; }
 
     /* ── 반경 표시 ── */
     .radius-badge {
@@ -1085,6 +1086,19 @@
               </div>
             </div>
 
+            <!-- 구사 가능 언어 -->
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">🗣 구사 가능 언어 <span style="font-weight:400;color:#bbb">(복수 선택)</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="lang-ability-chips">
+                <button type="button" data-l="ko" onclick="toggleLangAbility(this)" class="l-chip">🇰🇷 한국어</button>
+                <button type="button" data-l="en" onclick="toggleLangAbility(this)" class="l-chip">🇺🇸 영어</button>
+                <button type="button" data-l="zh" onclick="toggleLangAbility(this)" class="l-chip">🇨🇳 중국어</button>
+                <button type="button" data-l="ja" onclick="toggleLangAbility(this)" class="l-chip">🇯🇵 일본어</button>
+                <button type="button" data-l="vi" onclick="toggleLangAbility(this)" class="l-chip">🇻🇳 베트남어</button>
+                <button type="button" data-l="ru" onclick="toggleLangAbility(this)" class="l-chip">🇷🇺 러시아어</button>
+              </div>
+            </div>
+
             <button onclick="saveWorkerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
           </div>
         </div>
@@ -1232,14 +1246,20 @@
         </div>
 
         <!-- 언어 토글 -->
-        <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-size:14px;font-weight:800;color:#222">🌐 언어 / Language</div>
-            <div style="font-size:11px;color:#aaa;margin-top:2px" id="lang-desc">현재: 한국어</div>
+        <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#222">🌐 앱 언어 / App Language</div>
+              <div style="font-size:11px;color:#aaa;margin-top:2px" id="lang-desc">현재: 한국어</div>
+            </div>
           </div>
-          <div style="display:flex;gap:6px">
-            <button id="lang-ko-btn" onclick="setLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">한국어</button>
-            <button id="lang-en-btn" onclick="setLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">English</button>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <button id="lang-ko-btn" onclick="setLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">🇰🇷 한국어</button>
+            <button id="lang-en-btn" onclick="setLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇺🇸 English</button>
+            <button id="lang-zh-btn" onclick="setLang('zh')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇨🇳 中文</button>
+            <button id="lang-ja-btn" onclick="setLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇯🇵 日本語</button>
+            <button id="lang-vi-btn" onclick="setLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇻🇳 Tiếng Việt</button>
+            <button id="lang-ru-btn" onclick="setLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇷🇺 Русский</button>
           </div>
         </div>
 
@@ -2389,7 +2409,51 @@ const TRANSLATIONS = {
     search_placeholder: 'Search by area, category',
     job_search_placeholder: 'Search title, biz, category',
     lang_desc: 'Current: English',
-  }
+  },
+  zh: {
+    nav_map: '地图', nav_swipe: '滑动', nav_applications: '我的申请', nav_chats: '聊天', nav_profile: '我的',
+    tab_status: '申请状态', tab_bookmarks: '🔖 收藏',
+    status_pending: '审核中', status_accepted: '✅ 录用', status_rejected: '❌ 拒绝', status_cancelled: '已取消',
+    apply_btn: '⚡ 立即申请', apply_chat_btn: '💬 联系雇主',
+    cat_all: '全部', cat_urgent: '🔥 急聘',
+    loading: '地图加载中...',
+    search_placeholder: '搜索地区、职种',
+    job_search_placeholder: '搜索职位、公司、职种',
+    lang_desc: '当前语言: 中文',
+  },
+  ja: {
+    nav_map: '地図', nav_swipe: 'スワイプ', nav_applications: '応募履歴', nav_chats: 'チャット', nav_profile: 'マイページ',
+    tab_status: '応募状況', tab_bookmarks: '🔖 ブックマーク',
+    status_pending: '審査中', status_accepted: '✅ 合格', status_rejected: '❌ 不合格', status_cancelled: 'キャンセル',
+    apply_btn: '⚡ 今すぐ応募', apply_chat_btn: '💬 雇用主に連絡',
+    cat_all: '全て', cat_urgent: '🔥 急募',
+    loading: '地図読み込み中...',
+    search_placeholder: '地域・業種を検索',
+    job_search_placeholder: '求人名・店名・業種を検索',
+    lang_desc: '現在の言語: 日本語',
+  },
+  vi: {
+    nav_map: 'Bản đồ', nav_swipe: 'Vuốt', nav_applications: 'Đã ứng tuyển', nav_chats: 'Chat', nav_profile: 'Trang của tôi',
+    tab_status: 'Trạng thái', tab_bookmarks: '🔖 Đã lưu',
+    status_pending: 'Đang xét', status_accepted: '✅ Đã nhận', status_rejected: '❌ Từ chối', status_cancelled: 'Đã hủy',
+    apply_btn: '⚡ Ứng tuyển ngay', apply_chat_btn: '💬 Nhắn tin chủ',
+    cat_all: 'Tất cả', cat_urgent: '🔥 Gấp',
+    loading: 'Đang tải bản đồ...',
+    search_placeholder: 'Tìm khu vực, ngành nghề',
+    job_search_placeholder: 'Tìm tên việc, cửa hàng, ngành',
+    lang_desc: 'Ngôn ngữ: Tiếng Việt',
+  },
+  ru: {
+    nav_map: 'Карта', nav_swipe: 'Свайп', nav_applications: 'Заявки', nav_chats: 'Чат', nav_profile: 'Профиль',
+    tab_status: 'Мои заявки', tab_bookmarks: '🔖 Закладки',
+    status_pending: 'На рассмотрении', status_accepted: '✅ Принят', status_rejected: '❌ Отказ', status_cancelled: 'Отменено',
+    apply_btn: '⚡ Подать заявку', apply_chat_btn: '💬 Написать работодателю',
+    cat_all: 'Все', cat_urgent: '🔥 Срочно',
+    loading: 'Загрузка карты...',
+    search_placeholder: 'Поиск по району, типу',
+    job_search_placeholder: 'Поиск по названию, компании',
+    lang_desc: 'Язык: Русский',
+  },
 };
 
 let currentLang = localStorage.getItem('baroalba_lang') || 'ko';
@@ -2435,10 +2499,13 @@ function applyLang() {
   if (urgentChip) urgentChip.textContent = t('cat_urgent');
 
   // 언어 버튼 상태
-  const koBt = document.getElementById('lang-ko-btn');
-  const enBt = document.getElementById('lang-en-btn');
-  if (koBt) { koBt.style.background = ko ? 'var(--red)' : '#f0f0f0'; koBt.style.color = ko ? '#fff' : '#666'; }
-  if (enBt) { enBt.style.background = !ko ? 'var(--red)' : '#f0f0f0'; enBt.style.color = !ko ? '#fff' : '#666'; }
+  ['ko','en','zh','ja','vi','ru'].forEach(l => {
+    const btn = document.getElementById('lang-' + l + '-btn');
+    if (!btn) return;
+    const active = currentLang === l;
+    btn.style.background = active ? 'var(--red)' : '#f0f0f0';
+    btn.style.color = active ? '#fff' : '#666';
+  });
   const langDesc = document.getElementById('lang-desc');
   if (langDesc) langDesc.textContent = t('lang_desc');
 
@@ -3418,6 +3485,7 @@ async function loadWorkerProfileForm() {
   renderSkillTags();
   renderVehicleChips(Array.isArray(w.vehicles) ? w.vehicles : []);
   renderStrengthChips(Array.isArray(w.strengths) ? w.strengths : []);
+  renderLangAbilityChips(Array.isArray(w.languages) ? w.languages : []);
   const meta = currentUser?.user_metadata || {};
   const rawPhone = w.phone || meta.phone || '';
   document.getElementById('worker-phone').value = rawPhone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3');
@@ -3600,9 +3668,10 @@ async function uploadDoc(certType, input) {
   showToast(`✅ ${meta.label} 등록됐습니다`);
 }
 
-// ── 이동수단 & 강점 태그 ────────────────────────────────
+// ── 이동수단 & 강점 & 언어 태그 ──────────────────────────
 let _workerVehicles = [];
 let _workerStrengths = [];
+let _workerLanguages = [];
 
 function toggleVehicle(el) {
   const v = el.dataset.v;
@@ -3638,6 +3707,24 @@ function renderStrengthChips(arr) {
   _workerStrengths = arr || [];
   document.querySelectorAll('#strength-chips .s-chip').forEach(el => {
     el.classList.toggle('active', _workerStrengths.includes(el.dataset.s));
+  });
+}
+
+function toggleLangAbility(el) {
+  const l = el.dataset.l;
+  if (_workerLanguages.includes(l)) {
+    _workerLanguages = _workerLanguages.filter(x => x !== l);
+    el.classList.remove('active');
+  } else {
+    _workerLanguages.push(l);
+    el.classList.add('active');
+  }
+}
+
+function renderLangAbilityChips(arr) {
+  _workerLanguages = arr || [];
+  document.querySelectorAll('#lang-ability-chips .l-chip').forEach(el => {
+    el.classList.toggle('active', _workerLanguages.includes(el.dataset.l));
   });
 }
 
@@ -3715,7 +3802,7 @@ async function saveWorkerProfile() {
   const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
-  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths };
+  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages };
   if (_workerGender) payload.gender = _workerGender;
   const { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error) { showToast('저장 실패: ' + error.message); return; }

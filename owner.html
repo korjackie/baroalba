@@ -2615,7 +2615,7 @@ async function openWorkerProfileDirect(appId) {
 async function openWorkerProfile() {
   if (!_chatAppId) return;
   const { data: app } = await db.from('applications')
-    .select('*, workers(name, phone, email, gender, age, bio, experience, rating, review_count, skills, vehicles, strengths), job_postings(title)')
+    .select('*, workers(name, phone, email, gender, age, bio, experience, rating, review_count, skills, vehicles, strengths, languages), job_postings(title)')
     .eq('id', _chatAppId).single();
   if (!app) return;
   const w = app.workers || {};
@@ -2679,6 +2679,16 @@ async function openWorkerProfile() {
             <div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1.5px solid #eee;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#444">${s}</span>`).join('')}</div>
            </div>`
         : infoRow('🏷️ 보유 스킬', null)
+      }
+      ${w.languages?.length
+        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
+            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">🗣 구사 가능 언어</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.languages.map(l => {
+              const MAP = {ko:'🇰🇷 한국어', en:'🇺🇸 영어', zh:'🇨🇳 중국어', ja:'🇯🇵 일본어', vi:'🇻🇳 베트남어', ru:'🇷🇺 러시아어'};
+              return `<span style="background:#F0FDF4;color:#16a34a;border:1.5px solid #86EFAC;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[l]||l}</span>`;
+            }).join('')}</div>
+           </div>`
+        : ''
       }
       ${w.vehicles?.length
         ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
