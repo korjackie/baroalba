@@ -114,7 +114,7 @@
     .chip {
       flex-shrink: 0;
       padding: 6px 12px;
-      border-radius: 20px;
+      border-radius: 7px;
       border: 1.5px solid #e0e0e0;
       background: #fff;
       font-size: 12px;
@@ -125,7 +125,7 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       white-space: nowrap;
     }
-    .chip.active { background: var(--red); border-color: var(--red); color: #fff; }
+    .chip.active { background: #111; border-color: #111; color: #fff; font-weight: 700; }
 
     .v-chip, .s-chip, .l-chip {
       padding: 7px 12px; border-radius: 20px; border: 1.5px solid #e5e7eb;
@@ -532,10 +532,24 @@
       background: none;
       padding: 0;
     }
-    .nav-icon { font-size: 22px; line-height: 1; }
-    .nav-label { font-size: 10px; font-weight: 700; color: #bbb; }
-    .nav-item.active .nav-label { color: var(--red); }
-    .nav-item.active .nav-icon  { filter: none; }
+    .nav-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+    .nav-icon svg { width: 22px; height: 22px; }
+    .nav-icon svg path, .nav-icon svg circle, .nav-icon svg line,
+    .nav-icon svg polyline, .nav-icon svg rect, .nav-icon svg polygon {
+      stroke: #c0c0c0; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .nav-label { font-size: 10px; font-weight: 600; color: #c0c0c0; }
+    .nav-item.active .nav-label { color: var(--red); font-weight: 700; }
+    .nav-item.active .nav-icon svg path,
+    .nav-item.active .nav-icon svg circle,
+    .nav-item.active .nav-icon svg line,
+    .nav-item.active .nav-icon svg polyline,
+    .nav-item.active .nav-icon svg rect,
+    .nav-item.active .nav-icon svg polygon { stroke: var(--red); }
+    .nav-item.active::before {
+      content: ''; position: absolute; top: 0; left: 25%; right: 25%;
+      height: 2px; background: var(--red); border-radius: 0 0 2px 2px;
+    }
     .nav-item { position: relative; }
     .nav-badge {
       position: absolute; top: 4px; right: calc(50% - 18px);
@@ -699,17 +713,17 @@
   </div>
   <div class="filter-row" id="filter-row">
     <div class="chip active" data-cat="" onclick="setCategory(this, '')">전체</div>
-    <div class="chip" data-cat="F&B"  onclick="setCategory(this, 'F&B')">☕ F&B</div>
-    <div class="chip" data-cat="물류" onclick="setCategory(this, '물류')">📦 물류</div>
-    <div class="chip" data-cat="판매" onclick="setCategory(this, '판매')">🛍 판매</div>
-    <div class="chip" data-cat="청소" onclick="setCategory(this, '청소')">🧹 청소</div>
-    <div class="chip" data-cat="이벤트" onclick="setCategory(this, '이벤트')">🎉 이벤트</div>
-    <div class="chip" data-cat="커플알바" onclick="setCategory(this, '커플알바')">💑 커플알바</div>
-    <div class="chip" data-cat="컨텐츠" onclick="setCategory(this, '컨텐츠')">📱 컨텐츠</div>
-    <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">🏆 챌린지</div>
-    <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">🏃 심부름</div>
-    <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">🔥 급구만</div>
-    <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">🎛 필터</div>
+    <div class="chip" data-cat="F&B"  onclick="setCategory(this, 'F&B')">F&B</div>
+    <div class="chip" data-cat="물류" onclick="setCategory(this, '물류')">운송/물류</div>
+    <div class="chip" data-cat="판매" onclick="setCategory(this, '판매')">판매</div>
+    <div class="chip" data-cat="청소" onclick="setCategory(this, '청소')">청소</div>
+    <div class="chip" data-cat="이벤트" onclick="setCategory(this, '이벤트')">이벤트</div>
+    <div class="chip" data-cat="커플알바" onclick="setCategory(this, '커플알바')">커플알바</div>
+    <div class="chip" data-cat="컨텐츠" onclick="setCategory(this, '컨텐츠')">촬영/컨텐츠</div>
+    <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">챌린지</div>
+    <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
+    <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
+    <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
     <div class="chip" onclick="openSearchOverlay()" style="flex-shrink:0;background:#111;color:#fff;border-color:#111">🔍 검색</div>
   </div>
 </div>
@@ -1061,24 +1075,24 @@
 <!-- 하단 내비게이션 -->
 <div class="bottom-nav">
   <button class="nav-item active" onclick="setNav(this, 'map')">
-    <div class="nav-icon">🗺</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
     <div class="nav-label">지도</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'swipe')">
-    <div class="nav-icon">💘</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
     <div class="nav-label">스와이프</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'applications')">
-    <div class="nav-icon">📋</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
     <div class="nav-label">내 지원</div>
   </button>
   <button class="nav-item" id="nav-chats" onclick="setNav(this, 'chats')">
-    <div class="nav-icon">💬</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
     <div class="nav-label">채팅</div>
     <div class="nav-badge" id="chat-unread-badge" style="display:none">0</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'profile')">
-    <div class="nav-icon">👤</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
     <div class="nav-label">마이페이지</div>
   </button>
 </div>
@@ -1915,7 +1929,7 @@ function renderList() {
     <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')" style="${appSt ? 'opacity:0.65;' : ''}">
       <div class="card-top">
         <div class="card-left">
-          <div class="card-biz">🏪 ${job.biz_name}${appliedBadge}</div>
+          <div class="card-biz">${job.biz_name}${appliedBadge}</div>
           <div class="card-title">${job.title}</div>
         </div>
         <div class="card-right">
@@ -1926,19 +1940,19 @@ function renderList() {
       </div>
       ${surgeTimer}
       <div class="card-tags">
-        ${job.work_type === 'errand'  ? '<span class="tag" style="background:#FFF0F5;color:#E91E8C;font-weight:900">🏃 심부름</span>' : ''}
-        ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:900">📅 단기</span>' : ''}
-        ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:900">🔄 정기</span>' : ''}
-        ${isUrgent ? '<span class="tag urgent-tag">🔥 급구</span>' : ''}
-        ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500">⚡ 번개</span>' : ''}
-        ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a">💴 당일정산</span>' : ''}
+        ${job.work_type === 'errand'  ? '<span class="tag" style="background:#F3E8FF;color:#7C3AED;font-weight:700">심부름</span>' : ''}
+        ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:700">단기</span>' : ''}
+        ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:700">정기</span>' : ''}
+        ${isUrgent ? '<span class="tag urgent-tag">ASAP</span>' : ''}
+        ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">번개</span>' : ''}
+        ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a;font-weight:700">당일정산</span>' : ''}
         <span class="tag ${catClass}">${job.category}</span>
         <span class="tag">${job.work_type === 'errand' ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
         ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
       </div>
       <div class="card-meta">
-        <span>📍 ${dist}</span>
-        <span>⏰ ${startStr}</span>
+        <span>${dist}</span>
+        <span>${startStr}</span>
         <span class="card-star">★ ${job.biz_rating || '-'}</span>
       </div>
     </div>`;

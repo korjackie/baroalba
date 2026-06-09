@@ -569,7 +569,7 @@ function selectSignupRole(role) {
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 db.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
     const role = session.user.user_metadata?.baroalba_role;
     if (role) {
       showLoading('앱으로 이동 중...');
@@ -615,7 +615,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     const { data } = await Promise.race([sessionPromise, timeoutPromise.then(() => ({ data: { session: null } }))]);
     if (data?.session) {
       clearTimeout(safetyTimer);
-      return; // onAuthStateChange 가 처리
+      // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
+      setTimeout(() => {
+        if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
+          const role = data.session.user?.user_metadata?.baroalba_role;
+          goToApp(role);
+        }
+      }, 1500);
+      return;
     }
   } catch(e) { /* ignore */ }
 
