@@ -325,6 +325,12 @@
 <!-- FAB -->
 <button class="fab" onclick="openPostingForm()" title="공고 등록">+</button>
 
+<!-- 비교 FAB -->
+<div id="compare-fab" onclick="openCompareModal()" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#3B82F6;color:#fff;border-radius:30px;padding:12px 24px;font-size:14px;font-weight:800;cursor:pointer;z-index:200;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(59,130,246,0.4)">
+  🔍 선택한 2명 비교하기
+  <button onclick="event.stopPropagation();_compareSet.clear();renderApplicants(_allApplicants)" style="background:rgba(255,255,255,0.3);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;padding:0">✕</button>
+</div>
+
 <!-- 공고 등록/수정 폼 시트 -->
 <div class="sheet-overlay" id="form-overlay">
   <div class="form-sheet" id="form-sheet">
@@ -368,7 +374,8 @@
 
       <div class="form-group">
         <label class="form-label" id="f-wage-label">시급 (원) *</label>
-        <input class="form-input" id="f-wage" type="number" min="9860" placeholder="10000">
+        <input class="form-input" id="f-wage" type="number" min="10030" placeholder="10030" oninput="checkMinWage(this.value)">
+        <div id="wage-warn" style="display:none;font-size:11px;color:#EF4444;font-weight:700;margin-top:4px">⚠️ 2025년 최저시급(10,030원) 미만입니다</div>
       </div>
 
       <!-- 근무형태 -->
@@ -867,6 +874,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   autoCloseExpiredPostings();
   loadMyPlaces();
+  loadFavWorkers();
   loadPostings();
   loadApplicants();
   setupRealtime();
@@ -1285,6 +1293,11 @@ async function updateStats() {
   document.getElementById('stat-accepted').textContent = accepted || 0;
 }
 
+function checkMinWage(val) {
+  const w = document.getElementById('wage-warn');
+  if (w) w.style.display = (val && parseInt(val) < 10030) ? 'block' : 'none';
+}
+
 // ── 시급 서지 ─────────────────────────────────────────────
 async function surgeWage(jobId, currentWage) {
   const newWage = currentWage + 1000;
@@ -1433,6 +1446,80 @@ async function markNoshow(appId, workerId) {
 
 // ── 지원자 필터 (대시보드 클릭) ──────────────────────────
 let _allApplicants = [];
+let _compareSet = new Set();
+let _favWorkers = new Set();
+
+function loadFavWorkers() {
+  if (!bizRecord) return;
+  try { _favWorkers = new Set(JSON.parse(localStorage.getItem('baro_fav_' + bizRecord.id) || '[]')); } catch(e) {}
+}
+function toggleFavWorker(workerId) {
+  if (_favWorkers.has(workerId)) _favWorkers.delete(workerId);
+  else _favWorkers.add(workerId);
+  localStorage.setItem('baro_fav_' + bizRecord.id, JSON.stringify([..._favWorkers]));
+  renderApplicants(_allApplicants);
+}
+function toggleCompare(appId) {
+  if (_compareSet.has(appId)) { _compareSet.delete(appId); }
+  else if (_compareSet.size < 2) { _compareSet.add(appId); }
+  else { showToast('최대 2명까지 선택 가능합니다'); return; }
+  renderApplicants(_allApplicants);
+  const btn = document.getElementById('compare-fab');
+  if (btn) btn.style.display = _compareSet.size === 2 ? 'flex' : 'none';
+}
+function openCompareModal() {
+  const ids = [..._compareSet];
+  const apps = ids.map(id => _allApplicants.find(a => a.id === id)).filter(Boolean);
+  if (apps.length < 2) { showToast('2명을 선택해주세요'); return; }
+  const col = (a) => {
+    const w = a.workers || {};
+    const isFav = _favWorkers.has(w.id);
+    return `<div style="flex:1;min-width:0;padding:0 8px">
+      <div style="text-align:center;margin-bottom:12px">
+        <div style="width:56px;height:56px;border-radius:50%;background:#f0f0f0;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:24px">👤</div>
+        <div style="font-size:15px;font-weight:900;color:#222">${w.name||'이름없음'}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${a.job_postings?.title||''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+        <div style="background:#f8f8f8;border-radius:10px;padding:10px">
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">평점</div>
+          <div style="font-weight:900;color:#F59E0B;font-size:15px">★ ${w.rating?.toFixed(1)||'-'}</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:10px;padding:10px">
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">완료 알바</div>
+          <div style="font-weight:900;color:#333;font-size:15px">${w.review_count||0}회</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:10px;padding:10px">
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">노쇼</div>
+          <div style="font-weight:900;color:${w.noshow_count>0?'#EF4444':'#16a34a'};font-size:15px">${w.noshow_count||0}회</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:10px;padding:10px">
+          <div style="color:#aaa;font-weight:700;margin-bottom:4px">스킬</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${(w.skills||[]).map(s=>`<span style="background:#EFF6FF;color:#3B82F6;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700">${s}</span>`).join('')||'<span style="color:#aaa">없음</span>'}</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:10px;padding:10px">
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">연락처</div>
+          <div style="font-weight:700;color:#333">${w.phone||'-'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button onclick="openChat('${a.id}','${w.name||'지원자'}')" style="flex:1;padding:8px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 채팅</button>
+        <button onclick="toggleFavWorker('${w.id}')" style="padding:8px 12px;background:${isFav?'#FEF3C7':'#f0f0f0'};color:${isFav?'#D97706':'#888'};border:none;border-radius:10px;font-size:14px;cursor:pointer">${isFav?'♥':'♡'}</button>
+      </div>
+    </div>`;
+  };
+  const ov = document.createElement('div');
+  ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:4000;display:flex;align-items:flex-end';
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  ov.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 16px 36px;max-height:85vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:17px;font-weight:900">🔍 지원자 비교</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:20px;background:none;border:none;color:#aaa;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;gap:0;border-top:1px solid #f0f0f0;padding-top:16px">${apps.map(col).join('<div style="width:1px;background:#f0f0f0;margin:0 4px"></div>')}</div>
+  </div>`;
+  document.body.appendChild(ov);
+}
 function filterApplicants(status) {
   if (!_allApplicants.length) return;
   const filtered = status === 'all' ? _allApplicants : _allApplicants.filter(a => a.status === status);
@@ -1469,12 +1556,22 @@ function renderApplicants(apps) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div class="empty-txt">아직 지원자가 없어요</div></div>';
     return;
   }
-  el.innerHTML = apps.map(a => {
+  // 즐겨찾기 먼저, 나머지 최신순
+  const sorted = [...apps].sort((a,b) => {
+    const af = _favWorkers.has(a.workers?.id), bf = _favWorkers.has(b.workers?.id);
+    return af === bf ? 0 : af ? -1 : 1;
+  });
+  el.innerHTML = sorted.map(a => {
     const w = a.workers;
+    const isFav = _favWorkers.has(w?.id);
+    const isCmp = _compareSet.has(a.id);
     const statusHtml = buildStatusHtml(a, true);
     return `
-    <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
-      <div class="applicant-avatar">👤</div>
+    <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer;border:2px solid ${isCmp?'#3B82F6':'transparent'}">
+      <div class="applicant-avatar" style="position:relative">
+        👤
+        ${isFav ? '<span style="position:absolute;top:-4px;right:-4px;font-size:12px">♥</span>' : ''}
+      </div>
       <div class="applicant-info">
         <div class="applicant-name">
           ${a.is_quick ? '<span style="font-size:11px;font-weight:900;background:#FFF9E6;color:#D97706;padding:2px 7px;border-radius:6px;margin-right:4px">⚡ 번개지원</span>' : ''}${w?.name || '이름없음'}
@@ -1484,12 +1581,18 @@ function renderApplicants(apps) {
           ${w?.phone ? ' · ' + w.phone : ''}
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end" onclick="event.stopPropagation()">
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end" onclick="event.stopPropagation()">
         ${statusHtml}
-        <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:6px 12px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 채팅</button>
+        <div style="display:flex;gap:4px;margin-top:2px">
+          <button onclick="toggleFavWorker('${w?.id}')" title="즐겨찾기" style="padding:5px 8px;background:${isFav?'#FEF3C7':'#f0f0f0'};color:${isFav?'#D97706':'#aaa'};border:none;border-radius:8px;font-size:13px;cursor:pointer">${isFav?'♥':'♡'}</button>
+          <button onclick="toggleCompare('${a.id}')" title="비교" style="padding:5px 8px;background:${isCmp?'#EFF6FF':'#f0f0f0'};color:${isCmp?'#3B82F6':'#aaa'};border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">${isCmp?'✓비교':'비교'}</button>
+          <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:5px 10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">💬</button>
+        </div>
       </div>
     </div>`;
   }).join('');
+  const fab = document.getElementById('compare-fab');
+  if (fab) fab.style.display = _compareSet.size === 2 ? 'flex' : 'none';
 }
 
 async function showPostingApplicants(jobId, title) {
@@ -1506,14 +1609,33 @@ async function updateApplication(appId, status) {
   if (error) { showToast('처리 실패'); return; }
   if (status === 'accepted') {
     await sendAcceptMessage(appId);
+    sendAppStatusPush(appId, 'accepted');
     showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+  } else if (status === 'rejected') {
+    sendAppStatusPush(appId, 'rejected');
+    showToast('탈락 처리됐습니다');
   } else if (status === 'pending') {
     showToast('↩ 합격 취소 — 검토중으로 변경됐습니다');
   } else {
-    showToast('탈락 처리됐습니다');
+    showToast('처리됐습니다');
   }
   loadApplicants();
   loadPostings();
+}
+
+async function sendAppStatusPush(appId, status) {
+  try {
+    const { data: app } = await db.from('applications')
+      .select('workers(kakao_uid), job_postings(title)').eq('id', appId).single();
+    const uid = app?.workers?.kakao_uid;
+    if (!uid) return;
+    const title = status === 'accepted' ? '🎉 합격 확정!' : '📋 지원 결과 안내';
+    const body  = status === 'accepted'
+      ? `${bizRecord?.name || '업주'}의 "${app?.job_postings?.title || '공고'}"에 합격하셨습니다!`
+      : `${bizRecord?.name || '업주'}의 "${app?.job_postings?.title || '공고'}" 지원 결과를 확인해보세요.`;
+    fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: uid, title, body, url: '/바로알바.html' }) }).catch(()=>{});
+  } catch(e) {}
 }
 
 async function sendAcceptMessage(appId) {
@@ -1899,7 +2021,7 @@ async function submitPosting() {
   const duration = isErrand ? errandDuration : (startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null);
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
-  if (!wage || (!isErrand && wage < 9860)) { showToast(isErrand ? '건당 금액을 입력해주세요' : '시급은 최저임금(9,860원) 이상이어야 해요'); return; }
+  if (!wage || (!isErrand && wage < 10030)) { showToast(isErrand ? '건당 금액을 입력해주세요' : '시급은 2025 최저임금(10,030원) 이상이어야 해요'); return; }
   if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
   if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
   // 위치는 반드시 탭에서 명시적으로 설정해야 함 (제출 시 자동 지오코딩 없음)
@@ -2513,7 +2635,11 @@ async function updateApplicationFromProfile(appId, status) {
   await db.from('applications').update({ status }).eq('id', appId);
   if (status === 'accepted') {
     await sendAcceptMessage(appId);
+    sendAppStatusPush(appId, 'accepted');
     showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+  } else if (status === 'rejected') {
+    sendAppStatusPush(appId, 'rejected');
+    showToast('탈락 처리됐습니다');
   } else if (status === 'reviewing') {
     showToast('🔍 검토 진행 중으로 변경됐습니다');
   } else {

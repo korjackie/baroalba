@@ -605,6 +605,59 @@
     <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">🏆 챌린지</div>
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">🏃 심부름</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">🔥 급구만</div>
+    <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">🎛 필터</div>
+  </div>
+</div>
+
+<!-- 고급 필터 시트 -->
+<div id="adv-filter-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:600" onclick="if(event.target===this)closeAdvFilter()">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:20px 20px 40px;max-height:70vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:900">🎛 고급 필터</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="resetAdvFilter()" style="padding:7px 14px;background:#f0f0f0;color:#888;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">초기화</button>
+        <button onclick="closeAdvFilter()" style="padding:7px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">적용</button>
+      </div>
+    </div>
+
+    <!-- 시급 범위 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:10px">💰 최소 시급</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" id="wage-slider" min="10000" max="30000" step="1000" value="10000"
+          oninput="document.getElementById('wage-val').textContent=parseInt(this.value).toLocaleString()+'원'"
+          style="flex:1;accent-color:var(--red)">
+        <div style="font-size:14px;font-weight:900;color:var(--red);white-space:nowrap;min-width:70px;text-align:right"><span id="wage-val">10,000원</span></div>
+      </div>
+    </div>
+
+    <!-- 날짜 필터 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">📅 날짜</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="flt-chip" id="flt-date-any"   onclick="setDateFilter('')"      style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">전체</button>
+        <button class="flt-chip" id="flt-date-today" onclick="setDateFilter('today')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">오늘</button>
+        <button class="flt-chip" id="flt-date-tmr"   onclick="setDateFilter('tmr')"   style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">내일</button>
+        <button class="flt-chip" id="flt-date-wknd"  onclick="setDateFilter('wknd')"  style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">이번 주말</button>
+      </div>
+    </div>
+
+    <!-- 시간대 필터 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">⏰ 시간대</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="flt-chip" id="flt-time-any"  onclick="setTimeFilter('')"       style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">전체</button>
+        <button class="flt-chip" id="flt-time-am"   onclick="setTimeFilter('am')"     style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">🌅 오전(6~12시)</button>
+        <button class="flt-chip" id="flt-time-pm"   onclick="setTimeFilter('pm')"     style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">☀️ 오후(12~18시)</button>
+        <button class="flt-chip" id="flt-time-eve"  onclick="setTimeFilter('eve')"    style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">🌙 야간(18시~)</button>
+      </div>
+    </div>
+
+    <!-- 최근 검색어 -->
+    <div id="recent-search-section" style="display:none">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">🕐 최근 검색어</div>
+      <div id="recent-search-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
   </div>
 </div>
 
@@ -685,7 +738,7 @@
       <span style="font-size:14px;color:#bbb">🔍</span>
       <input id="job-search-input" type="text" placeholder="공고명, 업체명, 업종 검색"
         style="flex:1;border:none;background:transparent;outline:none;font-size:13px;color:#222;font-family:inherit"
-        oninput="filterJobsByKeyword(this.value)">
+        oninput="filterJobsByKeyword(this.value)" onkeydown="if(event.key==='Enter'){saveRecentSearch(this.value);this.blur()}">
       <button onclick="document.getElementById('job-search-input').value='';filterJobsByKeyword('')" style="background:none;border:none;color:#bbb;font-size:14px;cursor:pointer;padding:0;line-height:1">✕</button>
     </div>
   </div>
@@ -1186,6 +1239,9 @@ let markers = [];
 let overlays = [];
 let selectedJobId = null;
 let myLocationOverlay = null;
+let minWageFilter = 0;
+let dateFilter = '';
+let timeFilter = '';
 let currentUser = null;
 let isGuest = false;
 let sheetState = 'peek'; // peek | half | full
@@ -1396,6 +1452,36 @@ async function loadJobs() {
     if (currentWorkType === 'errand') result = result.filter(j => j.work_type === 'errand');
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
     if (sortByWage) result = result.sort((a,b) => b.current_wage - a.current_wage);
+
+    // 고급 필터
+    if (minWageFilter > 10000) result = result.filter(j => (j.current_wage || 0) >= minWageFilter);
+    if (dateFilter) {
+      const now = new Date();
+      const todayD = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tmrD   = new Date(todayD.getTime() + 86400000);
+      const day    = now.getDay();
+      const sat    = new Date(todayD.getTime() + ((6 - day + 7) % 7) * 86400000);
+      const sun    = new Date(sat.getTime() + 86400000);
+      result = result.filter(j => {
+        if (!j.start_time) return false;
+        const d = new Date(j.start_time);
+        const jd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        if (dateFilter === 'today') return jd.getTime() === todayD.getTime();
+        if (dateFilter === 'tmr')   return jd.getTime() === tmrD.getTime();
+        if (dateFilter === 'wknd')  return jd.getTime() === sat.getTime() || jd.getTime() === sun.getTime();
+        return true;
+      });
+    }
+    if (timeFilter) {
+      result = result.filter(j => {
+        if (!j.start_time) return false;
+        const h = new Date(j.start_time).getHours();
+        if (timeFilter === 'am')  return h >= 6  && h < 12;
+        if (timeFilter === 'pm')  return h >= 12 && h < 18;
+        if (timeFilter === 'eve') return h >= 18;
+        return true;
+      });
+    }
 
     jobs = result;
     renderMarkers();
@@ -2442,9 +2528,9 @@ function moveToMyLocation(silent = false) {
 function setMyLocationMarker(latlng) {
   if (myLocationOverlay) myLocationOverlay.setMap(null);
   const content = `<div style="position:relative;width:44px;height:44px">
-    <div style="position:absolute;inset:0;border-radius:50%;background:rgba(255,75,75,0.18);animation:locPulse 1.8s ease-out infinite"></div>
-    <div style="position:absolute;inset:6px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);overflow:hidden;display:flex;align-items:center;justify-content:center">
-      <img src="./icons/바로알바 최종로고.png" style="width:28px;height:28px;object-fit:contain">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;border-radius:50%;background:rgba(255,75,75,0.18);animation:locPulse 1.8s ease-out infinite"></div>
+    <div style="position:absolute;top:6px;left:6px;right:6px;bottom:6px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <img src="./icons/바로알바 최종로고.png" style="width:26px;height:26px;object-fit:contain">
     </div>
   </div>`;
   myLocationOverlay = new kakao.maps.CustomOverlay({ position: latlng, content, yAnchor: 0.5, zIndex: 10 });
@@ -2482,6 +2568,81 @@ function setRadius(m) {
 
 function toggleRadiusPopup() {
   document.getElementById('radius-popup').classList.toggle('open');
+}
+
+// ── 고급 필터 시트 ────────────────────────────────────────
+function openAdvFilter() {
+  document.getElementById('adv-filter-overlay').style.display = 'block';
+  renderRecentSearches();
+}
+function closeAdvFilter() {
+  document.getElementById('adv-filter-overlay').style.display = 'none';
+  const wage = parseInt(document.getElementById('wage-slider')?.value || 0);
+  minWageFilter = wage > 10000 ? wage : 0;
+  const chip = document.getElementById('chip-adv-filter');
+  const active = minWageFilter > 10000 || dateFilter || timeFilter;
+  if (chip) { chip.classList.toggle('active', active); chip.textContent = active ? '🎛 필터●' : '🎛 필터'; }
+  loadJobs();
+}
+function resetAdvFilter() {
+  minWageFilter = 0; dateFilter = ''; timeFilter = '';
+  const sl = document.getElementById('wage-slider');
+  if (sl) { sl.value = 10000; document.getElementById('wage-val').textContent = '10,000원'; }
+  ['flt-date-any','flt-date-today','flt-date-tmr','flt-date-wknd'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.cssText = el.style.cssText.replace(/background:[^;]+/, `background:${id==='flt-date-any'?'var(--red)':'#f0f0f0'}`).replace(/color:[^;]+/, `color:${id==='flt-date-any'?'#fff':'#555'}`);
+  });
+  ['flt-time-any','flt-time-am','flt-time-pm','flt-time-eve'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.cssText = el.style.cssText.replace(/background:[^;]+/, `background:${id==='flt-time-any'?'var(--red)':'#f0f0f0'}`).replace(/color:[^;]+/, `color:${id==='flt-time-any'?'#fff':'#555'}`);
+  });
+}
+function setDateFilter(val) {
+  dateFilter = val;
+  const map = { '':'flt-date-any', 'today':'flt-date-today', 'tmr':'flt-date-tmr', 'wknd':'flt-date-wknd' };
+  Object.entries(map).forEach(([k,id]) => {
+    const el = document.getElementById(id); if (!el) return;
+    const on = k === val;
+    el.style.background = on ? 'var(--red)' : '#f0f0f0';
+    el.style.color = on ? '#fff' : '#555';
+  });
+}
+function setTimeFilter(val) {
+  timeFilter = val;
+  const map = { '':'flt-time-any', 'am':'flt-time-am', 'pm':'flt-time-pm', 'eve':'flt-time-eve' };
+  Object.entries(map).forEach(([k,id]) => {
+    const el = document.getElementById(id); if (!el) return;
+    const on = k === val;
+    el.style.background = on ? 'var(--red)' : '#f0f0f0';
+    el.style.color = on ? '#fff' : '#555';
+  });
+}
+
+// ── 최근 검색어 ──────────────────────────────────────────
+function saveRecentSearch(q) {
+  if (!q || q.length < 2) return;
+  const key = 'baro_recent_search';
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+  arr = [q, ...arr.filter(s => s !== q)].slice(0, 8);
+  localStorage.setItem(key, JSON.stringify(arr));
+}
+function renderRecentSearches() {
+  const sec = document.getElementById('recent-search-section');
+  const list = document.getElementById('recent-search-list');
+  if (!sec || !list) return;
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem('baro_recent_search') || '[]'); } catch(e) {}
+  if (!arr.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = arr.map(q =>
+    `<button onclick="applyRecentSearch('${q.replace(/'/g,"\\'")}')" style="padding:6px 12px;background:#f0f0f0;color:#555;border:none;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer">${q}</button>`
+  ).join('');
+}
+function applyRecentSearch(q) {
+  closeAdvFilter();
+  const inp = document.getElementById('job-search-input');
+  if (inp) { inp.value = q; filterJobsByKeyword(q); }
 }
 
 function toggleSort() {
