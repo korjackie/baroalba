@@ -2280,8 +2280,16 @@ function showConfirm(message, onOk) {
 
 async function cancelApplication(appId) {
   showConfirm('지원을 취소하시겠어요?', async () => {
-    const { error } = await db.from('applications').update({ status: 'cancelled' }).eq('id', appId);
+    const { data, error } = await db.from('applications')
+      .update({ status: 'cancelled' })
+      .eq('id', appId)
+      .select('id');
     if (error) { showToast('취소 실패: ' + error.message); return; }
+    if (!data?.length) {
+      // RLS silent failure: 0행 업데이트 → 권한 없음
+      showToast('취소 실패: 권한이 없거나 이미 처리됐습니다');
+      return;
+    }
     showToast('✅ 지원이 취소됐습니다');
     loadMyApplications();
   });

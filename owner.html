@@ -2444,6 +2444,7 @@ function setNav(el, tab) {
   document.getElementById('panel-owner-chats').classList.remove('show');
   document.getElementById('panel-owner-map').classList.remove('show');
   document.getElementById('panel-owner-settings').classList.remove('show');
+  document.getElementById('panel-posting-detail').classList.remove('show');
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
@@ -2615,7 +2616,7 @@ async function openWorkerProfileDirect(appId) {
 async function openWorkerProfile() {
   if (!_chatAppId) return;
   const { data: app } = await db.from('applications')
-    .select('*, workers(name, phone, email, gender, age, bio, experience, rating, review_count, skills, vehicles, strengths, languages), job_postings(title)')
+    .select('*, workers(*), job_postings(title)')
     .eq('id', _chatAppId).single();
   if (!app) return;
   const w = app.workers || {};
