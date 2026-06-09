@@ -128,13 +128,13 @@
     .chip.active { background: #111; border-color: #111; color: #fff; font-weight: 700; }
 
     .v-chip, .s-chip, .l-chip {
-      padding: 7px 12px; border-radius: 20px; border: 1.5px solid #e5e7eb;
-      background: #f8f8f8; color: #555; font-size: 12px; font-weight: 700;
+      padding: 7px 13px; border-radius: 8px; border: 1.5px solid #e5e7eb;
+      background: #f8f8f8; color: #555; font-size: 12px; font-weight: 600;
       cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
-    .v-chip.active { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; }
-    .s-chip.active { background: #FFF5F5; border-color: var(--red); color: var(--red); }
-    .l-chip.active { background: #F0FDF4; border-color: #16a34a; color: #16a34a; }
+    .v-chip.active { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; font-weight: 700; }
+    .s-chip.active { background: #fff0f0; border-color: #FFAAAA; color: var(--red); font-weight: 700; }
+    .l-chip.active { background: #F0FDF4; border-color: #16a34a; color: #16a34a; font-weight: 700; }
 
     /* ── 반경 표시 ── */
     .radius-badge {
@@ -1198,7 +1198,7 @@
 
         <!-- 알바생 프로필 편집 (worker 역할만 표시) -->
         <div id="worker-profile-edit" style="display:none;margin-bottom:14px">
-          <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">📋 내 프로필</div>
+          <div style="font-size:11px;font-weight:800;color:#999;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.8px">내 프로필</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <!-- 프로필 사진 -->
             <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
@@ -1255,50 +1255,50 @@
             </div>
             <!-- 이동수단 -->
             <div>
-              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">🚗 보유 이동수단 <span style="font-weight:400;color:#bbb">(복수 선택)</span></div>
+              <div style="font-size:11px;font-weight:800;color:#999;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">이동수단 <span style="font-weight:500;color:#bbb;text-transform:none;letter-spacing:0">· 복수 선택</span></div>
               <div style="display:flex;flex-wrap:wrap;gap:6px" id="vehicle-chips">
-                <button type="button" data-v="bicycle"      onclick="toggleVehicle(this)" class="v-chip">🚲 자전거</button>
-                <button type="button" data-v="kickboard"    onclick="toggleVehicle(this)" class="v-chip">🛴 킥보드</button>
-                <button type="button" data-v="motorcycle"   onclick="toggleVehicle(this)" class="v-chip">🛵 오토바이</button>
-                <button type="button" data-v="car_compact"  onclick="toggleVehicle(this)" class="v-chip">🚗 차량(소형)</button>
-                <button type="button" data-v="car_midsize"  onclick="toggleVehicle(this)" class="v-chip">🚙 차량(중형)</button>
-                <button type="button" data-v="car_suv"      onclick="toggleVehicle(this)" class="v-chip">🚐 차량(SUV)</button>
-                <button type="button" data-v="car_large"    onclick="toggleVehicle(this)" class="v-chip">🚌 차량(대형)</button>
-                <button type="button" data-v="truck"        onclick="toggleVehicle(this)" class="v-chip">🚚 트럭/화물</button>
+                <button type="button" data-v="bicycle"      onclick="toggleVehicle(this)" class="v-chip">자전거</button>
+                <button type="button" data-v="kickboard"    onclick="toggleVehicle(this)" class="v-chip">킥보드</button>
+                <button type="button" data-v="motorcycle"   onclick="toggleVehicle(this)" class="v-chip">오토바이</button>
+                <button type="button" data-v="car_compact"  onclick="toggleVehicle(this)" class="v-chip">차량 소형</button>
+                <button type="button" data-v="car_midsize"  onclick="toggleVehicle(this)" class="v-chip">차량 중형</button>
+                <button type="button" data-v="car_suv"      onclick="toggleVehicle(this)" class="v-chip">차량 SUV</button>
+                <button type="button" data-v="car_large"    onclick="toggleVehicle(this)" class="v-chip">차량 대형</button>
+                <button type="button" data-v="truck"        onclick="toggleVehicle(this)" class="v-chip">트럭/화물</button>
               </div>
             </div>
 
             <!-- 나의 강점 태그 -->
             <div>
-              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">✨ 나의 강점 <span style="font-weight:400;color:#bbb">(복수 선택, 최대 5개)</span></div>
+              <div style="font-size:11px;font-weight:800;color:#999;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">나의 강점 <span style="font-weight:500;color:#bbb;text-transform:none;letter-spacing:0">· 최대 5개</span></div>
               <div style="font-size:11px;color:#bbb;margin-bottom:8px">선택 안해도 됩니다 · 업주에게 어필할 매력포인트를 골라보세요</div>
               <div style="display:flex;flex-wrap:wrap;gap:6px" id="strength-chips">
-                <button type="button" data-s="strong"      onclick="toggleStrength(this)" class="s-chip">💪 힘이 강함</button>
-                <button type="button" data-s="speed"       onclick="toggleStrength(this)" class="s-chip">⚡ 스피드</button>
-                <button type="button" data-s="numbers"     onclick="toggleStrength(this)" class="s-chip">🔢 숫자에 밝음</button>
-                <button type="button" data-s="design"      onclick="toggleStrength(this)" class="s-chip">🎨 디자인 안목</button>
-                <button type="button" data-s="experience"  onclick="toggleStrength(this)" class="s-chip">🌍 다양한 경험</button>
-                <button type="button" data-s="always_on"   onclick="toggleStrength(this)" class="s-chip">🕐 상시출동 가능</button>
-                <button type="button" data-s="educated"    onclick="toggleStrength(this)" class="s-chip">🎓 좋은 학벌</button>
-                <button type="button" data-s="kind"        onclick="toggleStrength(this)" class="s-chip">🤝 친절함</button>
-                <button type="button" data-s="driving"     onclick="toggleStrength(this)" class="s-chip">🚗 운전 능숙</button>
-                <button type="button" data-s="language"    onclick="toggleStrength(this)" class="s-chip">🗣 외국어 가능</button>
-                <button type="button" data-s="detail"      onclick="toggleStrength(this)" class="s-chip">🔍 꼼꼼함</button>
-                <button type="button" data-s="stamina"     onclick="toggleStrength(this)" class="s-chip">🏃 체력 강함</button>
-                <button type="button" data-s="night"       onclick="toggleStrength(this)" class="s-chip">🌙 야간 가능</button>
-                <button type="button" data-s="clean"       onclick="toggleStrength(this)" class="s-chip">🧹 청결 철저</button>
-                <button type="button" data-s="photo"       onclick="toggleStrength(this)" class="s-chip">📸 사진/영상</button>
-                <button type="button" data-s="cooking"     onclick="toggleStrength(this)" class="s-chip">🍳 요리 잘 함</button>
-                <button type="button" data-s="elderly"     onclick="toggleStrength(this)" class="s-chip">👴 어르신 친화</button>
-                <button type="button" data-s="pet"         onclick="toggleStrength(this)" class="s-chip">🐾 반려동물 OK</button>
-                <button type="button" data-s="handyman"    onclick="toggleStrength(this)" class="s-chip">🔧 손재주 있음</button>
-                <button type="button" data-s="moving"      onclick="toggleStrength(this)" class="s-chip">📦 이사/운반 경험</button>
+                <button type="button" data-s="strong"      onclick="toggleStrength(this)" class="s-chip">힘이 강함</button>
+                <button type="button" data-s="speed"       onclick="toggleStrength(this)" class="s-chip">스피드</button>
+                <button type="button" data-s="numbers"     onclick="toggleStrength(this)" class="s-chip">숫자에 밝음</button>
+                <button type="button" data-s="design"      onclick="toggleStrength(this)" class="s-chip">디자인 안목</button>
+                <button type="button" data-s="experience"  onclick="toggleStrength(this)" class="s-chip">다양한 경험</button>
+                <button type="button" data-s="always_on"   onclick="toggleStrength(this)" class="s-chip">상시출동 가능</button>
+                <button type="button" data-s="educated"    onclick="toggleStrength(this)" class="s-chip">좋은 학벌</button>
+                <button type="button" data-s="kind"        onclick="toggleStrength(this)" class="s-chip">친절함</button>
+                <button type="button" data-s="driving"     onclick="toggleStrength(this)" class="s-chip">운전 능숙</button>
+                <button type="button" data-s="language"    onclick="toggleStrength(this)" class="s-chip">외국어 가능</button>
+                <button type="button" data-s="detail"      onclick="toggleStrength(this)" class="s-chip">꼼꼼함</button>
+                <button type="button" data-s="stamina"     onclick="toggleStrength(this)" class="s-chip">체력 강함</button>
+                <button type="button" data-s="night"       onclick="toggleStrength(this)" class="s-chip">야간 가능</button>
+                <button type="button" data-s="clean"       onclick="toggleStrength(this)" class="s-chip">청결 철저</button>
+                <button type="button" data-s="photo"       onclick="toggleStrength(this)" class="s-chip">사진/영상</button>
+                <button type="button" data-s="cooking"     onclick="toggleStrength(this)" class="s-chip">요리 잘 함</button>
+                <button type="button" data-s="elderly"     onclick="toggleStrength(this)" class="s-chip">어르신 친화</button>
+                <button type="button" data-s="pet"         onclick="toggleStrength(this)" class="s-chip">반려동물 OK</button>
+                <button type="button" data-s="handyman"    onclick="toggleStrength(this)" class="s-chip">손재주 있음</button>
+                <button type="button" data-s="moving"      onclick="toggleStrength(this)" class="s-chip">이사/운반 경험</button>
               </div>
             </div>
 
             <!-- 구사 가능 언어 -->
             <div>
-              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">🗣 구사 가능 언어 <span style="font-weight:400;color:#bbb">(복수 선택)</span></div>
+              <div style="font-size:11px;font-weight:800;color:#999;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">구사 가능 언어 <span style="font-weight:500;color:#bbb;text-transform:none;letter-spacing:0">· 복수 선택</span></div>
               <div style="display:flex;flex-wrap:wrap;gap:6px" id="lang-ability-chips">
                 <button type="button" data-l="ko" onclick="toggleLangAbility(this)" class="l-chip">🇰🇷 한국어</button>
                 <button type="button" data-l="en" onclick="toggleLangAbility(this)" class="l-chip">🇺🇸 영어</button>
@@ -1321,7 +1321,7 @@
         <!-- 증빙서류 -->
         <div id="worker-cert-section" style="display:none;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-            <div style="font-size:14px;font-weight:800;color:#222">📂 증빙서류</div>
+            <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px">증빙서류</div>
             <div style="font-size:11px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:8px">업주에게만 공개</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px">
@@ -1464,7 +1464,7 @@
         <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:10px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div>
-              <div style="font-size:14px;font-weight:800;color:#222">🌐 앱 언어 / App Language</div>
+              <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px">앱 언어 / App Language</div>
               <div style="font-size:11px;color:#aaa;margin-top:2px" id="lang-desc">현재: 한국어</div>
             </div>
           </div>
@@ -1478,9 +1478,9 @@
           </div>
         </div>
 
-        <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">🚪 로그아웃</button>
+        <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">로그아웃</button>
         <div style="height:1px;background:#f0f0f0;margin-bottom:10px"></div>
-        <button onclick="deleteUserAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:center">⚠️ 회원 탈퇴</button>
+        <button onclick="deleteUserAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:center">회원 탈퇴</button>
       </div>
 
       <!-- 게스트/비로그인 상태 -->
