@@ -721,6 +721,7 @@
     <div class="chip" data-cat="커플알바" onclick="setCategory(this, '커플알바')">커플알바</div>
     <div class="chip" data-cat="컨텐츠" onclick="setCategory(this, '컨텐츠')">촬영/컨텐츠</div>
     <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">챌린지</div>
+    <div class="chip" data-cat="이사도우미" onclick="setCategory(this, '이사도우미')">이사도우미</div>
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
     <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
@@ -799,6 +800,7 @@
         <button class="srch-cat-btn" data-cat="커플알바" onclick="setSrchCat(this,'커플알바')">커플알바</button>
         <button class="srch-cat-btn" data-cat="컨텐츠" onclick="setSrchCat(this,'컨텐츠')">촬영/컨텐츠</button>
         <button class="srch-cat-btn" data-cat="챌린지" onclick="setSrchCat(this,'챌린지')">챌린지</button>
+        <button class="srch-cat-btn" data-cat="이사도우미" onclick="setSrchCat(this,'이사도우미')">이사도우미</button>
         <button class="srch-cat-btn" data-cat="__errand__" onclick="setSrchCat(this,'__errand__')">심부름/대행</button>
         <button class="srch-cat-btn" data-cat="반려동물 산책" onclick="setSrchCat(this,'반려동물 산책')">펫 돌봄</button>
       </div>
@@ -1706,6 +1708,8 @@ async function loadCategoriesWorker() {
     if (!data?.length) return;
     const row = document.getElementById('filter-row');
     if (!row) return;
+    // 이사도우미가 DB에 없으면 항상 추가
+    if (!data.find(c => c.name === '이사도우미')) data.push({ name:'이사도우미', icon:'' });
     // 전체 + 급구만 칩은 유지하고 중간 카테고리 칩을 교체
     const allChip = row.querySelector('[data-cat=""]');
     const urgentChip = row.querySelector('[data-urgent]');

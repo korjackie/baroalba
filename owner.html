@@ -678,10 +678,11 @@
     <!-- 필터 칩 -->
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
       <button class="om-chip active" onclick="setOwnerMapFilter(this,'','')">전체</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'이사도우미','')">이사도우미</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'','errand')">심부름</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'F&B','')">F&B</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'물류','')">물류</button>
-      <button class="om-chip" onclick="setOwnerMapFilter(this,'판매','')">🛍 판매</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'판매','')">판매</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'청소','')">청소</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'이벤트','')">이벤트</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'컨텐츠','')">컨텐츠</button>
@@ -2950,6 +2951,7 @@ const DEFAULT_CATEGORIES = [
   { name:'컨텐츠',     icon:'📱', display_order:13 },
   { name:'유튜브/틱톡',icon:'🎬', display_order:14 },
   { name:'모델/촬영',  icon:'📸', display_order:15 },
+  { name:'이사도우미', icon:'🚚', display_order:16 },
   { name:'기타',       icon:'📋', display_order:99 },
 ];
 
@@ -3043,6 +3045,9 @@ async function loadCategories() {
     const { data, error } = await db.from('job_categories').select('*').eq('active', true).order('display_order');
     if (!error && data?.length) categories = data;
   } catch(e) { /* fallback to defaults */ }
+  if (!categories.find(c => c.name === '이사도우미')) {
+    categories.push({ name:'이사도우미', icon:'🚚', display_order:16, active:true });
+  }
   renderCategorySelect();
 }
 
