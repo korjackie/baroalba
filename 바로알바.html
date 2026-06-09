@@ -614,13 +614,13 @@
       top: 110px; right: 14px;
       background: #fff;
       border-radius: 14px;
-      padding: 12px;
+      padding: 14px 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
       z-index: 250;
       display: none;
       flex-direction: column;
-      gap: 6px;
-      min-width: 100px;
+      gap: 10px;
+      width: 180px;
     }
     .radius-popup.open { display: flex; }
     .radius-opt {
@@ -835,7 +835,7 @@
 <div id="adv-filter-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:600" onclick="if(event.target===this)closeAdvFilter()">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:20px 20px 40px;max-height:70vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="font-size:17px;font-weight:900">🎛 고급 필터</div>
+      <div style="font-size:17px;font-weight:900">고급 필터</div>
       <div style="display:flex;gap:8px">
         <button onclick="resetAdvFilter()" style="padding:7px 14px;background:#f0f0f0;color:#888;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">초기화</button>
         <button onclick="closeAdvFilter()" style="padding:7px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">적용</button>
@@ -844,7 +844,7 @@
 
     <!-- 시급 범위 -->
     <div style="margin-bottom:20px">
-      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:10px">💰 최소 시급</div>
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:10px">최소 시급</div>
       <div style="display:flex;align-items:center;gap:10px">
         <input type="range" id="wage-slider" min="10000" max="30000" step="1000" value="10000"
           oninput="document.getElementById('wage-val').textContent=parseInt(this.value).toLocaleString()+'원'"
@@ -855,7 +855,7 @@
 
     <!-- 날짜 필터 -->
     <div style="margin-bottom:20px">
-      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">📅 날짜</div>
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">날짜</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="flt-chip" id="flt-date-any"   onclick="setDateFilter('')"      style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">전체</button>
         <button class="flt-chip" id="flt-date-today" onclick="setDateFilter('today')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">오늘</button>
@@ -866,7 +866,7 @@
 
     <!-- 시간대 필터 -->
     <div style="margin-bottom:20px">
-      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">⏰ 시간대</div>
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">시간대</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="flt-chip" id="flt-time-any"  onclick="setTimeFilter('')"       style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">전체</button>
         <button class="flt-chip" id="flt-time-am"   onclick="setTimeFilter('am')"     style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">🌅 오전(6~12시)</button>
@@ -877,7 +877,7 @@
 
     <!-- 최근 검색어 -->
     <div id="recent-search-section" style="display:none">
-      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">🕐 최근 검색어</div>
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">최근 검색어</div>
       <div id="recent-search-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>
   </div>
@@ -932,10 +932,17 @@
 
 <!-- 반경 팝업 -->
 <div class="radius-popup" id="radius-popup">
-  <div class="radius-opt" onclick="setRadius(1000)">1km</div>
-  <div class="radius-opt" onclick="setRadius(3000)">3km</div>
-  <div class="radius-opt" onclick="setRadius(5000)">5km</div>
-  <div class="radius-opt selected" onclick="setRadius(10000)">10km</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+    <div style="font-size:11px;font-weight:800;color:#888;letter-spacing:0.3px">반경</div>
+    <div id="radius-slider-val" style="font-size:14px;font-weight:900;color:var(--red)">10km</div>
+  </div>
+  <input type="range" id="radius-slider" min="1" max="30" step="1" value="10"
+    oninput="document.getElementById('radius-slider-val').textContent=this.value+'km'"
+    onchange="setRadiusSlider(parseInt(this.value)*1000)"
+    style="width:100%;accent-color:var(--red);cursor:pointer">
+  <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;font-weight:700;margin-top:-4px">
+    <span>1km</span><span>30km</span>
+  </div>
 </div>
 
 <!-- 게스트 배너 -->
@@ -1486,6 +1493,37 @@
             <button id="lang-ja-btn" onclick="setLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇯🇵 日本語</button>
             <button id="lang-vi-btn" onclick="setLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇻🇳 Tiếng Việt</button>
             <button id="lang-ru-btn" onclick="setLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">🇷🇺 Русский</button>
+          </div>
+        </div>
+
+        <!-- 알림 수신 설정 -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">알림 설정</div>
+          <div style="background:#f8f8f8;border-radius:14px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#222">채팅 알림</div>
+                <div style="font-size:12px;color:#aaa;margin-top:2px">새 메시지 수신 시 알림</div>
+              </div>
+              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+                <input type="checkbox" id="noti-toggle-chat" onchange="saveNotiSetting('chat',this.checked)"
+                  style="opacity:0;width:0;height:0;position:absolute">
+                <span id="noti-track-chat" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+                <span id="noti-thumb-chat" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#222">합격/거절 알림</div>
+                <div style="font-size:12px;color:#aaa;margin-top:2px">지원 결과 변경 시 알림</div>
+              </div>
+              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+                <input type="checkbox" id="noti-toggle-status" onchange="saveNotiSetting('status',this.checked)"
+                  style="opacity:0;width:0;height:0;position:absolute">
+                <span id="noti-track-status" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+                <span id="noti-thumb-status" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -2997,9 +3035,13 @@ function toggleUrgent(el) {
 
 function setRadius(m) {
   currentRadius = m;
-  document.getElementById('radius-txt').textContent = m >= 1000 ? (m/1000) + 'km' : m + 'm';
-  document.querySelectorAll('.radius-opt').forEach(o => o.classList.remove('selected'));
-  event.target.classList.add('selected');
+  document.getElementById('radius-txt').textContent = (m/1000).toFixed(0) + 'km';
+  toggleRadiusPopup();
+  loadJobs();
+}
+function setRadiusSlider(m) {
+  currentRadius = m;
+  document.getElementById('radius-txt').textContent = (m/1000).toFixed(0) + 'km';
   toggleRadiusPopup();
   loadJobs();
 }
@@ -3019,7 +3061,7 @@ function closeAdvFilter() {
   minWageFilter = wage > 10000 ? wage : 0;
   const chip = document.getElementById('chip-adv-filter');
   const active = minWageFilter > 10000 || dateFilter || timeFilter;
-  if (chip) { chip.classList.toggle('active', active); chip.textContent = active ? '🎛 필터●' : '🎛 필터'; }
+  if (chip) { chip.classList.toggle('active', active); chip.textContent = active ? '필터●' : '필터'; }
   loadJobs();
 }
 function resetAdvFilter() {
@@ -3722,6 +3764,7 @@ function openProfile() {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
   }
+  initNotiToggles();
 }
 
 
@@ -4207,6 +4250,25 @@ function goToLogin() {
   location.href = '/login.html';
 }
 
+function saveNotiSetting(key, val) {
+  localStorage.setItem('baro_noti_' + key, val ? '1' : '0');
+  const track = document.getElementById('noti-track-' + key);
+  const thumb = document.getElementById('noti-thumb-' + key);
+  if (track) track.style.background = val ? 'var(--red)' : '#ddd';
+  if (thumb) thumb.style.transform = val ? 'translateX(20px)' : 'translateX(0)';
+}
+function initNotiToggles() {
+  ['chat','status'].forEach(key => {
+    const on = localStorage.getItem('baro_noti_' + key) !== '0'; // default ON
+    const el = document.getElementById('noti-toggle-' + key);
+    if (el) el.checked = on;
+    saveNotiSetting(key, on);
+  });
+}
+function getNotiSetting(key) {
+  return localStorage.getItem('baro_noti_' + key) !== '0'; // default ON
+}
+
 async function doLogout() {
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
@@ -4555,8 +4617,10 @@ async function updateNotiBadge() {
   if (unread > 0) {
     badge.textContent = unread > 9 ? '9+' : unread;
     badge.style.display = 'flex';
+    if ('setAppBadge' in navigator) navigator.setAppBadge(unread).catch(() => {});
   } else {
     badge.style.display = 'none';
+    if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
   }
 }
 
