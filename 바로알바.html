@@ -1257,6 +1257,7 @@ let markers = [];
 let overlays = [];
 let selectedJobId = null;
 let myLocationOverlay = null;
+let _locationWatchId = null;
 let minWageFilter = 0;
 let dateFilter = '';
 let timeFilter = '';
@@ -2532,15 +2533,26 @@ async function checkAlreadyApplied(jobId) {
 // ── 내 위치로 이동 ────────────────────────────────────────
 function moveToMyLocation(silent = false) {
   if (!navigator.geolocation) { if (!silent) showToast('위치 정보를 사용할 수 없습니다'); return; }
-  navigator.geolocation.getCurrentPosition(pos => {
-    saveMapCenter(pos.coords.latitude, pos.coords.longitude);
-    const latlng = new kakao.maps.LatLng(mapCenter.lat, mapCenter.lng);
-    kakaoMap.setCenter(latlng);
+  // 기존 추적 중단 후 재시작
+  if (_locationWatchId !== null) { navigator.geolocation.clearWatch(_locationWatchId); _locationWatchId = null; }
+  let firstFix = true;
+  _locationWatchId = navigator.geolocation.watchPosition(pos => {
+    const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
     setMyLocationMarker(latlng);
-    loadJobs();
+    if (firstFix) {
+      firstFix = false;
+      saveMapCenter(pos.coords.latitude, pos.coords.longitude);
+      kakaoMap.setCenter(latlng);
+      loadJobs();
+    }
   }, () => {
     if (!silent) showToast('위치 권한이 필요합니다');
-  });
+  }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+}
+
+function stopLocationWatch() {
+  if (_locationWatchId !== null) { navigator.geolocation.clearWatch(_locationWatchId); _locationWatchId = null; }
+  if (myLocationOverlay) { myLocationOverlay.setMap(null); myLocationOverlay = null; }
 }
 
 function setMyLocationMarker(latlng) {
@@ -2883,6 +2895,8 @@ function setNav(el, tab) {
   panelApps.classList.remove('show');
   panelChats.classList.remove('show');
   panelProfile.classList.remove('show');
+
+  if (tab !== 'map') stopLocationWatch();
 
   if (tab === 'swipe') {
     topBar.style.display      = 'none';
