@@ -1060,8 +1060,8 @@
 
             <!-- 나의 강점 태그 -->
             <div>
-              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">✨ 나의 강점 <span style="font-weight:400;color:#bbb">(최대 5개)</span></div>
-              <div style="font-size:11px;color:#bbb;margin-bottom:8px">업주에게 나를 어필할 매력포인트를 선택하세요</div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">✨ 나의 강점 <span style="font-weight:400;color:#bbb">(복수 선택, 최대 5개)</span></div>
+              <div style="font-size:11px;color:#bbb;margin-bottom:8px">선택 안해도 됩니다 · 업주에게 어필할 매력포인트를 골라보세요</div>
               <div style="display:flex;flex-wrap:wrap;gap:6px" id="strength-chips">
                 <button type="button" data-s="strong"      onclick="toggleStrength(this)" class="s-chip">💪 힘이 강함</button>
                 <button type="button" data-s="speed"       onclick="toggleStrength(this)" class="s-chip">⚡ 스피드</button>
@@ -1097,6 +1097,11 @@
                 <button type="button" data-l="vi" onclick="toggleLangAbility(this)" class="l-chip">🇻🇳 베트남어</button>
                 <button type="button" data-l="ru" onclick="toggleLangAbility(this)" class="l-chip">🇷🇺 러시아어</button>
               </div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input type="text" id="lang-other-input" placeholder="기타 언어 직접입력 (예: 태국어)" style="flex:1;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addOtherLang()">
+                <button onclick="addOtherLang()" style="padding:8px 14px;background:#4ade80;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">+ 추가</button>
+              </div>
+              <div id="lang-other-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
             </div>
 
             <button onclick="saveWorkerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
@@ -2257,12 +2262,29 @@ async function openApplicationJobDetail(jobPostingId) {
     </div>`;
 }
 
+function showConfirm(message, onOk) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:4000;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:18px;padding:24px;width:100%;max-width:300px;text-align:center">
+      <div style="font-size:15px;font-weight:700;color:#222;margin-bottom:20px;line-height:1.6">${message}</div>
+      <div style="display:flex;gap:10px">
+        <button onclick="this.closest('[style*=position]').remove()" style="flex:1;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">아니오</button>
+        <button id="_confirm_ok" style="flex:1;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">예</button>
+      </div>
+    </div>`;
+  overlay.querySelector('#_confirm_ok').addEventListener('click', () => { overlay.remove(); onOk(); });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 async function cancelApplication(appId) {
-  if (!confirm('지원을 취소하시겠어요?')) return;
-  const { error } = await db.from('applications').update({ status: 'cancelled' }).eq('id', appId);
-  if (error) { showToast('취소 실패: ' + error.message); return; }
-  showToast('✅ 지원이 취소됐습니다');
-  loadMyApplications();
+  showConfirm('지원을 취소하시겠어요?', async () => {
+    const { error } = await db.from('applications').update({ status: 'cancelled' }).eq('id', appId);
+    if (error) { showToast('취소 실패: ' + error.message); return; }
+    showToast('✅ 지원이 취소됐습니다');
+    loadMyApplications();
+  });
 }
 
 // ── 내 지원 서브탭 ────────────────────────────────────────
@@ -3057,9 +3079,12 @@ function setNav(el, tab) {
 // ── 스와이프 ─────────────────────────────────────────────
 let swipeJobs = [];
 let swipeIdx = 0;
+const appliedSwipeIds = new Set();
 
 function initSwipe() {
-  swipeJobs = [...jobs].sort(() => Math.random() - 0.5);
+  swipeJobs = jobs
+    .filter(j => !j.applied_status && !appliedSwipeIds.has(j.id))
+    .sort(() => Math.random() - 0.5);
   swipeIdx = 0;
   renderSwipeStack();
 }
@@ -3368,6 +3393,7 @@ function showQuickGradeModal(type, data = {}) {
 
 async function applySwipeJob(job, isQuick = false) {
   if (isGuest || !currentUser) return;
+  appliedSwipeIds.add(job.id);
   let { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
   if (!worker) {
     const meta = currentUser.user_metadata || {};
@@ -3376,12 +3402,18 @@ async function applySwipeJob(job, isQuick = false) {
     if (!created) return;
     worker = created;
   }
-  await db.from('applications').insert({ job_posting_id: job.id, worker_id: worker.id }).catch(()=>{});
-  // 번개지원이면 오늘 날짜 저장
+  const { error } = await db.from('applications').insert({ job_posting_id: job.id, worker_id: worker.id });
+  if (error && error.code !== '23505') {
+    showToast('지원 처리 중 오류가 발생했습니다');
+    return;
+  }
   if (isQuick) {
     const today = new Date().toISOString().slice(0, 10);
     localStorage.setItem('quick_apply_date_' + currentUser.id, today);
   }
+  // 내 지원 탭이 열려 있으면 즉시 갱신
+  const panelApps = document.getElementById('panel-applications');
+  if (panelApps?.classList.contains('show')) loadMyApplications();
 }
 
 function openProfile() {
@@ -3721,11 +3753,38 @@ function toggleLangAbility(el) {
   }
 }
 
+function addOtherLang() {
+  const input = document.getElementById('lang-other-input');
+  const val = input.value.trim();
+  if (!val) return;
+  const key = 'other:' + val;
+  if (_workerLanguages.includes(key)) { showToast('이미 추가된 언어입니다'); return; }
+  _workerLanguages.push(key);
+  input.value = '';
+  renderOtherLangChips();
+}
+
+function removeOtherLang(key) {
+  _workerLanguages = _workerLanguages.filter(l => l !== key);
+  renderOtherLangChips();
+}
+
+function renderOtherLangChips() {
+  const others = _workerLanguages.filter(l => l.startsWith('other:'));
+  const container = document.getElementById('lang-other-chips');
+  if (!container) return;
+  container.innerHTML = others.map(l => {
+    const name = l.slice(6);
+    return `<span class="l-chip active" style="display:inline-flex;align-items:center;gap:4px">🌐 ${name}<button onclick="removeOtherLang('${l}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:inherit;padding:0;line-height:1">✕</button></span>`;
+  }).join('');
+}
+
 function renderLangAbilityChips(arr) {
   _workerLanguages = arr || [];
   document.querySelectorAll('#lang-ability-chips .l-chip').forEach(el => {
     el.classList.toggle('active', _workerLanguages.includes(el.dataset.l));
   });
+  renderOtherLangChips();
 }
 
 // ── 스킬 태그 ──────────────────────────────────────────
