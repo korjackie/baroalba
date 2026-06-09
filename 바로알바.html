@@ -1065,6 +1065,26 @@
       <button onclick="shareJob()" title="공유"
         style="width:52px;height:52px;flex-shrink:0;background:#f5f5f5;border:none;border-radius:16px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">⤴</button>
     </div>
+    <div style="text-align:right;margin:8px 20px 0">
+      <button onclick="openReportModal('job', selectedJobId)" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 신고 모달 -->
+<div class="modal-overlay" id="report-modal" onclick="if(event.target===this)closeReportModal()" style="z-index:1100;align-items:flex-end">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">신고하기</div>
+      <button onclick="closeReportModal()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px">
+      <div id="report-reason-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <textarea id="report-detail" placeholder="추가 내용을 입력해주세요 (선택)" rows="3"
+        style="width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box"></textarea>
+      <button onclick="submitReport()" style="width:100%;margin-top:12px;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">신고 제출</button>
+      <div style="font-size:11px;color:#bbb;text-align:center;margin-top:10px;line-height:1.7">허위 신고 시 이용이 제한될 수 있습니다</div>
+    </div>
   </div>
 </div>
 
@@ -1527,6 +1547,10 @@
           </div>
         </div>
 
+        <div style="display:flex;gap:12px;margin-bottom:14px">
+          <a href="./terms.html" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">이용약관</a>
+          <a href="./terms.html" onclick="localStorage.setItem('terms_tab','privacy')" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">개인정보처리방침</a>
+        </div>
         <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">로그아웃</button>
         <div style="height:1px;background:#f0f0f0;margin-bottom:10px"></div>
         <button onclick="deleteUserAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:center">회원 탈퇴</button>
@@ -4677,6 +4701,52 @@ async function openNotifications() {
         </div>
       </div>`;
   }).join('');
+}
+
+// ── 신고하기 ─────────────────────────────────────────────
+let _reportTargetType = null;
+let _reportTargetId = null;
+
+const REPORT_REASONS_JOB = ['허위/과장 공고', '최저임금 이하 시급', '불법/유해 업종', '개인정보 요구', '기타'];
+const REPORT_REASONS_USER = ['부적절한 언행', '허위 프로필', '개인정보 침해', '노쇼/무단이탈', '기타'];
+
+function openReportModal(targetType, targetId) {
+  if (!currentUser) { showToast('로그인 후 신고할 수 있습니다'); return; }
+  if (!targetId) return;
+  _reportTargetType = targetType;
+  _reportTargetId = targetId;
+  const reasons = targetType === 'job' ? REPORT_REASONS_JOB : REPORT_REASONS_USER;
+  document.getElementById('report-reason-list').innerHTML = reasons.map(r =>
+    `<label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f8f8f8;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;color:#333">
+      <input type="radio" name="report-reason" value="${r}" style="accent-color:var(--red);width:16px;height:16px">${r}
+    </label>`
+  ).join('');
+  document.getElementById('report-detail').value = '';
+  document.getElementById('report-modal').classList.add('open');
+}
+
+function closeReportModal() {
+  document.getElementById('report-modal').classList.remove('open');
+  _reportTargetType = null;
+  _reportTargetId = null;
+}
+
+async function submitReport() {
+  const reason = document.querySelector('input[name="report-reason"]:checked')?.value;
+  if (!reason) { showToast('신고 사유를 선택해주세요'); return; }
+  const detail = document.getElementById('report-detail').value.trim();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (await db.auth.getSession()).data.session?.access_token },
+      body: JSON.stringify({ reporter_id: currentUser.id, target_id: _reportTargetId, target_type: _reportTargetType, reason, detail })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    showToast('신고가 접수됐습니다. 검토 후 조치하겠습니다');
+  } catch(e) {
+    showToast('신고 접수 중 오류가 발생했습니다');
+  }
+  closeReportModal();
 }
 </script>
 </body>

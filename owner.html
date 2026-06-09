@@ -865,6 +865,10 @@
         <input id="owner-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none">
         <button onclick="submitOwnerPw()" style="width:100%;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
       </div>
+      <div style="display:flex;gap:12px">
+        <a href="./terms.html" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">이용약관</a>
+        <a href="./terms.html" onclick="localStorage.setItem('terms_tab','privacy')" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">개인정보처리방침</a>
+      </div>
       <button onclick="logout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">🚪 로그아웃</button>
       <div style="height:1px;background:#f0f0f0"></div>
       <button onclick="deleteOwnerAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
@@ -2772,6 +2776,9 @@ async function openWorkerProfile() {
            <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;min-width:90px;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 합격</button>
            <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;min-width:90px;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>`
         : ''}
+    </div>
+    <div style="text-align:right;margin-top:10px">
+      <button onclick="openOwnerReport('worker','${w.kakao_uid || app.workers?.id || ''}')" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
     </div>`;
   document.getElementById('worker-profile-overlay').classList.add('open');
 }
@@ -3643,6 +3650,65 @@ async function openOwnerNotifications() {
       </div>`;
   }).join('');
 }
+
+// ── 신고하기 ─────────────────────────────────────────────
+let _ownerReportType = null;
+let _ownerReportTargetId = null;
+
+const OWNER_REPORT_REASONS = ['부적절한 언행', '허위 프로필', '개인정보 침해', '노쇼/무단이탈', '기타'];
+
+function openOwnerReport(targetType, targetId) {
+  if (!currentUser || !targetId) return;
+  _ownerReportType = targetType;
+  _ownerReportTargetId = targetId;
+  document.getElementById('owner-report-reason-list').innerHTML = OWNER_REPORT_REASONS.map(r =>
+    `<label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f8f8f8;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;color:#333">
+      <input type="radio" name="owner-report-reason" value="${r}" style="accent-color:var(--red);width:16px;height:16px">${r}
+    </label>`
+  ).join('');
+  document.getElementById('owner-report-detail').value = '';
+  document.getElementById('owner-report-modal').classList.add('open');
+}
+
+function closeOwnerReport() {
+  document.getElementById('owner-report-modal').classList.remove('open');
+}
+
+async function submitOwnerReport() {
+  const reason = document.querySelector('input[name="owner-report-reason"]:checked')?.value;
+  if (!reason) { showToast('신고 사유를 선택해주세요'); return; }
+  const detail = document.getElementById('owner-report-detail').value.trim();
+  try {
+    const sess = (await db.auth.getSession()).data.session;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sess?.access_token },
+      body: JSON.stringify({ reporter_id: currentUser.id, target_id: _ownerReportTargetId, target_type: _ownerReportType, reason, detail })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    showToast('신고가 접수됐습니다. 검토 후 조치하겠습니다');
+  } catch(e) {
+    showToast('신고 접수 중 오류가 발생했습니다');
+  }
+  closeOwnerReport();
+}
 </script>
+
+<!-- 신고 모달 (owner) -->
+<div class="modal-overlay" id="owner-report-modal" onclick="if(event.target===this)closeOwnerReport()" style="z-index:1100;align-items:flex-end">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">신고하기</div>
+      <button onclick="closeOwnerReport()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px">
+      <div id="owner-report-reason-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <textarea id="owner-report-detail" placeholder="추가 내용을 입력해주세요 (선택)" rows="3"
+        style="width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box"></textarea>
+      <button onclick="submitOwnerReport()" style="width:100%;margin-top:12px;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">신고 제출</button>
+      <div style="font-size:11px;color:#bbb;text-align:center;margin-top:10px;line-height:1.7">허위 신고 시 이용이 제한될 수 있습니다</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
