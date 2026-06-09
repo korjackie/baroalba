@@ -1387,6 +1387,10 @@ async function loadJobs() {
       }
     }
 
+    // 기간 만료된 공고 제외
+    const todayStr = new Date().toISOString().slice(0, 10);
+    result = result.filter(j => !j.work_end_date || j.work_end_date >= todayStr);
+
     if (currentWorkType === 'errand') result = result.filter(j => j.work_type === 'errand');
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
     if (sortByWage) result = result.sort((a,b) => b.current_wage - a.current_wage);
