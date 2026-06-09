@@ -2378,6 +2378,21 @@ async function setupOwnerChatNotify() {
     .subscribe();
 }
 
+// ── 채팅 아바타 색상 ──────────────────────────────────────
+const AVATAR_PALETTE = [
+  { bg:'#DBEAFE', fg:'#1D4ED8' },
+  { bg:'#D1FAE5', fg:'#065F46' },
+  { bg:'#EDE9FE', fg:'#5B21B6' },
+  { bg:'#FEF3C7', fg:'#92400E' },
+  { bg:'#FCE7F3', fg:'#9D174D' },
+  { bg:'#CCFBF1', fg:'#0F766E' },
+];
+function avatarColor(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h + str.charCodeAt(i)) % AVATAR_PALETTE.length;
+  return AVATAR_PALETTE[h];
+}
+
 // ── 업주 채팅 목록 ────────────────────────────────────────
 async function loadOwnerChatList() {
   const el = document.getElementById('owner-chats-list');
@@ -2386,7 +2401,7 @@ async function loadOwnerChatList() {
 
   const jobIds = postings.map(p => p.id);
   if (!jobIds.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-weight:700">등록한 공고가 없어요</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-weight:700">등록한 공고가 없어요</div></div>';
     return;
   }
 
@@ -2421,7 +2436,7 @@ async function loadOwnerChatList() {
 
   const chats = apps.filter(a => latestMsg[a.id]);
   if (!chats.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원자를 수락하면 채팅이 시작됩니다</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원자를 수락하면 채팅이 시작됩니다</div></div>';
     return;
   }
 
@@ -2430,10 +2445,11 @@ async function loadOwnerChatList() {
     const unread = unreadCnt[a.id] || 0;
     const isMine = msg.sender_id === currentUser.id;
     const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
-    const workerName = a.workers?.name || '지원자';
+    const workerName = a.workers?.name || a.job_postings?.title || '지원자';
+    const wac = avatarColor(workerName);
     return `
     <div onclick="openChat('${a.id}','${workerName}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
-      <div style="width:44px;height:44px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👤</div>
+      <div style="width:44px;height:44px;border-radius:12px;background:${wac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${wac.fg};flex-shrink:0">${workerName.charAt(0)}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
           <div style="font-size:14px;font-weight:800;color:#222">${workerName}</div>
