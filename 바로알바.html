@@ -2144,6 +2144,14 @@ function openDetail(jobId) {
   checkAlreadyApplied(jobId);
   checkBookmarkState(jobId);
 
+  // 조회수 increment (백그라운드, 비로그인/오류 무시)
+  if (currentUser) {
+    db.from('job_postings').select('view_count').eq('id', jobId).single()
+      .then(({ data }) => {
+        if (data !== null) db.from('job_postings').update({ view_count: (data.view_count || 0) + 1 }).eq('id', jobId);
+      }).catch(() => {});
+  }
+
   // 지도 해당 위치로 이동
   kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
 }

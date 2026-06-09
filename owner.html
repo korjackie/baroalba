@@ -971,6 +971,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('biz-name').textContent = bizRecord.name;
 
   autoCloseExpiredPostings();
+  checkSurgeSchedules();
   loadMyPlaces();
   loadFavWorkers();
   loadPostings();
@@ -1173,8 +1174,11 @@ function openPostingDetail(jobId) {
         <div style="font-size:14px;color:#555;line-height:1.6;white-space:pre-wrap">${p.description}</div>
       </div>` : ''}
 
-      <!-- 등록일 -->
-      ${p.created_at ? `<div style="font-size:12px;color:#ccc;text-align:right;margin-bottom:20px">📌 ${fmtDay(p.created_at)} 등록</div>` : ''}
+      <!-- 등록일 + 조회수 -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        ${p.created_at ? `<div style="font-size:12px;color:#ccc">📌 ${fmtDay(p.created_at)} 등록</div>` : '<div></div>'}
+        <div style="font-size:12px;color:#bbb;font-weight:700">👁 ${p.view_count || 0}회 조회</div>
+      </div>
 
       <!-- 지원자 -->
       <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">👥 지원자 목록</div>
@@ -1185,7 +1189,8 @@ function openPostingDetail(jobId) {
       <!-- 액션 버튼 -->
       <div style="display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;gap:8px">
-          ${isOpen ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:12px;background:#FFF7ED;color:#F59E0B;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⚡ 시급 +1,000원</button>` : ''}
+          ${isOpen ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:12px;background:#FFF7ED;color:#F59E0B;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⚡ +1,000원</button>
+          <button onclick="openSurgeScheduler('${p.id}',${p.current_wage})" id="surge-sched-btn-${p.id}" style="flex:1;padding:12px;background:${getSurgeSchedule(p.id)?'#FEF3C7':'#f5f5f5'};color:${getSurgeSchedule(p.id)?'#D97706':'#888'};border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${getSurgeSchedule(p.id)?'⏰ 예약됨':'⏰ 자동서지'}</button>` : ''}
           <button onclick="openEditForm('${p.id}')" style="flex:1;padding:12px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✏️ 수정</button>
         </div>
         <div style="display:flex;gap:8px">
@@ -1406,6 +1411,77 @@ async function surgeWage(jobId, currentWage) {
   if (error) { showToast('시급 인상 실패: ' + error.message); return; }
   showToast(`⚡ 시급 ${newWage.toLocaleString()}원으로 인상!`);
   loadPostings();
+}
+
+// ── 시급 서지 자동 스케줄 ───────────────────────────────────
+const SURGE_SCHED_KEY = 'baro_surge_schedules';
+
+function getSurgeSchedules() {
+  try { return JSON.parse(localStorage.getItem(SURGE_SCHED_KEY) || '{}'); } catch(e) { return {}; }
+}
+function getSurgeSchedule(jobId) {
+  return getSurgeSchedules()[jobId] || null;
+}
+function saveSurgeSchedule(jobId, triggerAt, amount) {
+  const s = getSurgeSchedules();
+  s[jobId] = { triggerAt, amount };
+  localStorage.setItem(SURGE_SCHED_KEY, JSON.stringify(s));
+}
+function cancelSurgeSchedule(jobId) {
+  const s = getSurgeSchedules();
+  delete s[jobId];
+  localStorage.setItem(SURGE_SCHED_KEY, JSON.stringify(s));
+}
+
+function openSurgeScheduler(jobId, currentWage) {
+  const existing = getSurgeSchedule(jobId);
+  if (existing) {
+    const rem = Math.max(0, Math.round((existing.triggerAt - Date.now()) / 60000));
+    if (confirm(`현재 예약: ${rem}분 후 +${existing.amount.toLocaleString()}원\n\n예약을 취소하시겠습니까?`)) {
+      cancelSurgeSchedule(jobId);
+      showToast('자동 서지 예약이 취소됐습니다');
+      loadPostings();
+    }
+    return;
+  }
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:flex-end';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 40px;width:100%" onclick="event.stopPropagation()">
+      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">⏰ 자동 시급 서지 예약</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:20px">현재 시급 ${currentWage.toLocaleString()}원 → N시간 후 자동으로 +1,000원</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        ${[2,4,8,12,24].map(h => `<button onclick="scheduleSurge('${jobId}',${currentWage},${h},this.closest('[style*=fixed]'))"
+          style="padding:14px;background:#FFF7ED;color:#D97706;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${h}시간 후</button>`).join('')}
+      </div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+    </div>`;
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+}
+
+function scheduleSurge(jobId, currentWage, hours, overlayEl) {
+  const triggerAt = Date.now() + hours * 3600000;
+  saveSurgeSchedule(jobId, triggerAt, 1000);
+  overlayEl.remove();
+  showToast(`⏰ ${hours}시간 후 시급이 자동으로 +1,000원 인상됩니다`);
+  loadPostings();
+}
+
+async function checkSurgeSchedules() {
+  const schedules = getSurgeSchedules();
+  const now = Date.now();
+  for (const [jobId, sched] of Object.entries(schedules)) {
+    if (sched.triggerAt <= now) {
+      const { data: p } = await db.from('job_postings').select('current_wage,status').eq('id', jobId).single();
+      if (p && (p.status === 'open' || p.status === 'urgent')) {
+        const newWage = (p.current_wage || 0) + sched.amount;
+        await db.from('job_postings').update({ current_wage: newWage, status: 'urgent' }).eq('id', jobId);
+        showToast(`⚡ 예약된 시급 서지 실행! ${newWage.toLocaleString()}원`);
+      }
+      cancelSurgeSchedule(jobId);
+    }
+  }
 }
 
 // ── 상태 토글 ─────────────────────────────────────────────
