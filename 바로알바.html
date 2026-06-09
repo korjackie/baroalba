@@ -2557,13 +2557,10 @@ function stopLocationWatch() {
 
 function setMyLocationMarker(latlng) {
   if (myLocationOverlay) { myLocationOverlay.setMap(null); myLocationOverlay = null; }
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.3);overflow:hidden;display:flex;align-items:center;justify-content:center;border:2.5px solid #FF4B4B;cursor:pointer';
   const img = document.createElement('img');
   img.src = './icons/바로알바 최종로고.png';
-  img.style.cssText = 'width:28px;height:28px;object-fit:contain;pointer-events:none';
-  wrap.appendChild(img);
-  myLocationOverlay = new kakao.maps.CustomOverlay({ position: latlng, content: wrap, yAnchor: 0.5, zIndex: 10 });
+  img.style.cssText = 'width:34px;height:34px;object-fit:contain;pointer-events:none';
+  myLocationOverlay = new kakao.maps.CustomOverlay({ position: latlng, content: img, yAnchor: 0.5, zIndex: 10 });
   myLocationOverlay.setMap(kakaoMap);
 }
 
