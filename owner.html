@@ -2615,7 +2615,7 @@ async function openWorkerProfileDirect(appId) {
 async function openWorkerProfile() {
   if (!_chatAppId) return;
   const { data: app } = await db.from('applications')
-    .select('*, workers(name, phone, email, gender, age, bio, experience, rating, review_count, skills), job_postings(title)')
+    .select('*, workers(name, phone, email, gender, age, bio, experience, rating, review_count, skills, vehicles, strengths), job_postings(title)')
     .eq('id', _chatAppId).single();
   if (!app) return;
   const w = app.workers || {};
@@ -2679,6 +2679,26 @@ async function openWorkerProfile() {
             <div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1.5px solid #eee;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#444">${s}</span>`).join('')}</div>
            </div>`
         : infoRow('🏷️ 보유 스킬', null)
+      }
+      ${w.vehicles?.length
+        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
+            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">🚗 보유 이동수단</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.vehicles.map(v => {
+              const MAP = {bicycle:'🚲 자전거',kickboard:'🛴 킥보드',motorcycle:'🛵 오토바이',car_compact:'🚗 차량(소형)',car_midsize:'🚙 차량(중형)',car_suv:'🚐 차량(SUV)',car_large:'🚌 차량(대형)',truck:'🚚 트럭/화물'};
+              return `<span style="background:#EFF6FF;color:#3B82F6;border:1.5px solid #BFDBFE;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[v]||v}</span>`;
+            }).join('')}</div>
+           </div>`
+        : ''
+      }
+      ${w.strengths?.length
+        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
+            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">✨ 나의 강점</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.strengths.map(s => {
+              const MAP = {strong:'💪 힘이 강함',speed:'⚡ 스피드',numbers:'🔢 숫자에 밝음',design:'🎨 디자인 안목',experience:'🌍 다양한 경험',always_on:'🕐 상시출동 가능',educated:'🎓 좋은 학벌',kind:'🤝 친절함',driving:'🚗 운전 능숙',language:'🗣 외국어 가능',detail:'🔍 꼼꼼함',stamina:'🏃 체력 강함',night:'🌙 야간 가능',clean:'🧹 청결 철저',photo:'📸 사진/영상',cooking:'🍳 요리 잘 함',elderly:'👴 어르신 친화',pet:'🐾 반려동물 OK',handyman:'🔧 손재주 있음',moving:'📦 이사/운반 경험'};
+              return `<span style="background:#FFF5F5;color:#FF4B4B;border:1.5px solid #FECACA;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[s]||s}</span>`;
+            }).join('')}</div>
+           </div>`
+        : ''
       }
     </div>
 

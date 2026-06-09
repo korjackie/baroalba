@@ -127,6 +127,14 @@
     }
     .chip.active { background: var(--red); border-color: var(--red); color: #fff; }
 
+    .v-chip, .s-chip {
+      padding: 7px 12px; border-radius: 20px; border: 1.5px solid #e5e7eb;
+      background: #f8f8f8; color: #555; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .v-chip.active { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; }
+    .s-chip.active { background: #FFF5F5; border-color: var(--red); color: var(--red); }
+
     /* ── 반경 표시 ── */
     .radius-badge {
       position: fixed;
@@ -1034,6 +1042,49 @@
                 <button onclick="addSkillTag()" style="padding:9px 14px;background:#f0f0f0;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#555">추가</button>
               </div>
             </div>
+            <!-- 이동수단 -->
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">🚗 보유 이동수단 <span style="font-weight:400;color:#bbb">(복수 선택)</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="vehicle-chips">
+                <button type="button" data-v="bicycle"      onclick="toggleVehicle(this)" class="v-chip">🚲 자전거</button>
+                <button type="button" data-v="kickboard"    onclick="toggleVehicle(this)" class="v-chip">🛴 킥보드</button>
+                <button type="button" data-v="motorcycle"   onclick="toggleVehicle(this)" class="v-chip">🛵 오토바이</button>
+                <button type="button" data-v="car_compact"  onclick="toggleVehicle(this)" class="v-chip">🚗 차량(소형)</button>
+                <button type="button" data-v="car_midsize"  onclick="toggleVehicle(this)" class="v-chip">🚙 차량(중형)</button>
+                <button type="button" data-v="car_suv"      onclick="toggleVehicle(this)" class="v-chip">🚐 차량(SUV)</button>
+                <button type="button" data-v="car_large"    onclick="toggleVehicle(this)" class="v-chip">🚌 차량(대형)</button>
+                <button type="button" data-v="truck"        onclick="toggleVehicle(this)" class="v-chip">🚚 트럭/화물</button>
+              </div>
+            </div>
+
+            <!-- 나의 강점 태그 -->
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">✨ 나의 강점 <span style="font-weight:400;color:#bbb">(최대 5개)</span></div>
+              <div style="font-size:11px;color:#bbb;margin-bottom:8px">업주에게 나를 어필할 매력포인트를 선택하세요</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="strength-chips">
+                <button type="button" data-s="strong"      onclick="toggleStrength(this)" class="s-chip">💪 힘이 강함</button>
+                <button type="button" data-s="speed"       onclick="toggleStrength(this)" class="s-chip">⚡ 스피드</button>
+                <button type="button" data-s="numbers"     onclick="toggleStrength(this)" class="s-chip">🔢 숫자에 밝음</button>
+                <button type="button" data-s="design"      onclick="toggleStrength(this)" class="s-chip">🎨 디자인 안목</button>
+                <button type="button" data-s="experience"  onclick="toggleStrength(this)" class="s-chip">🌍 다양한 경험</button>
+                <button type="button" data-s="always_on"   onclick="toggleStrength(this)" class="s-chip">🕐 상시출동 가능</button>
+                <button type="button" data-s="educated"    onclick="toggleStrength(this)" class="s-chip">🎓 좋은 학벌</button>
+                <button type="button" data-s="kind"        onclick="toggleStrength(this)" class="s-chip">🤝 친절함</button>
+                <button type="button" data-s="driving"     onclick="toggleStrength(this)" class="s-chip">🚗 운전 능숙</button>
+                <button type="button" data-s="language"    onclick="toggleStrength(this)" class="s-chip">🗣 외국어 가능</button>
+                <button type="button" data-s="detail"      onclick="toggleStrength(this)" class="s-chip">🔍 꼼꼼함</button>
+                <button type="button" data-s="stamina"     onclick="toggleStrength(this)" class="s-chip">🏃 체력 강함</button>
+                <button type="button" data-s="night"       onclick="toggleStrength(this)" class="s-chip">🌙 야간 가능</button>
+                <button type="button" data-s="clean"       onclick="toggleStrength(this)" class="s-chip">🧹 청결 철저</button>
+                <button type="button" data-s="photo"       onclick="toggleStrength(this)" class="s-chip">📸 사진/영상</button>
+                <button type="button" data-s="cooking"     onclick="toggleStrength(this)" class="s-chip">🍳 요리 잘 함</button>
+                <button type="button" data-s="elderly"     onclick="toggleStrength(this)" class="s-chip">👴 어르신 친화</button>
+                <button type="button" data-s="pet"         onclick="toggleStrength(this)" class="s-chip">🐾 반려동물 OK</button>
+                <button type="button" data-s="handyman"    onclick="toggleStrength(this)" class="s-chip">🔧 손재주 있음</button>
+                <button type="button" data-s="moving"      onclick="toggleStrength(this)" class="s-chip">📦 이사/운반 경험</button>
+              </div>
+            </div>
+
             <button onclick="saveWorkerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
           </div>
         </div>
@@ -3365,6 +3416,8 @@ async function loadWorkerProfileForm() {
   }
   _workerSkills = Array.isArray(w.skills) ? [...w.skills] : [];
   renderSkillTags();
+  renderVehicleChips(Array.isArray(w.vehicles) ? w.vehicles : []);
+  renderStrengthChips(Array.isArray(w.strengths) ? w.strengths : []);
   const meta = currentUser?.user_metadata || {};
   const rawPhone = w.phone || meta.phone || '';
   document.getElementById('worker-phone').value = rawPhone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3');
@@ -3547,6 +3600,47 @@ async function uploadDoc(certType, input) {
   showToast(`✅ ${meta.label} 등록됐습니다`);
 }
 
+// ── 이동수단 & 강점 태그 ────────────────────────────────
+let _workerVehicles = [];
+let _workerStrengths = [];
+
+function toggleVehicle(el) {
+  const v = el.dataset.v;
+  if (_workerVehicles.includes(v)) {
+    _workerVehicles = _workerVehicles.filter(x => x !== v);
+    el.classList.remove('active');
+  } else {
+    _workerVehicles.push(v);
+    el.classList.add('active');
+  }
+}
+
+function toggleStrength(el) {
+  const s = el.dataset.s;
+  if (_workerStrengths.includes(s)) {
+    _workerStrengths = _workerStrengths.filter(x => x !== s);
+    el.classList.remove('active');
+  } else {
+    if (_workerStrengths.length >= 5) { showToast('강점은 최대 5개까지 선택 가능합니다'); return; }
+    _workerStrengths.push(s);
+    el.classList.add('active');
+  }
+}
+
+function renderVehicleChips(arr) {
+  _workerVehicles = arr || [];
+  document.querySelectorAll('#vehicle-chips .v-chip').forEach(el => {
+    el.classList.toggle('active', _workerVehicles.includes(el.dataset.v));
+  });
+}
+
+function renderStrengthChips(arr) {
+  _workerStrengths = arr || [];
+  document.querySelectorAll('#strength-chips .s-chip').forEach(el => {
+    el.classList.toggle('active', _workerStrengths.includes(el.dataset.s));
+  });
+}
+
 // ── 스킬 태그 ──────────────────────────────────────────
 let _workerSkills = [];
 
@@ -3621,7 +3715,7 @@ async function saveWorkerProfile() {
   const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
-  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills };
+  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths };
   if (_workerGender) payload.gender = _workerGender;
   const { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error) { showToast('저장 실패: ' + error.message); return; }
