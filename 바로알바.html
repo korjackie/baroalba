@@ -600,7 +600,6 @@
       <span class="search-icon">🔍</span>
       <input id="search-input" type="text" placeholder="지역, 업종 검색">
     </div>
-    <button class="location-btn" onclick="moveToMyLocation()" title="내 위치로">📍</button>
   </div>
   <div class="filter-row" id="filter-row">
     <div class="chip active" data-cat="" onclick="setCategory(this, '')">전체</div>
@@ -703,6 +702,14 @@
   </div>
   <button onclick="event.stopPropagation();document.getElementById('today-pick-card').style.display='none'" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:18px;color:#ccc;cursor:pointer;line-height:1">✕</button>
 </div>
+
+<!-- 내 위치 플로팅 버튼 -->
+<button id="map-loc-btn" onclick="moveToMyLocation()" title="내 위치로"
+  style="position:fixed;left:16px;bottom:calc(var(--nav-h) + var(--sheet-peek) + 16px);width:48px;height:48px;background:#FF4B4B;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,75,75,0.45);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;-webkit-tap-highlight-color:transparent">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+    <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/>
+  </svg>
+</button>
 
 <!-- 반경 배지 -->
 <div class="radius-badge" id="radius-badge" onclick="toggleRadiusPopup()">
@@ -3040,6 +3047,7 @@ function setNav(el, tab) {
   const topBar      = document.querySelector('.top-bar');
   const bottomSheet = document.getElementById('bottom-sheet');
   const radiusBadge   = document.getElementById('radius-badge');
+  const mapLocBtn     = document.getElementById('map-loc-btn');
   const panelApps     = document.getElementById('panel-applications');
   const panelChats    = document.getElementById('panel-chats');
   const panelProfile  = document.getElementById('panel-profile');
@@ -3056,30 +3064,35 @@ function setNav(el, tab) {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
+    if (mapLocBtn) mapLocBtn.style.display = 'none';
     swipeScreen.style.display = 'flex';
     initSwipe();
   } else if (tab === 'applications') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
+    if (mapLocBtn) mapLocBtn.style.display = 'none';
     panelApps.classList.add('show');
     switchAppSubtab('status');
   } else if (tab === 'chats') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
+    if (mapLocBtn) mapLocBtn.style.display = 'none';
     panelChats.classList.add('show');
     loadMyChatList();
   } else if (tab === 'profile') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
+    if (mapLocBtn) mapLocBtn.style.display = 'none';
     panelProfile.classList.add('show');
     openProfile();
   } else {
     topBar.style.display      = '';
     bottomSheet.style.display = '';
     radiusBadge.style.display = '';
+    if (mapLocBtn) mapLocBtn.style.display = 'flex';
     if (tab === 'map') setSheetState('peek');
   }
 }
@@ -3871,9 +3884,17 @@ async function saveWorkerProfile() {
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
   const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages };
   if (_workerGender) payload.gender = _workerGender;
-  const { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
+  let { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
+  if (error?.message?.includes('languages')) {
+    // languages 컬럼 미존재 → 없이 재저장 (DDL 실행 전 임시 처리)
+    const { languages: _l, ...payloadNoLang } = payload;
+    const res = await db.from('workers').upsert(payloadNoLang, { onConflict: 'kakao_uid' });
+    error = res.error;
+    if (!error) showToast('✅ 저장됐습니다 (언어는 DB 설정 후 적용됩니다)');
+  } else if (!error) {
+    showToast('✅ 프로필이 저장됐습니다');
+  }
   if (error) { showToast('저장 실패: ' + error.message); return; }
-  showToast('✅ 프로필이 저장됐습니다');
   loadWorkerGrade();
   updateProfileCompletion();
 }
