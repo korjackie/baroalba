@@ -2558,10 +2558,10 @@ function stopLocationWatch() {
 function setMyLocationMarker(latlng) {
   if (myLocationOverlay) { myLocationOverlay.setMap(null); myLocationOverlay = null; }
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'width:30px;height:40px;display:flex;align-items:center;justify-content:center';
+  wrap.style.cssText = 'width:26px;height:35px;display:flex;align-items:center;justify-content:center';
   const img = document.createElement('img');
   img.src = './icons/marker-logo.png';
-  img.style.cssText = 'width:30px;height:40px;object-fit:contain;pointer-events:none';
+  img.style.cssText = 'width:26px;height:35px;object-fit:contain;pointer-events:none';
   wrap.appendChild(img);
   myLocationOverlay = new kakao.maps.CustomOverlay({ position: latlng, content: wrap, yAnchor: 0.5, zIndex: 10 });
   myLocationOverlay.setMap(kakaoMap);
