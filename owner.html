@@ -337,6 +337,12 @@
   <div id="applicants-list"><div style="text-align:center;padding:32px"><div class="spinner"></div></div></div>
 </div>
 
+<!-- 내 위치 FAB -->
+<button id="owner-loc-fab" onclick="ownerMapMyLocation()" title="내 위치로"
+  style="position:fixed;right:20px;bottom:calc(var(--nav-h) + 88px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:200;-webkit-tap-highlight-color:transparent">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>
+</button>
+
 <!-- FAB -->
 <button class="fab" onclick="openPostingForm()" title="공고 등록">+</button>
 
@@ -665,7 +671,9 @@
         <button onclick="document.getElementById('owner-map-search').value=''" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;line-height:1;padding:0">✕</button>
       </div>
       <button onclick="ownerMapMyLocation()" title="내 위치로"
-        style="width:44px;height:44px;background:#fff;border:none;border-radius:12px;font-size:20px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.15);flex-shrink:0">📍</button>
+        style="width:44px;height:44px;background:#fff;border:none;border-radius:12px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF4B4B" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>
+      </button>
     </div>
     <!-- 필터 칩 -->
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
@@ -2463,10 +2471,13 @@ function setNav(el, tab) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
+  const locFab = document.getElementById('owner-loc-fab');
   if (tab === 'map') {
     document.getElementById('panel-owner-map').classList.add('show');
+    if (locFab) locFab.style.display = 'flex';
     initOwnerMap();
   } else if (tab === 'postings') {
+    if (locFab) locFab.style.display = 'none';
     switchTab('postings', document.querySelectorAll('.tab-btn')[0]);
   } else if (tab === 'applicants') {
     const badge = document.getElementById('owner-chat-badge');
