@@ -2769,6 +2769,21 @@ function applyLang() {
   }
 }
 
+// ── 채팅 아바타 색상 ──────────────────────────────────────
+const AVATAR_PALETTE = [
+  { bg:'#DBEAFE', fg:'#1D4ED8' },
+  { bg:'#D1FAE5', fg:'#065F46' },
+  { bg:'#EDE9FE', fg:'#5B21B6' },
+  { bg:'#FEF3C7', fg:'#92400E' },
+  { bg:'#FCE7F3', fg:'#9D174D' },
+  { bg:'#CCFBF1', fg:'#0F766E' },
+];
+function avatarColor(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h + str.charCodeAt(i)) % AVATAR_PALETTE.length;
+  return AVATAR_PALETTE[h];
+}
+
 // ── 채팅 목록 ─────────────────────────────────────────────
 async function loadMyChatList() {
   if (isGuest || !currentUser) return;
@@ -2815,13 +2830,17 @@ async function loadMyChatList() {
     const unread = unreadCnt[a.id] || 0;
     const isMine = msg.sender_id === currentUser.id;
     const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    const bizName = a.job_postings?.businesses?.name || '업주';
+    const bizName = a.job_postings?.businesses?.name || '';
+    const jobTitle = a.job_postings?.title || '';
+    const displayName = bizName || jobTitle || '업주';
+    const avatarKey = bizName || jobTitle || '업주';
+    const ac = avatarColor(avatarKey);
     return `
-    <div onclick="openWChat('${a.id}','${bizName}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#FFE0E0,#FFBCBC);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#EE3333;flex-shrink:0">${bizName.charAt(0)}</div>
+    <div onclick="openWChat('${a.id}','${displayName}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${avatarKey.charAt(0)}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-          <div style="font-size:14px;font-weight:800;color:#222">${bizName}</div>
+          <div style="font-size:14px;font-weight:800;color:#222">${displayName}</div>
           <div style="font-size:11px;color:#bbb">${time}</div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
