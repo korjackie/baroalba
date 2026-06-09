@@ -216,9 +216,24 @@
     /* ── 하단 내비 ── */
     .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:#fff; border-top:1px solid #f0f0f0; display:flex; z-index:400; box-shadow:0 -2px 12px rgba(0,0,0,0.06); }
     .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border:none; background:none; position:relative; }
-    .nav-icon { font-size:22px; }
-    .nav-label { font-size:10px; font-weight:700; color:#bbb; }
-    .nav-item.active .nav-label { color:var(--red); }
+    .nav-icon { width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+    .nav-icon svg { width:22px; height:22px; }
+    .nav-icon svg path, .nav-icon svg circle, .nav-icon svg line,
+    .nav-icon svg polyline, .nav-icon svg rect, .nav-icon svg polygon {
+      stroke:#c0c0c0; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+    }
+    .nav-label { font-size:10px; font-weight:600; color:#c0c0c0; }
+    .nav-item.active .nav-label { color:var(--red); font-weight:700; }
+    .nav-item.active .nav-icon svg path,
+    .nav-item.active .nav-icon svg circle,
+    .nav-item.active .nav-icon svg line,
+    .nav-item.active .nav-icon svg polyline,
+    .nav-item.active .nav-icon svg rect,
+    .nav-item.active .nav-icon svg polygon { stroke:var(--red); }
+    .nav-item.active::before {
+      content:''; position:absolute; top:0; left:25%; right:25%;
+      height:2px; background:var(--red); border-radius:0 0 2px 2px;
+    }
     .owner-nav-badge { position:absolute; top:4px; right:calc(50% - 18px); min-width:16px; height:16px; padding:0 4px; background:var(--red); color:#fff; border-radius:8px; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; line-height:1; }
     .full-panel { position:fixed; inset:0; bottom:var(--nav-h); background:#f5f5f5; z-index:300; display:none; flex-direction:column; overflow-y:auto; }
     .full-panel.show { display:flex; }
@@ -286,8 +301,8 @@
 
 <!-- 탭 -->
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('postings', this)">📋 내 공고</button>
-  <button class="tab-btn" onclick="switchTab('applicants', this)">👥 지원자</button>
+  <button class="tab-btn active" onclick="switchTab('postings', this)">내 공고</button>
+  <button class="tab-btn" onclick="switchTab('applicants', this)">지원자</button>
 </div>
 
 <!-- 내 공고 탭 -->
@@ -382,9 +397,9 @@
       <div class="form-group" id="work-type-group">
         <label class="form-label">근무형태 *</label>
         <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="work-type-tabs">
-          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">⚡ 스팟</button>
-          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">📅 단기</button>
-          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">🔄 정기</button>
+          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">스팟</button>
+          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">단기</button>
+          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">정기</button>
         </div>
         <input type="hidden" id="f-work-type" value="spot">
         <div style="font-size:11px;color:#aaa;margin-top:6px" id="wt-desc">1회성 단발 근무 (날짜·시간 1회 지정)</div>
@@ -603,25 +618,25 @@
 <!-- 하단 내비 -->
 <div class="bottom-nav">
   <button class="nav-item" onclick="setNav(this,'map')">
-    <div class="nav-icon">🗺</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
     <div class="nav-label">지도</div>
   </button>
   <button class="nav-item active" onclick="setNav(this,'postings')">
-    <div class="nav-icon">📋</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
     <div class="nav-label">내 공고</div>
   </button>
   <button class="nav-item" onclick="setNav(this,'applicants')">
-    <div class="nav-icon">👥</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
     <div class="nav-label">지원자</div>
     <span class="owner-nav-badge" id="owner-chat-badge"></span>
   </button>
   <button class="nav-item" id="nav-owner-chats" onclick="setNav(this,'chats')">
-    <div class="nav-icon">💬</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
     <div class="nav-label">채팅</div>
     <span class="owner-nav-badge" id="owner-msg-badge" style="display:none"></span>
   </button>
   <button class="nav-item" onclick="setNav(this,'settings')">
-    <div class="nav-icon">👤</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
     <div class="nav-label">마이페이지</div>
   </button>
 </div>
@@ -655,14 +670,14 @@
     <!-- 필터 칩 -->
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
       <button class="om-chip active" onclick="setOwnerMapFilter(this,'','')">전체</button>
-      <button class="om-chip" onclick="setOwnerMapFilter(this,'','errand')">🏃 심부름</button>
-      <button class="om-chip" onclick="setOwnerMapFilter(this,'F&B','')">☕ F&B</button>
-      <button class="om-chip" onclick="setOwnerMapFilter(this,'물류','')">📦 물류</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'','errand')">심부름</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'F&B','')">F&B</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'물류','')">물류</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'판매','')">🛍 판매</button>
-      <button class="om-chip" onclick="setOwnerMapFilter(this,'청소','')">🧹 청소</button>
-      <button class="om-chip" onclick="setOwnerMapFilter(this,'이벤트','')">🎉 이벤트</button>
-      <button class="om-chip" onclick="setOwnerMapFilter(this,'컨텐츠','')">📱 컨텐츠</button>
-      <button class="om-chip" data-urgent onclick="setOwnerMapUrgent(this)">🔥 급구만</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'청소','')">청소</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'이벤트','')">이벤트</button>
+      <button class="om-chip" onclick="setOwnerMapFilter(this,'컨텐츠','')">컨텐츠</button>
+      <button class="om-chip" data-urgent onclick="setOwnerMapUrgent(this)">ASAP</button>
     </div>
   </div>
   <div id="owner-map-container" style="flex:1;width:100%"></div>
@@ -984,7 +999,7 @@ function renderPostings() {
     const today = new Date().toISOString().slice(0, 10);
     const isExpired = p.work_end_date && p.work_end_date < today;
     const surge = p.current_wage - p.base_wage;
-    const statusLabel = p.status === 'urgent' ? '🔥 급구' : p.status === 'open' ? '모집중' : '마감';
+    const statusLabel = p.status === 'urgent' ? 'ASAP' : p.status === 'open' ? '모집중' : '마감';
     const statusCls = p.status === 'urgent' ? 'urgent' : p.status === 'open' ? 'open' : 'closed';
     const start = p.start_time ? formatTime(p.start_time) : '미정';
     // 날짜 표시 헬퍼
@@ -1010,10 +1025,10 @@ function renderPostings() {
         <div class="posting-top" style="margin-bottom:8px">
           <div>
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-              ${p.work_type === 'errand'  ? '<span style="font-size:10px;font-weight:900;background:#7C3AED;color:#fff;padding:2px 7px;border-radius:6px;white-space:nowrap">🏃 심부름</span>' : ''}
-              ${p.work_type === 'short'   ? '<span style="font-size:10px;font-weight:900;background:#EFF6FF;color:#3B82F6;padding:2px 7px;border-radius:6px;white-space:nowrap">📅 단기</span>' : ''}
-              ${p.work_type === 'regular' ? '<span style="font-size:10px;font-weight:900;background:#F0FFF4;color:#16a34a;padding:2px 7px;border-radius:6px;white-space:nowrap">🔄 정기</span>' : ''}
-              ${p.is_premium ? '<span style="font-size:10px;font-weight:900;background:#EDE9FE;color:#7C3AED;padding:2px 7px;border-radius:6px;white-space:nowrap">⭐ 프리미엄</span>' : ''}
+              ${p.work_type === 'errand'  ? '<span style="font-size:10px;font-weight:700;background:#F3E8FF;color:#7C3AED;padding:2px 7px;border-radius:6px;white-space:nowrap">심부름</span>' : ''}
+              ${p.work_type === 'short'   ? '<span style="font-size:10px;font-weight:700;background:#EFF6FF;color:#3B82F6;padding:2px 7px;border-radius:6px;white-space:nowrap">단기</span>' : ''}
+              ${p.work_type === 'regular' ? '<span style="font-size:10px;font-weight:700;background:#F0FFF4;color:#16a34a;padding:2px 7px;border-radius:6px;white-space:nowrap">정기</span>' : ''}
+              ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:2px 7px;border-radius:6px;white-space:nowrap">프리미엄</span>' : ''}
               <div class="posting-title">${p.title}</div>
               ${jobTypeBadge}
             </div>
@@ -1074,10 +1089,10 @@ function openPostingDetail(jobId) {
   const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} (${['일','월','화','수','목','금','토'][d.getDay()]}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
   const fmtDay  = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}`; };
 
-  const WORK_TYPE_LABEL = { spot:'⚡ 스팟', short:'📅 단기', regular:'🔄 정기', errand:'🏃 심부름' };
+  const WORK_TYPE_LABEL = { spot:'스팟', short:'단기', regular:'정기', errand:'심부름' };
   const typeLabel = WORK_TYPE_LABEL[p.work_type] || '스팟';
   const statusColor = p.status==='urgent' ? '#FF4B4B' : p.status==='open' ? '#16a34a' : '#888';
-  const statusLabel = p.status==='urgent' ? '🔥 급구' : p.status==='open' ? '모집중' : '마감';
+  const statusLabel = p.status==='urgent' ? 'ASAP' : p.status==='open' ? '모집중' : '마감';
 
   document.getElementById('pd-body').innerHTML = `
     <div style="padding:0 20px 20px">
