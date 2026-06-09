@@ -471,6 +471,7 @@
     .map-loading.hidden { opacity: 0; pointer-events: none; }
     .spinner { width: 40px; height: 40px; border: 3px solid #eee; border-top-color: var(--red); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes locPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.2); opacity: 0; } }
     .loading-txt { font-size: 14px; font-weight: 700; color: #666; }
 
     /* ── 토스트 ── */
@@ -1184,6 +1185,7 @@ let jobs = [];
 let markers = [];
 let overlays = [];
 let selectedJobId = null;
+let myLocationOverlay = null;
 let currentUser = null;
 let isGuest = false;
 let sheetState = 'peek'; // peek | half | full
@@ -2428,11 +2430,25 @@ function moveToMyLocation(silent = false) {
   if (!navigator.geolocation) { if (!silent) showToast('위치 정보를 사용할 수 없습니다'); return; }
   navigator.geolocation.getCurrentPosition(pos => {
     saveMapCenter(pos.coords.latitude, pos.coords.longitude);
-    kakaoMap.setCenter(new kakao.maps.LatLng(mapCenter.lat, mapCenter.lng));
+    const latlng = new kakao.maps.LatLng(mapCenter.lat, mapCenter.lng);
+    kakaoMap.setCenter(latlng);
+    setMyLocationMarker(latlng);
     loadJobs();
   }, () => {
     if (!silent) showToast('위치 권한이 필요합니다');
   });
+}
+
+function setMyLocationMarker(latlng) {
+  if (myLocationOverlay) myLocationOverlay.setMap(null);
+  const content = `<div style="position:relative;width:44px;height:44px">
+    <div style="position:absolute;inset:0;border-radius:50%;background:rgba(255,75,75,0.18);animation:locPulse 1.8s ease-out infinite"></div>
+    <div style="position:absolute;inset:6px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <img src="./icons/바로알바 최종로고.png" style="width:28px;height:28px;object-fit:contain">
+    </div>
+  </div>`;
+  myLocationOverlay = new kakao.maps.CustomOverlay({ position: latlng, content, yAnchor: 0.5, zIndex: 10 });
+  myLocationOverlay.setMap(kakaoMap);
 }
 
 // ── 필터 ─────────────────────────────────────────────────
