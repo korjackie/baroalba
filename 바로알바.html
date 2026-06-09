@@ -707,7 +707,7 @@
 <div class="top-bar">
   <div class="search-row">
     <div class="search-box">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input id="search-input" type="text" placeholder="지역, 업종 검색">
     </div>
   </div>
@@ -724,7 +724,7 @@
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
     <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
-    <div class="chip" onclick="openSearchOverlay()" style="flex-shrink:0;background:#111;color:#fff;border-color:#111">🔍 검색</div>
+    <div class="chip" onclick="openSearchOverlay()" style="flex-shrink:0;background:#111;color:#fff;border-color:#111">검색</div>
   </div>
 </div>
 
@@ -970,7 +970,7 @@
   <!-- 공고 키워드 검색 -->
   <div style="padding:0 14px 10px">
     <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:12px;padding:9px 12px">
-      <span style="font-size:14px;color:#bbb">🔍</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="job-search-input" type="text" placeholder="공고명, 업체명, 업종 검색"
         style="flex:1;border:none;background:transparent;outline:none;font-size:13px;color:#222;font-family:inherit"
         oninput="filterJobsByKeyword(this.value)" onkeydown="if(event.key==='Enter'){saveRecentSearch(this.value);this.blur()}">
@@ -1716,7 +1716,7 @@ async function loadCategoriesWorker() {
       const chip = document.createElement('div');
       chip.className = 'chip';
       chip.dataset.cat = cat.name;
-      chip.textContent = `${cat.icon} ${cat.name}`;
+      chip.textContent = cat.name;
       chip.onclick = () => setCategory(chip, cat.name);
       row.insertBefore(chip, urgentChip);
     });
