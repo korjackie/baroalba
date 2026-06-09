@@ -2286,7 +2286,7 @@ function initOwnerMap() {
     const container = document.getElementById('owner-map-container');
     const center = bizRecord?.lat
       ? new kakao.maps.LatLng(bizRecord.lat, bizRecord.lng)
-      : new kakao.maps.LatLng(37.5665, 126.9780);
+      : new kakao.maps.LatLng(APP_CONFIG.DEFAULT_LAT, APP_CONFIG.DEFAULT_LNG);
     _ownerMap = new kakao.maps.Map(container, { center, level: 5 });
     loadOwnerMapJobs();
   }, 100);
@@ -2297,7 +2297,7 @@ async function loadOwnerMapJobs() {
   const center = _ownerMap.getCenter();
   const { data, error: mapErr } = await db.rpc('nearby_jobs', {
     user_lat: center.getLat(), user_lng: center.getLng(),
-    radius_meters: 5000, job_category: _ownerMapCat || null
+    radius_meters: 10000
   });
   if (mapErr) { console.error('[ownerMap] nearby_jobs error:', mapErr); }
 
