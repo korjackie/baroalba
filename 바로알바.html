@@ -3410,6 +3410,10 @@ function setNav(el, tab) {
   const panelChats    = document.getElementById('panel-chats');
   const panelProfile  = document.getElementById('panel-profile');
 
+  // 탭 전환 시 열린 오버레이 모두 닫기
+  closeWChat();
+  document.getElementById('detail-overlay')?.classList.remove('open');
+
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
   panelApps.classList.remove('show');
