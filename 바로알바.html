@@ -4186,11 +4186,11 @@ function updateProfileCompletion() {
   if (!wrap) return;
   wrap.style.display = 'block';
   const checks = [
-    { label: '생년월일', ok: !!document.getElementById('worker-birth')?.value },
-    { label: '연락처',   ok: !!document.getElementById('worker-phone')?.value },
-    { label: '성별',     ok: !!window._workerGender },
+    { label: '생년월일', ok: !!calcAgeFromBirth(document.getElementById('worker-birth')?.value) },
+    { label: '연락처',   ok: (document.getElementById('worker-phone')?.value || '').replace(/-/g,'').length >= 10 },
+    { label: '성별',     ok: !!_workerGender },
     { label: '거주지',   ok: !!document.getElementById('worker-region')?.value },
-    { label: '자기소개', ok: !!(document.getElementById('worker-bio')?.value?.length > 10) },
+    { label: '자기소개', ok: (document.getElementById('worker-bio')?.value?.trim().length || 0) > 10 },
     { label: '경력/특기',ok: !!document.getElementById('worker-experience')?.value },
     { label: '스킬 태그',ok: _workerSkills.length > 0 },
   ];
@@ -4219,6 +4219,10 @@ function calcAgeFromBirth(yymmdd) {
 async function saveWorkerProfile() {
   if (!currentUser) return;
   const birthVal = document.getElementById('worker-birth').value.trim();
+  if (birthVal && !calcAgeFromBirth(birthVal)) {
+    showToast('생년월일을 올바르게 입력해주세요 (예: 990115)');
+    return;
+  }
   const age = calcAgeFromBirth(birthVal) || null;
   const phone = document.getElementById('worker-phone').value.trim().replace(/-/g, '');
   const bio = document.getElementById('worker-bio').value.trim();
