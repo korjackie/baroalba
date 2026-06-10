@@ -2969,9 +2969,10 @@ async function loadMyChatList() {
     </div>`;
   }).join('');
   el.innerHTML = chatRows;
-  el.querySelectorAll('._chat-item').forEach(div => {
-    div.addEventListener('click', () => openWChat(div.dataset.appId, div.dataset.bizName));
-  });
+  el.onclick = function(e) {
+    const item = e.target.closest('._chat-item');
+    if (item) openWChat(item.dataset.appId, item.dataset.bizName);
+  };
 }
 
 async function loadWChatMessages() {
