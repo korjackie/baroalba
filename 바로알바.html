@@ -2306,8 +2306,8 @@ async function openWChat(applicationId, bizName) {
 }
 
 function closeWChat() {
-  document.getElementById('wchat-overlay').classList.remove('open');
-  if (_wchatSub) { _wchatSub.unsubscribe(); _wchatSub = null; }
+  document.getElementById('wchat-overlay')?.classList.remove('open');
+  if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
 }
 
@@ -3410,9 +3410,10 @@ function setNav(el, tab) {
   const panelChats    = document.getElementById('panel-chats');
   const panelProfile  = document.getElementById('panel-profile');
 
-  // 탭 전환 시 열린 오버레이 모두 닫기
+  // 탭 전환 시 열린 오버레이/패널 모두 닫기
   closeWChat();
   document.getElementById('detail-overlay')?.classList.remove('open');
+  document.getElementById('panel-app-job-detail')?.classList.remove('show');
 
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
