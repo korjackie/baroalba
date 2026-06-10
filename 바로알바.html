@@ -2289,11 +2289,11 @@ async function setupMessageNotifications() {
 let _wchatAppId = null, _wchatSub = null;
 
 async function openWChat(applicationId, bizName) {
-  showToast('[DEBUG] openWChat: ' + (applicationId ? applicationId.slice(0,8) : 'null'));
   if (!applicationId) { showToast('채팅을 열 수 없습니다 (ID 없음)'); return; }
+  const name = bizName || (window._chatBizNames && window._chatBizNames[applicationId]) || '업주';
   _wchatAppId = applicationId;
-  document.getElementById('wchat-title').textContent = bizName || '업주';
-  document.getElementById('wchat-sub').textContent = '업주와 실시간 대화';
+  document.getElementById('wchat-title').textContent = name;
+  document.getElementById('wchat-sub').textContent = name + '와 실시간 대화';
   document.getElementById('wchat-overlay').classList.add('open');
   document.getElementById('wchat-input').value = '';
   try {
@@ -2942,6 +2942,7 @@ async function loadMyChatList() {
     return;
   }
 
+  window._chatBizNames = window._chatBizNames || {};
   const chatRows = chats.map(a => {
     const msg = latestMsg[a.id];
     const unread = unreadCnt[a.id] || 0;
@@ -2952,8 +2953,8 @@ async function loadMyChatList() {
     const displayName = bizName || jobTitle || '업주';
     const avatarKey = bizName || jobTitle || '업주';
     const ac = avatarColor(avatarKey);
-    return `
-    <div class="_chat-item" data-app-id="${a.id}" data-biz-name="${displayName.replace(/"/g,'&quot;')}" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
+    window._chatBizNames[a.id] = displayName;
+    return `<div onclick="openWChat('${a.id}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
       <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${avatarKey.charAt(0)}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
