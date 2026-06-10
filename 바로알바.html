@@ -1138,7 +1138,7 @@
 </div>
 
 <!-- 지원 공고 상세 패널 -->
-<div class="full-panel" id="panel-app-job-detail">
+<div class="full-panel" id="panel-app-job-detail" style="z-index:350">
   <div class="panel-header" style="display:flex;align-items:center;gap:10px">
     <button onclick="document.getElementById('panel-app-job-detail').classList.remove('show')" style="background:none;border:none;font-size:22px;cursor:pointer;line-height:1;color:#555;padding:0 4px 0 0">←</button>
     <span>공고 상세</span>
@@ -2289,6 +2289,7 @@ async function setupMessageNotifications() {
 let _wchatAppId = null, _wchatSub = null;
 
 async function openWChat(applicationId, bizName) {
+  showToast('[DEBUG] openWChat: ' + (applicationId ? applicationId.slice(0,8) : 'null'));
   if (!applicationId) { showToast('채팅을 열 수 없습니다 (ID 없음)'); return; }
   _wchatAppId = applicationId;
   document.getElementById('wchat-title').textContent = bizName || '업주';
@@ -2459,6 +2460,7 @@ async function showMyRatings() {
 }
 
 async function openApplicationJobDetail(jobPostingId) {
+  showToast('[DEBUG] openAppDetail: ' + (jobPostingId ? jobPostingId.slice(0,8) : 'null'));
   if (!jobPostingId) return;
   const panel = document.getElementById('panel-app-job-detail');
   const body  = document.getElementById('ajd-body');
@@ -2940,7 +2942,7 @@ async function loadMyChatList() {
     return;
   }
 
-  el.innerHTML = chats.map(a => {
+  const chatRows = chats.map(a => {
     const msg = latestMsg[a.id];
     const unread = unreadCnt[a.id] || 0;
     const isMine = msg.sender_id === currentUser.id;
@@ -2951,7 +2953,7 @@ async function loadMyChatList() {
     const avatarKey = bizName || jobTitle || '업주';
     const ac = avatarColor(avatarKey);
     return `
-    <div onclick="openWChat('${a.id}','${displayName}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
+    <div class="_chat-item" data-app-id="${a.id}" data-biz-name="${displayName.replace(/"/g,'&quot;')}" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
       <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${avatarKey.charAt(0)}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
@@ -2966,6 +2968,10 @@ async function loadMyChatList() {
       </div>
     </div>`;
   }).join('');
+  el.innerHTML = chatRows;
+  el.querySelectorAll('._chat-item').forEach(div => {
+    div.addEventListener('click', () => openWChat(div.dataset.appId, div.dataset.bizName));
+  });
 }
 
 async function loadWChatMessages() {
