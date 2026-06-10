@@ -18,6 +18,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
+  <!-- 카카오 공유 SDK (Kakao.Share) — 지도 SDK(kakao.maps)와 별도 네임스페이스 -->
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -1629,6 +1631,9 @@ let sheetState = 'peek'; // peek | half | full
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
+  // 카카오 공유 SDK 초기화 (지도 SDK kakao.maps와 별개)
+  if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
+
   // 세션 확인 (카카오 SDK는 동기 로드이므로 이미 준비됨)
   const { data: { session } } = await db.auth.getSession();
 
@@ -2284,14 +2289,20 @@ async function setupMessageNotifications() {
 let _wchatAppId = null, _wchatSub = null;
 
 async function openWChat(applicationId, bizName) {
+  if (!applicationId) { showToast('채팅을 열 수 없습니다 (ID 없음)'); return; }
   _wchatAppId = applicationId;
-  document.getElementById('wchat-title').textContent = bizName;
+  document.getElementById('wchat-title').textContent = bizName || '업주';
   document.getElementById('wchat-sub').textContent = '업주와 실시간 대화';
   document.getElementById('wchat-overlay').classList.add('open');
   document.getElementById('wchat-input').value = '';
-  await loadWChatMessages();
-  subscribeWChatMessages();
-  markWMessagesRead(applicationId);
+  try {
+    await loadWChatMessages();
+    subscribeWChatMessages();
+    markWMessagesRead(applicationId);
+  } catch(e) {
+    console.error('채팅 로드 실패:', e);
+    document.getElementById('wchat-messages').innerHTML = '<div style="text-align:center;color:#e53e3e;font-size:13px;margin-top:40px">채팅을 불러오지 못했습니다<br>잠시 후 다시 시도해주세요</div>';
+  }
 }
 
 function closeWChat() {
@@ -3021,12 +3032,14 @@ async function markWMessagesRead(appId) {
 async function checkAlreadyApplied(jobId) {
   if (!currentUser || isGuest || !isRealJobId(jobId)) return;
   try {
-    const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    const { data: worker, error: we } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (we) { console.error('checkAlreadyApplied: worker 조회 실패', we); return; }
     if (!worker) return;
-    const { data: app } = await db.from('applications')
+    const { data: app, error: ae } = await db.from('applications')
       .select('id').eq('job_posting_id', jobId).eq('worker_id', worker.id).single();
+    if (ae && ae.code !== 'PGRST116') console.error('checkAlreadyApplied: 지원 조회 실패', ae);
     if (app) showAppliedState(app.id);
-  } catch(e) {}
+  } catch(e) { console.error('checkAlreadyApplied:', e); }
 }
 
 // ── 내 위치로 이동 ────────────────────────────────────────
@@ -3199,9 +3212,12 @@ function copyWorkerShareUrl() {
     .catch(() => { showToast('복사 실패. URL을 직접 선택해 복사해주세요.'); });
 }
 function shareJobKakao() {
-  if (!window.Kakao?.isInitialized?.()) { showToast('카카오 초기화 오류'); return; }
+  if (!window.Kakao?.isInitialized?.()) {
+    showToast('카카오 공유를 사용할 수 없습니다. 링크 복사를 이용해주세요');
+    return;
+  }
   const job = _shareJobData;
-  const url = `${location.origin}${location.pathname}?job=${job.id}`;
+  const url = `${location.href.split('?')[0]}?job=${job.id}`;
   Kakao.Share.sendDefault({
     objectType: 'feed',
     content: {
