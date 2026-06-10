@@ -1612,6 +1612,7 @@ let currentWorkType = '';
 let urgentOnly = false;
 let sortByWage = false;
 let jobs = [];
+let _myAge = null;
 let markers = [];
 let overlays = [];
 let selectedJobId = null;
@@ -2152,6 +2153,23 @@ function openDetail(jobId) {
       }).catch(() => {});
   }
 
+  // 미성년자 보호: age_limit 공고는 만 18세 미만 지원 차단
+  if (currentUser && _myAge !== null && _myAge < 18) {
+    db.from('job_postings').select('age_limit').eq('id', jobId).single()
+      .then(({ data }) => {
+        if (data?.age_limit) {
+          const btn = document.getElementById('d-apply-btn');
+          if (btn && !btn.classList.contains('applied-state')) {
+            btn.disabled = true;
+            btn.style.background = '#d1d5db';
+            btn.style.color = '#6b7280';
+            btn.textContent = '&#128286; 만 18세 이상만 지원 가능';
+            btn.onclick = null;
+          }
+        }
+      }).catch(() => {});
+  }
+
   // 지도 해당 위치로 이동
   kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
 }
@@ -2437,7 +2455,7 @@ async function openApplicationJobDetail(jobPostingId) {
   panel.classList.add('show');
 
   const { data: j } = await db.from('job_postings')
-    .select('*, businesses(name, rating, kindness_rating, review_count, phone, description)')
+    .select('*, businesses(name, rating, kindness_rating, review_count, phone, description, is_verified)')
     .eq('id', jobPostingId).single();
   if (!j) { showToast('공고 정보를 불러올 수 없어요'); panel.classList.remove('show'); return; }
 
@@ -2488,7 +2506,10 @@ async function openApplicationJobDetail(jobPostingId) {
       <!-- 업체 정보 카드 -->
       <div style="background:#f8f8f8;border-radius:16px;padding:16px;margin-bottom:16px">
         <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:10px">업체 정보</div>
-        <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:8px">${biz.name || '업체명 없음'}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:18px;font-weight:900;color:#222">${biz.name || '업체명 없음'}</span>
+          ${biz.is_verified ? '<span style="font-size:10px;font-weight:800;background:#DCFCE7;color:#16a34a;padding:2px 8px;border-radius:10px;white-space:nowrap">✓ 인증업체</span>' : ''}
+        </div>
         <!-- 평점 -->
         <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:4px">
@@ -3881,6 +3902,7 @@ async function loadWorkerGrade() {
   if (ageEl) {
     const age = w?.age || (w?.birth_date ? calcAgeFromBirth(w.birth_date) : null);
     ageEl.textContent = age ? `· ${age}세` : '';
+    _myAge = age;
   }
 
   // stats 그리드

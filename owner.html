@@ -616,6 +616,19 @@
       </div>
       <input type="hidden" id="f-is-premium" value="false">
 
+      <!-- 미성년자 보호 토글 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff8f0;border:1.5px solid #FED7AA;border-radius:12px">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#EA580C">&#128286; 만 18세 이상만 지원 가능</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">주류·심야·유해업종 등 연소자 취업 금지 공고</div>
+        </div>
+        <div id="age-limit-toggle" onclick="toggleAgeLimit(this)" data-on="false"
+          style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
+          <div style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.2s"></div>
+        </div>
+      </div>
+      <input type="hidden" id="f-age-limit" value="false">
+
       <button class="submit-btn" id="submit-btn" onclick="submitPosting()">공고 등록하기</button>
     </div>
   </div>
@@ -969,6 +982,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     bizRecord = biz;
   }
   document.getElementById('biz-name').textContent = bizRecord.name;
+  if (bizRecord.is_verified) {
+    const badge = document.createElement('span');
+    badge.textContent = '✓ 인증';
+    badge.style.cssText = 'font-size:10px;font-weight:800;background:#DCFCE7;color:#16a34a;padding:2px 7px;border-radius:8px;margin-left:6px';
+    document.getElementById('biz-name').after(badge);
+  }
 
   autoCloseExpiredPostings();
   checkSurgeSchedules();
@@ -1043,6 +1062,7 @@ function renderPostings() {
               ${p.work_type === 'short'   ? '<span style="font-size:10px;font-weight:700;background:#EFF6FF;color:#3B82F6;padding:2px 7px;border-radius:6px;white-space:nowrap">단기</span>' : ''}
               ${p.work_type === 'regular' ? '<span style="font-size:10px;font-weight:700;background:#F0FFF4;color:#16a34a;padding:2px 7px;border-radius:6px;white-space:nowrap">정기</span>' : ''}
               ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:2px 7px;border-radius:6px;white-space:nowrap">프리미엄</span>' : ''}
+              ${p.age_limit ? '<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:2px 7px;border-radius:6px;white-space:nowrap">&#128286; 18+</span>' : ''}
               <div class="posting-title">${p.title}</div>
               ${jobTypeBadge}
             </div>
@@ -1962,6 +1982,7 @@ function openEditForm(jobId) {
     }
   }
   setSameDay(p.same_day_payment || false);
+  setAgeLimit(p.age_limit || false);
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -2250,6 +2271,7 @@ async function submitPosting() {
     work_days:          workDays || null,
     work_end_date:      workType === 'short' ? periodEnd : null,
     holiday_pay:        workType === 'regular' ? holidayPay : false,
+    age_limit:          document.getElementById('f-age-limit').value === 'true',
   };
 
   const btn = document.getElementById('submit-btn');
@@ -2365,6 +2387,7 @@ function copyPosting(jobId) {
   document.getElementById('surge-settings').style.display = 'none';
   document.getElementById('surge-preview').textContent = '';
   setSameDay(p.same_day_payment || false);
+  setAgeLimit(p.age_limit || false);
   // 공고 유형(심부름/일반알바 등) 복사
   const jobType = p.work_type === 'errand' ? 'errand' : 'alba';
   setJobType(jobType);
@@ -3492,6 +3515,23 @@ function togglePremiumPosting(el) {
   el.style.background = next ? '#7C3AED' : '#e5e7eb';
   el.querySelector('div').style.transform = next ? 'translateX(20px)' : 'translateX(0)';
   document.getElementById('f-is-premium').value = String(next);
+}
+
+function toggleAgeLimit(el) {
+  const next = el.dataset.on !== 'true';
+  el.dataset.on = String(next);
+  el.style.background = next ? '#EA580C' : '#e5e7eb';
+  el.querySelector('div').style.transform = next ? 'translateX(20px)' : 'translateX(0)';
+  document.getElementById('f-age-limit').value = String(next);
+}
+
+function setAgeLimit(val) {
+  document.getElementById('f-age-limit').value = val ? 'true' : 'false';
+  const el = document.getElementById('age-limit-toggle');
+  if (!el) return;
+  el.dataset.on = String(val);
+  el.style.background = val ? '#EA580C' : '#e5e7eb';
+  el.querySelector('div').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
 }
 
 function selectPlan(plan) {
