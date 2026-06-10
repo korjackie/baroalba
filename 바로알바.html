@@ -1167,7 +1167,7 @@
 <!-- 채팅 패널 -->
 <div class="full-panel" id="panel-chats">
   <div class="panel-header">채팅</div>
-  <div style="padding:16px" id="my-chats-list">
+  <div style="padding:16px" id="my-chats-list" onclick="chatListClick(event)">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
   </div>
 </div>
@@ -2969,10 +2969,11 @@ async function loadMyChatList() {
     </div>`;
   }).join('');
   el.innerHTML = chatRows;
-  el.onclick = function(e) {
-    const item = e.target.closest('._chat-item');
-    if (item) openWChat(item.dataset.appId, item.dataset.bizName);
-  };
+}
+
+function chatListClick(e) {
+  const item = e.target.closest('._chat-item');
+  if (item) openWChat(item.dataset.appId, item.dataset.bizName);
 }
 
 async function loadWChatMessages() {
