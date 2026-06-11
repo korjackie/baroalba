@@ -740,12 +740,30 @@
       <input type="file" accept="image/*" style="display:none" onchange="uploadOwnerAvatar(this)">
     </label>
     <div style="flex:1;min-width:0">
-      <div style="font-size:11px;color:#bbb;font-weight:700;letter-spacing:0.5px;margin-bottom:3px" data-i18n="owner_account">업주 계정</div>
       <div style="font-size:17px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="settings-name">-</div>
       <div style="font-size:12px;color:#aaa;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="settings-email">-</div>
+      <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">
+        <div style="font-size:11px;font-weight:700;background:#FFF0F0;color:#FF4B4B;padding:2px 8px;border-radius:6px">&#127978; 업주</div>
+        <div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:none" id="owner-provider-badge"></div>
+      </div>
     </div>
   </div>
   <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+      <!-- 공고/알바/평점 스탯 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div onclick="document.getElementById('panel-owner-settings').classList.remove('show')" style="background:#f8f8f8;border-radius:14px;padding:12px;text-align:center;cursor:pointer">
+          <div style="font-size:22px;font-weight:900;color:#FF4B4B" id="owner-stat-postings">-</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">공고 현황 ›</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:14px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#16a34a" id="owner-stat-hired">-</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">완료 알바</div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:14px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#F59E0B" id="owner-stat-rating">-</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">내 평점</div>
+        </div>
+      </div>
       <!-- 커뮤니티 게시판 -->
       <a href="/바로알바.html?community=1" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff5f5,#fff0f0);border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;text-decoration:none">
         <div style="width:40px;height:40px;border-radius:12px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -757,6 +775,27 @@
         </div>
         <span style="font-size:18px;color:#FFB3B3">›</span>
       </a>
+      <!-- 내 등급 -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:14px;padding:14px">
+          <div>
+            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">내 등급</div>
+            <div id="owner-grade-badge" style="font-size:16px;font-weight:900">&#127978; 일반 업주</div>
+          </div>
+        </div>
+        <div id="owner-grade-desc" style="margin-top:8px;padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#888;line-height:1.8"></div>
+      </div>
+      <!-- 프로필 완성도 -->
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:800;color:#555">&#128202; 프로필 완성도</span>
+          <span id="owner-completion-pct" style="font-size:13px;font-weight:900;color:#FF4B4B">0%</span>
+        </div>
+        <div style="height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden">
+          <div id="owner-completion-bar" style="height:100%;background:#FF4B4B;border-radius:99px;transition:width 0.4s ease;width:0%"></div>
+        </div>
+        <div id="owner-completion-items" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
       <!-- 업체 정보 편집 -->
       <div style="background:#f8f8f8;border-radius:14px;padding:14px">
         <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">&#127978; <span data-i18n="owner_biz_section">업체 정보</span></div>
@@ -3272,6 +3311,53 @@ async function openOwnerSettings() {
       const inner = document.getElementById('owner-header-avatar-inner');
       if (inner) inner.innerHTML = `<img src="${bizRecord.photo_url}" style="width:100%;height:100%;object-fit:cover">`;
     }
+
+    // 로그인 방식 배지
+    const identities = currentUser.identities || [];
+    const oauthProvider = identities.find(i => i.provider !== 'email')?.provider;
+    const provider = oauthProvider || meta.provider || currentUser.app_metadata?.provider || '';
+    const providerMap = {
+      email:  { label: '\u{1F4E7} 이메일', bg: '#f0f0f0', color: '#555' },
+      kakao:  { label: '\u{1F49B} 카카오', bg: '#FEE500', color: '#3C1E1E' },
+      naver:  { label: '\u{1F7E2} 네이버', bg: '#03C75A', color: '#fff' },
+      google: { label: '\u{1F535} 구글',   bg: '#4285F4', color: '#fff' }
+    };
+    const pInfo = providerMap[provider] || { label: '\u{1F511} 소셜', bg: '#f0f0f0', color: '#555' };
+    const pEl = document.getElementById('owner-provider-badge');
+    if (pEl) { pEl.textContent = pInfo.label; pEl.style.background = pInfo.bg; pEl.style.color = pInfo.color; pEl.style.display = 'block'; }
+
+    // 스탯
+    const openCount = (postings || []).filter(p => p.status === 'open' || p.status === 'urgent').length;
+    document.getElementById('owner-stat-postings').textContent = openCount;
+    const ratingVal = bizRecord?.rating;
+    document.getElementById('owner-stat-rating').textContent = ratingVal ? parseFloat(ratingVal).toFixed(1) : '-';
+    let hiredCount = 0;
+    if (bizRecord?.id && postings?.length) {
+      const { count } = await db.from('applications')
+        .select('id', { count: 'exact', head: true })
+        .in('job_posting_id', postings.map(p => p.id))
+        .eq('status', 'completed');
+      hiredCount = count || 0;
+    }
+    document.getElementById('owner-stat-hired').textContent = hiredCount;
+
+    // 내 등급
+    const rating = parseFloat(ratingVal) || 0;
+    const gradeBadge = document.getElementById('owner-grade-badge');
+    const gradeDesc = document.getElementById('owner-grade-desc');
+    if (gradeBadge && gradeDesc) {
+      if (hiredCount >= 30 && rating >= 4.5) {
+        gradeBadge.innerHTML = '⭐ 프리미엄 업주';
+        gradeDesc.innerHTML = '✅ 완료 알바 30회 이상<br>✅ 평점 4.5 이상';
+      } else if (hiredCount >= 10 && rating >= 4.0) {
+        gradeBadge.innerHTML = '\u{1F31F} 우수 업주';
+        gradeDesc.innerHTML = `${hiredCount>=30?'✅':'❌'} 완료 알바 30회 이상 (현재 ${hiredCount}회)<br>${rating>=4.5?'✅':'❌'} 평점 4.5 이상 (현재 ${rating>0?rating.toFixed(1):'없음'})`;
+      } else {
+        gradeBadge.innerHTML = '\u{1F3EA} 일반 업주';
+        gradeDesc.innerHTML = `❌ 완료 알바 10회 이상 (현재 ${hiredCount}회)<br>❌ 평점 4.0 이상 (현재 ${rating>0?rating.toFixed(1):'없음'})`;
+      }
+    }
+
     document.getElementById('settings-biz-name').value  = bizRecord?.name || '';
     document.getElementById('settings-biz-phone').value = bizRecord?.phone || '';
     document.getElementById('settings-biz-desc').value  = bizRecord?.description || '';
@@ -3282,8 +3368,31 @@ async function openOwnerSettings() {
     renderPlanUI();
     loadBizPhotos();
     applyLang();
+
+    // 프로필 완성도 (biz_photos / places는 비동기 로드 후 업데이트)
+    _updateOwnerCompletion();
   }
   document.getElementById('panel-owner-settings').classList.add('show');
+}
+
+function _updateOwnerCompletion() {
+  const checks = [
+    { label: '업체명',   ok: !!(bizRecord?.name) },
+    { label: '연락처',   ok: !!(bizRecord?.phone) },
+    { label: '업체소개', ok: !!(bizRecord?.description) },
+    { label: '프로필사진', ok: !!(bizRecord?.photo_url) },
+    { label: '업체사진', ok: !!(_bizPhotos?.length > 0) },
+    { label: '업체장소', ok: !!(_bizPlaces?.length > 0) },
+  ];
+  const pct = Math.round(checks.filter(c => c.ok).length / checks.length * 100);
+  const pctEl = document.getElementById('owner-completion-pct');
+  const barEl = document.getElementById('owner-completion-bar');
+  const itemsEl = document.getElementById('owner-completion-items');
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (barEl) barEl.style.width = pct + '%';
+  if (itemsEl) itemsEl.innerHTML = checks.map(c =>
+    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'#16a34a':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
+  ).join('');
 }
 
 async function uploadOwnerAvatar(input) {
@@ -3360,6 +3469,7 @@ async function loadMyPlaces() {
     .select('*').eq('business_id', bizRecord.id).order('created_at');
   _bizPlaces = data || [];
   renderMyPlacesList();
+  _updateOwnerCompletion();
 }
 
 function renderMyPlacesList() {
@@ -3958,6 +4068,7 @@ async function loadBizPhotos() {
   const { data } = await db.from('business_photos').select('*').eq('business_id', bizRecord.id).order('sort_order');
   _bizPhotos = data || [];
   _renderBizPhotos();
+  _updateOwnerCompletion();
 }
 
 let _dragSrcId = null;
