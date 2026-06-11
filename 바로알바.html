@@ -5087,7 +5087,7 @@ async function loadCommunityPosts(cat) {
   el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
 
   let q = db.from('community_posts')
-    .select('id, category, title, content, likes, comments_count, is_anonymous, created_at, workers(name)')
+    .select('id, category, title, content, likes, comments_count, is_anonymous, created_at, workers(name), businesses(biz_name)')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -5116,7 +5116,7 @@ async function loadCommunityPosts(cat) {
 
   el.innerHTML = posts.map(p => {
     const ct = CAT_INFO[p.category] || CAT_INFO.free;
-    const author = p.is_anonymous ? '익명' : (p.workers?.name || '알바생');
+    const author = p.is_anonymous ? '익명' : (p.workers?.name || p.businesses?.biz_name || '사용자');
     const preview = (p.content || '').slice(0, 55) + ((p.content || '').length > 55 ? '...' : '');
     return `<div onclick="openCommunityPost('${p.id}')" style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 5px rgba(0,0,0,0.05);cursor:pointer">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
@@ -5142,8 +5142,8 @@ async function openCommunityPost(postId) {
   overlay.classList.add('open');
 
   const [{ data: post }, { data: comments }] = await Promise.all([
-    db.from('community_posts').select('*, workers(name)').eq('id', postId).single(),
-    db.from('community_comments').select('*, workers(name)').eq('post_id', postId).order('created_at', { ascending: true })
+    db.from('community_posts').select('*, workers(name), businesses(biz_name)').eq('id', postId).single(),
+    db.from('community_comments').select('*, workers(name), businesses(biz_name)').eq('post_id', postId).order('created_at', { ascending: true })
   ]);
 
   if (!post) { body.innerHTML = '<div style="padding:20px;color:#aaa">게시글을 불러올 수 없어요</div>'; return; }
@@ -5159,13 +5159,13 @@ async function openCommunityPost(postId) {
     worker:{ bg:'#E0F2FE', color:'#0284C7', label:'알바생전용' },
   };
   const ct = CAT_INFO[post.category] || CAT_INFO.free;
-  const author = post.is_anonymous ? '익명' : (post.workers?.name || '알바생');
+  const author = post.is_anonymous ? '익명' : (post.workers?.name || post.businesses?.biz_name || '사용자');
   const fmtFull = iso => { const d = new Date(iso); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
   const fmtRel = iso => { const d = new Date(iso); const now = new Date(); const diffH = (now - d) / 3600000; if (diffH < 1) return Math.floor(diffH * 60) + '분 전'; if (diffH < 24) return Math.floor(diffH) + '시간 전'; return `${d.getMonth()+1}/${d.getDate()}`; };
 
   const commentsHtml = comments?.length
     ? comments.map(c => {
-        const ca = c.is_anonymous ? '익명' : (c.workers?.name || '알바생');
+        const ca = c.is_anonymous ? '익명' : (c.workers?.name || c.businesses?.biz_name || '사용자');
         return `<div style="padding:12px 0;border-top:1px solid #f5f5f5">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
             <span style="font-size:12px;font-weight:700;color:#555">${ca}</span>
@@ -5225,12 +5225,20 @@ async function submitCommunityPost() {
   if (!title) { showToast('제목을 입력해주세요'); return; }
   if (!content) { showToast('내용을 입력해주세요'); return; }
 
-  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!w) { showToast('프로필 등록 후 작성할 수 있어요'); return; }
+  const role = currentUser?.user_metadata?.baroalba_role;
+  const insertData = { category: _commWriteCat, title, content, is_anonymous: anon };
 
-  const { error } = await db.from('community_posts').insert({
-    worker_id: w.id, category: _commWriteCat, title, content, is_anonymous: anon
-  });
+  if (role === 'business') {
+    const { data: b } = await db.from('businesses').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!b) { showToast('업체 정보를 먼저 등록해주세요'); return; }
+    insertData.business_id = b.id;
+  } else {
+    const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!w) { showToast('프로필 등록 후 작성할 수 있어요'); return; }
+    insertData.worker_id = w.id;
+  }
+
+  const { error } = await db.from('community_posts').insert(insertData);
   if (error) { showToast('작성 실패: ' + error.message); return; }
 
   showToast('✅ 게시글이 등록됐습니다');
@@ -5245,12 +5253,20 @@ async function submitCommunityComment() {
   const content = input.value.trim();
   if (!content) return;
 
-  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!w) { showToast('프로필 등록 후 이용할 수 있어요'); return; }
+  const role = currentUser?.user_metadata?.baroalba_role;
+  const insertData = { post_id: _commCurrentPostId, content, is_anonymous: false };
 
-  const { error } = await db.from('community_comments').insert({
-    post_id: _commCurrentPostId, worker_id: w.id, content, is_anonymous: false
-  });
+  if (role === 'business') {
+    const { data: b } = await db.from('businesses').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!b) { showToast('업체 정보를 먼저 등록해주세요'); return; }
+    insertData.business_id = b.id;
+  } else {
+    const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!w) { showToast('프로필 등록 후 이용할 수 있어요'); return; }
+    insertData.worker_id = w.id;
+  }
+
+  const { error } = await db.from('community_comments').insert(insertData);
   if (error) { showToast('댓글 실패: ' + error.message); return; }
 
   await db.rpc('refresh_comments_count', { p_post_id: _commCurrentPostId });
