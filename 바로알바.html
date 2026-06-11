@@ -1514,11 +1514,6 @@
           </div>
         </div>
 
-        <div id="profile-biz-btn" style="display:none;margin-bottom:10px">
-          <button onclick="location.href='/owner.html'" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">
-            &#127978; 업주 대시보드로 이동
-          </button>
-        </div>
 
         <!-- 업주 프로필 편집 (business 역할만 표시) -->
         <div id="owner-profile-edit" style="display:none;margin-bottom:14px">
@@ -5017,6 +5012,9 @@ function openCommunityPanel() {
 
 function closeCommunityPanel() {
   document.getElementById('panel-community').classList.remove('show');
+  if (currentUser?.user_metadata?.baroalba_role === 'business') {
+    location.href = '/owner.html';
+  }
 }
 
 function closeCommunityPost() {
