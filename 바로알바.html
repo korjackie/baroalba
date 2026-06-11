@@ -1404,106 +1404,22 @@
         <!-- 증빙서류 -->
         <div id="worker-cert-section" style="display:none;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-            <div data-i18n="cert_section" style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px">증빙서류</div>
-            <div data-i18n="cert_owner_only" style="font-size:11px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:8px">업주에게만 공개</div>
+            <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px">자격증 및 증빙서류</div>
+            <div style="font-size:11px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:8px">업주에게만 공개</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-
-            <!-- 보건증 -->
-            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
-              <div style="font-size:22px;flex-shrink:0">&#127973;</div>
-              <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                  <div>
-                    <div data-i18n="cert_health" style="font-size:12px;font-weight:800;color:#333">보건증</div>
-                    <div data-i18n="cert_health_desc" style="font-size:11px;color:#aaa">외식·식품 업종 필수</div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                    <span id="cert-status-health" style="font-size:11px;color:#aaa">미등록</span>
-                    <label style="padding:5px 12px;background:#f0f0f0;color:#555;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
-                      <span data-i18n="cert_upload_btn">업로드</span><input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('health',this)">
-                    </label>
-                  </div>
-                </div>
-              </div>
+          <div style="padding:14px;background:#f8f8f8;border-radius:12px">
+            <div style="font-size:12px;color:#777;line-height:1.75;margin-bottom:12px">
+              보건증 · 운전면허증 · 식품위생사 자격증 · 위생교육 수료증 · 바리스타 · 요양보호사 등<br>
+              <strong style="color:#444">업무 관련 자격 및 증빙서류</strong>를 자유롭게 추가하세요.
             </div>
-
-            <!-- 운전면허 -->
-            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
-              <div style="font-size:22px;flex-shrink:0">&#128663;</div>
-              <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                  <div>
-                    <div data-i18n="cert_driver" style="font-size:12px;font-weight:800;color:#333">운전면허증</div>
-                    <div data-i18n="cert_driver_desc" style="font-size:11px;color:#aaa">배달·운반·주차 업종</div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                    <span id="cert-status-driver" style="font-size:11px;color:#aaa">미등록</span>
-                    <label style="padding:5px 12px;background:#f0f0f0;color:#555;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
-                      <span data-i18n="cert_upload_btn">업로드</span><input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('driver',this)">
-                    </label>
-                  </div>
-                </div>
-              </div>
+            <div id="other-cert-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="other-cert-name" type="text" placeholder="서류명 (예: 보건증, 운전면허)" maxlength="30"
+                style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit">
+              <label style="padding:9px 16px;background:var(--red);color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+                업로드<input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
+              </label>
             </div>
-
-            <!-- 식품위생사 -->
-            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
-              <div style="font-size:22px;flex-shrink:0">&#127869;️</div>
-              <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                  <div>
-                    <div data-i18n="cert_food" style="font-size:12px;font-weight:800;color:#333">식품위생사 자격증</div>
-                    <div data-i18n="cert_food_desc" style="font-size:11px;color:#aaa">주방·식품 관련 업종</div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                    <span id="cert-status-food" style="font-size:11px;color:#aaa">미등록</span>
-                    <label style="padding:5px 12px;background:#f0f0f0;color:#555;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
-                      <span data-i18n="cert_upload_btn">업로드</span><input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('food',this)">
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 위생교육 수료증 -->
-            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
-              <div style="font-size:22px;flex-shrink:0">&#128220;</div>
-              <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                  <div>
-                    <div data-i18n="cert_sanitation" style="font-size:12px;font-weight:800;color:#333">위생교육 수료증</div>
-                    <div data-i18n="cert_sanitation_desc" style="font-size:11px;color:#aaa">식품취급 종사자 교육</div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                    <span id="cert-status-sanitation" style="font-size:11px;color:#aaa">미등록</span>
-                    <label style="padding:5px 12px;background:#f0f0f0;color:#555;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
-                      <span data-i18n="cert_upload_btn">업로드</span><input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('sanitation',this)">
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 기타 자격증 -->
-            <div style="padding:12px;background:#f8f8f8;border-radius:12px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-                <div style="font-size:22px">&#128206;</div>
-                <div>
-                  <div data-i18n="cert_other" style="font-size:12px;font-weight:800;color:#333">기타 자격증 / 증빙서류</div>
-                  <div data-i18n="cert_other_desc" style="font-size:11px;color:#aaa">자유롭게 업로드 (복수 가능)</div>
-                </div>
-              </div>
-              <div id="other-cert-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input id="other-cert-name" type="text" placeholder="서류명 입력 (예: 바리스타 2급)" maxlength="30"
-                  style="flex:1;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;outline:none;box-sizing:border-box;font-family:inherit">
-                <label style="padding:8px 14px;background:var(--red);color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
-                  추가<input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
-                </label>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -2123,7 +2039,7 @@ function renderList() {
         ${isUrgent ? '<span class="tag urgent-tag">ASAP</span>' : ''}
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">번개</span>' : ''}
         ${job.same_day_payment ? '<span class="tag" style="background:#F0FDF4;color:#16a34a;font-weight:700">당일정산</span>' : ''}
-        <span class="tag ${catClass}">${job.category}</span>
+        ${job.category ? `<span class="tag ${catClass}">${job.category}</span>` : ''}
         <span class="tag">${job.work_type === 'errand' ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
         ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
       </div>
@@ -4075,8 +3991,7 @@ async function uploadAvatar(input) {
   input.value = '';
   openCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `${currentUser.id}/avatar.jpg`;
-    await db.storage.from('avatars').remove([path]);
+    const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
     const { error } = await db.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);

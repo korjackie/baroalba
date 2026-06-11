@@ -3292,8 +3292,7 @@ async function uploadOwnerAvatar(input) {
   input.value = '';
   openBizCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `${currentUser.id}/biz-logo.jpg`;
-    await db.storage.from('biz-photos').remove([path]);
+    const path = `${currentUser.id}/biz-logo_${Date.now()}.jpg`;
     const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
