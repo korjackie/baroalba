@@ -342,7 +342,7 @@
 
 <!-- 내 위치 FAB -->
 <button id="owner-loc-fab" onclick="ownerMapMyLocation()" title="내 위치로"
-  style="position:fixed;right:20px;bottom:160px;width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:200;-webkit-tap-highlight-color:transparent">
+  style="position:fixed;right:20px;bottom:160px;width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>
 </button>
 
@@ -3960,18 +3960,54 @@ async function loadBizPhotos() {
   _renderBizPhotos();
 }
 
+let _dragSrcId = null;
+
 function _renderBizPhotos() {
   const grid = document.getElementById('biz-photos-grid');
   const addBtn = document.getElementById('biz-add-photo-btn');
   if (!grid) return;
   grid.innerHTML = _bizPhotos.map((p, i) =>
-    `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid ${p.is_main?'#FF4B4B':'#eee'}">
-      <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">
-      ${p.is_main ? '<span style="position:absolute;top:3px;left:3px;background:#FF4B4B;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">대표</span>' : `<button onclick="setBizMainPhoto('${p.id}')" style="position:absolute;top:3px;left:3px;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;cursor:pointer">대표설정</button>`}
-      <button onclick="deleteBizPhoto('${p.id}')" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    `<div draggable="true"
+      ondragstart="bizPhotoDragStart(event,'${p.id}')"
+      ondragover="bizPhotoDragOver(event)"
+      ondragenter="bizPhotoDragEnter(event,this)"
+      ondragleave="bizPhotoDragLeave(event,this)"
+      ondrop="bizPhotoDrop(event,'${p.id}',this)"
+      style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid #eee;cursor:grab;transition:outline 0.1s">
+      <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
+      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;pointer-events:none">${i+1}</span>
+      <button onclick="event.stopPropagation();deleteBizPhoto('${p.id}')" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
     </div>`
   ).join('');
   if (addBtn) addBtn.style.display = _bizPhotos.length < 5 ? 'block' : 'none';
+}
+
+function bizPhotoDragStart(e, photoId) {
+  _dragSrcId = photoId;
+  e.dataTransfer.effectAllowed = 'move';
+}
+function bizPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function bizPhotoDragEnter(e, el) {
+  e.preventDefault();
+  if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #FF4B4B'; el.style.outlineOffset = '-3px'; }
+}
+function bizPhotoDragLeave(e, el) {
+  if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; }
+}
+async function bizPhotoDrop(e, photoId, el) {
+  e.preventDefault();
+  el.style.outline = ''; el.style.outlineOffset = '';
+  if (!_dragSrcId || _dragSrcId === photoId) { _dragSrcId = null; return; }
+  const src = _bizPhotos.find(p => p.id === _dragSrcId);
+  const dst = _bizPhotos.find(p => p.id === photoId);
+  if (!src || !dst) { _dragSrcId = null; return; }
+  const srcOrder = src.sort_order, dstOrder = dst.sort_order;
+  await Promise.all([
+    db.from('business_photos').update({ sort_order: dstOrder }).eq('id', src.id),
+    db.from('business_photos').update({ sort_order: srcOrder }).eq('id', dst.id),
+  ]);
+  _dragSrcId = null;
+  await loadBizPhotos();
 }
 
 async function addBizPhoto(input) {
@@ -3981,53 +4017,23 @@ async function addBizPhoto(input) {
   openBizCropModal(file, async (blob) => {
     showToast('업로드 중...');
     const path = `${currentUser.id}/biz-${Date.now()}.jpg`;
-    const { error } = await db.storage.from('biz-photos').upload(path, blob, { upsert: false, contentType: 'image/jpeg' });
+    const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
-    const isFirst = _bizPhotos.length === 0;
     await db.from('business_photos').insert({
       business_id: bizRecord.id,
       photo_url: publicUrl,
-      is_main: isFirst,
+      is_main: false,
       sort_order: _bizPhotos.length
     });
-    if (isFirst) {
-      await db.from('businesses').update({ photo_url: publicUrl }).eq('id', bizRecord.id);
-      bizRecord = { ...bizRecord, photo_url: publicUrl };
-    }
     await loadBizPhotos();
     showToast('✅ 사진이 추가됐습니다');
   });
 }
 
-async function setBizMainPhoto(photoId) {
-  if (!bizRecord?.id) return;
-  // 전체 is_main 초기화 후 선택 사진을 대표로 + sort_order 0
-  await db.from('business_photos').update({ is_main: false }).eq('business_id', bizRecord.id);
-  await db.from('business_photos').update({ is_main: true, sort_order: 0 }).eq('id', photoId);
-  // 나머지 사진들 sort_order 1~4로 재정렬
-  const others = _bizPhotos.filter(p => p.id !== photoId);
-  for (let i = 0; i < others.length; i++) {
-    await db.from('business_photos').update({ sort_order: i + 1 }).eq('id', others[i].id);
-  }
-  const mainPhoto = _bizPhotos.find(p => p.id === photoId);
-  if (mainPhoto) {
-    await db.from('businesses').update({ photo_url: mainPhoto.photo_url }).eq('id', bizRecord.id);
-    bizRecord = { ...bizRecord, photo_url: mainPhoto.photo_url };
-  }
-  await loadBizPhotos();
-  showToast('✅ 대표 사진이 변경됐습니다');
-}
-
 async function deleteBizPhoto(photoId) {
   if (!confirm('이 사진을 삭제할까요?')) return;
-  const wasMain = _bizPhotos.find(p => p.id === photoId)?.is_main;
   await db.from('business_photos').delete().eq('id', photoId);
-  _bizPhotos = _bizPhotos.filter(p => p.id !== photoId);
-  if (wasMain && _bizPhotos.length > 0) {
-    await db.from('business_photos').update({ is_main: true }).eq('id', _bizPhotos[0].id);
-    await db.from('businesses').update({ photo_url: _bizPhotos[0].photo_url }).eq('id', bizRecord.id);
-  }
   await loadBizPhotos();
   showToast('사진이 삭제됐습니다');
 }
