@@ -1204,15 +1204,17 @@
       <div id="profile-logged-in" style="display:none">
         <!-- 프로필 헤더 (탭 스타일, 뒤로가기 없음) -->
         <div style="display:flex;align-items:center;gap:14px;background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #f0f0f0">
-          <label style="position:relative;width:58px;height:58px;flex-shrink:0;cursor:pointer;display:block">
+          <label style="position:relative;width:58px;height:58px;flex-shrink:0;cursor:pointer;display:block" onclick="event.preventDefault();showAvatarTip('worker-avatar-file')">
             <div id="header-avatar-inner" style="width:58px;height:58px;border-radius:50%;background:#f4f4f4;overflow:hidden;border:1.5px solid #eee;display:flex;align-items:center;justify-content:center">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
             </div>
-            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.42);border-radius:0 0 29px 29px;text-align:center;font-size:9px;color:#fff;font-weight:700;padding:2px 0;line-height:1.5">편집</div>
-            <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);border-radius:0 0 29px 29px;display:flex;align-items:center;justify-content:center;padding:4px 0">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <input id="worker-avatar-file" type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
           </label>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -4287,6 +4289,7 @@ async function saveWorkerProfile() {
   const age = calcAgeFromBirth(birthVal) || null;
   const phone = document.getElementById('worker-phone').value.trim().replace(/-/g, '');
   const bio = document.getElementById('worker-bio').value.trim();
+  if (bio.length > 0 && bio.length < 20) { showToast('자기소개는 20자 이상 입력해주세요'); return false; }
   const experience = document.getElementById('worker-experience').value.trim();
   const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
@@ -4333,6 +4336,14 @@ async function saveOwnerProfile() {
 
 async function saveAllProfileSettings() {
   if (!currentUser) return;
+  const dKey = 'baro_disclaimer_' + currentUser.id;
+  if (!localStorage.getItem(dKey)) {
+    showDisclaimerSheet(() => { localStorage.setItem(dKey, '1'); _doSaveAllProfileSettings(); });
+    return;
+  }
+  _doSaveAllProfileSettings();
+}
+async function _doSaveAllProfileSettings() {
   currentLang = _pendingLang;
   localStorage.setItem('baroalba_lang', currentLang);
   const role = currentUser?.user_metadata?.baroalba_role;
@@ -4341,8 +4352,59 @@ async function saveAllProfileSettings() {
 }
 
 function closeProfileIfBg(e) {
-  // 더 이상 사용하지 않음 (profile → full-panel 전환)
   void e;
+}
+
+function showAvatarTip(inputId) {
+  const existing = document.getElementById('avatar-tip-overlay');
+  if (existing) { existing.remove(); return; }
+  const el = document.createElement('div');
+  el.id = 'avatar-tip-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">&#128247; 프로필 사진 안내</div>
+        <div style="font-size:13px;color:#888">좋은 사진은 채용 확률을 높여줍니다</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fff4;border-radius:12px">
+          <span>&#9989;</span><span style="font-size:13px;color:#16a34a;font-weight:700">얼굴이 잘 보이는 정면 사진</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fff4;border-radius:12px">
+          <span>&#9989;</span><span style="font-size:13px;color:#16a34a;font-weight:700">밝고 깔끔한 배경</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff0f0;border-radius:12px">
+          <span>&#10060;</span><span style="font-size:13px;color:#EF4444;font-weight:700">단체 사진 · 풍경 사진</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff0f0;border-radius:12px">
+          <span>&#10060;</span><span style="font-size:13px;color:#EF4444;font-weight:700">선글라스 · 마스크 착용 사진</span>
+        </div>
+      </div>
+      <button onclick="document.getElementById('avatar-tip-overlay').remove();document.getElementById('${inputId}').click()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer">&#128247; 사진 선택하기</button>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+function showDisclaimerSheet(onConfirm) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:flex-end';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
+      <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">&#9888;&#65039; 서비스 이용 동의</div>
+      <div style="font-size:13px;color:#888;margin-bottom:16px">아래 내용을 확인하고 동의해주세요</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#444;line-height:1.6">&#128286; 만 19세 이상만 이용 가능합니다</div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#444;line-height:1.6">&#128683; 주류·담배·의약품 대리 구매 등 불법 심부름 매칭 시 즉시 계정 정지</div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#444;line-height:1.6">&#128274; 타인 개인정보 유출 및 사기 행위 엄격 금지</div>
+      </div>
+      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer">동의하고 저장하기</button>
+    </div>`;
+  document.body.appendChild(el);
+  el.querySelector('#disclaimer-ok-btn').onclick = () => { el.remove(); if (onConfirm) onConfirm(); };
 }
 
 function toggleProfilePwForm() {

@@ -676,8 +676,13 @@
 
 <!-- 지도 탭 패널 -->
 <div class="full-panel" id="panel-owner-map">
-  <!-- 검색바 + 필터칩 (지도 위에 float) -->
-  <div style="position:absolute;top:12px;left:12px;right:12px;z-index:10;display:flex;flex-direction:column;gap:8px;pointer-events:all">
+  <!-- 공고 / 바로투입 탭 스위처 -->
+  <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:11;display:flex;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.18);overflow:hidden;pointer-events:all">
+    <button id="map-tab-jobs" onclick="setOwnerMapMode('jobs')" style="padding:8px 20px;font-size:13px;font-weight:800;border:none;cursor:pointer;background:#FF4B4B;color:#fff;transition:0.2s">&#128203; 공고</button>
+    <button id="map-tab-workers" onclick="setOwnerMapMode('workers')" style="padding:8px 20px;font-size:13px;font-weight:800;border:none;cursor:pointer;background:#fff;color:#888;transition:0.2s">&#128100; 바로투입</button>
+  </div>
+  <!-- 검색바 + 필터칩 (공고 모드) -->
+  <div id="map-mode-jobs-ui" style="position:absolute;top:58px;left:12px;right:12px;z-index:10;display:flex;flex-direction:column;gap:8px;pointer-events:all">
     <div style="display:flex;gap:8px">
       <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,0.15)">
         <span style="font-size:16px;color:#999">&#128269;</span>
@@ -687,7 +692,6 @@
         <button onclick="document.getElementById('owner-map-search').value=''" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;line-height:1;padding:0">✕</button>
       </div>
     </div>
-    <!-- 필터 칩 -->
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none">
       <button class="om-chip active" onclick="setOwnerMapFilter(this,'','')">전체</button>
       <button class="om-chip" onclick="setOwnerMapFilter(this,'이사도우미','')">이사도우미</button>
@@ -703,6 +707,20 @@
   </div>
   <div id="owner-map-container" style="flex:1;width:100%"></div>
   <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center;flex-shrink:0" data-i18n="owner_map_hint">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
+  <!-- 바로투입 패널 (지도 위 슬라이드업) -->
+  <div id="barotouip-panel" style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:20;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,0.15);max-height:65vh;display:none;flex-direction:column">
+    <div style="padding:12px 20px 8px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+      <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 12px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:16px;font-weight:900;color:#222">&#128100; 주변 알바생 목록</div>
+        <div style="font-size:12px;color:#aaa" id="barotouip-count">불러오는 중...</div>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:3px">지원한 이력 없는 알바생에게 먼저 연락하세요</div>
+    </div>
+    <div id="barotouip-list" style="overflow-y:auto;padding:10px 16px 32px;flex:1">
+      <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
+    </div>
+  </div>
 </div>
 
 <!-- 채팅 목록 패널 -->
@@ -729,15 +747,17 @@
 <div class="full-panel" id="panel-owner-settings">
   <!-- 프로필 헤더 (뒤로가기 없는 탭 스타일) -->
   <div style="background:#fff;padding:env(safe-area-inset-top,16px) 20px 18px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:14px;padding-top:max(env(safe-area-inset-top),16px)">
-    <label style="position:relative;width:58px;height:58px;flex-shrink:0;cursor:pointer;display:block">
+    <label style="position:relative;width:58px;height:58px;flex-shrink:0;cursor:pointer;display:block" onclick="event.preventDefault();showOwnerAvatarTip('owner-avatar-file')">
       <div id="owner-header-avatar-inner" style="width:58px;height:58px;border-radius:50%;background:#f4f4f4;overflow:hidden;border:1.5px solid #eee;display:flex;align-items:center;justify-content:center">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
       </div>
-      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.42);border-radius:0 0 29px 29px;text-align:center;font-size:9px;color:#fff;font-weight:700;padding:2px 0;line-height:1.5">편집</div>
-      <input type="file" accept="image/*" style="display:none" onchange="uploadOwnerAvatar(this)">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);border-radius:0 0 29px 29px;display:flex;align-items:center;justify-content:center;padding:4px 0">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </div>
+      <input id="owner-avatar-file" type="file" accept="image/*" style="display:none" onchange="uploadOwnerAvatar(this)">
     </label>
     <div style="flex:1;min-width:0">
       <div style="font-size:17px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="settings-name">-</div>
@@ -755,13 +775,13 @@
           <div style="font-size:22px;font-weight:900;color:#FF4B4B" id="owner-stat-postings">-</div>
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">공고 현황 ›</div>
         </div>
-        <div style="background:#f8f8f8;border-radius:14px;padding:12px;text-align:center">
+        <div onclick="showCompletedWorkers()" style="background:#f8f8f8;border-radius:14px;padding:12px;text-align:center;cursor:pointer">
           <div style="font-size:22px;font-weight:900;color:#16a34a" id="owner-stat-hired">-</div>
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">완료 알바</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">완료 알바 ›</div>
         </div>
-        <div style="background:#f8f8f8;border-radius:14px;padding:12px;text-align:center">
+        <div onclick="showOwnerRatings()" style="background:#f8f8f8;border-radius:14px;padding:12px;text-align:center;cursor:pointer">
           <div style="font-size:22px;font-weight:900;color:#F59E0B" id="owner-stat-rating">-</div>
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">내 평점</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:2px">내 평점 ›</div>
         </div>
       </div>
       <!-- 커뮤니티 게시판 -->
@@ -935,6 +955,43 @@
       <div style="display:flex;gap:12px">
         <a id="owner-terms-link" href="./terms.html" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">이용약관</a>
         <a id="owner-privacy-link" href="./terms.html" onclick="localStorage.setItem('terms_tab','privacy')" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">개인정보처리방침</a>
+      </div>
+      <!-- 알림 설정 -->
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">알림 설정</div>
+      <div style="background:#f8f8f8;border-radius:14px;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#222">채팅 알림</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">새 메시지 수신 시 알림</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+            <input type="checkbox" id="owner-noti-toggle-chat" onchange="saveOwnerNotiSetting('chat',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+            <span id="owner-noti-track-chat" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+            <span id="owner-noti-thumb-chat" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#222">지원자 알림</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">새 지원·취소·완료 시 알림</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+            <input type="checkbox" id="owner-noti-toggle-apply" onchange="saveOwnerNotiSetting('apply',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+            <span id="owner-noti-track-apply" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+            <span id="owner-noti-thumb-apply" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#222">댓글 알림</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">내 게시글에 댓글 달릴 때</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+            <input type="checkbox" id="owner-noti-toggle-comment" onchange="saveOwnerNotiSetting('comment',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+            <span id="owner-noti-track-comment" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+            <span id="owner-noti-thumb-comment" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+          </label>
+        </div>
       </div>
       <!-- 언어 설정 -->
       <div style="background:#f8f8f8;border-radius:14px;padding:14px">
@@ -2803,6 +2860,84 @@ function setOwnerMapUrgent(el) {
   loadOwnerMapJobs();
 }
 
+let _ownerMapMode = 'jobs';
+function setOwnerMapMode(mode) {
+  _ownerMapMode = mode;
+  const tabJobs    = document.getElementById('map-tab-jobs');
+  const tabWorkers = document.getElementById('map-tab-workers');
+  const jobsUI     = document.getElementById('map-mode-jobs-ui');
+  const btPanel    = document.getElementById('barotouip-panel');
+  const infoBar    = document.getElementById('owner-map-info');
+  if (mode === 'jobs') {
+    tabJobs.style.background    = '#FF4B4B'; tabJobs.style.color    = '#fff';
+    tabWorkers.style.background = '#fff';     tabWorkers.style.color = '#888';
+    if (jobsUI)  jobsUI.style.display  = 'flex';
+    if (btPanel) btPanel.style.display = 'none';
+    if (infoBar) infoBar.textContent   = '마커를 클릭하면 공고 정보를 볼 수 있습니다';
+  } else {
+    tabJobs.style.background    = '#fff';     tabJobs.style.color    = '#888';
+    tabWorkers.style.background = '#FF4B4B'; tabWorkers.style.color = '#fff';
+    if (jobsUI)  jobsUI.style.display  = 'none';
+    if (btPanel) { btPanel.style.display = 'flex'; loadBarotouipList(); }
+    if (infoBar) infoBar.textContent   = '주변 알바생에게 먼저 연락해보세요';
+  }
+}
+
+async function loadBarotouipList() {
+  const listEl  = document.getElementById('barotouip-list');
+  const countEl = document.getElementById('barotouip-count');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+
+  const { data: workers } = await db.from('workers')
+    .select('id, kakao_uid, name, bio, skills, languages, region, rating, review_count, photo_url, phone')
+    .not('name', 'is', null)
+    .order('rating', { ascending: false, nullsFirst: false })
+    .limit(50);
+
+  const list = workers || [];
+  if (countEl) countEl.textContent = list.length + '명';
+
+  if (!list.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa"><div style="font-size:32px;margin-bottom:8px">&#128100;</div><div style="font-size:14px;font-weight:700">등록된 알바생이 없습니다</div></div>';
+    return;
+  }
+
+  listEl.innerHTML = list.map(w => {
+    const avatar = w.photo_url
+      ? `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover">`
+      : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    const ratingStr = w.rating ? `★ ${parseFloat(w.rating).toFixed(1)} (${w.review_count || 0})` : '평점 없음';
+    const skills = (w.skills || []).slice(0, 3).join(' · ') || '';
+    const langs = (w.languages || []).slice(0, 2).join(', ') || '';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f5f5f5">
+      <div style="width:46px;height:46px;border-radius:50%;background:#f4f4f4;overflow:hidden;flex-shrink:0;border:1.5px solid #eee;display:flex;align-items:center;justify-content:center">${avatar}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:#222">${w.name || '이름 없음'} ${w.region ? `<span style="font-size:11px;color:#aaa;font-weight:500">· ${w.region}</span>` : ''}</div>
+        ${skills ? `<div style="font-size:11px;color:#666;margin-top:2px">🏷️ ${skills}</div>` : ''}
+        ${langs  ? `<div style="font-size:11px;color:#3B82F6;margin-top:1px">🌐 ${langs}</div>` : ''}
+        <div style="font-size:11px;color:#F59E0B;margin-top:1px">${ratingStr}</div>
+      </div>
+      <button onclick="showBarotouipContact('${w.kakao_uid}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}')" style="flex-shrink:0;padding:8px 12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">연락하기</button>
+    </div>`;
+  }).join('');
+}
+
+function showBarotouipContact(kakaoUid, name, phone) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
+      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">&#128100; ${name}님에게 연락</div>
+      <div style="font-size:13px;color:#888;margin-bottom:18px">직접 연락하거나 공고를 공유해보세요</div>
+      ${phone ? `<button onclick="window.location.href='tel:${phone}'" style="width:100%;padding:14px;background:#16a34a;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">&#128222; 전화하기 (${phone})</button>` : `<div style="padding:14px;background:#f8f8f8;border-radius:14px;font-size:13px;color:#aaa;text-align:center;margin-bottom:10px">연락처 미공개</div>`}
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:13px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+    </div>`;
+  document.body.appendChild(el);
+}
+
 async function searchOwnerLocation(q) {
   if (!q) return;
   try {
@@ -3368,6 +3503,7 @@ async function openOwnerSettings() {
     renderPlanUI();
     loadBizPhotos();
     applyLang();
+    initOwnerNotiToggles();
 
     // 프로필 완성도 (biz_photos / places는 비동기 로드 후 업데이트)
     _updateOwnerCompletion();
@@ -3393,6 +3529,157 @@ function _updateOwnerCompletion() {
   if (itemsEl) itemsEl.innerHTML = checks.map(c =>
     `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'#16a34a':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
   ).join('');
+}
+
+// ── 업주 알림 설정 ─────────────────────────────────────────
+function saveOwnerNotiSetting(key, val) {
+  localStorage.setItem('owner_noti_' + key, val ? '1' : '0');
+  const track = document.getElementById('owner-noti-track-' + key);
+  const thumb = document.getElementById('owner-noti-thumb-' + key);
+  if (track) track.style.background = val ? '#FF4B4B' : '#ddd';
+  if (thumb) thumb.style.transform  = val ? 'translateX(20px)' : 'translateX(0)';
+}
+function initOwnerNotiToggles() {
+  ['chat','apply','comment'].forEach(key => {
+    const on = localStorage.getItem('owner_noti_' + key) !== '0';
+    const el = document.getElementById('owner-noti-toggle-' + key);
+    if (el) el.checked = on;
+    saveOwnerNotiSetting(key, on);
+  });
+}
+function getOwnerNotiSetting(key) {
+  return localStorage.getItem('owner_noti_' + key) !== '0';
+}
+
+// ── 업주 프로필 TIP 바텀시트 ───────────────────────────────
+function showOwnerAvatarTip(inputId) {
+  const existing = document.getElementById('owner-avatar-tip-overlay');
+  if (existing) { existing.remove(); return; }
+  const el = document.createElement('div');
+  el.id = 'owner-avatar-tip-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">&#128247; 업체 대표 사진 안내</div>
+        <div style="font-size:13px;color:#888">신뢰도 높은 사진이 지원자를 끌어모아요</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fff4;border-radius:12px">
+          <span>&#9989;</span><span style="font-size:13px;color:#16a34a;font-weight:700">업체/매장 로고 또는 외관 사진</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fff4;border-radius:12px">
+          <span>&#9989;</span><span style="font-size:13px;color:#16a34a;font-weight:700">대표자 or 직원 사진 (활기찬 분위기)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff0f0;border-radius:12px">
+          <span>&#10060;</span><span style="font-size:13px;color:#EF4444;font-weight:700">저작권 위반 이미지 · 타업체 사진</span>
+        </div>
+      </div>
+      <button onclick="document.getElementById('owner-avatar-tip-overlay').remove();document.getElementById('${inputId}').click()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer">&#128247; 사진 선택하기</button>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+// ── 완료 알바 목록 바텀시트 ────────────────────────────────
+async function showCompletedWorkers() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:75vh;display:flex;flex-direction:column">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:17px;font-weight:900">&#127937; 완료 알바 목록</div>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+      </div>
+      <div id="completed-workers-list" style="overflow-y:auto;padding:10px 16px 40px;flex:1">
+        <div style="text-align:center;padding:24px"><div class="spinner"></div></div>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+
+  if (!bizRecord?.id) return;
+  const { data: myPostings } = await db.from('job_postings').select('id,title').eq('business_id', bizRecord.id);
+  const postingIds = (myPostings || []).map(p => p.id);
+  if (!postingIds.length) {
+    document.getElementById('completed-workers-list').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">완료된 알바가 없습니다</div>';
+    return;
+  }
+  const titleMap = Object.fromEntries((myPostings||[]).map(p => [p.id, p.title]));
+  const { data: apps } = await db.from('applications')
+    .select('id, job_posting_id, updated_at, workers(name, photo_url, rating)')
+    .in('job_posting_id', postingIds)
+    .eq('status', 'completed')
+    .order('updated_at', { ascending: false })
+    .limit(50);
+  const listEl = document.getElementById('completed-workers-list');
+  if (!listEl) return;
+  if (!(apps||[]).length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">완료된 알바가 없습니다</div>';
+    return;
+  }
+  listEl.innerHTML = (apps||[]).map(a => {
+    const w = a.workers || {};
+    const d = a.updated_at ? new Date(a.updated_at) : null;
+    const dateStr = d ? `${d.getMonth()+1}/${d.getDate()}` : '';
+    const avatar = w.photo_url
+      ? `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover">`
+      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
+      <div style="width:38px;height:38px;border-radius:50%;background:#f4f4f4;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center">${avatar}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:#222">${w.name||'이름 없음'}</div>
+        <div style="font-size:12px;color:#aaa">${titleMap[a.job_posting_id]||'공고'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:12px;color:#aaa">${dateStr}</div>
+        ${w.rating ? `<div style="font-size:12px;color:#F59E0B;font-weight:700">★ ${parseFloat(w.rating).toFixed(1)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 내 평점 바텀시트 ───────────────────────────────────────
+function showOwnerRatings() {
+  const rating  = parseFloat(bizRecord?.rating) || 0;
+  const kind    = parseFloat(bizRecord?.kindness_rating) || 0;
+  const reviews = bizRecord?.review_count || 0;
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  const stars = n => n > 0 ? '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n)) : '☆☆☆☆☆';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
+      <div style="font-size:17px;font-weight:900;margin-bottom:16px">&#11088; 내 평점 현황</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <div style="background:#f8f8f8;border-radius:14px;padding:14px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:13px;color:#888;margin-bottom:2px">종합 평점</div>
+              <div style="font-size:28px;font-weight:900;color:#F59E0B">${rating > 0 ? rating.toFixed(1) : '-'}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;color:#F59E0B;letter-spacing:2px">${stars(rating)}</div>
+              <div style="font-size:12px;color:#aaa;margin-top:2px">리뷰 ${reviews}건</div>
+            </div>
+          </div>
+        </div>
+        ${kind > 0 ? `<div style="background:#f8f8f8;border-radius:14px;padding:14px 16px">
+          <div style="font-size:13px;color:#888;margin-bottom:4px">친절도</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-size:20px;font-weight:900;color:#F59E0B">${kind.toFixed(1)}</div>
+            <div style="font-size:16px;color:#F59E0B">${stars(kind)}</div>
+          </div>
+        </div>` : ''}
+        <div style="background:#FFF0F0;border-radius:14px;padding:12px 14px;font-size:12px;color:#888;line-height:1.6">
+          &#128161; 평점은 알바 완료 후 알바생이 남긴 후기를 기반으로 집계됩니다. 높은 평점은 더 많은 지원자를 끌어모아요.
+        </div>
+      </div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:14px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+    </div>`;
+  document.body.appendChild(el);
 }
 
 async function uploadOwnerAvatar(input) {
@@ -3884,6 +4171,39 @@ async function _fetchOwnerNotifications() {
       items.push({ icon: '\u{1F3C1}', color: '#16a34a', title: `${name}님 근무 완료`, body: `"${title}"`, time: app.updated_at });
     }
   });
+
+  // 커뮤니티 댓글 알림 (내 게시글에 달린 새 댓글)
+  if (getOwnerNotiSetting('comment')) {
+    const lastSeen = parseInt(localStorage.getItem(_ownerNotiKey()) || '0');
+    if (lastSeen > 0) {
+      try {
+        const { data: myPosts } = await db.from('community_posts')
+          .select('id, title').eq('business_id', bizRecord.id).eq('is_deleted', false);
+        if (myPosts?.length) {
+          const ids = myPosts.map(p => p.id);
+          const postMap = Object.fromEntries(myPosts.map(p => [p.id, p.title]));
+          const { data: newCmts } = await db.from('community_comments')
+            .select('id, content, created_at, post_id, workers(name), businesses(biz_name)')
+            .in('post_id', ids)
+            .gt('created_at', new Date(lastSeen).toISOString())
+            .is('business_id', null)
+            .order('created_at', { ascending: false })
+            .limit(10);
+          (newCmts || []).forEach(c => {
+            const ptitle = postMap[c.post_id] || '게시글';
+            const commenter = c.workers?.name || c.businesses?.biz_name || '누군가';
+            items.push({
+              id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: '#7C3AED',
+              title: `"${ptitle.slice(0,20)}"에 댓글이 달렸어요`,
+              body: `${commenter}: "${c.content.slice(0,40)}"`,
+              time: c.created_at
+            });
+          });
+        }
+      } catch(e) {}
+    }
+  }
+
   return items;
 }
 
