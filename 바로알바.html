@@ -5076,14 +5076,18 @@ function _buildCommTabs() {
   ];
   const el = document.getElementById('community-cat-tabs');
   const btnBase = 'padding:11px 4px;background:none;border:none;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0';
-  el.innerHTML = `<div style="display:flex;min-width:100%">` +
+  el.innerHTML = `<div style="display:flex;min-width:100%;align-items:stretch">` +
     tabs.map((t, i) => {
       const active = i === 0;
-      const color = active ? 'var(--red)' : '#888';
+      const isExclusive = i === tabs.length - 1;
+      const color = active ? 'var(--red)' : (isExclusive ? '#7C3AED' : '#888');
       const weight = active ? '700' : '600';
       const border = active ? 'var(--red)' : 'transparent';
-      return `<button onclick="loadCommunityPosts('${t.cat}')" class="comm-cat-btn" data-cat="${t.cat}"
-        style="${btnBase};flex:1;color:${color};font-weight:${weight};border-bottom:2px solid ${border}">${t.label}</button>`;
+      const separator = isExclusive ? `<div style="width:1px;background:#e5e7eb;margin:8px 0;flex-shrink:0"></div>` : '';
+      return separator + `<button onclick="loadCommunityPosts('${t.cat}')" class="comm-cat-btn" data-cat="${t.cat}"
+        style="${btnBase};flex:1;color:${color};font-weight:${weight};border-bottom:2px solid ${border};${isExclusive?'background:#faf5ff;':''}">
+        ${isExclusive ? `<span style="font-size:10px;display:block;color:#9333EA;font-weight:800;line-height:1;margin-bottom:2px">전용</span>` : ''}${t.label}
+      </button>`;
     }).join('') + `</div>`;
 }
 
