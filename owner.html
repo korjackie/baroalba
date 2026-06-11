@@ -774,7 +774,10 @@
             <label style="font-size:12px;color:#888;font-weight:700;display:block;margin-bottom:4px">업체 소개</label>
             <textarea id="settings-biz-desc" placeholder="업체를 간단히 소개해주세요" maxlength="200" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;box-sizing:border-box;font-family:inherit;background:#fff"></textarea>
           </div>
-          <button onclick="saveOwnerSettingsProfile()" style="width:100%;padding:11px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+          <div style="display:flex;gap:8px">
+            <button onclick="openOwnerSettings()" style="flex:1;padding:11px;background:#f0f0f0;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+            <button onclick="saveOwnerSettingsProfile()" style="flex:2;padding:11px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+          </div>
         </div>
       </div>
       <!-- 내 장소 관리 -->
@@ -894,14 +897,15 @@
       <div style="background:#f8f8f8;border-radius:14px;padding:14px">
         <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">&#127760; 언어 설정</div>
         <div style="font-size:11px;color:#aaa;margin-bottom:8px" id="owner-lang-desc">현재: 한국어</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          <button id="owner-lang-ko" onclick="ownerSetLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">&#127472;&#127479; 한국어</button>
-          <button id="owner-lang-en" onclick="ownerSetLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127482;&#127480; English</button>
-          <button id="owner-lang-zh" onclick="ownerSetLang('zh')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127464;&#127475; 中文</button>
-          <button id="owner-lang-ja" onclick="ownerSetLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127471;&#127477; 日本語</button>
-          <button id="owner-lang-vi" onclick="ownerSetLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127483;&#127475; Tiếng Việt</button>
-          <button id="owner-lang-ru" onclick="ownerSetLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127479;&#127482; Русский</button>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+          <button id="owner-lang-ko" onclick="ownerSelectLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">&#127472;&#127479; 한국어</button>
+          <button id="owner-lang-en" onclick="ownerSelectLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127482;&#127480; English</button>
+          <button id="owner-lang-zh" onclick="ownerSelectLang('zh')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127464;&#127475; 中文</button>
+          <button id="owner-lang-ja" onclick="ownerSelectLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127471;&#127477; 日本語</button>
+          <button id="owner-lang-vi" onclick="ownerSelectLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127483;&#127475; Tiếng Việt</button>
+          <button id="owner-lang-ru" onclick="ownerSelectLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127479;&#127482; Русский</button>
         </div>
+        <button onclick="ownerSaveLang()" style="width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">언어 저장하기</button>
       </div>
       <button onclick="logout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">&#128682; 로그아웃</button>
       <div style="height:1px;background:#f0f0f0"></div>
@@ -3888,8 +3892,11 @@ const OWNER_LANG_DESC = {
   ja:'現在の言語: 日本語', vi:'Ngôn ngữ: Tiếng Việt', ru:'Язык: Русский'
 };
 
+let _ownerPendingLang = localStorage.getItem('baroalba_lang') || 'ko';
+
 function ownerApplyLang() {
   const lang = localStorage.getItem('baroalba_lang') || 'ko';
+  _ownerPendingLang = lang;
   ['ko','en','zh','ja','vi','ru'].forEach(l => {
     const btn = document.getElementById('owner-lang-' + l);
     if (!btn) return;
@@ -3900,10 +3907,22 @@ function ownerApplyLang() {
   if (desc) desc.textContent = OWNER_LANG_DESC[lang] || OWNER_LANG_DESC.ko;
 }
 
-function ownerSetLang(lang) {
-  localStorage.setItem('baroalba_lang', lang);
+function ownerSelectLang(lang) {
+  _ownerPendingLang = lang;
+  ['ko','en','zh','ja','vi','ru'].forEach(l => {
+    const btn = document.getElementById('owner-lang-' + l);
+    if (!btn) return;
+    btn.style.background = l === lang ? '#555' : '#f0f0f0';
+    btn.style.color = l === lang ? '#fff' : '#666';
+  });
+  const desc = document.getElementById('owner-lang-desc');
+  if (desc) desc.textContent = (OWNER_LANG_DESC[lang] || OWNER_LANG_DESC.ko) + ' (저장 전)';
+}
+
+function ownerSaveLang() {
+  localStorage.setItem('baroalba_lang', _ownerPendingLang);
   ownerApplyLang();
-  showToast('✅ 언어가 변경됐습니다. 알바생 앱에서도 동일하게 적용돼요.');
+  showToast('✅ 언어가 저장됐습니다');
 }
 
 // ── 업체 사진 (최대 5장) ─────────────────────────────────
