@@ -1799,8 +1799,23 @@ async function showPostingApplicants(jobId, title) {
   renderApplicants(data || []);
 }
 
+function calcCancelDeadline(workType, startTime) {
+  if (!startTime) return null;
+  const start = new Date(startTime);
+  const OFFSETS = { regular: 7 * 24 * 3600000, short: 3 * 24 * 3600000 };
+  const offset = OFFSETS[workType] ?? (2 * 3600000);
+  return new Date(start.getTime() - offset).toISOString();
+}
+
 async function updateApplication(appId, status) {
-  const { error } = await db.from('applications').update({ status }).eq('id', appId);
+  let updateData = { status };
+  if (status === 'accepted') {
+    const { data: appData } = await db.from('applications')
+      .select('job_postings(work_type, start_time)').eq('id', appId).single();
+    const dl = calcCancelDeadline(appData?.job_postings?.work_type, appData?.job_postings?.start_time);
+    if (dl) updateData.cancel_deadline = dl;
+  }
+  const { error } = await db.from('applications').update(updateData).eq('id', appId);
   if (error) { showToast('처리 실패'); return; }
   if (status === 'accepted') {
     await sendAcceptMessage(appId);
@@ -2883,7 +2898,14 @@ async function openWorkerProfile() {
 }
 
 async function updateApplicationFromProfile(appId, status) {
-  await db.from('applications').update({ status }).eq('id', appId);
+  let updateData = { status };
+  if (status === 'accepted') {
+    const { data: appData } = await db.from('applications')
+      .select('job_postings(work_type, start_time)').eq('id', appId).single();
+    const dl = calcCancelDeadline(appData?.job_postings?.work_type, appData?.job_postings?.start_time);
+    if (dl) updateData.cancel_deadline = dl;
+  }
+  await db.from('applications').update(updateData).eq('id', appId);
   if (status === 'accepted') {
     await sendAcceptMessage(appId);
     sendAppStatusPush(appId, 'accepted');

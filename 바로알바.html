@@ -2357,8 +2357,20 @@ async function loadMyApplications() {
     const biz = job.businesses || {};
     const s  = STATUS[a.status]  || { label: a.status || '검토중', color: '#888', bg: '#f5f5f5' };
     const wt = WORK_TYPE[job.work_type] || WORK_TYPE.spot;
-    const canCancel  = a.status === 'pending' || a.status === 'reviewing';
+    const cancelDlPassed = a.status === 'accepted' && a.cancel_deadline && new Date(a.cancel_deadline) <= new Date();
+    const canCancel  = a.status === 'pending' || a.status === 'reviewing' || (a.status === 'accepted' && !cancelDlPassed);
     const isAccepted = a.status === 'accepted';
+
+    const cancelDlChip = (() => {
+      if (a.status !== 'accepted' || !a.cancel_deadline) return '';
+      const dl = new Date(a.cancel_deadline);
+      const now = new Date();
+      if (dl <= now) return '<span style="font-size:11px;color:#EF4444;font-weight:700;background:#FFF0F0;padding:3px 8px;border-radius:8px">취소마감 지남</span>';
+      const diffH = Math.floor((dl - now) / 3600000);
+      if (diffH < 24) return `<span style="font-size:11px;color:#F59E0B;font-weight:700;background:#FFF7ED;padding:3px 8px;border-radius:8px">⏰ 취소가능 ${diffH}시간 남음</span>`;
+      const diffD = Math.ceil(diffH / 24);
+      return `<span style="font-size:11px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:3px 8px;border-radius:8px">취소가능 D-${diffD}</span>`;
+    })();
 
     const wageStr = job.current_wage
       ? job.duration_hours
@@ -2410,6 +2422,7 @@ async function loadMyApplications() {
         ${workEndStr  ? `<span style="font-size:11px;color:#3B82F6;font-weight:700;background:#EFF6FF;padding:4px 9px;border-radius:8px">\u{1F4C5} ${workEndStr}까지</span>` : ''}
         ${workDaysStr ? `<span style="font-size:11px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:4px 9px;border-radius:8px">\u{1F504} ${workDaysStr}</span>` : ''}
         ${appliedStr  ? `<span style="font-size:11px;color:#bbb;font-weight:600;padding:4px 0">\u{1F4CC} ${appliedStr}</span>` : ''}
+        ${cancelDlChip}
       </div>
 
       <!-- 업체 연락처 -->
@@ -2477,7 +2490,7 @@ async function openApplicationJobDetail(jobPostingId) {
   if (currentUser && !isGuest) {
     const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
     if (w) {
-      const { data: a } = await db.from('applications').select('id,status').eq('job_posting_id', jobPostingId).eq('worker_id', w.id).single();
+      const { data: a } = await db.from('applications').select('id,status,cancel_deadline').eq('job_posting_id', jobPostingId).eq('worker_id', w.id).single();
       myApp = a;
     }
   }
@@ -2499,7 +2512,8 @@ async function openApplicationJobDetail(jobPostingId) {
     noshow:    { label:'⚠️ 노쇼', color:'#D97706', bg:'#FEF3C7' },
   };
   const appStatus = myApp ? (STATUS_INFO[myApp.status] || STATUS_INFO.pending) : null;
-  const canCancel  = myApp && (myApp.status === 'pending' || myApp.status === 'reviewing');
+  const _dlPassed  = myApp?.status === 'accepted' && myApp?.cancel_deadline && new Date(myApp.cancel_deadline) <= new Date();
+  const canCancel  = myApp && (myApp.status === 'pending' || myApp.status === 'reviewing' || (myApp.status === 'accepted' && !_dlPassed));
   const isAccepted = myApp && myApp.status === 'accepted';
 
   body.innerHTML = `
@@ -2618,6 +2632,11 @@ function showConfirm(message, onOk) {
 }
 
 async function cancelApplication(appId) {
+  const { data: appCheck } = await db.from('applications').select('status, cancel_deadline').eq('id', appId).single();
+  if (appCheck?.status === 'accepted' && appCheck?.cancel_deadline && new Date(appCheck.cancel_deadline) <= new Date()) {
+    showToast('취소 마감일이 지났습니다. 업주에게 직접 연락해주세요.');
+    return;
+  }
   showConfirm('지원을 취소하시겠어요?', async () => {
     const { data, error } = await db.from('applications')
       .update({ status: 'cancelled' })
