@@ -5067,9 +5067,9 @@ function _buildCommTabs() {
   const isOwner = _commIsOwner();
   const tabs = [
     { cat: 'all',    label: '전체' },
+    { cat: 'free',   label: '자유' },
     { cat: 'review', label: '업체후기' },
     { cat: 'info',   label: '정보공유' },
-    { cat: 'free',   label: '자유' },
     isOwner
       ? { cat: 'owner',  label: '업주전용' }
       : { cat: 'worker', label: '알바생전용' },
