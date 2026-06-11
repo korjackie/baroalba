@@ -890,6 +890,19 @@
         <a href="./terms.html" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">이용약관</a>
         <a href="./terms.html" onclick="localStorage.setItem('terms_tab','privacy')" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">개인정보처리방침</a>
       </div>
+      <!-- 언어 설정 -->
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">&#127760; 언어 설정</div>
+        <div style="font-size:11px;color:#aaa;margin-bottom:8px" id="owner-lang-desc">현재: 한국어</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <button id="owner-lang-ko" onclick="ownerSetLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">&#127472;&#127479; 한국어</button>
+          <button id="owner-lang-en" onclick="ownerSetLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127482;&#127480; English</button>
+          <button id="owner-lang-zh" onclick="ownerSetLang('zh')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127464;&#127475; 中文</button>
+          <button id="owner-lang-ja" onclick="ownerSetLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127471;&#127477; 日本語</button>
+          <button id="owner-lang-vi" onclick="ownerSetLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127483;&#127475; Tiếng Việt</button>
+          <button id="owner-lang-ru" onclick="ownerSetLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127479;&#127482; Русский</button>
+        </div>
+      </div>
       <button onclick="logout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">&#128682; 로그아웃</button>
       <div style="height:1px;background:#f0f0f0"></div>
       <button onclick="deleteOwnerAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
@@ -3250,6 +3263,7 @@ async function openOwnerSettings() {
     loadMyPlaces();
     renderPlanUI();
     loadBizPhotos();
+    ownerApplyLang();
   }
   document.getElementById('panel-owner-settings').classList.add('show');
 }
@@ -3868,6 +3882,30 @@ async function submitOwnerReport() {
 </div>
 
 <script>
+// ── 언어 설정 ─────────────────────────────────────────────
+const OWNER_LANG_DESC = {
+  ko:'현재: 한국어', en:'Current: English', zh:'当前语言: 中文',
+  ja:'現在の言語: 日本語', vi:'Ngôn ngữ: Tiếng Việt', ru:'Язык: Русский'
+};
+
+function ownerApplyLang() {
+  const lang = localStorage.getItem('baroalba_lang') || 'ko';
+  ['ko','en','zh','ja','vi','ru'].forEach(l => {
+    const btn = document.getElementById('owner-lang-' + l);
+    if (!btn) return;
+    btn.style.background = l === lang ? 'var(--red)' : '#f0f0f0';
+    btn.style.color = l === lang ? '#fff' : '#666';
+  });
+  const desc = document.getElementById('owner-lang-desc');
+  if (desc) desc.textContent = OWNER_LANG_DESC[lang] || OWNER_LANG_DESC.ko;
+}
+
+function ownerSetLang(lang) {
+  localStorage.setItem('baroalba_lang', lang);
+  ownerApplyLang();
+  showToast('✅ 언어가 변경됐습니다. 알바생 앱에서도 동일하게 적용돼요.');
+}
+
 // ── 업체 사진 (최대 5장) ─────────────────────────────────
 let _bizPhotos = [];
 let _bizCropper = null;

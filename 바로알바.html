@@ -2871,73 +2871,110 @@ function filterJobsByKeyword(keyword) {
   jobs = tempJobs;
 }
 
-// ── 한국어/영어 전환 ──────────────────────────────────────
+// ── 한국어/다국어 전환 ─────────────────────────────────────
+const WORK_TYPE_LABELS = {
+  ko: { regular:'정기알바', short:'단기알바', spot:'스팟', errand:'심부름' },
+  en: { regular:'Regular', short:'Short-term', spot:'Spot', errand:'Errand' },
+  zh: { regular:'长期兼职', short:'短期兼职', spot:'临时', errand:'跑腿' },
+  ja: { regular:'定期バイト', short:'短期バイト', spot:'スポット', errand:'お使い' },
+  vi: { regular:'Thường xuyên', short:'Ngắn hạn', spot:'Tạm thời', errand:'Việc vặt' },
+  ru: { regular:'Постоянная', short:'Краткосрочная', spot:'Разовая', errand:'Поручение' },
+};
+
+function tWorkType(code) {
+  return (WORK_TYPE_LABELS[currentLang] || WORK_TYPE_LABELS.ko)[code] || code;
+}
+
 const TRANSLATIONS = {
   ko: {
     nav_map: '지도', nav_swipe: '스와이프', nav_applications: '내 지원', nav_chats: '채팅', nav_profile: '마이페이지',
     tab_status: '지원 현황', tab_bookmarks: '\u{1F516} 북마크',
-    status_pending: '검토중', status_accepted: '✅ 수락', status_rejected: '❌ 거절', status_cancelled: '취소됨',
-    apply_btn: '⚡ 바로 지원하기', apply_chat_btn: '\u{1F4AC} 업주에게 문의하기',
-    cat_all: '전체', cat_urgent: '\u{1F525} 급구만',
+    status_pending: '검토중', status_accepted: '&#x2705; 수락', status_rejected: '&#x274C; 거절', status_cancelled: '취소됨',
+    apply_btn: '&#x26A1; 바로 지원하기', apply_chat_btn: '&#x1F4AC; 업주에게 문의하기',
+    cat_all: '전체', cat_urgent: '&#x1F525; 급구만',
     loading: '지도 불러오는 중...',
     search_placeholder: '지역, 업종 검색',
     job_search_placeholder: '공고명, 업체명, 업종 검색',
     lang_desc: '현재: 한국어',
+    work_type_label: '근무형태', wage_label: '시급', location_label: '위치',
+    apply_success: '지원이 완료됐어요!', cancel_confirm: '지원을 취소하시겠어요?',
+    no_jobs: '주변에 공고가 없어요', profile_incomplete: '프로필을 완성해주세요',
+    login_required: '로그인이 필요해요',
   },
   en: {
     nav_map: 'Map', nav_swipe: 'Swipe', nav_applications: 'Applied', nav_chats: 'Chat', nav_profile: 'My Page',
     tab_status: 'Applications', tab_bookmarks: '\u{1F516} Bookmarks',
-    status_pending: 'Pending', status_accepted: '✅ Accepted', status_rejected: '❌ Rejected', status_cancelled: 'Cancelled',
-    apply_btn: '⚡ Apply Now', apply_chat_btn: '\u{1F4AC} Message Owner',
-    cat_all: 'All', cat_urgent: '\u{1F525} Urgent',
+    status_pending: 'Pending', status_accepted: '&#x2705; Accepted', status_rejected: '&#x274C; Rejected', status_cancelled: 'Cancelled',
+    apply_btn: '&#x26A1; Apply Now', apply_chat_btn: '&#x1F4AC; Message Owner',
+    cat_all: 'All', cat_urgent: '&#x1F525; Urgent',
     loading: 'Loading map...',
     search_placeholder: 'Search by area, category',
     job_search_placeholder: 'Search title, biz, category',
     lang_desc: 'Current: English',
+    work_type_label: 'Work Type', wage_label: 'Hourly', location_label: 'Location',
+    apply_success: 'Application submitted!', cancel_confirm: 'Cancel your application?',
+    no_jobs: 'No jobs nearby', profile_incomplete: 'Please complete your profile',
+    login_required: 'Login required',
   },
   zh: {
     nav_map: '地图', nav_swipe: '滑动', nav_applications: '我的申请', nav_chats: '聊天', nav_profile: '我的',
     tab_status: '申请状态', tab_bookmarks: '\u{1F516} 收藏',
-    status_pending: '审核中', status_accepted: '✅ 录用', status_rejected: '❌ 拒绝', status_cancelled: '已取消',
-    apply_btn: '⚡ 立即申请', apply_chat_btn: '\u{1F4AC} 联系雇主',
-    cat_all: '全部', cat_urgent: '\u{1F525} 急聘',
+    status_pending: '审核中', status_accepted: '&#x2705; 录用', status_rejected: '&#x274C; 拒绝', status_cancelled: '已取消',
+    apply_btn: '&#x26A1; 立即申请', apply_chat_btn: '&#x1F4AC; 联系雇主',
+    cat_all: '全部', cat_urgent: '&#x1F525; 急聘',
     loading: '地图加载中...',
     search_placeholder: '搜索地区、职种',
     job_search_placeholder: '搜索职位、公司、职种',
     lang_desc: '当前语言: 中文',
+    work_type_label: '工作类型', wage_label: '时薪', location_label: '地点',
+    apply_success: '申请成功！', cancel_confirm: '取消申请？',
+    no_jobs: '附近没有职位', profile_incomplete: '请完善您的简介',
+    login_required: '请先登录',
   },
   ja: {
     nav_map: '地図', nav_swipe: 'スワイプ', nav_applications: '応募履歴', nav_chats: 'チャット', nav_profile: 'マイページ',
     tab_status: '応募状況', tab_bookmarks: '\u{1F516} ブックマーク',
-    status_pending: '審査中', status_accepted: '✅ 合格', status_rejected: '❌ 不合格', status_cancelled: 'キャンセル',
-    apply_btn: '⚡ 今すぐ応募', apply_chat_btn: '\u{1F4AC} 雇用主に連絡',
-    cat_all: '全て', cat_urgent: '\u{1F525} 急募',
+    status_pending: '審査中', status_accepted: '&#x2705; 合格', status_rejected: '&#x274C; 不合格', status_cancelled: 'キャンセル',
+    apply_btn: '&#x26A1; 今すぐ応募', apply_chat_btn: '&#x1F4AC; 雇用主に連絡',
+    cat_all: '全て', cat_urgent: '&#x1F525; 急募',
     loading: '地図読み込み中...',
     search_placeholder: '地域・業種を検索',
     job_search_placeholder: '求人名・店名・業種を検索',
     lang_desc: '現在の言語: 日本語',
+    work_type_label: '勤務形態', wage_label: '時給', location_label: '場所',
+    apply_success: '応募が完了しました！', cancel_confirm: '応募をキャンセルしますか？',
+    no_jobs: '近くに求人がありません', profile_incomplete: 'プロフィールを完成させてください',
+    login_required: 'ログインが必要です',
   },
   vi: {
     nav_map: 'Bản đồ', nav_swipe: 'Vuốt', nav_applications: 'Đã ứng tuyển', nav_chats: 'Chat', nav_profile: 'Trang của tôi',
     tab_status: 'Trạng thái', tab_bookmarks: '\u{1F516} Đã lưu',
-    status_pending: 'Đang xét', status_accepted: '✅ Đã nhận', status_rejected: '❌ Từ chối', status_cancelled: 'Đã hủy',
-    apply_btn: '⚡ Ứng tuyển ngay', apply_chat_btn: '\u{1F4AC} Nhắn tin chủ',
-    cat_all: 'Tất cả', cat_urgent: '\u{1F525} Gấp',
+    status_pending: 'Đang xét', status_accepted: '&#x2705; Đã nhận', status_rejected: '&#x274C; Từ chối', status_cancelled: 'Đã hủy',
+    apply_btn: '&#x26A1; Ứng tuyển ngay', apply_chat_btn: '&#x1F4AC; Nhắn tin chủ',
+    cat_all: 'Tất cả', cat_urgent: '&#x1F525; Gấp',
     loading: 'Đang tải bản đồ...',
     search_placeholder: 'Tìm khu vực, ngành nghề',
     job_search_placeholder: 'Tìm tên việc, cửa hàng, ngành',
     lang_desc: 'Ngôn ngữ: Tiếng Việt',
+    work_type_label: 'Loại việc', wage_label: 'Lương/giờ', location_label: 'Địa điểm',
+    apply_success: 'Ứng tuyển thành công!', cancel_confirm: 'Hủy đơn ứng tuyển?',
+    no_jobs: 'Không có việc gần đây', profile_incomplete: 'Vui lòng hoàn thiện hồ sơ',
+    login_required: 'Cần đăng nhập',
   },
   ru: {
     nav_map: 'Карта', nav_swipe: 'Свайп', nav_applications: 'Заявки', nav_chats: 'Чат', nav_profile: 'Профиль',
     tab_status: 'Мои заявки', tab_bookmarks: '\u{1F516} Закладки',
-    status_pending: 'На рассмотрении', status_accepted: '✅ Принят', status_rejected: '❌ Отказ', status_cancelled: 'Отменено',
-    apply_btn: '⚡ Подать заявку', apply_chat_btn: '\u{1F4AC} Написать работодателю',
-    cat_all: 'Все', cat_urgent: '\u{1F525} Срочно',
+    status_pending: 'На рассмотрении', status_accepted: '&#x2705; Принят', status_rejected: '&#x274C; Отказ', status_cancelled: 'Отменено',
+    apply_btn: '&#x26A1; Подать заявку', apply_chat_btn: '&#x1F4AC; Написать работодателю',
+    cat_all: 'Все', cat_urgent: '&#x1F525; Срочно',
     loading: 'Загрузка карты...',
     search_placeholder: 'Поиск по району, типу',
     job_search_placeholder: 'Поиск по названию, компании',
     lang_desc: 'Язык: Русский',
+    work_type_label: 'Тип работы', wage_label: 'Ставка/ч', location_label: 'Место',
+    apply_success: 'Заявка отправлена!', cancel_confirm: 'Отменить заявку?',
+    no_jobs: 'Нет вакансий рядом', profile_incomplete: 'Заполните профиль',
+    login_required: 'Необходим вход',
   },
 };
 
@@ -2996,10 +3033,23 @@ function applyLang() {
 
   // 지원 버튼 텍스트 (열려있으면)
   const applyBtn = document.getElementById('d-apply-btn');
-  if (applyBtn && applyBtn.textContent.includes('지원') || applyBtn?.textContent.includes('Apply')) {
-    const isChat = applyBtn?.style.background === 'rgb(59, 130, 246)';
-    if (applyBtn && !isChat) applyBtn.textContent = t('apply_btn');
+  if (applyBtn) {
+    const isChat = applyBtn.style.background === 'rgb(59, 130, 246)';
+    if (!isChat) applyBtn.innerHTML = t('apply_btn');
+    else applyBtn.innerHTML = t('apply_chat_btn');
   }
+
+  // 공고 목록 work_type 칩 갱신 (data-wt 속성 기반)
+  document.querySelectorAll('[data-wt]').forEach(el => {
+    el.textContent = tWorkType(el.dataset.wt);
+  });
+
+  // 지원현황 상태 칩 갱신 (data-status 속성 기반)
+  document.querySelectorAll('[data-status]').forEach(el => {
+    const s = el.dataset.status;
+    const key = s === 'pending' ? 'status_pending' : s === 'accepted' ? 'status_accepted' : s === 'rejected' ? 'status_rejected' : 'status_cancelled';
+    el.innerHTML = t(key);
+  });
 }
 
 // ── 채팅 아바타 색상 ──────────────────────────────────────
@@ -5315,6 +5365,7 @@ async function submitCommunityComment() {
   await db.from('community_posts').update({ comments_count: count || 0 }).eq('id', _commCurrentPostId);
 
   input.value = '';
+  loadCommunityPosts(_commCurrentCat);
   await openCommunityPost(_commCurrentPostId);
 }
 </script>
