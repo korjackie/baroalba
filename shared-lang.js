@@ -116,8 +116,41 @@ const TRANSLATIONS = {
     noti_section:'알림 설정',
     noti_chat:'채팅 알림', noti_chat_desc:'새 메시지 수신 시 알림',
     noti_status:'합격/거절 알림', noti_status_desc:'지원 결과 변경 시 알림',
-    // 업주 전용
+    // 업주 전용 기본
     biz_name_label:'업체명', biz_desc_label:'업체 소개', biz_photo_title:'업체 사진',
+    // 업주 앱 — 내비/탭/통계
+    owner_badge:'업주', owner_account:'업주 계정',
+    tab_my_postings:'내 공고', tab_applicants:'지원자',
+    stat_open:'모집중', stat_total_applicants:'총 지원자', stat_confirmed:'확정',
+    section_my_postings:'내 공고 목록', section_all_applicants:'전체 지원자',
+    // 업주 마이페이지
+    community_title:'커뮤니티 게시판', community_desc_owner:'업주전용 게시판 · 알바 정보',
+    owner_biz_section:'업체 정보', biz_photo_hint:'(최대 5장 · 첫 번째가 대표)',
+    biz_add_photo:'+ 사진 추가', owner_places_section:'내 업체 장소',
+    owner_places_hint:'장소를 추가하면 공고 등록 시 바로 선택할 수 있어요',
+    owner_plan_section:'이용 플랜', lang_section:'언어 설정',
+    plan_free_name:'무료 플랜', plan_free_desc:'공고 3개까지, 일반 노출',
+    plan_basic_name:'베이직 플랜', plan_basic_desc:'공고 10개, 지원자 필터, 통계',
+    plan_pro_name:'프로 플랜 ⚡', plan_pro_desc:'무제한 공고, 프리미엄 노출, AI 매칭',
+    // 업주 패널/모달
+    owner_map_hint:'마커를 클릭하면 공고 정보를 볼 수 있습니다',
+    chats_panel:'대화 목록', posting_detail_title:'공고 상세',
+    applicant_profile:'지원자 프로필', share_posting:'공고 공유하기',
+    copy_link:'링크 복사', kakao_share:'카카오톡', share_more:'더 보내기 (SNS/문자)',
+    send_btn:'전송', chat_msg_placeholder:'메시지를 입력하세요',
+    // 공고 등록 폼
+    form_post_new:'공고 등록', form_post_edit:'공고 수정',
+    job_type_alba:'일반 알바', job_type_technical:'전문기술직', job_type_care:'돌봄·케어',
+    form_category_label:'업종', form_needed_label:'필요 인원', form_wage_label:'시급 (원)',
+    form_days_label:'근무 요일', form_start_date:'시작일', form_end_date:'종료일',
+    form_start_time:'시작 시간', form_end_time:'종료 시간',
+    form_duration_label:'예상 소요시간', form_desc_label:'상세 설명',
+    form_submit_post:'공고 등록하기', form_submit_edit:'수정 완료',
+    same_day_label:'당일 정산', surge_mode_label:'번개 알바 모드',
+    premium_label:'프리미엄 노출', age_limit_label:'만 18세 이상만 지원 가능',
+    loc_tab_place:'플레이스', loc_tab_addr:'주소 검색', loc_tab_direct:'직접 입력',
+    work_type_spot:'스팟', work_type_short:'단기', work_type_regular:'정기',
+    status_open_label:'모집중', status_closed_label:'마감', status_expired_label:'기간만료',
   },
   en: {
     nav_map:'Map', nav_swipe:'Swipe', nav_applications:'Applied', nav_chats:'Chat', nav_profile:'My Page',
@@ -158,6 +191,35 @@ const TRANSLATIONS = {
     noti_chat:'Chat Alerts', noti_chat_desc:'New message notifications',
     noti_status:'Application Alerts', noti_status_desc:'Application status updates',
     biz_name_label:'Business Name', biz_desc_label:'About Business', biz_photo_title:'Business Photos',
+    owner_badge:'Owner', owner_account:'Owner Account',
+    tab_my_postings:'My Jobs', tab_applicants:'Applicants',
+    stat_open:'Recruiting', stat_total_applicants:'Total', stat_confirmed:'Confirmed',
+    section_my_postings:'My Job Listings', section_all_applicants:'All Applicants',
+    community_title:'Community', community_desc_owner:'Owner Board · Job Info',
+    owner_biz_section:'Business Info', biz_photo_hint:'(Max 5 · First is main)',
+    biz_add_photo:'+ Add Photo', owner_places_section:'My Places',
+    owner_places_hint:'Add places to select quickly when posting',
+    owner_plan_section:'Plan', lang_section:'Language',
+    plan_free_name:'Free Plan', plan_free_desc:'Up to 3 jobs, standard',
+    plan_basic_name:'Basic Plan', plan_basic_desc:'10 jobs, filter, stats',
+    plan_pro_name:'Pro Plan ⚡', plan_pro_desc:'Unlimited, premium, AI match',
+    owner_map_hint:'Click a marker to view the posting',
+    chats_panel:'Chats', posting_detail_title:'Posting Detail',
+    applicant_profile:'Applicant Profile', share_posting:'Share Job',
+    copy_link:'Copy Link', kakao_share:'KakaoTalk', share_more:'Share More (SNS/SMS)',
+    send_btn:'Send', chat_msg_placeholder:'Type a message',
+    form_post_new:'Post a Job', form_post_edit:'Edit Posting',
+    job_type_alba:'General', job_type_technical:'Technical', job_type_care:'Care',
+    form_category_label:'Category', form_needed_label:'Staff Needed', form_wage_label:'Hourly (KRW)',
+    form_days_label:'Work Days', form_start_date:'Start Date', form_end_date:'End Date',
+    form_start_time:'Start Time', form_end_time:'End Time',
+    form_duration_label:'Est. Duration', form_desc_label:'Description',
+    form_submit_post:'Post Job', form_submit_edit:'Save Changes',
+    same_day_label:'Same-Day Pay', surge_mode_label:'Flash Mode',
+    premium_label:'Premium', age_limit_label:'18+ Only',
+    loc_tab_place:'Place', loc_tab_addr:'Address', loc_tab_direct:'Manual',
+    work_type_spot:'Spot', work_type_short:'Short-term', work_type_regular:'Regular',
+    status_open_label:'Open', status_closed_label:'Closed', status_expired_label:'Expired',
   },
   zh: {
     nav_map:'地图', nav_swipe:'滑动', nav_applications:'我的申请', nav_chats:'聊天', nav_profile:'我的',
@@ -198,6 +260,35 @@ const TRANSLATIONS = {
     noti_chat:'聊天通知', noti_chat_desc:'收到新消息时通知',
     noti_status:'录取/拒绝通知', noti_status_desc:'申请结果变更时通知',
     biz_name_label:'店铺名称', biz_desc_label:'店铺简介', biz_photo_title:'店铺照片',
+    owner_badge:'业主', owner_account:'业主账号',
+    tab_my_postings:'我的公告', tab_applicants:'求职者',
+    stat_open:'招募中', stat_total_applicants:'总申请', stat_confirmed:'已确认',
+    section_my_postings:'我的公告列表', section_all_applicants:'全部应聘者',
+    community_title:'社区论坛', community_desc_owner:'业主专区·招聘信息',
+    owner_biz_section:'业务信息', biz_photo_hint:'(最多5张·首张为封面)',
+    biz_add_photo:'+ 添加照片', owner_places_section:'我的地点',
+    owner_places_hint:'添加地点后发布公告时可快速选择',
+    owner_plan_section:'订阅计划', lang_section:'语言设置',
+    plan_free_name:'免费计划', plan_free_desc:'最多3条, 普通展示',
+    plan_basic_name:'基础计划', plan_basic_desc:'10条, 筛选, 统计',
+    plan_pro_name:'专业计划 ⚡', plan_pro_desc:'无限发布, 高级展示, AI匹配',
+    owner_map_hint:'点击标记查看公告信息',
+    chats_panel:'对话列表', posting_detail_title:'招聘详情',
+    applicant_profile:'求职者资料', share_posting:'分享招聘',
+    copy_link:'复制链接', kakao_share:'KakaoTalk', share_more:'更多分享 (SNS/短信)',
+    send_btn:'发送', chat_msg_placeholder:'输入消息',
+    form_post_new:'发布招聘', form_post_edit:'修改招聘',
+    job_type_alba:'普通兼职', job_type_technical:'专业技术', job_type_care:'护理·照料',
+    form_category_label:'行业', form_needed_label:'所需人数', form_wage_label:'时薪(韩元)',
+    form_days_label:'工作日', form_start_date:'开始日期', form_end_date:'结束日期',
+    form_start_time:'开始时间', form_end_time:'结束时间',
+    form_duration_label:'预计时长', form_desc_label:'详细说明',
+    form_submit_post:'发布招聘', form_submit_edit:'修改完成',
+    same_day_label:'当日结算', surge_mode_label:'闪电模式',
+    premium_label:'高级展示', age_limit_label:'仅限18岁以上',
+    loc_tab_place:'地点搜索', loc_tab_addr:'地址搜索', loc_tab_direct:'手动输入',
+    work_type_spot:'一次性', work_type_short:'短期', work_type_regular:'长期',
+    status_open_label:'招募中', status_closed_label:'已截止', status_expired_label:'已过期',
   },
   ja: {
     nav_map:'地図', nav_swipe:'スワイプ', nav_applications:'応募履歴', nav_chats:'チャット', nav_profile:'マイページ',
@@ -238,6 +329,35 @@ const TRANSLATIONS = {
     noti_chat:'チャット通知', noti_chat_desc:'新しいメッセージ受信時',
     noti_status:'合否通知', noti_status_desc:'応募結果変更時',
     biz_name_label:'店舗名', biz_desc_label:'店舗紹介', biz_photo_title:'店舗写真',
+    owner_badge:'業主', owner_account:'業主アカウント',
+    tab_my_postings:'求人一覧', tab_applicants:'応募者',
+    stat_open:'募集中', stat_total_applicants:'総応募', stat_confirmed:'確定',
+    section_my_postings:'求人一覧', section_all_applicants:'全応募者',
+    community_title:'コミュニティ', community_desc_owner:'業主専用·求人情報',
+    owner_biz_section:'業体情報', biz_photo_hint:'(最大5枚·最初がメイン)',
+    biz_add_photo:'+ 写真追加', owner_places_section:'マイスポット',
+    owner_places_hint:'場所追加で求人登録時すぐ選択できます',
+    owner_plan_section:'利用プラン', lang_section:'言語設定',
+    plan_free_name:'無料プラン', plan_free_desc:'求人3件まで, 通常表示',
+    plan_basic_name:'ベーシックプラン', plan_basic_desc:'求人10件, フィルター, 統計',
+    plan_pro_name:'プロプラン ⚡', plan_pro_desc:'無制限, プレミアム, AIマッチング',
+    owner_map_hint:'マーカーをクリックで求人情報を表示',
+    chats_panel:'会話リスト', posting_detail_title:'求人詳細',
+    applicant_profile:'応募者プロフィール', share_posting:'求人をシェア',
+    copy_link:'リンクをコピー', kakao_share:'カカオトーク', share_more:'さらに送る (SNS/SMS)',
+    send_btn:'送信', chat_msg_placeholder:'メッセージを入力',
+    form_post_new:'求人掲載', form_post_edit:'求人編集',
+    job_type_alba:'普通バイト', job_type_technical:'専門技術職', job_type_care:'ケア',
+    form_category_label:'業種', form_needed_label:'必要人数', form_wage_label:'時給(ウォン)',
+    form_days_label:'勤務曜日', form_start_date:'開始日', form_end_date:'終了日',
+    form_start_time:'開始時間', form_end_time:'終了時間',
+    form_duration_label:'所要時間(目安)', form_desc_label:'詳細説明',
+    form_submit_post:'求人を掲載する', form_submit_edit:'修正完了',
+    same_day_label:'当日精算', surge_mode_label:'バーストモード',
+    premium_label:'プレミアム表示', age_limit_label:'満18歳以上のみ',
+    loc_tab_place:'プレイス', loc_tab_addr:'住所検索', loc_tab_direct:'直接入力',
+    work_type_spot:'スポット', work_type_short:'短期', work_type_regular:'定期',
+    status_open_label:'募集中', status_closed_label:'締め切り', status_expired_label:'期間満了',
   },
   vi: {
     nav_map:'Bản đồ', nav_swipe:'Vuốt', nav_applications:'Đã ứng tuyển', nav_chats:'Chat', nav_profile:'Trang của tôi',
@@ -278,6 +398,35 @@ const TRANSLATIONS = {
     noti_chat:'Thông báo chat', noti_chat_desc:'Khi nhận tin nhắn mới',
     noti_status:'Thông báo kết quả', noti_status_desc:'Khi trạng thái ứng tuyển thay đổi',
     biz_name_label:'Tên cơ sở', biz_desc_label:'Giới thiệu', biz_photo_title:'Ảnh cơ sở',
+    owner_badge:'Chủ', owner_account:'Tài khoản chủ',
+    tab_my_postings:'Tin của tôi', tab_applicants:'Ứng viên',
+    stat_open:'Đang tuyển', stat_total_applicants:'Tổng đơn', stat_confirmed:'Đã nhận',
+    section_my_postings:'Danh sách tin', section_all_applicants:'Tất cả ứng viên',
+    community_title:'Cộng đồng', community_desc_owner:'Dành cho chủ · Thông tin việc làm',
+    owner_biz_section:'Thông tin cơ sở', biz_photo_hint:'(Tối đa 5 · Đầu tiên đại diện)',
+    biz_add_photo:'+ Thêm ảnh', owner_places_section:'Địa điểm của tôi',
+    owner_places_hint:'Thêm địa điểm để chọn nhanh khi đăng tin',
+    owner_plan_section:'Gói dịch vụ', lang_section:'Cài đặt ngôn ngữ',
+    plan_free_name:'Gói miễn phí', plan_free_desc:'Tối đa 3 tin, thông thường',
+    plan_basic_name:'Gói cơ bản', plan_basic_desc:'10 tin, lọc, thống kê',
+    plan_pro_name:'Gói Pro ⚡', plan_pro_desc:'Không giới hạn, nổi bật, AI',
+    owner_map_hint:'Nhấn vào nhãn để xem chi tiết tin',
+    chats_panel:'Danh sách chat', posting_detail_title:'Chi tiết tin',
+    applicant_profile:'Hồ sơ ứng viên', share_posting:'Chia sẻ tin',
+    copy_link:'Sao chép link', kakao_share:'KakaoTalk', share_more:'Chia sẻ thêm (SNS/SMS)',
+    send_btn:'Gửi', chat_msg_placeholder:'Nhập tin nhắn',
+    form_post_new:'Đăng tin', form_post_edit:'Sửa tin',
+    job_type_alba:'Thông thường', job_type_technical:'Kỹ thuật', job_type_care:'Chăm sóc',
+    form_category_label:'Ngành', form_needed_label:'Số người cần', form_wage_label:'Lương/giờ (₩)',
+    form_days_label:'Ngày làm', form_start_date:'Ngày bắt đầu', form_end_date:'Ngày kết thúc',
+    form_start_time:'Giờ bắt đầu', form_end_time:'Giờ kết thúc',
+    form_duration_label:'Dự kiến thời gian', form_desc_label:'Mô tả',
+    form_submit_post:'Đăng tin ngay', form_submit_edit:'Lưu thay đổi',
+    same_day_label:'Thanh toán ngay hôm đó', surge_mode_label:'Chế độ Flash',
+    premium_label:'Nổi bật Premium', age_limit_label:'Chỉ từ 18 tuổi trở lên',
+    loc_tab_place:'Địa điểm', loc_tab_addr:'Tìm địa chỉ', loc_tab_direct:'Nhập tay',
+    work_type_spot:'Một lần', work_type_short:'Ngắn hạn', work_type_regular:'Thường xuyên',
+    status_open_label:'Đang tuyển', status_closed_label:'Đã đóng', status_expired_label:'Hết hạn',
   },
   ru: {
     nav_map:'Карта', nav_swipe:'Свайп', nav_applications:'Заявки', nav_chats:'Чат', nav_profile:'Профиль',
@@ -318,6 +467,35 @@ const TRANSLATIONS = {
     noti_chat:'Уведомления чата', noti_chat_desc:'При получении сообщений',
     noti_status:'Уведомления о приёме', noti_status_desc:'При изменении статуса заявки',
     biz_name_label:'Название заведения', biz_desc_label:'О заведении', biz_photo_title:'Фото заведения',
+    owner_badge:'Работодатель', owner_account:'Аккаунт работодателя',
+    tab_my_postings:'Мои вакансии', tab_applicants:'Кандидаты',
+    stat_open:'Набор', stat_total_applicants:'Всего заявок', stat_confirmed:'Подтверждено',
+    section_my_postings:'Список вакансий', section_all_applicants:'Все кандидаты',
+    community_title:'Сообщество', community_desc_owner:'Для работодателей · Вакансии',
+    owner_biz_section:'О бизнесе', biz_photo_hint:'(Макс. 5 · Первое главное)',
+    biz_add_photo:'+ Добавить фото', owner_places_section:'Мои места',
+    owner_places_hint:'Добавьте места для быстрого выбора при создании вакансии',
+    owner_plan_section:'Тариф', lang_section:'Язык',
+    plan_free_name:'Бесплатный план', plan_free_desc:'До 3 вакансий, стандарт',
+    plan_basic_name:'Базовый план', plan_basic_desc:'10 вакансий, фильтр, статистика',
+    plan_pro_name:'Про план ⚡', plan_pro_desc:'Безлимит, премиум, AI',
+    owner_map_hint:'Нажмите маркер для просмотра вакансии',
+    chats_panel:'Список чатов', posting_detail_title:'Детали вакансии',
+    applicant_profile:'Профиль кандидата', share_posting:'Поделиться вакансией',
+    copy_link:'Копировать ссылку', kakao_share:'KakaoTalk', share_more:'Ещё поделиться',
+    send_btn:'Отправить', chat_msg_placeholder:'Введите сообщение',
+    form_post_new:'Создать вакансию', form_post_edit:'Редактировать',
+    job_type_alba:'Обычная работа', job_type_technical:'Специалист', job_type_care:'Уход',
+    form_category_label:'Отрасль', form_needed_label:'Кол-во человек', form_wage_label:'Ставка (₩)',
+    form_days_label:'Рабочие дни', form_start_date:'Дата начала', form_end_date:'Дата окончания',
+    form_start_time:'Время начала', form_end_time:'Время конца',
+    form_duration_label:'Ожид. длит.', form_desc_label:'Описание',
+    form_submit_post:'Опубликовать', form_submit_edit:'Сохранить изменения',
+    same_day_label:'Расчёт в день работы', surge_mode_label:'Срочный режим',
+    premium_label:'Премиум показ', age_limit_label:'Только 18+',
+    loc_tab_place:'Место', loc_tab_addr:'Адрес', loc_tab_direct:'Вручную',
+    work_type_spot:'Разовая', work_type_short:'Краткосрочная', work_type_regular:'Постоянная',
+    status_open_label:'Открыт', status_closed_label:'Закрыт', status_expired_label:'Истёк',
   },
 };
 
@@ -421,26 +599,45 @@ function applyLang() {
   si('worker-delete-btn', 'withdraw');
   si('owner-delete-btn',  'withdraw');
 
-  // ── 알바생 앱 전용 ──────────────────────────────────────────
-  // 하단 내비 레이블
+  // ── 앱별 내비 레이블 ──────────────────────────────────────────
   const navLabels = document.querySelectorAll('.nav-label');
-  const navKeys = ['nav_map','nav_swipe','nav_applications','nav_chats','nav_profile'];
-  navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
-
-  // 서브탭
-  si('subtab-status', 'tab_status');
-  const sbm = document.getElementById('subtab-bookmarks');
-  if (sbm) sbm.textContent = t('tab_bookmarks');
-
-  // 검색 placeholder
-  const si2 = document.getElementById('search-input');
-  if (si2) si2.placeholder = t('search_placeholder');
-  const jsi = document.getElementById('job-search-input');
-  if (jsi) jsi.placeholder = t('job_search_placeholder');
-
-  // 지도 로딩 텍스트
-  const lt = document.querySelector('.loading-txt');
-  if (lt) lt.textContent = t('loading');
+  if (document.getElementById('panel-owner-map')) {
+    // ── 업주 앱 전용 ─────────────────────────────────────────────
+    const ownerNavKeys = ['nav_map','tab_my_postings','tab_applicants','nav_chats','nav_profile'];
+    navLabels.forEach((el, i) => { if (ownerNavKeys[i]) el.textContent = t(ownerNavKeys[i]); });
+    // 탭 버튼
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    if (tabBtns[0]) tabBtns[0].textContent = t('tab_my_postings');
+    if (tabBtns[1]) tabBtns[1].textContent = t('tab_applicants');
+    // 통계 라벨
+    const statLabels = document.querySelectorAll('.stat-label');
+    const statKeys = ['stat_open','stat_total_applicants','stat_confirmed'];
+    statLabels.forEach((el, i) => { if (statKeys[i]) el.textContent = t(statKeys[i]); });
+    // 공고 폼 — 근무형태 버튼
+    [['wt-spot','work_type_spot'],['wt-short','work_type_short'],['wt-regular','work_type_regular']].forEach(([id, key]) => si(id, key));
+    // 공고 폼 — 위치 탭
+    const lt1 = document.getElementById('loc-tab-1'); if (lt1) lt1.textContent = '🏠 ' + t('loc_tab_place');
+    const lt2 = document.getElementById('loc-tab-2'); if (lt2) lt2.textContent = '🗺 ' + t('loc_tab_addr');
+    const lt3 = document.getElementById('loc-tab-3'); if (lt3) lt3.textContent = '✏️ ' + t('loc_tab_direct');
+    // 채팅 placeholder
+    const ci = document.getElementById('chat-input'); if (ci) ci.placeholder = t('chat_msg_placeholder');
+  } else {
+    // ── 알바생 앱 전용 ────────────────────────────────────────────
+    const navKeys = ['nav_map','nav_swipe','nav_applications','nav_chats','nav_profile'];
+    navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
+    // 서브탭
+    si('subtab-status', 'tab_status');
+    const sbm = document.getElementById('subtab-bookmarks');
+    if (sbm) sbm.textContent = t('tab_bookmarks');
+    // 검색 placeholder
+    const si2 = document.getElementById('search-input');
+    if (si2) si2.placeholder = t('search_placeholder');
+    const jsi = document.getElementById('job-search-input');
+    if (jsi) jsi.placeholder = t('job_search_placeholder');
+    // 지도 로딩 텍스트
+    const lt = document.querySelector('.loading-txt');
+    if (lt) lt.textContent = t('loading');
+  }
 
   // 카테고리 칩
   const allChip = document.querySelector('[data-cat=""]');
