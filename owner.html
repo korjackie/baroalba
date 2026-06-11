@@ -727,9 +727,19 @@
 
 <!-- 마이페이지 패널 -->
 <div class="full-panel" id="panel-owner-settings">
-  <div class="panel-header" style="display:flex;align-items:center;gap:10px">
-    <button onclick="setNav(document.querySelectorAll('.nav-item')[0],'postings')" style="background:none;border:none;font-size:22px;cursor:pointer;line-height:1;color:#555;padding:0 4px 0 0">←</button>
-    <span>마이페이지</span>
+  <!-- 프로필 헤더 (뒤로가기 없는 탭 스타일) -->
+  <div style="background:#fff;padding:env(safe-area-inset-top,16px) 20px 18px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:14px;padding-top:max(env(safe-area-inset-top),16px)">
+    <div style="width:58px;height:58px;border-radius:50%;background:#f4f4f4;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid #eee">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:11px;color:#bbb;font-weight:700;letter-spacing:0.5px;margin-bottom:3px">업주 계정</div>
+      <div style="font-size:17px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="settings-name">-</div>
+      <div style="font-size:12px;color:#aaa;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="settings-email">-</div>
+    </div>
   </div>
   <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
       <!-- 커뮤니티 게시판 -->
@@ -743,13 +753,6 @@
         </div>
         <span style="font-size:18px;color:#FFB3B3">›</span>
       </a>
-
-      <!-- 내 정보 -->
-      <div style="background:#f8f8f8;border-radius:14px;padding:14px">
-        <div style="font-size:12px;color:#aaa;font-weight:700;margin-bottom:4px">업주 계정</div>
-        <div style="font-size:15px;font-weight:800;color:#222" id="settings-name">-</div>
-        <div style="font-size:12px;color:#aaa;margin-top:2px" id="settings-email">-</div>
-      </div>
       <!-- 업체 정보 편집 -->
       <div style="background:#f8f8f8;border-radius:14px;padding:14px">
         <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">&#127978; 업체 정보</div>
