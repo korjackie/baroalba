@@ -3395,11 +3395,16 @@ function renderSwipeStack() {
   document.getElementById('swipe-counter').textContent = remaining > 0 ? `${remaining}개 남음` : '';
 
   if (remaining === 0) {
-    stack.innerHTML = `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;text-align:center;gap:12px">
-      <div style="font-size:56px">\u{1F389}</div>
-      <div style="font-size:18px;font-weight:800;color:#555">주변 알바 다 봤어요!</div>
-      <div style="font-size:13px">반경을 넓히거나 내일 다시 확인해보세요</div>
-      <button onclick="swipeIdx=0;renderSwipeStack()" style="margin-top:8px;padding:12px 24px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer">다시 보기</button>
+    stack.innerHTML = `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:32px">
+      <div style="width:80px;height:80px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;margin-bottom:4px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FF4B4B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div style="font-size:18px;font-weight:900;color:#222">주변 알바 다 봤어요!</div>
+      <div style="font-size:13px;color:#aaa;line-height:1.6">반경을 넓히거나<br>내일 다시 확인해보세요</div>
+      <button onclick="swipeIdx=0;renderSwipeStack()" style="margin-top:12px;padding:13px 32px;background:var(--red);color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:-0.3px">다시 보기</button>
     </div>`;
     return;
   }
@@ -3425,7 +3430,7 @@ function makeSwipeCard(job, isTop) {
   card.dataset.jobId = job.id;
   const bg = CAT_BG[job.category] || '#f5f5f5';
   const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
-  const dist = job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
+  const dist = (job.distance_m == null || isNaN(job.distance_m)) ? '위치확인중' : job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
 
   // 날짜/시간 포맷
   let dateStr = '날짜 미정', timeStr = '';
@@ -3503,7 +3508,7 @@ function makeSwipeCard(job, isTop) {
       <div style="background:#FFF5F5;border-radius:14px;padding:14px 16px;margin-bottom:12px">
         <div style="display:flex;align-items:baseline;gap:6px">
           <span style="font-size:36px;font-weight:900;color:var(--red)">${job.current_wage.toLocaleString()}</span>
-          <span style="font-size:16px;font-weight:700;color:var(--red)">원/시</span>
+          <span style="font-size:16px;font-weight:700;color:var(--red)">원/시간</span>
           ${hasSurge ? `<span style="font-size:12px;font-weight:800;color:#FF9500;background:#FFF3E0;padding:3px 8px;border-radius:8px;margin-left:4px">↑ ${job.wage_delta.toLocaleString()}원</span>` : ''}
         </div>
         ${job.duration_hours ? `<div style="font-size:13px;color:#888;font-weight:700;margin-top:4px">총 ${Math.round(job.current_wage * job.duration_hours).toLocaleString()}원 예상</div>` : ''}
