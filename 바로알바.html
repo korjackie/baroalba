@@ -924,7 +924,7 @@
 
 <!-- 내 위치 플로팅 버튼 -->
 <button id="map-loc-btn" onclick="moveToMyLocation()" title="내 위치로"
-  style="position:fixed;right:16px;bottom:calc(var(--nav-h) + var(--sheet-peek) + 16px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;-webkit-tap-highlight-color:transparent">
+  style="position:fixed;right:16px;bottom:calc(var(--nav-h) + var(--sheet-peek) + 16px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
     <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/>
   </svg>
@@ -1286,7 +1286,7 @@
             <!-- 포트폴리오 사진 (최대 5장) -->
             <div style="background:#f8f8f8;border-radius:12px;padding:12px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-                <div data-i18n="portfolio_title" style="font-size:12px;font-weight:800;color:#555">포트폴리오 사진</div>
+                <div data-i18n="portfolio_title" style="font-size:12px;font-weight:800;color:#555">프로필 및 포트폴리오 사진</div>
                 <span id="worker-photos-count" style="font-size:11px;color:#aaa;font-weight:600">0/5</span>
               </div>
               <div id="worker-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
@@ -1409,8 +1409,8 @@
           </div>
           <div style="padding:14px;background:#f8f8f8;border-radius:12px">
             <div style="font-size:12px;color:#777;line-height:1.75;margin-bottom:12px">
-              보건증 · 운전면허증 · 식품위생사 자격증 · 위생교육 수료증 · 바리스타 · 요양보호사 등<br>
-              <strong style="color:#444">업무 관련 자격 및 증빙서류</strong>를 자유롭게 추가하세요.
+              <strong style="color:#444">업무 관련 자격 및 증빙서류</strong>를 자유롭게 추가하세요.<br>
+              <span style="color:#aaa">ex) 운전면허증, 보건증, 식품위생사 자격증, 위생교육 수료증, 바리스타, 요양보호사 등</span>
             </div>
             <div id="other-cert-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
             <div style="display:flex;gap:8px;align-items:center">
@@ -1505,7 +1505,7 @@
         <!-- 통합 저장/취소 (프로필 + 언어 한번에) -->
         <div style="display:flex;gap:8px;margin-bottom:14px">
           <button id="worker-cancel-profile-btn" onclick="openProfile()" style="flex:1;padding:14px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
-          <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+          <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="flex:1;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
         </div>
 
         <div style="display:flex;gap:12px;margin-bottom:14px">
@@ -4010,68 +4010,72 @@ async function loadWorkerPhotos() {
   _renderWorkerPhotos(photos || [], w.id);
 }
 
+let _wPhotos = [], _wDragSrcId = null;
+
 function _renderWorkerPhotos(photos, workerId) {
+  _wPhotos = photos;
   const grid = document.getElementById('worker-photos-grid');
   const addBtn = document.getElementById('worker-photos-add-btn');
   const countEl = document.getElementById('worker-photos-count');
   if (!grid) return;
   countEl.textContent = `${photos.length}/5`;
-  grid.innerHTML = photos.map(p => `
-    <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb">
-      <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">
-      ${p.is_main ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,75,75,0.85);color:#fff;font-size:10px;font-weight:800;text-align:center;padding:3px">메인</div>' : `<button onclick="setMainWorkerPhoto('${p.id}','${workerId}')" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:10px;font-weight:700;border:none;cursor:pointer;padding:3px">메인 설정</button>`}
-      <button onclick="deleteWorkerPhoto('${p.id}','${workerId}')" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+  grid.innerHTML = photos.map((p, i) => `
+    <div draggable="true"
+      ondragstart="wPhotoDragStart(event,'${p.id}')"
+      ondragover="wPhotoDragOver(event)"
+      ondragenter="wPhotoDragEnter(event,this)"
+      ondragleave="wPhotoDragLeave(event,this)"
+      ondrop="wPhotoDrop(event,'${p.id}',this)"
+      style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb;cursor:grab">
+      <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
+      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;pointer-events:none">${i+1}</span>
+      <button onclick="event.stopPropagation();deleteWorkerPhoto('${p.id}')" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
     </div>`).join('');
   addBtn.style.display = photos.length < 5 ? 'flex' : 'none';
+}
+
+function wPhotoDragStart(e, photoId) { _wDragSrcId = photoId; e.dataTransfer.effectAllowed = 'move'; }
+function wPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function wPhotoDragEnter(e, el) { e.preventDefault(); if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #FF4B4B'; el.style.outlineOffset = '-3px'; } }
+function wPhotoDragLeave(e, el) { if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; } }
+async function wPhotoDrop(e, photoId, el) {
+  e.preventDefault();
+  el.style.outline = ''; el.style.outlineOffset = '';
+  if (!_wDragSrcId || _wDragSrcId === photoId) { _wDragSrcId = null; return; }
+  const src = _wPhotos.find(p => p.id === _wDragSrcId);
+  const dst = _wPhotos.find(p => p.id === photoId);
+  if (!src || !dst) { _wDragSrcId = null; return; }
+  await Promise.all([
+    db.from('worker_photos').update({ sort_order: dst.sort_order }).eq('id', src.id),
+    db.from('worker_photos').update({ sort_order: src.sort_order }).eq('id', dst.id),
+  ]);
+  _wDragSrcId = null;
+  loadWorkerPhotos();
 }
 
 async function uploadWorkerPhoto(input) {
   const file = input.files[0];
   if (!file || !currentUser) { input.value = ''; return; }
   input.value = '';
-  let { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!w) {
-    // workers 레코드가 없으면 먼저 저장하라고 안내
-    showToast('프로필을 먼저 저장해주세요');
-    return;
-  }
+  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!w) { showToast('프로필을 먼저 저장해주세요'); return; }
   const { count } = await db.from('worker_photos').select('id', { count: 'exact', head: true }).eq('worker_id', w.id);
   if ((count || 0) >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
-
   openCropModal(file, async blob => {
     showToast('업로드 중...');
     const path = `${currentUser.id}/portfolio_${Date.now()}.jpg`;
-    const { error: upErr } = await db.storage.from('avatars').upload(path, blob, { upsert: false, contentType: 'image/jpeg' });
+    const { error: upErr } = await db.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg' });
     if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
     const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
-    const isFirst = (count || 0) === 0;
-    const { error: dbErr } = await db.from('worker_photos').insert({ worker_id: w.id, photo_url: publicUrl, is_main: isFirst, sort_order: count || 0 });
+    const { error: dbErr } = await db.from('worker_photos').insert({ worker_id: w.id, photo_url: publicUrl, is_main: false, sort_order: count || 0 });
     if (dbErr) { showToast('사진 등록 실패: ' + dbErr.message); return; }
     showToast('✅ 사진이 등록됐습니다');
     loadWorkerPhotos();
   });
 }
 
-async function setMainWorkerPhoto(photoId, workerId) {
-  await db.from('worker_photos').update({ is_main: false }).eq('worker_id', workerId);
-  await db.from('worker_photos').update({ is_main: true }).eq('id', photoId);
-  // workers.photo_url도 동기화
-  const { data: p } = await db.from('worker_photos').select('photo_url').eq('id', photoId).single();
-  if (p?.photo_url) await db.from('workers').update({ photo_url: p.photo_url }).eq('id', workerId);
-  loadWorkerPhotos();
-}
-
-async function deleteWorkerPhoto(photoId, workerId) {
-  const { data: p } = await db.from('worker_photos').select('is_main').eq('id', photoId).single();
+async function deleteWorkerPhoto(photoId) {
   await db.from('worker_photos').delete().eq('id', photoId);
-  if (p?.is_main) {
-    // 메인이었으면 남은 첫 번째를 메인으로
-    const { data: first } = await db.from('worker_photos').select('id,photo_url').eq('worker_id', workerId).order('sort_order').limit(1).single();
-    if (first) {
-      await db.from('worker_photos').update({ is_main: true }).eq('id', first.id);
-      await db.from('workers').update({ photo_url: first.photo_url }).eq('id', workerId);
-    }
-  }
   loadWorkerPhotos();
 }
 
