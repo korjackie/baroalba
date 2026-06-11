@@ -1405,10 +1405,6 @@
               <div id="lang-other-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
             </div>
 
-            <div style="display:flex;gap:8px">
-              <button id="worker-cancel-profile-btn" onclick="openProfile()" style="flex:1;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
-              <button id="worker-save-profile-btn" onclick="saveWorkerProfile()" style="flex:2;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
-            </div>
           </div>
         </div>
 
@@ -1535,7 +1531,6 @@
               <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">업체 소개</div>
               <textarea id="owner-biz-desc" placeholder="업체나 사업장을 간단히 소개해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
             </div>
-            <button onclick="saveOwnerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
           </div>
         </div>
 
@@ -1565,7 +1560,6 @@
             <button id="lang-vi-btn" onclick="selectLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127483;&#127475; Tiếng Việt</button>
             <button id="lang-ru-btn" onclick="selectLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127479;&#127482; Русский</button>
           </div>
-          <button id="lang-save-btn" onclick="saveLang()" style="width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">언어 저장하기</button>
         </div>
 
         <!-- 알림 수신 설정 -->
@@ -1597,6 +1591,12 @@
               </label>
             </div>
           </div>
+        </div>
+
+        <!-- 통합 저장/취소 (프로필 + 언어 한번에) -->
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button id="worker-cancel-profile-btn" onclick="openProfile()" style="flex:1;padding:14px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
+          <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
         </div>
 
         <div style="display:flex;gap:12px;margin-bottom:14px">
@@ -4111,7 +4111,7 @@ function _renderWorkerPhotos(photos, workerId) {
   countEl.textContent = `${photos.length}/5`;
   grid.innerHTML = photos.map(p => `
     <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb">
-      <img src="${p.url}" style="width:100%;height:100%;object-fit:cover">
+      <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">
       ${p.is_main ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,75,75,0.85);color:#fff;font-size:10px;font-weight:800;text-align:center;padding:3px">메인</div>' : `<button onclick="setMainWorkerPhoto('${p.id}','${workerId}')" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:10px;font-weight:700;border:none;cursor:pointer;padding:3px">메인 설정</button>`}
       <button onclick="deleteWorkerPhoto('${p.id}','${workerId}')" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
     </div>`).join('');
@@ -4134,7 +4134,7 @@ async function uploadWorkerPhoto(input) {
     if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
     const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
     const isFirst = (count || 0) === 0;
-    await db.from('worker_photos').insert({ worker_id: w.id, url: publicUrl, is_main: isFirst, sort_order: count || 0 });
+    await db.from('worker_photos').insert({ worker_id: w.id, photo_url: publicUrl, is_main: isFirst, sort_order: count || 0 });
     showToast('✅ 사진이 등록됐습니다');
     loadWorkerPhotos();
   });
@@ -4144,8 +4144,8 @@ async function setMainWorkerPhoto(photoId, workerId) {
   await db.from('worker_photos').update({ is_main: false }).eq('worker_id', workerId);
   await db.from('worker_photos').update({ is_main: true }).eq('id', photoId);
   // workers.photo_url도 동기화
-  const { data: p } = await db.from('worker_photos').select('url').eq('id', photoId).single();
-  if (p?.url) await db.from('workers').update({ photo_url: p.url }).eq('id', workerId);
+  const { data: p } = await db.from('worker_photos').select('photo_url').eq('id', photoId).single();
+  if (p?.photo_url) await db.from('workers').update({ photo_url: p.photo_url }).eq('id', workerId);
   loadWorkerPhotos();
 }
 
@@ -4382,9 +4382,10 @@ async function saveWorkerProfile() {
   } else if (!error) {
     showToast('✅ 프로필이 저장됐습니다');
   }
-  if (error) { showToast('저장 실패: ' + error.message); return; }
+  if (error) { showToast('저장 실패: ' + error.message); return false; }
   loadWorkerGrade();
   updateProfileCompletion();
+  return true;
 }
 
 async function loadOwnerProfileForm() {
@@ -4402,11 +4403,20 @@ async function saveOwnerProfile() {
   const name = document.getElementById('owner-biz-name').value.trim();
   const phone = document.getElementById('owner-biz-phone').value.trim();
   const description = document.getElementById('owner-biz-desc').value.trim();
-  if (!name) { showToast('업체명을 입력해주세요'); return; }
+  if (!name) { showToast('업체명을 입력해주세요'); return false; }
   const { error } = await db.from('businesses')
     .update({ name, phone, description }).eq('kakao_uid', currentUser.id);
-  if (error) { showToast('저장 실패: ' + error.message); return; }
-  showToast('✅ 업체 정보가 저장됐습니다');
+  if (error) { showToast('저장 실패: ' + error.message); return false; }
+  return true;
+}
+
+async function saveAllProfileSettings() {
+  if (!currentUser) return;
+  currentLang = _pendingLang;
+  localStorage.setItem('baroalba_lang', currentLang);
+  const role = currentUser?.user_metadata?.baroalba_role;
+  const ok = role === 'business' ? await saveOwnerProfile() : await saveWorkerProfile();
+  if (ok) location.reload();
 }
 
 function closeProfileIfBg(e) {
