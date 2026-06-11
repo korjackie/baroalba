@@ -1489,7 +1489,7 @@
                 <span id="noti-thumb-chat" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
               </label>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
               <div>
                 <div data-i18n="noti_status" style="font-size:14px;font-weight:700;color:#222">합격/거절 알림</div>
                 <div data-i18n="noti_status_desc" style="font-size:12px;color:#aaa;margin-top:2px">지원 결과 변경 시 알림</div>
@@ -1499,6 +1499,18 @@
                   style="opacity:0;width:0;height:0;position:absolute">
                 <span id="noti-track-status" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
                 <span id="noti-thumb-status" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+              </label>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#222">댓글 알림</div>
+                <div style="font-size:12px;color:#aaa;margin-top:2px">내 게시글에 댓글 달릴 때</div>
+              </div>
+              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+                <input type="checkbox" id="noti-toggle-comment" onchange="saveNotiSetting('comment',this.checked)"
+                  style="opacity:0;width:0;height:0;position:absolute">
+                <span id="noti-track-comment" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+                <span id="noti-thumb-comment" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
               </label>
             </div>
           </div>
@@ -4366,24 +4378,24 @@ function showAvatarTip(inputId) {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
       <div style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
       <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">&#128247; 프로필 사진 안내</div>
-        <div style="font-size:13px;color:#888">좋은 사진은 채용 확률을 높여줍니다</div>
+        <div style="font-size:17px;font-weight:800;color:#222;margin-bottom:4px">&#128247; 프로필 사진 안내</div>
+        <div style="font-size:13px;color:#999;font-weight:400">좋은 사진은 채용 확률을 높여줍니다</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fff4;border-radius:12px">
-          <span>&#9989;</span><span style="font-size:13px;color:#16a34a;font-weight:700">얼굴이 잘 보이는 정면 사진</span>
+          <span>&#9989;</span><span style="font-size:13px;color:#16a34a">얼굴이 잘 보이는 정면 사진</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fff4;border-radius:12px">
-          <span>&#9989;</span><span style="font-size:13px;color:#16a34a;font-weight:700">밝고 깔끔한 배경</span>
+          <span>&#9989;</span><span style="font-size:13px;color:#16a34a">밝고 깔끔한 배경</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff0f0;border-radius:12px">
-          <span>&#10060;</span><span style="font-size:13px;color:#EF4444;font-weight:700">단체 사진 · 풍경 사진</span>
+          <span>&#10060;</span><span style="font-size:13px;color:#EF4444">단체 사진 · 풍경 사진</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff0f0;border-radius:12px">
-          <span>&#10060;</span><span style="font-size:13px;color:#EF4444;font-weight:700">선글라스 · 마스크 착용 사진</span>
+          <span>&#10060;</span><span style="font-size:13px;color:#EF4444">선글라스 · 마스크 착용 사진</span>
         </div>
       </div>
-      <button onclick="document.getElementById('avatar-tip-overlay').remove();document.getElementById('${inputId}').click()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer">&#128247; 사진 선택하기</button>
+      <button onclick="document.getElementById('avatar-tip-overlay').remove();document.getElementById('${inputId}').click()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
     </div>`;
   document.body.appendChild(el);
 }
@@ -4394,14 +4406,14 @@ function showDisclaimerSheet(onConfirm) {
   el.innerHTML = `
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
       <div style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
-      <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">&#9888;&#65039; 서비스 이용 동의</div>
-      <div style="font-size:13px;color:#888;margin-bottom:16px">아래 내용을 확인하고 동의해주세요</div>
+      <div style="font-size:17px;font-weight:800;color:#222;margin-bottom:4px">&#9888;&#65039; 서비스 이용 동의</div>
+      <div style="font-size:13px;color:#999;font-weight:400;margin-bottom:16px">아래 내용을 확인하고 동의해주세요</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#444;line-height:1.6">&#128286; 만 19세 이상만 이용 가능합니다</div>
-        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#444;line-height:1.6">&#128683; 주류·담배·의약품 대리 구매 등 불법 심부름 매칭 시 즉시 계정 정지</div>
-        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#444;line-height:1.6">&#128274; 타인 개인정보 유출 및 사기 행위 엄격 금지</div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128286; 만 19세 이상만 이용 가능합니다</div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128683; 주류·담배·의약품 대리 구매 등 불법 매칭 시 즉시 계정 정지</div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128274; 타인 개인정보 유출 및 사기 행위 금지</div>
       </div>
-      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer">동의하고 저장하기</button>
+      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">동의하고 저장하기</button>
     </div>`;
   document.body.appendChild(el);
   el.querySelector('#disclaimer-ok-btn').onclick = () => { el.remove(); if (onConfirm) onConfirm(); };
@@ -4449,7 +4461,7 @@ function saveNotiSetting(key, val) {
   if (thumb) thumb.style.transform = val ? 'translateX(20px)' : 'translateX(0)';
 }
 function initNotiToggles() {
-  ['chat','status'].forEach(key => {
+  ['chat','status','comment'].forEach(key => {
     const on = localStorage.getItem('baro_noti_' + key) !== '0'; // default ON
     const el = document.getElementById('noti-toggle-' + key);
     if (el) el.checked = on;
@@ -4626,7 +4638,7 @@ async function _fetchWorkerNotifications() {
 
   // 커뮤니티 댓글 알림 (내 게시글에 달린 새 댓글)
   const lastSeen = parseInt(localStorage.getItem(_notiKey()) || '0');
-  if (w.id && lastSeen > 0) {
+  if (w.id && lastSeen > 0 && getNotiSetting('comment')) {
     try {
       const { data: myPosts } = await db.from('community_posts')
         .select('id, title').eq('worker_id', w.id).eq('is_deleted', false);
