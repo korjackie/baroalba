@@ -20,6 +20,8 @@
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
   <!-- 카카오 공유 SDK (Kakao.Share) — 지도 SDK(kakao.maps)와 별도 네임스페이스 -->
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -1073,6 +1075,26 @@
   </div>
 </div>
 
+<!-- 사진 크롭 모달 -->
+<div class="modal-overlay" id="crop-modal" style="z-index:2000;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:360px;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:800;color:#222">사진 편집</div>
+      <button onclick="closeCropModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:16px">
+      <div style="width:100%;background:#000;border-radius:12px;overflow:hidden;max-height:300px">
+        <img id="crop-source" style="display:block;max-width:100%">
+      </div>
+      <div style="font-size:12px;color:#aaa;text-align:center;margin:10px 0 14px">드래그로 이동, 핀치로 확대/축소</div>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeCropModal()" style="flex:1;padding:13px;background:#f5f5f5;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:#555">취소</button>
+        <button onclick="applyCrop()" style="flex:2;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 신고 모달 -->
 <div class="modal-overlay" id="report-modal" onclick="if(event.target===this)closeReportModal()" style="z-index:1100;align-items:flex-end">
   <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
@@ -1244,12 +1266,24 @@
             <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f8f8f8;border-radius:12px">
               <div id="avatar-preview" style="width:64px;height:64px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px">&#128100;</div>
               <div style="flex:1">
-                <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:6px">프로필 사진</div>
+                <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:6px">프로필 사진 (메인)</div>
                 <label style="display:inline-block;padding:7px 14px;background:var(--red);color:#fff;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">
                   사진 변경
                   <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
                 </label>
               </div>
+            </div>
+            <!-- 포트폴리오 사진 (최대 5장) -->
+            <div style="background:#f8f8f8;border-radius:12px;padding:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:12px;font-weight:800;color:#555">포트폴리오 사진</div>
+                <span id="worker-photos-count" style="font-size:11px;color:#aaa;font-weight:600">0/5</span>
+              </div>
+              <div id="worker-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+              <label id="worker-photos-add-btn" style="display:flex;align-items:center;justify-content:center;height:72px;background:#fff;border:2px dashed #ddd;border-radius:10px;cursor:pointer;margin-top:6px">
+                <span style="font-size:28px;color:#ccc;line-height:1">+</span>
+                <input type="file" accept="image/*" style="display:none" onchange="uploadWorkerPhoto(this)">
+              </label>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">생년월일</label>
@@ -3966,6 +4000,8 @@ async function loadWorkerProfileForm() {
     const preview = document.getElementById('avatar-preview');
     if (preview) preview.innerHTML = `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover">`;
   }
+  // 포트폴리오 사진 로드
+  loadWorkerPhotos().catch(() => {});
   // 증빙서류 상태 확인
   const { data: certFiles } = await db.storage.from('health-certs').list(currentUser.id);
   if (certFiles?.length) {
@@ -4126,24 +4162,138 @@ function updateAgePreview(val) {
   preview.textContent = age ? `만 ${age}세` : '';
 }
 
+// ── 크롭 모달 ────────────────────────────────────────
+let _cropper = null;
+let _cropCallback = null;
+
+function openCropModal(file, callback) {
+  if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('crop-source');
+    img.src = e.target.result;
+    document.getElementById('crop-modal').style.display = 'flex';
+    if (_cropper) { _cropper.destroy(); _cropper = null; }
+    img.onload = () => {
+      _cropper = new Cropper(img, {
+        aspectRatio: 1,
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 0.85,
+        guides: false,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+      });
+    };
+    _cropCallback = callback;
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeCropModal() {
+  document.getElementById('crop-modal').style.display = 'none';
+  if (_cropper) { _cropper.destroy(); _cropper = null; }
+  _cropCallback = null;
+}
+
+function applyCrop() {
+  if (!_cropper || !_cropCallback) return;
+  const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });
+  canvas.toBlob(blob => {
+    closeCropModal();
+    _cropCallback(blob);
+  }, 'image/jpeg', 0.88);
+}
+
 // ── Storage 업로드 ────────────────────────────────────
 async function uploadAvatar(input) {
   const file = input.files[0];
-  if (!file || !currentUser) return;
-  if (file.size > 5 * 1024 * 1024) { showToast('5MB 이하 이미지만 업로드 가능합니다'); return; }
-  showToast('업로드 중...');
-  const ext = file.name.split('.').pop();
-  const path = `${currentUser.id}/avatar.${ext}`;
-  const { error } = await db.storage.from('avatars').upload(path, file, { upsert: true });
-  if (error) { showToast('업로드 실패: ' + error.message); return; }
-  const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
-  await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
-  const preview = document.getElementById('avatar-preview');
-  if (preview) { preview.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`; }
-  // 헤더 아바타도 갱신
-  const hdr = document.getElementById('profile-avatar');
-  if (hdr) hdr.src = publicUrl + '?t=' + Date.now();
-  showToast('✅ 프로필 사진이 업데이트됐습니다');
+  if (!file || !currentUser) { input.value = ''; return; }
+  input.value = '';
+  openCropModal(file, async blob => {
+    showToast('업로드 중...');
+    const path = `${currentUser.id}/avatar.jpg`;
+    const { error } = await db.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if (error) { showToast('업로드 실패: ' + error.message); return; }
+    const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
+    await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
+    const preview = document.getElementById('avatar-preview');
+    if (preview) preview.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`;
+    const hdr = document.getElementById('profile-avatar');
+    if (hdr) hdr.src = publicUrl + '?t=' + Date.now();
+    showToast('✅ 프로필 사진이 업데이트됐습니다');
+  });
+}
+
+// ── 포트폴리오 사진 (다중, 최대 5장) ─────────────────────
+async function loadWorkerPhotos() {
+  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!w) return;
+  const { data: photos } = await db.from('worker_photos').select('*').eq('worker_id', w.id).order('sort_order');
+  _renderWorkerPhotos(photos || [], w.id);
+}
+
+function _renderWorkerPhotos(photos, workerId) {
+  const grid = document.getElementById('worker-photos-grid');
+  const addBtn = document.getElementById('worker-photos-add-btn');
+  const countEl = document.getElementById('worker-photos-count');
+  if (!grid) return;
+  countEl.textContent = `${photos.length}/5`;
+  grid.innerHTML = photos.map(p => `
+    <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb">
+      <img src="${p.url}" style="width:100%;height:100%;object-fit:cover">
+      ${p.is_main ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,75,75,0.85);color:#fff;font-size:10px;font-weight:800;text-align:center;padding:3px">메인</div>' : `<button onclick="setMainWorkerPhoto('${p.id}','${workerId}')" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:10px;font-weight:700;border:none;cursor:pointer;padding:3px">메인 설정</button>`}
+      <button onclick="deleteWorkerPhoto('${p.id}','${workerId}')" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`).join('');
+  addBtn.style.display = photos.length < 5 ? 'flex' : 'none';
+}
+
+async function uploadWorkerPhoto(input) {
+  const file = input.files[0];
+  if (!file || !currentUser) { input.value = ''; return; }
+  input.value = '';
+  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!w) return;
+  const { count } = await db.from('worker_photos').select('id', { count: 'exact', head: true }).eq('worker_id', w.id);
+  if ((count || 0) >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
+
+  openCropModal(file, async blob => {
+    showToast('업로드 중...');
+    const path = `${currentUser.id}/portfolio_${Date.now()}.jpg`;
+    const { error: upErr } = await db.storage.from('avatars').upload(path, blob, { upsert: false, contentType: 'image/jpeg' });
+    if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
+    const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
+    const isFirst = (count || 0) === 0;
+    await db.from('worker_photos').insert({ worker_id: w.id, url: publicUrl, is_main: isFirst, sort_order: count || 0 });
+    showToast('✅ 사진이 등록됐습니다');
+    loadWorkerPhotos();
+  });
+}
+
+async function setMainWorkerPhoto(photoId, workerId) {
+  await db.from('worker_photos').update({ is_main: false }).eq('worker_id', workerId);
+  await db.from('worker_photos').update({ is_main: true }).eq('id', photoId);
+  // workers.photo_url도 동기화
+  const { data: p } = await db.from('worker_photos').select('url').eq('id', photoId).single();
+  if (p?.url) await db.from('workers').update({ photo_url: p.url }).eq('id', workerId);
+  loadWorkerPhotos();
+}
+
+async function deleteWorkerPhoto(photoId, workerId) {
+  const { data: p } = await db.from('worker_photos').select('is_main').eq('id', photoId).single();
+  await db.from('worker_photos').delete().eq('id', photoId);
+  if (p?.is_main) {
+    // 메인이었으면 남은 첫 번째를 메인으로
+    const { data: first } = await db.from('worker_photos').select('id,url').eq('worker_id', workerId).order('sort_order').limit(1).single();
+    if (first) {
+      await db.from('worker_photos').update({ is_main: true }).eq('id', first.id);
+      await db.from('workers').update({ photo_url: first.url }).eq('id', workerId);
+    }
+  }
+  loadWorkerPhotos();
 }
 
 const CERT_META = {
