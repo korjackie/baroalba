@@ -1322,8 +1322,14 @@
               <input id="worker-region" type="text" placeholder="예: 서울 강남구" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
             </div>
             <div>
-              <div data-i18n="bio_label" style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">자기소개</div>
-              <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                <div data-i18n="bio_label" style="font-size:12px;color:#888;font-weight:700">자기소개</div>
+                <div id="worker-bio-counter" style="font-size:11px;color:#bbb">0 / 200</div>
+              </div>
+              <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200"
+                oninput="updateBioCounter(this)"
+                style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
+              <div id="worker-bio-hint" style="display:none;font-size:11px;color:#FF4B4B;margin-top:3px">최소 20자 이상 입력해주세요</div>
             </div>
             <div>
               <div data-i18n="exp_label" style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">경력/특기</div>
@@ -1410,9 +1416,8 @@
             <div style="font-size:11px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:8px">업주에게만 공개</div>
           </div>
           <div style="padding:14px;background:#f8f8f8;border-radius:12px">
-            <div style="font-size:12px;color:#777;line-height:1.75;margin-bottom:12px">
-              <strong style="color:#444">업무 관련 자격 및 증빙서류</strong>를 자유롭게 추가하세요.<br>
-              <span style="color:#aaa">ex) 면허증, 보건증, 각종 자격증 등</span>
+            <div style="font-size:12px;color:#777;margin-bottom:12px">
+              <strong style="color:#444">업무 관련 자격 및 증빙서류</strong>를 자유롭게 추가하세요.
             </div>
             <div id="other-cert-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
             <div style="display:flex;gap:8px;align-items:center">
@@ -3840,6 +3845,7 @@ async function loadWorkerProfileForm() {
   const rawPhone = w.phone || meta.phone || '';
   document.getElementById('worker-phone').value = rawPhone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3');
   document.getElementById('worker-bio').value = w.bio || '';
+  updateBioCounter(document.getElementById('worker-bio'));
   document.getElementById('worker-experience').value = w.experience || '';
   document.getElementById('worker-region').value = w.region || '';
   if (w.gender) setGender(w.gender);
@@ -4451,6 +4457,27 @@ async function deleteUserAccount() {
 function goToLogin() {
   localStorage.removeItem('baroalba_guest');
   location.href = '/login.html';
+}
+
+function updateBioCounter(textarea) {
+  const len = textarea.value.length;
+  const counter = document.getElementById('worker-bio-counter');
+  const hint    = document.getElementById('worker-bio-hint');
+  if (!counter) return;
+  counter.textContent = len + ' / 200';
+  if (len === 0) {
+    counter.style.color = '#bbb';
+    if (hint) hint.style.display = 'none';
+    textarea.style.borderColor = '#eee';
+  } else if (len < 20) {
+    counter.style.color = '#FF4B4B';
+    if (hint) hint.style.display = 'block';
+    textarea.style.borderColor = '#FF4B4B';
+  } else {
+    counter.style.color = '#16a34a';
+    if (hint) hint.style.display = 'none';
+    textarea.style.borderColor = '#16a34a';
+  }
 }
 
 function saveNotiSetting(key, val) {
