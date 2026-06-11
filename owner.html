@@ -838,8 +838,14 @@
             <input id="settings-biz-phone" type="tel" placeholder="010-0000-0000" style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;background:#fff">
           </div>
           <div>
-            <label data-i18n="biz_desc_label" style="font-size:12px;color:#888;font-weight:700;display:block;margin-bottom:4px">업체 소개</label>
-            <textarea id="settings-biz-desc" placeholder="업체를 간단히 소개해주세요" maxlength="200" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;box-sizing:border-box;font-family:inherit;background:#fff"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <label data-i18n="biz_desc_label" style="font-size:12px;color:#888;font-weight:700">업체 소개</label>
+              <div id="biz-desc-counter" style="font-size:11px;color:#bbb">0 / 200</div>
+            </div>
+            <textarea id="settings-biz-desc" placeholder="업체를 간단히 소개해주세요" maxlength="200" rows="3"
+              oninput="updateBizDescCounter(this)"
+              style="width:100%;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;box-sizing:border-box;font-family:inherit;background:#fff"></textarea>
+            <div id="biz-desc-hint" style="display:none;font-size:11px;color:#FF4B4B;margin-top:3px">최소 20자 이상 입력해주세요</div>
           </div>
         </div>
       </div>
@@ -3496,6 +3502,7 @@ async function openOwnerSettings() {
     document.getElementById('settings-biz-name').value  = bizRecord?.name || '';
     document.getElementById('settings-biz-phone').value = bizRecord?.phone || '';
     document.getElementById('settings-biz-desc').value  = bizRecord?.description || '';
+    updateBizDescCounter(document.getElementById('settings-biz-desc'));
     const isAdmin = currentUser.email === 'nicepkw@gmail.com';
     document.getElementById('admin-cat-section').style.display = isAdmin ? 'block' : 'none';
     if (isAdmin) renderAdminCatList();
@@ -3532,6 +3539,27 @@ function _updateOwnerCompletion() {
 }
 
 // ── 업주 알림 설정 ─────────────────────────────────────────
+function updateBizDescCounter(textarea) {
+  const len     = textarea.value.length;
+  const counter = document.getElementById('biz-desc-counter');
+  const hint    = document.getElementById('biz-desc-hint');
+  if (!counter) return;
+  counter.textContent = len + ' / 200';
+  if (len === 0) {
+    counter.style.color = '#bbb';
+    if (hint) hint.style.display = 'none';
+    textarea.style.borderColor = '#eee';
+  } else if (len < 20) {
+    counter.style.color = '#FF4B4B';
+    if (hint) hint.style.display = 'block';
+    textarea.style.borderColor = '#FF4B4B';
+  } else {
+    counter.style.color = '#16a34a';
+    if (hint) hint.style.display = 'none';
+    textarea.style.borderColor = '#16a34a';
+  }
+}
+
 function saveOwnerNotiSetting(key, val) {
   localStorage.setItem('owner_noti_' + key, val ? '1' : '0');
   const track = document.getElementById('owner-noti-track-' + key);
@@ -3913,6 +3941,7 @@ async function saveOwnerSettingsProfile() {
   const name  = document.getElementById('settings-biz-name').value.trim();
   const phone = document.getElementById('settings-biz-phone').value.trim();
   const desc  = document.getElementById('settings-biz-desc').value.trim();
+  if (desc.length > 0 && desc.length < 20) { showToast('업체 소개는 20자 이상 입력해주세요'); return; }
   const { error } = await db.from('businesses')
     .update({ name: name || bizRecord.name, phone, description: desc })
     .eq('id', bizRecord.id);
