@@ -879,15 +879,15 @@
       </div>
 
       <!-- 비밀번호 변경 -->
-      <button onclick="toggleOwnerPwForm()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">&#128273; 비밀번호 변경</button>
+      <button id="owner-pw-toggle-btn" onclick="toggleOwnerPwForm()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">비밀번호 변경</button>
       <div id="owner-pw-form" style="display:none;padding:14px;background:#f8f8f8;border-radius:14px">
         <input id="owner-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none">
         <input id="owner-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none">
-        <button onclick="submitOwnerPw()" style="width:100%;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+        <button id="owner-pw-submit-btn" onclick="submitOwnerPw()" style="width:100%;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
       </div>
       <div style="display:flex;gap:12px">
-        <a href="./terms.html" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">이용약관</a>
-        <a href="./terms.html" onclick="localStorage.setItem('terms_tab','privacy')" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">개인정보처리방침</a>
+        <a id="owner-terms-link" href="./terms.html" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">이용약관</a>
+        <a id="owner-privacy-link" href="./terms.html" onclick="localStorage.setItem('terms_tab','privacy')" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">개인정보처리방침</a>
       </div>
       <!-- 언어 설정 -->
       <div style="background:#f8f8f8;border-radius:14px;padding:14px">
@@ -904,12 +904,13 @@
       </div>
       <!-- 저장/취소 -->
       <div style="display:flex;gap:8px;margin-top:4px">
-        <button onclick="openOwnerSettings()" style="flex:1;padding:14px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
-        <button onclick="saveOwnerSettingsProfile()" style="flex:2;padding:14px;background:#FF4B4B;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+        <button id="owner-settings-cancel-btn" onclick="openOwnerSettings()" style="flex:1;padding:14px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
+        <button id="owner-settings-save-btn" onclick="saveOwnerSettingsProfile()" style="flex:2;padding:14px;background:#FF4B4B;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
       </div>
-      <button onclick="logout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">&#128682; 로그아웃</button>
-      <div style="height:1px;background:#f0f0f0"></div>
-      <button onclick="deleteOwnerAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
+      <div style="display:flex;gap:8px">
+        <button id="owner-logout-btn" onclick="logout()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">로그아웃</button>
+        <button id="owner-delete-btn" onclick="deleteOwnerAccount()" style="flex:1;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+      </div>
 
       <!-- 어드민 전용: 업종 카테고리 관리 -->
       <div id="admin-cat-section" style="display:none;border-top:1px solid #f0f0f0;padding-top:12px">
@@ -981,6 +982,7 @@ let editingId = null;
 window.addEventListener('DOMContentLoaded', async () => {
   buildTimeSelects();
   loadCategories();
+  ownerApplyLang();
   const { data: { session } } = await db.auth.getSession();
   if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
@@ -3889,12 +3891,21 @@ const OWNER_LANG_DESC = {
   ko:'현재: 한국어', en:'Current: English', zh:'当前语言: 中文',
   ja:'現在の言語: 日本語', vi:'Ngôn ngữ: Tiếng Việt', ru:'Язык: Русский'
 };
+const OWNER_UI = {
+  ko: { pw_toggle:'비밀번호 변경', pw_submit:'변경하기', terms:'이용약관', privacy:'개인정보처리방침', cancel:'취소', save:'저장하기', logout:'로그아웃', withdraw:'회원 탈퇴' },
+  en: { pw_toggle:'Change Password', pw_submit:'Change', terms:'Terms', privacy:'Privacy Policy', cancel:'Cancel', save:'Save', logout:'Logout', withdraw:'Delete Account' },
+  zh: { pw_toggle:'修改密码', pw_submit:'修改', terms:'使用条款', privacy:'隐私政策', cancel:'取消', save:'保存', logout:'退出登录', withdraw:'注销账户' },
+  ja: { pw_toggle:'パスワード変更', pw_submit:'変更する', terms:'利用規約', privacy:'プライバシー', cancel:'キャンセル', save:'保存する', logout:'ログアウト', withdraw:'退会する' },
+  vi: { pw_toggle:'Đổi mật khẩu', pw_submit:'Đổi', terms:'Điều khoản', privacy:'Chính sách', cancel:'Hủy', save:'Lưu', logout:'Đăng xuất', withdraw:'Xóa tài khoản' },
+  ru: { pw_toggle:'Сменить пароль', pw_submit:'Изменить', terms:'Условия', privacy:'Конфиденц.', cancel:'Отмена', save:'Сохранить', logout:'Выйти', withdraw:'Удалить аккаунт' }
+};
 
 let _ownerPendingLang = localStorage.getItem('baroalba_lang') || 'ko';
 
 function ownerApplyLang() {
   const lang = localStorage.getItem('baroalba_lang') || 'ko';
   _ownerPendingLang = lang;
+  const ui = OWNER_UI[lang] || OWNER_UI.ko;
   ['ko','en','zh','ja','vi','ru'].forEach(l => {
     const btn = document.getElementById('owner-lang-' + l);
     if (!btn) return;
@@ -3903,6 +3914,15 @@ function ownerApplyLang() {
   });
   const desc = document.getElementById('owner-lang-desc');
   if (desc) desc.textContent = OWNER_LANG_DESC[lang] || OWNER_LANG_DESC.ko;
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  set('owner-pw-toggle-btn', ui.pw_toggle);
+  set('owner-pw-submit-btn', ui.pw_submit);
+  set('owner-terms-link', ui.terms);
+  set('owner-privacy-link', ui.privacy);
+  set('owner-settings-cancel-btn', ui.cancel);
+  set('owner-settings-save-btn', ui.save);
+  set('owner-logout-btn', ui.logout);
+  set('owner-delete-btn', ui.withdraw);
 }
 
 function ownerSelectLang(lang) {

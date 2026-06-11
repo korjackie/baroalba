@@ -1400,7 +1400,10 @@
               <div id="lang-other-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
             </div>
 
-            <button onclick="saveWorkerProfile()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+            <div style="display:flex;gap:8px">
+              <button onclick="openProfile()" style="flex:1;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+              <button onclick="saveWorkerProfile()" style="flex:2;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+            </div>
           </div>
         </div>
 
@@ -1554,14 +1557,15 @@
               <div style="font-size:11px;color:#aaa;margin-top:2px" id="lang-desc">현재: 한국어</div>
             </div>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            <button id="lang-ko-btn" onclick="setLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">&#127472;&#127479; 한국어</button>
-            <button id="lang-en-btn" onclick="setLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127482;&#127480; English</button>
-            <button id="lang-zh-btn" onclick="setLang('zh')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127464;&#127475; 中文</button>
-            <button id="lang-ja-btn" onclick="setLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127471;&#127477; 日本語</button>
-            <button id="lang-vi-btn" onclick="setLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127483;&#127475; Tiếng Việt</button>
-            <button id="lang-ru-btn" onclick="setLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127479;&#127482; Русский</button>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+            <button id="lang-ko-btn" onclick="selectLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">&#127472;&#127479; 한국어</button>
+            <button id="lang-en-btn" onclick="selectLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127482;&#127480; English</button>
+            <button id="lang-zh-btn" onclick="selectLang('zh')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127464;&#127475; 中文</button>
+            <button id="lang-ja-btn" onclick="selectLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127471;&#127477; 日本語</button>
+            <button id="lang-vi-btn" onclick="selectLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127483;&#127475; Tiếng Việt</button>
+            <button id="lang-ru-btn" onclick="selectLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127479;&#127482; Русский</button>
           </div>
+          <button onclick="saveLang()" style="width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">언어 저장하기</button>
         </div>
 
         <!-- 알림 수신 설정 -->
@@ -1599,9 +1603,10 @@
           <a href="./terms.html" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">이용약관</a>
           <a href="./terms.html" onclick="localStorage.setItem('terms_tab','privacy')" style="flex:1;padding:12px;background:#f8f8f8;color:#555;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none">개인정보처리방침</a>
         </div>
-        <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">로그아웃</button>
-        <div style="height:1px;background:#f0f0f0;margin-bottom:10px"></div>
-        <button onclick="deleteUserAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:center">회원 탈퇴</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="doLogout()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">로그아웃</button>
+          <button onclick="deleteUserAccount()" style="flex:1;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+        </div>
       </div>
 
       <!-- 게스트/비로그인 상태 -->
@@ -2979,13 +2984,33 @@ const TRANSLATIONS = {
 };
 
 let currentLang = localStorage.getItem('baroalba_lang') || 'ko';
+let _pendingLang = currentLang;
 
 function t(key) {
   return (TRANSLATIONS[currentLang] || TRANSLATIONS['ko'])[key] || key;
 }
 
+function selectLang(lang) {
+  _pendingLang = lang;
+  ['ko','en','zh','ja','vi','ru'].forEach(l => {
+    const btn = document.getElementById('lang-' + l + '-btn');
+    if (!btn) return;
+    btn.style.background = l === lang ? '#555' : '#f0f0f0';
+    btn.style.color = l === lang ? '#fff' : '#666';
+  });
+  const desc = document.getElementById('lang-desc');
+  if (desc) desc.textContent = (TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc + ' (저장 전)';
+}
+
+function saveLang() {
+  currentLang = _pendingLang;
+  localStorage.setItem('baroalba_lang', currentLang);
+  applyLang();
+  showToast('✅ 언어가 저장됐습니다');
+}
+
 function setLang(lang) {
-  currentLang = lang;
+  currentLang = lang; _pendingLang = lang;
   localStorage.setItem('baroalba_lang', lang);
   applyLang();
 }
@@ -4803,6 +4828,36 @@ async function _fetchWorkerNotifications() {
     }
   });
 
+  // 커뮤니티 댓글 알림 (내 게시글에 달린 새 댓글)
+  const lastSeen = parseInt(localStorage.getItem(_notiKey()) || '0');
+  if (w.id && lastSeen > 0) {
+    try {
+      const { data: myPosts } = await db.from('community_posts')
+        .select('id, title').eq('worker_id', w.id).eq('is_deleted', false);
+      if (myPosts?.length) {
+        const ids = myPosts.map(p => p.id);
+        const postMap = Object.fromEntries(myPosts.map(p => [p.id, p.title]));
+        const { data: newCmts } = await db.from('community_comments')
+          .select('id, content, created_at, post_id, workers(name)')
+          .in('post_id', ids)
+          .gt('created_at', new Date(lastSeen).toISOString())
+          .neq('worker_id', w.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        (newCmts || []).forEach(c => {
+          const title = postMap[c.post_id] || '게시글';
+          const commenter = c.workers?.name || '누군가';
+          items.push({
+            id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: '#7C3AED',
+            title: `"${title.slice(0,20)}"에 댓글이 달렸어요`,
+            body: `${commenter}: "${c.content.slice(0,40)}"`,
+            time: c.created_at
+          });
+        });
+      }
+    } catch(e) {}
+  }
+
   return items;
 }
 
@@ -5307,7 +5362,7 @@ async function openCommunityPost(postId) {
       </div>
       <div style="font-size:13px;color:#aaa;margin-bottom:14px">${author} · ${fmtFull(post.created_at)}</div>
       <div style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">${post.content}</div>
-      <button onclick="likeCommunityPost()" style="margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:#555;cursor:pointer">
+      <button id="comm-like-btn" onclick="likeCommunityPost()" style="margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'#FF4B4B':'#555'};cursor:pointer">
         ❤️ <span id="comm-like-count">${post.likes || 0}</span>
       </button>
     </div>
@@ -5317,12 +5372,28 @@ async function openCommunityPost(postId) {
   `;
 }
 
+function _getLikedPosts() {
+  return new Set(JSON.parse(localStorage.getItem('baro_liked_' + (currentUser?.id || '')) || '[]'));
+}
+function _saveLikedPost(postId) {
+  const s = _getLikedPosts(); s.add(postId);
+  localStorage.setItem('baro_liked_' + (currentUser?.id || ''), JSON.stringify([...s]));
+}
+
 async function likeCommunityPost() {
-  if (!_commCurrentPostId) return;
+  if (!_commCurrentPostId || !currentUser) return;
+  if (_getLikedPosts().has(_commCurrentPostId)) {
+    showToast('이미 좋아요를 눌렀어요');
+    return;
+  }
   _commCurrentPostLikes++;
   const el = document.getElementById('comm-like-count');
   if (el) el.textContent = _commCurrentPostLikes;
+  const btn = document.getElementById('comm-like-btn');
+  if (btn) btn.style.color = '#FF4B4B';
+  _saveLikedPost(_commCurrentPostId);
   await db.from('community_posts').update({ likes: _commCurrentPostLikes }).eq('id', _commCurrentPostId);
+  loadCommunityPosts(_commCurrentCat);
 }
 
 async function submitCommunityPost() {
