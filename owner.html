@@ -729,12 +729,16 @@
 <div class="full-panel" id="panel-owner-settings">
   <!-- 프로필 헤더 (뒤로가기 없는 탭 스타일) -->
   <div style="background:#fff;padding:env(safe-area-inset-top,16px) 20px 18px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:14px;padding-top:max(env(safe-area-inset-top),16px)">
-    <div style="width:58px;height:58px;border-radius:50%;background:#f4f4f4;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid #eee">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-        <circle cx="12" cy="7" r="4"/>
-      </svg>
-    </div>
+    <label style="position:relative;width:58px;height:58px;flex-shrink:0;cursor:pointer;display:block">
+      <div id="owner-header-avatar-inner" style="width:58px;height:58px;border-radius:50%;background:#f4f4f4;overflow:hidden;border:1.5px solid #eee;display:flex;align-items:center;justify-content:center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.42);border-radius:0 0 29px 29px;text-align:center;font-size:9px;color:#fff;font-weight:700;padding:2px 0;line-height:1.5">편집</div>
+      <input type="file" accept="image/*" style="display:none" onchange="uploadOwnerAvatar(this)">
+    </label>
     <div style="flex:1;min-width:0">
       <div style="font-size:11px;color:#bbb;font-weight:700;letter-spacing:0.5px;margin-bottom:3px" data-i18n="owner_account">업주 계정</div>
       <div style="font-size:17px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="settings-name">-</div>
@@ -3264,6 +3268,10 @@ async function openOwnerSettings() {
     const meta = currentUser.user_metadata || {};
     document.getElementById('settings-name').textContent = bizRecord?.name || meta.full_name || '업주';
     document.getElementById('settings-email').textContent = currentUser.email || '';
+    if (bizRecord?.photo_url) {
+      const inner = document.getElementById('owner-header-avatar-inner');
+      if (inner) inner.innerHTML = `<img src="${bizRecord.photo_url}" style="width:100%;height:100%;object-fit:cover">`;
+    }
     document.getElementById('settings-biz-name').value  = bizRecord?.name || '';
     document.getElementById('settings-biz-phone').value = bizRecord?.phone || '';
     document.getElementById('settings-biz-desc').value  = bizRecord?.description || '';
@@ -3278,14 +3286,33 @@ async function openOwnerSettings() {
   document.getElementById('panel-owner-settings').classList.add('show');
 }
 
+async function uploadOwnerAvatar(input) {
+  const file = input.files[0];
+  if (!file || !currentUser || !bizRecord?.id) { if (input) input.value = ''; return; }
+  input.value = '';
+  openBizCropModal(file, async blob => {
+    showToast('업로드 중...');
+    const path = `${currentUser.id}/biz-logo.jpg`;
+    await db.storage.from('biz-photos').remove([path]);
+    const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
+    if (error) { showToast('업로드 실패: ' + error.message); return; }
+    const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
+    await db.from('businesses').update({ photo_url: publicUrl }).eq('id', bizRecord.id);
+    bizRecord = { ...bizRecord, photo_url: publicUrl };
+    const inner = document.getElementById('owner-header-avatar-inner');
+    if (inner) inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`;
+    showToast('✅ 업체 프로필 사진이 업데이트됐습니다');
+  });
+}
+
 async function uploadBizPhoto(input) {
   const file = input.files[0];
   if (!file || !currentUser) return;
   if (file.size > 5 * 1024 * 1024) { showToast('5MB 이하 이미지만 업로드 가능합니다'); return; }
   showToast('업로드 중...');
-  const ext = file.name.split('.').pop();
-  const path = `${currentUser.id}/biz-photo.${ext}`;
-  const { error } = await db.storage.from('biz-photos').upload(path, file, { upsert: true });
+  const path = `${currentUser.id}/biz-photo.jpg`;
+  await db.storage.from('biz-photos').remove([path]);
+  const { error } = await db.storage.from('biz-photos').upload(path, file, { contentType: 'image/jpeg' });
   if (error) { showToast('업로드 실패: ' + error.message); return; }
   const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
   await db.from('businesses').update({ photo_url: publicUrl }).eq('id', bizRecord.id);
