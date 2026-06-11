@@ -14,6 +14,8 @@
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services"><\/scr'+'ipt>');</script>
   <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   <style>
@@ -730,7 +732,7 @@
   </div>
   <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
       <!-- 커뮤니티 게시판 -->
-      <a href="/바로알바.html?browse=true&community=1" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff5f5,#fff0f0);border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;text-decoration:none">
+      <a href="/바로알바.html?community=1" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff5f5,#fff0f0);border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;text-decoration:none">
         <div style="width:40px;height:40px;border-radius:12px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         </div>
@@ -751,16 +753,14 @@
       <div style="background:#f8f8f8;border-radius:14px;padding:14px">
         <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">&#127978; 업체 정보</div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <!-- 업체 대표 사진 -->
-          <div style="display:flex;align-items:center;gap:12px;padding:10px;background:#fff;border-radius:12px">
-            <div id="biz-photo-preview" style="width:56px;height:56px;border-radius:12px;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px">&#127978;</div>
-            <div style="flex:1">
-              <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:6px">업체 대표 사진</div>
-              <label style="display:inline-block;padding:6px 12px;background:#FF4B4B;color:#fff;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">
-                사진 변경
-                <input type="file" accept="image/*" style="display:none" onchange="uploadBizPhoto(this)">
-              </label>
-            </div>
+          <!-- 업체 사진 (최대 5장) -->
+          <div style="background:#fff;border-radius:12px;padding:10px">
+            <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">업체 사진 <span style="color:#aaa;font-weight:600">(최대 5장 · 첫 번째가 대표)</span></div>
+            <div id="biz-photos-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px"></div>
+            <label id="biz-add-photo-btn" style="display:none;margin-top:8px;padding:8px;background:#f5f5f5;border:1.5px dashed #ccc;border-radius:10px;text-align:center;cursor:pointer;font-size:12px;color:#888;font-weight:700">
+              + 사진 추가
+              <input type="file" accept="image/*" style="display:none" onchange="addBizPhoto(this)">
+            </label>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
             <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">업체명</label>
@@ -3249,11 +3249,7 @@ async function openOwnerSettings() {
     if (isAdmin) renderAdminCatList();
     loadMyPlaces();
     renderPlanUI();
-    // 업체 사진 로드
-    if (bizRecord?.photo_url) {
-      const p = document.getElementById('biz-photo-preview');
-      if (p) p.innerHTML = `<img src="${bizRecord.photo_url}" style="width:100%;height:100%;object-fit:cover">`;
-    }
+    loadBizPhotos();
   }
   document.getElementById('panel-owner-settings').classList.add('show');
 }
@@ -3856,5 +3852,128 @@ async function submitOwnerReport() {
     </div>
   </div>
 </div>
+<!-- 사진 크롭 모달 -->
+<div id="biz-crop-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;flex-direction:column">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;flex-shrink:0">
+    <span style="color:#fff;font-size:16px;font-weight:800">사진 편집</span>
+    <button onclick="closeBizCropModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">✕</button>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center">
+    <img id="biz-crop-source" style="max-width:100%;max-height:100%">
+  </div>
+  <div style="padding:16px;display:flex;gap:10px;flex-shrink:0">
+    <button onclick="closeBizCropModal()" style="flex:1;padding:13px;background:#444;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+    <button onclick="applyBizCrop()" style="flex:2;padding:13px;background:#FF4B4B;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">적용</button>
+  </div>
+</div>
+
+<script>
+// ── 업체 사진 (최대 5장) ─────────────────────────────────
+let _bizPhotos = [];
+let _bizCropper = null;
+let _bizCropCallback = null;
+
+function openBizCropModal(file, callback) {
+  _bizCropCallback = callback;
+  const modal = document.getElementById('biz-crop-modal');
+  modal.style.display = 'flex';
+  const img = document.getElementById('biz-crop-source');
+  const reader = new FileReader();
+  reader.onload = e => {
+    img.src = e.target.result;
+    if (_bizCropper) { _bizCropper.destroy(); _bizCropper = null; }
+    img.onload = () => {
+      _bizCropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.9 });
+    };
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeBizCropModal() {
+  document.getElementById('biz-crop-modal').style.display = 'none';
+  if (_bizCropper) { _bizCropper.destroy(); _bizCropper = null; }
+}
+
+function applyBizCrop() {
+  if (!_bizCropper || !_bizCropCallback) return;
+  _bizCropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(blob => {
+    closeBizCropModal();
+    _bizCropCallback(blob);
+  }, 'image/jpeg', 0.88);
+}
+
+async function loadBizPhotos() {
+  if (!bizRecord?.id) return;
+  const { data } = await db.from('business_photos').select('*').eq('business_id', bizRecord.id).order('sort_order');
+  _bizPhotos = data || [];
+  _renderBizPhotos();
+}
+
+function _renderBizPhotos() {
+  const grid = document.getElementById('biz-photos-grid');
+  const addBtn = document.getElementById('biz-add-photo-btn');
+  if (!grid) return;
+  grid.innerHTML = _bizPhotos.map((p, i) =>
+    `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid ${p.is_main?'#FF4B4B':'#eee'}">
+      <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">
+      ${p.is_main ? '<span style="position:absolute;top:3px;left:3px;background:#FF4B4B;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">대표</span>' : `<button onclick="setBizMainPhoto('${p.id}')" style="position:absolute;top:3px;left:3px;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;cursor:pointer">대표설정</button>`}
+      <button onclick="deleteBizPhoto('${p.id}')" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    </div>`
+  ).join('');
+  if (addBtn) addBtn.style.display = _bizPhotos.length < 5 ? 'block' : 'none';
+}
+
+async function addBizPhoto(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file || !bizRecord?.id) return;
+  openBizCropModal(file, async (blob) => {
+    showToast('업로드 중...');
+    const path = `${currentUser.id}/biz-${Date.now()}.jpg`;
+    const { error } = await db.storage.from('biz-photos').upload(path, blob, { upsert: false, contentType: 'image/jpeg' });
+    if (error) { showToast('업로드 실패: ' + error.message); return; }
+    const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
+    const isFirst = _bizPhotos.length === 0;
+    await db.from('business_photos').insert({
+      business_id: bizRecord.id,
+      photo_url: publicUrl,
+      is_main: isFirst,
+      sort_order: _bizPhotos.length
+    });
+    if (isFirst) {
+      await db.from('businesses').update({ photo_url: publicUrl }).eq('id', bizRecord.id);
+      bizRecord = { ...bizRecord, photo_url: publicUrl };
+    }
+    await loadBizPhotos();
+    showToast('✅ 사진이 추가됐습니다');
+  });
+}
+
+async function setBizMainPhoto(photoId) {
+  if (!bizRecord?.id) return;
+  await db.from('business_photos').update({ is_main: false }).eq('business_id', bizRecord.id);
+  await db.from('business_photos').update({ is_main: true }).eq('id', photoId);
+  const mainPhoto = _bizPhotos.find(p => p.id === photoId);
+  if (mainPhoto) {
+    await db.from('businesses').update({ photo_url: mainPhoto.photo_url }).eq('id', bizRecord.id);
+    bizRecord = { ...bizRecord, photo_url: mainPhoto.photo_url };
+  }
+  await loadBizPhotos();
+  showToast('✅ 대표 사진이 변경됐습니다');
+}
+
+async function deleteBizPhoto(photoId) {
+  if (!confirm('이 사진을 삭제할까요?')) return;
+  const wasMain = _bizPhotos.find(p => p.id === photoId)?.is_main;
+  await db.from('business_photos').delete().eq('id', photoId);
+  _bizPhotos = _bizPhotos.filter(p => p.id !== photoId);
+  if (wasMain && _bizPhotos.length > 0) {
+    await db.from('business_photos').update({ is_main: true }).eq('id', _bizPhotos[0].id);
+    await db.from('businesses').update({ photo_url: _bizPhotos[0].photo_url }).eq('id', bizRecord.id);
+  }
+  await loadBizPhotos();
+  showToast('사진이 삭제됐습니다');
+}
+</script>
 </body>
 </html>

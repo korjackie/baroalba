@@ -1636,7 +1636,7 @@
 </div>
 
 <!-- 커뮤니티 게시글 상세 -->
-<div class="detail-overlay" id="community-post-overlay" style="z-index:370" onclick="if(event.target===this)closeCommunityPost()">
+<div class="detail-overlay" id="community-post-overlay" style="z-index:410" onclick="if(event.target===this)closeCommunityPost()">
   <div class="detail-sheet" style="height:85vh;display:flex;flex-direction:column;padding:0">
     <div class="detail-handle" style="flex-shrink:0"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 12px;flex-shrink:0">
@@ -1653,7 +1653,7 @@
 </div>
 
 <!-- 커뮤니티 글쓰기 -->
-<div class="detail-overlay" id="community-write-overlay" style="z-index:380" onclick="if(event.target===this)closeCommunityWriteOverlay()">
+<div class="detail-overlay" id="community-write-overlay" style="z-index:420" onclick="if(event.target===this)closeCommunityWriteOverlay()">
   <div class="detail-sheet" style="height:72vh;display:flex;flex-direction:column;padding:0">
     <div class="detail-handle" style="flex-shrink:0"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 16px;flex-shrink:0">
@@ -1750,20 +1750,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     const isBrowseMode = !!new URLSearchParams(location.search).get('browse');
-    if (new URLSearchParams(location.search).get('community')) {
+    const isCommunityMode = !!new URLSearchParams(location.search).get('community');
+    if (isCommunityMode) {
       setTimeout(() => openCommunityPanel(), 800);
     }
     if (currentUser.user_metadata?.baroalba_role === 'business') {
-      if (!isBrowseMode) { location.href = '/owner.html'; return; }
-      // 업주 지도 열람 모드: 배너 표시 + 내지원/채팅 탭 숨김
-      const banner = document.getElementById('owner-browse-banner');
-      if (banner) banner.style.display = 'flex';
-      document.querySelectorAll('.nav-item').forEach((btn, i) => {
-        if (i === 2 || i === 3) btn.style.display = 'none'; // 내지원, 채팅 숨김
-      });
-      // 지도가 배너 아래에 가리지 않도록 여백
-      const topBar = document.querySelector('.top-bar');
-      if (topBar) topBar.style.marginTop = '40px';
+      if (!isBrowseMode && !isCommunityMode) { location.href = '/owner.html'; return; }
     }
   } else if (localStorage.getItem('baroalba_guest') || new URLSearchParams(location.search).get('job')) {
     isGuest = true;
