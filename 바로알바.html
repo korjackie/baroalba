@@ -2461,7 +2461,6 @@ async function showMyRatings() {
 }
 
 async function openApplicationJobDetail(jobPostingId) {
-  showToast('[DEBUG] openAppDetail: ' + (jobPostingId ? jobPostingId.slice(0,8) : 'null'));
   if (!jobPostingId) return;
   const panel = document.getElementById('panel-app-job-detail');
   const body  = document.getElementById('ajd-body');
@@ -4492,7 +4491,7 @@ async function _fetchWorkerNotifications() {
   const { data: apps } = await db.from('applications')
     .select('id, status, updated_at, completed_at, worker_rating, worker_review, job_postings(title, businesses(name))')
     .eq('worker_id', w.id)
-    .not('status', 'in', '("pending","reviewing")')
+    .not('status', 'in', '(pending,reviewing)')
     .order('updated_at', { ascending: false })
     .limit(40);
 
