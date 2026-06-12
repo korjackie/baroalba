@@ -2790,6 +2790,11 @@ function initOwnerMap() {
     const rb = document.getElementById('owner-radius-badge');
     if (rb) rb.style.display = 'block';
     loadOwnerMapJobs();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        setOwnerLocationMarker(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+      });
+    }
   }, 100);
 }
 
