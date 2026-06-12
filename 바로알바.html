@@ -1320,6 +1320,25 @@
               <label data-i18n="region_label" style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">거주지</label>
               <input id="worker-region" type="text" placeholder="예: 서울 강남구" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
             </div>
+            <!-- 주요 활동 지역 -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <label style="font-size:12px;color:#888;font-weight:700">&#128205; 주요 활동 지역</label>
+                <span style="font-size:10px;color:#FF4B4B;font-weight:700;background:#fff0f0;padding:2px 7px;border-radius:6px">업주 지도에 표시됩니다</span>
+              </div>
+              <div style="display:flex;gap:6px">
+                <input id="activity-area-input" type="text" placeholder="동 이름 입력 (예: 성수동, 이태원동)"
+                  style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();searchActivityArea()}">
+                <button onclick="searchActivityArea()" style="padding:10px 14px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
+              </div>
+              <div id="activity-area-results" style="display:none;margin-top:4px;border:1.5px solid #eee;border-radius:10px;overflow:hidden;background:#fff"></div>
+              <div id="activity-area-selected" style="display:none;margin-top:6px;align-items:center;gap:8px;padding:9px 14px;background:#fff0f0;border-radius:10px;border:1px solid #FFCCCC">
+                <span style="font-size:13px;font-weight:800;color:#FF4B4B" id="activity-area-tag"></span>
+                <button onclick="clearActivityArea()" style="margin-left:auto;background:none;border:none;color:#bbb;cursor:pointer;font-size:16px;line-height:1;padding:0">✕</button>
+              </div>
+              <div style="font-size:11px;color:#bbb;margin-top:5px">동 단위로 설정하면 해당 동 중심이 업주 지도에 핀으로 표시됩니다</div>
+            </div>
             <div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
                 <div data-i18n="bio_label" style="font-size:12px;color:#888;font-weight:700">자기소개</div>
@@ -1655,7 +1674,6 @@ let overlays = [];
 let selectedJobId = null;
 let myLocationOverlay = null;
 let _locationWatchId = null;
-let _lastLocSaved = 0;
 let minWageFilter = 0;
 let dateFilter = '';
 let timeFilter = '';
@@ -2983,13 +3001,6 @@ function moveToMyLocation(silent = false) {
       kakaoMap.setCenter(latlng);
       loadJobs();
     }
-    // 5분마다 DB에 위치 저장 (업주 바로투입 지도용)
-    const now = Date.now();
-    if (currentUser && (now - _lastLocSaved) > 300000) {
-      _lastLocSaved = now;
-      db.from('workers').update({ last_lat: pos.coords.latitude, last_lng: pos.coords.longitude })
-        .eq('kakao_uid', currentUser.id).then(() => {});
-    }
   }, () => {
     if (!silent) showToast('위치 권한이 필요합니다');
   }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
@@ -3794,7 +3805,7 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills, photo_url')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills, photo_url, activity_area, activity_lat, activity_lng')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   // 프로필 사진
@@ -3850,8 +3861,18 @@ async function loadWorkerProfileForm() {
   updateBioCounter(document.getElementById('worker-bio'));
   document.getElementById('worker-experience').value = w.experience || '';
   document.getElementById('worker-region').value = w.region || '';
+  // 주요 활동 지역 복원
+  _activityLat = w.activity_lat || null;
+  _activityLng = w.activity_lng || null;
+  _activityAreaName = w.activity_area || '';
+  const selEl = document.getElementById('activity-area-selected');
+  const tagEl = document.getElementById('activity-area-tag');
+  if (_activityAreaName && selEl && tagEl) {
+    tagEl.textContent = '📍 ' + _activityAreaName;
+    selEl.style.display = 'flex';
+  }
   if (w.gender) setGender(w.gender);
-  else if (meta.gender) setGender(meta.gender); // 네이버 제공 성별 자동 적용
+  else if (meta.gender) setGender(meta.gender);
 }
 
 async function loadWorkerGrade() {
@@ -4038,6 +4059,7 @@ async function loadWorkerPhotos() {
 }
 
 let _wPhotos = [], _wDragSrcId = null;
+let _activityLat = null, _activityLng = null, _activityAreaName = '';
 
 function _renderWorkerPhotos(photos, workerId) {
   _wPhotos = photos;
@@ -4156,6 +4178,59 @@ async function uploadWorkerPhoto(input) {
 async function deleteWorkerPhoto(photoId) {
   await db.from('worker_photos').delete().eq('id', photoId);
   loadWorkerPhotos();
+}
+
+function searchActivityArea() {
+  const q = document.getElementById('activity-area-input').value.trim();
+  if (!q) return;
+  const geocoder = new kakao.maps.services.Geocoder();
+  geocoder.addressSearch(q, (result, status) => {
+    if (status === kakao.maps.services.Status.OK && result.length) {
+      _showActivityResults(result.slice(0, 5).map(r => ({ name: r.address_name, lat: parseFloat(r.y), lng: parseFloat(r.x) })));
+    } else {
+      // 주소 검색 실패 → 키워드 검색으로 fallback
+      const ps = new kakao.maps.services.Places();
+      ps.keywordSearch(q, (data, pStatus) => {
+        if (pStatus !== kakao.maps.services.Status.OK || !data.length) {
+          showToast('검색 결과가 없습니다'); return;
+        }
+        _showActivityResults(data.slice(0, 5).map(p => ({ name: p.address_name || p.place_name, lat: parseFloat(p.y), lng: parseFloat(p.x) })));
+      }, { size: 5 });
+    }
+  });
+}
+
+function _showActivityResults(items) {
+  const el = document.getElementById('activity-area-results');
+  el.style.display = 'block';
+  el.innerHTML = items.map((item, i) =>
+    `<div onclick="_selectActivityArea('${item.name.replace(/'/g,"\\'")}',${item.lat},${item.lng})"
+      style="padding:10px 14px;font-size:13px;color:#333;cursor:pointer;${i > 0 ? 'border-top:1px solid #f0f0f0' : ''}">
+      &#128205; ${item.name}
+    </div>`
+  ).join('');
+}
+
+function _selectActivityArea(name, lat, lng) {
+  _activityAreaName = name;
+  _activityLat = lat;
+  _activityLng = lng;
+  document.getElementById('activity-area-input').value = '';
+  document.getElementById('activity-area-results').style.display = 'none';
+  const tag = document.getElementById('activity-area-tag');
+  const sel = document.getElementById('activity-area-selected');
+  if (tag) tag.textContent = '📍 ' + name;
+  if (sel) sel.style.display = 'flex';
+}
+
+function clearActivityArea() {
+  _activityAreaName = '';
+  _activityLat = null;
+  _activityLng = null;
+  document.getElementById('activity-area-input').value = '';
+  document.getElementById('activity-area-results').style.display = 'none';
+  const sel = document.getElementById('activity-area-selected');
+  if (sel) sel.style.display = 'none';
 }
 
 const CERT_META = {
@@ -4366,7 +4441,7 @@ async function saveWorkerProfile() {
   const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
-  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages };
+  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng };
   if (_workerGender) payload.gender = _workerGender;
   let { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error?.message?.includes('languages')) {

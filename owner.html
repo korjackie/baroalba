@@ -2933,13 +2933,13 @@ async function loadBarotouipList() {
 
   // query workers with location data
   const { data: workers, error } = await db.from('workers')
-    .select('id, kakao_uid, name, photo_url, rating, review_count, phone, skills, languages, region, last_lat, last_lng')
-    .not('last_lat', 'is', null)
-    .not('last_lng', 'is', null)
+    .select('id, kakao_uid, name, photo_url, rating, review_count, phone, skills, languages, region, activity_lat, activity_lng, activity_area')
+    .not('activity_lat', 'is', null)
+    .not('activity_lng', 'is', null)
     .not('name', 'is', null)
     .limit(80);
 
-  const list = error ? [] : (workers || []).filter(w => w.last_lat && w.last_lng);
+  const list = error ? [] : (workers || []).filter(w => w.activity_lat && w.activity_lng);
 
   if (countEl) countEl.textContent = list.length + '명';
 
@@ -2968,7 +2968,7 @@ async function loadBarotouipList() {
       <div style="margin-top:3px;background:rgba(0,0,0,0.72);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nameShort}${ratingStr ? ' '+ratingStr : ''}</div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({
-      position: new kakao.maps.LatLng(w.last_lat, w.last_lng),
+      position: new kakao.maps.LatLng(w.activity_lat, w.activity_lng),
       content, yAnchor: 1.1, zIndex: 5
     });
     overlay.setMap(_ownerMap);
