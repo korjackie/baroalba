@@ -277,6 +277,38 @@
     .om-tail { width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:11px solid #FF4B4B; margin-top:-1px; }
     .om-tail.open   { border-top-color:#22c55e; }
     .om-tail.errand { border-top-color:#7C3AED; }
+    /* ── 업주 지도 바텀시트 (워커 맵 동일 구조) ── */
+    #owner-bottom-sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 75%;
+      display: flex;
+      flex-direction: column;
+      z-index: 15;
+      transform: translateY(calc(100% - 56px));
+    }
+    #owner-sheet-handle-area {
+      padding: 8px 0 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    #owner-sheet-handle-bar { width:36px; height:4px; background:#e0e0e0; border-radius:2px; }
+    #owner-sheet-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px 10px;
+      width: 100%;
+    }
+    #owner-sheet-count { font-size:15px; font-weight:800; color:#222; }
+    #owner-sheet-count span { color:var(--red); }
   </style>
 </head>
 <body>
@@ -673,7 +705,7 @@
 </div>
 
 <!-- 지도 탭 패널 -->
-<div class="full-panel" id="panel-owner-map">
+<div class="full-panel" id="panel-owner-map" style="overflow:hidden;position:relative">
   <!-- 공고 / 바로투입 탭 스위처 -->
   <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:11;display:flex;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.18);overflow:hidden;pointer-events:all">
     <button id="map-tab-jobs" onclick="setOwnerMapMode('jobs')" style="padding:8px 20px;font-size:13px;font-weight:800;border:none;cursor:pointer;background:#FF4B4B;color:#fff;transition:0.2s">&#128203; 공고</button>
@@ -703,8 +735,17 @@
       <button class="om-chip" data-urgent onclick="setOwnerMapUrgent(this)">ASAP</button>
     </div>
   </div>
-  <div id="owner-map-container" style="flex:1;width:100%"></div>
-  <div id="owner-map-info" style="height:56px;display:flex;align-items:center;justify-content:center;background:#fff;border-top:1px solid #f0f0f0;padding:0 16px;font-size:15px;font-weight:800;color:#222;flex-shrink:0">주변 공고 <span id="owner-map-count" style="color:#FF4B4B;margin:0 2px">0</span>개</div>
+  <div id="owner-map-container" style="flex:1;width:100%;position:relative"></div>
+  <div id="owner-bottom-sheet">
+    <div id="owner-sheet-handle-area">
+      <div id="owner-sheet-handle-bar"></div>
+      <div id="owner-sheet-summary">
+        <span id="owner-sheet-count">주변 공고 <span>0</span>개</span>
+        <span style="font-size:12px;color:#888;cursor:pointer">거리순 ↕</span>
+      </div>
+    </div>
+    <div id="owner-sheet-list" style="overflow-y:auto;flex:1;padding:0 16px 32px"></div>
+  </div>
   <!-- 반경 배지 -->
   <div id="owner-radius-badge" onclick="toggleOwnerRadiusPopup()" style="display:none;position:absolute;top:152px;right:14px;z-index:12;background:#fff;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:700;color:#555;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer">
     &#128225; <span id="owner-radius-txt">10km</span>
@@ -2778,6 +2819,7 @@ let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerNam
 let _ownerMap = null, _ownerOverlays = [], _ownerWorkerOverlays = [], _ownerMapDragBound = false, _ownerLocOverlay = null;
 let _ownerMapCat = '', _ownerMapWorkType = '', _ownerMapUrgentOnly = false;
 let _ownerRadius = 10000, _ownerMapMode = 'jobs';
+let _ownerSheetState = 'peek', _ownerMapJobs = [];
 
 function initOwnerMap() {
   if (_ownerMap) { loadOwnerMapJobs(); return; }
@@ -2789,11 +2831,15 @@ function initOwnerMap() {
     _ownerMap = new kakao.maps.Map(container, { center, level: 5 });
     const rb = document.getElementById('owner-radius-badge');
     if (rb) rb.style.display = 'block';
+    setupOwnerSheet();
     loadOwnerMapJobs();
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(pos => {
-        setOwnerLocationMarker(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
-      });
+        const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        _ownerMap.setCenter(latlng);
+        setOwnerLocationMarker(latlng);
+        loadOwnerMapJobs();
+      }, () => {});
     }
   }, 100);
 }
@@ -2860,8 +2906,10 @@ async function loadOwnerMapJobs() {
     _ownerOverlays.push(overlay);
   });
 
-  const _infoBar = document.getElementById('owner-map-info');
-  if (_infoBar) _infoBar.innerHTML = `주변 공고 <span style="color:#FF4B4B;margin:0 2px">${jobs.length}</span>개`;
+  _ownerMapJobs = jobs;
+  renderOwnerSheetJobs(jobs);
+  const _cntEl = document.getElementById('owner-sheet-count');
+  if (_cntEl) _cntEl.innerHTML = `주변 공고 <span>${jobs.length}</span>개`;
 
   if (!_ownerMapDragBound) {
     kakao.maps.event.addListener(_ownerMap, 'dragend', loadOwnerMapJobs);
@@ -2889,7 +2937,8 @@ function setOwnerMapMode(mode) {
   const tabWorkers = document.getElementById('map-tab-workers');
   const jobsUI     = document.getElementById('map-mode-jobs-ui');
   const btPanel    = document.getElementById('barotouip-panel');
-  const infoBar    = document.getElementById('owner-map-info');
+  const sheetCount = document.getElementById('owner-sheet-count');
+  const sheetList  = document.getElementById('owner-sheet-list');
   const radiusBadge = document.getElementById('owner-radius-badge');
   const radiusPopup = document.getElementById('owner-radius-popup');
   if (mode === 'jobs') {
@@ -2897,9 +2946,9 @@ function setOwnerMapMode(mode) {
     tabWorkers.style.background = '#fff';     tabWorkers.style.color = '#888';
     if (jobsUI)  jobsUI.style.display  = 'flex';
     if (btPanel) btPanel.style.display = 'none';
-    if (infoBar) infoBar.innerHTML = '주변 공고 <span style="color:#FF4B4B;margin:0 2px">0</span>개';
+    if (sheetCount) sheetCount.innerHTML = '주변 공고 <span>0</span>개';
+    if (sheetList) sheetList.innerHTML = '';
     if (radiusBadge) radiusBadge.style.display = 'block';
-    // clear worker overlays
     (_ownerWorkerOverlays || []).forEach(o => o.setMap(null));
     _ownerWorkerOverlays = [];
     loadOwnerMapJobs();
@@ -2909,10 +2958,10 @@ function setOwnerMapMode(mode) {
     if (jobsUI)  jobsUI.style.display  = 'none';
     if (radiusBadge) radiusBadge.style.display = 'none';
     if (radiusPopup) radiusPopup.style.display = 'none';
-    // clear job overlays
+    if (sheetCount) sheetCount.innerHTML = '주변 알바생 <span>0</span>명';
+    if (sheetList) sheetList.innerHTML = '';
     (_ownerOverlays || []).forEach(o => o.setMap(null));
     _ownerOverlays = [];
-    if (infoBar) infoBar.innerHTML = '주변 알바생 <span style="color:#FF4B4B;margin:0 2px">0</span>명';
     loadBarotouipList();
   }
 }
@@ -2983,8 +3032,8 @@ async function loadBarotouipList() {
     _ownerWorkerOverlays.push(overlay);
   });
 
-  const _wInfoBar = document.getElementById('owner-map-info');
-  if (_wInfoBar) _wInfoBar.innerHTML = `주변 알바생 <span style="color:#FF4B4B;margin:0 2px">${list.length}</span>명`;
+  const _wCntEl = document.getElementById('owner-sheet-count');
+  if (_wCntEl) _wCntEl.innerHTML = `주변 알바생 <span>${list.length}</span>명`;
 }
 
 function showBarotouipContact(kakaoUid, name, phone) {
@@ -3041,15 +3090,99 @@ function ownerMapMyLocation() {
   }, () => showToast('위치 권한이 필요합니다'));
 }
 
+// ── 업주 지도 바텀시트 (워커 맵 setupSheet 동일 구조) ──────
+function setOwnerSheetState(state) {
+  const sheet = document.getElementById('owner-bottom-sheet');
+  if (!sheet) return;
+  const T = { peek: 'translateY(calc(100% - 56px))', half: 'translateY(30%)', full: 'translateY(0)' };
+  sheet.style.transform = T[state] || T.peek;
+  _ownerSheetState = state;
+}
+
+function setupOwnerSheet() {
+  const sheet    = document.getElementById('owner-bottom-sheet');
+  const handleArea = document.getElementById('owner-sheet-handle-area');
+  const summary  = document.getElementById('owner-sheet-summary');
+  if (!sheet || !handleArea) return;
+  const dragEls = [handleArea, summary].filter(Boolean);
+  let startY = 0, isDragging = false;
+
+  function onStart(y) { startY = y; isDragging = true; sheet.style.transition = 'none'; }
+  function onMove(y) {
+    if (!isDragging) return;
+    const dy = y - startY;
+    const order = ['peek','half','full'];
+    const idx = order.indexOf(_ownerSheetState);
+    const base = _ownerSheetState === 'peek' ? '100% - 56px' : _ownerSheetState === 'half' ? '30%' : '0%';
+    if ((dy < 0 && idx < 2) || (dy > 0 && idx > 0)) {
+      sheet.style.transform = `translateY(calc(${base} + ${dy}px))`;
+    }
+  }
+  function onEnd(y) {
+    if (!isDragging) return;
+    isDragging = false;
+    sheet.style.transition = '';
+    sheet.style.transform = '';
+    const dy = y - startY;
+    const THRESHOLD = 30;
+    const order = ['peek','half','full'];
+    const idx = order.indexOf(_ownerSheetState);
+    if (dy < -THRESHOLD && idx < 2) setOwnerSheetState(order[idx + 1]);
+    else if (dy > THRESHOLD && idx > 0) setOwnerSheetState(order[idx - 1]);
+    else setOwnerSheetState(_ownerSheetState);
+  }
+  dragEls.forEach(el => {
+    el.addEventListener('touchstart', e => onStart(e.touches[0].clientY), { passive: true });
+    el.addEventListener('touchmove', e => { e.preventDefault(); e.stopPropagation(); onMove(e.touches[0].clientY); }, { passive: false });
+    el.addEventListener('touchend', e => onEnd(e.changedTouches[0].clientY), { passive: true });
+    el.addEventListener('mousedown', e => onStart(e.clientY));
+    window.addEventListener('mousemove', e => { if (isDragging) onMove(e.clientY); });
+    window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientY); });
+    el.addEventListener('click', e => {
+      if (Math.abs(startY - e.clientY) > 5) return;
+      const order = ['peek','half','full'];
+      setOwnerSheetState(order[(order.indexOf(_ownerSheetState) + 1) % 3]);
+    });
+  });
+}
+
+function renderOwnerSheetJobs(jobs) {
+  const list = document.getElementById('owner-sheet-list');
+  if (!list) return;
+  if (!jobs.length) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa;font-size:13px">주변에 공고가 없습니다</div>';
+    return;
+  }
+  const ERRAND_CATS = new Set(['물건 픽업/전달','대리 줄서기','서류/우편','쇼핑 대행','벌레 퇴치','반려동물 산책','이사/짐 보조','음식 배달','차량 이동/주차','약국/병원 대행','장보기 대행','기타 심부름']);
+  list.innerHTML = jobs.map(j => {
+    const isUrgent = j.status === 'urgent';
+    const isErrand = j.work_type === 'errand' || ERRAND_CATS.has(j.category);
+    const wage = (j.current_wage / 10000).toFixed(1) + '만/' + (isErrand ? '건' : '시간');
+    const dist = j.distance_m < 1000 ? Math.round(j.distance_m) + 'm' : (j.distance_m / 1000).toFixed(1) + 'km';
+    return `<div onclick="ownerMapInfo('${j.id}')" style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:10px;font-weight:700;color:#888;background:#f5f5f5;padding:2px 7px;border-radius:6px">${j.category || ''}</span>
+        ${isUrgent ? '<span style="font-size:10px;font-weight:800;color:#fff;background:#FF4B4B;padding:2px 6px;border-radius:6px">🔥 급구</span>' : ''}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#111">${j.title || ''}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">${j.biz_name || ''} &middot; 📍 ${dist}</div>
+        </div>
+        <div style="font-size:15px;font-weight:900;color:#FF4B4B;white-space:nowrap">${wage}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function ownerMapInfo(jobId) {
-  const infoEl = document.getElementById('owner-map-info');
-  // RPC 결과는 jobs 배열에 없으므로 간단히 표시
-  infoEl.innerHTML = '<span style="color:#aaa">공고 정보 불러오는 중...</span>';
+  const own = (postings || []).find(p => p.id === jobId);
+  if (own) { openPostingDetail(jobId); return; }
   db.from('job_postings').select('title, biz_name, current_wage, status, category, work_type')
     .eq('id', jobId).single().then(({ data: j }) => {
       if (!j) return;
-      const isErrand = j.work_type === 'errand' || j.category?.includes('심부름') || j.category?.includes('퇴치') || j.category?.includes('배달') || j.category?.includes('대행') || j.category?.includes('산책') || j.category?.includes('보조');
-      infoEl.innerHTML = `<b>${j.biz_name || ''}</b> · ${j.title} · <b style="color:#FF4B4B">${j.current_wage.toLocaleString()}원/${isErrand?'건':'시간'}</b> · ${j.status==='urgent'?'\u{1F525} 급구':'모집중'}`;
+      const isErrand = j.work_type === 'errand';
+      showToast(`${j.biz_name||''} · ${j.title} · ${j.current_wage.toLocaleString()}원/${isErrand?'건':'시간'}`);
     });
 }
 
