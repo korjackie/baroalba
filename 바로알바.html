@@ -2065,9 +2065,8 @@ function renderList() {
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
     const catClass = getCatClass(job.category);
-    const dist = job.distance_m < 1000
-      ? Math.round(job.distance_m) + 'm'
-      : (job.distance_m/1000).toFixed(1) + 'km';
+    const _da0 = (job.address||'').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+    const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da0 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
     const startStr = job.start_time ? formatTime(job.start_time) : '미정';
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
     const appSt = job.applied_status;
@@ -2117,7 +2116,8 @@ function renderUrgentFeed() {
   if (!urgentJobs.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   feedList.innerHTML = urgentJobs.map(job => {
-    const dist = job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
+    const _da1 = (job.address||'').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+    const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da1 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
     const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
     const bg = CAT_BG[job.category] || '#f5f5f5';
     return `
@@ -2146,9 +2146,8 @@ function openDetail(jobId) {
 
   const isUrgent = job.status === 'urgent';
   const hasSurge = job.wage_delta > 0;
-  const dist = job.distance_m < 1000
-    ? Math.round(job.distance_m) + 'm'
-    : (job.distance_m/1000).toFixed(1) + 'km';
+  const _da2 = (job.address||'').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+  const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da2 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
 
   document.getElementById('d-status').textContent = isUrgent ? '\u{1F525} 급구' : '모집중';
   document.getElementById('d-status').className = `detail-status ${isUrgent ? 'status-urgent' : 'status-open'}`;
