@@ -332,11 +332,6 @@
   </div>
 </div>
 
-<!-- 탭 -->
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('postings', this)" data-i18n="tab_my_postings">내 공고</button>
-  <button class="tab-btn" onclick="switchTab('applicants', this)" data-i18n="tab_applicants">지원자</button>
-</div>
 
 <!-- 내 공고 탭 -->
 <div class="tab-content active" id="tab-postings">
@@ -705,7 +700,7 @@
 </div>
 
 <!-- 지도 탭 패널 -->
-<div class="full-panel" id="panel-owner-map" style="overflow:hidden;position:relative">
+<div class="full-panel" id="panel-owner-map" style="overflow:hidden">
   <!-- 공고 / 바로투입 탭 스위처 -->
   <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:11;display:flex;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.18);overflow:hidden;pointer-events:all">
     <button id="map-tab-jobs" onclick="setOwnerMapMode('jobs')" style="padding:8px 20px;font-size:13px;font-weight:800;border:none;cursor:pointer;background:#FF4B4B;color:#fff;transition:0.2s">&#128203; 공고</button>
