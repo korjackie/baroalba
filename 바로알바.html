@@ -4120,16 +4120,24 @@ async function uploadAvatar(input) {
 
 // ── 포트폴리오 사진 (다중, 최대 5장) ─────────────────────
 async function loadWorkerPhotos() {
-  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!w) return;
-  const { data: photos } = await db.from('worker_photos').select('*').eq('worker_id', w.id).order('sort_order');
-  _renderWorkerPhotos(photos || [], w.id);
+  if (!currentUser) return;
+  const prefix = `workers/${currentUser.id}`;
+  const { data: files, error } = await db.storage.from('biz-photos').list(prefix);
+  if (error) { console.error('loadWorkerPhotos error:', error); return; }
+  const photos = (files || [])
+    .filter(f => f.name.startsWith('portfolio_'))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(f => ({
+      id: f.name,
+      photo_url: db.storage.from('biz-photos').getPublicUrl(`${prefix}/${f.name}`).data.publicUrl
+    }));
+  _renderWorkerPhotos(photos);
 }
 
 let _wPhotos = [], _wDragSrcId = null;
 let _activityLat = null, _activityLng = null, _activityAreaName = '';
 
-function _renderWorkerPhotos(photos, workerId) {
+function _renderWorkerPhotos(photos) {
   _wPhotos = photos;
   const grid = document.getElementById('worker-photos-grid');
   const addBtn = document.getElementById('worker-photos-add-btn');
@@ -4149,35 +4157,17 @@ function _renderWorkerPhotos(photos, workerId) {
       <button onclick="event.stopPropagation();deleteWorkerPhoto('${p.id}')" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
     </div>`).join('');
   addBtn.style.display = photos.length < 5 ? 'flex' : 'none';
-  _setupTouchDnd(grid, async (srcId, dstId) => {
-    const src = _wPhotos.find(p => p.id === srcId);
-    const dst = _wPhotos.find(p => p.id === dstId);
-    if (!src || !dst) return;
-    await Promise.all([
-      db.from('worker_photos').update({ sort_order: dst.sort_order }).eq('id', src.id),
-      db.from('worker_photos').update({ sort_order: src.sort_order }).eq('id', dst.id),
-    ]);
-    loadWorkerPhotos();
-  });
+  _setupTouchDnd(grid, () => {});
 }
 
 function wPhotoDragStart(e, photoId) { _wDragSrcId = photoId; e.dataTransfer.effectAllowed = 'move'; }
 function wPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
 function wPhotoDragEnter(e, el) { e.preventDefault(); if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #FF4B4B'; el.style.outlineOffset = '-3px'; } }
 function wPhotoDragLeave(e, el) { if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; } }
-async function wPhotoDrop(e, photoId, el) {
+function wPhotoDrop(e, photoId, el) {
   e.preventDefault();
   el.style.outline = ''; el.style.outlineOffset = '';
-  if (!_wDragSrcId || _wDragSrcId === photoId) { _wDragSrcId = null; return; }
-  const src = _wPhotos.find(p => p.id === _wDragSrcId);
-  const dst = _wPhotos.find(p => p.id === photoId);
-  if (!src || !dst) { _wDragSrcId = null; return; }
-  await Promise.all([
-    db.from('worker_photos').update({ sort_order: dst.sort_order }).eq('id', src.id),
-    db.from('worker_photos').update({ sort_order: src.sort_order }).eq('id', dst.id),
-  ]);
   _wDragSrcId = null;
-  loadWorkerPhotos();
 }
 
 function _setupTouchDnd(grid, swapFn) {
@@ -4226,42 +4216,24 @@ async function uploadWorkerPhoto(input) {
   const file = input.files[0];
   if (!file || !currentUser) { input.value = ''; return; }
   input.value = '';
-  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!w) { showToast('프로필을 먼저 저장해주세요'); return; }
-  const { count } = await db.from('worker_photos').select('id', { count: 'exact', head: true }).eq('worker_id', w.id);
-  if ((count || 0) >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
+  const prefix = `workers/${currentUser.id}`;
+  const { data: existingFiles } = await db.storage.from('biz-photos').list(prefix);
+  const existing = (existingFiles || []).filter(f => f.name.startsWith('portfolio_'));
+  if (existing.length >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
   openCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `workers/${currentUser.id}/portfolio_${Date.now()}.jpg`;
+    const path = `${prefix}/portfolio_${Date.now()}.jpg`;
     const { error: upErr } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
-    if (upErr) { showToast('업로드 실패: ' + upErr.message); console.error('portfolio storage upload error:', upErr); return; }
-    const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
-    // REST API 직접 호출 (RLS 우회)
-    const sess = await db.auth.getSession();
-    const token = sess.data?.session?.access_token || APP_CONFIG.SUPABASE_ANON_KEY;
-    const res = await fetch(`${APP_CONFIG.SUPABASE_URL}/rest/v1/worker_photos`, {
-      method: 'POST',
-      headers: {
-        'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ worker_id: w.id, photo_url: publicUrl, is_main: false, sort_order: count || 0 })
-    });
-    if (!res.ok) {
-      const errText = await res.text().catch(() => res.status);
-      console.error('worker_photos insert error:', errText);
-      showToast('사진 등록 실패: ' + errText);
-      return;
-    }
+    if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
     showToast('✅ 사진이 등록됐습니다');
     loadWorkerPhotos();
   });
 }
 
-async function deleteWorkerPhoto(photoId) {
-  await db.from('worker_photos').delete().eq('id', photoId);
+async function deleteWorkerPhoto(photoName) {
+  const path = `workers/${currentUser.id}/${photoName}`;
+  const { error } = await db.storage.from('biz-photos').remove([path]);
+  if (error) { showToast('삭제 실패: ' + error.message); return; }
   loadWorkerPhotos();
 }
 
