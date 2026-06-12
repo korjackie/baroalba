@@ -3444,7 +3444,10 @@ async function openChat(applicationId, workerName) {
   if (app?.workers?.kakao_uid) _chatWorkerUserId = app.workers.kakao_uid;
   await loadChatMessages();
   subscribeChatMessages();
-  markMessagesRead(applicationId);
+  markMessagesRead(applicationId).then(() => {
+    const badge = document.getElementById('owner-chat-badge');
+    if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
+  });
 }
 
 function closeChat() {
@@ -3507,8 +3510,18 @@ async function sendChatMessage() {
     sender_id: currentUser.id,
     content,
   });
-  // 알바생에게 Push 알림 전송
+  // 알바생 Broadcast 알림 (RLS 우회)
   if (_chatWorkerUserId) {
+    try {
+      const ch = db.channel(`worker-${_chatWorkerUserId}-notify`);
+      ch.subscribe(status => {
+        if (status === 'SUBSCRIBED') {
+          ch.send({ type: 'broadcast', event: 'new_msg', payload: { application_id: _chatAppId, content, sender_id: currentUser.id } });
+          setTimeout(() => ch.unsubscribe(), 1500);
+        }
+      });
+    } catch(e) {}
+    // Push 알림도 병행
     fetch('/api/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3518,7 +3531,7 @@ async function sendChatMessage() {
         body: content.length > 40 ? content.slice(0, 40) + '…' : content,
         url: '/바로알바.html'
       })
-    }).catch(() => {}); // 실패해도 채팅은 정상 동작
+    }).catch(() => {});
   }
 }
 

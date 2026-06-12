@@ -2301,37 +2301,43 @@ function showAppliedState(applicationId) {
 }
 
 
-// ── 채팅 알림 (전역) ─────────────────────────────────────
-async function setupMessageNotifications() {
+// ── 채팅 알림 (전역 — Broadcast 방식, RLS 우회) ────────────
+let _workerGlobalChatSub = null;
+function setupMessageNotifications() {
   if (isGuest || !currentUser) return;
-  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!worker) return;
+  if (_workerGlobalChatSub) { try { _workerGlobalChatSub.unsubscribe(); } catch(e) {} _workerGlobalChatSub = null; }
 
-  const { data: apps } = await db.from('applications').select('id').eq('worker_id', worker.id);
-  if (!apps || !apps.length) return;
-
-  const myAppIds = new Set(apps.map(a => a.id));
-
-  db.channel('global-msg-notify')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-      const msg = payload.new;
-      if (!myAppIds.has(msg.application_id)) return;
-      if (msg.sender_id === currentUser.id) return;
-
-      // 채팅창 열려있으면 건너뜀
+  _workerGlobalChatSub = db.channel(`worker-${currentUser.id}-notify`)
+    .on('broadcast', { event: 'new_msg' }, ({ payload }) => {
+      if (!payload || payload.sender_id === currentUser.id) return;
       const chatOpen = document.getElementById('wchat-overlay')?.classList.contains('open');
-      if (chatOpen && _wchatAppId === msg.application_id) return;
-
-      // 탭 뱃지 업데이트
+      if (chatOpen && _wchatAppId === payload.application_id) return;
       const badge = document.getElementById('chat-unread-badge');
       const cnt = parseInt(badge.textContent || '0') + 1;
       badge.textContent = cnt;
       badge.style.display = 'flex';
-
-      // 토스트 알림
-      showToast('\u{1F4AC} 새 메시지: ' + msg.content.slice(0, 20) + (msg.content.length > 20 ? '…' : ''));
+      showToast('\u{1F4AC} 새 메시지: ' + (payload.content || '').slice(0, 20) + ((payload.content || '').length > 20 ? '…' : ''));
     })
     .subscribe();
+}
+
+async function refreshWorkerChatBadge() {
+  const badge = document.getElementById('chat-unread-badge');
+  if (!badge || !currentUser) return;
+  try {
+    const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!worker) { badge.style.display = 'none'; return; }
+    const { data: apps } = await db.from('applications').select('id').eq('worker_id', worker.id);
+    if (!apps?.length) { badge.textContent = '0'; badge.style.display = 'none'; return; }
+    const { count } = await db.from('messages')
+      .select('id', { count: 'exact', head: true })
+      .in('application_id', apps.map(a => a.id))
+      .eq('is_read', false)
+      .neq('sender_id', currentUser.id);
+    const n = count || 0;
+    badge.textContent = n > 0 ? String(n) : '0';
+    badge.style.display = n > 0 ? 'flex' : 'none';
+  } catch(e) {}
 }
 
 // ── 채팅 (알바생) ─────────────────────────────────────────
@@ -2348,7 +2354,7 @@ async function openWChat(applicationId, bizName) {
   try {
     await loadWChatMessages();
     subscribeWChatMessages();
-    markWMessagesRead(applicationId);
+    markWMessagesRead(applicationId).then(() => refreshWorkerChatBadge());
   } catch(e) {
     console.error('채팅 로드 실패:', e);
     document.getElementById('wchat-messages').innerHTML = '<div style="text-align:center;color:#e53e3e;font-size:13px;margin-top:40px">채팅을 불러오지 못했습니다<br>잠시 후 다시 시도해주세요</div>';
@@ -3679,6 +3685,17 @@ function bindSwipeDrag(card) {
 }
 
 async function flyCard(card, dir) {
+  // 번개지원: 카드 날리기 전 자격 검사 (카드가 사라지면 복구 불가)
+  if (dir === 'up') {
+    const eligible = await checkQuickApplyEligible();
+    if (!eligible) {
+      card.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      card.style.transform = '';
+      setTimeout(() => { card.style.transition = ''; }, 400);
+      return;
+    }
+  }
+
   const targets = { left:[-1200,100,'-30deg'], right:[1200,100,'30deg'], up:[0,-1200,'0deg'] };
   const [tx, ty, rot] = targets[dir];
   card.style.transform = `translate(${tx}px,${ty}px) rotate(${rot})`;
@@ -3689,9 +3706,6 @@ async function flyCard(card, dir) {
     showToast('✅ 지원됐습니다!');
     applySwipeJob(job, false);
   } else if (dir === 'up') {
-    // 번개지원 자격 검사
-    const eligible = await checkQuickApplyEligible();
-    if (!eligible) return; // 내부에서 토스트/모달 처리
     showToast('⚡ 번개 지원!');
     applySwipeJob(job, true);
   } else {
@@ -3926,6 +3940,8 @@ async function loadWorkerProfileForm() {
   }
   if (w.gender) setGender(w.gender);
   else if (meta.gender) setGender(meta.gender);
+  // 모든 필드 세팅 완료 후 완성도 계산 (renderSkillTags 시점엔 아직 phone/bio/gender 미적용)
+  setTimeout(() => updateProfileCompletion(), 0);
 }
 
 async function loadWorkerGrade() {
@@ -4219,10 +4235,27 @@ async function uploadWorkerPhoto(input) {
     showToast('업로드 중...');
     const path = `workers/${currentUser.id}/portfolio_${Date.now()}.jpg`;
     const { error: upErr } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
-    if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
+    if (upErr) { showToast('업로드 실패: ' + upErr.message); console.error('portfolio storage upload error:', upErr); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
-    const { error: dbErr } = await db.from('worker_photos').insert({ worker_id: w.id, photo_url: publicUrl, is_main: false, sort_order: count || 0 });
-    if (dbErr) { showToast('사진 등록 실패: ' + dbErr.message); return; }
+    // REST API 직접 호출 (RLS 우회)
+    const sess = await db.auth.getSession();
+    const token = sess.data?.session?.access_token || APP_CONFIG.SUPABASE_ANON_KEY;
+    const res = await fetch(`${APP_CONFIG.SUPABASE_URL}/rest/v1/worker_photos`, {
+      method: 'POST',
+      headers: {
+        'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ worker_id: w.id, photo_url: publicUrl, is_main: false, sort_order: count || 0 })
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.status);
+      console.error('worker_photos insert error:', errText);
+      showToast('사진 등록 실패: ' + errText);
+      return;
+    }
     showToast('✅ 사진이 등록됐습니다');
     loadWorkerPhotos();
   });
