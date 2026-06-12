@@ -4418,7 +4418,7 @@ function _renderBizPhotos() {
   const addBtn = document.getElementById('biz-add-photo-btn');
   if (!grid) return;
   grid.innerHTML = _bizPhotos.map((p, i) =>
-    `<div draggable="true"
+    `<div draggable="true" data-photo-id="${p.id}"
       ondragstart="bizPhotoDragStart(event,'${p.id}')"
       ondragover="bizPhotoDragOver(event)"
       ondragenter="bizPhotoDragEnter(event,this)"
@@ -4431,6 +4431,16 @@ function _renderBizPhotos() {
     </div>`
   ).join('');
   if (addBtn) addBtn.style.display = _bizPhotos.length < 5 ? 'block' : 'none';
+  _setupTouchDnd(grid, async (srcId, dstId) => {
+    const src = _bizPhotos.find(p => p.id === srcId);
+    const dst = _bizPhotos.find(p => p.id === dstId);
+    if (!src || !dst) return;
+    await Promise.all([
+      db.from('business_photos').update({ sort_order: dst.sort_order }).eq('id', src.id),
+      db.from('business_photos').update({ sort_order: src.sort_order }).eq('id', dst.id),
+    ]);
+    loadBizPhotos();
+  });
 }
 
 function bizPhotoDragStart(e, photoId) {
@@ -4459,6 +4469,48 @@ async function bizPhotoDrop(e, photoId, el) {
   ]);
   _dragSrcId = null;
   await loadBizPhotos();
+}
+
+function _setupTouchDnd(grid, swapFn) {
+  let srcEl = null, ghostEl = null;
+  grid.querySelectorAll('[draggable]').forEach(el => {
+    el.addEventListener('touchstart', e => {
+      srcEl = el;
+      const r = el.getBoundingClientRect();
+      ghostEl = el.cloneNode(true);
+      Object.assign(ghostEl.style, {
+        position:'fixed', zIndex:'9999', pointerEvents:'none', opacity:'0.75',
+        width: r.width+'px', height: r.height+'px', top: r.top+'px', left: r.left+'px',
+        borderRadius:'10px', boxShadow:'0 8px 24px rgba(0,0,0,0.3)', transition:'none'
+      });
+      document.body.appendChild(ghostEl);
+      el.style.opacity = '0.3';
+    }, { passive: true });
+    el.addEventListener('touchmove', e => {
+      if (!ghostEl) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      ghostEl.style.left = (t.clientX - ghostEl.offsetWidth / 2) + 'px';
+      ghostEl.style.top  = (t.clientY - ghostEl.offsetHeight / 2) + 'px';
+      ghostEl.style.visibility = 'hidden';
+      const under = document.elementFromPoint(t.clientX, t.clientY);
+      ghostEl.style.visibility = '';
+      grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+      const tgt = under?.closest('[data-photo-id]');
+      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #FF4B4B'; tgt.style.outlineOffset = '-3px'; }
+    }, { passive: false });
+    el.addEventListener('touchend', e => {
+      if (!ghostEl) return;
+      ghostEl.remove(); ghostEl = null;
+      if (srcEl) srcEl.style.opacity = '';
+      grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+      const t = e.changedTouches[0];
+      const under = document.elementFromPoint(t.clientX, t.clientY);
+      const tgt = under?.closest('[data-photo-id]');
+      if (tgt && tgt !== srcEl) swapFn(srcEl.dataset.photoId, tgt.dataset.photoId);
+      srcEl = null;
+    }, { passive: true });
+  });
 }
 
 async function addBizPhoto(input) {

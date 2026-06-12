@@ -4010,10 +4010,10 @@ async function uploadAvatar(input) {
   input.value = '';
   openCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
-    const { error } = await db.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg' });
+    const path = `workers/${currentUser.id}/avatar_${Date.now()}.jpg`;
+    const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
-    const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
+    const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
     await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
     const inner = document.getElementById('header-avatar-inner');
     if (inner) inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`;
@@ -4039,7 +4039,7 @@ function _renderWorkerPhotos(photos, workerId) {
   if (!grid) return;
   countEl.textContent = `${photos.length}/5`;
   grid.innerHTML = photos.map((p, i) => `
-    <div draggable="true"
+    <div draggable="true" data-photo-id="${p.id}"
       ondragstart="wPhotoDragStart(event,'${p.id}')"
       ondragover="wPhotoDragOver(event)"
       ondragenter="wPhotoDragEnter(event,this)"
@@ -4051,6 +4051,16 @@ function _renderWorkerPhotos(photos, workerId) {
       <button onclick="event.stopPropagation();deleteWorkerPhoto('${p.id}')" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
     </div>`).join('');
   addBtn.style.display = photos.length < 5 ? 'flex' : 'none';
+  _setupTouchDnd(grid, async (srcId, dstId) => {
+    const src = _wPhotos.find(p => p.id === srcId);
+    const dst = _wPhotos.find(p => p.id === dstId);
+    if (!src || !dst) return;
+    await Promise.all([
+      db.from('worker_photos').update({ sort_order: dst.sort_order }).eq('id', src.id),
+      db.from('worker_photos').update({ sort_order: src.sort_order }).eq('id', dst.id),
+    ]);
+    loadWorkerPhotos();
+  });
 }
 
 function wPhotoDragStart(e, photoId) { _wDragSrcId = photoId; e.dataTransfer.effectAllowed = 'move'; }
@@ -4072,6 +4082,48 @@ async function wPhotoDrop(e, photoId, el) {
   loadWorkerPhotos();
 }
 
+function _setupTouchDnd(grid, swapFn) {
+  let srcEl = null, ghostEl = null;
+  grid.querySelectorAll('[draggable]').forEach(el => {
+    el.addEventListener('touchstart', e => {
+      srcEl = el;
+      const r = el.getBoundingClientRect();
+      ghostEl = el.cloneNode(true);
+      Object.assign(ghostEl.style, {
+        position:'fixed', zIndex:'9999', pointerEvents:'none', opacity:'0.75',
+        width: r.width+'px', height: r.height+'px', top: r.top+'px', left: r.left+'px',
+        borderRadius:'10px', boxShadow:'0 8px 24px rgba(0,0,0,0.3)', transition:'none'
+      });
+      document.body.appendChild(ghostEl);
+      el.style.opacity = '0.3';
+    }, { passive: true });
+    el.addEventListener('touchmove', e => {
+      if (!ghostEl) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      ghostEl.style.left = (t.clientX - ghostEl.offsetWidth / 2) + 'px';
+      ghostEl.style.top  = (t.clientY - ghostEl.offsetHeight / 2) + 'px';
+      ghostEl.style.visibility = 'hidden';
+      const under = document.elementFromPoint(t.clientX, t.clientY);
+      ghostEl.style.visibility = '';
+      grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+      const tgt = under?.closest('[data-photo-id]');
+      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #FF4B4B'; tgt.style.outlineOffset = '-3px'; }
+    }, { passive: false });
+    el.addEventListener('touchend', e => {
+      if (!ghostEl) return;
+      ghostEl.remove(); ghostEl = null;
+      if (srcEl) srcEl.style.opacity = '';
+      grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+      const t = e.changedTouches[0];
+      const under = document.elementFromPoint(t.clientX, t.clientY);
+      const tgt = under?.closest('[data-photo-id]');
+      if (tgt && tgt !== srcEl) swapFn(srcEl.dataset.photoId, tgt.dataset.photoId);
+      srcEl = null;
+    }, { passive: true });
+  });
+}
+
 async function uploadWorkerPhoto(input) {
   const file = input.files[0];
   if (!file || !currentUser) { input.value = ''; return; }
@@ -4082,10 +4134,10 @@ async function uploadWorkerPhoto(input) {
   if ((count || 0) >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
   openCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `${currentUser.id}/portfolio_${Date.now()}.jpg`;
-    const { error: upErr } = await db.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg' });
+    const path = `workers/${currentUser.id}/portfolio_${Date.now()}.jpg`;
+    const { error: upErr } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
-    const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(path);
+    const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
     const { error: dbErr } = await db.from('worker_photos').insert({ worker_id: w.id, photo_url: publicUrl, is_main: false, sort_order: count || 0 });
     if (dbErr) { showToast('사진 등록 실패: ' + dbErr.message); return; }
     showToast('✅ 사진이 등록됐습니다');
