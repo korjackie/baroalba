@@ -901,18 +901,6 @@
       </div>
     </div>
 
-    <!-- 정렬 -->
-    <div style="margin-bottom:20px">
-      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">정렬</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button id="flt-sort-dist"      onclick="setSortMode('dist')"      style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">거리순</button>
-        <button id="flt-sort-wage-desc" onclick="setSortMode('wage_desc')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시급 높은순</button>
-        <button id="flt-sort-wage-asc"  onclick="setSortMode('wage_asc')"  style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시급 낮은순</button>
-        <button id="flt-sort-date-asc"  onclick="setSortMode('date_asc')"  style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시작 빠른순</button>
-        <button id="flt-sort-date-desc" onclick="setSortMode('date_desc')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시작 느린순</button>
-      </div>
-    </div>
-
     <!-- 최근 검색어 -->
     <div id="recent-search-section" style="display:none">
       <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">최근 검색어</div>
@@ -3057,12 +3045,23 @@ function setMyLocationMarker(latlng) {
 
 // ── 필터 ─────────────────────────────────────────────────
 function setCategory(el, cat) {
-  document.querySelectorAll('#filter-row .chip[data-cat]').forEach(c => c.classList.remove('active'));
+  const _WT_MAP = { '__errand__':'errand', '__regular__':'regular', '__short__':'short', '__spot__':'spot' };
+  const newWT = _WT_MAP[cat] || '';
+
+  // 같은 근무유형 칩 재클릭 → 토글 off → 전체로 복귀
+  if (newWT && currentWorkType === newWT) {
+    currentWorkType = '';
+    currentCategory = '';
+    document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
+    const allChip = document.querySelector('#filter-row .chip[data-cat=""]');
+    if (allChip) allChip.classList.add('active');
+    loadJobs();
+    return;
+  }
+
+  document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  if      (cat === '__errand__')  { currentCategory = ''; currentWorkType = 'errand'; }
-  else if (cat === '__regular__') { currentCategory = ''; currentWorkType = 'regular'; }
-  else if (cat === '__short__')   { currentCategory = ''; currentWorkType = 'short'; }
-  else if (cat === '__spot__')    { currentCategory = ''; currentWorkType = 'spot'; }
+  if (newWT) { currentCategory = ''; currentWorkType = newWT; }
   else { currentCategory = cat; currentWorkType = ''; }
   loadJobs();
 }
@@ -3077,18 +3076,12 @@ function toggleDday(el) {
   dateFilter = dateFilter === 'today' ? '' : 'today';
   el.classList.toggle('active', dateFilter === 'today');
   const advChip = document.getElementById('chip-adv-filter');
-  if (advChip) { const a = minWageFilter > 10000 || dateFilter || timeFilter || sortMode !== 'dist'; advChip.classList.toggle('active', a); advChip.textContent = a ? '필터●' : '필터'; }
+  if (advChip) { const a = minWageFilter > 10000 || dateFilter || timeFilter; advChip.classList.toggle('active', a); advChip.textContent = a ? '필터●' : '필터'; }
   loadJobs();
 }
 
 function setSortMode(mode) {
   sortMode = mode;
-  ['dist','wage-desc','wage-asc','date-asc','date-desc'].forEach(m => {
-    const btn = document.getElementById('flt-sort-' + m);
-    if (btn) { btn.style.background = '#f0f0f0'; btn.style.color = '#555'; }
-  });
-  const activeBtn = document.getElementById('flt-sort-' + mode.replace(/_/g,'-'));
-  if (activeBtn) { activeBtn.style.background = 'var(--red)'; activeBtn.style.color = '#fff'; }
 }
 
 function calcDDay(st) {
@@ -3129,13 +3122,12 @@ function closeAdvFilter() {
   const wage = parseInt(document.getElementById('wage-slider')?.value || 0);
   minWageFilter = wage > 10000 ? wage : 0;
   const chip = document.getElementById('chip-adv-filter');
-  const active = minWageFilter > 10000 || dateFilter || timeFilter || sortMode !== 'dist';
+  const active = minWageFilter > 10000 || dateFilter || timeFilter;
   if (chip) { chip.classList.toggle('active', active); chip.textContent = active ? '필터●' : '필터'; }
   loadJobs();
 }
 function resetAdvFilter() {
-  minWageFilter = 0; dateFilter = ''; timeFilter = ''; sortMode = 'dist';
-  setSortMode('dist');
+  minWageFilter = 0; dateFilter = ''; timeFilter = '';
   const sl = document.getElementById('wage-slider');
   if (sl) { sl.value = 10000; document.getElementById('wage-val').textContent = '10,000원'; }
   ['flt-date-any','flt-date-today','flt-date-tmr','flt-date-wknd'].forEach(id => {
