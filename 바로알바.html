@@ -903,24 +903,6 @@
   </div>
 </div>
 
-<!-- 투데이 추천 공고 카드 (지도 하단 플로팅) -->
-<div id="today-pick-card" style="display:none;position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + 12px);z-index:150;background:#fff;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.18);overflow:hidden;cursor:pointer" onclick="openDetail(this.dataset.jobId)">
-  <div id="today-pick-header" style="padding:14px 16px 10px;position:relative">
-    <div style="font-size:10px;font-weight:800;color:#FF4B4B;margin-bottom:4px;letter-spacing:0.5px">&#128205; 내 주변 추천 공고</div>
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:15px;font-weight:900;color:#111" id="today-pick-title"></div>
-        <div style="font-size:12px;color:#888;font-weight:700;margin-top:2px" id="today-pick-biz"></div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:20px;font-weight:900;color:#FF4B4B" id="today-pick-wage"></div>
-        <div style="font-size:10px;color:#aaa;font-weight:700" id="today-pick-dist"></div>
-      </div>
-    </div>
-  </div>
-  <button onclick="event.stopPropagation();document.getElementById('today-pick-card').style.display='none'" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:18px;color:#ccc;cursor:pointer;line-height:1">✕</button>
-</div>
-
 <!-- 내 위치 플로팅 버튼 -->
 <button id="map-loc-btn" onclick="moveToMyLocation()" title="내 위치로"
   style="position:fixed;right:16px;bottom:calc(var(--nav-h) + var(--sheet-peek) + 16px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
@@ -2113,25 +2095,7 @@ function renderUrgentFeed() {
 
 }
 
-function renderTodayPick() {
-  const card = document.getElementById('today-pick-card');
-  if (!card) return;
-  // 하단 시트가 peek 상태일 때만 표시
-  const sheet = document.getElementById('bottom-sheet');
-  const isPeek = sheet?.classList.contains('sheet-peek');
-  if (!isPeek) { card.style.display = 'none'; return; }
-  const pick = jobs.find(j => j.status === 'urgent') || jobs[0];
-  if (!pick) { card.style.display = 'none'; return; }
-  const dist = pick.distance_m < 1000 ? Math.round(pick.distance_m)+'m' : (pick.distance_m/1000).toFixed(1)+'km';
-  const bg = CAT_BG[pick.category] || '#FFF5F5';
-  card.dataset.jobId = pick.id;
-  document.getElementById('today-pick-header').style.background = bg;
-  document.getElementById('today-pick-title').textContent = pick.title;
-  document.getElementById('today-pick-biz').textContent = `${CAT_EMOJI[pick.category]||'\u{1F4BC}'} ${pick.biz_name||pick.category}`;
-  document.getElementById('today-pick-wage').textContent = (pick.current_wage/10000).toFixed(1) + '만원/시';
-  document.getElementById('today-pick-dist').textContent = '\u{1F4CD} ' + dist;
-  card.style.display = 'block';
-}
+function renderTodayPick() {}
 
 // ── 공고 상세 ─────────────────────────────────────────────
 function openDetail(jobId) {
@@ -3258,9 +3222,6 @@ function setSheetState(state) {
   sheet.classList.remove('sheet-peek', 'sheet-half', 'sheet-full');
   sheet.classList.add('sheet-' + state);
   sheetState = state;
-  // 시트가 올라오면 추천 카드 숨기기
-  const pick = document.getElementById('today-pick-card');
-  if (pick) pick.style.display = state === 'peek' ? 'block' : 'none';
 }
 
 // ── 검색 (위치 검색 + 공고 텍스트 필터 통합) ─────────────
