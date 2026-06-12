@@ -3672,7 +3672,12 @@ function bindSwipeDrag(card) {
     if (dx > 80)       flyCard(card, 'right');
     else if (dx < -80) flyCard(card, 'left');
     else if (dy < -100 && Math.abs(dy) > Math.abs(dx)) flyCard(card, 'up');
-    else { card.style.transform = ''; }
+    else {
+      card.style.transform = '';
+      card.querySelector('.sw-overlay-left').style.opacity = '0';
+      card.querySelector('.sw-overlay-right').style.opacity = '0';
+      card.querySelector('.sw-overlay-up').style.opacity = '0';
+    }
   };
 
   card.addEventListener('touchstart', e => onStart(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
@@ -3690,6 +3695,8 @@ async function flyCard(card, dir) {
     if (!eligible) {
       card.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
       card.style.transform = '';
+      const ovUp = card.querySelector('.sw-overlay-up');
+      if (ovUp) ovUp.style.opacity = '0';
       setTimeout(() => { card.style.transition = ''; }, 400);
       return;
     }
@@ -4222,11 +4229,14 @@ async function uploadWorkerPhoto(input) {
   if (existing.length >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
   openCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `${prefix}/portfolio_${Date.now()}.jpg`;
+    const filename = `portfolio_${Date.now()}.jpg`;
+    const path = `${prefix}/${filename}`;
     const { error: upErr } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
     showToast('✅ 사진이 등록됐습니다');
-    loadWorkerPhotos();
+    const publicUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
+    _renderWorkerPhotos([..._wPhotos, { id: filename, photo_url: publicUrl }]);
+    loadWorkerPhotos().catch(() => {});
   });
 }
 
