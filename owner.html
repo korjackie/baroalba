@@ -340,7 +340,7 @@
 
 <!-- 내 위치 FAB -->
 <button id="owner-loc-fab" onclick="ownerMapMyLocation()" title="내 위치로"
-  style="position:fixed;right:20px;bottom:calc(var(--nav-h) + 16px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
+  style="position:fixed;right:20px;bottom:calc(var(--nav-h) + 56px + 16px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>
 </button>
 
@@ -704,7 +704,7 @@
     </div>
   </div>
   <div id="owner-map-container" style="flex:1;width:100%"></div>
-  <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center;flex-shrink:0" data-i18n="owner_map_hint">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
+  <div id="owner-map-info" style="height:56px;display:flex;align-items:center;justify-content:center;background:#fff;border-top:1px solid #f0f0f0;padding:0 16px;font-size:15px;font-weight:800;color:#222;flex-shrink:0">주변 공고 <span id="owner-map-count" style="color:#FF4B4B;margin:0 2px">0</span>개</div>
   <!-- 반경 배지 -->
   <div id="owner-radius-badge" onclick="toggleOwnerRadiusPopup()" style="display:none;position:absolute;top:152px;right:14px;z-index:12;background:#fff;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:700;color:#555;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer">
     &#128225; <span id="owner-radius-txt">10km</span>
@@ -2775,7 +2775,7 @@ function setNav(el, tab) {
 let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerName = '';
 
 // ── 지도 탭 (업주용 주변 공고 조회) ──────────────────────
-let _ownerMap = null, _ownerOverlays = [], _ownerWorkerOverlays = [], _ownerMapDragBound = false;
+let _ownerMap = null, _ownerOverlays = [], _ownerWorkerOverlays = [], _ownerMapDragBound = false, _ownerLocOverlay = null;
 let _ownerMapCat = '', _ownerMapWorkType = '', _ownerMapUrgentOnly = false;
 let _ownerRadius = 10000, _ownerMapMode = 'jobs';
 
@@ -2855,6 +2855,9 @@ async function loadOwnerMapJobs() {
     _ownerOverlays.push(overlay);
   });
 
+  const _infoBar = document.getElementById('owner-map-info');
+  if (_infoBar) _infoBar.innerHTML = `주변 공고 <span style="color:#FF4B4B;margin:0 2px">${jobs.length}</span>개`;
+
   if (!_ownerMapDragBound) {
     kakao.maps.event.addListener(_ownerMap, 'dragend', loadOwnerMapJobs);
     _ownerMapDragBound = true;
@@ -2889,7 +2892,7 @@ function setOwnerMapMode(mode) {
     tabWorkers.style.background = '#fff';     tabWorkers.style.color = '#888';
     if (jobsUI)  jobsUI.style.display  = 'flex';
     if (btPanel) btPanel.style.display = 'none';
-    if (infoBar) infoBar.textContent   = '마커를 클릭하면 공고 정보를 볼 수 있습니다';
+    if (infoBar) infoBar.innerHTML = '주변 공고 <span style="color:#FF4B4B;margin:0 2px">0</span>개';
     if (radiusBadge) radiusBadge.style.display = 'block';
     // clear worker overlays
     (_ownerWorkerOverlays || []).forEach(o => o.setMap(null));
@@ -2904,7 +2907,7 @@ function setOwnerMapMode(mode) {
     // clear job overlays
     (_ownerOverlays || []).forEach(o => o.setMap(null));
     _ownerOverlays = [];
-    if (infoBar) infoBar.textContent = '알바생 마커를 클릭하면 연락할 수 있습니다';
+    if (infoBar) infoBar.innerHTML = '주변 알바생 <span style="color:#FF4B4B;margin:0 2px">0</span>명';
     loadBarotouipList();
   }
 }
@@ -2974,6 +2977,9 @@ async function loadBarotouipList() {
     overlay.setMap(_ownerMap);
     _ownerWorkerOverlays.push(overlay);
   });
+
+  const _wInfoBar = document.getElementById('owner-map-info');
+  if (_wInfoBar) _wInfoBar.innerHTML = `주변 알바생 <span style="color:#FF4B4B;margin:0 2px">${list.length}</span>명`;
 }
 
 function showBarotouipContact(kakaoUid, name, phone) {
@@ -3008,10 +3014,24 @@ async function searchOwnerLocation(q) {
   }
 }
 
+function setOwnerLocationMarker(latlng) {
+  if (_ownerLocOverlay) { _ownerLocOverlay.setMap(null); _ownerLocOverlay = null; }
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:26px;height:35px;display:flex;align-items:center;justify-content:center';
+  const img = document.createElement('img');
+  img.src = './icons/marker-logo.png';
+  img.style.cssText = 'width:26px;height:35px;object-fit:contain;pointer-events:none';
+  wrap.appendChild(img);
+  _ownerLocOverlay = new kakao.maps.CustomOverlay({ position: latlng, content: wrap, yAnchor: 0.5, zIndex: 10 });
+  _ownerLocOverlay.setMap(_ownerMap);
+}
+
 function ownerMapMyLocation() {
   if (!navigator.geolocation) { showToast('위치 정보를 사용할 수 없습니다'); return; }
   navigator.geolocation.getCurrentPosition(pos => {
-    _ownerMap.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+    const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+    _ownerMap.setCenter(latlng);
+    setOwnerLocationMarker(latlng);
     loadOwnerMapJobs();
   }, () => showToast('위치 권한이 필요합니다'));
 }
