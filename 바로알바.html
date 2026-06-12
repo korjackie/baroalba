@@ -616,7 +616,7 @@
     /* ── 토스트 ── */
     .toast {
       position: fixed;
-      bottom: calc(var(--nav-h) + var(--sheet-peek) + 12px);
+      bottom: calc(var(--nav-h) + 20px);
       left: 50%; transform: translateX(-50%);
       background: #222; color: #fff;
       font-size: 13px; font-weight: 700;
@@ -1133,8 +1133,8 @@
 
   <div style="width:100%;padding:14px 20px 6px;display:flex;align-items:center;justify-content:space-between;">
     <div>
-      <div style="font-size:20px;font-weight:900;color:#222">&#127919; 바로지원</div>
-      <div style="font-size:11px;color:#aaa;font-weight:600;margin-top:1px">오른쪽=지원 · 왼쪽=패스 · 위=번개지원</div>
+      <div style="font-size:20px;font-weight:900;color:#111;letter-spacing:-0.5px">바로지원</div>
+      <div style="font-size:11px;color:#ccc;font-weight:600;margin-top:2px">← 패스 &nbsp;·&nbsp; ↑ 번개지원 &nbsp;·&nbsp; → 지원</div>
     </div>
     <div id="swipe-counter" style="font-size:13px;color:#aaa;font-weight:700"></div>
   </div>
@@ -1143,10 +1143,25 @@
   <div id="swipe-stack" style="position:relative;width:calc(100% - 32px);flex:1;max-height:68vh;"></div>
 
   <!-- 액션 버튼 -->
-  <div style="display:flex;gap:20px;align-items:center;justify-content:center;padding:16px 0 20px;">
-    <button onclick="swipeAction('left')" style="width:60px;height:60px;border-radius:50%;background:#fff;border:2px solid #FFE0E0;font-size:26px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;">❌</button>
-    <button onclick="swipeAction('up')" style="width:50px;height:50px;border-radius:50%;background:#fff;border:2px solid #FFF3E0;font-size:22px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;">⚡</button>
-    <button onclick="swipeAction('right')" style="width:60px;height:60px;border-radius:50%;background:var(--red);border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(255,75,75,0.4);display:flex;align-items:center;justify-content:center;">✅</button>
+  <div style="display:flex;gap:28px;align-items:flex-end;justify-content:center;padding:14px 0 22px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <button onclick="swipeAction('left')" style="width:60px;height:60px;border-radius:50%;background:#fff;border:2.5px solid #FFD0D0;cursor:pointer;box-shadow:0 4px 16px rgba(255,75,75,0.15);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4B4B" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <span style="font-size:10px;font-weight:700;color:#FF4B4B;letter-spacing:-0.3px">패스</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <button onclick="swipeAction('up')" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#FFF8E8,#FFE0B2);border:2.5px solid #FFCB6B;cursor:pointer;box-shadow:0 4px 16px rgba(255,149,0,0.2);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#FF9500"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </button>
+      <span style="font-size:10px;font-weight:700;color:#FF9500;letter-spacing:-0.3px">번개</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <button onclick="swipeAction('right')" style="width:60px;height:60px;border-radius:50%;background:var(--red);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(255,75,75,0.4);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <span style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:-0.3px">지원</span>
+    </div>
   </div>
 </div>
 
@@ -1157,7 +1172,7 @@
     <div class="nav-label">지도</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'swipe')">
-    <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="14" height="10" rx="2"/><path d="M5 6h14a2 2 0 012 2v8"/><path d="M19 11l3 3-3 3"/></svg></div>
     <div class="nav-label">스와이프</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'applications')">
@@ -3507,7 +3522,8 @@ function makeSwipeCard(job, isTop) {
   card.dataset.jobId = job.id;
   const bg = CAT_BG[job.category] || '#f5f5f5';
   const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
-  const dist = (job.distance_m == null || isNaN(job.distance_m)) ? '위치확인중' : job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
+  const _addrFallback = (job.address || '').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+  const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_addrFallback || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
 
   // 날짜/시간 포맷
   let dateStr = '날짜 미정', timeStr = '';
