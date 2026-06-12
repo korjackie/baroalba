@@ -727,7 +727,7 @@
   <div class="search-row">
     <div class="search-box">
       <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-      <input id="search-input" type="text" placeholder="지역, 업종 검색">
+      <input id="search-input" type="text" placeholder="지역, 업종 검색" readonly onfocus="this.blur();openSearchOverlay()">
     </div>
   </div>
   <div class="filter-row" id="filter-row">
@@ -742,13 +742,16 @@
     <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">챌린지</div>
     <div class="chip" data-cat="이사도우미" onclick="setCategory(this, '이사도우미')">이사도우미</div>
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
-    <div class="chip" data-cat="__regular__" onclick="setCategory(this,'__regular__')">정기</div>
-    <div class="chip" data-cat="__short__"   onclick="setCategory(this,'__short__')">단기</div>
-    <div class="chip" data-cat="__spot__"    onclick="setCategory(this,'__spot__')">스팟</div>
-    <div class="chip" id="chip-dday"         onclick="toggleDday(this)" style="flex-shrink:0">D-DAY</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
     <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
     <div class="chip" onclick="openSearchOverlay()" style="flex-shrink:0;background:#111;color:#fff;border-color:#111">검색</div>
+  </div>
+  <div class="filter-row" style="margin-top:4px">
+    <div class="chip" id="chip-dday"     onclick="toggleDday(this)">D-DAY</div>
+    <div class="chip" data-cat="__regular__" onclick="setCategory(this,'__regular__')">정기</div>
+    <div class="chip" data-cat="__short__"   onclick="setCategory(this,'__short__')">단기</div>
+    <div class="chip" data-cat="__spot__"    onclick="setCategory(this,'__spot__')">스팟</div>
+    <div class="chip" id="chip-sort-btn" onclick="toggleSort()" style="margin-left:auto;flex-shrink:0">↕ 거리순</div>
   </div>
 </div>
 
@@ -992,7 +995,7 @@
   </div>
   <div class="sheet-summary">
     <div class="sheet-count">주변 공고 <span id="job-count">0</span>개</div>
-    <div class="sheet-sort" onclick="toggleSort()">⇅ <span id="sort-label">거리순</span></div>
+    <div class="sheet-sort" onclick="toggleSort()">↕ <span id="sort-label">거리순</span></div>
   </div>
   <!-- 오늘의 급구 피드 -->
   <div id="urgent-feed-section" style="padding:0 14px 4px;display:none">
@@ -1999,7 +2002,7 @@ function renderMarkers() {
     // work_type 없는 구공고는 카테고리로 심부름 판별
     const isErrand = job.work_type === 'errand' || ERRAND_CAT_NAMES.has(job.category);
 
-    const wageUnit = isErrand ? '/건' : '/h';
+    const wageUnit = isErrand ? '/건' : '/시';
     const catName  = CAT_SHORT[job.category] || (isErrand ? '심부름' : (job.category || '알바'));
 
     const bubbleCls = isErrand ? 'mk-errand' : (isUrgent ? 'mk-asap' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : '')));
@@ -3224,11 +3227,15 @@ function shareJobNative() {
 }
 
 function toggleSort() {
-  sortByWage = !sortByWage;
-  document.getElementById('sort-label').textContent = sortByWage ? '시급순' : '거리순';
-  if (sortByWage) jobs.sort((a,b) => b.current_wage - a.current_wage);
-  else jobs.sort((a,b) => a.distance_m - b.distance_m);
-  renderList();
+  const cycle  = ['dist','wage_desc','wage_asc','date_asc','date_desc'];
+  const labels = { dist:'거리순', wage_desc:'시급↑', wage_asc:'시급↓', date_asc:'시작빠른순', date_desc:'시작느린순' };
+  sortMode = cycle[(cycle.indexOf(sortMode) + 1) % cycle.length];
+  const label = labels[sortMode];
+  document.getElementById('sort-label').textContent = label;
+  const sortBtn = document.getElementById('chip-sort-btn');
+  if (sortBtn) sortBtn.textContent = '↕ ' + label;
+  setSortMode(sortMode);
+  loadJobs();
 }
 
 // ── 하단 시트 드래그 ──────────────────────────────────────
