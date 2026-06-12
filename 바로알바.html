@@ -1655,6 +1655,7 @@ let overlays = [];
 let selectedJobId = null;
 let myLocationOverlay = null;
 let _locationWatchId = null;
+let _lastLocSaved = 0;
 let minWageFilter = 0;
 let dateFilter = '';
 let timeFilter = '';
@@ -2981,6 +2982,13 @@ function moveToMyLocation(silent = false) {
       saveMapCenter(pos.coords.latitude, pos.coords.longitude);
       kakaoMap.setCenter(latlng);
       loadJobs();
+    }
+    // 5분마다 DB에 위치 저장 (업주 바로투입 지도용)
+    const now = Date.now();
+    if (currentUser && (now - _lastLocSaved) > 300000) {
+      _lastLocSaved = now;
+      db.from('workers').update({ last_lat: pos.coords.latitude, last_lng: pos.coords.longitude })
+        .eq('kakao_uid', currentUser.id).then(() => {});
     }
   }, () => {
     if (!silent) showToast('위치 권한이 필요합니다');

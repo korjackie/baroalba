@@ -340,7 +340,7 @@
 
 <!-- 내 위치 FAB -->
 <button id="owner-loc-fab" onclick="ownerMapMyLocation()" title="내 위치로"
-  style="position:fixed;right:20px;bottom:160px;width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
+  style="position:fixed;right:20px;bottom:calc(var(--nav-h) + 16px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>
 </button>
 
@@ -705,19 +705,34 @@
   </div>
   <div id="owner-map-container" style="flex:1;width:100%"></div>
   <div id="owner-map-info" style="background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;font-size:12px;color:#888;text-align:center;flex-shrink:0" data-i18n="owner_map_hint">마커를 클릭하면 공고 정보를 볼 수 있습니다</div>
-  <!-- 바로투입 패널 (지도 위 슬라이드업) -->
-  <div id="barotouip-panel" style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:20;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,0.15);max-height:65vh;display:none;flex-direction:column">
+  <!-- 반경 배지 -->
+  <div id="owner-radius-badge" onclick="toggleOwnerRadiusPopup()" style="display:none;position:absolute;top:152px;right:14px;z-index:12;background:#fff;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:700;color:#555;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer">
+    &#128225; <span id="owner-radius-txt">10km</span>
+  </div>
+  <!-- 반경 팝업 -->
+  <div id="owner-radius-popup" style="display:none;position:absolute;top:186px;right:14px;z-index:13;background:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 4px 16px rgba(0,0,0,0.15);width:160px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+      <div style="font-size:11px;font-weight:800;color:#888">반경</div>
+      <div id="owner-radius-val" style="font-size:14px;font-weight:900;color:#FF4B4B">10km</div>
+    </div>
+    <input type="range" id="owner-radius-slider" min="1" max="30" step="1" value="10"
+      oninput="document.getElementById('owner-radius-val').textContent=this.value+'km'"
+      onchange="setOwnerRadius(parseInt(this.value)*1000)"
+      style="width:100%;accent-color:#FF4B4B;cursor:pointer">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;font-weight:700;margin-top:-4px">
+      <span>1km</span><span>30km</span>
+    </div>
+  </div>
+  <!-- 바로투입 패널 (지도 위 슬라이드업) - fallback -->
+  <div id="barotouip-panel" style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:20;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,0.15);max-height:65vh;flex-direction:column">
     <div style="padding:12px 20px 8px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
       <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 12px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:16px;font-weight:900;color:#222">&#128100; 주변 알바생 목록</div>
-        <div style="font-size:12px;color:#aaa" id="barotouip-count">불러오는 중...</div>
+        <div style="font-size:16px;font-weight:900;color:#222">&#128100; 주변 알바생</div>
+        <div style="font-size:12px;color:#aaa" id="barotouip-count"></div>
       </div>
-      <div style="font-size:12px;color:#888;margin-top:3px">지원한 이력 없는 알바생에게 먼저 연락하세요</div>
     </div>
-    <div id="barotouip-list" style="overflow-y:auto;padding:10px 16px 32px;flex:1">
-      <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
-    </div>
+    <div id="barotouip-list" style="overflow-y:auto;padding:10px 16px 32px;flex:1"></div>
   </div>
 </div>
 
@@ -2760,8 +2775,9 @@ function setNav(el, tab) {
 let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerName = '';
 
 // ── 지도 탭 (업주용 주변 공고 조회) ──────────────────────
-let _ownerMap = null, _ownerOverlays = [], _ownerMapDragBound = false;
+let _ownerMap = null, _ownerOverlays = [], _ownerWorkerOverlays = [], _ownerMapDragBound = false;
 let _ownerMapCat = '', _ownerMapWorkType = '', _ownerMapUrgentOnly = false;
+let _ownerRadius = 10000, _ownerMapMode = 'jobs';
 
 function initOwnerMap() {
   if (_ownerMap) { loadOwnerMapJobs(); return; }
@@ -2771,6 +2787,8 @@ function initOwnerMap() {
       ? new kakao.maps.LatLng(bizRecord.lat, bizRecord.lng)
       : new kakao.maps.LatLng(APP_CONFIG.DEFAULT_LAT, APP_CONFIG.DEFAULT_LNG);
     _ownerMap = new kakao.maps.Map(container, { center, level: 5 });
+    const rb = document.getElementById('owner-radius-badge');
+    if (rb) rb.style.display = 'block';
     loadOwnerMapJobs();
   }, 100);
 }
@@ -2780,7 +2798,7 @@ async function loadOwnerMapJobs() {
   const center = _ownerMap.getCenter();
   const { data, error: mapErr } = await db.rpc('nearby_jobs', {
     user_lat: center.getLat(), user_lng: center.getLng(),
-    radius_meters: 10000
+    radius_meters: _ownerRadius
   });
   if (mapErr) { console.error('[ownerMap] nearby_jobs error:', mapErr); }
 
@@ -2857,7 +2875,6 @@ function setOwnerMapUrgent(el) {
   loadOwnerMapJobs();
 }
 
-let _ownerMapMode = 'jobs';
 function setOwnerMapMode(mode) {
   _ownerMapMode = mode;
   const tabJobs    = document.getElementById('map-tab-jobs');
@@ -2865,59 +2882,98 @@ function setOwnerMapMode(mode) {
   const jobsUI     = document.getElementById('map-mode-jobs-ui');
   const btPanel    = document.getElementById('barotouip-panel');
   const infoBar    = document.getElementById('owner-map-info');
+  const radiusBadge = document.getElementById('owner-radius-badge');
+  const radiusPopup = document.getElementById('owner-radius-popup');
   if (mode === 'jobs') {
     tabJobs.style.background    = '#FF4B4B'; tabJobs.style.color    = '#fff';
     tabWorkers.style.background = '#fff';     tabWorkers.style.color = '#888';
     if (jobsUI)  jobsUI.style.display  = 'flex';
     if (btPanel) btPanel.style.display = 'none';
     if (infoBar) infoBar.textContent   = '마커를 클릭하면 공고 정보를 볼 수 있습니다';
+    if (radiusBadge) radiusBadge.style.display = 'block';
+    // clear worker overlays
+    (_ownerWorkerOverlays || []).forEach(o => o.setMap(null));
+    _ownerWorkerOverlays = [];
+    loadOwnerMapJobs();
   } else {
     tabJobs.style.background    = '#fff';     tabJobs.style.color    = '#888';
     tabWorkers.style.background = '#FF4B4B'; tabWorkers.style.color = '#fff';
     if (jobsUI)  jobsUI.style.display  = 'none';
-    if (btPanel) { btPanel.style.display = 'flex'; loadBarotouipList(); }
-    if (infoBar) infoBar.textContent   = '주변 알바생에게 먼저 연락해보세요';
+    if (radiusBadge) radiusBadge.style.display = 'none';
+    if (radiusPopup) radiusPopup.style.display = 'none';
+    // clear job overlays
+    (_ownerOverlays || []).forEach(o => o.setMap(null));
+    _ownerOverlays = [];
+    if (infoBar) infoBar.textContent = '알바생 마커를 클릭하면 연락할 수 있습니다';
+    loadBarotouipList();
   }
 }
 
+function toggleOwnerRadiusPopup() {
+  const p = document.getElementById('owner-radius-popup');
+  if (p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function setOwnerRadius(meters) {
+  _ownerRadius = meters;
+  const km = Math.round(meters / 1000);
+  const txt = document.getElementById('owner-radius-txt');
+  if (txt) txt.textContent = km + 'km';
+  document.getElementById('owner-radius-popup').style.display = 'none';
+  loadOwnerMapJobs();
+}
+
 async function loadBarotouipList() {
-  const listEl  = document.getElementById('barotouip-list');
   const countEl = document.getElementById('barotouip-count');
-  if (!listEl) return;
-  listEl.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+  const btPanel = document.getElementById('barotouip-panel');
 
-  const { data: workers } = await db.from('workers')
-    .select('id, kakao_uid, name, bio, skills, languages, region, rating, review_count, photo_url, phone')
+  // clear existing worker overlays
+  (_ownerWorkerOverlays || []).forEach(o => o.setMap(null));
+  _ownerWorkerOverlays = [];
+
+  // query workers with location data
+  const { data: workers, error } = await db.from('workers')
+    .select('id, kakao_uid, name, photo_url, rating, review_count, phone, skills, languages, region, last_lat, last_lng')
+    .not('last_lat', 'is', null)
+    .not('last_lng', 'is', null)
     .not('name', 'is', null)
-    .order('rating', { ascending: false, nullsFirst: false })
-    .limit(50);
+    .limit(80);
 
-  const list = workers || [];
+  const list = error ? [] : (workers || []).filter(w => w.last_lat && w.last_lng);
+
   if (countEl) countEl.textContent = list.length + '명';
 
   if (!list.length) {
-    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa"><div style="font-size:32px;margin-bottom:8px">&#128100;</div><div style="font-size:14px;font-weight:700">등록된 알바생이 없습니다</div></div>';
+    // fallback: show list panel with all workers (no location filter)
+    if (btPanel) btPanel.style.display = 'flex';
+    const listEl = document.getElementById('barotouip-list');
+    if (listEl) {
+      listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:13px;margin-bottom:6px">아직 실시간 위치 정보가 없습니다</div><div style="font-size:11px;color:#bbb">알바생이 앱을 열고 지도 탭을 방문하면<br>이 화면에 마커로 표시됩니다</div></div>';
+    }
     return;
   }
 
-  listEl.innerHTML = list.map(w => {
+  // hide panel - show on map as markers
+  if (btPanel) btPanel.style.display = 'none';
+
+  const personSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  list.forEach(w => {
     const avatar = w.photo_url
-      ? `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover">`
-      : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
-    const ratingStr = w.rating ? `★ ${parseFloat(w.rating).toFixed(1)} (${w.review_count || 0})` : '평점 없음';
-    const skills = (w.skills || []).slice(0, 3).join(' · ') || '';
-    const langs = (w.languages || []).slice(0, 2).join(', ') || '';
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f5f5f5">
-      <div style="width:46px;height:46px;border-radius:50%;background:#f4f4f4;overflow:hidden;flex-shrink:0;border:1.5px solid #eee;display:flex;align-items:center;justify-content:center">${avatar}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:800;color:#222">${w.name || '이름 없음'} ${w.region ? `<span style="font-size:11px;color:#aaa;font-weight:500">· ${w.region}</span>` : ''}</div>
-        ${skills ? `<div style="font-size:11px;color:#666;margin-top:2px">🏷️ ${skills}</div>` : ''}
-        ${langs  ? `<div style="font-size:11px;color:#3B82F6;margin-top:1px">🌐 ${langs}</div>` : ''}
-        <div style="font-size:11px;color:#F59E0B;margin-top:1px">${ratingStr}</div>
-      </div>
-      <button onclick="showBarotouipContact('${w.kakao_uid}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}')" style="flex-shrink:0;padding:8px 12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">연락하기</button>
+      ? `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f4f4f4;pointer-events:none">${personSvg}</div>`;
+    const nameShort = (w.name || '').substring(0, 4);
+    const ratingStr = w.rating ? `★${parseFloat(w.rating).toFixed(1)}` : '';
+    const content = `<div style="text-align:center;cursor:pointer" onclick="showBarotouipContact('${w.kakao_uid}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}')">
+      <div style="width:46px;height:46px;border-radius:50%;border:2.5px solid #FF4B4B;overflow:hidden;box-shadow:0 2px 10px rgba(255,75,75,0.4)">${avatar}</div>
+      <div style="margin-top:3px;background:rgba(0,0,0,0.72);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nameShort}${ratingStr ? ' '+ratingStr : ''}</div>
     </div>`;
-  }).join('');
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(w.last_lat, w.last_lng),
+      content, yAnchor: 1.1, zIndex: 5
+    });
+    overlay.setMap(_ownerMap);
+    _ownerWorkerOverlays.push(overlay);
+  });
 }
 
 function showBarotouipContact(kakaoUid, name, phone) {
