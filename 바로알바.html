@@ -198,6 +198,21 @@
     .marker-tail.mk-regular { border-top-color: #16a34a; }
     .marker-tail.mk-short   { border-top-color: var(--open); }
     .marker-tail.mk-errand  { border-top-color: #7C3AED; }
+    /* 마커 타입배지/D-day */
+    .mk-row1 { display:flex; align-items:center; gap:3px; margin-bottom:2px; justify-content:center; }
+    .mk-type  { font-size:8px; font-weight:900; color:#fff; padding:1px 5px; border-radius:3px; flex-shrink:0; }
+    .mk-type.mt-reg   { background:#16a34a; }
+    .mk-type.mt-short { background:var(--open); }
+    .mk-type.mt-spot  { background:#EA580C; }
+    .mk-type.mt-errnd { background:#7C3AED; }
+    .mk-cat  { font-size:10px; font-weight:700; color:#555; max-width:50px; overflow:hidden; text-overflow:ellipsis; }
+    .mk-dday { font-size:8px; font-weight:900; flex-shrink:0; }
+    .mk-dday.dd-today { color:var(--red); }
+    .mk-dday.dd-soon  { color:#EA580C; }
+    .mk-dday.dd-later { color:#aaa; }
+    .marker-bubble.mk-asap .mk-cat, .marker-bubble.mk-errand .mk-cat { color:rgba(255,255,255,0.88); }
+    .marker-bubble.mk-asap .mk-dday, .marker-bubble.mk-errand .mk-dday { color:rgba(255,255,255,0.72); }
+    .marker-bubble.mk-asap .mk-type, .marker-bubble.mk-errand .mk-type { background:rgba(255,255,255,0.22); }
     .surge-badge {
       position: absolute;
       top: -8px; right: -8px;
@@ -727,6 +742,10 @@
     <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">챌린지</div>
     <div class="chip" data-cat="이사도우미" onclick="setCategory(this, '이사도우미')">이사도우미</div>
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
+    <div class="chip" data-cat="__regular__" onclick="setCategory(this,'__regular__')">정기</div>
+    <div class="chip" data-cat="__short__"   onclick="setCategory(this,'__short__')">단기</div>
+    <div class="chip" data-cat="__spot__"    onclick="setCategory(this,'__spot__')">스팟</div>
+    <div class="chip" id="chip-dday"         onclick="toggleDday(this)" style="flex-shrink:0">D-DAY</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
     <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
     <div class="chip" onclick="openSearchOverlay()" style="flex-shrink:0;background:#111;color:#fff;border-color:#111">검색</div>
@@ -876,6 +895,18 @@
         <button class="flt-chip" id="flt-time-am"   onclick="setTimeFilter('am')"     style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">&#127749; 오전(6~12시)</button>
         <button class="flt-chip" id="flt-time-pm"   onclick="setTimeFilter('pm')"     style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">☀️ 오후(12~18시)</button>
         <button class="flt-chip" id="flt-time-eve"  onclick="setTimeFilter('eve')"    style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">&#127769; 야간(18시~)</button>
+      </div>
+    </div>
+
+    <!-- 정렬 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">정렬</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button id="flt-sort-dist"      onclick="setSortMode('dist')"      style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">거리순</button>
+        <button id="flt-sort-wage-desc" onclick="setSortMode('wage_desc')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시급 높은순</button>
+        <button id="flt-sort-wage-asc"  onclick="setSortMode('wage_asc')"  style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시급 낮은순</button>
+        <button id="flt-sort-date-asc"  onclick="setSortMode('date_asc')"  style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시작 빠른순</button>
+        <button id="flt-sort-date-desc" onclick="setSortMode('date_desc')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">시작 느린순</button>
       </div>
     </div>
 
@@ -1649,6 +1680,7 @@ let currentCategory = '';
 let currentWorkType = '';
 let urgentOnly = false;
 let sortByWage = false;
+let sortMode = 'dist'; // dist|wage_desc|wage_asc|date_asc|date_desc
 let jobs = [];
 let _myAge = null;
 let markers = [];
@@ -1867,9 +1899,16 @@ async function loadJobs() {
     const todayStr = new Date().toISOString().slice(0, 10);
     result = result.filter(j => !j.work_end_date || j.work_end_date >= todayStr);
 
-    if (currentWorkType === 'errand') result = result.filter(j => j.work_type === 'errand');
+    if (currentWorkType === 'errand')        result = result.filter(j => j.work_type === 'errand');
+    else if (currentWorkType === 'regular') result = result.filter(j => j.work_type === 'regular');
+    else if (currentWorkType === 'short')   result = result.filter(j => j.work_type === 'short');
+    else if (currentWorkType === 'spot')    result = result.filter(j => !j.work_type || j.work_type === 'spot');
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
-    if (sortByWage) result = result.sort((a,b) => b.current_wage - a.current_wage);
+    if      (sortMode === 'wage_desc') result.sort((a,b) => b.current_wage - a.current_wage);
+    else if (sortMode === 'wage_asc')  result.sort((a,b) => a.current_wage - b.current_wage);
+    else if (sortMode === 'date_asc')  result.sort((a,b) => (a.start_time||'').localeCompare(b.start_time||''));
+    else if (sortMode === 'date_desc') result.sort((a,b) => (b.start_time||'').localeCompare(a.start_time||''));
+    else if (sortByWage) result.sort((a,b) => b.current_wage - a.current_wage);
 
     // 고급 필터
     if (minWageFilter > 10000) result = result.filter(j => (j.current_wage || 0) >= minWageFilter);
@@ -1963,30 +2002,26 @@ function renderMarkers() {
     const wageUnit = isErrand ? '/건' : '/h';
     const catName  = CAT_SHORT[job.category] || (isErrand ? '심부름' : (job.category || '알바'));
 
-    // 마커 상단 라벨: ASAP > 유형+카테고리
-    let topLabel = '';
-    if (isErrand) {
-      topLabel = `심부름 · ${catName}`;
-    } else if (isUrgent) {
-      topLabel = `⚡ ASAP · ${catName}`;
-    } else if (job.work_type === 'regular') {
-      topLabel = `정기 · ${catName}`;
-    } else if (job.work_type === 'short') {
-      topLabel = `단기 · ${catName}`;
-    } else {
-      topLabel = catName; // 스팟은 카테고리만
-    }
-
     const bubbleCls = isErrand ? 'mk-errand' : (isUrgent ? 'mk-asap' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : '')));
     const tailCls   = isErrand ? 'mk-errand' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : ''));
     const surgeHtml = hasSurge
       ? `<div class="surge-badge">↑${(job.wage_delta/1000).toFixed(0)}k</div>` : '';
+    const { str: ddayStr, cls: ddayCls } = calcDDay(job.start_time);
+    const _TYPE_CLS = { regular:'mt-reg', short:'mt-short', errand:'mt-errnd' };
+    const _TYPE_CHR = { regular:'정', short:'단', errand:'심' };
+    const mkTypeCls = _TYPE_CLS[job.work_type] || 'mt-spot';
+    const mkTypeChr = _TYPE_CHR[job.work_type] || '스';
+    const catShort  = catName.length > 5 ? catName.slice(0,5) : catName;
 
     const content = `
       <div class="marker-wrap" onclick="openDetail('${job.id}')">
         ${surgeHtml}
         <div class="marker-bubble ${bubbleCls}">
-          <span class="mk-top">${topLabel}</span>
+          <div class="mk-row1">
+            <span class="mk-type ${mkTypeCls}">${mkTypeChr}</span>
+            <span class="mk-cat">${catShort}</span>
+            ${ddayStr ? `<span class="mk-dday ${ddayCls}">${ddayStr}</span>` : ''}
+          </div>
           <span class="mk-wage">${wageStr}<span class="mk-unit">${wageUnit}</span></span>
         </div>
         <div class="marker-tail ${tailCls}"></div>
@@ -2929,6 +2964,21 @@ async function sendWChatMessage() {
     sender_id: currentUser.id,
     content,
   });
+  // Broadcast to owner's channel (RLS 우회 - postgres_changes 대신)
+  try {
+    const { data: ad } = await db.from('applications')
+      .select('job_postings(businesses(kakao_uid))').eq('id', _wchatAppId).single();
+    const ownerUid = ad?.job_postings?.businesses?.kakao_uid;
+    if (ownerUid) {
+      const ch = db.channel(`owner-${ownerUid}-notify`);
+      ch.subscribe(status => {
+        if (status === 'SUBSCRIBED') {
+          ch.send({ type:'broadcast', event:'new_msg', payload:{ application_id:_wchatAppId, content, sender_id:currentUser.id } });
+          setTimeout(() => ch.unsubscribe(), 1500);
+        }
+      });
+    }
+  } catch(e) {}
 }
 
 async function markWMessagesRead(appId) {
@@ -2989,15 +3039,13 @@ function setMyLocationMarker(latlng) {
 
 // ── 필터 ─────────────────────────────────────────────────
 function setCategory(el, cat) {
-  document.querySelectorAll('#filter-row .chip:not([data-urgent])').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#filter-row .chip[data-cat]').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  if (cat === '__errand__') {
-    currentCategory = '';
-    currentWorkType = 'errand';
-  } else {
-    currentCategory = cat;
-    currentWorkType = '';
-  }
+  if      (cat === '__errand__')  { currentCategory = ''; currentWorkType = 'errand'; }
+  else if (cat === '__regular__') { currentCategory = ''; currentWorkType = 'regular'; }
+  else if (cat === '__short__')   { currentCategory = ''; currentWorkType = 'short'; }
+  else if (cat === '__spot__')    { currentCategory = ''; currentWorkType = 'spot'; }
+  else { currentCategory = cat; currentWorkType = ''; }
   loadJobs();
 }
 
@@ -3005,6 +3053,35 @@ function toggleUrgent(el) {
   urgentOnly = !urgentOnly;
   el.classList.toggle('active', urgentOnly);
   loadJobs();
+}
+
+function toggleDday(el) {
+  dateFilter = dateFilter === 'today' ? '' : 'today';
+  el.classList.toggle('active', dateFilter === 'today');
+  const advChip = document.getElementById('chip-adv-filter');
+  if (advChip) { const a = minWageFilter > 10000 || dateFilter || timeFilter || sortMode !== 'dist'; advChip.classList.toggle('active', a); advChip.textContent = a ? '필터●' : '필터'; }
+  loadJobs();
+}
+
+function setSortMode(mode) {
+  sortMode = mode;
+  ['dist','wage-desc','wage-asc','date-asc','date-desc'].forEach(m => {
+    const btn = document.getElementById('flt-sort-' + m);
+    if (btn) { btn.style.background = '#f0f0f0'; btn.style.color = '#555'; }
+  });
+  const activeBtn = document.getElementById('flt-sort-' + mode.replace(/_/g,'-'));
+  if (activeBtn) { activeBtn.style.background = 'var(--red)'; activeBtn.style.color = '#fff'; }
+}
+
+function calcDDay(st) {
+  if (!st) return { str:'', cls:'' };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(st); d.setHours(0,0,0,0);
+  const diff = Math.round((d - today) / 86400000);
+  if (diff < 0)   return { str:'진행중', cls:'dd-later' };
+  if (diff === 0) return { str:'D-DAY',  cls:'dd-today' };
+  if (diff <= 3)  return { str:`D-${diff}`, cls:'dd-soon' };
+  return { str:`D-${diff}`, cls:'dd-later' };
 }
 
 function setRadius(m) {
@@ -3034,12 +3111,13 @@ function closeAdvFilter() {
   const wage = parseInt(document.getElementById('wage-slider')?.value || 0);
   minWageFilter = wage > 10000 ? wage : 0;
   const chip = document.getElementById('chip-adv-filter');
-  const active = minWageFilter > 10000 || dateFilter || timeFilter;
+  const active = minWageFilter > 10000 || dateFilter || timeFilter || sortMode !== 'dist';
   if (chip) { chip.classList.toggle('active', active); chip.textContent = active ? '필터●' : '필터'; }
   loadJobs();
 }
 function resetAdvFilter() {
-  minWageFilter = 0; dateFilter = ''; timeFilter = '';
+  minWageFilter = 0; dateFilter = ''; timeFilter = ''; sortMode = 'dist';
+  setSortMode('dist');
   const sl = document.getElementById('wage-slider');
   if (sl) { sl.value = 10000; document.getElementById('wage-val').textContent = '10,000원'; }
   ['flt-date-any','flt-date-today','flt-date-tmr','flt-date-wknd'].forEach(id => {
