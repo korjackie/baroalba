@@ -262,6 +262,25 @@
     .om-chip.active { background:#222; color:#fff; }
     /* ── 지도 마커 (알바생 앱과 동일) ── */
     .marker-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25)); }
+    /* 알바생 맵과 동일한 마커 스타일 */
+    .marker-bubble { background:#fff; border-radius:10px; padding:6px 11px 5px; border:2px solid var(--red); white-space:nowrap; line-height:1.3; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+    .marker-bubble.mk-asap { background:var(--red); border-color:var(--red); }
+    .marker-bubble.mk-asap .mk-top { color:rgba(255,255,255,0.9); }
+    .marker-bubble.mk-asap .mk-wage { color:#fff; }
+    .marker-bubble.mk-regular { border-color:#16a34a; }
+    .marker-bubble.mk-regular .mk-wage { color:#16a34a; }
+    .marker-bubble.mk-short { border-color:#3B82F6; }
+    .marker-bubble.mk-short .mk-wage { color:#3B82F6; }
+    .marker-bubble.mk-errand { background:#7C3AED; border-color:#7C3AED; }
+    .marker-bubble.mk-errand .mk-top { color:rgba(255,255,255,0.88); }
+    .marker-bubble.mk-errand .mk-wage { color:#fff; }
+    .mk-top { font-size:10px; font-weight:700; color:#777; display:block; }
+    .mk-wage { font-size:14px; font-weight:900; color:var(--red); display:block; }
+    .mk-unit { font-size:9px; font-weight:700; }
+    .marker-tail { width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid var(--red); margin-top:-1px; }
+    .marker-tail.mk-regular { border-top-color:#16a34a; }
+    .marker-tail.mk-short { border-top-color:#3B82F6; }
+    .marker-tail.mk-errand { border-top-color:#7C3AED; }
     .om-bubble { background:#fff; border-radius:14px; padding:9px 16px 8px; border:3px solid #FF4B4B; white-space:nowrap; line-height:1.2; min-width:100px; text-align:center; }
     .om-bubble.urgent  { background:#FF4B4B; border-color:#FF4B4B; }
     .om-bubble.urgent  .om-wage { color:#fff; }
@@ -1198,6 +1217,7 @@ async function loadPostings() {
   postings = data || [];
   renderPostings();
   updateStats();
+  subscribeOwnerGlobalChat();
 }
 
 function renderPostings() {
@@ -2866,31 +2886,26 @@ async function loadOwnerMapJobs() {
     const isUrgent = job.status === 'urgent';
     const isErrand = job.work_type === 'errand' || ERRAND_CATS.has(job.category);
     const wageStr  = (job.current_wage / 10000).toFixed(1) + '만';
-    const wageUnit = isErrand ? '/건' : '/시간';
+    const wageUnit = isErrand ? '/건' : '/h';
     const catIcon  = isErrand ? (ERRAND_ICON_MAP[job.category] || '\u{1F3C3}') : '';
-    const subLabel = isErrand
-      ? `${catIcon} ${job.category || '심부름'}`
-      : (job.biz_name || job.title || '').slice(0, 8);
 
-    const startFmt = (() => {
-      if (!job.start_time) return '';
-      const d = new Date(job.start_time);
-      if (isNaN(d.getTime())) return '';
-      return (d.getMonth()+1) + '/' + d.getDate() + ' ' +
-        String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    })();
+    let topLabel = '';
+    if (isErrand) topLabel = catIcon + ' ' + (job.category || '심부름');
+    else if (isUrgent) topLabel = '⚡ ASAP · ' + (job.category || '');
+    else if (job.work_type === 'regular') topLabel = '정기 · ' + (job.category || '');
+    else if (job.work_type === 'short') topLabel = '단기 · ' + (job.category || '');
+    else topLabel = job.category || '알바';
 
-    const statusCls = isErrand ? 'errand' : (isUrgent ? 'urgent' : 'open');
-    const tailCls   = isErrand ? 'errand' : (isUrgent ? '' : 'open');
+    const bubbleCls = isErrand ? 'mk-errand' : (isUrgent ? 'mk-asap' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : '')));
+    const tailCls   = isErrand ? 'mk-errand' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : ''));
 
     const content = `
       <div class="marker-wrap" onclick="ownerMapInfo('${job.id}')">
-        <div class="om-bubble ${statusCls}">
-          <span class="om-wage">${wageStr}<span style="font-size:10px;font-weight:700">${wageUnit}</span></span>
-          <span class="om-sub">${subLabel}</span>
-          ${!isErrand && startFmt ? `<span class="om-sub">⏰ ${startFmt}</span>` : ''}
+        <div class="marker-bubble ${bubbleCls}">
+          <span class="mk-top">${topLabel}</span>
+          <span class="mk-wage">${wageStr}<span class="mk-unit">${wageUnit}</span></span>
         </div>
-        <div class="om-tail ${tailCls}"></div>
+        <div class="marker-tail ${tailCls}"></div>
       </div>`;
 
     const overlay = new kakao.maps.CustomOverlay({
@@ -2995,18 +3010,13 @@ async function loadBarotouipList() {
 
   if (countEl) countEl.textContent = list.length + '명';
 
+  if (btPanel) btPanel.style.display = 'none';
+
   if (!list.length) {
-    // fallback: show list panel with all workers (no location filter)
-    if (btPanel) btPanel.style.display = 'flex';
-    const listEl = document.getElementById('barotouip-list');
-    if (listEl) {
-      listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:13px;margin-bottom:6px">아직 활동 지역을 설정한 알바생이 없습니다</div><div style="font-size:11px;color:#bbb">알바생이 마이페이지에서 주요 활동 지역을<br>설정하면 이 화면에 마커로 표시됩니다</div></div>';
-    }
+    const sheetList = document.getElementById('owner-sheet-list');
+    if (sheetList) sheetList.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:13px;margin-bottom:6px">아직 활동 지역을 설정한 알바생이 없습니다</div><div style="font-size:11px;color:#bbb">알바생이 마이페이지에서 주요 활동 지역을<br>설정하면 이 화면에 마커로 표시됩니다</div></div>';
     return;
   }
-
-  // hide panel - show on map as markers
-  if (btPanel) btPanel.style.display = 'none';
 
   const personSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
   list.forEach(w => {
@@ -3434,6 +3444,37 @@ async function markMessagesRead(appId) {
     .update({ is_read: true })
     .eq('application_id', appId)
     .neq('sender_id', currentUser?.id || '');
+}
+
+// ── 업주 글로벌 채팅 알림 (알바생 맵 subscribeGlobalChatNotify 동일 구조) ──
+let _ownerGlobalChatSub = null;
+async function subscribeOwnerGlobalChat() {
+  if (!currentUser || !postings?.length) return;
+  if (_ownerGlobalChatSub) { _ownerGlobalChatSub.unsubscribe(); _ownerGlobalChatSub = null; }
+
+  const jobIds = postings.map(p => p.id);
+  const { data: apps } = await db.from('applications').select('id').in('job_id', jobIds);
+  if (!apps?.length) return;
+  const myAppIds = new Set(apps.map(a => a.id));
+
+  _ownerGlobalChatSub = db.channel('owner-global-msg-notify')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+      const msg = payload.new;
+      if (!myAppIds.has(msg.application_id)) return;
+      if (msg.sender_id === currentUser.id) return;
+
+      const chatOpen = document.getElementById('chat-overlay')?.classList.contains('open');
+      if (chatOpen && _chatAppId === msg.application_id) return;
+
+      const badge = document.getElementById('owner-chat-badge');
+      if (badge) {
+        const cnt = parseInt(badge.textContent || '0') + 1;
+        badge.textContent = cnt;
+        badge.style.display = 'flex';
+      }
+      showToast('\u{1F4AC} 새 메시지: ' + msg.content.slice(0, 20) + (msg.content.length > 20 ? '…' : ''));
+    })
+    .subscribe();
 }
 
 // ── 공유 ───────────────────────────────────────────────────
