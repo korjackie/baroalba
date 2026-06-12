@@ -2931,7 +2931,7 @@ async function loadOwnerMapJobs() {
     const isUrgent = job.status === 'urgent';
     const isErrand = job.work_type === 'errand' || ERRAND_CATS.has(job.category);
     const wageStr  = (job.current_wage / 10000).toFixed(1) + '만';
-    const wageUnit = isErrand ? '/건' : '/시';
+    const wageUnit = isErrand ? '/건' : '/시간';
     const catName  = CAT_SHORT_O[job.category] || (isErrand ? '심부름' : (job.category || '알바'));
     const catShort = catName.length > 5 ? catName.slice(0,5) : catName;
 

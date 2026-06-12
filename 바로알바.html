@@ -2002,7 +2002,7 @@ function renderMarkers() {
     // work_type 없는 구공고는 카테고리로 심부름 판별
     const isErrand = job.work_type === 'errand' || ERRAND_CAT_NAMES.has(job.category);
 
-    const wageUnit = isErrand ? '/건' : '/시';
+    const wageUnit = isErrand ? '/건' : '/시간';
     const catName  = CAT_SHORT[job.category] || (isErrand ? '심부름' : (job.category || '알바'));
 
     const bubbleCls = isErrand ? 'mk-errand' : (isUrgent ? 'mk-asap' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : '')));
