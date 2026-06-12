@@ -144,7 +144,7 @@
     /* ── 반경 표시 ── */
     .radius-badge {
       position: fixed;
-      top: 110px; right: 14px;
+      top: 162px; right: 14px;
       background: #fff;
       border-radius: 10px;
       padding: 6px 10px;
@@ -695,7 +695,6 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span id="noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#FF4B4B;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
     </button>
-    <div id="header-user-info" style="font-size:13px;color:#555;font-weight:600"></div>
   </div>
 </div>
 
@@ -1675,11 +1674,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (session) {
     currentUser = session.user;
-    // 헤더 사용자 이름 표시
-    const _meta = currentUser.user_metadata || {};
-    const _uname = _meta.full_name || _meta.name || currentUser.email?.split('@')[0] || '';
-    const _hdr = document.getElementById('header-user-info');
-    if (_hdr && _uname) _hdr.textContent = _uname;
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     const isBrowseMode = !!new URLSearchParams(location.search).get('browse');
