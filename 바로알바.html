@@ -4123,7 +4123,7 @@ async function uploadAvatar(input) {
   input.value = '';
   openCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `workers/${currentUser.id}/avatar_${Date.now()}.jpg`;
+    const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
     const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
@@ -4137,7 +4137,7 @@ async function uploadAvatar(input) {
 // ── 포트폴리오 사진 (다중, 최대 5장) ─────────────────────
 async function loadWorkerPhotos() {
   if (!currentUser) return;
-  const prefix = `workers/${currentUser.id}`;
+  const prefix = `${currentUser.id}`;
   const { data: files, error } = await db.storage.from('biz-photos').list(prefix);
   if (error) { console.error('loadWorkerPhotos error:', error); return; }
   const photos = (files || [])
@@ -4232,7 +4232,7 @@ async function uploadWorkerPhoto(input) {
   const file = input.files[0];
   if (!file || !currentUser) { input.value = ''; return; }
   input.value = '';
-  const prefix = `workers/${currentUser.id}`;
+  const prefix = `${currentUser.id}`;
   const { data: existingFiles } = await db.storage.from('biz-photos').list(prefix);
   const existing = (existingFiles || []).filter(f => f.name.startsWith('portfolio_'));
   if (existing.length >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
@@ -4250,7 +4250,7 @@ async function uploadWorkerPhoto(input) {
 }
 
 async function deleteWorkerPhoto(photoName) {
-  const path = `workers/${currentUser.id}/${photoName}`;
+  const path = `${currentUser.id}/${photoName}`;
   const { error } = await db.storage.from('biz-photos').remove([path]);
   if (error) { showToast('삭제 실패: ' + error.message); return; }
   loadWorkerPhotos();
