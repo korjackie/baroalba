@@ -66,9 +66,10 @@
       background:#fff; border-radius:16px; padding:16px;
       margin-bottom:12px; box-shadow:0 1px 6px rgba(0,0,0,0.06);
       position:relative; overflow:hidden;
+      border-left:4px solid #22c55e; cursor:pointer;
     }
-    .posting-card.urgent-card { border-left:4px solid var(--red); }
-    .posting-card.closed-card { opacity:0.6; }
+    .posting-card.urgent-card { border-left-color:var(--red); }
+    .posting-card.closed-card { border-left-color:#d1d5db; opacity:0.65; }
 
     .posting-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
     .posting-title { font-size:16px; font-weight:800; color:#222; margin-bottom:3px; }
@@ -183,20 +184,36 @@
     .submit-btn:hover { background:#e03333; }
     .submit-btn:disabled { background:#ddd; cursor:default; }
 
-    /* ── 지원자 시트 ── */
+    /* ── 지원자 카드 ── */
     .applicant-card {
-      background:#f8f8f8; border-radius:14px; padding:14px;
-      margin-bottom:10px; display:flex; align-items:center; gap:12px;
+      background:#fff; border-radius:14px; margin-bottom:10px;
+      box-shadow:0 1px 8px rgba(0,0,0,0.07); border-left:4px solid #e5e7eb; overflow:hidden;
     }
-    .applicant-avatar { width:44px; height:44px; border-radius:50%; background:#FFE0E0; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
-    .applicant-info { flex:1; }
-    .applicant-name { font-size:14px; font-weight:800; color:#222; }
-    .applicant-meta { font-size:11px; color:#aaa; font-weight:600; margin-top:2px; }
-    .applicant-btns { display:flex; gap:6px; }
-    .accept-btn { padding:7px 12px; background:#E6FBF4; color:#10B981; border:none; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; }
-    .reject-btn { padding:7px 12px; background:#FFF0F0; color:var(--red); border:none; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; }
-    .accepted-badge { font-size:11px; font-weight:800; color:#10B981; background:#E6FBF4; padding:4px 10px; border-radius:8px; }
-    .rejected-badge { font-size:11px; font-weight:800; color:#aaa; background:#f0f0f0; padding:4px 10px; border-radius:8px; }
+    .applicant-card.s-pending   { border-left-color:#3B82F6; }
+    .applicant-card.s-reviewing { border-left-color:#F59E0B; }
+    .applicant-card.s-accepted  { border-left-color:#22c55e; }
+    .applicant-card.s-rejected  { border-left-color:#d1d5db; }
+    .applicant-card.s-cancelled { border-left-color:#d1d5db; }
+    .applicant-card.s-completed { border-left-color:#15803d; }
+    .applicant-card.s-noshow    { border-left-color:#BE123C; }
+    .applicant-card.cmp-selected { box-shadow:0 0 0 2px #3B82F6; }
+    .ac-top { display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer; }
+    .applicant-avatar {
+      width:44px; height:44px; border-radius:50%;
+      background:linear-gradient(135deg,#FFE4E4,#FFCACA);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .ac-info { flex:1; min-width:0; }
+    .ac-name { font-size:14px; font-weight:800; color:#111; }
+    .ac-meta { font-size:11px; color:#aaa; font-weight:600; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ac-actions { display:flex; align-items:center; gap:6px; padding:0 14px 12px; }
+    .ac-btn { flex:1; padding:8px 4px; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center; white-space:nowrap; transition:opacity 0.1s; }
+    .ac-btn:active { opacity:0.75; }
+    .ac-chat  { background:#f5f5f5; color:#555; }
+    .ac-pass  { background:#dcfce7; color:#16a34a; font-weight:800; }
+    .ac-fail  { background:#fee2e2; color:#EF4444; }
+    .ac-done  { background:#EFF6FF; color:#3B82F6; font-weight:800; }
+    .ac-sub   { background:#f5f5f5; color:#888; font-size:11px; }
 
     /* ── 빈 상태 ── */
     .empty { text-align:center; padding:48px 20px; color:#ccc; }
@@ -1271,49 +1288,43 @@ function renderPostings() {
       ? '<span style="font-size:10px;font-weight:800;background:#F0FDF4;color:#16a34a;padding:2px 6px;border-radius:6px">\u{1F91D} 돌봄</span>'
       : '';
 
+    const WT = { errand:{bg:'#F3E8FF',color:'#7C3AED',label:'심부름'}, short:{bg:'#EFF6FF',color:'#3B82F6',label:'단기'}, regular:{bg:'#F0FFF4',color:'#16a34a',label:'정기'}, spot:{bg:'#FFF7ED',color:'#F59E0B',label:'스팟'} };
+    const wtStyle = WT[p.work_type] || null;
+    const workTypeBadge = wtStyle ? `<span style="font-size:10px;font-weight:700;background:${wtStyle.bg};color:${wtStyle.color};padding:2px 7px;border-radius:6px">${wtStyle.label}</span>` : '';
+    const statusDot = p.status === 'urgent' ? `<span style="color:var(--red);font-weight:800;font-size:12px">● ASAP</span>` : p.status === 'open' ? `<span style="color:#22c55e;font-weight:800;font-size:12px">● 모집중</span>` : `<span style="color:#aaa;font-weight:700;font-size:12px">● 마감</span>`;
+    const timeInfo = workTimeStr ? workTimeStr : workRangeStr ? `~${workRangeStr}` : createdStr;
     return `
-    <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}">
-
-      <!-- ── 카드 본문 (클릭 시 상세 패널 열림) ── -->
-      <div onclick="openPostingDetail('${p.id}')" style="cursor:pointer">
-        <div class="posting-top" style="margin-bottom:8px">
-          <div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-              ${p.work_type === 'errand'  ? '<span style="font-size:10px;font-weight:700;background:#F3E8FF;color:#7C3AED;padding:2px 7px;border-radius:6px;white-space:nowrap">심부름</span>' : ''}
-              ${p.work_type === 'short'   ? '<span style="font-size:10px;font-weight:700;background:#EFF6FF;color:#3B82F6;padding:2px 7px;border-radius:6px;white-space:nowrap">단기</span>' : ''}
-              ${p.work_type === 'regular' ? '<span style="font-size:10px;font-weight:700;background:#F0FFF4;color:#16a34a;padding:2px 7px;border-radius:6px;white-space:nowrap">정기</span>' : ''}
-              ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:2px 7px;border-radius:6px;white-space:nowrap">프리미엄</span>' : ''}
-              ${p.age_limit ? '<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:2px 7px;border-radius:6px;white-space:nowrap">\u{1F51E} 18+</span>' : ''}
-              <div class="posting-title">${p.title}</div>
-              ${jobTypeBadge}
-            </div>
-            <div class="posting-cat">${p.category}</div>
-          </div>
-          <div style="text-align:right">
-            <div class="wage-val">${p.current_wage.toLocaleString()}원</div>
-            ${surge > 0 ? `<div style="font-size:10px;color:#FF9500;font-weight:700">↑${surge.toLocaleString()}원</div>` : ''}
-          </div>
+    <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}" onclick="openPostingDetail('${p.id}')">
+      <!-- 상단: 카테고리 + 태그 + 상태 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#888;font-weight:600">${p.category}</span>
+          ${workTypeBadge}
+          ${jobTypeBadge}
+          ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:6px">PRO</span>' : ''}
+          ${p.age_limit ? '<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:2px 6px;border-radius:6px">18+</span>' : ''}
+          ${isExpired ? '<span style="font-size:10px;font-weight:700;background:#FEF2F2;color:#EF4444;padding:2px 6px;border-radius:6px">기간만료</span>' : ''}
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <span class="meta-chip ${statusCls}">${statusLabel}</span>
-            ${isExpired ? `<span class="meta-chip" style="background:#FEF2F2;color:#EF4444;font-weight:800">⏰ 기간만료</span>` : `<span class="meta-chip">⏰ ${start}</span>`}
-          </div>
-          <!-- 지원자 수 칩: 클릭 시 인라인 펼침 (카드 상세와 별도) -->
-          <button onclick="event.stopPropagation();toggleApplicantInline('${p.id}')"
-            style="display:flex;align-items:center;gap:5px;background:#f5f5f5;border:none;border-radius:20px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;color:#555">
-            \u{1F465} <span id="app-count-${p.id}" style="color:var(--red)">...</span>명
-            <span id="chevron-app-${p.id}" style="font-size:11px;color:#bbb;transition:transform 0.2s">▼</span>
-          </button>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
-          ${createdStr ? `<span style="font-size:11px;color:#aaa;font-weight:600">\u{1F4CC} ${createdStr}</span>` : ''}
-          ${workTimeStr ? `<span style="font-size:11px;color:#666;font-weight:700">\u{1F550} ${workTimeStr}</span>` : ''}
-          ${workRangeStr ? `<span style="font-size:11px;color:#3B82F6;font-weight:700">\u{1F4C5} ${workRangeStr}까지</span>` : ''}
-          ${workDaysStr ? `<span style="font-size:11px;color:#16a34a;font-weight:700">\u{1F504} ${workDaysStr}</span>` : ''}
-        </div>
+        ${statusDot}
       </div>
-
+      <!-- 제목 -->
+      <div style="font-size:16px;font-weight:800;color:#111;margin-bottom:10px;line-height:1.3">${p.title}</div>
+      <!-- 구분선 + 시급/시간/지원자 -->
+      <div style="border-top:1px solid #f5f5f5;padding-top:10px;display:flex;align-items:flex-end;justify-content:space-between">
+        <div>
+          <div style="display:flex;align-items:baseline;gap:6px">
+            <span style="font-size:20px;font-weight:900;color:var(--red);line-height:1">${p.current_wage.toLocaleString()}원</span>
+            <span style="font-size:12px;color:#aaa;font-weight:600">/시간</span>
+            ${surge > 0 ? `<span style="font-size:11px;color:#FF9500;font-weight:700">↑${surge.toLocaleString()}원</span>` : ''}
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:4px;font-weight:600">${timeInfo}</div>
+        </div>
+        <button onclick="event.stopPropagation();toggleApplicantInline('${p.id}')"
+          style="display:flex;align-items:center;gap:4px;background:#FFF0F0;border:none;border-radius:20px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:700;color:var(--red);white-space:nowrap;flex-shrink:0">
+          👥 <span id="app-count-${p.id}">...</span>명
+          <span id="chevron-app-${p.id}" style="font-size:10px;transition:transform 0.2s">▼</span>
+        </button>
+      </div>
       <!-- 인라인 지원자 목록 (토글) -->
       <div id="inline-apps-${p.id}" style="display:none;border-top:1px solid #f5f5f5;padding-top:12px;margin-top:10px">
         <div id="inline-apps-body-${p.id}"></div>
@@ -1466,21 +1477,7 @@ async function loadPostingDetailApplicants(jobId) {
     return;
   }
   const fmtPhone = p => p ? p.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
-  el.innerHTML = apps.map(a => {
-    const w = a.workers;
-    const statusHtml = buildStatusHtml(a, false);
-    return `<div class="applicant-card" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
-      <div class="applicant-avatar">\u{1F464}</div>
-      <div class="applicant-info">
-        <div class="applicant-name">${w?.name || '이름없음'}</div>
-        <div class="applicant-meta">★ ${w?.rating || '-'}${w?.phone ? ' · ' + fmtPhone(w.phone) : ''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end" onclick="event.stopPropagation()">
-        ${statusHtml}
-        <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:6px 12px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">\u{1F4AC} 채팅</button>
-      </div>
-    </div>`;
-  }).join('');
+  el.innerHTML = apps.map(a => makeApplicantCardHtml(a, { stopProp: false })).join('');
 }
 
 async function loadInlineApplicants(jobId, targetId) {
@@ -1495,23 +1492,7 @@ async function loadInlineApplicants(jobId, targetId) {
     el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0">아직 지원자가 없어요</div>';
     return;
   }
-  el.innerHTML = apps.map(a => {
-    const w = a.workers;
-    const statusHtml = buildStatusHtml(a, true);
-    const fmtPhone = w?.phone ? w.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') : '';
-    return `
-    <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer">
-      <div class="applicant-avatar">\u{1F464}</div>
-      <div class="applicant-info">
-        <div class="applicant-name">${w?.name || '이름없음'}</div>
-        <div class="applicant-meta">★ ${w?.rating || '-'}${fmtPhone ? ' · ' + fmtPhone : ''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end" onclick="event.stopPropagation()">
-        ${statusHtml}
-        <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:6px 12px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">\u{1F4AC} 채팅</button>
-      </div>
-    </div>`;
-  }).join('');
+  el.innerHTML = apps.map(a => makeApplicantCardHtml(a, { stopProp: true })).join('');
 }
 
 async function deleteApplication(appId) {
@@ -1557,62 +1538,73 @@ async function deletePosting(jobId) {
   loadPostings();
 }
 
-// ── 지원자 상태 뱃지/버튼 빌더 ──────────────────────────────
-function buildStatusHtml(a, stopProp) {
-  const sp = stopProp ? 'event.stopPropagation();' : '';
-  const wid = a.workers?.id || '';
-  const STATUS_BADGE = {
-    pending:   { bg:'#EFF6FF', color:'#3B82F6', label:'\u{1F4E5} 접수' },
-    reviewing: { bg:'#FFF7ED', color:'#F59E0B', label:'\u{1F50D} 검토중' },
-    accepted:  { bg:'#DCFCE7', color:'#16a34a', label:'✅ 합격' },
-    rejected:  { bg:'#FEF2F2', color:'#EF4444', label:'❌ 탈락' },
-    cancelled: { bg:'#f5f5f5', color:'#aaa',    label:'\u{1F6AB} 지원취소' },
-    completed: { bg:'#F0FDF4', color:'#15803d', label:'\u{1F3C1} 근무완료' },
-    noshow:    { bg:'#FFF1F2', color:'#BE123C', label:'\u{1F613} 노쇼' },
-  };
-  const b = STATUS_BADGE[a.status] || STATUS_BADGE.pending;
-  const badge = `<span style="background:${b.bg};color:${b.color};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">${b.label}</span>`;
+// ── 지원자 카드 공통 생성 함수 ──────────────────────────────
+const _STATUS_BADGE = {
+  pending:   { bg:'#EFF6FF', color:'#3B82F6', label:'접수' },
+  reviewing: { bg:'#FFF7ED', color:'#F59E0B', label:'검토중' },
+  accepted:  { bg:'#DCFCE7', color:'#16a34a', label:'합격' },
+  rejected:  { bg:'#F5F5F5', color:'#999',    label:'탈락' },
+  cancelled: { bg:'#F5F5F5', color:'#bbb',    label:'지원취소' },
+  completed: { bg:'#F0FDF4', color:'#15803d', label:'근무완료' },
+  noshow:    { bg:'#FFF1F2', color:'#BE123C', label:'노쇼' },
+};
 
-  if (a.status === 'cancelled') {
-    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${badge}</div>`;
-  }
-  if (a.status === 'completed') {
+function makeApplicantCardHtml(a, opts = {}) {
+  const { stopProp = false, isFav = false, isCmp = false, showExtras = false } = opts;
+  const sp = 'event.stopPropagation();';
+  const w = a.workers;
+  const wid = w?.id || '';
+  const name = w?.name || '이름없음';
+  const rating = w?.rating != null ? Number(w.rating).toFixed(1) : '-';
+  const reviews = w?.review_count || 0;
+  const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
+  const b = _STATUS_BADGE[a.status] || _STATUS_BADGE.pending;
+  const badge = `<span style="background:${b.bg};color:${b.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap">${b.label}</span>`;
+  const avatarSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
+  // 액션 버튼 (상태별로 필요한 것만)
+  let actions = `<button onclick="${sp}openChat('${a.id}','${name}')" class="ac-btn ac-chat">💬 채팅</button>`;
+  if (a.status === 'pending') {
+    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">🔍 검토</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','accepted')" class="ac-btn ac-pass">✓ 합격</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">✗ 탈락</button>`;
+  } else if (a.status === 'reviewing') {
+    actions += `<button onclick="${sp}updateApplication('${a.id}','accepted')" class="ac-btn ac-pass">✓ 합격</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">✗ 탈락</button>`;
+  } else if (a.status === 'accepted') {
+    actions += `<button onclick="${sp}showRatingModal('${a.id}','${wid}')" class="ac-btn ac-done">🏁 완료</button>`;
+    actions += `<button onclick="${sp}markNoshow('${a.id}','${wid}')" class="ac-btn ac-fail">노쇼</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">↩</button>`;
+  } else if (a.status === 'rejected') {
+    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">↩ 재검토</button>`;
+  } else if (a.status === 'completed') {
     const stars = a.worker_rating ? '⭐'.repeat(a.worker_rating) : '';
-    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-      ${badge}
-      ${stars ? `<span style="font-size:11px;color:#888">${stars}</span>` : ''}
-      ${a.worker_review ? `<span style="font-size:11px;color:#888;max-width:120px;text-align:right;word-break:break-all">"${a.worker_review.slice(0,30)}"</span>` : ''}
-    </div>`;
+    if (stars) actions += `<span style="font-size:13px;letter-spacing:1px">${stars}</span>`;
   }
-  if (a.status === 'noshow') {
-    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${badge}</div>`;
+  if (showExtras) {
+    actions += `<button onclick="${sp}toggleFavWorker('${wid}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isFav?'#FEF3C7':'#f5f5f5'};color:${isFav?'#D97706':'#aaa'}">${isFav?'♥':'♡'}</button>`;
+    actions += `<button onclick="${sp}toggleCompare('${a.id}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isCmp?'#EFF6FF':'#f5f5f5'};color:${isCmp?'#3B82F6':'#aaa'}">${isCmp?'✓비교':'비교'}</button>`;
   }
-  if (a.status === 'accepted') {
-    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-      ${badge}
-      <div style="display:flex;gap:4px">
-        <button onclick="${sp}showRatingModal('${a.id}','${wid}')" style="padding:5px 10px;background:#3B82F6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">\u{1F3C1} 완료</button>
-        <button onclick="${sp}markNoshow('${a.id}','${wid}')" style="padding:5px 10px;background:#FFF1F2;color:#BE123C;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">\u{1F613} 노쇼</button>
+
+  const quickBadge = a.is_quick ? `<span style="font-size:10px;font-weight:900;background:#FFF9E6;color:#D97706;padding:2px 6px;border-radius:6px;margin-right:4px">⚡번개</span>` : '';
+  const jobTitle = showExtras && a.job_postings?.title ? `<span style="font-size:10px;color:#bbb;margin-left:4px">· ${a.job_postings.title}</span>` : '';
+
+  return `
+  <div class="applicant-card s-${a.status}${isCmp?' cmp-selected':''}" id="app-card-${a.id}" onclick="${sp}">
+    <div class="ac-top" onclick="${sp}openWorkerProfileDirect('${a.id}')">
+      <div class="applicant-avatar">${avatarSvg}</div>
+      <div class="ac-info">
+        <div class="ac-name">${quickBadge}${name}${jobTitle}</div>
+        <div class="ac-meta">★ ${rating} · 완료 ${reviews}건${phone ? ' · '+phone : ''}</div>
       </div>
-      <button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 검토로</button>
-    </div>`;
-  }
-  if (a.status === 'rejected') {
-    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
       ${badge}
-      <button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">↩ 재검토</button>
-    </div>`;
-  }
-  // pending or reviewing
-  return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-    ${badge}
-    <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-      ${a.status === 'pending' ? `<button onclick="${sp}updateApplication('${a.id}','reviewing')" style="padding:4px 8px;background:#FFF7ED;color:#F59E0B;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">\u{1F50D} 검토</button>` : ''}
-      <button onclick="${sp}updateApplication('${a.id}','accepted')" style="padding:5px 10px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer">✅ 합격</button>
-      <button onclick="${sp}updateApplication('${a.id}','rejected')" style="padding:5px 10px;background:#f5f5f5;color:#888;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">❌ 탈락</button>
     </div>
+    <div class="ac-actions" onclick="${sp}">${actions}</div>
   </div>`;
 }
+
+// 하위 호환용 래퍼 (기존 buildStatusHtml 호출부는 모두 makeApplicantCardHtml로 대체됨)
+function buildStatusHtml(a, stopProp) { return ''; }
 
 async function loadApplicantCount(jobId) {
   const { count } = await db.from('applications')
@@ -1978,34 +1970,9 @@ function renderApplicants(apps) {
     return af === bf ? 0 : af ? -1 : 1;
   });
   el.innerHTML = sorted.map(a => {
-    const w = a.workers;
-    const isFav = _favWorkers.has(w?.id);
+    const isFav = _favWorkers.has(a.workers?.id);
     const isCmp = _compareSet.has(a.id);
-    const statusHtml = buildStatusHtml(a, true);
-    return `
-    <div class="applicant-card" id="app-card-${a.id}" onclick="openWorkerProfileDirect('${a.id}')" style="cursor:pointer;border:2px solid ${isCmp?'#3B82F6':'transparent'}">
-      <div class="applicant-avatar" style="position:relative">
-        \u{1F464}
-        ${isFav ? '<span style="position:absolute;top:-4px;right:-4px;font-size:12px">♥</span>' : ''}
-      </div>
-      <div class="applicant-info">
-        <div class="applicant-name">
-          ${a.is_quick ? '<span style="font-size:11px;font-weight:900;background:#FFF9E6;color:#D97706;padding:2px 7px;border-radius:6px;margin-right:4px">⚡ 번개지원</span>' : ''}${w?.name || '이름없음'}
-        </div>
-        <div class="applicant-meta">
-          ★ ${w?.rating || '-'} · ${a.job_postings?.title || ''}
-          ${w?.phone ? ' · ' + w.phone : ''}
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end" onclick="event.stopPropagation()">
-        ${statusHtml}
-        <div style="display:flex;gap:4px;margin-top:2px">
-          <button onclick="toggleFavWorker('${w?.id}')" title="즐겨찾기" style="padding:5px 8px;background:${isFav?'#FEF3C7':'#f0f0f0'};color:${isFav?'#D97706':'#aaa'};border:none;border-radius:8px;font-size:13px;cursor:pointer">${isFav?'♥':'♡'}</button>
-          <button onclick="toggleCompare('${a.id}')" title="비교" style="padding:5px 8px;background:${isCmp?'#EFF6FF':'#f0f0f0'};color:${isCmp?'#3B82F6':'#aaa'};border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">${isCmp?'✓비교':'비교'}</button>
-          <button onclick="openChat('${a.id}','${w?.name||'지원자'}')" style="padding:5px 10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">\u{1F4AC}</button>
-        </div>
-      </div>
-    </div>`;
+    return makeApplicantCardHtml(a, { stopProp: true, showExtras: true, isFav, isCmp });
   }).join('');
   const fab = document.getElementById('compare-fab');
   if (fab) fab.style.display = _compareSet.size === 2 ? 'flex' : 'none';
