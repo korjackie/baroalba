@@ -4109,10 +4109,11 @@ function closeCropModal() {
 
 function applyCrop() {
   if (!_cropper || !_cropCallback) return;
+  const cb = _cropCallback;
   const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });
   canvas.toBlob(blob => {
     closeCropModal();
-    _cropCallback(blob);
+    cb(blob);
   }, 'image/jpeg', 0.88);
 }
 
@@ -4606,7 +4607,7 @@ function showAvatarTip(inputId) {
           <span>&#10060;</span><span style="font-size:13px;color:#EF4444">선글라스 · 마스크 착용 사진</span>
         </div>
       </div>
-      <button onclick="document.getElementById('avatar-tip-overlay').remove();document.getElementById('${inputId}').click()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
+      <label for="${inputId}" onclick="document.getElementById('avatar-tip-overlay').remove()" style="display:block;width:100%;padding:15px;background:#FF4B4B;color:#fff;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;text-align:center;box-sizing:border-box">사진 선택하기</label>
     </div>`;
   document.body.appendChild(el);
 }
