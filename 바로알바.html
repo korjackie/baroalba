@@ -1750,7 +1750,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupSearch();
   applyLang();
   loadCategoriesWorker();
-  const deepJobId = new URLSearchParams(location.search).get('job');
+  const deepJobId = new URLSearchParams(location.search).get('job') || sessionStorage.getItem('pending_deep_job');
+  if (deepJobId) sessionStorage.removeItem('pending_deep_job');
   await loadJobs();
   if (deepJobId) openDeepLink(deepJobId);
   setupRealtime();
@@ -4662,6 +4663,8 @@ async function deleteUserAccount() {
 
 function goToLogin() {
   localStorage.removeItem('baroalba_guest');
+  const jobId = new URLSearchParams(location.search).get('job') || (typeof selectedJobId !== 'undefined' && selectedJobId ? selectedJobId : null);
+  if (jobId) sessionStorage.setItem('pending_deep_job', jobId);
   location.href = '/login.html';
 }
 
@@ -5178,14 +5181,17 @@ async function submitReport() {
   if (!reason) { showToast('신고 사유를 선택해주세요'); return; }
   const detail = document.getElementById('report-detail').value.trim();
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/reports`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (await db.auth.getSession()).data.session?.access_token },
-      body: JSON.stringify({ reporter_id: currentUser.id, target_id: _reportTargetId, target_type: _reportTargetType, reason, detail })
+    const { error } = await db.from('reports').insert({
+      reporter_id: currentUser.id,
+      target_id: _reportTargetId,
+      target_type: _reportTargetType,
+      reason,
+      detail: detail || null
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (error) throw error;
     showToast('신고가 접수됐습니다. 검토 후 조치하겠습니다');
   } catch(e) {
+    console.error('report error:', e);
     showToast('신고 접수 중 오류가 발생했습니다');
   }
   closeReportModal();

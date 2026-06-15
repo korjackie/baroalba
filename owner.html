@@ -1191,6 +1191,7 @@ let currentUser = null;
 let bizRecord = null;
 let currentSession = null;
 let miniMap = null;
+let miniMarker = null;
 let selectedLatLng = null;
 let postings = [];
 let editingId = null;
@@ -2394,7 +2395,8 @@ function showMiniMap(lat, lng, addr) {
       miniMap.relayout();
       miniMap.setCenter(pos);
     }
-    new kakao.maps.Marker({ position: pos, map: miniMap });
+    if (miniMarker) miniMarker.setMap(null);
+    miniMarker = new kakao.maps.Marker({ position: pos, map: miniMap });
   });
 }
 
