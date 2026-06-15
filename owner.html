@@ -1559,7 +1559,9 @@ function makeApplicantCardHtml(a, opts = {}) {
   const reviews = w?.review_count || 0;
   const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
   const b = _STATUS_BADGE[a.status] || _STATUS_BADGE.pending;
-  const badge = `<span style="background:${b.bg};color:${b.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap">${b.label}</span>`;
+  const badge = (a.status === 'pending' || a.status === 'reviewing')
+    ? ''
+    : `<span style="background:${b.bg};color:${b.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap">${b.label}</span>`;
   const avatarSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 
   // 액션 버튼 (상태별로 필요한 것만)
