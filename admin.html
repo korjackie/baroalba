@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바로알바 관리자</title>
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,'Apple SD Gothic Neo',sans-serif; background:#f1f5f9; min-height:100vh; }
+
+    .header {
+      background:#1e293b; color:#fff; padding:14px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:100;
+    }
+    .header-left { display:flex; align-items:center; gap:10px; }
+    .header-logo { font-size:17px; font-weight:900; color:#FF4B4B; }
+    .header-badge { font-size:10px; font-weight:800; background:#FF4B4B; color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:0.5px; }
+    .header-user { font-size:12px; color:#94a3b8; }
+    .logout-btn { font-size:12px; color:#94a3b8; background:none; border:none; cursor:pointer; padding:6px 10px; }
+    .logout-btn:hover { color:#fff; }
+
+    .tabs { background:#fff; border-bottom:1px solid #e2e8f0; display:flex; padding:0 20px; }
+    .tab-btn {
+      padding:14px 16px; font-size:14px; font-weight:700; color:#94a3b8;
+      border:none; background:none; cursor:pointer; border-bottom:2.5px solid transparent;
+    }
+    .tab-btn.active { color:#FF4B4B; border-bottom-color:#FF4B4B; }
+
+    .content { padding:20px; max-width:1100px; margin:0 auto; }
+
+    /* 통계 카드 */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+    .stat-card {
+      background:#fff; border-radius:14px; padding:18px 16px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.06);
+    }
+    .stat-icon { font-size:24px; margin-bottom:8px; }
+    .stat-val { font-size:28px; font-weight:900; color:#1e293b; }
+    .stat-label { font-size:12px; color:#94a3b8; font-weight:600; margin-top:3px; }
+    .stat-card.alert .stat-val { color:#EF4444; }
+
+    /* 섹션 헤더 */
+    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .section-title { font-size:16px; font-weight:800; color:#1e293b; }
+
+    /* 필터 바 */
+    .filter-bar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+    .filter-btn {
+      padding:6px 14px; border-radius:20px; border:1.5px solid #e2e8f0;
+      font-size:12px; font-weight:700; cursor:pointer; background:#fff; color:#64748b;
+    }
+    .filter-btn.active { background:#1e293b; color:#fff; border-color:#1e293b; }
+
+    /* 신고 카드 */
+    .report-card {
+      background:#fff; border-radius:14px; margin-bottom:10px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.06); overflow:hidden;
+      border-left:4px solid #e2e8f0;
+    }
+    .report-card.s-pending   { border-left-color:#F59E0B; }
+    .report-card.s-reviewing { border-left-color:#3B82F6; }
+    .report-card.s-done      { border-left-color:#22c55e; }
+    .report-card.s-dismissed { border-left-color:#d1d5db; }
+
+    .report-body { padding:14px 16px; }
+    .report-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
+    .report-type { font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; background:#FFF7ED; color:#F59E0B; }
+    .report-type.job  { background:#EFF6FF; color:#3B82F6; }
+    .report-type.user { background:#FEF3C7; color:#D97706; }
+    .report-date { font-size:11px; color:#94a3b8; }
+    .report-target { font-size:15px; font-weight:800; color:#1e293b; margin-bottom:3px; }
+    .report-biz { font-size:12px; color:#94a3b8; margin-bottom:6px; }
+    .report-reason { display:inline-block; font-size:12px; font-weight:700; background:#FEE2E2; color:#EF4444; padding:3px 10px; border-radius:20px; margin-bottom:6px; }
+    .report-detail { font-size:13px; color:#475569; background:#f8fafc; padding:8px 12px; border-radius:8px; margin-bottom:10px; }
+    .report-reporter { font-size:11px; color:#94a3b8; margin-bottom:10px; }
+    .report-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .r-btn {
+      padding:6px 14px; border-radius:8px; border:none; font-size:12px; font-weight:700; cursor:pointer;
+    }
+    .r-btn-reviewing { background:#EFF6FF; color:#3B82F6; }
+    .r-btn-done      { background:#DCFCE7; color:#16a34a; }
+    .r-btn-dismiss   { background:#f1f5f9; color:#94a3b8; }
+    .r-btn-close     { background:#FEE2E2; color:#EF4444; }
+    .r-btn:hover { opacity:0.8; }
+
+    /* 상태 배지 */
+    .status-badge {
+      font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px;
+      white-space:nowrap;
+    }
+    .sb-pending   { background:#FFF7ED; color:#F59E0B; }
+    .sb-reviewing { background:#EFF6FF; color:#3B82F6; }
+    .sb-done      { background:#DCFCE7; color:#16a34a; }
+    .sb-dismissed { background:#f1f5f9; color:#94a3b8; }
+
+    /* 공고 카드 */
+    .posting-row {
+      background:#fff; border-radius:12px; margin-bottom:8px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:14px 16px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .posting-row.closed { opacity:0.5; }
+    .posting-info { flex:1; min-width:0; }
+    .posting-title { font-size:14px; font-weight:800; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .posting-meta  { font-size:11px; color:#94a3b8; margin-top:2px; }
+    .posting-wage  { font-size:14px; font-weight:900; color:#FF4B4B; white-space:nowrap; }
+    .close-btn {
+      padding:7px 14px; background:#FEE2E2; color:#EF4444; border:none;
+      border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+    }
+    .close-btn:disabled { background:#f1f5f9; color:#cbd5e1; cursor:default; }
+
+    /* 회원 카드 */
+    .user-row {
+      background:#fff; border-radius:12px; margin-bottom:8px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:14px 16px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .user-avatar {
+      width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#FFE4E4,#FFCACA);
+      display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+    }
+    .user-info { flex:1; }
+    .user-name  { font-size:14px; font-weight:800; color:#1e293b; }
+    .user-meta  { font-size:11px; color:#94a3b8; margin-top:2px; }
+    .user-stats { font-size:12px; color:#475569; font-weight:600; }
+
+    /* 빈 상태 */
+    .empty { text-align:center; padding:48px 20px; color:#94a3b8; font-size:14px; }
+
+    /* 로딩 */
+    .loading { text-align:center; padding:32px; color:#94a3b8; font-size:13px; }
+
+    /* 탭 컨텐츠 */
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    /* 토스트 */
+    #toast {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:#1e293b; color:#fff; padding:12px 20px; border-radius:12px;
+      font-size:13px; font-weight:700; display:none; z-index:9999;
+      box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width:600px) {
+      .stats-grid { grid-template-columns:repeat(2,1fr); }
+      .content { padding:12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="header-logo">바로알바</span>
+    <span class="header-badge">ADMIN</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="header-user" id="admin-email">-</span>
+    <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">📊 대시보드</button>
+  <button class="tab-btn" onclick="switchTab('reports')">🚨 신고관리 <span id="report-badge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px">0</span></button>
+  <button class="tab-btn" onclick="switchTab('postings')">📋 공고관리</button>
+  <button class="tab-btn" onclick="switchTab('users')">👥 회원관리</button>
+</div>
+
+<div class="content">
+
+  <!-- 대시보드 -->
+  <div class="tab-content active" id="tab-dashboard">
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="s-workers">-</div><div class="stat-label">총 알바생</div></div>
+      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val" id="s-postings">-</div><div class="stat-label">활성 공고</div></div>
+      <div class="stat-card alert"><div class="stat-icon">🚨</div><div class="stat-val" id="s-reports">-</div><div class="stat-label">미처리 신고</div></div>
+      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-val" id="s-apps">-</div><div class="stat-label">오늘 지원</div></div>
+    </div>
+    <div class="section-head">
+      <div class="section-title">최근 신고</div>
+      <button onclick="switchTab('reports')" style="font-size:12px;color:#3B82F6;background:none;border:none;cursor:pointer;font-weight:700">전체 보기 →</button>
+    </div>
+    <div id="dashboard-reports"><div class="loading">로딩 중...</div></div>
+  </div>
+
+  <!-- 신고관리 -->
+  <div class="tab-content" id="tab-reports">
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterReports('all', this)">전체</button>
+      <button class="filter-btn" onclick="filterReports('pending', this)">🟡 대기</button>
+      <button class="filter-btn" onclick="filterReports('reviewing', this)">🔵 검토중</button>
+      <button class="filter-btn" onclick="filterReports('done', this)">🟢 조치완료</button>
+      <button class="filter-btn" onclick="filterReports('dismissed', this)">⚪ 기각</button>
+    </div>
+    <div id="reports-list"><div class="loading">로딩 중...</div></div>
+  </div>
+
+  <!-- 공고관리 -->
+  <div class="tab-content" id="tab-postings">
+    <div id="postings-list"><div class="loading">로딩 중...</div></div>
+  </div>
+
+  <!-- 회원관리 -->
+  <div class="tab-content" id="tab-users">
+    <div id="users-list"><div class="loading">로딩 중...</div></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
+
+const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
+let currentSession = null;
+let _reports = [];
+let _reportFilter = 'all';
+
+// ── 초기화 ──────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session || !ADMIN_EMAILS.includes(session.user.email)) {
+    alert('관리자 권한이 없습니다.');
+    location.href = '/login.html';
+    return;
+  }
+  currentSession = session;
+  document.getElementById('admin-email').textContent = session.user.email;
+  loadDashboard();
+});
+
+// ── 탭 전환 ─────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    const names = ['dashboard','reports','postings','users'];
+    b.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'reports' && document.getElementById('reports-list').innerHTML.includes('로딩')) loadReports();
+  if (name === 'postings' && document.getElementById('postings-list').innerHTML.includes('로딩')) loadPostings();
+  if (name === 'users' && document.getElementById('users-list').innerHTML.includes('로딩')) loadUsers();
+}
+
+// ── API 호출 ─────────────────────────────────────────────
+async function adminApi(action, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${currentSession.access_token}`
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`/api/admin?action=${action}`, opts);
+  return r.json();
+}
+
+// ── 대시보드 ─────────────────────────────────────────────
+async function loadDashboard() {
+  const stats = await adminApi('stats');
+  document.getElementById('s-workers').textContent = stats.workers ?? '-';
+  document.getElementById('s-postings').textContent = stats.postings ?? '-';
+  document.getElementById('s-reports').textContent = stats.pending_reports ?? '-';
+  document.getElementById('s-apps').textContent = stats.today_apps ?? '-';
+
+  if (stats.pending_reports > 0) {
+    const badge = document.getElementById('report-badge');
+    badge.textContent = stats.pending_reports;
+    badge.style.display = 'inline';
+  }
+
+  const reports = await adminApi('reports');
+  _reports = Array.isArray(reports) ? reports : [];
+  const recent = _reports.slice(0, 3);
+  document.getElementById('dashboard-reports').innerHTML = recent.length
+    ? recent.map(r => reportCardHtml(r, true)).join('')
+    : '<div class="empty">신고 없음</div>';
+}
+
+// ── 신고 관리 ─────────────────────────────────────────────
+async function loadReports() {
+  const reports = await adminApi('reports');
+  _reports = Array.isArray(reports) ? reports : [];
+  renderReports();
+}
+
+function filterReports(filter, btn) {
+  _reportFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReports();
+}
+
+function renderReports() {
+  const list = _reportFilter === 'all'
+    ? _reports
+    : _reports.filter(r => (r.status || 'pending') === _reportFilter);
+  document.getElementById('reports-list').innerHTML = list.length
+    ? list.map(r => reportCardHtml(r, false)).join('')
+    : '<div class="empty">해당 신고 없음</div>';
+}
+
+function reportCardHtml(r, compact) {
+  const status = r.status || 'pending';
+  const statusLabel = { pending:'대기', reviewing:'검토중', done:'조치완료', dismissed:'기각' };
+  const typeLabel = r.target_type === 'job' ? '공고' : '사용자';
+  const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+
+  const actions = compact ? '' : `
+    <div class="report-actions">
+      ${status !== 'reviewing' && status !== 'done' ? `<button class="r-btn r-btn-reviewing" onclick="updateReport('${r.id}','reviewing')">🔵 검토중</button>` : ''}
+      ${status !== 'done' ? `<button class="r-btn r-btn-done" onclick="updateReport('${r.id}','done')">✅ 조치완료</button>` : ''}
+      ${status !== 'dismissed' ? `<button class="r-btn r-btn-dismiss" onclick="updateReport('${r.id}','dismissed')">기각</button>` : ''}
+      ${r.target_type === 'job' ? `<button class="r-btn r-btn-close" onclick="closePostingById('${r.target_id}')">공고 강제마감</button>` : ''}
+    </div>`;
+
+  return `
+    <div class="report-card s-${status}" id="rc-${r.id}">
+      <div class="report-body">
+        <div class="report-top">
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="report-type ${r.target_type}">${typeLabel} 신고</span>
+            <span class="status-badge sb-${status}">${statusLabel[status] || status}</span>
+          </div>
+          <span class="report-date">${date}</span>
+        </div>
+        <div class="report-target">${r.target_name || '-'}</div>
+        ${r.target_biz ? `<div class="report-biz">${r.target_biz}</div>` : ''}
+        <span class="report-reason">${r.reason}</span>
+        ${r.detail ? `<div class="report-detail">"${r.detail}"</div>` : ''}
+        <div class="report-reporter">신고자: ${r.reporter_name || '-'}${r.reporter_phone ? ' · ' + r.reporter_phone : ''}</div>
+        ${actions}
+      </div>
+    </div>`;
+}
+
+async function updateReport(id, status) {
+  await adminApi('update_report', 'PATCH', { id, status });
+  const idx = _reports.findIndex(r => r.id === id);
+  if (idx >= 0) _reports[idx].status = status;
+  renderReports();
+  showToast(status === 'done' ? '✅ 조치 완료 처리됨' : status === 'dismissed' ? '기각 처리됨' : '🔵 검토중으로 변경됨');
+  // 배지 업데이트
+  const pending = _reports.filter(r => !r.status || r.status === 'pending').length;
+  const badge = document.getElementById('report-badge');
+  badge.textContent = pending;
+  badge.style.display = pending > 0 ? 'inline' : 'none';
+  document.getElementById('s-reports').textContent = pending;
+}
+
+// ── 공고 관리 ─────────────────────────────────────────────
+async function loadPostings() {
+  const data = await adminApi('postings');
+  const list = Array.isArray(data) ? data : [];
+  document.getElementById('postings-list').innerHTML = list.length
+    ? list.map(p => {
+        const isClosed = p.status === 'closed';
+        const date = p.start_time ? new Date(p.start_time).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+        return `
+          <div class="posting-row ${isClosed ? 'closed' : ''}" id="pr-${p.id}">
+            <div class="posting-info">
+              <div class="posting-title">${p.title || '(제목없음)'}</div>
+              <div class="posting-meta">${p.biz_name || '-'} · ${date} · ${p.filled_count || 0}/${p.needed_count || 1}명</div>
+            </div>
+            <div class="posting-wage">${p.current_wage ? p.current_wage.toLocaleString() + '원' : '-'}</div>
+            <button class="close-btn" onclick="closePostingById('${p.id}')" ${isClosed ? 'disabled' : ''}>${isClosed ? '마감됨' : '강제마감'}</button>
+          </div>`;
+      }).join('')
+    : '<div class="empty">공고 없음</div>';
+}
+
+async function closePostingById(id) {
+  if (!confirm('이 공고를 강제 마감하시겠습니까?')) return;
+  await adminApi('close_posting', 'PATCH', { id });
+  const row = document.getElementById('pr-' + id);
+  if (row) {
+    row.classList.add('closed');
+    const btn = row.querySelector('.close-btn');
+    if (btn) { btn.textContent = '마감됨'; btn.disabled = true; }
+  }
+  showToast('공고가 강제 마감됐습니다');
+}
+
+// ── 회원 관리 ─────────────────────────────────────────────
+async function loadUsers() {
+  const data = await adminApi('users');
+  const list = Array.isArray(data) ? data : [];
+  document.getElementById('users-list').innerHTML = list.length
+    ? list.map(u => `
+        <div class="user-row">
+          <div class="user-avatar">👤</div>
+          <div class="user-info">
+            <div class="user-name">${u.name || '(이름없음)'}</div>
+            <div class="user-meta">${u.phone || '-'} · 가입 ${u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR') : '-'}</div>
+          </div>
+          <div class="user-stats">
+            ⭐ ${u.rating ? u.rating.toFixed(1) : '-'}
+            · 노쇼 ${u.noshow_count || 0}회
+          </div>
+        </div>`).join('')
+    : '<div class="empty">회원 없음</div>';
+}
+
+// ── 공통 ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  location.href = '/login.html';
+}
+</script>
+</body>
+</html>
