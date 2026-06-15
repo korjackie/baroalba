@@ -5189,6 +5189,12 @@ async function submitReport() {
       detail: detail || null
     });
     if (error) throw error;
+    // 관리자 이메일 알림 (실패해도 사용자 경험에 영향 없음)
+    fetch('/api/report-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reporter_id: currentUser.id, target_id: _reportTargetId, target_type: _reportTargetType, reason, detail: detail || null })
+    }).catch(() => {});
     showToast('신고가 접수됐습니다. 검토 후 조치하겠습니다');
   } catch(e) {
     console.error('report error:', e);
