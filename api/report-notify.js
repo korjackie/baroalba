@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
       headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'baroalba@multimove.co.kr',
-        to: ['multimove247@gmail.com'],
+        to: ['baroalba@multimove.co.kr'],
         subject: `[바로알바] ${typeLabel} 신고 접수 — ${reason}`,
         html
       })
