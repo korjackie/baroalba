@@ -120,10 +120,32 @@ module.exports = async function handler(req, res) {
     // ── 회원 목록 ──────────────────────────────────────
     if (action === 'users') {
       const data = await sb(
-        'workers?select=id,name,phone,rating,review_count,noshow_count,created_at&order=created_at.desc&limit=100',
+        'workers?select=id,name,phone,rating,review_count,noshow_count,is_banned,created_at&order=created_at.desc&limit=100',
         svcKey
       ).then(r => r.json());
       return res.json(Array.isArray(data) ? data : []);
+    }
+
+    // ── 노쇼 초기화 ────────────────────────────────────
+    if (action === 'reset_noshow' && req.method === 'PATCH') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      await sb(`workers?id=eq.${id}`, svcKey, {
+        method: 'PATCH',
+        body: JSON.stringify({ noshow_count: 0 })
+      });
+      return res.json({ ok: true });
+    }
+
+    // ── 계정 정지/해제 ─────────────────────────────────
+    if (action === 'ban_user' && req.method === 'PATCH') {
+      const { id, is_banned } = req.body || {};
+      if (!id || is_banned === undefined) return res.status(400).json({ error: 'id, is_banned required' });
+      await sb(`workers?id=eq.${id}`, svcKey, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_banned: !!is_banned })
+      });
+      return res.json({ ok: true });
     }
 
     return res.status(400).json({ error: 'Unknown action' });

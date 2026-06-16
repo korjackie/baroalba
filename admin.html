@@ -127,6 +127,12 @@
     .user-name  { font-size:14px; font-weight:800; color:#1e293b; }
     .user-meta  { font-size:11px; color:#94a3b8; margin-top:2px; }
     .user-stats { font-size:12px; color:#475569; font-weight:600; }
+    .user-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+    .u-btn { padding:6px 12px; border-radius:8px; border:none; font-size:11px; font-weight:700; cursor:pointer; }
+    .u-btn-noshow  { background:#EFF6FF; color:#3B82F6; }
+    .u-btn-ban     { background:#FEE2E2; color:#EF4444; }
+    .u-btn-unban   { background:#DCFCE7; color:#16a34a; }
+    .user-row.banned { opacity:0.6; border-left:3px solid #EF4444; }
 
     /* 빈 상태 */
     .empty { text-align:center; padding:48px 20px; color:#94a3b8; font-size:14px; }
@@ -156,6 +162,7 @@
 
 <div class="header">
   <div class="header-left">
+    <button onclick="history.back()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;padding:0 6px 0 0;line-height:1">‹</button>
     <span class="header-logo">바로알바</span>
     <span class="header-badge">ADMIN</span>
   </div>
@@ -391,23 +398,57 @@ async function closePostingById(id) {
 }
 
 // ── 회원 관리 ─────────────────────────────────────────────
+let _users = [];
+
 async function loadUsers() {
   const data = await adminApi('users');
-  const list = Array.isArray(data) ? data : [];
-  document.getElementById('users-list').innerHTML = list.length
-    ? list.map(u => `
-        <div class="user-row">
-          <div class="user-avatar">👤</div>
-          <div class="user-info">
-            <div class="user-name">${u.name || '(이름없음)'}</div>
-            <div class="user-meta">${u.phone || '-'} · 가입 ${u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR') : '-'}</div>
-          </div>
-          <div class="user-stats">
-            ⭐ ${u.rating ? u.rating.toFixed(1) : '-'}
-            · 노쇼 ${u.noshow_count || 0}회
-          </div>
-        </div>`).join('')
+  _users = Array.isArray(data) ? data : [];
+  renderUsers();
+}
+
+function renderUsers() {
+  document.getElementById('users-list').innerHTML = _users.length
+    ? _users.map(u => {
+        const banned = u.is_banned;
+        return `
+          <div class="user-row ${banned ? 'banned' : ''}" id="ur-${u.id}">
+            <div class="user-avatar">${banned ? '🚫' : '👤'}</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="user-name">${u.name || '(이름없음)'}</div>
+                ${banned ? '<span style="font-size:10px;background:#FEE2E2;color:#EF4444;padding:2px 7px;border-radius:5px;font-weight:800">정지됨</span>' : ''}
+              </div>
+              <div class="user-meta">${u.phone || '-'} · 가입 ${u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR') : '-'}</div>
+              <div class="user-stats" style="margin-top:3px">⭐ ${u.rating ? u.rating.toFixed(1) : '-'} · 노쇼 ${u.noshow_count || 0}회 · 완료 ${u.review_count || 0}회</div>
+              <div class="user-actions">
+                ${(u.noshow_count || 0) > 0 ? `<button class="u-btn u-btn-noshow" onclick="resetNoshow('${u.id}')">노쇼 초기화</button>` : ''}
+                ${banned
+                  ? `<button class="u-btn u-btn-unban" onclick="toggleBan('${u.id}', false)">정지 해제</button>`
+                  : `<button class="u-btn u-btn-ban" onclick="toggleBan('${u.id}', true)">계정 정지</button>`}
+              </div>
+            </div>
+          </div>`;
+      }).join('')
     : '<div class="empty">회원 없음</div>';
+}
+
+async function resetNoshow(id) {
+  if (!confirm('노쇼 횟수를 0으로 초기화하겠습니까?')) return;
+  await adminApi('reset_noshow', 'PATCH', { id });
+  const u = _users.find(u => u.id === id);
+  if (u) u.noshow_count = 0;
+  renderUsers();
+  showToast('노쇼 횟수가 초기화됐습니다');
+}
+
+async function toggleBan(id, ban) {
+  const msg = ban ? '이 회원을 정지하겠습니까?\n정지된 회원은 앱 접근이 차단됩니다.' : '정지를 해제하겠습니까?';
+  if (!confirm(msg)) return;
+  await adminApi('ban_user', 'PATCH', { id, is_banned: ban });
+  const u = _users.find(u => u.id === id);
+  if (u) u.is_banned = ban;
+  renderUsers();
+  showToast(ban ? '🚫 계정이 정지됐습니다' : '✅ 정지가 해제됐습니다');
 }
 
 // ── 공통 ─────────────────────────────────────────────────
