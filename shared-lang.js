@@ -119,8 +119,8 @@ const TRANSLATIONS = {
     // 업주 전용 기본
     biz_name_label:'업체명', biz_desc_label:'업체 소개', biz_photo_title:'업체 사진',
     // 업주 앱 — 내비/탭/통계
-    owner_badge:'업주', owner_account:'업주 계정',
-    tab_my_postings:'내 공고', tab_applicants:'지원자',
+    owner_badge:'공고관리', owner_account:'공고관리',
+    tab_my_postings:'내 공고', tab_applicants:'지원 관리',
     stat_open:'모집중', stat_total_applicants:'총 지원자', stat_confirmed:'확정',
     section_my_postings:'내 공고 목록', section_all_applicants:'전체 지원자',
     // 업주 마이페이지
