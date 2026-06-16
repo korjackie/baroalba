@@ -1129,8 +1129,15 @@
         <button id="owner-delete-btn" onclick="deleteOwnerAccount()" style="flex:1;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
       </div>
 
+      <!-- 어드민 전용: 관리자 페이지 링크 -->
+      <div id="owner-admin-banner" style="display:none;margin-top:12px">
+        <button onclick="location.href='/admin.html'" style="width:100%;padding:14px;background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <span>⚙️</span> 관리자 페이지 이동
+        </button>
+      </div>
+
       <!-- 어드민 전용: 업종 카테고리 관리 -->
-      <div id="admin-cat-section" style="display:none;border-top:1px solid #f0f0f0;padding-top:12px">
+      <div id="admin-cat-section" style="display:none;border-top:1px solid #f0f0f0;padding-top:12px;margin-top:12px">
         <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px">&#128295; 어드민 — 업종 카테고리 관리</div>
         <div id="admin-cat-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
         <div style="display:flex;gap:8px">
@@ -3802,8 +3809,10 @@ async function openOwnerSettings() {
     document.getElementById('settings-biz-phone').value = bizRecord?.phone || '';
     document.getElementById('settings-biz-desc').value  = bizRecord?.description || '';
     updateBizDescCounter(document.getElementById('settings-biz-desc'));
-    const isAdmin = currentUser.email === 'nicepkw@gmail.com';
+    const isAdmin = ['jackie@multimove.co.kr','nicepkw@gmail.com'].includes(currentUser.email);
     document.getElementById('admin-cat-section').style.display = isAdmin ? 'block' : 'none';
+    const ownerAdminBanner = document.getElementById('owner-admin-banner');
+    if (ownerAdminBanner) ownerAdminBanner.style.display = isAdmin ? 'block' : 'none';
     if (isAdmin) renderAdminCatList();
     loadMyPlaces();
     renderPlanUI();

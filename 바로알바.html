@@ -1272,6 +1272,16 @@
           </div>
         </div>
 
+        <!-- 관리자 페이지 진입 (관리자 계정만 표시) -->
+        <div id="admin-banner" style="display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer" onclick="location.href='/admin.html'">
+          <div style="width:40px;height:40px;border-radius:12px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">⚙️</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:800;color:#fff">관리자 페이지</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px">신고관리 · 공고관리 · 회원관리</div>
+          </div>
+          <span style="font-size:18px;color:#94a3b8">›</span>
+        </div>
+
         <!-- 커뮤니티 게시판 진입 -->
         <div onclick="openCommunityPanel()" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#fff5f5,#fff0f0);border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer">
           <div style="width:40px;height:40px;border-radius:12px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -3842,6 +3852,9 @@ function openProfile() {
     const provider = oauthProvider || meta.provider || currentUser.app_metadata?.provider || '';
     document.getElementById('profile-name').textContent = meta.full_name || currentUser.email?.split('@')[0] || '사용자';
     document.getElementById('profile-email').textContent = currentUser.email || '';
+    const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
+    const adminBanner = document.getElementById('admin-banner');
+    if (adminBanner) adminBanner.style.display = ADMIN_EMAILS.includes(currentUser.email) ? 'flex' : 'none';
     document.getElementById('profile-role').textContent = role === 'business' ? '\u{1F3EA} 업주' : '\u{1F4BC} 알바생';
     const providerMap = {
       email:  { label: '\u{1F4E7} 이메일', bg: '#f0f0f0', color: '#555' },

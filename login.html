@@ -624,7 +624,12 @@ window.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => {
         if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
           const role = data.session.user?.user_metadata?.baroalba_role;
-          goToApp(role);
+          if (role) {
+            goToApp(role);
+          } else {
+            showLoginScreen();
+            showRoleModal(data.session.user.user_metadata?.full_name || data.session.user.email);
+          }
         }
       }, 1500);
       return;
