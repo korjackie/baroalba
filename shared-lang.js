@@ -601,8 +601,8 @@ function applyLang() {
 
   // ── 앱별 내비 레이블 ──────────────────────────────────────────
   const navLabels = [...document.querySelectorAll('.nav-label')];
-  if (document.getElementById('panel-owner-map')) {
-    // ── 업주 앱 전용 ─────────────────────────────────────────────
+  // 통합앱(바로알바.html)은 항상 알바생 nav 사용. 업주패널은 별도 처리.
+  if (false) {
     const ownerNavKeys = ['nav_map','tab_my_postings','tab_applicants','nav_chats','nav_profile'];
     navLabels.forEach((el, i) => { if (ownerNavKeys[i]) el.textContent = t(ownerNavKeys[i]); });
     // 탭 버튼
