@@ -4235,7 +4235,9 @@ function openOwnerPanel(tab) {
 }
 
 function closeOwnerPanel() {
-  document.getElementById('panel-owner').style.display = 'none';
+  const panel = document.getElementById('panel-owner');
+  if (panel.style.display === 'none') return;
+  panel.style.display = 'none';
   if (window._fromProfile) {
     window._fromProfile = false;
     setNav(document.querySelectorAll('.nav-item')[4], 'profile');
@@ -4263,6 +4265,7 @@ function setNav(el, tab) {
   closeWChat();
   document.getElementById('detail-overlay')?.classList.remove('open');
   document.getElementById('panel-app-job-detail')?.classList.remove('show');
+  document.getElementById('panel-community')?.classList.remove('show');
 
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
@@ -6067,40 +6070,32 @@ function _commIsOwner() {
 }
 
 function _buildCommTabs() {
-  const isOwner = _commIsOwner();
   const tabs = [
     { cat: 'all',    label: '전체' },
     { cat: 'free',   label: '자유' },
     { cat: 'review', label: '업체후기' },
     { cat: 'info',   label: '정보공유' },
-    isOwner
-      ? { cat: 'owner',  label: '업주전용' }
-      : { cat: 'worker', label: '알바생전용' },
   ];
   const el = document.getElementById('community-cat-tabs');
   const btnBase = 'padding:11px 4px;background:none;border:none;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0';
   el.innerHTML = `<div style="display:flex;min-width:100%;align-items:stretch">` +
     tabs.map((t, i) => {
       const active = i === 0;
-      const isExclusive = i === tabs.length - 1;
-      const color = active ? 'var(--red)' : (isExclusive ? '#7C3AED' : '#888');
+      const color = active ? 'var(--red)' : '#888';
       const weight = active ? '700' : '600';
       const border = active ? 'var(--red)' : 'transparent';
-      const separator = isExclusive ? `<div style="width:1px;background:#e5e7eb;margin:8px 0;flex-shrink:0"></div>` : '';
-      return separator + `<button onclick="loadCommunityPosts('${t.cat}')" class="comm-cat-btn" data-cat="${t.cat}"
-        style="${btnBase};flex:1;color:${color};font-weight:${weight};border-bottom:2px solid ${border};${isExclusive?'background:#faf5ff;':''}">
-        ${isExclusive ? `<span style="font-size:10px;display:block;color:#9333EA;font-weight:800;line-height:1;margin-bottom:2px">전용</span>` : ''}${t.label}
+      return `<button onclick="loadCommunityPosts('${t.cat}')" class="comm-cat-btn" data-cat="${t.cat}"
+        style="${btnBase};flex:1;color:${color};font-weight:${weight};border-bottom:2px solid ${border}">
+        ${t.label}
       </button>`;
     }).join('') + `</div>`;
 }
 
 function _buildWriteCats() {
-  const isOwner = _commIsOwner();
   const cats = [
     { cat: 'review', label: '업체후기' },
     { cat: 'info',   label: '정보공유' },
     { cat: 'free',   label: '자유' },
-    isOwner ? { cat: 'owner', label: '업주전용' } : { cat: 'worker', label: '알바생전용' },
   ];
   const el = document.getElementById('comm-write-cats');
   el.innerHTML = cats.map((c, i) => {
@@ -6119,9 +6114,6 @@ function openCommunityPanel() {
 
 function closeCommunityPanel() {
   document.getElementById('panel-community').classList.remove('show');
-  if (currentUser?.user_metadata?.baroalba_role === 'business') {
-    location.href = '/owner.html';
-  }
 }
 
 function closeCommunityPost() {
@@ -6160,17 +6152,6 @@ async function loadCommunityPosts(cat) {
 
   // 전용 게시판 접근 권한 체크
   const isOwner = _commIsOwner();
-  if (cat === 'owner' && !isOwner) {
-    document.getElementById('community-post-list').innerHTML =
-      '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">🔒</div><div style="font-size:15px;font-weight:700">업주 전용 게시판입니다</div></div>';
-    return;
-  }
-  if (cat === 'worker' && isOwner) {
-    document.getElementById('community-post-list').innerHTML =
-      '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">🔒</div><div style="font-size:15px;font-weight:700">알바생 전용 게시판입니다</div></div>';
-    return;
-  }
-
   const el = document.getElementById('community-post-list');
   el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
 
@@ -6179,11 +6160,7 @@ async function loadCommunityPosts(cat) {
     .order('created_at', { ascending: false })
     .limit(50);
 
-  // 전체 탭에서는 자신이 볼 수 없는 전용 게시판 제외
-  if (cat === 'all') {
-    if (isOwner) q = q.not('category', 'eq', 'worker');
-    else q = q.not('category', 'eq', 'owner');
-  } else {
+  if (cat !== 'all') {
     q = q.eq('category', cat);
   }
 
