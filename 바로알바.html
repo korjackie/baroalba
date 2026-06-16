@@ -1518,8 +1518,12 @@
     <div class="nav-label">스와이프</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'applications')">
-    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-    <div class="nav-label">내 지원</div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+    <div class="nav-label">바로알바</div>
+  </button>
+  <button class="nav-item" onclick="setNav(this, 'chats')">
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+    <div class="nav-label">채팅</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'profile')">
     <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
@@ -1541,7 +1545,7 @@
 <!-- 내 지원 패널 -->
 <div class="full-panel" id="panel-applications">
   <div class="panel-header" style="display:flex;align-items:center;gap:8px">
-    <button onclick="if(window._fromProfile){window._fromProfile=false;document.getElementById('panel-applications').classList.remove('show');setNav(document.querySelectorAll('.nav-item')[3],'profile')}else{document.getElementById('panel-applications').classList.remove('show')}" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px 0 0;line-height:1">‹</button>
+    <button onclick="if(window._fromProfile){window._fromProfile=false;document.getElementById('panel-applications').classList.remove('show');setNav(document.querySelectorAll('.nav-item')[4],'profile')}else{document.getElementById('panel-applications').classList.remove('show')}" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px 0 0;line-height:1">‹</button>
     &#128203; 내 지원 현황
   </div>
   <!-- 서브탭 -->
@@ -2537,7 +2541,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const btn = document.querySelectorAll('.nav-item')[2];
     if (btn) setNav(btn, 'applications');
   } else if (tabParam === 'profile') {
-    const btn = document.querySelectorAll('.nav-item')[3];
+    const btn = document.querySelectorAll('.nav-item')[4];
     if (btn) setNav(btn, 'profile');
   } else if (tabParam === 'swipe') {
     const btn = document.querySelectorAll('.nav-item')[1];
@@ -4234,7 +4238,7 @@ function closeOwnerPanel() {
   panel.style.display = 'none';
   if (window._fromProfile) {
     window._fromProfile = false;
-    setNav(document.querySelectorAll('.nav-item')[3], 'profile');
+    setNav(document.querySelectorAll('.nav-item')[4], 'profile');
   }
 }
 
