@@ -624,7 +624,8 @@ function applyLang() {
     const ci = document.getElementById('chat-input'); if (ci) ci.placeholder = t('chat_msg_placeholder');
   } else {
     // ── 알바생 앱 전용 ────────────────────────────────────────────
-    const navKeys = ['nav_map','nav_swipe','nav_applications','nav_chats','nav_profile'];
+    // nav-post-btn 제외 후 4개: 지도/스와이프/내지원/마이페이지 (채팅탭 없음)
+    const navKeys = ['nav_map','nav_swipe','nav_applications','nav_profile'];
     navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
     // 서브탭
     si('subtab-status', 'tab_status');
