@@ -2475,13 +2475,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
-    const isBrowseMode = !!new URLSearchParams(location.search).get('browse');
     const isCommunityMode = !!new URLSearchParams(location.search).get('community');
     if (isCommunityMode) {
       setTimeout(() => openCommunityPanel(), 800);
-    }
-    if (currentUser.user_metadata?.baroalba_role === 'business') {
-      if (!isBrowseMode && !isCommunityMode) { location.href = '/owner.html'; return; }
     }
   } else if (localStorage.getItem('baroalba_guest') || new URLSearchParams(location.search).get('job')) {
     isGuest = true;
