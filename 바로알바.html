@@ -812,7 +812,7 @@
       font-size:28px; font-weight:300; cursor:pointer;
       box-shadow:0 4px 16px rgba(255,75,75,0.4);
       display:flex; align-items:center; justify-content:center;
-      z-index:200; transition:transform 0.2s;
+      z-index:520; transition:transform 0.2s;
     }
     .fab:active { transform:scale(0.93); }
 
@@ -2425,7 +2425,7 @@
 </button>
 
 <!-- FAB -->
-<button class="fab" onclick="openPostingForm()" title="공고 등록">+</button>
+<button class="fab" id="posting-fab" onclick="openPostingForm()" title="공고 등록" style="display:none">+</button>
 
 <!-- 비교 FAB -->
 <div id="compare-fab" onclick="openCompareModal()" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#3B82F6;color:#fff;border-radius:30px;padding:12px 24px;font-size:14px;font-weight:800;cursor:pointer;z-index:200;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(59,130,246,0.4)">
@@ -4485,6 +4485,8 @@ function openOwnerPanel(tab) {
   if (!currentUser) { goToLogin(); return; }
   const panel = document.getElementById('panel-owner');
   panel.style.display = 'block';
+  const fab = document.getElementById('posting-fab');
+  if (fab) fab.style.display = 'flex';
   const switchToTab = (t) => {
     const idx = t === 'applicants' ? 1 : 0;
     ownerSwitchTab(t, document.querySelectorAll('.tab-btn')[idx]);
@@ -4500,6 +4502,8 @@ function closeOwnerPanel() {
   const panel = document.getElementById('panel-owner');
   if (panel.style.display === 'none') return;
   panel.style.display = 'none';
+  const fab = document.getElementById('posting-fab');
+  if (fab) fab.style.display = 'none';
   if (window._fromProfile) {
     window._fromProfile = false;
     setNav(document.querySelectorAll('.nav-item')[4], 'profile');
