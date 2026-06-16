@@ -2062,7 +2062,7 @@
 <!-- 토스트 -->
 
 <!-- ── owner 기능 패널 (공고 관리 전체화면 패널) ── -->
-<div id="panel-owner" style="display:none;position:fixed;inset:0;z-index:200;background:#f8f8f8;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div id="panel-owner" style="display:none;position:fixed;inset:0;z-index:500;background:#f8f8f8;overflow-y:auto;-webkit-overflow-scrolling:touch">
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
@@ -4240,6 +4240,7 @@ function setNav(el, tab) {
   const panelProfile  = document.getElementById('panel-profile');
 
   // 탭 전환 시 열린 오버레이/패널 모두 닫기
+  closeOwnerPanel();
   closeWChat();
   document.getElementById('detail-overlay')?.classList.remove('open');
   document.getElementById('panel-app-job-detail')?.classList.remove('show');
