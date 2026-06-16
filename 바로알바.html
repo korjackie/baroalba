@@ -1319,7 +1319,7 @@
 <!-- 업주 지도 열람 모드 배너 -->
 <div id="owner-browse-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#FF4B4B;color:#fff;padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px">
   <span style="font-size:13px;font-weight:700">&#128506; 지도 열람 중</span>
-  <button onclick="location.href='/owner.html'" style="padding:7px 14px;background:#fff;color:#FF4B4B;border:none;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">← 업주 대시보드</button>
+  <button onclick="openOwnerPanel('postings')" style="padding:7px 14px;background:#fff;color:#FF4B4B;border:none;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">← 공고 관리</button>
 </div>
 
 <!-- PWA 설치 배너 -->
@@ -1640,6 +1640,18 @@
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800;color:#222">채팅</div>
             <div style="font-size:12px;color:#aaa;margin-top:2px">업주·알바생과 대화</div>
+          </div>
+          <span style="font-size:18px;color:#94a3b8">›</span>
+        </div>
+
+        <!-- 내 공고 관리 진입 -->
+        <div onclick="openOwnerPanel('postings')" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer">
+          <div style="width:40px;height:40px;border-radius:12px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:800;color:#222">공고 관리</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">내 공고 등록 · 지원자 관리</div>
           </div>
           <span style="font-size:18px;color:#94a3b8">›</span>
         </div>
@@ -2049,11 +2061,12 @@
 
 <!-- 토스트 -->
 
-<!-- ── owner 기능 패널 (병합) ── -->
+<!-- ── owner 기능 패널 (공고 관리 전체화면 패널) ── -->
+<div id="panel-owner" style="display:none;position:fixed;inset:0;z-index:200;background:#f8f8f8;overflow-y:auto;-webkit-overflow-scrolling:touch">
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
-    <button onclick="location.href='/바로알바.html'" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 6px 0 0;line-height:1">‹</button>
+    <button onclick="closeOwnerPanel()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 6px 0 0;line-height:1">‹</button>
     <div class="header-logo" style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="ownerSetNav(document.querySelector('.nav-item'),this.dataset.tab||'postings');ownerSwitchTab('postings',document.querySelectorAll('.tab-btn')[0])">
       <div style="width:28px;height:28px;border-radius:7px;overflow:hidden;flex-shrink:0">
         <img src="./icons/바로알바 최종로고.png" style="width:28px;height:auto;margin-top:-1px;object-fit:cover">
@@ -2425,7 +2438,10 @@
   </div>
 </div>
 
-<!-- 하단 내비 -->
+<!-- 하단 내비 공간 확보 -->
+<div style="height:80px"></div>
+</div><!-- /#panel-owner -->
+
 <!-- ── /owner 기능 패널 ── -->
 <div class="toast hidden" id="toast"></div>
 
@@ -4188,16 +4204,27 @@ function openChatPanel() {
   loadMyChatList();
 }
 
-function goToPostJob() {
+function openOwnerPanel(tab) {
   if (!currentUser) { goToLogin(); return; }
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.nav-item')[2].classList.add('active');
-  // 다른 패널 닫기
-  document.getElementById('panel-applications')?.classList.remove('show');
-  document.getElementById('panel-chats')?.classList.remove('show');
-  document.getElementById('panel-profile')?.classList.remove('show');
-  // 공고 패널 열기
-  ownerSetNav(null, 'postings');
+  const panel = document.getElementById('panel-owner');
+  panel.style.display = 'block';
+  const switchToTab = (t) => {
+    const idx = t === 'applicants' ? 1 : 0;
+    ownerSwitchTab(t, document.querySelectorAll('.tab-btn')[idx]);
+  };
+  if (!bizRecord) {
+    initOwnerFeatures().then(() => { if (tab) switchToTab(tab); }).catch(console.error);
+  } else {
+    if (tab) switchToTab(tab);
+  }
+}
+
+function closeOwnerPanel() {
+  document.getElementById('panel-owner').style.display = 'none';
+}
+
+function goToPostJob() {
+  openOwnerPanel('postings');
 }
 
 function setNav(el, tab) {
@@ -4636,7 +4663,7 @@ function openProfile() {
     const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
     const adminBanner = document.getElementById('admin-banner');
     if (adminBanner) adminBanner.style.display = ADMIN_EMAILS.includes(currentUser.email) ? 'flex' : 'none';
-    document.getElementById('profile-role').textContent = role === 'business' ? '\u{1F3EA} 업주' : '\u{1F4BC} 알바생';
+    document.getElementById('profile-role').style.display = 'none';
     const providerMap = {
       email:  { label: '\u{1F4E7} 이메일', bg: '#f0f0f0', color: '#555' },
       kakao:  { label: '\u{1F49B} 카카오', bg: '#FEE500', color: '#3C1E1E' },
@@ -6354,7 +6381,6 @@ async function initOwnerFeatures() {
   loadFavWorkers();
   loadPostings();
   loadApplicants();
-  setupRealtime();
   setTimeout(updateOwnerNotiBadge, 1500);
 
   // 새로고침 시 마지막 활성 탭 복원
