@@ -1783,6 +1783,19 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupRealtime();
   setupMessageNotifications();
   if (!isGuest) subscribePush();
+
+  // owner.html에서 돌아올 때 탭 복원
+  const tabParam = new URLSearchParams(location.search).get('tab');
+  if (tabParam === 'applications') {
+    const btn = document.querySelectorAll('.nav-item')[3];
+    if (btn) setNav(btn, 'applications');
+  } else if (tabParam === 'profile') {
+    const btn = document.querySelectorAll('.nav-item')[4];
+    if (btn) setNav(btn, 'profile');
+  } else if (tabParam === 'swipe') {
+    const btn = document.querySelectorAll('.nav-item')[1];
+    if (btn) setNav(btn, 'swipe');
+  }
 });
 
 // ── 카카오맵 초기화 ───────────────────────────────────────
