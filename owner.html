@@ -367,13 +367,14 @@
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
+    <button onclick="location.href='/바로알바.html'" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 6px 0 0;line-height:1">‹</button>
     <div class="header-logo" style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="setNav(document.querySelector('.nav-item'),this.dataset.tab||'postings');switchTab('postings',document.querySelectorAll('.tab-btn')[0])">
       <div style="width:28px;height:28px;border-radius:7px;overflow:hidden;flex-shrink:0">
         <img src="./icons/바로알바 최종로고.png" style="width:28px;height:auto;margin-top:-1px;object-fit:cover">
       </div>
       바로알바
     </div>
-    <div class="header-badge" data-i18n="owner_badge">업주</div>
+    <div class="header-badge" data-i18n="owner_badge">공고관리</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <button id="owner-noti-bell" onclick="openOwnerNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1;display:none">

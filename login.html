@@ -429,21 +429,6 @@
 
     <!-- ── 회원가입 폼 ── -->
     <div id="form-signup" style="display:none">
-      <!-- 역할 선택 -->
-      <div class="form-label" style="margin-bottom:8px;">나는 어떤 역할인가요? *</div>
-      <div class="signup-role-row">
-        <div class="signup-role-card" id="signup-role-worker" onclick="selectSignupRole('worker')">
-          <div class="role-icon">💼</div>
-          <div class="role-name">알바생</div>
-          <div class="role-desc">알바 찾기</div>
-        </div>
-        <div class="signup-role-card" id="signup-role-business" onclick="selectSignupRole('business')">
-          <div class="role-icon">🏪</div>
-          <div class="role-name">업주</div>
-          <div class="role-desc">직원 구하기</div>
-        </div>
-      </div>
-
       <div class="name-row">
         <div class="form-group">
           <label class="form-label">이름</label>
@@ -490,30 +475,6 @@
       <div style="margin-top:8px;">© 2026 MultiMOVE Corp. All rights reserved.</div>
     </footer>
   </div>
-
-<!-- ── 역할 선택 모달 ── -->
-<div class="modal-overlay" id="role-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">반갑습니다! 👋</div>
-    <div class="modal-sub" id="role-user-name">저는 어떤 역할로 사용할까요?</div>
-    <div class="role-cards">
-      <div class="role-card" id="role-worker" onclick="selectRole('worker')">
-        <div class="role-icon">💼</div>
-        <div class="role-name">알바생</div>
-        <div class="role-desc">주변 알바를<br>찾고 지원해요</div>
-      </div>
-      <div class="role-card" id="role-business" onclick="selectRole('business')">
-        <div class="role-icon">🏪</div>
-        <div class="role-name">업주</div>
-        <div class="role-desc">직원을 급하게<br>구해야 해요</div>
-      </div>
-    </div>
-    <button class="role-confirm-btn" id="role-confirm-btn" disabled onclick="confirmRole()">
-      시작하기
-    </button>
-  </div>
-</div>
 
 <!-- ── 로딩 ── -->
 <div class="loading-overlay" id="loading">
@@ -563,28 +524,21 @@ const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
   }
 });
 
-let selectedRole = null;
-let selectedSignupRole = null;
-
-function selectSignupRole(role) {
-  selectedSignupRole = role;
-  document.getElementById('signup-role-worker').classList.toggle('selected', role === 'worker');
-  document.getElementById('signup-role-business').classList.toggle('selected', role === 'business');
-}
-
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 db.auth.onAuthStateChange(async (event, session) => {
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    const role = session.user.user_metadata?.baroalba_role;
-    if (role) {
-      showLoading('앱으로 이동 중...');
-      goToApp(role);
-    } else {
-      hideLoading();
-      const name = session.user.user_metadata?.full_name || session.user.email;
-      showLoginScreen();       // 로그인 화면 확실히 보이게
-      showRoleModal(name);
+    // 신규 OAuth 가입 시 workers 레코드 자동 생성 (기존 레코드는 덮어쓰지 않음)
+    if (event === 'SIGNED_IN') {
+      const u = session.user;
+      const meta = u.user_metadata || {};
+      const displayName = meta.full_name || meta.name || u.email?.split('@')[0] || '사용자';
+      db.from('workers').upsert(
+        { kakao_uid: u.id, name: displayName, email: u.email || '', phone: meta.phone || '' },
+        { ignoreDuplicates: true }
+      ).catch(() => {});
     }
+    showLoading('앱으로 이동 중...');
+    goToApp();
   }
 });
 
@@ -623,13 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
       setTimeout(() => {
         if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
-          const role = data.session.user?.user_metadata?.baroalba_role;
-          if (role) {
-            goToApp(role);
-          } else {
-            showLoginScreen();
-            showRoleModal(data.session.user.user_metadata?.full_name || data.session.user.email);
-          }
+          goToApp();
         }
       }, 1500);
       return;
@@ -791,13 +739,12 @@ async function signupEmail() {
   const phone = document.getElementById('signup-phone').value.trim();
   const email = document.getElementById('signup-email').value.trim();
   const pw    = document.getElementById('signup-pw').value;
-  if (!selectedSignupRole) { showError('알바생 또는 업주를 선택해주세요.'); return; }
   if (!name || !email || !pw) { showError('이름, 이메일, 비밀번호는 필수입니다.'); return; }
   if (pw.length < 6) { showError('비밀번호는 6자 이상이어야 합니다.'); return; }
   showLoading('회원가입 중...');
   const { error } = await db.auth.signUp({
     email, password: pw,
-    options: { data: { full_name: name, phone, baroalba_role: selectedSignupRole } }
+    options: { data: { full_name: name, phone } }
   });
   if (error) {
     hideLoading();
@@ -817,53 +764,12 @@ function enterAsGuest() {
 }
 
 // ── 역할 선택 ──────────────────────────────────────────────
-function showRoleModal(name) {
-  document.getElementById('role-user-name').textContent = `${name}님, 어떤 역할로 사용하실 건가요?`;
-  document.getElementById('splash').classList.add('hidden');
-  document.getElementById('screen-login').classList.add('active');
-  document.getElementById('role-modal').classList.add('open');
-}
-
-function selectRole(role) {
-  selectedRole = role;
-  document.getElementById('role-worker').classList.toggle('selected', role === 'worker');
-  document.getElementById('role-business').classList.toggle('selected', role === 'business');
-  document.getElementById('role-confirm-btn').disabled = false;
-}
-
-async function confirmRole() {
-  if (!selectedRole) return;
-  showLoading('프로필 설정 중...');
-
-  const { data: { user }, error: userErr } = await db.auth.getUser();
-  if (userErr || !user) { hideLoading(); showError('세션 오류. 다시 로그인해주세요.'); return; }
-
-  // 역할을 user_metadata에 저장
-  const { error: updateErr } = await db.auth.updateUser({ data: { baroalba_role: selectedRole } });
-  if (updateErr) { hideLoading(); showError(updateErr.message); return; }
-
-  // DB 레코드 생성
-  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || '사용자';
-  const table = selectedRole === 'worker' ? 'workers' : 'businesses';
-  await db.from(table).upsert(
-    { kakao_uid: user.id, name: displayName, email: user.email || '', phone: user.user_metadata?.phone || '' },
-    { onConflict: 'kakao_uid' }
-  );
-
-  window._pendingRole = selectedRole;
-  goToApp(selectedRole);
-}
-
 // ── 헬퍼 ──────────────────────────────────────────────────
 function getRedirectUrl() {
   return window.location.origin + '/app.html';
 }
-function goToApp(role) {
-  const r = role || currentUserRole();
-  window.location.href = r === 'business' ? '/owner.html' : '/바로알바.html';
-}
-function currentUserRole() {
-  return window._pendingRole || '';
+function goToApp() {
+  window.location.href = '/바로알바.html';
 }
 
 function switchTab(tab) {
