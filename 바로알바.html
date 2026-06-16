@@ -944,9 +944,6 @@
 
     /* ── 하단 내비 ── */
     .owner-nav-badge { position:absolute; top:4px; right:calc(50% - 18px); min-width:16px; height:16px; padding:0 4px; background:var(--red); color:#fff; border-radius:8px; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; line-height:1; }
-    .full-panel { position:fixed; inset:0; bottom:var(--nav-h); background:#f5f5f5; z-index:300; display:none; flex-direction:column; overflow-y:auto; }
-    .full-panel.show { display:flex; }
-    .panel-header { background:#fff; padding:16px 20px 12px; border-bottom:1px solid #f0f0f0; font-size:18px; font-weight:900; color:#222; position:sticky; top:0; z-index:1; flex-shrink:0; }
 
     /* ── PC: 팝업/모달만 적당한 너비로 제한 (전체 레이아웃은 그대로) ── */
     @media (min-width: 600px) {
@@ -2080,7 +2077,7 @@
 <!-- 토스트 -->
 
 <!-- ── owner 기능 패널 (공고 관리 전체화면 패널) ── -->
-<div id="panel-owner" style="display:none;position:fixed;inset:0;z-index:500;background:#f8f8f8;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div id="panel-owner" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);z-index:500;background:#f8f8f8;overflow-y:auto;-webkit-overflow-scrolling:touch">
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
