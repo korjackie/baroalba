@@ -597,7 +597,7 @@ db.auth.onAuthStateChange(async (event, session) => {
       db.from('workers').upsert(
         { kakao_uid: u.id, name: displayName, email: u.email || '', phone: meta.phone || '' },
         { ignoreDuplicates: true }
-      ).catch(() => {});
+      ).then(null, () => {});
     }
     showLoading('앱으로 이동 중...');
     goToApp();
