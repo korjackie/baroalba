@@ -600,8 +600,7 @@ function applyLang() {
   si('owner-delete-btn',  'withdraw');
 
   // ── 앱별 내비 레이블 ──────────────────────────────────────────
-  // nav-post-btn(+공고 올리기)의 라벨은 번역 대상에서 제외
-  const navLabels = [...document.querySelectorAll('.nav-label')].filter(el => !el.closest('.nav-post-btn'));
+  const navLabels = [...document.querySelectorAll('.nav-label')];
   if (document.getElementById('panel-owner-map')) {
     // ── 업주 앱 전용 ─────────────────────────────────────────────
     const ownerNavKeys = ['nav_map','tab_my_postings','tab_applicants','nav_chats','nav_profile'];
