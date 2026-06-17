@@ -17,101 +17,47 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
-
-      - name: Pre-configure Bubblewrap (skip interactive SDK setup)
+      - name: Install Android Build Tools
         run: |
-          mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
-          cat ~/.bubblewrap/config.json
-
-      - name: Create TWA project directory and manifest
-        run: |
-          mkdir -p twa-build
-          python3 -c "
-          import json, os
-          manifest = {
-            'packageId': 'kr.co.multimove.baroalba',
-            'host': 'baroalba.multimove.co.kr',
-            'name': '바로알바',
-            'launcherName': '바로알바',
-            'display': 'standalone',
-            'orientation': 'portrait',
-            'themeColor': '#FF4B4B',
-            'navigationColor': '#FF4B4B',
-            'navigationColorDark': '#000000',
-            'navigationDividerColor': '#000000',
-            'navigationDividerColorDark': '#000000',
-            'backgroundColor': '#FF4B4B',
-            'enableNotifications': False,
-            'startUrl': '/login.html',
-            'iconUrl': 'https://baroalba.multimove.co.kr/icons/icon-512.png',
-            'maskableIconUrl': 'https://baroalba.multimove.co.kr/icons/icon-512.png',
-            'monochromeIconUrl': 'https://baroalba.multimove.co.kr/icons/icon-512.png',
-            'appVersionCode': 1,
-            'appVersionName': '1.0.0',
-            'shortcuts': [],
-            'generatorApp': 'bubblewrap-cli',
-            'webManifestUrl': 'https://baroalba.multimove.co.kr/manifest.json',
-            'isChromeOSOnly': False,
-            'isMetaQuest': False,
-            'minSdkVersion': 19,
-            'fingerprints': [],
-            'signingKey': {'path': 'android.keystore', 'alias': 'android'},
-            'additionalTrustedOrigins': [],
-            'retainedBundles': []
-          }
-          with open('twa-build/twa-manifest.json', 'w', encoding='utf-8') as f:
-              json.dump(manifest, f, ensure_ascii=False, indent=2)
-          print('twa-manifest.json created')
-          "
-
-      - name: Generate Android project from TWA manifest
-        working-directory: twa-build
-        run: bubblewrap update --skipPwaValidation
+          sdkmanager "build-tools;34.0.0" "platforms;android-34" --sdk_root=$ANDROID_HOME
 
       - name: Generate signing keystore
-        working-directory: twa-build
         run: |
           keytool -genkey -v \
-            -keystore android.keystore \
+            -keystore android/release.keystore \
             -alias android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
+            -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass baroalba2026 \
             -keypass baroalba2026 \
             -dname "CN=MultiMOVE, OU=바로알바, O=MultiMOVE Co Ltd, L=Seoul, ST=Seoul, C=KR"
 
-      - name: Build AAB
-        working-directory: twa-build
+      - name: Setup Gradle wrapper
+        working-directory: android
         run: |
-          bubblewrap build \
-            --skipPwaValidation \
-            --signingKeyPath android.keystore \
-            --signingKeyPassword baroalba2026 \
-            --signingKeyAlias android
+          curl -L https://services.gradle.org/distributions/gradle-8.4-bin.zip -o gradle.zip
+          unzip -q gradle.zip
+          ./gradle-8.4/bin/gradle wrapper
+          chmod +x gradlew
+
+      - name: Build AAB
+        working-directory: android
+        env:
+          KEY_PASSWORD: baroalba2026
+        run: ./gradlew bundleRelease --no-daemon
 
       - name: Print SHA-256 fingerprint
-        working-directory: twa-build
         run: |
-          echo "=== SHA-256 Fingerprint (assetlinks.json에 입력) ==="
+          echo "=== SHA-256 (assetlinks.json에 입력) ==="
           keytool -list -v \
-            -keystore android.keystore \
+            -keystore android/release.keystore \
             -alias android \
             -storepass baroalba2026 2>&1 | grep "SHA256:"
 
-      - name: Upload artifacts
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: baroalba-android-v${{ github.run_number }}
+          name: baroalba-aab-v${{ github.run_number }}
           path: |
-            twa-build/app-release-bundle.aab
-            twa-build/app-release.apk
-            twa-build/android.keystore
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/release.keystore
           retention-days: 30
