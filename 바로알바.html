@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -201,7 +201,8 @@
     /* ── 반경 표시 ── */
     .radius-badge {
       position: fixed;
-      top: 162px; right: 14px;
+      bottom: calc(var(--nav-h) + var(--sheet-peek) + 16px + 48px + 10px);
+      right: 16px;
       background: #fff;
       border-radius: 10px;
       padding: 6px 10px;
@@ -1117,7 +1118,7 @@
     .lesson-card:active { background:#fafafa; }
     .lesson-subject-tag { display:inline-block; background:#f0f4ff; color:#3b82f6; font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; margin-bottom:8px; }
     .lesson-name { font-size:15px; font-weight:800; color:#222; margin-bottom:2px; }
-    .lesson-price { font-size:14px; font-weight:700; color:#C8102E; }
+    .lesson-price { font-size:14px; font-weight:700; color:#FF4B4B; }
     .lesson-meta { font-size:12px; color:#aaa; font-weight:500; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .lesson-cat-btn { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid #e8e8e8; background:#fff; color:#666; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
     .lesson-cat-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
@@ -1125,7 +1126,7 @@
     .lesson-form-input { width:100%; padding:12px 14px; border:1.5px solid #eee; border-radius:12px; font-size:14px; color:#222; outline:none; background:#fafafa; margin-bottom:12px; }
     .lesson-form-input:focus { border-color:#3b82f6; background:#fff; }
     .booking-day-btn { flex:1; padding:8px 4px; border-radius:10px; border:1.5px solid #eee; background:#fff; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; }
-    .booking-day-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
+    .booking-day-btn.active { background:#FF4B4B; color:#fff; border-color:#FF4B4B; }
 
 </style>
 </head>
@@ -1173,8 +1174,7 @@
       <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0">레슨/과외 ▾</button>
     </div>
     <div class="filter-bar-actions">
-      <div class="chip" id="chip-sort-btn" onclick="toggleSort()" style="padding:6px 9px;font-size:14px">↕</div>
-      <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 9px;font-size:14px">필터</div>
+      <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px">필터</div>
     </div>
   </div>
   <!-- 카테고리 드롭다운 시트 -->
@@ -1198,7 +1198,6 @@
   </div>
   <!-- 근무타입 드롭다운 시트 (복수 선택) -->
   <div class="filter-sheet" id="filter-sheet-type">
-    <div class="chip" id="chip-dday"         onclick="toggleDday(this)">D-DAY</div>
     <div class="chip" data-cat="__regular__" onclick="toggleWorkTypeChip(this,'__regular__')">정기</div>
     <div class="chip" data-cat="__short__"   onclick="toggleWorkTypeChip(this,'__short__')">단기</div>
     <div class="chip" data-cat="__spot__"    onclick="toggleWorkTypeChip(this,'__spot__')">스팟</div>
@@ -2155,7 +2154,7 @@
   <!-- 메인 카테고리 탭 -->
   <div style="display:flex;gap:0;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button id="lp-tab-all" onclick="filterLessonMain(this,'')"
-      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #C8102E;color:#C8102E;background:#fff;cursor:pointer">전체</button>
+      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #FF4B4B;color:#FF4B4B;background:#fff;cursor:pointer">전체</button>
     <button id="lp-tab-lesson" onclick="filterLessonMain(this,'레슨')"
       style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">🎾 레슨</button>
     <button id="lp-tab-tutoring" onclick="filterLessonMain(this,'과외')"
@@ -2209,21 +2208,8 @@
 
     <label class="lesson-form-label">패키지 구성 <span style="font-size:11px;font-weight:500;color:#aaa">(선택 — 할인 제공 시 설정)</span></label>
     <div style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:16px" id="lr-packages-wrap">
-      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-bottom:8px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="pkg-4" onchange="togglePackageInput('pkg-4-price',this.checked)" style="accent-color:#3b82f6"><span style="font-size:13px;font-weight:700;color:#333;white-space:nowrap">4회권</span></label>
-        <input id="pkg-4-price" class="lesson-form-input" type="number" placeholder="총금액 예) 180000" disabled style="margin-bottom:0;background:#f0f0f0;font-size:13px">
-        <span style="font-size:11px;color:#aaa">원</span>
-      </div>
-      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-bottom:8px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="pkg-8" onchange="togglePackageInput('pkg-8-price',this.checked)" style="accent-color:#3b82f6"><span style="font-size:13px;font-weight:700;color:#333;white-space:nowrap">8회권</span></label>
-        <input id="pkg-8-price" class="lesson-form-input" type="number" placeholder="총금액 예) 320000" disabled style="margin-bottom:0;background:#f0f0f0;font-size:13px">
-        <span style="font-size:11px;color:#aaa">원</span>
-      </div>
-      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="pkg-month" onchange="togglePackageInput('pkg-month-price',this.checked)" style="accent-color:#3b82f6"><span style="font-size:13px;font-weight:700;color:#333;white-space:nowrap">월회원</span></label>
-        <input id="pkg-month-price" class="lesson-form-input" type="number" placeholder="월 총금액 예) 400000" disabled style="margin-bottom:0;background:#f0f0f0;font-size:13px">
-        <span style="font-size:11px;color:#aaa">원</span>
-      </div>
+      <div id="pkg-rows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+      <button type="button" onclick="addPackageRow()" style="width:100%;padding:9px;border:1.5px dashed #bfdbfe;border-radius:10px;background:none;color:#3b82f6;font-size:13px;font-weight:700;cursor:pointer">+ 패키지 추가</button>
     </div>
 
     <label class="lesson-form-label">장소/지역 (주소 또는 동 단위)</label>
@@ -2297,14 +2283,14 @@
         <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">결제 방식</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <input type="radio" name="bk-payment" value="offline" checked style="accent-color:#C8102E">
+            <input type="radio" name="bk-payment" value="offline" checked style="accent-color:#FF4B4B">
             <div>
               <div style="font-size:13px;font-weight:700;color:#222">현장 결제</div>
               <div style="font-size:11px;color:#aaa">레슨 당일 직접 결제</div>
             </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;cursor:not-allowed;opacity:0.5">
-            <input type="radio" name="bk-payment" value="toss" disabled style="accent-color:#C8102E">
+            <input type="radio" name="bk-payment" value="toss" disabled style="accent-color:#FF4B4B">
             <div>
               <div style="font-size:13px;font-weight:700;color:#222">토스 안전결제 (에스크로) <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px;font-weight:700">준비 중</span></div>
               <div style="font-size:11px;color:#aaa">레슨 완료 후 자동 정산 · 취소 시 전액 환불 보장</div>
@@ -2316,7 +2302,7 @@
         </div>
       </div>
 
-      <button onclick="confirmBooking()" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">예약 신청</button>
+      <button onclick="confirmBooking()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">예약 신청</button>
       <button onclick="document.getElementById('lesson-booking-form').style.display='none'" style="width:100%;padding:10px;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;margin-top:4px">취소</button>
     </div>
   </div>
@@ -5104,6 +5090,8 @@ function setNav(el, tab) {
   document.getElementById('detail-overlay')?.classList.remove('open');
   document.getElementById('panel-app-job-detail')?.classList.remove('show');
   document.getElementById('panel-community')?.classList.remove('show');
+  document.getElementById('panel-lesson')?.classList.remove('show');
+  document.getElementById('panel-lesson-manage')?.classList.remove('show');
 
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
@@ -7750,7 +7738,7 @@ function filterLessonMain(el, main) {
     const t = document.getElementById(id);
     if (t) { t.style.borderBottomColor='transparent'; t.style.color='#888'; }
   });
-  el.style.borderBottomColor = '#C8102E'; el.style.color = '#C8102E';
+  el.style.borderBottomColor = '#FF4B4B'; el.style.color = '#FF4B4B';
   _updateLessonSubcatRow();
   loadLessons();
 }
@@ -7895,7 +7883,7 @@ async function openLessonDetail(profileId) {
     </div>
     <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:16px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><div style="font-size:11px;color:#aaa;font-weight:600">1회 금액</div><div style="font-size:16px;font-weight:800;color:#C8102E;margin-top:3px">${price}원</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">1회 금액</div><div style="font-size:16px;font-weight:800;color:#FF4B4B;margin-top:3px">${price}원</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">소요 시간</div><div style="font-size:16px;font-weight:800;color:#222;margin-top:3px">${p.session_duration||60}분</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">가능 요일</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${days}</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">수업 형태</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${locTypeMap[p.location_type]||'협의'}</div></div>
@@ -7915,7 +7903,7 @@ async function openLessonDetail(profileId) {
             <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:10px;padding:10px 14px">
               <span style="font-size:14px;font-weight:700;color:#222">${pkg.label}</span>
               <div style="text-align:right">
-                <span style="font-size:15px;font-weight:800;color:#C8102E">${Number(pkg.price).toLocaleString()}원</span>
+                <span style="font-size:15px;font-weight:800;color:#FF4B4B">${Number(pkg.price).toLocaleString()}원</span>
                 ${pkg.sessions?`<span style="font-size:11px;color:#aaa;margin-left:4px">(${Math.round(pkg.price/pkg.sessions).toLocaleString()}원/회)</span>`:''}
               </div>
             </div>`).join('')}
@@ -7927,7 +7915,7 @@ async function openLessonDetail(profileId) {
       <button onclick="openLessonConsult('${p.id}','${(w?.name||'강사').replace(/'/g,"\\'")}','${w?.kakao_uid||''}')"
         style="flex:1;padding:14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 무료 상담</button>
       <button onclick="document.getElementById('lesson-booking-form').style.display='block';this.style.display='none';document.querySelector('.lesson-cta-row').style.display='none'"
-        style="flex:1;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 예약하기</button>
+        style="flex:1;padding:14px;background:#FF4B4B;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 예약하기</button>
     </div>
     <div class="lesson-cta-row"></div>`;
   document.getElementById('lesson-booking-form').style.display = 'none';
@@ -7984,6 +7972,8 @@ function openLessonRegisterModal() {
   document.getElementById('cert-file-name').style.display = 'none';
   const btn = document.getElementById('cert-upload-btn');
   if (btn) { btn.style.borderColor='#fbbf24'; btn.style.color='#a16207'; btn.textContent='📎 서류 업로드 (사진/PDF)'; }
+  const pkgRows = document.getElementById('pkg-rows');
+  if (pkgRows) { pkgRows.innerHTML = ''; _pkgRowIdx = 0; }
   document.getElementById('lesson-register-modal').classList.add('open');
 }
 function closeLessonRegisterModal() {
@@ -8021,27 +8011,41 @@ function toggleLrTime(el, slot) {
   if (_selectedLrTimes.includes(slot)) _selectedLrTimes = _selectedLrTimes.filter(s => s !== slot);
   else _selectedLrTimes.push(slot);
 }
-function togglePackageInput(inputId, enabled) {
-  const el = document.getElementById(inputId);
-  if (!el) return;
-  el.disabled = !enabled;
-  el.style.background = enabled ? '#fff' : '#f0f0f0';
-  if (!enabled) el.value = '';
+let _pkgRowIdx = 0;
+const _PKG_SESSION_OPTS = [1,2,3,4,5,6,7,8,9,10,12,16,20];
+
+function addPackageRow(sessions, price) {
+  const idx = _pkgRowIdx++;
+  const opts = _PKG_SESSION_OPTS.map(n =>
+    `<option value="${n}" ${sessions === n ? 'selected' : ''}>${n}회</option>`
+  ).join('') + `<option value="0" ${sessions === 0 ? 'selected' : ''}>월정액</option>`;
+  const row = document.createElement('div');
+  row.id = `pkg-row-${idx}`;
+  row.style.cssText = 'display:grid;grid-template-columns:100px 1fr auto auto;align-items:center;gap:6px';
+  row.innerHTML = `
+    <select style="padding:9px 6px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;font-weight:700;color:#333;background:#fff;cursor:pointer;width:100%">
+      ${opts}
+    </select>
+    <input type="number" inputmode="numeric" placeholder="총금액" value="${price||''}"
+      style="padding:9px 10px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none;width:100%;box-sizing:border-box">
+    <span style="font-size:11px;color:#aaa;white-space:nowrap">원</span>
+    <button type="button" onclick="document.getElementById('pkg-row-${idx}').remove()"
+      style="background:none;border:none;color:#ccc;font-size:20px;cursor:pointer;padding:0 2px;line-height:1">✕</button>`;
+  document.getElementById('pkg-rows').appendChild(row);
 }
+
 function _collectPackages() {
   const pkgs = [];
-  if (document.getElementById('pkg-4')?.checked) {
-    const p = parseInt(document.getElementById('pkg-4-price')?.value);
-    if (p > 0) pkgs.push({ label: '4회권', sessions: 4, price: p });
-  }
-  if (document.getElementById('pkg-8')?.checked) {
-    const p = parseInt(document.getElementById('pkg-8-price')?.value);
-    if (p > 0) pkgs.push({ label: '8회권', sessions: 8, price: p });
-  }
-  if (document.getElementById('pkg-month')?.checked) {
-    const p = parseInt(document.getElementById('pkg-month-price')?.value);
-    if (p > 0) pkgs.push({ label: '월회원', sessions: null, price: p });
-  }
+  document.querySelectorAll('#pkg-rows > div').forEach(row => {
+    const sel = row.querySelector('select');
+    const inp = row.querySelector('input[type="number"]');
+    if (!sel || !inp) return;
+    const sessions = parseInt(sel.value);
+    const price    = parseInt(inp.value);
+    if (!price || price <= 0) return;
+    const label = sessions === 0 ? '월정액' : `${sessions}회권`;
+    pkgs.push({ label, sessions: sessions === 0 ? null : sessions, price });
+  });
   return pkgs.length ? pkgs : null;
 }
 function _renderStars(rating) {
@@ -8229,7 +8233,7 @@ async function loadMyLessons() {
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button onclick="toggleLessonActive('${p.id}',${!p.is_active})" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid ${p.is_active?'#e2e8f0':'#3b82f6'};background:${p.is_active?'#fff':'#eff6ff'};font-size:12px;font-weight:700;color:${p.is_active?'#888':'#3b82f6'};cursor:pointer">${p.is_active ? '지도에서 숨기기' : '지도에 표시하기'}</button>
-        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#C8102E;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#FF4B4B;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
       </div>
     </div>`).join('');
 }

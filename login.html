@@ -580,6 +580,11 @@ const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
   }
 });
 
+// Android 네이티브 스플래시와 이중 표시 방지 — 웹 스플래시는 즉시 사라짐
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => document.getElementById('splash')?.classList.add('hidden'), 0);
+});
+
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 db.auth.onAuthStateChange(async (event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
