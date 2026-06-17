@@ -1596,8 +1596,8 @@
     <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="14" height="10" rx="2"/><path d="M5 6h14a2 2 0 012 2v8"/><path d="M19 11l3 3-3 3"/></svg></div>
     <div class="nav-label">스와이프</div>
   </button>
-  <button class="nav-item" onclick="setNav(this, 'applications')">
-    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+  <button class="nav-item" onclick="setNav(this, 'dashboard')">
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
     <div class="nav-label">바로알바</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'chats')">
@@ -1618,6 +1618,77 @@
   </div>
   <div style="overflow-y:auto;flex:1;padding-bottom:24px" id="ajd-body">
     <div style="text-align:center;padding:48px"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- 바로알바 대시보드 패널 -->
+<div class="full-panel" id="panel-dashboard">
+  <div style="padding:20px 20px 14px;background:#fff;flex-shrink:0;border-bottom:1px solid #f0f0f0">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
+      <div style="width:32px;height:32px;border-radius:9px;overflow:hidden;flex-shrink:0;background:#FF4B4B;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      </div>
+      <span style="font-size:20px;font-weight:900;color:#222">바로알바</span>
+    </div>
+    <div style="font-size:12px;color:#bbb;font-weight:600;margin-top:2px">내 활동 현황을 한눈에</div>
+  </div>
+
+  <!-- 진행 중 요약 카드 -->
+  <div style="padding:16px 16px 0;flex-shrink:0">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="dash-summary-cards">
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px 8px;text-align:center">
+        <div class="spinner" style="margin:0 auto 4px"></div>
+      </div>
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px 8px;text-align:center"></div>
+      <div style="background:#f8f8f8;border-radius:14px;padding:14px 8px;text-align:center"></div>
+    </div>
+  </div>
+
+  <!-- 메뉴 목록 -->
+  <div style="flex:1;overflow-y:auto;padding:16px 16px 80px">
+    <div style="font-size:11px;font-weight:800;color:#bbb;margin-bottom:10px;letter-spacing:0.8px;text-transform:uppercase">관리 메뉴</div>
+
+    <div onclick="openDashPanel('applications')" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0.05)">
+      <div style="width:44px;height:44px;border-radius:13px;background:#8B5CF6;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">내 지원 현황</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px">지원한 공고 · 합격 결과 확인</div>
+      </div>
+      <span style="font-size:18px;color:#94a3b8">›</span>
+    </div>
+
+    <div onclick="openDashPanel('owner')" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(255,75,75,0.05)">
+      <div style="width:44px;height:44px;border-radius:13px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">공고 관리</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px">공고 등록 · 지원자 관리</div>
+      </div>
+      <span style="font-size:18px;color:#94a3b8">›</span>
+    </div>
+
+    <div onclick="openDashPanel('lesson')" style="display:flex;align-items:center;gap:12px;background:#f0f4ff;border:1.5px solid #bfdbfe;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(59,130,246,0.05)">
+      <div style="width:44px;height:44px;border-radius:13px;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">🧑‍🏫</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">레슨/과외 관리</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">레슨 프로필 · 예약 관리</div>
+      </div>
+      <span style="font-size:18px;color:#94a3b8">›</span>
+    </div>
+
+    <div onclick="openDashPanel('community')" style="display:flex;align-items:center;gap:12px;background:#fffbf0;border:1.5px solid #FDE68A;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(245,158,11,0.05)">
+      <div style="width:44px;height:44px;border-radius:13px;background:#F59E0B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">커뮤니티 게시판</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px">알바 정보공유 · 업체후기 · 자유게시판</div>
+      </div>
+      <span style="font-size:18px;color:#94a3b8">›</span>
+    </div>
   </div>
 </div>
 
@@ -1708,57 +1779,16 @@
           <span style="font-size:18px;color:#94a3b8">›</span>
         </div>
 
-        <!-- 채팅 진입 -->
-        <!-- 내 지원 현황 카드 -->
-        <div onclick="window._fromProfile=true;setNav(document.querySelectorAll('.nav-item')[2],'applications')" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0.05)">
-          <div style="width:40px;height:40px;border-radius:12px;background:#8B5CF6;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <!-- 바로알바 대시보드 바로가기 -->
+        <div onclick="setNav(document.querySelectorAll('.nav-item')[2],'dashboard')" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#FF4B4B,#ff7b7b);border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(255,75,75,0.1)">
+          <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           </div>
           <div style="flex:1">
-            <div style="font-size:14px;font-weight:800;color:#222">내 지원 현황</div>
-            <div style="font-size:12px;color:#aaa;margin-top:2px">지원한 공고 · 합격 결과 확인</div>
+            <div style="font-size:14px;font-weight:800;color:#fff">바로알바 대시보드</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px">지원 · 공고 · 레슨 · 커뮤니티 관리</div>
           </div>
-          <span style="font-size:18px;color:#94a3b8">›</span>
-        </div>
-
-        <!-- 내 공고 관리 진입 (고용주/구인 기능) -->
-        <div onclick="window._fromProfile=true;document.getElementById('panel-profile').classList.remove('show');setTimeout(()=>openOwnerPanel('postings'),50)" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(255,75,75,0.08)">
-          <div style="width:40px;height:40px;border-radius:12px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          </div>
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:14px;font-weight:800;color:#222">공고 관리</div>
-              <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#FF4B4B;padding:2px 8px;border-radius:20px;margin-left:4px">고용주 전용</span>
-            </div>
-            <div style="font-size:12px;color:#aaa;margin-top:2px">공고 등록 · 지원자 관리</div>
-          </div>
-          <span style="font-size:18px;color:#94a3b8">›</span>
-        </div>
-
-        <!-- 내 레슨 프로필 -->
-        <div onclick="openLessonManagePanel()" style="display:flex;align-items:center;gap:12px;background:#f0f4ff;border:1.5px solid #bfdbfe;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer">
-          <div style="width:40px;height:40px;border-radius:12px;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">🧑‍🏫</div>
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:14px;font-weight:800;color:#222">내 레슨/과외 프로필</div>
-              <span style="font-size:10px;font-weight:800;background:#dbeafe;color:#3b82f6;padding:2px 7px;border-radius:20px">NEW</span>
-            </div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px">레슨/과외 등록 · 예약 관리</div>
-          </div>
-          <span style="font-size:18px;color:#94a3b8">›</span>
-        </div>
-
-        <!-- 커뮤니티 게시판 진입 -->
-        <div onclick="openCommunityPanel()" style="display:flex;align-items:center;gap:12px;background:#fffbf0;border:1.5px solid #FDE68A;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer">
-          <div style="width:40px;height:40px;border-radius:12px;background:#F59E0B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          </div>
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:800;color:#222">커뮤니티 게시판</div>
-            <div style="font-size:12px;color:#aaa;margin-top:2px">알바 정보공유 · 업체후기 · 자유게시판</div>
-          </div>
-          <span style="font-size:18px;color:#FFB3B3">›</span>
+          <span style="font-size:18px;color:rgba(255,255,255,0.7)">›</span>
         </div>
 
         <!-- 회원 등급 (worker 역할만 표시) -->
@@ -3073,9 +3103,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // owner.html에서 돌아올 때 탭 복원
   const tabParam = new URLSearchParams(location.search).get('tab');
-  if (tabParam === 'applications') {
+  if (tabParam === 'applications' || tabParam === 'dashboard') {
     const btn = document.querySelectorAll('.nav-item')[2];
-    if (btn) setNav(btn, 'applications');
+    if (btn) setNav(btn, 'dashboard');
   } else if (tabParam === 'profile') {
     const btn = document.querySelectorAll('.nav-item')[4];
     if (btn) setNav(btn, 'profile');
@@ -4859,6 +4889,56 @@ function setupRealtime() {
     .subscribe();
 }
 
+// ── 바로알바 대시보드 ─────────────────────────────────────
+async function loadDashboard() {
+  const cards = document.getElementById('dash-summary-cards');
+  if (!cards) return;
+  if (!currentUser) { cards.innerHTML = ''; return; }
+
+  let appCount = 0, postingCount = 0, lessonCount = 0;
+  try {
+    const [workerRes, bizRes, lessonRes] = await Promise.all([
+      db.from('workers').select('id').eq('kakao_uid', currentUser.id).maybeSingle(),
+      db.from('businesses').select('id').eq('owner_kakao_uid', currentUser.id).maybeSingle(),
+      db.from('lesson_profiles').select('id').eq('worker_kakao_uid', currentUser.id).eq('is_active', true)
+    ]);
+    if (workerRes.data) {
+      const { data: apps } = await db.from('applications').select('id').eq('worker_id', workerRes.data.id).in('status', ['pending', 'accepted']);
+      appCount = apps?.length || 0;
+    }
+    if (bizRes.data) {
+      const { data: posts } = await db.from('job_postings').select('id').eq('business_id', bizRes.data.id).eq('is_active', true);
+      postingCount = posts?.length || 0;
+    }
+    lessonCount = lessonRes.data?.length || 0;
+  } catch(e) {}
+
+  const mkCard = (val, label, color, fn) =>
+    `<div onclick="${fn}" style="background:#f8f8f8;border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0.05)">
+      <div style="font-size:26px;font-weight:900;color:${color}">${val}</div>
+      <div style="font-size:10px;color:#aaa;font-weight:700;margin-top:4px;line-height:1.4">진행 중<br>${label}</div>
+    </div>`;
+
+  cards.innerHTML =
+    mkCard(appCount,      '지원',    '#8B5CF6', "openDashPanel('applications')") +
+    mkCard(postingCount,  '공고',    '#FF4B4B', "openDashPanel('owner')")        +
+    mkCard(lessonCount,   '레슨',    '#3b82f6', "openDashPanel('lesson')");
+}
+
+function openDashPanel(which) {
+  if (!currentUser) { goToLogin(); return; }
+  if (which === 'applications') {
+    document.getElementById('panel-applications')?.classList.add('show');
+    switchAppSubtab('status');
+  } else if (which === 'owner') {
+    openOwnerPanel('postings');
+  } else if (which === 'lesson') {
+    openLessonManagePanel();
+  } else if (which === 'community') {
+    openCommunityPanel();
+  }
+}
+
 // ── 내비게이션 ────────────────────────────────────────────
 function openChatPanel() {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -4919,9 +4999,10 @@ function setNav(el, tab) {
   const bottomSheet = document.getElementById('bottom-sheet');
   const radiusBadge   = document.getElementById('radius-badge');
   const mapLocBtn     = document.getElementById('map-loc-btn');
-  const panelApps     = document.getElementById('panel-applications');
-  const panelChats    = document.getElementById('panel-chats');
-  const panelProfile  = document.getElementById('panel-profile');
+  const panelApps      = document.getElementById('panel-applications');
+  const panelDash      = document.getElementById('panel-dashboard');
+  const panelChats     = document.getElementById('panel-chats');
+  const panelProfile   = document.getElementById('panel-profile');
 
   // 탭 전환 시 열린 오버레이/패널 모두 닫기
   closeOwnerPanel();
@@ -4933,6 +5014,7 @@ function setNav(el, tab) {
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
   panelApps.classList.remove('show');
+  panelDash?.classList.remove('show');
   panelChats.classList.remove('show');
   panelProfile.classList.remove('show');
 
@@ -4945,13 +5027,13 @@ function setNav(el, tab) {
     if (mapLocBtn) mapLocBtn.style.display = 'none';
     swipeScreen.style.display = 'flex';
     initSwipe();
-  } else if (tab === 'applications') {
+  } else if (tab === 'dashboard') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
     if (mapLocBtn) mapLocBtn.style.display = 'none';
-    panelApps.classList.add('show');
-    switchAppSubtab('status');
+    panelDash?.classList.add('show');
+    loadDashboard();
   } else if (tab === 'chats') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
