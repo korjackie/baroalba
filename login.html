@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FF4B4B">
+  <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="바로알바">
@@ -31,14 +31,14 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     :root {
-      --red: #FF4B4B;
+      --red: #C8102E;
       --kakao: #FEE500;
       --naver: #03C75A;
       --google-border: #dadce0;
     }
     body {
       font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      background: #FF4B4B;
+      background: #C8102E;
       min-height: 100dvh;
       overflow-y: auto;
       display: flex;
@@ -49,7 +49,7 @@
     #splash {
       position: fixed;
       inset: 0;
-      background: #FF4B4B;
+      background: #C8102E;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -58,16 +58,13 @@
       transition: opacity 0.5s ease, visibility 0.5s;
     }
     #splash.hidden { opacity: 0; visibility: hidden; }
-    .splash-icon { font-size: 72px; animation: pulse 1s ease infinite alternate; }
-    .splash-name {
-      font-size: 32px;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: -1px;
-      margin-top: 12px;
-    }
-    .splash-sub { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 6px; }
-    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.08); } }
+    .splash-logo { width:88px; height:88px; border-radius:24px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.25); }
+    .splash-logo img { width:100%; height:100%; object-fit:cover; display:block; }
+    .splash-name { font-size:34px; font-weight:900; color:#fff; letter-spacing:-1.5px; margin-top:18px; }
+    .splash-sub { font-size:14px; color:rgba(255,255,255,0.75); margin-top:8px; }
+    .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:48px; overflow:hidden; }
+    .splash-bar { height:100%; width:40%; background:#fff; border-radius:2px; animation:splash-slide 1.4s ease-in-out infinite; }
+    @keyframes splash-slide { 0%{transform:translateX(-150%)} 100%{transform:translateX(350%)} }
 
     /* ── 메인 레이아웃 ── */
     .screen { display: none; flex-direction: column; min-height: 100dvh; overflow-y: auto; }
@@ -75,7 +72,7 @@
 
     /* ── 로그인 화면 ── */
     .hero {
-      background: #FF4B4B;
+      background: #C8102E;
       padding: 48px 24px 36px;
       display: flex;
       flex-direction: column;
@@ -348,9 +345,10 @@
 
 <!-- ── 스플래시 ── -->
 <div id="splash">
-  <div class="splash-icon"><img src="./icons/바로알바 최종로고.png" style="width:80px;height:80px;border-radius:20px"></div>
+  <div class="splash-logo"><img src="./icons/바로알바 최종로고.png" alt="바로알바"></div>
   <div class="splash-name">바로알바</div>
   <div class="splash-sub">지금 이 순간, 내 주변 알바</div>
+  <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
 </div>
 
 <!-- ── 로그인 화면 ── -->
@@ -362,7 +360,7 @@
 
     <!-- 서비스 카테고리 뱃지 -->
     <div style="display:flex;gap:7px;margin-top:14px;width:100%;justify-content:center;flex-wrap:wrap;">
-      <span style="background:rgba(255,255,255,0.93);color:#FF4B4B;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">⚡ 번개알바</span>
+      <span style="background:rgba(255,255,255,0.93);color:#C8102E;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">⚡ 번개알바</span>
       <span style="background:rgba(255,255,255,0.93);color:#d97706;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">📅 단기/장기알바</span>
       <span style="background:rgba(255,255,255,0.93);color:#2563eb;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">📦 운반</span>
       <span style="background:rgba(255,255,255,0.93);color:#16a34a;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🛵 퀵배달</span>
@@ -525,7 +523,7 @@
     <input id="new-pw-confirm" type="password" placeholder="비밀번호 확인"
       style="width:100%;padding:14px 16px;border:1.5px solid #eee;border-radius:12px;font-size:15px;margin-bottom:16px;outline:none;box-sizing:border-box">
     <button onclick="submitNewPassword()"
-      style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer">
+      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer">
       비밀번호 변경
     </button>
     <div id="pw-reset-error" style="color:#EF4444;font-size:13px;text-align:center;margin-top:10px;display:none"></div>
@@ -546,7 +544,7 @@
   <div style="font-size:56px;margin-bottom:20px">📧</div>
   <div style="font-size:22px;font-weight:900;color:#222;margin-bottom:10px">이메일을 확인해주세요</div>
   <div style="font-size:14px;color:#666;line-height:1.7;margin-bottom:12px">아래 이메일로 가입 확인 메일을 보냈습니다</div>
-  <div id="naver-magic-email" style="font-size:15px;font-weight:800;color:#FF4B4B;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:20px;word-break:break-all;max-width:320px"></div>
+  <div id="naver-magic-email" style="font-size:15px;font-weight:800;color:#C8102E;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:20px;word-break:break-all;max-width:320px"></div>
   <div style="font-size:13px;color:#888;line-height:1.9;margin-bottom:32px;max-width:300px">
     📌 이메일에서 <b>"Confirm your email"</b><br>버튼을 클릭하면 가입 완료됩니다<br>
     이후 네이버 로그인이 정상 작동합니다<br>
@@ -626,7 +624,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const banner = document.createElement('div');
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;font-size:12px;font-weight:700;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
     banner.innerHTML = `<span>더 나은 경험을 위해 Chrome에서 열어주세요</span>
-      <button onclick="openInChrome()" style="background:#FF4B4B;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:800">Chrome으로 열기</button>`;
+      <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:800">Chrome으로 열기</button>`;
     document.body.prepend(banner);
   }
 

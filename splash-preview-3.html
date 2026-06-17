@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>스플래시 3 — 화이트 미니멀</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #fff;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .preview-label {
+      position: fixed; top: 14px; right: 14px;
+      background: rgba(0,0,0,0.1); color: #444;
+      font-size: 11px; font-weight: 800;
+      padding: 5px 14px; border-radius: 20px; z-index: 99;
+    }
+    .center {
+      display: flex; flex-direction: column;
+      align-items: center;
+    }
+    .logo-wrap {
+      width: 84px; height: 84px; border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-fallback {
+      width: 84px; height: 84px; border-radius: 22px;
+      background: #C8102E;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 42px;
+    }
+    .app-name {
+      font-size: 30px; font-weight: 900;
+      color: #111; letter-spacing: -1.5px;
+      margin-top: 18px;
+    }
+    .red { color: #C8102E; }
+    .app-tag {
+      font-size: 13px; color: #aaa;
+      font-weight: 500; margin-top: 6px;
+      letter-spacing: -0.2px;
+    }
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: #f0f0f0;
+      overflow: hidden;
+    }
+    .bottom-bar-fill {
+      height: 100%; width: 30%;
+      background: #C8102E;
+      animation: sweep 1.6s ease-in-out infinite;
+    }
+    @keyframes sweep {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
+    }
+  </style>
+</head>
+<body>
+<div class="preview-label">스플래시 3 — 화이트 미니멀</div>
+<div class="center">
+  <div class="logo-wrap">
+    <img src="./icons/바로알바 최종로고.png" onerror="this.parentElement.innerHTML='<div class=logo-fallback>🎯</div>'">
+  </div>
+  <div class="app-name"><span class="red">바로</span>알바</div>
+  <div class="app-tag">지금 이 순간, 내 주변 알바</div>
+</div>
+<div class="bottom-bar"><div class="bottom-bar-fill"></div></div>
+</body>
+</html>

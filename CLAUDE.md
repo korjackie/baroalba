@@ -1,4 +1,8 @@
-# 바로알바 — 완전 기술 문서 (2026-06-11 최신)
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+# 바로알바 — 완전 기술 문서 (2026-06-17 최신)
 
 ---
 
@@ -6,12 +10,13 @@
 
 | # | 규칙 | 이유 |
 |---|------|------|
-| 1 | **바로알바.html + owner.html 항상 동시 수정** | 한쪽만 수정하면 계정별 동작 불일치 발생 |
-| 2 | **배포: `git push origin main`만** | Vercel 자동배포. SCP 절대 금지 |
-| 3 | **HTML/JS 수정 시 sw.js CACHE 버전 증가** | PWA 캐시 미갱신 방지 |
-| 4 | **DML은 JS 클라이언트 직접** | `db.from(...)`으로 처리. SQL 실행 위임 금지 (DDL만 예외) |
-| 5 | **버전 파일 생성 금지** | 소스파일은 항상 단일본. `바로알바_v2.html` 같은 파일 생성 불가 |
-| 6 | **편집 후 즉시 배포** | 편집만 하고 완료 보고 금지 |
+| 1 | **owner.html은 redirect 파일 — 직접 편집 금지** | owner 기능은 바로알바.html의 panel-owner에 통합됨. owner.html 1줄 redirect 유지 |
+| 2 | **shared-lang.js 수정 시 바로알바.html applyLang 대상 동기화 확인** | 번역키 추가/삭제 시 HTML data-i18n 불일치 발생 가능 |
+| 3 | **배포: `git push origin main`만** | Vercel 자동배포. SCP 절대 금지 |
+| 4 | **HTML/JS 수정 시 sw.js CACHE 버전 증가** | PWA 캐시 미갱신 방지 |
+| 5 | **DML은 JS 클라이언트 직접** | `db.from(...)`으로 처리. SQL 실행 위임 금지 (DDL만 예외) |
+| 6 | **버전 파일 생성 금지** | 소스파일은 항상 단일본. `바로알바_v2.html` 같은 파일 생성 불가 |
+| 7 | **편집 후 즉시 배포** | 편집만 하고 완료 보고 금지 |
 
 ---
 
@@ -21,11 +26,12 @@
 
 ```
 사용자 → baroalba.multimove.co.kr (Vercel)
-          ├── 바로알바.html     (알바생 앱)
-          ├── owner.html        (업주 앱)
+          ├── 바로알바.html     (알바생 + 업주 통합 앱)
+          ├── owner.html        (redirect only → /바로알바.html?tab=postings)
+          ├── admin.html        (관리자 전용 대시보드, ADMIN_EMAILS 화이트리스트)
           ├── login.html        (PWA 진입점, manifest start_url)
-          ├── shared-lang.js    (두 앱 공통 번역 시스템)
-          ├── sw.js             (PWA 서비스워커, 현재 v30)
+          ├── shared-lang.js    (번역 데이터 + applyLang() 엔진)
+          ├── sw.js             (PWA 서비스워커, 현재 v87)
           ├── manifest.json     (PWA 설정)
           ├── config.js         (앱 설정값)
           └── api/send-push.js  (Vercel 서버리스, Web Push 발송)
@@ -41,11 +47,12 @@ Supabase: onwvbmllpycgswfzywjv.supabase.co
 
 | 파일 | 역할 | 크기 기준 |
 |------|------|-----------|
-| `바로알바.html` | 알바생 메인 (지도/스와이프/지원/채팅/마이페이지/커뮤니티) | ~300KB |
-| `owner.html` | 업주 대시보드 (공고관리/지원자/채팅/마이페이지) | ~200KB |
+| `바로알바.html` | 알바생+업주 통합 앱 (지도/스와이프/지원/채팅/마이페이지/커뮤니티 + panel-owner) | ~400KB |
+| `owner.html` | 1줄 redirect → `/바로알바.html?tab=postings` (편집 금지) | ~0.1KB |
+| `admin.html` | 관리자 전용 대시보드 (ADMIN_EMAILS 화이트리스트, 신고관리/회원관리) | ~30KB |
 | `login.html` | 로그인/회원가입 (카카오·네이버·구글·이메일) | ~24KB |
 | `shared-lang.js` | 번역 데이터 + applyLang() 엔진 | ~15KB |
-| `sw.js` | PWA 캐시 전략 (현재 v30) | ~3KB |
+| `sw.js` | PWA 캐시 전략 (현재 v87) | ~3KB |
 | `manifest.json` | PWA 메타 (background_color: #FF4B4B) | ~1KB |
 | `config.js` | DEFAULT_LAT: 37.5445 (성수역), RADIUS: 10km | ~2KB |
 | `terms.html` | 이용약관 + 개인정보처리방침 (탭 전환형) | - |
@@ -73,11 +80,13 @@ if (role === 'business') {
 }
 ```
 
-### 2-4. 커뮤니티 접근 구조
+### 2-4. 업주 패널 구조 (panel-owner)
 
-- **알바생**: `바로알바.html` → 내비 탭 커뮤니티
-- **업주**: `owner.html` → 커뮤니티 버튼 → `바로알바.html?community=1` 리다이렉트
-- **결론**: 커뮤니티 코드는 `바로알바.html` 단일 관리. owner.html에 커뮤니티 코드 없음
+- **업주 진입**: `owner.html` 접속 → `/바로알바.html?tab=postings` redirect → `panel-owner` div 활성화
+- **panel-owner**: `바로알바.html` 내 `<div id="panel-owner">` (position:fixed, z-index:500)
+  - 내 공고 / 지원자 / 채팅(panel-owner-chats) / 지도(panel-owner-map) / 설정(panel-owner-settings)
+- **커뮤니티**: 알바생·업주 모두 `바로알바.html` 내 커뮤니티 탭 사용. owner.html에 커뮤니티 코드 없음
+- **관리자**: `ADMIN_EMAILS` 배열 화이트리스트 → admin-banner 표시 → `/admin.html` 이동
 
 ---
 
@@ -254,7 +263,7 @@ manifest.json
 
 login.html body { background: #FF4B4B }  ← HTML 레벨도 동일색 필수
 
-sw.js (v30)
+sw.js (v87)
   SHELL: manifest.json, icons/*.{svg,png}
   전략:
     - HTML: 네트워크 우선
@@ -349,11 +358,12 @@ sw.js (v30)
 - SECURITY DEFINER RPC 함수 (RLS 우회)
 - 업주 접근: `바로알바.html?community=1` 리다이렉트
 
-### Phase 25 ⏳ 진행예정 — 지원취소 마감일
+### Phase 25 ✅ 지원취소 마감일 (구현 완료)
 - work_type별 취소 마감: 정기 7일 전 / 단기 3일 전 / 스팟 2시간 전
-- D-day 칩 표시
-- 마감 후 노쇼 자동 처리
-- **필요 DDL**: `ALTER TABLE applications ADD COLUMN IF NOT EXISTS cancel_deadline TIMESTAMPTZ;`
+- `calcCancelDeadline(workType, startTime)` 함수로 마감일 계산
+- D-day 칩 표시: "취소가능 D-N" / "⏰ 취소가능 N시간 남음" / "취소마감 지남"
+- 수락(accepted) 처리 시 자동으로 cancel_deadline 계산 후 저장
+- **DDL 상태**: `cancel_deadline TIMESTAMPTZ` 컬럼 운영 중 (코드 읽기/쓰기 모두 동작)
 
 ### Phase 26 ⏳ 진행예정 — TWA 플레이스토어
 - 법인 구글 개발자 계정 + DUNS 번호 필요
@@ -371,10 +381,9 @@ sw.js (v30)
 
 | 항목 | 상태 | 처리 방법 |
 |------|------|-----------|
-| `cancel_deadline` 컬럼 없음 | 🔴 DDL 미실행 | SQL Editor: `ALTER TABLE applications ADD COLUMN IF NOT EXISTS cancel_deadline TIMESTAMPTZ;` |
-| 댓글 삭제 UI 없음 | 🟡 기능 미구현 | 내 댓글에 삭제 버튼 추가 필요 |
-| 게시글 삭제/수정 UI 없음 | 🟡 기능 미구현 | 내 글에 수정/삭제 버튼 추가 필요 |
-| 업주↔알바생 UI 전체 패리티 검수 | 🟡 검수 필요 | 두 앱 기능 대조 점검 |
+| 커뮤니티 댓글 삭제 UI 없음 | 🟡 기능 미구현 | 내 댓글에 × 버튼 추가, `community_comments` DELETE 쿼리 필요 |
+| 커뮤니티 게시글 삭제/수정 UI 없음 | 🟡 기능 미구현 | 내 글에 수정/삭제 버튼 추가, `community_posts` UPDATE/DELETE 쿼리 필요 |
+| 커뮤니티 댓글 익명 토글 없음 | 🟡 기능 미구현 | 현재 `is_anonymous: false` 하드코딩 → 체크박스 추가 필요 |
 
 ---
 
@@ -383,10 +392,9 @@ sw.js (v30)
 ### 9-1. 단기 (바로 작업 가능)
 | 항목 | 설명 |
 |------|------|
+| 커뮤니티 게시글 수정/삭제 | 본인 글 수정/삭제 버튼 (Section 8 미완료 항목) |
+| 커뮤니티 댓글 삭제 | 본인 댓글 × 버튼 (Section 8 미완료 항목) |
 | 댓글 익명 토글 | 현재 `is_anonymous: false` 하드코딩 → 체크박스 추가 |
-| 커뮤니티 게시글 수정/삭제 | 본인 글 수정/삭제 버튼 |
-| 커뮤니티 댓글 삭제 | 본인 댓글 × 버튼 |
-| 지원취소 마감일 D-day 표시 | cancel_deadline DDL 실행 후 즉시 구현 가능 |
 | 알바생 스킬 태그 공고 필터 | skills 배열로 매칭 필터링 |
 
 ### 9-2. 중기 (1~2주)

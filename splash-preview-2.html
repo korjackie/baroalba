@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>스플래시 2 — 다크 프리미엄</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #111117;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .preview-label {
+      position: fixed; top: 14px; right: 14px;
+      background: rgba(255,255,255,0.12); color: #fff;
+      font-size: 11px; font-weight: 800;
+      padding: 5px 14px; border-radius: 20px; z-index: 99;
+    }
+    .center {
+      display: flex; flex-direction: column;
+      align-items: center;
+    }
+    .logo-glow {
+      width: 92px; height: 92px; border-radius: 26px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(200,16,46,0.3), 0 12px 40px rgba(200,16,46,0.35);
+    }
+    .logo-glow img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-fallback {
+      width: 92px; height: 92px; border-radius: 26px;
+      background: #C8102E;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 46px;
+    }
+    .app-name {
+      font-size: 32px; font-weight: 900;
+      color: #fff; letter-spacing: -1.5px;
+      margin-top: 20px;
+    }
+    .app-name span { color: #C8102E; }
+    .app-tag {
+      font-size: 13px; font-weight: 400;
+      color: rgba(255,255,255,0.4);
+      margin-top: 8px; letter-spacing: 0.5px;
+    }
+    .bar-wrap {
+      width: 48px; height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      margin-top: 52px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; width: 40%;
+      background: #C8102E;
+      border-radius: 2px;
+      animation: bar 1.8s ease-in-out infinite;
+    }
+    @keyframes bar {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+  </style>
+</head>
+<body>
+<div class="preview-label">스플래시 2 — 다크 프리미엄</div>
+<div class="center">
+  <div class="logo-glow">
+    <img src="./icons/바로알바 최종로고.png" onerror="this.parentElement.innerHTML='<div class=logo-fallback>🎯</div>'">
+  </div>
+  <div class="app-name"><span>바로</span>알바</div>
+  <div class="app-tag">BAROALBA · MULTIMOVE</div>
+  <div class="bar-wrap"><div class="bar-fill"></div></div>
+</div>
+</body>
+</html>

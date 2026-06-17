@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>스플래시 1 — 클린 레드</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #C8102E;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .preview-label {
+      position: fixed; top: 14px; right: 14px;
+      background: rgba(0,0,0,0.35); color: #fff;
+      font-size: 11px; font-weight: 800;
+      padding: 5px 14px; border-radius: 20px; z-index: 99;
+    }
+    .center {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0;
+    }
+    .logo-wrap {
+      width: 88px; height: 88px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    .logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-fallback {
+      width: 88px; height: 88px; border-radius: 24px;
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px;
+    }
+    .app-name {
+      font-size: 34px; font-weight: 900; color: #fff;
+      letter-spacing: -1.5px; margin-top: 18px;
+    }
+    .app-tag {
+      font-size: 14px; font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      margin-top: 8px; letter-spacing: -0.3px;
+    }
+    .loading-dot {
+      display: flex; gap: 6px; margin-top: 48px;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+    }
+    .dot.on { background: rgba(255,255,255,0.9); }
+  </style>
+</head>
+<body>
+<div class="preview-label">스플래시 1 — 클린 레드</div>
+<div class="center">
+  <div class="logo-wrap">
+    <img src="./icons/바로알바 최종로고.png" onerror="this.parentElement.innerHTML='<div class=logo-fallback>🎯</div>'">
+  </div>
+  <div class="app-name">바로알바</div>
+  <div class="app-tag">지금 이 순간, 내 주변 알바</div>
+  <div class="loading-dot">
+    <div class="dot on"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+</div>
+</body>
+</html>

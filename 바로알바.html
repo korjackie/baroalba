@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FF4B4B">
+  <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="바로알바">
   <link rel="manifest" href="./manifest.json">
@@ -27,8 +27,8 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     :root {
-      --red: #FF4B4B;
-      --urgent: #FF4B4B;
+      --red: #C8102E;
+      --urgent: #C8102E;
       --open: #3B82F6;
       --fnb: #F59E0B;
       --logistics: #8B5CF6;
@@ -628,7 +628,7 @@
     .nav-label { font-size: 10px; font-weight: 600; color: #c0c0c0; }
     .nav-item.active .nav-label { color: var(--red); font-weight: 700; }
     .nav-post-btn { margin-top: -10px; }
-    .nav-post-btn .nav-label { color: #FF4B4B !important; font-weight: 800 !important; }
+    .nav-post-btn .nav-label { color: #C8102E !important; font-weight: 800 !important; }
     .nav-item.active .nav-icon svg path,
     .nav-item.active .nav-icon svg circle,
     .nav-item.active .nav-icon svg line,
@@ -869,7 +869,7 @@
       width:56px; height:56px; border-radius:50%;
       background:var(--red); color:#fff; border:none;
       font-size:28px; font-weight:300; cursor:pointer;
-      box-shadow:0 4px 16px rgba(255,75,75,0.4);
+      box-shadow:0 4px 16px rgba(200,16,46,0.4);
       display:flex; align-items:center; justify-content:center;
       z-index:520; transition:transform 0.2s;
     }
@@ -977,7 +977,7 @@
     .filter-chips { display:flex;gap:6px;padding:10px 16px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none }
     .filter-chips::-webkit-scrollbar { display:none }
     .filter-chip { flex-shrink:0;padding:6px 14px;border-radius:20px;border:1.5px solid #e8e8e8;background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s }
-    .filter-chip.active { background:#FF4B4B;color:#fff;border-color:#FF4B4B }
+    .filter-chip.active { background:#C8102E;color:#fff;border-color:#C8102E }
 
     /* ── 추천/차단 숏컷 ── */
     .worker-shortcut { flex:1;background:#fff;border-radius:16px;padding:16px;border:1.5px solid #f0f0f0;text-align:center;cursor:pointer;transition:background 0.15s }
@@ -1058,8 +1058,8 @@
     .marker-bubble.mk-asap .mk-cat, .marker-bubble.mk-errand .mk-cat { color:rgba(255,255,255,0.88); }
     .marker-bubble.mk-asap .mk-dday, .marker-bubble.mk-errand .mk-dday { color:rgba(255,255,255,0.72); }
     .marker-bubble.mk-asap .mk-type, .marker-bubble.mk-errand .mk-type { background:rgba(255,255,255,0.22); }
-    .om-bubble { background:#fff; border-radius:14px; padding:9px 16px 8px; border:3px solid #FF4B4B; white-space:nowrap; line-height:1.2; min-width:100px; text-align:center; }
-    .om-bubble.urgent  { background:#FF4B4B; border-color:#FF4B4B; }
+    .om-bubble { background:#fff; border-radius:14px; padding:9px 16px 8px; border:3px solid #C8102E; white-space:nowrap; line-height:1.2; min-width:100px; text-align:center; }
+    .om-bubble.urgent  { background:#C8102E; border-color:#C8102E; }
     .om-bubble.urgent  .om-wage { color:#fff; }
     .om-bubble.urgent  .om-sub  { color:rgba(255,255,255,0.85); }
     .om-bubble.open    { border-color:#22c55e; }
@@ -1068,9 +1068,9 @@
     .om-bubble.errand  { background:#7C3AED; border-color:#7C3AED; }
     .om-bubble.errand  .om-wage { color:#fff; }
     .om-bubble.errand  .om-sub  { color:rgba(255,255,255,0.85); }
-    .om-wage { font-size:16px; font-weight:900; color:#FF4B4B; display:block; }
+    .om-wage { font-size:16px; font-weight:900; color:#C8102E; display:block; }
     .om-sub  { font-size:11px; font-weight:700; color:#888; display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
-    .om-tail { width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:11px solid #FF4B4B; margin-top:-1px; }
+    .om-tail { width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:11px solid #C8102E; margin-top:-1px; }
     .om-tail.open   { border-top-color:#22c55e; }
     .om-tail.errand { border-top-color:#7C3AED; }
     /* ── 업주 지도 바텀시트 (워커 맵 동일 구조) ── */
@@ -1119,7 +1119,7 @@
     .lesson-card:active { background:#fafafa; }
     .lesson-subject-tag { display:inline-block; background:#f0f4ff; color:#3b82f6; font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; margin-bottom:8px; }
     .lesson-name { font-size:15px; font-weight:800; color:#222; margin-bottom:2px; }
-    .lesson-price { font-size:14px; font-weight:700; color:#FF4B4B; }
+    .lesson-price { font-size:14px; font-weight:700; color:#C8102E; }
     .lesson-meta { font-size:12px; color:#aaa; font-weight:500; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .lesson-cat-btn { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid #e8e8e8; background:#fff; color:#666; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
     .lesson-cat-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
@@ -1127,7 +1127,7 @@
     .lesson-form-input { width:100%; padding:12px 14px; border:1.5px solid #eee; border-radius:12px; font-size:14px; color:#222; outline:none; background:#fafafa; margin-bottom:12px; }
     .lesson-form-input:focus { border-color:#3b82f6; background:#fff; }
     .booking-day-btn { flex:1; padding:8px 4px; border-radius:10px; border:1.5px solid #eee; background:#fff; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; }
-    .booking-day-btn.active { background:#FF4B4B; color:#fff; border-color:#FF4B4B; }
+    .booking-day-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
 
 </style>
 </head>
@@ -1144,7 +1144,7 @@
   <div style="display:flex;align-items:center;gap:10px">
     <button id="noti-bell-btn" onclick="openNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1;display:none">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span id="noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#FF4B4B;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+      <span id="noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
     </button>
   </div>
 </div>
@@ -1430,9 +1430,9 @@
 </div>
 
 <!-- 업주 지도 열람 모드 배너 -->
-<div id="owner-browse-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#FF4B4B;color:#fff;padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px">
+<div id="owner-browse-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#C8102E;color:#fff;padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px">
   <span style="font-size:13px;font-weight:700">&#128506; 지도 열람 중</span>
-  <button onclick="openOwnerPanel('postings')" style="padding:7px 14px;background:#fff;color:#FF4B4B;border:none;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">← 공고 관리</button>
+  <button onclick="openOwnerPanel('postings')" style="padding:7px 14px;background:#fff;color:#C8102E;border:none;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">← 공고 관리</button>
 </div>
 
 <!-- PWA 설치 배너 -->
@@ -1603,10 +1603,10 @@
   <!-- 액션 버튼 -->
   <div style="display:flex;gap:28px;align-items:flex-end;justify-content:center;padding:14px 0 22px;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-      <button onclick="swipeAction('left')" style="width:60px;height:60px;border-radius:50%;background:#fff;border:2.5px solid #FFD0D0;cursor:pointer;box-shadow:0 4px 16px rgba(255,75,75,0.15);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4B4B" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button onclick="swipeAction('left')" style="width:60px;height:60px;border-radius:50%;background:#fff;border:2.5px solid #FFD0D0;cursor:pointer;box-shadow:0 4px 16px rgba(200,16,46,0.15);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <span style="font-size:10px;font-weight:700;color:#FF4B4B;letter-spacing:-0.3px">패스</span>
+      <span style="font-size:10px;font-weight:700;color:#C8102E;letter-spacing:-0.3px">패스</span>
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
       <button onclick="swipeAction('up')" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#FFF8E8,#FFE0B2);border:2.5px solid #FFCB6B;cursor:pointer;box-shadow:0 4px 16px rgba(255,149,0,0.2);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
@@ -1615,7 +1615,7 @@
       <span style="font-size:10px;font-weight:700;color:#FF9500;letter-spacing:-0.3px">번개</span>
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-      <button onclick="swipeAction('right')" style="width:60px;height:60px;border-radius:50%;background:var(--red);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(255,75,75,0.4);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+      <button onclick="swipeAction('right')" style="width:60px;height:60px;border-radius:50%;background:var(--red);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(200,16,46,0.4);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </button>
       <span style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:-0.3px">지원</span>
@@ -1698,8 +1698,8 @@
       <span style="font-size:18px;color:#94a3b8">›</span>
     </div>
 
-    <div onclick="openDashPanel('owner')" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(255,75,75,0.05)">
-      <div style="width:44px;height:44px;border-radius:13px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <div onclick="openDashPanel('owner')" style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #FFE0E0;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(200,16,46,0.05)">
+      <div style="width:44px;height:44px;border-radius:13px;background:#C8102E;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </div>
       <div style="flex:1">
@@ -1810,7 +1810,7 @@
 
         <!-- 관리자 페이지 진입 (관리자 계정만 표시) -->
         <div id="admin-banner" style="display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer" onclick="location.href='/admin.html'">
-          <div style="width:40px;height:40px;border-radius:12px;background:#FF4B4B;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">⚙️</div>
+          <div style="width:40px;height:40px;border-radius:12px;background:#C8102E;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">⚙️</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800;color:#fff">관리자 페이지</div>
             <div style="font-size:12px;color:#94a3b8;margin-top:2px">신고관리 · 공고관리 · 회원관리</div>
@@ -1819,7 +1819,7 @@
         </div>
 
         <!-- 바로알바 대시보드 바로가기 -->
-        <div onclick="setNav(document.querySelectorAll('.nav-item')[2],'dashboard')" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#FF4B4B,#ff7b7b);border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(255,75,75,0.1)">
+        <div onclick="setNav(document.querySelectorAll('.nav-item')[2],'dashboard')" style="display:flex;align-items:center;gap:12px;background:#C8102E;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(200,16,46,0.1)">
           <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           </div>
@@ -1876,7 +1876,7 @@
                 <input id="worker-birth" type="text" inputmode="numeric" maxlength="6" placeholder="950315 (YYMMDD)"
                   oninput="updateAgePreview(this.value)"
                   style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
-                <span id="age-preview" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#FF4B4B;font-weight:700"></span>
+                <span id="age-preview" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#C8102E;font-weight:700"></span>
               </div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
@@ -1898,17 +1898,17 @@
             <div>
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
                 <label style="font-size:12px;color:#888;font-weight:700">&#128205; 주요 활동 지역</label>
-                <span style="font-size:10px;color:#FF4B4B;font-weight:700;background:#fff0f0;padding:2px 7px;border-radius:6px">업주 지도에 표시됩니다</span>
+                <span style="font-size:10px;color:#C8102E;font-weight:700;background:#fff0f0;padding:2px 7px;border-radius:6px">업주 지도에 표시됩니다</span>
               </div>
               <div style="display:flex;gap:6px">
                 <input id="activity-area-input" type="text" placeholder="동 이름 입력 (예: 성수동, 이태원동)"
                   style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box"
                   onkeydown="if(event.key==='Enter'){event.preventDefault();searchActivityArea()}">
-                <button onclick="searchActivityArea()" style="padding:10px 14px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
+                <button onclick="searchActivityArea()" style="padding:10px 14px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
               </div>
               <div id="activity-area-results" style="display:none;margin-top:4px;border:1.5px solid #eee;border-radius:10px;overflow:hidden;background:#fff"></div>
               <div id="activity-area-selected" style="display:none;margin-top:6px;align-items:center;gap:8px;padding:9px 14px;background:#fff0f0;border-radius:10px;border:1px solid #FFCCCC">
-                <span style="font-size:13px;font-weight:800;color:#FF4B4B" id="activity-area-tag"></span>
+                <span style="font-size:13px;font-weight:800;color:#C8102E" id="activity-area-tag"></span>
                 <button onclick="clearActivityArea()" style="margin-left:auto;background:none;border:none;color:#bbb;cursor:pointer;font-size:16px;line-height:1;padding:0">✕</button>
               </div>
               <div style="font-size:11px;color:#bbb;margin-top:5px">동 단위로 설정하면 해당 동 중심이 업주 지도에 핀으로 표시됩니다</div>
@@ -1921,7 +1921,7 @@
               <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200"
                 oninput="updateBioCounter(this)"
                 style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
-              <div id="worker-bio-hint" style="display:none;font-size:11px;color:#FF4B4B;margin-top:3px">최소 20자 이상 입력해주세요</div>
+              <div id="worker-bio-hint" style="display:none;font-size:11px;color:#C8102E;margin-top:3px">최소 20자 이상 입력해주세요</div>
             </div>
             <div>
               <div data-i18n="exp_label" style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">경력/특기</div>
@@ -2125,7 +2125,7 @@
         </div>
         <div style="display:flex;gap:8px">
           <button id="worker-logout-btn" onclick="doLogout()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">로그아웃</button>
-          <button id="worker-delete-btn" onclick="deleteUserAccount()" style="flex:1;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+          <button id="worker-delete-btn" onclick="deleteUserAccount()" style="flex:1;padding:14px;background:#FFF0F0;color:#C8102E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
         </div>
       </div>
 
@@ -2154,7 +2154,7 @@
   <!-- 메인 카테고리 탭 -->
   <div style="display:flex;gap:0;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button id="lp-tab-all" onclick="filterLessonMain(this,'')"
-      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #FF4B4B;color:#FF4B4B;background:#fff;cursor:pointer">전체</button>
+      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #C8102E;color:#C8102E;background:#fff;cursor:pointer">전체</button>
     <button id="lp-tab-lesson" onclick="filterLessonMain(this,'레슨')"
       style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">🎾 레슨</button>
     <button id="lp-tab-tutoring" onclick="filterLessonMain(this,'과외')"
@@ -2287,14 +2287,14 @@
         <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">결제 방식</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <input type="radio" name="bk-payment" value="offline" checked style="accent-color:#FF4B4B">
+            <input type="radio" name="bk-payment" value="offline" checked style="accent-color:#C8102E">
             <div>
               <div style="font-size:13px;font-weight:700;color:#222">현장 결제</div>
               <div style="font-size:11px;color:#aaa">레슨 당일 직접 결제</div>
             </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;cursor:not-allowed;opacity:0.5">
-            <input type="radio" name="bk-payment" value="toss" disabled style="accent-color:#FF4B4B">
+            <input type="radio" name="bk-payment" value="toss" disabled style="accent-color:#C8102E">
             <div>
               <div style="font-size:13px;font-weight:700;color:#222">토스 안전결제 (에스크로) <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px;font-weight:700">준비 중</span></div>
               <div style="font-size:11px;color:#aaa">레슨 완료 후 자동 정산 · 취소 시 전액 환불 보장</div>
@@ -2306,7 +2306,7 @@
         </div>
       </div>
 
-      <button onclick="confirmBooking()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">예약 신청</button>
+      <button onclick="confirmBooking()" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">예약 신청</button>
       <button onclick="document.getElementById('lesson-booking-form').style.display='none'" style="width:100%;padding:10px;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;margin-top:4px">취소</button>
     </div>
   </div>
@@ -2334,7 +2334,7 @@
   <div style="flex:1;overflow-y:auto;padding:12px 16px 80px;position:relative" id="community-post-list">
     <div style="text-align:center;padding:48px 20px;color:#aaa"><div class="spinner"></div></div>
   </div>
-  <button onclick="openCommunityWriteOverlay()" style="position:absolute;bottom:20px;right:16px;display:flex;align-items:center;gap:7px;padding:12px 20px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(255,75,75,0.4);z-index:10">
+  <button onclick="openCommunityWriteOverlay()" style="position:absolute;bottom:20px;right:16px;display:flex;align-items:center;gap:7px;padding:12px 20px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(200,16,46,0.4);z-index:10">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     글쓰기
   </button>
@@ -2420,15 +2420,15 @@
   <div style="display:flex;align-items:center;gap:8px">
     <button id="owner-noti-bell" onclick="openOwnerNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1;display:none">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span id="owner-noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#FF4B4B;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+      <span id="owner-noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
     </button>
     <button onclick="ownerSetNav(document.querySelectorAll('.nav-item')[0],'map')" style="background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
     </button>
     <button onclick="ownerSetNav(document.querySelectorAll('.nav-item')[0],'chats')" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      <span id="owner-chat-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#FF4B4B;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
-      <span id="owner-msg-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#FF4B4B;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+      <span id="owner-chat-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+      <span id="owner-msg-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
     </button>
     <button onclick="ownerSetNav(document.querySelectorAll('.nav-item')[0],'settings')" style="background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -2524,7 +2524,7 @@
   <div style="padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;flex-shrink:0">
     <button onclick="document.getElementById('panel-owner-map').classList.remove('show');ownerSwitchTab('postings',document.querySelectorAll('.tab-btn')[0])" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
     <input id="owner-map-search" type="text" placeholder="지역 검색 (예: 부산 해운대)" onkeydown="if(event.key==='Enter')searchOwnerLocation(this.value)" style="flex:1;border:1.5px solid #eee;border-radius:10px;padding:8px 12px;font-size:14px;outline:none">
-    <button id="map-tab-jobs" onclick="setOwnerMapMode('jobs')" style="background:#FF4B4B;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">공고</button>
+    <button id="map-tab-jobs" onclick="setOwnerMapMode('jobs')" style="background:#C8102E;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">공고</button>
     <button id="map-tab-workers" onclick="setOwnerMapMode('workers')" style="background:#fff;color:#888;border:1.5px solid #eee;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">알바생</button>
   </div>
   <div id="owner-radius-badge" style="display:none;position:absolute;top:62px;right:16px;z-index:20;background:#fff;border:1.5px solid #eee;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:#555;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)" onclick="toggleOwnerRadiusPopup()">반경 <span id="owner-radius-txt">10km</span> ▾</div>
@@ -2533,7 +2533,7 @@
       <button onclick="setOwnerRadius(1000)"  style="padding:7px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#f5f5f5;color:#555;text-align:left">1km</button>
       <button onclick="setOwnerRadius(3000)"  style="padding:7px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#f5f5f5;color:#555;text-align:left">3km</button>
       <button onclick="setOwnerRadius(5000)"  style="padding:7px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#f5f5f5;color:#555;text-align:left">5km</button>
-      <button onclick="setOwnerRadius(10000)" style="padding:7px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#FFF0F0;color:#FF4B4B;text-align:left">10km ✓</button>
+      <button onclick="setOwnerRadius(10000)" style="padding:7px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#FFF0F0;color:#C8102E;text-align:left">10km ✓</button>
       <button onclick="setOwnerRadius(20000)" style="padding:7px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#f5f5f5;color:#555;text-align:left">20km</button>
     </div>
   </div>
@@ -2595,7 +2595,7 @@
         <div style="font-size:13px;font-weight:800;color:#222">프로필 완성도</div>
         <div id="owner-completion-pct" style="font-size:15px;font-weight:900;color:var(--red)">0%</div>
       </div>
-      <div style="height:6px;background:#f5f5f5;border-radius:3px;margin-bottom:10px"><div id="owner-completion-bar" style="height:100%;background:linear-gradient(90deg,#FF4B4B,#FF8C42);border-radius:3px;width:0%;transition:width 0.4s"></div></div>
+      <div style="height:6px;background:#f5f5f5;border-radius:3px;margin-bottom:10px"><div id="owner-completion-bar" style="height:100%;background:linear-gradient(90deg,#C8102E,#FF8C42);border-radius:3px;width:0%;transition:width 0.4s"></div></div>
       <div id="owner-completion-items" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
 
@@ -2621,7 +2621,7 @@
         <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:5px">업체 소개 <span style="color:#bbb;font-weight:400">(최소 20자)</span></label>
         <textarea id="settings-biz-desc" placeholder="업체/매장을 소개해주세요. 알바생들이 신뢰를 갖고 지원하게 됩니다." oninput="updateBizDescCounter(this)" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;resize:none;height:100px;box-sizing:border-box;line-height:1.5"></textarea>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-          <div id="biz-desc-hint" style="display:none;font-size:11px;color:#FF4B4B;font-weight:700">최소 20자 이상 입력해주세요</div>
+          <div id="biz-desc-hint" style="display:none;font-size:11px;color:#C8102E;font-weight:700">최소 20자 이상 입력해주세요</div>
           <div id="biz-desc-counter" style="font-size:11px;color:#bbb;text-align:right;flex:1">0 / 200</div>
         </div>
       </div>
@@ -2689,8 +2689,8 @@
         <span id="plan-badge" style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:#e5e7eb;color:#555">무료 플랜</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div id="plan-free" onclick="selectPlan('free')" style="border:2px solid #FF4B4B;background:#FFF5F5;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">무료 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">기본 공고 등록 · 지원자 관리</div><div style="font-size:16px;font-weight:900;color:#222;margin-top:4px">₩0</div></div>
-        <div id="plan-basic" onclick="selectPlan('basic')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">베이직 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">서지 자동화 · 추가 공고 슬롯</div><div style="font-size:16px;font-weight:900;color:#FF4B4B;margin-top:4px">₩9,900/월</div></div>
+        <div id="plan-free" onclick="selectPlan('free')" style="border:2px solid #C8102E;background:#FFF5F5;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">무료 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">기본 공고 등록 · 지원자 관리</div><div style="font-size:16px;font-weight:900;color:#222;margin-top:4px">₩0</div></div>
+        <div id="plan-basic" onclick="selectPlan('basic')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">베이직 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">서지 자동화 · 추가 공고 슬롯</div><div style="font-size:16px;font-weight:900;color:#C8102E;margin-top:4px">₩9,900/월</div></div>
         <div id="plan-pro" onclick="selectPlan('pro')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">프로 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">프리미엄 노출 · 무제한 공고</div><div style="font-size:16px;font-weight:900;color:#7C3AED;margin-top:4px">₩29,900/월</div></div>
       </div>
     </div>
@@ -2776,7 +2776,7 @@
       <!-- 공고 유형 탭 -->
       <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="job-type-tabs">
         <button type="button" class="job-type-tab active" data-type="alba" onclick="setJobType('alba')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">&#128119; <span data-i18n="job_type_alba">일반 알바</span></button>
+          style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#C8102E;box-shadow:0 1px 4px rgba(0,0,0,0.1)">&#128119; <span data-i18n="job_type_alba">일반 알바</span></button>
         <button type="button" class="job-type-tab" data-type="errand" onclick="setJobType('errand')"
           style="flex:1;padding:8px 4px;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">&#127939; <span data-i18n="job_type_errand">심부름</span></button>
         <button type="button" class="job-type-tab" data-type="technical" onclick="setJobType('technical')"
@@ -2813,7 +2813,7 @@
       <div class="form-group" id="work-type-group">
         <label class="form-label" data-i18n="work_type_label">근무형태</label>
         <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="work-type-tabs">
-          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 4px rgba(0,0,0,0.1)">스팟</button>
+          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#C8102E;box-shadow:0 1px 4px rgba(0,0,0,0.1)">스팟</button>
           <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">단기</button>
           <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">정기</button>
         </div>
@@ -2832,7 +2832,7 @@
             <button type="button" data-day="목" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">목</button>
             <button type="button" data-day="금" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">금</button>
             <button type="button" data-day="토" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer;color:#3B82F6">토</button>
-            <button type="button" data-day="일" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;cursor:pointer;color:#FF4B4B">일</button>
+            <button type="button" data-day="일" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;cursor:pointer;color:#C8102E">일</button>
           </div>
           <input type="hidden" id="f-work-days" value="">
         </div>
@@ -2947,7 +2947,7 @@
         <!-- 위치 입력 방식 탭 -->
         <div style="display:flex;gap:4px;background:#f5f5f5;border-radius:10px;padding:3px;margin-bottom:10px">
           <button type="button" id="loc-tab-1" onclick="setLocTab(1)"
-            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#FF4B4B;box-shadow:0 1px 3px rgba(0,0,0,0.1)">&#127978; 플레이스</button>
+            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#C8102E;box-shadow:0 1px 3px rgba(0,0,0,0.1)">&#127978; 플레이스</button>
           <button type="button" id="loc-tab-2" onclick="setLocTab(2)"
             style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">&#128506; 주소 검색</button>
           <button type="button" id="loc-tab-3" onclick="setLocTab(3)"
@@ -3526,14 +3526,14 @@ function renderUrgentFeed() {
     const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
     const bg = CAT_BG[job.category] || '#f5f5f5';
     return `
-    <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:140px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid #FF4B4B">
+    <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:140px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid #C8102E">
       <div style="background:${bg};padding:10px 12px 8px;position:relative">
         <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
         <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.biz_name || job.title}</div>
-        <span style="position:absolute;top:8px;right:8px;background:#FF4B4B;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">\u{1F525}급구</span>
+        <span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">\u{1F525}급구</span>
       </div>
       <div style="padding:8px 10px">
-        <div style="font-size:14px;font-weight:900;color:#FF4B4B">${(job.current_wage/10000).toFixed(1)}만원</div>
+        <div style="font-size:14px;font-weight:900;color:#C8102E">${(job.current_wage/10000).toFixed(1)}만원</div>
         <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">\u{1F4CD} ${dist}</div>
       </div>
     </div>`;
@@ -3889,7 +3889,7 @@ async function loadMyApplications() {
 
       <!-- 액션 버튼 -->
       ${isAccepted ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} 업주에게 문의하기</button>` : ''}
-      ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
+      ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -3980,7 +3980,7 @@ async function openApplicationJobDetail(jobPostingId) {
 
       <!-- 공고 상태 -->
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;padding-top:4px;flex-wrap:wrap">
-        <span style="font-size:12px;font-weight:800;color:${isUrgent?'#FF4B4B':'#16a34a'};background:${isUrgent?'#fff0f0':'#f0fdf4'};padding:4px 12px;border-radius:20px">${isUrgent?'\u{1F525} 급구':'모집중'}</span>
+        <span style="font-size:12px;font-weight:800;color:${isUrgent?'#C8102E':'#16a34a'};background:${isUrgent?'#fff0f0':'#f0fdf4'};padding:4px 12px;border-radius:20px">${isUrgent?'\u{1F525} 급구':'모집중'}</span>
         <span style="font-size:12px;font-weight:700;color:#666;background:#f5f5f5;padding:4px 10px;border-radius:20px">${WORK_TYPE[j.work_type]||'스팟'}</span>
         ${j.category ? `<span style="font-size:12px;color:#999;font-weight:600">${j.category}</span>` : ''}
         ${appStatus ? `<span style="font-size:12px;font-weight:800;color:${appStatus.color};background:${appStatus.bg};padding:4px 12px;border-radius:20px;margin-left:auto">${appStatus.label}</span>` : ''}
@@ -4070,7 +4070,7 @@ async function openApplicationJobDetail(jobPostingId) {
 
       <!-- 지원 관련 버튼 -->
       ${isAccepted ? `<button onclick="openWChat('${myApp.id}','${biz.name||'업주'}')" style="width:100%;padding:14px;background:#3B82F6;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4AC} 업주에게 문의하기</button>` : ''}
-      ${canCancel ? `<button onclick="cancelApplication('${myApp.id}')" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">지원 취소</button>` : ''}
+      ${canCancel ? `<button onclick="cancelApplication('${myApp.id}')" style="width:100%;padding:14px;background:#FFF0F0;color:#C8102E;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
 }
 
@@ -4082,7 +4082,7 @@ function showConfirm(message, onOk) {
       <div style="font-size:15px;font-weight:700;color:#222;margin-bottom:20px;line-height:1.6">${message}</div>
       <div style="display:flex;gap:10px">
         <button onclick="this.closest('[style*=position]').remove()" style="flex:1;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">아니오</button>
-        <button id="_confirm_ok" style="flex:1;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">예</button>
+        <button id="_confirm_ok" style="flex:1;padding:12px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">예</button>
       </div>
     </div>`;
   overlay.querySelector('#_confirm_ok').addEventListener('click', () => { overlay.remove(); onOk(); });
@@ -4172,7 +4172,7 @@ async function loadBookmarks() {
           <div style="font-size:13px;color:#888;margin-bottom:4px">${biz.name || ''}</div>
           <div style="font-size:14px;font-weight:700;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원/시' : ''}</div>
         </div>
-        <button onclick="toggleBookmark('${job.id}')" style="padding:6px 12px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">북마크 해제</button>
+        <button onclick="toggleBookmark('${job.id}')" style="padding:6px 12px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">북마크 해제</button>
       </div>
       <div style="margin-top:8px;font-size:11px;font-weight:700;display:inline-block;padding:3px 8px;border-radius:8px;background:${isOpen ? '#EFF6FF' : '#f0f0f0'};color:${isOpen ? '#3B82F6' : '#aaa'}">${job.status === 'urgent' ? '\u{1F525} 급구' : isOpen ? '모집중' : '마감'}</div>
     </div>`;
@@ -5030,7 +5030,7 @@ async function loadDashboard() {
 
   cards.innerHTML =
     mkCard(appCount,      '지원',    '#8B5CF6', "openDashPanel('applications')") +
-    mkCard(postingCount,  '공고',    '#FF4B4B', "openDashPanel('owner')")        +
+    mkCard(postingCount,  '공고',    '#C8102E', "openDashPanel('owner')")        +
     mkCard(lessonCount,   '레슨',    '#3b82f6', "openDashPanel('lesson')");
 }
 
@@ -5193,7 +5193,7 @@ function renderSwipeStack() {
   if (remaining === 0) {
     stack.innerHTML = `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:32px">
       <div style="width:80px;height:80px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;margin-bottom:4px">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FF4B4B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
           <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
@@ -5286,7 +5286,7 @@ function makeSwipeCard(job, isTop) {
             ${job.biz_rating ? `<span style="background:#FEF3C7;color:#D97706;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">★${job.biz_rating}</span>` : ''}
           </div>
         </div>
-        ${isUrgent ? '<span style="background:#FF4B4B;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">\u{1F525} 급구</span>' : ''}
+        ${isUrgent ? '<span style="background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">\u{1F525} 급구</span>' : ''}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
         <div style="font-size:20px;font-weight:900;color:#111;line-height:1.3;flex:1">${job.title}</div>
@@ -5327,7 +5327,7 @@ function makeSwipeCard(job, isTop) {
         </div>
         <div style="background:#f8f8f8;border-radius:12px;padding:10px 12px">
           <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:3px">\u{1F465} 모집인원</div>
-          <div style="font-size:13px;font-weight:800;color:${neededLeft<=1?'#FF4B4B':'#222'}">${neededLeft > 0 ? neededLeft + '명 남음' : '마감임박'}</div>
+          <div style="font-size:13px;font-weight:800;color:${neededLeft<=1?'#C8102E':'#222'}">${neededLeft > 0 ? neededLeft + '명 남음' : '마감임박'}</div>
         </div>
       </div>
 
@@ -5345,8 +5345,8 @@ function makeSwipeCard(job, isTop) {
     </div>
 
     <!-- 스와이프 오버레이 -->
-    <div class="sw-overlay-left" style="position:absolute;inset:0;background:rgba(255,75,75,0.15);display:flex;align-items:center;justify-content:flex-end;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
-      <div style="font-size:48px;font-weight:900;color:#FF4B4B;border:4px solid #FF4B4B;border-radius:12px;padding:8px 16px;transform:rotate(15deg)">패스</div>
+    <div class="sw-overlay-left" style="position:absolute;inset:0;background:rgba(200,16,46,0.15);display:flex;align-items:center;justify-content:flex-end;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
+      <div style="font-size:48px;font-weight:900;color:#C8102E;border:4px solid #C8102E;border-radius:12px;padding:8px 16px;transform:rotate(15deg)">패스</div>
     </div>
     <div class="sw-overlay-right" style="position:absolute;inset:0;background:rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:flex-start;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
       <div style="font-size:48px;font-weight:900;color:#10B981;border:4px solid #10B981;border-radius:12px;padding:8px 16px;transform:rotate(-15deg)">지원!</div>
@@ -5754,7 +5754,7 @@ function showGradeInfoModal() {
         </div>
       </div>
       <div style="background:#FFF0F0;border-radius:14px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:900;color:#FF4B4B;margin-bottom:8px">⚡ 번개지원 혜택</div>
+        <div style="font-size:13px;font-weight:900;color:#C8102E;margin-bottom:8px">⚡ 번개지원 혜택</div>
         <div style="font-size:13px;color:#555;line-height:2">
           \u{1F51D} 업주 지원자 목록 <b>최상단</b> 노출<br>
           ⚡ 번개지원 배지 표시<br>
@@ -5892,7 +5892,7 @@ function _renderWorkerPhotos(photos) {
 
 function wPhotoDragStart(e, photoId) { _wDragSrcId = photoId; e.dataTransfer.effectAllowed = 'move'; }
 function wPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
-function wPhotoDragEnter(e, el) { e.preventDefault(); if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #FF4B4B'; el.style.outlineOffset = '-3px'; } }
+function wPhotoDragEnter(e, el) { e.preventDefault(); if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #C8102E'; el.style.outlineOffset = '-3px'; } }
 function wPhotoDragLeave(e, el) { if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; } }
 function wPhotoDrop(e, photoId, el) {
   e.preventDefault();
@@ -5926,7 +5926,7 @@ function _setupTouchDnd(grid, swapFn) {
       ghostEl.style.visibility = '';
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
       const tgt = under?.closest('[data-photo-id]');
-      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #FF4B4B'; tgt.style.outlineOffset = '-3px'; }
+      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
       if (!ghostEl) return;
@@ -6324,7 +6324,7 @@ function showAvatarTip(inputId) {
           <span style="font-size:14px;color:#6b7280;font-weight:500">선글라스 · 마스크 착용 사진</span>
         </div>
       </div>
-      <label style="display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:#FF4B4B;color:#fff;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;box-sizing:border-box;gap:8px">
+      <label style="display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:#C8102E;color:#fff;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;box-sizing:border-box;gap:8px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         사진 선택하기
         <input type="file" accept="image/*" style="display:none" onchange="document.getElementById('avatar-tip-overlay').remove();uploadAvatar(this)">
@@ -6346,7 +6346,7 @@ function showDisclaimerSheet(onConfirm) {
         <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128683; 주류·담배·의약품 대리 구매 등 불법 매칭 시 즉시 계정 정지</div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128274; 타인 개인정보 유출 및 사기 행위 금지</div>
       </div>
-      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">동의하고 저장하기</button>
+      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">동의하고 저장하기</button>
     </div>`;
   document.body.appendChild(el);
   el.querySelector('#disclaimer-ok-btn').onclick = () => { el.remove(); if (onConfirm) onConfirm(); };
@@ -6399,9 +6399,9 @@ function updateBioCounter(textarea) {
     if (hint) hint.style.display = 'none';
     textarea.style.borderColor = '#eee';
   } else if (len < 20) {
-    counter.style.color = '#FF4B4B';
+    counter.style.color = '#C8102E';
     if (hint) hint.style.display = 'block';
-    textarea.style.borderColor = '#FF4B4B';
+    textarea.style.borderColor = '#C8102E';
   } else {
     counter.style.color = '#16a34a';
     if (hint) hint.style.display = 'none';
@@ -6496,8 +6496,8 @@ function startSurgeTimers() {
       cnt.textContent = `${m}:${String(s).padStart(2,'0')}`;
       bar.style.width = pct + '%';
       if (remaining < 10000) {
-        cnt.style.color = '#FF4B4B';
-        bar.style.background = '#FF4B4B';
+        cnt.style.color = '#C8102E';
+        bar.style.background = '#C8102E';
       }
     }, 1000);
     surgeTimerHandles.push(handle);
@@ -6758,7 +6758,7 @@ function renderSearchResults(list) {
   }
 
   const TYPE_LABEL = { regular:'정기', short:'단기', errand:'심부름', spot:'스팟' };
-  const TYPE_COLOR = { regular:'#16a34a', short:'#3B82F6', errand:'#7C3AED', spot:'#FF4B4B' };
+  const TYPE_COLOR = { regular:'#16a34a', short:'#3B82F6', errand:'#7C3AED', spot:'#C8102E' };
 
   el.innerHTML = list.map(job => {
     const isUrgent = job.status === 'urgent';
@@ -6769,7 +6769,7 @@ function renderSearchResults(list) {
     const regionShort = addrPart.split(' ').slice(0, 3).join(' ');
     const wt = job.work_type || 'spot';
     const typeLabel = TYPE_LABEL[wt] || '스팟';
-    const typeColor = TYPE_COLOR[wt] || '#FF4B4B';
+    const typeColor = TYPE_COLOR[wt] || '#C8102E';
 
     const urgentBadge = isUrgent
       ? `<span style="font-size:10px;font-weight:700;color:#DC2626;background:#FEF2F2;padding:2px 7px;border-radius:20px">⚡ ASAP</span>` : '';
@@ -6859,7 +6859,7 @@ async function openNotifications() {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
             <div style="font-size:14px;font-weight:800;color:#222;line-height:1.4">${it.title}</div>
-            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#FF4B4B;flex-shrink:0;display:inline-block"></span>' : ''}
+            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#C8102E;flex-shrink:0;display:inline-block"></span>' : ''}
           </div>
           ${it.body ? `<div style="font-size:12px;color:#888;line-height:1.5">${it.body}</div>` : ''}
           ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_timeAgo(it.time)}</div>` : ''}
@@ -7127,7 +7127,7 @@ async function openCommunityPost(postId) {
       <div style="font-size:13px;color:#aaa;margin-bottom:14px">${author} · ${fmtFull(post.created_at)}</div>
       <div style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">${post.content}</div>
       ${myPostBtns}
-      <button id="comm-like-btn" onclick="likeCommunityPost()" style="margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'#FF4B4B':'#555'};cursor:pointer">
+      <button id="comm-like-btn" onclick="likeCommunityPost()" style="margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'#C8102E':'#555'};cursor:pointer">
         ❤️ <span id="comm-like-count">${post.likes || 0}</span>
       </button>
     </div>
@@ -7155,7 +7155,7 @@ async function likeCommunityPost() {
   const el = document.getElementById('comm-like-count');
   if (el) el.textContent = _commCurrentPostLikes;
   const btn = document.getElementById('comm-like-btn');
-  if (btn) btn.style.color = '#FF4B4B';
+  if (btn) btn.style.color = '#C8102E';
   _saveLikedPost(_commCurrentPostId);
   await db.rpc('increment_post_likes', { p_post_id: _commCurrentPostId });
   loadCommunityPosts(_commCurrentCat);
@@ -7459,7 +7459,7 @@ function openPostingDetail(jobId) {
 
   const WORK_TYPE_LABEL = { spot:'스팟', short:'단기', regular:'정기', errand:'심부름' };
   const typeLabel = WORK_TYPE_LABEL[p.work_type] || '스팟';
-  const statusColor = p.status==='urgent' ? '#FF4B4B' : p.status==='open' ? '#16a34a' : '#888';
+  const statusColor = p.status==='urgent' ? '#C8102E' : p.status==='open' ? '#16a34a' : '#888';
   const statusLabel = p.status==='urgent' ? 'ASAP' : p.status==='open' ? t('status_open_label') : t('status_closed_label');
 
   document.getElementById('pd-body').innerHTML = `
@@ -7772,7 +7772,7 @@ function filterLessonMain(el, main) {
     const t = document.getElementById(id);
     if (t) { t.style.borderBottomColor='transparent'; t.style.color='#888'; }
   });
-  el.style.borderBottomColor = '#FF4B4B'; el.style.color = '#FF4B4B';
+  el.style.borderBottomColor = '#C8102E'; el.style.color = '#C8102E';
   _updateLessonSubcatRow();
   loadLessons();
 }
@@ -7923,7 +7923,7 @@ async function openLessonDetail(profileId) {
     </div>
     <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:16px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><div style="font-size:11px;color:#aaa;font-weight:600">1회 금액</div><div style="font-size:16px;font-weight:800;color:#FF4B4B;margin-top:3px">${price}원</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">1회 금액</div><div style="font-size:16px;font-weight:800;color:#C8102E;margin-top:3px">${price}원</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">소요 시간</div><div style="font-size:16px;font-weight:800;color:#222;margin-top:3px">${p.session_duration||60}분</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">가능 요일</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${days}</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">수업 형태</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${locTypeMap[p.location_type]||'협의'}</div></div>
@@ -7943,7 +7943,7 @@ async function openLessonDetail(profileId) {
             <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:10px;padding:10px 14px">
               <span style="font-size:14px;font-weight:700;color:#222">${pkg.label}</span>
               <div style="text-align:right">
-                <span style="font-size:15px;font-weight:800;color:#FF4B4B">${Number(pkg.price).toLocaleString()}원</span>
+                <span style="font-size:15px;font-weight:800;color:#C8102E">${Number(pkg.price).toLocaleString()}원</span>
                 ${pkg.sessions?`<span style="font-size:11px;color:#aaa;margin-left:4px">(${Math.round(pkg.price/pkg.sessions).toLocaleString()}원/회)</span>`:''}
               </div>
             </div>`).join('')}
@@ -7955,7 +7955,7 @@ async function openLessonDetail(profileId) {
       <button onclick="openLessonConsult('${p.id}','${(w?.name||'강사').replace(/'/g,"\\'")}','${w?.kakao_uid||''}')"
         style="flex:1;padding:14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 무료 상담</button>
       <button onclick="document.getElementById('lesson-booking-form').style.display='block';this.style.display='none';document.querySelector('.lesson-cta-row').style.display='none'"
-        style="flex:1;padding:14px;background:#FF4B4B;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 예약하기</button>
+        style="flex:1;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 예약하기</button>
     </div>
     <div class="lesson-cta-row"></div>`;
   document.getElementById('lesson-booking-form').style.display = 'none';
@@ -8301,7 +8301,7 @@ async function loadMyLessons() {
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button onclick="toggleLessonActive('${p.id}',${!p.is_active})" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid ${p.is_active?'#e2e8f0':'#3b82f6'};background:${p.is_active?'#fff':'#eff6ff'};font-size:12px;font-weight:700;color:${p.is_active?'#888':'#3b82f6'};cursor:pointer">${p.is_active ? '지도에서 숨기기' : '지도에 표시하기'}</button>
-        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#FF4B4B;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#C8102E;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
       </div>
     </div>`).join('');
 }
@@ -8979,7 +8979,7 @@ function setWorkType(type) {
     const el = document.getElementById(btns[k]);
     if (!el) return;
     el.style.background = k === type ? '#fff' : 'transparent';
-    el.style.color = k === type ? '#FF4B4B' : '#888';
+    el.style.color = k === type ? '#C8102E' : '#888';
     el.style.boxShadow = k === type ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
   });
   document.getElementById('wt-desc').textContent = descs[type] || '';
@@ -8997,9 +8997,9 @@ function setWorkType(type) {
 
 function toggleDay(btn) {
   const active = btn.style.background === 'rgb(255, 75, 75)';
-  btn.style.background = active ? '#fff' : '#FF4B4B';
+  btn.style.background = active ? '#fff' : '#C8102E';
   btn.style.color = active ? '#888' : '#fff';
-  btn.style.borderColor = active ? '#eee' : '#FF4B4B';
+  btn.style.borderColor = active ? '#eee' : '#C8102E';
   const days = Array.from(document.querySelectorAll('#f-days-wrap button'))
     .filter(b => b.style.background === 'rgb(255, 75, 75)').map(b => b.dataset.day);
   document.getElementById('f-work-days').value = days.join(',');
@@ -9059,7 +9059,7 @@ function setLocTab(n) {
     const panel = document.getElementById(`loc-panel-${i}`);
     const active = i === n;
     tab.style.background = active ? '#fff' : 'transparent';
-    tab.style.color = active ? '#FF4B4B' : '#888';
+    tab.style.color = active ? '#C8102E' : '#888';
     tab.style.boxShadow = active ? '0 1px 3px rgba(0,0,0,0.1)' : 'none';
     panel.style.display = active ? 'block' : 'none';
   });
@@ -9850,7 +9850,7 @@ function setOwnerMapMode(mode) {
   const radiusBadge = document.getElementById('owner-radius-badge');
   const radiusPopup = document.getElementById('owner-radius-popup');
   if (mode === 'jobs') {
-    tabJobs.style.background    = '#FF4B4B'; tabJobs.style.color    = '#fff';
+    tabJobs.style.background    = '#C8102E'; tabJobs.style.color    = '#fff';
     tabWorkers.style.background = '#fff';     tabWorkers.style.color = '#888';
     if (jobsUI)  jobsUI.style.display  = 'flex';
     if (btPanel) btPanel.style.display = 'none';
@@ -9862,7 +9862,7 @@ function setOwnerMapMode(mode) {
     loadOwnerMapJobs();
   } else {
     tabJobs.style.background    = '#fff';     tabJobs.style.color    = '#888';
-    tabWorkers.style.background = '#FF4B4B'; tabWorkers.style.color = '#fff';
+    tabWorkers.style.background = '#C8102E'; tabWorkers.style.color = '#fff';
     if (jobsUI)  jobsUI.style.display  = 'none';
     if (radiusBadge) radiusBadge.style.display = 'none';
     if (radiusPopup) radiusPopup.style.display = 'none';
@@ -9924,7 +9924,7 @@ async function loadBarotouipList() {
     const nameShort = (w.name || '').substring(0, 4);
     const ratingStr = w.rating ? `★${parseFloat(w.rating).toFixed(1)}` : '';
     const content = `<div style="text-align:center;cursor:pointer" onclick="showBarotouipContact('${w.kakao_uid}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}')">
-      <div style="width:46px;height:46px;border-radius:50%;border:2.5px solid #FF4B4B;overflow:hidden;box-shadow:0 2px 10px rgba(255,75,75,0.4)">${avatar}</div>
+      <div style="width:46px;height:46px;border-radius:50%;border:2.5px solid #C8102E;overflow:hidden;box-shadow:0 2px 10px rgba(200,16,46,0.4)">${avatar}</div>
       <div style="margin-top:3px;background:rgba(0,0,0,0.72);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nameShort}${ratingStr ? ' '+ratingStr : ''}</div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({
@@ -10065,14 +10065,14 @@ function renderOwnerSheetJobs(jobs) {
     return `<div onclick="ownerMapInfo('${j.id}')" style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         <span style="font-size:10px;font-weight:700;color:#888;background:#f5f5f5;padding:2px 7px;border-radius:6px">${j.category || ''}</span>
-        ${isUrgent ? '<span style="font-size:10px;font-weight:800;color:#fff;background:#FF4B4B;padding:2px 6px;border-radius:6px">🔥 급구</span>' : ''}
+        ${isUrgent ? '<span style="font-size:10px;font-weight:800;color:#fff;background:#C8102E;padding:2px 6px;border-radius:6px">🔥 급구</span>' : ''}
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:14px;font-weight:800;color:#111">${j.title || ''}</div>
           <div style="font-size:11px;color:#aaa;margin-top:2px">${j.biz_name || ''} &middot; 📍 ${dist}</div>
         </div>
-        <div style="font-size:15px;font-weight:900;color:#FF4B4B;white-space:nowrap">${wage}</div>
+        <div style="font-size:15px;font-weight:900;color:#C8102E;white-space:nowrap">${wage}</div>
       </div>
     </div>`;
   }).join('');
@@ -10141,7 +10141,7 @@ async function openWorkerProfile() {
       <div style="flex:1">
         <div style="font-size:20px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
         <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-          ${w.age ? `<span style="background:#FFF0F0;color:#FF4B4B;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">만 ${w.age}세</span>` : '<span style="background:#f5f5f5;color:#bbb;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">나이 미입력</span>'}
+          ${w.age ? `<span style="background:#FFF0F0;color:#C8102E;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">만 ${w.age}세</span>` : '<span style="background:#f5f5f5;color:#bbb;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">나이 미입력</span>'}
           ${w.gender ? `<span style="background:#EFF6FF;color:#3B82F6;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
           <span style="background:#f5f5f5;color:#888;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">★ ${w.rating || '-'} · ${w.review_count || 0}건</span>
         </div>
@@ -10190,7 +10190,7 @@ async function openWorkerProfile() {
             <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">✨ 나의 강점</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px">${w.strengths.map(s => {
               const MAP = {strong:'\u{1F4AA} 힘이 강함',speed:'⚡ 스피드',numbers:'\u{1F522} 숫자에 밝음',design:'\u{1F3A8} 디자인 안목',experience:'\u{1F30D} 다양한 경험',always_on:'\u{1F550} 상시출동 가능',educated:'\u{1F393} 좋은 학벌',kind:'\u{1F91D} 친절함',driving:'\u{1F697} 운전 능숙',language:'\u{1F5E3} 외국어 가능',detail:'\u{1F50D} 꼼꼼함',stamina:'\u{1F3C3} 체력 강함',night:'\u{1F319} 야간 가능',clean:'\u{1F9F9} 청결 철저',photo:'\u{1F4F8} 사진/영상',cooking:'\u{1F373} 요리 잘 함',elderly:'\u{1F474} 어르신 친화',pet:'\u{1F43E} 반려동물 OK',handyman:'\u{1F527} 손재주 있음',moving:'\u{1F4E6} 이사/운반 경험'};
-              return `<span style="background:#FFF5F5;color:#FF4B4B;border:1.5px solid #FECACA;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[s]||s}</span>`;
+              return `<span style="background:#FFF5F5;color:#C8102E;border:1.5px solid #FECACA;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[s]||s}</span>`;
             }).join('')}</div>
            </div>`
         : ''
@@ -10500,7 +10500,7 @@ function setJobType(type) {
   document.querySelectorAll('.job-type-tab').forEach(btn => {
     const active = btn.dataset.type === type;
     btn.style.background = active ? '#fff' : 'transparent';
-    btn.style.color = active ? '#FF4B4B' : '#888';
+    btn.style.color = active ? '#C8102E' : '#888';
     btn.style.boxShadow = active ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
   });
 
@@ -10557,7 +10557,7 @@ function renderAdminCatList() {
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px">
       <span style="font-size:18px">${c.icon}</span>
       <span style="flex:1;font-size:14px;font-weight:700">${c.name}</span>
-      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
     </div>`).join('');
 }
 
@@ -10699,9 +10699,9 @@ function updateBizDescCounter(textarea) {
     if (hint) hint.style.display = 'none';
     textarea.style.borderColor = '#eee';
   } else if (len < 20) {
-    counter.style.color = '#FF4B4B';
+    counter.style.color = '#C8102E';
     if (hint) hint.style.display = 'block';
-    textarea.style.borderColor = '#FF4B4B';
+    textarea.style.borderColor = '#C8102E';
   } else {
     counter.style.color = '#16a34a';
     if (hint) hint.style.display = 'none';
@@ -10713,7 +10713,7 @@ function saveOwnerNotiSetting(key, val) {
   localStorage.setItem('owner_noti_' + key, val ? '1' : '0');
   const track = document.getElementById('owner-noti-track-' + key);
   const thumb = document.getElementById('owner-noti-thumb-' + key);
-  if (track) track.style.background = val ? '#FF4B4B' : '#ddd';
+  if (track) track.style.background = val ? '#C8102E' : '#ddd';
   if (thumb) thumb.style.transform  = val ? 'translateX(20px)' : 'translateX(0)';
 }
 function initOwnerNotiToggles() {
@@ -10757,7 +10757,7 @@ function showOwnerAvatarTip(inputId) {
           <span style="font-size:14px;color:#6b7280;font-weight:500">저작권 위반 이미지 · 타업체 사진</span>
         </div>
       </div>
-      <label style="display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:#FF4B4B;color:#fff;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;box-sizing:border-box;gap:8px">
+      <label style="display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:#C8102E;color:#fff;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;box-sizing:border-box;gap:8px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         사진 선택하기
         <input type="file" accept="image/*" style="display:none" onchange="document.getElementById('owner-avatar-tip-overlay').remove();uploadOwnerAvatar(this)">
@@ -10913,10 +10913,10 @@ function renderMyPlacesQuick() {
   wrap.style.display = 'block';
   list.innerHTML = _bizPlaces.map(p => `
     <button type="button" onclick="applyPlaceToForm('${p.id}')"
-      style="width:100%;text-align:left;padding:9px 12px;background:${p.is_default?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${p.is_default?'#FF4B4B':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
+      style="width:100%;text-align:left;padding:9px 12px;background:${p.is_default?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${p.is_default?'#C8102E':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
       <span style="font-size:16px">\u{1F4CD}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:#FF4B4B">(기본)</span>':''}</div>
+        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:#C8102E">(기본)</span>':''}</div>
         <div style="font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.address||''}</div>
       </div>
     </button>`).join('');
@@ -10950,12 +10950,12 @@ function renderMyPlacesList() {
     return;
   }
   el.innerHTML = _bizPlaces.map(p => `
-    <div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:10px 12px;border:1.5px solid ${p.is_default?'#FF4B4B':'#f0f0f0'}">
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:10px 12px;border:1.5px solid ${p.is_default?'#C8102E':'#f0f0f0'}">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:800;color:#222">${p.name}</div>
         <div style="font-size:11px;color:#aaa;margin-top:2px">${p.address||''}</div>
       </div>
-      ${p.is_default ? '<span style="font-size:10px;font-weight:800;color:#FF4B4B;background:#FFF0F0;padding:2px 6px;border-radius:6px;white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:#888;background:#f5f5f5;border:none;border-radius:6px;padding:3px 7px;cursor:pointer">기본 설정</button>`}
+      ${p.is_default ? '<span style="font-size:10px;font-weight:800;color:#C8102E;background:#FFF0F0;padding:2px 6px;border-radius:6px;white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:#888;background:#f5f5f5;border:none;border-radius:6px;padding:3px 7px;cursor:pointer">기본 설정</button>`}
       <button onclick="deletePlace('${p.id}')" style="font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;line-height:1;flex-shrink:0">✕</button>
     </div>`).join('');
 }
@@ -11151,11 +11151,11 @@ function renderPlanUI() {
   const p = PLAN_INFO[_currentPlan];
   badge.textContent = p.name;
   badge.style.background = _currentPlan === 'pro' ? '#EDE9FE' : _currentPlan === 'basic' ? '#FFF0F0' : '#e5e7eb';
-  badge.style.color      = _currentPlan === 'pro' ? '#7C3AED' : _currentPlan === 'basic' ? '#FF4B4B' : '#555';
+  badge.style.color      = _currentPlan === 'pro' ? '#7C3AED' : _currentPlan === 'basic' ? '#C8102E' : '#555';
   ['free','basic','pro'].forEach(k => {
     const card = document.getElementById('plan-' + k);
     if (!card) return;
-    card.style.border = k === _currentPlan ? '2px solid #FF4B4B' : '2px solid transparent';
+    card.style.border = k === _currentPlan ? '2px solid #C8102E' : '2px solid transparent';
     card.style.background = k === _currentPlan ? '#FFF5F5' : '#fff';
   });
 }
@@ -11439,7 +11439,7 @@ async function openOwnerNotifications() {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
             <div style="font-size:14px;font-weight:800;color:#222;line-height:1.4">${it.title}</div>
-            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#FF4B4B;flex-shrink:0;display:inline-block"></span>' : ''}
+            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#C8102E;flex-shrink:0;display:inline-block"></span>' : ''}
           </div>
           ${it.body ? `<div style="font-size:12px;color:#888">${it.body}</div>` : ''}
           ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_ownerTimeAgo(it.time)}</div>` : ''}
@@ -11576,7 +11576,7 @@ function bizPhotoDragStart(e, photoId) {
 function bizPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
 function bizPhotoDragEnter(e, el) {
   e.preventDefault();
-  if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #FF4B4B'; el.style.outlineOffset = '-3px'; }
+  if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #C8102E'; el.style.outlineOffset = '-3px'; }
 }
 function bizPhotoDragLeave(e, el) {
   if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; }
@@ -11623,7 +11623,7 @@ function _setupTouchDnd(grid, swapFn) {
       ghostEl.style.visibility = '';
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
       const tgt = under?.closest('[data-photo-id]');
-      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #FF4B4B'; tgt.style.outlineOffset = '-3px'; }
+      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
       if (!ghostEl) return;
