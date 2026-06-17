@@ -21,6 +21,19 @@ jobs:
         run: |
           sdkmanager "build-tools;34.0.0" "platforms;android-34" --sdk_root=$ANDROID_HOME
 
+      - name: Generate launcher icons
+        run: |
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          convert icons/icon-512.png -resize 48x48   android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          convert icons/icon-512.png -resize 72x72   android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          convert icons/icon-512.png -resize 96x96   android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          convert icons/icon-512.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          convert icons/icon-512.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
       - name: Generate signing keystore
         run: |
           keytool -genkey -v \
