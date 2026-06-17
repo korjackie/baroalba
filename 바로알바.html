@@ -1046,7 +1046,22 @@
     }
     #owner-sheet-count { font-size:15px; font-weight:800; color:#222; }
     #owner-sheet-count span { color:var(--red); }
-  
+
+    /* ── 레슨 기능 ── */
+    .lesson-card { background:#fff; border-radius:16px; padding:16px; margin-bottom:10px; border:1px solid #f0f0f0; cursor:pointer; active:background:#f9f9f9; }
+    .lesson-card:active { background:#fafafa; }
+    .lesson-subject-tag { display:inline-block; background:#f0f4ff; color:#3b82f6; font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; margin-bottom:8px; }
+    .lesson-name { font-size:15px; font-weight:800; color:#222; margin-bottom:2px; }
+    .lesson-price { font-size:14px; font-weight:700; color:#C8102E; }
+    .lesson-meta { font-size:12px; color:#aaa; font-weight:500; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lesson-cat-btn { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid #e8e8e8; background:#fff; color:#666; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .lesson-cat-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
+    .lesson-form-label { font-size:12px; font-weight:700; color:#555; margin-bottom:6px; display:block; }
+    .lesson-form-input { width:100%; padding:12px 14px; border:1.5px solid #eee; border-radius:12px; font-size:14px; color:#222; outline:none; background:#fafafa; margin-bottom:12px; }
+    .lesson-form-input:focus { border-color:#3b82f6; background:#fff; }
+    .booking-day-btn { flex:1; padding:8px 4px; border-radius:10px; border:1.5px solid #eee; background:#fff; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; }
+    .booking-day-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
+
 </style>
 </head>
 <body>
@@ -1099,6 +1114,7 @@
     <div class="chip" data-cat="퀵배달" onclick="setCategory(this, '퀵배달')">🛵퀵</div>
     <div class="chip" data-cat="청소 대행" onclick="setCategory(this, '청소 대행')">🧹청소대행</div>
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
+    <div class="chip" data-cat="__lesson__" onclick="setCategory(this, '__lesson__')">🎾 레슨</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
     <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
     <div class="chip" onclick="openSearchOverlay()" style="flex-shrink:0;background:#111;color:#fff;border-color:#111">검색</div>
@@ -1675,6 +1691,19 @@
           <span style="font-size:18px;color:#94a3b8">›</span>
         </div>
 
+        <!-- 내 레슨 프로필 -->
+        <div onclick="openLessonManagePanel()" style="display:flex;align-items:center;gap:12px;background:#f0f4ff;border:1.5px solid #bfdbfe;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer">
+          <div style="width:40px;height:40px;border-radius:12px;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">🎾</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="font-size:14px;font-weight:800;color:#222">내 레슨 프로필</div>
+              <span style="font-size:10px;font-weight:800;background:#dbeafe;color:#3b82f6;padding:2px 7px;border-radius:20px">NEW</span>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">레슨 등록 · 예약 관리</div>
+          </div>
+          <span style="font-size:18px;color:#94a3b8">›</span>
+        </div>
+
         <!-- 커뮤니티 게시판 진입 -->
         <div onclick="openCommunityPanel()" style="display:flex;align-items:center;gap:12px;background:#fffbf0;border:1.5px solid #FDE68A;border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer">
           <div style="width:40px;height:40px;border-radius:12px;background:#F59E0B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -1999,6 +2028,140 @@
     </div>
   </div>
 </div>
+</div>
+
+<!-- ── 레슨 탐색 패널 ── -->
+<div class="full-panel" id="panel-lesson" style="z-index:360">
+  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button onclick="closeLessonPanel()" style="background:none;border:none;font-size:22px;cursor:pointer;padding:0;color:#333">←</button>
+    <div style="font-size:17px;font-weight:900;color:#222">내 주변 레슨</div>
+    <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 레슨 등록</button>
+  </div>
+  <div style="padding:12px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+      <button class="lesson-cat-btn active" data-cat="" onclick="filterLessonCat(this,'')">전체</button>
+      <button class="lesson-cat-btn" data-cat="골프" onclick="filterLessonCat(this,'골프')">⛳ 골프</button>
+      <button class="lesson-cat-btn" data-cat="수영" onclick="filterLessonCat(this,'수영')">🏊 수영</button>
+      <button class="lesson-cat-btn" data-cat="PT/필라테스" onclick="filterLessonCat(this,'PT/필라테스')">💪 PT</button>
+      <button class="lesson-cat-btn" data-cat="보컬" onclick="filterLessonCat(this,'보컬')">🎤 보컬</button>
+      <button class="lesson-cat-btn" data-cat="악기" onclick="filterLessonCat(this,'악기')">🎵 악기</button>
+      <button class="lesson-cat-btn" data-cat="과외" onclick="filterLessonCat(this,'과외')">📚 과외</button>
+      <button class="lesson-cat-btn" data-cat="댄스" onclick="filterLessonCat(this,'댄스')">💃 댄스</button>
+      <button class="lesson-cat-btn" data-cat="기타" onclick="filterLessonCat(this,'기타')">🎯 기타</button>
+    </div>
+  </div>
+  <div id="lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
+    <div class="empty"><div class="empty-icon">🎾</div><div class="empty-txt">레슨 불러오는 중...</div></div>
+  </div>
+</div>
+
+<!-- ── 레슨 등록 모달 ── -->
+<div class="modal-overlay" id="lesson-register-modal" onclick="if(event.target===this)closeLessonRegisterModal()">
+  <div class="modal" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title">레슨 프로필 등록</div>
+    <div class="modal-sub">내 레슨 서비스를 등록해서 수강생을 모집하세요</div>
+
+    <label class="lesson-form-label">종목 / 과목 *</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px" id="lesson-subject-chips">
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'골프')">⛳ 골프</button>
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'수영')">🏊 수영</button>
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'PT/필라테스')">💪 PT/필라테스</button>
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'보컬')">🎤 보컬</button>
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'악기')">🎵 악기</button>
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'과외')">📚 과외</button>
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'댄스')">💃 댄스</button>
+      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'기타')">🎯 기타</button>
+    </div>
+    <input id="lr-subject-custom" class="lesson-form-input" placeholder="직접 입력 (예: 테니스, 드럼 등)" style="margin-top:-4px">
+
+    <label class="lesson-form-label">한 줄 소개 *</label>
+    <input id="lr-detail" class="lesson-form-input" placeholder="예) 10년 경력 골프 레슨 — 초보 전문">
+
+    <label class="lesson-form-label">1회 레슨 금액 (원) *</label>
+    <input id="lr-price" class="lesson-form-input" type="number" placeholder="예) 50000">
+
+    <label class="lesson-form-label">1회 소요 시간 (분)</label>
+    <input id="lr-duration" class="lesson-form-input" type="number" placeholder="60" value="60">
+
+    <label class="lesson-form-label">장소</label>
+    <input id="lr-location" class="lesson-form-input" placeholder="예) 강남구 역삼동 근처">
+
+    <label class="lesson-form-label">가능 요일</label>
+    <div style="display:flex;gap:6px;margin-bottom:14px" id="lr-days-row">
+      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'월')">월</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'화')">화</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'수')">수</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'목')">목</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'금')">금</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'토')">토</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'일')">일</button>
+    </div>
+
+    <label class="lesson-form-label">가능 시간대</label>
+    <input id="lr-times" class="lesson-form-input" placeholder="예) 오전 10시 ~ 오후 6시">
+
+    <button onclick="saveLessonProfile()" style="width:100%;padding:15px;background:#3b82f6;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">등록하기</button>
+    <button onclick="closeLessonRegisterModal()" style="width:100%;padding:12px;background:none;border:none;color:#aaa;font-size:14px;cursor:pointer;margin-top:6px">취소</button>
+  </div>
+</div>
+
+<!-- ── 레슨 상세 + 예약 모달 ── -->
+<div class="modal-overlay" id="lesson-detail-modal" onclick="if(event.target===this)closeLessonDetailModal()">
+  <div class="modal" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div id="lesson-detail-body"></div>
+
+    <!-- 예약 폼 (Phase 3 레이아웃) -->
+    <div id="lesson-booking-form" style="display:none;margin-top:16px;border-top:1px solid #f0f0f0;padding-top:16px">
+      <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:14px">예약하기</div>
+
+      <label class="lesson-form-label">희망 날짜</label>
+      <input id="bk-date" class="lesson-form-input" type="date">
+
+      <label class="lesson-form-label">희망 시간</label>
+      <input id="bk-time" class="lesson-form-input" type="time">
+
+      <label class="lesson-form-label">메모 (선택)</label>
+      <input id="bk-note" class="lesson-form-input" placeholder="수강 목적, 수준 등 간단히 적어주세요">
+
+      <!-- 결제 방식 — Phase 3 레이아웃 -->
+      <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">결제 방식</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="radio" name="bk-payment" value="offline" checked style="accent-color:#C8102E">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#222">현장 결제</div>
+              <div style="font-size:11px;color:#aaa">레슨 당일 직접 결제</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.5">
+            <input type="radio" name="bk-payment" value="toss" disabled style="accent-color:#C8102E">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#222">토스 1회권 결제 <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px;font-weight:700">준비 중</span></div>
+              <div style="font-size:11px;color:#aaa">안전 결제 · 레슨 완료 후 자동 정산</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <button onclick="confirmBooking()" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">예약 신청</button>
+      <button onclick="document.getElementById('lesson-booking-form').style.display='none'" style="width:100%;padding:10px;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;margin-top:4px">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 레슨 관리 패널 (내 레슨 목록) ── -->
+<div class="full-panel" id="panel-lesson-manage" style="z-index:370">
+  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button onclick="document.getElementById('panel-lesson-manage').classList.remove('show')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:0;color:#333">←</button>
+    <div style="font-size:17px;font-weight:900;color:#222">내 레슨 프로필</div>
+    <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
+  </div>
+  <div id="my-lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
+    <div class="empty"><div class="empty-icon">🎾</div><div class="empty-txt">등록된 레슨이 없어요</div></div>
+  </div>
 </div>
 
 <!-- 커뮤니티 패널 -->
@@ -4127,6 +4290,12 @@ function setMyLocationMarker(latlng) {
 
 // ── 필터 ─────────────────────────────────────────────────
 function setCategory(el, cat) {
+  if (cat === '__lesson__') {
+    document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    openLessonPanel();
+    return;
+  }
   const _WT_MAP = { '__errand__':'errand', '__regular__':'regular', '__short__':'short', '__spot__':'spot' };
   const newWT = _WT_MAP[cat] || '';
 
@@ -7143,6 +7312,233 @@ function makeApplicantCardHtml(a, opts = {}) {
   </div>`;
 }
 
+// ══════════════════════════════════════════════
+// 레슨 기능
+// ══════════════════════════════════════════════
+const TOSS_ENABLED = false; // 토스 가맹점 승인 후 true로 변경
+let _lessonCatFilter = '';
+let _currentLessonProfileId = null;
+
+function openLessonPanel() {
+  document.getElementById('panel-lesson').classList.add('show');
+  loadLessons();
+}
+function closeLessonPanel() {
+  document.getElementById('panel-lesson').classList.remove('show');
+  // 필터 칩 원래대로
+  document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
+  const allChip = document.querySelector('#filter-row .chip[data-cat=""]');
+  if (allChip) allChip.classList.add('active');
+  currentCategory = ''; currentWorkType = '';
+}
+
+async function loadLessons() {
+  const el = document.getElementById('lesson-list');
+  el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">🎾</div><div class="empty-txt">불러오는 중...</div></div>';
+  try {
+    let q = db.from('lesson_profiles')
+      .select('*, workers(name, rating, review_count, noshow_count)')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (_lessonCatFilter) q = q.eq('subject', _lessonCatFilter);
+    const { data, error } = await q;
+    if (error) throw error;
+    if (!data?.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🎾</div><div class="empty-txt">이 카테고리의 레슨이 아직 없어요<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>';
+      return;
+    }
+    el.innerHTML = data.map(p => makeLessonCardHtml(p)).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-txt">불러오기 실패</div></div>';
+  }
+}
+
+function makeLessonCardHtml(p) {
+  const w = p.workers;
+  const rating = w?.rating != null ? Number(w.rating).toFixed(1) : '-';
+  const reviews = w?.review_count || 0;
+  const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + '원/회' : '-';
+  const days = p.available_days?.join(' · ') || '';
+  const times = p.available_times || '';
+  return `
+  <div class="lesson-card" onclick="openLessonDetail('${p.id}')">
+    <span class="lesson-subject-tag">${p.subject || '기타'}</span>
+    <div class="lesson-name">${p.subject_detail || p.subject}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+      <div class="lesson-price">${price}</div>
+      <div style="font-size:12px;color:#888">★ ${rating} · ${reviews}건</div>
+    </div>
+    <div class="lesson-meta">${[p.location_name, days, times].filter(Boolean).join(' · ') || '위치 미지정'}</div>
+  </div>`;
+}
+
+function filterLessonCat(el, cat) {
+  document.querySelectorAll('.lesson-cat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  _lessonCatFilter = cat;
+  loadLessons();
+}
+
+async function openLessonDetail(profileId) {
+  _currentLessonProfileId = profileId;
+  const { data: p } = await db.from('lesson_profiles')
+    .select('*, workers(name, rating, review_count, noshow_count, phone)')
+    .eq('id', profileId).single();
+  if (!p) { showToast('레슨 정보를 불러올 수 없어요'); return; }
+  const w = p.workers;
+  const rating = w?.rating != null ? Number(w.rating).toFixed(1) : '-';
+  const reviews = w?.review_count || 0;
+  const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() : '-';
+  const days = p.available_days?.join(', ') || '협의';
+  document.getElementById('lesson-detail-body').innerHTML = `
+    <div style="margin-bottom:16px">
+      <span class="lesson-subject-tag" style="margin-bottom:10px">${p.subject || '기타'}</span>
+      <div style="font-size:19px;font-weight:900;color:#222;margin-bottom:4px">${p.subject_detail || p.subject}</div>
+      <div style="font-size:13px;color:#888">레슨 제공자: <strong style="color:#222">${w?.name || '알 수 없음'}</strong> · ★ ${rating} (${reviews}건)</div>
+    </div>
+    <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">1회 금액</div><div style="font-size:16px;font-weight:800;color:#C8102E;margin-top:3px">${price}원</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">소요 시간</div><div style="font-size:16px;font-weight:800;color:#222;margin-top:3px">${p.session_duration || 60}분</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">가능 요일</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${days}</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">장소</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${p.location_name || '협의'}</div></div>
+      </div>
+      ${p.available_times ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:12px;color:#666">🕐 ${p.available_times}</div>` : ''}
+    </div>
+    <button onclick="document.getElementById('lesson-booking-form').style.display='block';this.style.display='none'"
+      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">
+      예약하기
+    </button>`;
+  document.getElementById('lesson-booking-form').style.display = 'none';
+  document.getElementById('lesson-detail-modal').classList.add('open');
+}
+function closeLessonDetailModal() {
+  document.getElementById('lesson-detail-modal').classList.remove('open');
+}
+
+// 레슨 등록
+let _selectedLessonSubject = '';
+let _selectedLrDays = [];
+
+function openLessonRegisterModal() {
+  _selectedLessonSubject = '';
+  _selectedLrDays = [];
+  document.querySelectorAll('#lesson-subject-chips .booking-day-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#lr-days-row .booking-day-btn').forEach(b => b.classList.remove('active'));
+  ['lr-subject-custom','lr-detail','lr-price','lr-location','lr-times'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('lr-duration').value = '60';
+  document.getElementById('lesson-register-modal').classList.add('open');
+}
+function closeLessonRegisterModal() {
+  document.getElementById('lesson-register-modal').classList.remove('open');
+}
+function selectLessonSubject(el, val) {
+  document.querySelectorAll('#lesson-subject-chips .booking-day-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  _selectedLessonSubject = val;
+  document.getElementById('lr-subject-custom').value = '';
+}
+function toggleLrDay(el, day) {
+  el.classList.toggle('active');
+  if (_selectedLrDays.includes(day)) _selectedLrDays = _selectedLrDays.filter(d => d !== day);
+  else _selectedLrDays.push(day);
+}
+
+async function saveLessonProfile() {
+  if (!currentUser || isGuest) { showToast('로그인이 필요해요'); return; }
+  const subject = document.getElementById('lr-subject-custom').value.trim() || _selectedLessonSubject;
+  const detail  = document.getElementById('lr-detail').value.trim();
+  const price   = parseInt(document.getElementById('lr-price').value);
+  const duration = parseInt(document.getElementById('lr-duration').value) || 60;
+  const location = document.getElementById('lr-location').value.trim();
+  const times    = document.getElementById('lr-times').value.trim();
+  if (!subject) { showToast('종목/과목을 선택하거나 입력해주세요'); return; }
+  if (!detail)  { showToast('한 줄 소개를 입력해주세요'); return; }
+  if (!price || price < 1000) { showToast('금액을 올바르게 입력해주세요'); return; }
+  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!w) { showToast('알바생 프로필이 필요해요. 프로필을 먼저 완성해주세요'); return; }
+  const { error } = await db.from('lesson_profiles').insert({
+    worker_id: w.id, subject, subject_detail: detail,
+    price_per_session: price, session_duration: duration,
+    location_name: location || null,
+    available_days: _selectedLrDays.length ? _selectedLrDays : null,
+    available_times: times || null,
+    lat: mapCenter?.lat || null, lng: mapCenter?.lng || null,
+  });
+  if (error) { showToast('등록 실패: ' + error.message); return; }
+  closeLessonRegisterModal();
+  showToast('레슨 프로필이 등록됐어요!');
+  loadLessons();
+  loadMyLessons();
+}
+
+async function confirmBooking() {
+  if (!currentUser || isGuest) { showToast('로그인이 필요해요'); return; }
+  const date = document.getElementById('bk-date').value;
+  const time = document.getElementById('bk-time').value;
+  const note = document.getElementById('bk-note').value.trim();
+  if (!date) { showToast('희망 날짜를 선택해주세요'); return; }
+  if (!time) { showToast('희망 시간을 선택해주세요'); return; }
+  const payment = document.querySelector('input[name="bk-payment"]:checked')?.value || 'offline';
+  if (payment === 'toss' && !TOSS_ENABLED) { showToast('토스 결제는 준비 중이에요. 현장결제를 선택해주세요'); return; }
+  const { error } = await db.from('lesson_bookings').insert({
+    profile_id: _currentLessonProfileId,
+    student_kakao_uid: currentUser.id,
+    session_date: date, session_time: time,
+    note: note || null, payment_method: payment,
+    status: 'pending',
+  });
+  if (error) { showToast('예약 실패: ' + error.message); return; }
+  closeLessonDetailModal();
+  showToast('예약 신청 완료! 레슨 제공자가 확인 후 연락드려요');
+}
+
+// 내 레슨 관리 패널
+function openLessonManagePanel() {
+  document.getElementById('panel-profile').classList.remove('show');
+  setTimeout(() => {
+    document.getElementById('panel-lesson-manage').classList.add('show');
+    loadMyLessons();
+  }, 50);
+}
+async function loadMyLessons() {
+  if (!currentUser || isGuest) return;
+  const el = document.getElementById('my-lesson-list');
+  const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!w) { el.innerHTML = '<div class="empty"><div class="empty-txt">알바생 프로필을 먼저 만들어주세요</div></div>'; return; }
+  const { data } = await db.from('lesson_profiles').select('*').eq('worker_id', w.id).order('created_at', { ascending: false });
+  if (!data?.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🎾</div><div class="empty-txt">등록된 레슨이 없어요<br><button onclick="openLessonRegisterModal()" style="margin-top:12px;padding:10px 20px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">+ 레슨 등록하기</button></div></div>';
+    return;
+  }
+  el.innerHTML = data.map(p => `
+    <div class="lesson-card" style="border-left:3px solid ${p.is_active ? '#3b82f6' : '#ddd'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="lesson-subject-tag">${p.subject}</span>
+        <span style="font-size:11px;font-weight:700;color:${p.is_active ? '#16a34a' : '#aaa'}">${p.is_active ? '● 활성' : '● 비활성'}</span>
+      </div>
+      <div class="lesson-name">${p.subject_detail || p.subject}</div>
+      <div class="lesson-price" style="margin-top:4px">${Number(p.price_per_session).toLocaleString()}원/회 · ${p.session_duration}분</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="toggleLessonActive('${p.id}',${!p.is_active})" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;color:#555;cursor:pointer">${p.is_active ? '비활성화' : '활성화'}</button>
+        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#C8102E;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+      </div>
+    </div>`).join('');
+}
+async function toggleLessonActive(id, val) {
+  await db.from('lesson_profiles').update({ is_active: val }).eq('id', id);
+  loadMyLessons();
+}
+async function deleteLessonProfile(id) {
+  if (!confirm('레슨 프로필을 삭제할까요?')) return;
+  await db.from('lesson_profiles').delete().eq('id', id);
+  showToast('삭제됐어요'); loadMyLessons();
+}
+
+// ══════════════════════════════════════════════
 function formatRelativeDate(dateStr) {
   if (!dateStr) return '';
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
