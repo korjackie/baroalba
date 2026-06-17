@@ -700,7 +700,8 @@
     /* ── 반경 조절 팝업 ── */
     .radius-popup {
       position: fixed;
-      top: 110px; right: 14px;
+      bottom: calc(var(--nav-h) + var(--sheet-peek) + 16px + 48px + 10px + 42px + 8px);
+      right: 14px;
       background: #fff;
       border-radius: 14px;
       padding: 14px 16px;
@@ -1202,25 +1203,22 @@
     <div class="chip" data-cat="__short__"   onclick="toggleWorkTypeChip(this,'__short__')">단기</div>
     <div class="chip" data-cat="__spot__"    onclick="toggleWorkTypeChip(this,'__spot__')">스팟</div>
   </div>
-  <!-- 레슨/과외 드롭다운 시트 -->
+  <!-- 레슨/과외 드롭다운 시트 (중간카테고리 복수선택) -->
   <div class="filter-sheet" id="filter-sheet-lesson">
-    <div class="chip active" data-lcat="" onclick="toggleLessonCategoryChip(this,'')">전체</div>
-    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">레슨</div>
-    <div class="chip" data-lcat="골프"        onclick="toggleLessonCategoryChip(this,'골프')">⛳ 골프</div>
-    <div class="chip" data-lcat="테니스"      onclick="toggleLessonCategoryChip(this,'테니스')">🎾 테니스</div>
-    <div class="chip" data-lcat="탁구"        onclick="toggleLessonCategoryChip(this,'탁구')">🏓 탁구</div>
-    <div class="chip" data-lcat="수영"        onclick="toggleLessonCategoryChip(this,'수영')">🏊 수영</div>
-    <div class="chip" data-lcat="PT/필라테스" onclick="toggleLessonCategoryChip(this,'PT/필라테스')">💪 PT/필라테스</div>
-    <div class="chip" data-lcat="보컬"        onclick="toggleLessonCategoryChip(this,'보컬')">🎤 보컬</div>
-    <div class="chip" data-lcat="악기"        onclick="toggleLessonCategoryChip(this,'악기')">🎵 악기</div>
-    <div class="chip" data-lcat="댄스"        onclick="toggleLessonCategoryChip(this,'댄스')">💃 댄스</div>
-    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">과외</div>
-    <div class="chip" data-lcat="영어"        onclick="toggleLessonCategoryChip(this,'영어')">🇺🇸 영어</div>
-    <div class="chip" data-lcat="중국어"      onclick="toggleLessonCategoryChip(this,'중국어')">🇨🇳 중국어</div>
-    <div class="chip" data-lcat="일본어"      onclick="toggleLessonCategoryChip(this,'일본어')">🇯🇵 일본어</div>
-    <div class="chip" data-lcat="수학"        onclick="toggleLessonCategoryChip(this,'수학')">📐 수학</div>
-    <div class="chip" data-lcat="과학"        onclick="toggleLessonCategoryChip(this,'과학')">🔬 과학</div>
-    <div class="chip" data-lcat="국어"        onclick="toggleLessonCategoryChip(this,'국어')">📝 국어</div>
+    <div class="chip active" data-lmain="" data-lmid="" onclick="toggleLessonChip(this,'','')">전체</div>
+    <div class="chip" data-lmain="레슨" data-lmid="" onclick="toggleLessonChip(this,'레슨','')">🎾 레슨</div>
+    <div class="chip" data-lmain="과외" data-lmid="" onclick="toggleLessonChip(this,'과외','')">📚 과외</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 레슨 —</div>
+    <div class="chip" data-lmain="레슨" data-lmid="스포츠"   onclick="toggleLessonChip(this,'레슨','스포츠')">⚽ 스포츠</div>
+    <div class="chip" data-lmain="레슨" data-lmid="음악"     onclick="toggleLessonChip(this,'레슨','음악')">🎵 음악</div>
+    <div class="chip" data-lmain="레슨" data-lmid="댄스"     onclick="toggleLessonChip(this,'레슨','댄스')">💃 댄스</div>
+    <div class="chip" data-lmain="레슨" data-lmid="미술"     onclick="toggleLessonChip(this,'레슨','미술')">🎨 미술</div>
+    <div class="chip" data-lmain="레슨" data-lmid="기타레슨" onclick="toggleLessonChip(this,'레슨','기타레슨')">🎯 기타레슨</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 과외 —</div>
+    <div class="chip" data-lmain="과외" data-lmid="어학"     onclick="toggleLessonChip(this,'과외','어학')">🌍 어학</div>
+    <div class="chip" data-lmain="과외" data-lmid="수학/과학" onclick="toggleLessonChip(this,'과외','수학/과학')">📐 수학/과학</div>
+    <div class="chip" data-lmain="과외" data-lmid="국어/인문" onclick="toggleLessonChip(this,'과외','국어/인문')">📝 국어/인문</div>
+    <div class="chip" data-lmain="과외" data-lmid="기타과외" onclick="toggleLessonChip(this,'과외','기타과외')">📚 기타과외</div>
   </div>
 </div>
 
@@ -1662,14 +1660,16 @@
 
 <!-- 바로알바 대시보드 패널 -->
 <div class="full-panel" id="panel-dashboard">
-  <div style="padding:20px 20px 14px;background:#fff;flex-shrink:0;border-bottom:1px solid #f0f0f0">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
-      <div style="width:32px;height:32px;border-radius:9px;overflow:hidden;flex-shrink:0;background:#FF4B4B;display:flex;align-items:center;justify-content:center">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;background:#fff;flex-shrink:0;border-bottom:1px solid #f0f0f0;box-shadow:0 1px 6px rgba(0,0,0,0.06)">
+    <div class="app-header-logo">
+      <div style="width:28px;height:28px;border-radius:7px;overflow:hidden;flex-shrink:0">
+        <img src="./icons/바로알바 최종로고.png" style="width:28px;height:auto;object-fit:cover">
       </div>
-      <span style="font-size:20px;font-weight:900;color:#222">바로알바</span>
+      <span>바로알바</span>
     </div>
-    <div style="font-size:12px;color:#bbb;font-weight:600;margin-top:2px">내 활동 현황을 한눈에</div>
+    <button onclick="openNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
   </div>
 
   <!-- 진행 중 요약 카드 -->
@@ -2183,8 +2183,12 @@
       <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'과외')">📚 과외</button>
     </div>
 
+    <!-- 중간 카테고리 (분야) -->
+    <label class="lesson-form-label">분야 *</label>
+    <div id="lr-mid-cat-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
+
     <!-- 서브 카테고리 (가로 스크롤) -->
-    <label class="lesson-form-label">종목 / 과목 *</label>
+    <label class="lesson-form-label" id="lr-subject-label" style="display:none">종목 / 과목</label>
     <div id="lesson-subject-chips" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:10px"></div>
     <input id="lr-subject-custom" class="lesson-form-input" placeholder="직접 입력 (예: 배드민턴, 드럼 등)" style="margin-bottom:14px">
 
@@ -4458,7 +4462,8 @@ const _CAT_LABEL = {'F&B':'F&B','물류':'운송/물류','판매':'판매','청�
 const _TYPE_LABEL = {'regular':'정기','short':'단기','spot':'스팟','errand':'심부름'};
 const _WT_MAP = {'__regular__':'regular','__short__':'short','__spot__':'spot','__errand__':'errand'};
 
-let _mapLessonSubject = '';  // 지도 필터용 레슨 과목 ('' = 전체)
+let _lessonFilterMains = new Set(); // 지도 필터: 선택된 메인(레슨/과외)
+let _lessonFilterMids  = new Set(); // 지도 필터: 선택된 중간카테고리
 
 function _syncCatBtn() {
   const btn = document.getElementById('flt-cat-btn');
@@ -4473,52 +4478,76 @@ function _syncCatBtn() {
 function _syncLessonBtn() {
   const btn = document.getElementById('flt-lesson-btn');
   if (!btn) return;
-  if (!includeLesson) { btn.textContent = '레슨/과외 ▾'; btn.classList.remove('sel'); }
-  else if (!_mapLessonSubject) { btn.textContent = '레슨 전체 ✓'; btn.classList.add('sel'); }
-  else { btn.textContent = _mapLessonSubject + ' ✓'; btn.classList.add('sel'); }
+  if (!includeLesson) { btn.textContent = '레슨/과외 ▾'; btn.classList.remove('sel'); return; }
+  const total = _lessonFilterMains.size + _lessonFilterMids.size;
+  if (total === 0) { btn.textContent = '레슨 전체 ✓'; btn.classList.add('sel'); }
+  else if (total === 1) {
+    const lbl = _lessonFilterMids.size ? [..._lessonFilterMids][0] : ([..._lessonFilterMains][0] + ' 전체');
+    btn.textContent = lbl + ' ✓'; btn.classList.add('sel');
+  } else { btn.textContent = `레슨 ${total}개 ✓`; btn.classList.add('sel'); }
 }
-function toggleLessonCategoryChip(el, subject) {
-  if (subject === '') {
-    if (includeLesson && !_mapLessonSubject) {
+function toggleLessonChip(el, main, mid) {
+  if (main === '' && mid === '') {
+    // 전체: 모든 필터 초기화
+    includeLesson = false;
+    _lessonFilterMains.clear();
+    _lessonFilterMids.clear();
+    document.querySelectorAll('#filter-sheet-lesson .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    _clearLessonOverlays();
+  } else {
+    document.querySelector('#filter-sheet-lesson .chip[data-lmain=""][data-lmid=""]')?.classList.remove('active');
+    includeLesson = true;
+    if (mid === '') {
+      if (_lessonFilterMains.has(main)) { _lessonFilterMains.delete(main); el.classList.remove('active'); }
+      else { _lessonFilterMains.add(main); el.classList.add('active'); }
+    } else {
+      if (_lessonFilterMids.has(mid)) { _lessonFilterMids.delete(mid); el.classList.remove('active'); }
+      else { _lessonFilterMids.add(mid); el.classList.add('active'); }
+    }
+    if (_lessonFilterMains.size === 0 && _lessonFilterMids.size === 0) {
       includeLesson = false;
-      el.classList.remove('active');
+      document.querySelector('#filter-sheet-lesson .chip[data-lmain=""][data-lmid=""]')?.classList.add('active');
       _clearLessonOverlays();
     } else {
-      includeLesson = true;
-      _mapLessonSubject = '';
-      document.querySelectorAll('#filter-sheet-lesson .chip[data-lcat]').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-      _loadLessonMarkersForMap();
-    }
-  } else {
-    const isSame = includeLesson && _mapLessonSubject === subject;
-    if (isSame) {
-      _mapLessonSubject = '';
-      el.classList.remove('active');
-      document.querySelector('#filter-sheet-lesson .chip[data-lcat=""]')?.classList.add('active');
-      _loadLessonMarkersForMap();
-    } else {
-      includeLesson = true;
-      _mapLessonSubject = subject;
-      document.querySelectorAll('#filter-sheet-lesson .chip[data-lcat]').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-      document.querySelector('#filter-sheet-lesson .chip[data-lcat=""]')?.classList.remove('active');
       _loadLessonMarkersForMap();
     }
   }
   _syncLessonBtn();
 }
+function toggleLessonCategoryChip(el, subject) { toggleLessonChip(el, '', ''); }
 async function _loadLessonMarkersForMap() {
   if (!kakaoMap || !includeLesson) { _clearLessonOverlays(); return; }
   _clearLessonOverlays();
   try {
     let q = db.from('lesson_profiles')
-      .select('id, lat, lng, main_category, subject, subject_detail, price_per_session, is_available_now, worker_kakao_uid, workers(name, rating)')
+      .select('id, lat, lng, main_category, mid_category, subject, subject_detail, price_per_session, is_available_now, worker_kakao_uid, workers(name, rating)')
       .eq('is_active', true);
-    if (_mapLessonSubject) q = q.eq('subject', _mapLessonSubject);
+    if (_lessonFilterMains.size === 1 && _lessonFilterMids.size === 0) {
+      q = q.eq('main_category', [..._lessonFilterMains][0]);
+    }
     const { data } = await q;
-    if (data?.length) _renderLessonMarkers(data);
+    if (!data?.length) return;
+    let filtered = data;
+    if (_lessonFilterMids.size > 0) {
+      filtered = data.filter(p =>
+        _lessonFilterMids.has(p.mid_category) || _lessonFilterMids.has(_getSubjectMidCat(p.subject))
+      );
+    }
+    if (filtered.length) _renderLessonMarkers(filtered);
   } catch(e) {}
+}
+function _getSubjectMidCat(subject) {
+  const map = {
+    '골프':'스포츠','테니스':'스포츠','탁구':'스포츠','수영':'스포츠','PT/필라테스':'스포츠','배드민턴':'스포츠','클라이밍':'스포츠',
+    '보컬':'음악','기타':'음악','피아노':'음악','드럼':'음악','바이올린':'음악','악기':'음악',
+    'K-pop댄스':'댄스','발레':'댄스','힙합':'댄스','현대무용':'댄스','댄스':'댄스',
+    '그림':'미술','디자인':'미술','공예':'미술',
+    '영어':'어학','중국어':'어학','일본어':'어학','스페인어':'어학','기타외국어':'어학',
+    '수학':'수학/과학','과학':'수학/과학','물리':'수학/과학','화학':'수학/과학',
+    '국어':'국어/인문','역사':'국어/인문','논술':'국어/인문','한국사':'국어/인문',
+  };
+  return map[subject] || '기타레슨';
 }
 function _syncTypeBtn() {
   const btn = document.getElementById('flt-type-btn');
@@ -7700,15 +7729,20 @@ let _lessonMainFilter = '';   // '' | '레슨' | '과외'
 let _lessonSubFilter  = '';
 let _lessonOverlays   = [];   // 지도 마커 배열
 
+const LESSON_MIDS = {
+  '레슨': [{v:'스포츠',e:'⚽'},{v:'음악',e:'🎵'},{v:'댄스',e:'💃'},{v:'미술',e:'🎨'},{v:'기타레슨',e:'🎯'}],
+  '과외': [{v:'어학',e:'🌍'},{v:'수학/과학',e:'📐'},{v:'국어/인문',e:'📝'},{v:'기타과외',e:'📚'}]
+};
 const LESSON_SUBS = {
-  '레슨': [
-    {v:'골프',e:'⛳'},{v:'테니스',e:'🎾'},{v:'탁구',e:'🏓'},{v:'수영',e:'🏊'},
-    {v:'PT/필라테스',e:'💪'},{v:'보컬',e:'🎤'},{v:'악기',e:'🎵'},{v:'댄스',e:'💃'},{v:'기타',e:'🎯'}
-  ],
-  '과외': [
-    {v:'영어',e:'🇺🇸'},{v:'중국어',e:'🇨🇳'},{v:'일본어',e:'🇯🇵'},{v:'기타외국어',e:'🌐'},
-    {v:'수학',e:'📐'},{v:'과학',e:'🔬'},{v:'국어',e:'📝'},{v:'기타',e:'🎯'}
-  ]
+  '스포츠':   [{v:'골프',e:'⛳'},{v:'테니스',e:'🎾'},{v:'탁구',e:'🏓'},{v:'수영',e:'🏊'},{v:'PT/필라테스',e:'💪'},{v:'배드민턴',e:'🏸'},{v:'클라이밍',e:'🧗'},{v:'요가',e:'🧘'}],
+  '음악':     [{v:'보컬',e:'🎤'},{v:'기타',e:'🎸'},{v:'피아노',e:'🎹'},{v:'드럼',e:'🥁'},{v:'바이올린',e:'🎻'},{v:'우쿨렐레',e:'🎵'}],
+  '댄스':     [{v:'K-pop댄스',e:'🕺'},{v:'발레',e:'🩰'},{v:'힙합',e:'💃'},{v:'현대무용',e:'🩱'},{v:'재즈댄스',e:'✨'}],
+  '미술':     [{v:'그림/수채화',e:'🎨'},{v:'디자인',e:'✏️'},{v:'공예',e:'🖼️'},{v:'캘리그라피',e:'🖊️'}],
+  '기타레슨': [{v:'요리',e:'🍳'},{v:'승마',e:'🐴'},{v:'골프외',e:'🎯'},{v:'기타',e:'🎯'}],
+  '어학':     [{v:'영어',e:'🇺🇸'},{v:'중국어',e:'🇨🇳'},{v:'일본어',e:'🇯🇵'},{v:'스페인어',e:'🇪🇸'},{v:'기타외국어',e:'🌐'}],
+  '수학/과학': [{v:'수학',e:'📐'},{v:'과학',e:'🔬'},{v:'물리',e:'⚡'},{v:'화학',e:'🧪'},{v:'생물',e:'🌿'}],
+  '국어/인문': [{v:'국어',e:'📝'},{v:'역사',e:'📖'},{v:'논술',e:'✍️'},{v:'한국사',e:'🏛️'},{v:'사회',e:'🗺️'}],
+  '기타과외': [{v:'코딩',e:'💻'},{v:'경제',e:'📊'},{v:'철학',e:'💭'},{v:'기타',e:'🎯'}]
 };
 
 function openLessonPanel() {
@@ -7745,13 +7779,13 @@ function filterLessonMain(el, main) {
 
 function _updateLessonSubcatRow() {
   const row = document.getElementById('lesson-subcat-row');
-  const subs = _lessonMainFilter ? LESSON_SUBS[_lessonMainFilter] : [];
-  if (!subs.length) {
+  const mids = _lessonMainFilter ? (LESSON_MIDS[_lessonMainFilter] || []) : [];
+  if (!mids.length) {
     row.innerHTML = `<button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">전체</button>`;
     return;
   }
   row.innerHTML = `<button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">전체</button>`
-    + subs.map(s => `<button class="lesson-cat-btn" data-sub="${s.v}" onclick="filterLessonSub(this,'${s.v}')">${s.e} ${s.v}</button>`).join('');
+    + mids.map(m => `<button class="lesson-cat-btn" data-sub="${m.v}" onclick="filterLessonSub(this,'${m.v}')">${m.e} ${m.v}</button>`).join('');
 }
 
 function filterLessonSub(el, sub) {
@@ -7771,15 +7805,21 @@ async function loadLessons() {
       .eq('is_active', true)
       .order('created_at', { ascending: false });
     if (_lessonMainFilter) q = q.eq('main_category', _lessonMainFilter);
-    if (_lessonSubFilter)  q = q.eq('subject', _lessonSubFilter);
     const { data, error } = await q;
     if (error) throw error;
-    if (!data?.length) {
+    let lessons = data || [];
+    if (_lessonSubFilter) {
+      lessons = lessons.filter(p =>
+        (p.mid_category && p.mid_category === _lessonSubFilter) ||
+        (!p.mid_category && _getSubjectMidCat(p.subject) === _lessonSubFilter)
+      );
+    }
+    if (!lessons.length) {
       el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>';
       return;
     }
-    el.innerHTML = data.map(p => makeLessonCardHtml(p)).join('');
-    _renderLessonMarkers(data);
+    el.innerHTML = lessons.map(p => makeLessonCardHtml(p)).join('');
+    _renderLessonMarkers(lessons);
   } catch(e) {
     el.innerHTML = '<div class="empty"><div class="empty-txt">불러오기 실패</div></div>';
   }
@@ -7928,6 +7968,7 @@ function closeLessonDetailModal() {
 // ── 등록 ──────────────────────────────────────
 let _selectedLessonSubject = '';
 let _selectedMainCategory  = '레슨';
+let _selectedMidCategory   = '';
 let _selectedLrLocType     = '';
 let _selectedLrDays        = [];
 let _selectedLrTimes       = [];
@@ -7954,6 +7995,7 @@ function onCertFileSelected(input) {
 function openLessonRegisterModal() {
   _selectedLessonSubject = '';
   _selectedMainCategory  = '레슨';
+  _selectedMidCategory   = '';
   _selectedLrLocType     = '';
   _selectedLrDays        = [];
   _selectedLrTimes       = [];
@@ -7961,7 +8003,12 @@ function openLessonRegisterModal() {
   document.querySelectorAll('#lr-loctype-row .booking-day-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#lr-days-row .booking-day-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#lr-times-row .booking-day-btn').forEach(b => b.classList.remove('active'));
-  _renderRegisterSubChips('레슨');
+  // 분야(중간카테고리) 초기화
+  const mids = LESSON_MIDS['레슨'] || [];
+  document.getElementById('lr-mid-cat-row').innerHTML =
+    mids.map(m => `<button type="button" class="booking-day-btn" style="flex-shrink:0" onclick="selectLessonMidCat(this,'${m.v}')">${m.e} ${m.v}</button>`).join('');
+  document.getElementById('lesson-subject-chips').innerHTML = '';
+  document.getElementById('lr-subject-label').style.display = 'none';
   ['lr-subject-custom','lr-detail','lr-price','lr-location'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
@@ -7980,13 +8027,25 @@ function closeLessonRegisterModal() {
   document.getElementById('lesson-register-modal').classList.remove('open');
 }
 function selectLessonMainCat(el, cat) {
-  _selectedMainCategory = cat; _selectedLessonSubject = '';
+  _selectedMainCategory = cat; _selectedMidCategory = ''; _selectedLessonSubject = '';
   document.querySelectorAll('#lr-main-cat-row .booking-day-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  _renderRegisterSubChips(cat);
+  const mids = LESSON_MIDS[cat] || [];
+  document.getElementById('lr-mid-cat-row').innerHTML =
+    mids.map(m => `<button type="button" class="booking-day-btn" style="flex-shrink:0" onclick="selectLessonMidCat(this,'${m.v}')">${m.e} ${m.v}</button>`).join('');
+  document.getElementById('lesson-subject-chips').innerHTML = '';
+  document.getElementById('lr-subject-label').style.display = 'none';
+  document.getElementById('lr-subject-custom').value = '';
 }
-function _renderRegisterSubChips(cat) {
-  const subs = LESSON_SUBS[cat] || [];
+function selectLessonMidCat(el, mid) {
+  _selectedMidCategory = mid; _selectedLessonSubject = '';
+  document.querySelectorAll('#lr-mid-cat-row .booking-day-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('lr-subject-label').style.display = '';
+  _renderRegisterSubChips(mid);
+}
+function _renderRegisterSubChips(key) {
+  const subs = LESSON_SUBS[key] || [];
   document.getElementById('lesson-subject-chips').innerHTML =
     subs.map(s => `<button type="button" class="booking-day-btn" style="flex-shrink:0;white-space:nowrap" onclick="selectLessonSubject(this,'${s.v}')">${s.e} ${s.v}</button>`).join('');
 }
@@ -8135,6 +8194,7 @@ async function saveLessonProfile() {
   const { error } = await db.from('lesson_profiles').insert({
     worker_id: w.id,
     main_category: _selectedMainCategory,
+    mid_category: _selectedMidCategory || null,
     subject, subject_detail: detail,
     price_per_session: price, session_duration: duration,
     location_type: _selectedLrLocType,
