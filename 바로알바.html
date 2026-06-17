@@ -1213,12 +1213,12 @@
     <div class="chip" data-lmain="레슨" data-lmid="음악"     onclick="toggleLessonChip(this,'레슨','음악')">🎵 음악</div>
     <div class="chip" data-lmain="레슨" data-lmid="댄스"     onclick="toggleLessonChip(this,'레슨','댄스')">💃 댄스</div>
     <div class="chip" data-lmain="레슨" data-lmid="미술"     onclick="toggleLessonChip(this,'레슨','미술')">🎨 미술</div>
-    <div class="chip" data-lmain="레슨" data-lmid="기타레슨" onclick="toggleLessonChip(this,'레슨','기타레슨')">🎯 기타레슨</div>
+    <div class="chip" data-lmain="레슨" data-lmid="기타" onclick="toggleLessonChip(this,'레슨','기타')">기타</div>
     <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 과외 —</div>
-    <div class="chip" data-lmain="과외" data-lmid="어학"     onclick="toggleLessonChip(this,'과외','어학')">🌍 어학</div>
-    <div class="chip" data-lmain="과외" data-lmid="수학/과학" onclick="toggleLessonChip(this,'과외','수학/과학')">📐 수학/과학</div>
-    <div class="chip" data-lmain="과외" data-lmid="국어/인문" onclick="toggleLessonChip(this,'과외','국어/인문')">📝 국어/인문</div>
-    <div class="chip" data-lmain="과외" data-lmid="기타과외" onclick="toggleLessonChip(this,'과외','기타과외')">📚 기타과외</div>
+    <div class="chip" data-lmain="과외" data-lmid="어학"      onclick="toggleLessonChip(this,'과외','어학')">🌍 어학</div>
+    <div class="chip" data-lmain="과외" data-lmid="수학/과학"  onclick="toggleLessonChip(this,'과외','수학/과학')">📐 수학/과학</div>
+    <div class="chip" data-lmain="과외" data-lmid="국어/인문"  onclick="toggleLessonChip(this,'과외','국어/인문')">📝 국어/인문</div>
+    <div class="chip" data-lmain="과외" data-lmid="기타(과외)" onclick="toggleLessonChip(this,'과외','기타(과외)')">기타</div>
   </div>
 </div>
 
@@ -2232,10 +2232,10 @@
 
     <label class="lesson-form-label">가능 시간대 <span style="font-size:11px;font-weight:500;color:#aaa">(복수 선택 가능)</span></label>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px" id="lr-times-row">
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오전')">🌅 오전 6~12시</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오후')">☀️ 오후 12~18시</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'저녁')">🌆 저녁 18~22시</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'협의')">🤝 시간 협의</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오전')">오전 6~12시</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오후')">오후 12~18시</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'저녁')">저녁 18~22시</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'협의')">시간 협의</button>
     </div>
 
     <!-- 자격증 / 경력 인증 -->
@@ -7730,19 +7730,19 @@ let _lessonSubFilter  = '';
 let _lessonOverlays   = [];   // 지도 마커 배열
 
 const LESSON_MIDS = {
-  '레슨': [{v:'스포츠',e:'⚽'},{v:'음악',e:'🎵'},{v:'댄스',e:'💃'},{v:'미술',e:'🎨'},{v:'기타레슨',e:'🎯'}],
-  '과외': [{v:'어학',e:'🌍'},{v:'수학/과학',e:'📐'},{v:'국어/인문',e:'📝'},{v:'기타과외',e:'📚'}]
+  '레슨': [{v:'스포츠',e:'⚽'},{v:'음악',e:'🎵'},{v:'댄스',e:'💃'},{v:'미술',e:'🎨'},{v:'기타',e:''}],
+  '과외': [{v:'어학',e:'🌍'},{v:'수학/과학',e:'📐'},{v:'국어/인문',e:'📝'},{v:'기타(과외)',e:''}]
 };
 const LESSON_SUBS = {
   '스포츠':   [{v:'골프',e:'⛳'},{v:'테니스',e:'🎾'},{v:'탁구',e:'🏓'},{v:'수영',e:'🏊'},{v:'PT/필라테스',e:'💪'},{v:'배드민턴',e:'🏸'},{v:'클라이밍',e:'🧗'},{v:'요가',e:'🧘'}],
   '음악':     [{v:'보컬',e:'🎤'},{v:'기타',e:'🎸'},{v:'피아노',e:'🎹'},{v:'드럼',e:'🥁'},{v:'바이올린',e:'🎻'},{v:'우쿨렐레',e:'🎵'}],
   '댄스':     [{v:'K-pop댄스',e:'🕺'},{v:'발레',e:'🩰'},{v:'힙합',e:'💃'},{v:'현대무용',e:'🩱'},{v:'재즈댄스',e:'✨'}],
   '미술':     [{v:'그림/수채화',e:'🎨'},{v:'디자인',e:'✏️'},{v:'공예',e:'🖼️'},{v:'캘리그라피',e:'🖊️'}],
-  '기타레슨': [{v:'요리',e:'🍳'},{v:'승마',e:'🐴'},{v:'골프외',e:'🎯'},{v:'기타',e:'🎯'}],
+  '기타': [],
   '어학':     [{v:'영어',e:'🇺🇸'},{v:'중국어',e:'🇨🇳'},{v:'일본어',e:'🇯🇵'},{v:'스페인어',e:'🇪🇸'},{v:'기타외국어',e:'🌐'}],
   '수학/과학': [{v:'수학',e:'📐'},{v:'과학',e:'🔬'},{v:'물리',e:'⚡'},{v:'화학',e:'🧪'},{v:'생물',e:'🌿'}],
   '국어/인문': [{v:'국어',e:'📝'},{v:'역사',e:'📖'},{v:'논술',e:'✍️'},{v:'한국사',e:'🏛️'},{v:'사회',e:'🗺️'}],
-  '기타과외': [{v:'코딩',e:'💻'},{v:'경제',e:'📊'},{v:'철학',e:'💭'},{v:'기타',e:'🎯'}]
+  '기타(과외)': []
 };
 
 function openLessonPanel() {
@@ -8041,8 +8041,16 @@ function selectLessonMidCat(el, mid) {
   _selectedMidCategory = mid; _selectedLessonSubject = '';
   document.querySelectorAll('#lr-mid-cat-row .booking-day-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('lr-subject-label').style.display = '';
-  _renderRegisterSubChips(mid);
+  const isEtc = mid === '기타' || mid === '기타(과외)';
+  document.getElementById('lesson-subject-chips').innerHTML = '';
+  if (isEtc) {
+    document.getElementById('lr-subject-label').style.display = 'none';
+    document.getElementById('lr-subject-custom').placeholder = '종목/과목 직접 입력';
+  } else {
+    document.getElementById('lr-subject-label').style.display = '';
+    document.getElementById('lr-subject-custom').placeholder = '직접 입력 (예: 배드민턴, 드럼 등)';
+    _renderRegisterSubChips(mid);
+  }
 }
 function _renderRegisterSubChips(key) {
   const subs = LESSON_SUBS[key] || [];
