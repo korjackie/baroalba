@@ -1,0 +1,112 @@
+name: Build Android TWA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Create TWA manifest
+        run: |
+          mkdir -p twa-build
+          cat > twa-build/twa-manifest.json << 'EOF'
+          {
+            "packageId": "kr.co.multimove.baroalba",
+            "host": "baroalba.multimove.co.kr",
+            "name": "바로알바",
+            "launcherName": "바로알바",
+            "display": "standalone",
+            "orientation": "portrait",
+            "themeColor": "#FF4B4B",
+            "navigationColor": "#FF4B4B",
+            "navigationColorDark": "#000000",
+            "navigationDividerColor": "#000000",
+            "navigationDividerColorDark": "#000000",
+            "backgroundColor": "#FF4B4B",
+            "enableNotifications": false,
+            "startUrl": "/login.html",
+            "iconUrl": "https://baroalba.multimove.co.kr/icons/icon-512.png",
+            "maskableIconUrl": "https://baroalba.multimove.co.kr/icons/icon-512.png",
+            "monochromeIconUrl": "https://baroalba.multimove.co.kr/icons/icon-512.png",
+            "appVersionCode": 1,
+            "appVersionName": "1.0.0",
+            "shortcuts": [],
+            "generatorApp": "bubblewrap-cli",
+            "webManifestUrl": "https://baroalba.multimove.co.kr/manifest.json",
+            "isChromeOSOnly": false,
+            "isMetaQuest": false,
+            "minSdkVersion": 19,
+            "fingerprints": [],
+            "signingKey": {
+              "path": "android.keystore",
+              "alias": "android"
+            },
+            "additionalTrustedOrigins": [],
+            "retainedBundles": []
+          }
+          EOF
+
+      - name: Generate Android project
+        working-directory: twa-build
+        run: bubblewrap update
+
+      - name: Generate signing key
+        working-directory: twa-build
+        env:
+          KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'baroalba2026' }}
+        run: |
+          keytool -genkey -v \
+            -keystore android.keystore \
+            -alias android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "$KEY_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -dname "CN=MultiMOVE, OU=바로알바, O=MultiMOVE Co Ltd, L=Seoul, S=Seoul, C=KR"
+
+      - name: Build AAB
+        working-directory: twa-build
+        env:
+          KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'baroalba2026' }}
+        run: |
+          bubblewrap build \
+            --skipPwaValidation \
+            --signingKeyPath android.keystore \
+            --signingKeyPassword "$KEY_PASSWORD" \
+            --signingKeyAlias android
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: baroalba-android-${{ github.run_number }}
+          path: |
+            twa-build/app-release-bundle.aab
+            twa-build/app-release.apk
+          retention-days: 30
+
+      - name: Print signing key SHA-256
+        working-directory: twa-build
+        env:
+          KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'baroalba2026' }}
+        run: |
+          keytool -list -v \
+            -keystore android.keystore \
+            -alias android \
+            -storepass "$KEY_PASSWORD" \
+            2>&1 | grep "SHA256:"
