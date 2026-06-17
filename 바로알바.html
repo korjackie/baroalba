@@ -2138,11 +2138,31 @@
     <label class="lesson-form-label">강의 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">수강생에게 보이는 한 줄 설명</span></label>
     <input id="lr-detail" class="lesson-form-input" placeholder="예) 골프 국가대표 출신 · 초보 전문 / 중국 10년 거주 원어민급">
 
-    <label class="lesson-form-label">1회 금액 (원) *</label>
-    <input id="lr-price" class="lesson-form-input" type="number" placeholder="예) 50000">
+    <label class="lesson-form-label">1회 기본 단가 (원) *</label>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input id="lr-price" class="lesson-form-input" type="number" placeholder="예) 50000" style="flex:2;margin-bottom:0">
+      <input id="lr-duration" class="lesson-form-input" type="number" placeholder="분" value="60" style="flex:1;margin-bottom:0">
+      <span style="align-self:center;font-size:12px;color:#aaa;white-space:nowrap">분/회</span>
+    </div>
 
-    <label class="lesson-form-label">1회 소요 시간 (분)</label>
-    <input id="lr-duration" class="lesson-form-input" type="number" placeholder="60" value="60">
+    <label class="lesson-form-label">패키지 구성 <span style="font-size:11px;font-weight:500;color:#aaa">(선택 — 할인 제공 시 설정)</span></label>
+    <div style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:16px" id="lr-packages-wrap">
+      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="pkg-4" onchange="togglePackageInput('pkg-4-price',this.checked)" style="accent-color:#3b82f6"><span style="font-size:13px;font-weight:700;color:#333;white-space:nowrap">4회권</span></label>
+        <input id="pkg-4-price" class="lesson-form-input" type="number" placeholder="총금액 예) 180000" disabled style="margin-bottom:0;background:#f0f0f0;font-size:13px">
+        <span style="font-size:11px;color:#aaa">원</span>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="pkg-8" onchange="togglePackageInput('pkg-8-price',this.checked)" style="accent-color:#3b82f6"><span style="font-size:13px;font-weight:700;color:#333;white-space:nowrap">8회권</span></label>
+        <input id="pkg-8-price" class="lesson-form-input" type="number" placeholder="총금액 예) 320000" disabled style="margin-bottom:0;background:#f0f0f0;font-size:13px">
+        <span style="font-size:11px;color:#aaa">원</span>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="pkg-month" onchange="togglePackageInput('pkg-month-price',this.checked)" style="accent-color:#3b82f6"><span style="font-size:13px;font-weight:700;color:#333;white-space:nowrap">월회원</span></label>
+        <input id="pkg-month-price" class="lesson-form-input" type="number" placeholder="월 총금액 예) 400000" disabled style="margin-bottom:0;background:#f0f0f0;font-size:13px">
+        <span style="font-size:11px;color:#aaa">원</span>
+      </div>
+    </div>
 
     <label class="lesson-form-label">장소/지역 (주소 또는 동 단위)</label>
     <input id="lr-location" class="lesson-form-input" placeholder="예) 강남구 역삼동 근처, 서초구 방배동">
@@ -7541,7 +7561,7 @@ function makeLessonCardHtml(p) {
 async function openLessonDetail(profileId) {
   _currentLessonProfileId = profileId;
   const [{ data: p }, { data: bookings }] = await Promise.all([
-    db.from('lesson_profiles').select('*, workers(name, rating, review_count, noshow_count, phone)').eq('id', profileId).single(),
+    db.from('lesson_profiles').select('*, workers(name, rating, review_count, noshow_count, phone, kakao_uid)').eq('id', profileId).single(),
     db.from('lesson_bookings').select('student_kakao_uid').eq('profile_id', profileId).eq('status', 'completed'),
   ]);
   if (!p) { showToast('정보를 불러올 수 없어요'); return; }
@@ -7584,7 +7604,11 @@ async function openLessonDetail(profileId) {
       </div>
       <div style="font-size:19px;font-weight:900;color:#222;margin-bottom:4px">${p.main_category||'레슨'} · ${p.subject||'기타'}</div>
       ${p.subject_detail ? `<div style="font-size:14px;color:#555;margin-bottom:6px;line-height:1.5">${p.subject_detail}</div>` : ''}
-      <div style="font-size:13px;color:#888">강사: <strong style="color:#222">${w?.name||'알 수 없음'}</strong> · ★ ${rating} (${reviews}건)</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:13px;color:#888">강사: <strong style="color:#222">${w?.name||'알 수 없음'}</strong></span>
+        <span style="font-size:13px">${_renderStars(w?.rating)} <strong>${rating}</strong></span>
+        <span style="font-size:12px;color:#888">후기 ${reviews}건</span>
+      </div>
     </div>
     <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:16px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -7597,8 +7621,32 @@ async function openLessonDetail(profileId) {
       ${p.available_times ? `<div style="margin-top:6px;font-size:12px;color:#666">🕐 ${(()=>{try{return JSON.parse(p.available_times).join(' · ')}catch{return p.available_times}})()}</div>` : ''}
       ${retentionHtml}
     </div>
-    <button onclick="document.getElementById('lesson-booking-form').style.display='block';this.style.display='none'"
-      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">예약하기</button>`;
+    ${(()=>{
+      try {
+        const pkgs = p.packages ? JSON.parse(p.packages) : [];
+        if (!pkgs.length) return '';
+        return `<div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:8px">패키지 구성</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${pkgs.map(pkg=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:10px;padding:10px 14px">
+              <span style="font-size:14px;font-weight:700;color:#222">${pkg.label}</span>
+              <div style="text-align:right">
+                <span style="font-size:15px;font-weight:800;color:#C8102E">${Number(pkg.price).toLocaleString()}원</span>
+                ${pkg.sessions?`<span style="font-size:11px;color:#aaa;margin-left:4px">(${Math.round(pkg.price/pkg.sessions).toLocaleString()}원/회)</span>`:''}
+              </div>
+            </div>`).join('')}
+          </div>
+        </div>`;
+      } catch { return ''; }
+    })()}
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <button onclick="openLessonConsult('${p.id}','${(w?.name||'강사').replace(/'/g,"\\'")}','${w?.kakao_uid||''}')"
+        style="flex:1;padding:14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 무료 상담</button>
+      <button onclick="document.getElementById('lesson-booking-form').style.display='block';this.style.display='none';document.querySelector('.lesson-cta-row').style.display='none'"
+        style="flex:1;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 예약하기</button>
+    </div>
+    <div class="lesson-cta-row"></div>`;
   document.getElementById('lesson-booking-form').style.display = 'none';
   document.getElementById('lesson-detail-modal').classList.add('open');
 }
@@ -7690,6 +7738,64 @@ function toggleLrTime(el, slot) {
   if (_selectedLrTimes.includes(slot)) _selectedLrTimes = _selectedLrTimes.filter(s => s !== slot);
   else _selectedLrTimes.push(slot);
 }
+function togglePackageInput(inputId, enabled) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  el.disabled = !enabled;
+  el.style.background = enabled ? '#fff' : '#f0f0f0';
+  if (!enabled) el.value = '';
+}
+function _collectPackages() {
+  const pkgs = [];
+  if (document.getElementById('pkg-4')?.checked) {
+    const p = parseInt(document.getElementById('pkg-4-price')?.value);
+    if (p > 0) pkgs.push({ label: '4회권', sessions: 4, price: p });
+  }
+  if (document.getElementById('pkg-8')?.checked) {
+    const p = parseInt(document.getElementById('pkg-8-price')?.value);
+    if (p > 0) pkgs.push({ label: '8회권', sessions: 8, price: p });
+  }
+  if (document.getElementById('pkg-month')?.checked) {
+    const p = parseInt(document.getElementById('pkg-month-price')?.value);
+    if (p > 0) pkgs.push({ label: '월회원', sessions: null, price: p });
+  }
+  return pkgs.length ? pkgs : null;
+}
+function _renderStars(rating) {
+  if (!rating && rating !== 0) return '<span style="color:#ccc">★★★★★</span>';
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return `<span style="color:#FBBF24">${'★'.repeat(full)}${'½'.repeat(half)}</span><span style="color:#e5e7eb">${'★'.repeat(empty)}</span>`;
+}
+async function openLessonConsult(profileId, workerName, workerKakaoUid) {
+  if (!currentUser || isGuest) { showToast('로그인 후 상담 가능해요'); return; }
+  if (workerKakaoUid === currentUser.id) { showToast('본인 프로필이에요'); return; }
+  // lesson_inquiries 테이블에서 기존 상담 조회 또는 생성
+  let { data: inq } = await db.from('lesson_inquiries')
+    .select('id').eq('lesson_profile_id', profileId).eq('seeker_kakao_uid', currentUser.id).maybeSingle();
+  if (!inq) {
+    const { data: newInq, error } = await db.from('lesson_inquiries').insert({
+      lesson_profile_id: profileId, seeker_kakao_uid: currentUser.id, worker_kakao_uid: workerKakaoUid
+    }).select('id').single();
+    if (error) { showToast('상담 연결 실패: ' + error.message); return; }
+    inq = newInq;
+  }
+  document.getElementById('lesson-detail-modal')?.classList.remove('open');
+  _openLessonChatOverlay(inq.id, workerName, workerKakaoUid);
+}
+function _openLessonChatOverlay(inquiryId, workerName, workerKakaoUid) {
+  _chatAppId = null;
+  _chatInquiryId = inquiryId;
+  _chatWorkerName = workerName;
+  _chatWorkerUserId = workerKakaoUid;
+  document.getElementById('chat-title').textContent = workerName + ' 강사님과 상담';
+  document.getElementById('chat-sub').textContent = '레슨 관련 무료 상담';
+  document.getElementById('chat-overlay').classList.add('open');
+  document.getElementById('chat-input').value = '';
+  loadChatMessages();
+  subscribeChatMessages();
+}
 
 async function saveLessonProfile() {
   if (!currentUser || isGuest) { showToast('로그인이 필요해요'); return; }
@@ -7748,6 +7854,7 @@ async function saveLessonProfile() {
     location_name: location || null,
     available_days: _selectedLrDays.length ? _selectedLrDays : null,
     available_times: _selectedLrTimes.length ? JSON.stringify(_selectedLrTimes) : null,
+    packages: _collectPackages() ? JSON.stringify(_collectPackages()) : null,
     lat, lng,
     cert_note: certNote,
     cert_file_url: certFileUrl,
@@ -9203,7 +9310,7 @@ function ownerSetNav(el, tab) {
 }
 
 // ── 채팅 ───────────────────────────────────────────────────
-let _chatAppId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerName = '';
+let _chatAppId = null, _chatInquiryId = null, _chatSub = null, _chatWorkerUserId = null, _chatWorkerName = '';
 
 // ── 지도 탭 (업주용 주변 공고 조회) ──────────────────────
 let _ownerMap = null, _ownerOverlays = [], _ownerWorkerOverlays = [], _ownerMapDragBound = false, _ownerLocOverlay = null;
@@ -9807,13 +9914,15 @@ function closeChat() {
   document.getElementById('chat-overlay').classList.remove('open');
   if (_chatSub) { _chatSub.unsubscribe(); _chatSub = null; }
   _chatAppId = null;
+  _chatInquiryId = null;
   _chatWorkerUserId = null;
 }
 
 async function loadChatMessages() {
-  const { data } = await db.from('messages')
-    .select('*').eq('application_id', _chatAppId)
-    .order('created_at', { ascending: true });
+  let query = db.from('messages').select('*').order('created_at', { ascending: true });
+  if (_chatInquiryId) query = query.eq('inquiry_id', _chatInquiryId);
+  else query = query.eq('application_id', _chatAppId);
+  const { data } = await query;
   renderChatMessages(data || []);
 }
 
@@ -9856,13 +9965,12 @@ function subscribeChatMessages() {
 async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const content = input.value.trim();
-  if (!content || !_chatAppId) return;
+  if (!content || (!_chatAppId && !_chatInquiryId)) return;
   input.value = '';
-  await db.from('messages').insert({
-    application_id: _chatAppId,
-    sender_id: currentUser.id,
-    content,
-  });
+  const msgRow = { sender_id: currentUser.id, content };
+  if (_chatInquiryId) msgRow.inquiry_id = _chatInquiryId;
+  else msgRow.application_id = _chatAppId;
+  await db.from('messages').insert(msgRow);
   // 알바생 Broadcast 알림 (RLS 우회)
   if (_chatWorkerUserId) {
     try {

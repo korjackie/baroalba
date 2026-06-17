@@ -35,15 +35,21 @@ jobs:
           convert icons/icon-512.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
           convert icons/icon-512.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-      - name: Generate signing keystore
+      - name: Setup signing keystore
         run: |
-          keytool -genkey -v \
-            -keystore android/release.keystore \
-            -alias android \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass baroalba2026 \
-            -keypass baroalba2026 \
-            -dname "CN=MultiMOVE, OU=바로알바, O=MultiMOVE Co Ltd, L=Seoul, ST=Seoul, C=KR"
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/release.keystore
+            echo "✅ 저장된 keystore 사용 (SHA-256 고정)"
+          else
+            keytool -genkey -v \
+              -keystore android/release.keystore \
+              -alias android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass baroalba2026 \
+              -keypass baroalba2026 \
+              -dname "CN=MultiMOVE, OU=BaroAlba, O=MultiMOVE Co Ltd, L=Seoul, ST=Seoul, C=KR"
+            echo "⚠️ 새 keystore 생성됨 — KEYSTORE_BASE64 secret 등록 권장"
+          fi
 
       - name: Setup Gradle
         working-directory: android
@@ -55,7 +61,7 @@ jobs:
         working-directory: android
         env:
           KEY_PASSWORD: baroalba2026
-        run: ./gradle-8.4/bin/gradle bundleRelease --no-daemon --stacktrace
+        run: ./gradle-8.4/bin/gradle bundleRelease --no-daemon
 
       - name: Print SHA-256 fingerprint
         run: |
@@ -72,4 +78,4 @@ jobs:
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
             android/release.keystore
-          retention-days: 30
+          retention-days: 90
