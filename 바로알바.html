@@ -1047,6 +1047,14 @@
     #owner-sheet-count { font-size:15px; font-weight:800; color:#222; }
     #owner-sheet-count span { color:var(--red); }
 
+    /* ── 레슨 모달 기본 ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; align-items:flex-end; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:24px 24px 0 0; width:100%; max-width:600px; padding:0 20px 32px; box-sizing:border-box; }
+    .modal-handle { width:40px; height:4px; background:#e2e8f0; border-radius:4px; margin:12px auto 16px; }
+    .modal-title { font-size:18px; font-weight:900; color:#222; margin-bottom:6px; }
+    .modal-sub { font-size:13px; color:#888; margin-bottom:18px; }
+
     /* ── 레슨 기능 ── */
     .lesson-card { background:#fff; border-radius:16px; padding:16px; margin-bottom:10px; border:1px solid #f0f0f0; cursor:pointer; active:background:#f9f9f9; }
     .lesson-card:active { background:#fafafa; }
@@ -1672,7 +1680,7 @@
           <div style="flex:1">
             <div style="display:flex;align-items:center;gap:6px">
               <div style="font-size:14px;font-weight:800;color:#222">공고 관리</div>
-              <span style="font-size:10px;font-weight:800;background:#FFF0F0;color:#FF4B4B;padding:2px 7px;border-radius:20px">고용주용</span>
+              <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#FF4B4B;padding:2px 8px;border-radius:20px;margin-left:4px">고용주 전용</span>
             </div>
             <div style="font-size:12px;color:#aaa;margin-top:2px">공고 등록 · 지원자 관리</div>
           </div>
@@ -2096,14 +2104,19 @@
     <label class="lesson-form-label">가능 시간대</label>
     <input id="lr-times" class="lesson-form-input" placeholder="예) 오전 10시 ~ 오후 6시" style="margin-bottom:20px">
 
-    <!-- 자격증 인증 (중기 레이아웃 - 서류 심사 시스템 준비 중) -->
-    <div style="background:#fffbeb;border:1.5px dashed #fbbf24;border-radius:14px;padding:14px;margin-bottom:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:13px;font-weight:800;color:#92400e">🏅 자격증 / 경력 인증</div>
-        <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:20px;font-weight:700">준비 중</span>
-      </div>
-      <div style="font-size:12px;color:#a16207;line-height:1.6">자격증·학위·프로 라이센스 인증 시 <strong>✓ 인증 배지</strong>가 표시되어 신뢰도가 높아져요.<br>서류 심사 시스템 오픈 시 알림을 보내드릴게요.</div>
-      <input placeholder="보유 자격증/경력 간단히 입력 (선택)" class="lesson-form-input" style="margin-top:10px;background:#fff;opacity:0.7" disabled>
+    <!-- 자격증 / 경력 인증 -->
+    <div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:14px;padding:14px;margin-bottom:20px" id="cert-section">
+      <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:6px">🏅 자격증 / 경력 인증 <span style="font-size:11px;font-weight:500;color:#a16207">(선택)</span></div>
+      <div style="font-size:12px;color:#a16207;margin-bottom:10px">인증 완료 시 프로필에 <strong>✓ 인증 배지</strong>가 표시되어 신뢰도가 높아져요</div>
+      <input id="lr-cert-note" class="lesson-form-input" placeholder="예) 골프 지도사 2급, 체육학사, 프로 라이센스" style="background:#fff;margin-bottom:8px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <div id="cert-upload-btn" onclick="document.getElementById('lr-cert-file').click()"
+          style="flex:1;padding:11px;background:#fff;border:1.5px dashed #fbbf24;border-radius:10px;font-size:13px;color:#a16207;font-weight:600;text-align:center;cursor:pointer">
+          📎 서류 업로드 (사진/PDF)
+        </div>
+        <input id="lr-cert-file" type="file" accept="image/*,.pdf" style="display:none" onchange="onCertFileSelected(this)">
+      </label>
+      <div id="cert-file-name" style="font-size:12px;color:#16a34a;margin-top:6px;display:none"></div>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:4px">
@@ -7534,6 +7547,25 @@ let _selectedLessonSubject = '';
 let _selectedMainCategory  = '레슨';
 let _selectedLrLocType     = '';
 let _selectedLrDays        = [];
+let _certFile              = null;
+
+function onCertFileSelected(input) {
+  _certFile = input.files[0] || null;
+  const nameEl = document.getElementById('cert-file-name');
+  const btnEl  = document.getElementById('cert-upload-btn');
+  if (_certFile) {
+    nameEl.textContent = '✓ ' + _certFile.name;
+    nameEl.style.display = 'block';
+    btnEl.style.borderColor = '#16a34a';
+    btnEl.style.color = '#16a34a';
+    btnEl.textContent = '📎 ' + _certFile.name.slice(0, 20) + ((_certFile.name.length > 20) ? '…' : '');
+  } else {
+    nameEl.style.display = 'none';
+    btnEl.style.borderColor = '#fbbf24';
+    btnEl.style.color = '#a16207';
+    btnEl.textContent = '📎 서류 업로드 (사진/PDF)';
+  }
+}
 
 function openLessonRegisterModal() {
   _selectedLessonSubject = '';
@@ -7548,6 +7580,12 @@ function openLessonRegisterModal() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('lr-duration').value = '60';
+  _certFile = null;
+  document.getElementById('lr-cert-file').value = '';
+  document.getElementById('lr-cert-note').value = '';
+  document.getElementById('cert-file-name').style.display = 'none';
+  const btn = document.getElementById('cert-upload-btn');
+  if (btn) { btn.style.borderColor='#fbbf24'; btn.style.color='#a16207'; btn.textContent='📎 서류 업로드 (사진/PDF)'; }
   document.getElementById('lesson-register-modal').classList.add('open');
 }
 function closeLessonRegisterModal() {
@@ -7614,6 +7652,22 @@ async function saveLessonProfile() {
     });
   }
 
+  const certNote = document.getElementById('lr-cert-note')?.value.trim() || null;
+
+  // 자격증 파일 업로드
+  let certFileUrl = null, certStatus = 'none';
+  if (_certFile) {
+    const ext = _certFile.name.split('.').pop();
+    const path = `${currentUser.id}/${Date.now()}.${ext}`;
+    const { data: upData, error: upErr } = await db.storage.from('lesson-certs').upload(path, _certFile, { upsert: true });
+    if (upErr) { showToast('파일 업로드 실패: ' + upErr.message); return; }
+    const { data: urlData } = db.storage.from('lesson-certs').getPublicUrl(path);
+    certFileUrl = urlData?.publicUrl || null;
+    certStatus = 'pending';
+  } else if (certNote) {
+    certStatus = 'pending';
+  }
+
   const { error } = await db.from('lesson_profiles').insert({
     worker_id: w.id,
     main_category: _selectedMainCategory,
@@ -7624,10 +7678,14 @@ async function saveLessonProfile() {
     available_days: _selectedLrDays.length ? _selectedLrDays : null,
     available_times: times || null,
     lat, lng,
+    cert_note: certNote,
+    cert_file_url: certFileUrl,
+    cert_status: certStatus,
   });
   if (error) { showToast('등록 실패: ' + error.message); return; }
   closeLessonRegisterModal();
-  showToast('등록 완료! 수강생 모집이 시작됐어요 🎉');
+  const certMsg = certStatus === 'pending' ? '\n인증 서류는 검토 후 배지가 부여됩니다.' : '';
+  showToast('등록 완료! 수강생 모집이 시작됐어요' + certMsg);
   loadLessons();
   loadMyLessons();
 }
