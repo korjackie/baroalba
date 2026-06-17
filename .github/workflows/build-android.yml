@@ -57,7 +57,7 @@ jobs:
         working-directory: android
         env:
           KEY_PASSWORD: baroalba2026
-        run: ./gradlew bundleRelease --no-daemon --stacktrace 2>&1 | head -120
+        run: ./gradlew bundleRelease --no-daemon
 
       - name: Print SHA-256 fingerprint
         run: |
