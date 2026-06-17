@@ -2072,19 +2072,9 @@
       <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'과외')">📚 과외</button>
     </div>
 
-    <!-- 서브 카테고리 (동적) -->
+    <!-- 서브 카테고리 (가로 스크롤) -->
     <label class="lesson-form-label">종목 / 과목 *</label>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="lesson-subject-chips">
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'골프')">⛳ 골프</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'테니스')">🎾 테니스</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'탁구')">🏓 탁구</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'수영')">🏊 수영</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'PT/필라테스')">💪 PT/필라테스</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'보컬')">🎤 보컬</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'악기')">🎵 악기</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'댄스')">💃 댄스</button>
-      <button type="button" class="booking-day-btn" onclick="selectLessonSubject(this,'기타')">🎯 기타</button>
-    </div>
+    <div id="lesson-subject-chips" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:10px"></div>
     <input id="lr-subject-custom" class="lesson-form-input" placeholder="직접 입력 (예: 배드민턴, 드럼 등)" style="margin-bottom:14px">
 
     <!-- 수업 형태 -->
@@ -2177,12 +2167,12 @@
 <!-- ── 레슨/과외 관리 패널 ── -->
 <div class="full-panel" id="panel-lesson-manage" style="z-index:370">
   <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
-    <button onclick="document.getElementById('panel-lesson-manage').classList.remove('show')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:0;color:#333">←</button>
+    <button onclick="closeLessonManagePanel()" style="background:none;border:none;font-size:22px;cursor:pointer;padding:0;color:#333">←</button>
     <div style="font-size:17px;font-weight:900;color:#222">내 레슨/과외 프로필</div>
     <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
   </div>
   <div id="my-lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
-    <div class="empty"><div class="empty-icon" style="font-size:36px">🎾</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>
+    <div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>
   </div>
 </div>
 
@@ -7406,7 +7396,7 @@ function filterLessonSub(el, sub) {
 
 async function loadLessons() {
   const el = document.getElementById('lesson-list');
-  el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">🎾</div><div class="empty-txt">불러오는 중...</div></div>';
+  el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">🧑‍🏫</div><div class="empty-txt">불러오는 중...</div></div>';
   _clearLessonOverlays();
   try {
     let q = db.from('lesson_profiles')
@@ -7418,7 +7408,7 @@ async function loadLessons() {
     const { data, error } = await q;
     if (error) throw error;
     if (!data?.length) {
-      el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🎾</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>';
+      el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>';
       return;
     }
     el.innerHTML = data.map(p => makeLessonCardHtml(p)).join('');
@@ -7432,10 +7422,12 @@ function _renderLessonMarkers(data) {
   if (!kakaoMap) return;
   data.forEach(p => {
     if (!p.lat || !p.lng) return;
-    const w = p.workers;
     const price = p.price_per_session ? Math.round(p.price_per_session/1000)+'K' : '-';
     const catColor = p.main_category === '과외' ? '#7c3aed' : '#0891b2';
-    const content = `<div onclick="openLessonDetail('${p.id}')" style="background:${catColor};color:#fff;font-size:11px;font-weight:800;padding:5px 9px;border-radius:20px;white-space:nowrap;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.18)">${p.subject} ${price}원</div>`;
+    const onAir = p.is_available_now;
+    const glow = onAir ? 'box-shadow:0 0 0 3px #22c55e,0 2px 12px rgba(34,197,94,0.5);' : 'box-shadow:0 2px 8px rgba(0,0,0,0.18);';
+    const onAirDot = onAir ? '<span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;margin-right:4px"></span>' : '';
+    const content = `<div onclick="openLessonDetail('${p.id}')" style="background:${catColor};color:#fff;font-size:11px;font-weight:800;padding:5px 9px;border-radius:20px;white-space:nowrap;cursor:pointer;${glow}display:flex;align-items:center">${onAirDot}${p.subject} ${price}원</div>`;
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
       content, yAnchor: 1.2
@@ -7454,13 +7446,16 @@ function makeLessonCardHtml(p) {
   const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터방문', 비대면:'💻 비대면'};
   const locTypeBadge = p.location_type ? `<span style="font-size:10px;background:#f0f9ff;color:#0891b2;padding:2px 6px;border-radius:6px;margin-left:4px">${locTypeMap[p.location_type]||p.location_type}</span>` : '';
   const mainBadge = `<span style="font-size:10px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'#7c3aed':'#0891b2'};padding:2px 7px;border-radius:6px">${p.main_category||'레슨'}</span>`;
+  const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 7px;border-radius:6px;display:flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:#16a34a;border-radius:50%;display:inline-block"></span>지금 가능</span>` : '';
+  const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:800;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:6px">✓ 인증</span>` : '';
+  const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:6px">재수강 ${p._retention}%</span>` : '';
   return `
   <div class="lesson-card" onclick="openLessonDetail('${p.id}')">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">${mainBadge}<span class="lesson-subject-tag">${p.subject || '기타'}</span>${locTypeBadge}</div>
+    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px">${onAirBadge}${mainBadge}<span class="lesson-subject-tag">${p.subject || '기타'}</span>${certBadge}${locTypeBadge}</div>
     <div class="lesson-name">${p.subject_detail || p.subject}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
       <div class="lesson-price">${price}</div>
-      <div style="font-size:12px;color:#888">★ ${rating} · ${reviews}건</div>
+      <div style="font-size:12px;color:#888;display:flex;align-items:center;gap:6px">★ ${rating} · ${reviews}건${retentionBadge}</div>
     </div>
     <div class="lesson-meta">${[p.location_name, days].filter(Boolean).join(' · ') || '위치 협의'}</div>
   </div>`;
@@ -7637,6 +7632,10 @@ function openLessonManagePanel() {
     loadMyLessons();
   }, 50);
 }
+function closeLessonManagePanel() {
+  document.getElementById('panel-lesson-manage').classList.remove('show');
+  document.getElementById('panel-profile').classList.add('show');
+}
 async function loadMyLessons() {
   if (!currentUser || isGuest) return;
   const el = document.getElementById('my-lesson-list');
@@ -7644,7 +7643,7 @@ async function loadMyLessons() {
   if (!w) { el.innerHTML = '<div class="empty"><div class="empty-txt">알바생 프로필을 먼저 만들어주세요</div></div>'; return; }
   const { data } = await db.from('lesson_profiles').select('*').eq('worker_id', w.id).order('created_at', { ascending: false });
   if (!data?.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🎾</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>';
     return;
   }
   const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터방문', 비대면:'💻 비대면'};
