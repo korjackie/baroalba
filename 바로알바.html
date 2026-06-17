@@ -2033,7 +2033,7 @@
   <div class="detail-sheet" style="height:72vh;display:flex;flex-direction:column;padding:0">
     <div class="detail-handle" style="flex-shrink:0"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 16px;flex-shrink:0">
-      <div style="font-size:17px;font-weight:900;color:#222">글쓰기</div>
+      <div id="comm-write-title-h" style="font-size:17px;font-weight:900;color:#222">글쓰기</div>
       <button onclick="closeCommunityWriteOverlay()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:0 20px 20px">
@@ -2046,7 +2046,7 @@
         <input type="checkbox" id="comm-write-anon" style="width:18px;height:18px;cursor:pointer">
         <span style="font-size:14px;color:#555;font-weight:600">익명으로 작성</span>
       </label>
-      <button onclick="submitCommunityPost()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">게시하기</button>
+      <button id="comm-write-submit-btn" onclick="submitCommunityPost()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">게시하기</button>
     </div>
   </div>
 </div>
@@ -5730,7 +5730,7 @@ function showAvatarTip(inputId) {
           <span>&#10060;</span><span style="font-size:13px;color:#EF4444">선글라스 · 마스크 착용 사진</span>
         </div>
       </div>
-      <button onclick="document.getElementById('avatar-tip-overlay').remove();document.getElementById('${inputId}').click()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
+      <button onclick="document.getElementById('${inputId}').click();document.getElementById('avatar-tip-overlay').remove()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
     </div>`;
   document.body.appendChild(el);
 }
@@ -6330,6 +6330,7 @@ let _commCurrentCat = 'all';
 let _commCurrentPostId = null;
 let _commCurrentPostLikes = 0;
 let _commWriteCat = 'free';
+let _commEditPostId = null;
 
 function _commIsOwner() {
   return currentUser?.user_metadata?.baroalba_role === 'business';
@@ -6388,15 +6389,19 @@ function closeCommunityPost() {
 
 function openCommunityWriteOverlay() {
   if (!currentUser || isGuest) { showToast('로그인 후 글을 작성할 수 있어요'); return; }
-  document.getElementById('community-write-overlay').classList.add('open');
+  _commEditPostId = null;
   document.getElementById('comm-write-title').value = '';
   document.getElementById('comm-write-content').value = '';
   document.getElementById('comm-write-anon').checked = false;
+  document.getElementById('comm-write-title-h').textContent = '글쓰기';
+  document.getElementById('comm-write-submit-btn').textContent = '게시하기';
   _buildWriteCats();
+  document.getElementById('community-write-overlay').classList.add('open');
 }
 
 function closeCommunityWriteOverlay() {
   document.getElementById('community-write-overlay').classList.remove('open');
+  _commEditPostId = null;
 }
 
 function selectWriteCat(btn, cat) {
@@ -6473,8 +6478,8 @@ async function openCommunityPost(postId) {
   overlay.classList.add('open');
 
   const [{ data: post }, { data: comments }] = await Promise.all([
-    db.from('community_posts').select('*, workers(name), businesses(biz_name)').eq('id', postId).single(),
-    db.from('community_comments').select('*, workers(name), businesses(biz_name)').eq('post_id', postId).order('created_at', { ascending: true })
+    db.from('community_posts').select('*, workers(name,kakao_uid), businesses(biz_name,kakao_uid)').eq('id', postId).single(),
+    db.from('community_comments').select('*, workers(name,kakao_uid), businesses(biz_name,kakao_uid)').eq('post_id', postId).order('created_at', { ascending: true })
   ]);
 
   if (!post) { body.innerHTML = '<div style="padding:20px;color:#aaa">게시글을 불러올 수 없어요</div>'; return; }
@@ -6494,13 +6499,22 @@ async function openCommunityPost(postId) {
   const fmtFull = iso => { const d = new Date(iso); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
   const fmtRel = iso => { const d = new Date(iso); const now = new Date(); const diffH = (now - d) / 3600000; if (diffH < 1) return Math.floor(diffH * 60) + '분 전'; if (diffH < 24) return Math.floor(diffH) + '시간 전'; return `${d.getMonth()+1}/${d.getDate()}`; };
 
+  const isMyPost = currentUser && (post.workers?.kakao_uid === currentUser.id || post.businesses?.kakao_uid === currentUser.id);
+  const myPostBtns = isMyPost ? `
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="openEditCommPost()" style="padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;background:#fff;font-size:12px;font-weight:700;color:#555;cursor:pointer">✏️ 수정</button>
+      <button onclick="deleteCommPost()" style="padding:7px 14px;border:1.5px solid #fca5a5;border-radius:20px;background:#fff3f3;font-size:12px;font-weight:700;color:#c53030;cursor:pointer">🗑 삭제</button>
+    </div>` : '';
+
   const commentsHtml = comments?.length
     ? comments.map(c => {
         const ca = c.is_anonymous ? '익명' : (c.workers?.name || c.businesses?.biz_name || '사용자');
+        const isMyComment = currentUser && (c.workers?.kakao_uid === currentUser.id || c.businesses?.kakao_uid === currentUser.id);
         return `<div style="padding:12px 0;border-top:1px solid #f5f5f5">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
             <span style="font-size:12px;font-weight:700;color:#555">${ca}</span>
             <span style="font-size:11px;color:#ccc">${fmtRel(c.created_at)}</span>
+            ${isMyComment ? `<button onclick="deleteCommComment('${c.id}')" style="margin-left:auto;padding:3px 8px;border:none;background:none;font-size:11px;color:#ccc;cursor:pointer">삭제</button>` : ''}
           </div>
           <div style="font-size:13px;color:#333;line-height:1.6">${c.content}</div>
         </div>`;
@@ -6514,6 +6528,7 @@ async function openCommunityPost(postId) {
       </div>
       <div style="font-size:13px;color:#aaa;margin-bottom:14px">${author} · ${fmtFull(post.created_at)}</div>
       <div style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">${post.content}</div>
+      ${myPostBtns}
       <button id="comm-like-btn" onclick="likeCommunityPost()" style="margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'#FF4B4B':'#555'};cursor:pointer">
         ❤️ <span id="comm-like-count">${post.likes || 0}</span>
       </button>
@@ -6556,6 +6571,20 @@ async function submitCommunityPost() {
   if (!title) { showToast('제목을 입력해주세요'); return; }
   if (!content) { showToast('내용을 입력해주세요'); return; }
 
+  // 수정 모드
+  if (_commEditPostId) {
+    const { error } = await db.from('community_posts')
+      .update({ title, content, category: _commWriteCat, is_anonymous: anon })
+      .eq('id', _commEditPostId);
+    if (error) { showToast('수정 실패: ' + error.message); return; }
+    showToast('✅ 게시글이 수정됐습니다');
+    closeCommunityWriteOverlay();
+    loadCommunityPosts(_commCurrentCat);
+    openCommunityPost(_commCurrentPostId);
+    return;
+  }
+
+  // 신규 등록
   const role = currentUser?.user_metadata?.baroalba_role;
   const insertData = { category: _commWriteCat, title, content, is_anonymous: anon };
 
@@ -6575,6 +6604,46 @@ async function submitCommunityPost() {
   showToast('✅ 게시글이 등록됐습니다');
   closeCommunityWriteOverlay();
   loadCommunityPosts(_commCurrentCat);
+}
+
+function openEditCommPost() {
+  const body = document.getElementById('comm-post-body');
+  const title = document.getElementById('comm-post-title-h')?.textContent || '';
+  // 현재 렌더된 내용에서 category / content / anon을 복원하기 위해 DB 재조회
+  db.from('community_posts').select('title,content,category,is_anonymous').eq('id', _commCurrentPostId).single()
+    .then(({ data: p }) => {
+      if (!p) return;
+      _commEditPostId = _commCurrentPostId;
+      _commWriteCat = p.category || 'free';
+      document.getElementById('comm-write-title').value = p.title || '';
+      document.getElementById('comm-write-content').value = p.content || '';
+      document.getElementById('comm-write-anon').checked = !!p.is_anonymous;
+      _buildWriteCats();
+      document.getElementById('comm-write-title-h').textContent = '게시글 수정';
+      document.getElementById('comm-write-submit-btn').textContent = '수정하기';
+      document.getElementById('community-write-overlay').classList.add('open');
+    });
+}
+
+async function deleteCommPost() {
+  if (!_commCurrentPostId) return;
+  if (!confirm('게시글을 삭제할까요? 댓글도 함께 삭제됩니다.')) return;
+  const { error } = await db.from('community_posts').delete().eq('id', _commCurrentPostId);
+  if (error) { showToast('삭제 실패'); return; }
+  showToast('🗑 게시글이 삭제됐습니다');
+  closeCommunityPost();
+  loadCommunityPosts(_commCurrentCat);
+}
+
+async function deleteCommComment(commentId) {
+  if (!confirm('댓글을 삭제할까요?')) return;
+  const { error } = await db.from('community_comments').delete().eq('id', commentId);
+  if (error) { showToast('삭제 실패'); return; }
+  // comments_count 직접 감소
+  const { data: p } = await db.from('community_posts').select('comments_count').eq('id', _commCurrentPostId).single();
+  if (p) await db.from('community_posts').update({ comments_count: Math.max(0, (p.comments_count || 1) - 1) }).eq('id', _commCurrentPostId);
+  showToast('댓글이 삭제됐습니다');
+  openCommunityPost(_commCurrentPostId);
 }
 
 async function submitCommunityComment() {
@@ -7461,8 +7530,15 @@ function filterApplicants(status) {
 
 // ── 지원자 불러오기 ──────────────────────────────────────
 async function loadApplicants() {
-  if (!bizRecord || !postings.length) return;
-  const jobIds = postings.map(p => p.id);
+  if (!bizRecord) return;
+
+  // postings가 아직 로드 안됐을 수 있으므로 DB에서 직접 job ID 조회
+  let jobIds = postings.map(p => p.id);
+  if (!jobIds.length) {
+    const { data: jobs } = await db.from('job_postings').select('id').eq('business_id', bizRecord.id);
+    jobIds = (jobs || []).map(j => j.id);
+  }
+
   if (!jobIds.length) {
     document.getElementById('applicants-list').innerHTML =
       '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">지원자가 없어요</div></div>';
@@ -9411,7 +9487,7 @@ function showOwnerAvatarTip(inputId) {
           <span>&#10060;</span><span style="font-size:13px;color:#EF4444">저작권 위반 이미지 · 타업체 사진</span>
         </div>
       </div>
-      <button onclick="document.getElementById('owner-avatar-tip-overlay').remove();document.getElementById('${inputId}').click()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
+      <button onclick="document.getElementById('${inputId}').click();document.getElementById('owner-avatar-tip-overlay').remove()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
     </div>`;
   document.body.appendChild(el);
 }
