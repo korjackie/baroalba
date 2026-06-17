@@ -3942,8 +3942,10 @@ async function loadMyChatList() {
 
   const totalUnread = Object.values(unreadCnt).reduce((s, v) => s + v, 0);
   const badge = document.getElementById('chat-unread-badge');
-  if (totalUnread > 0) { badge.textContent = totalUnread; badge.style.display = 'flex'; }
-  else badge.style.display = 'none';
+  if (badge) {
+    if (totalUnread > 0) { badge.textContent = totalUnread; badge.style.display = 'flex'; }
+    else badge.style.display = 'none';
+  }
 
   const chats = apps.filter(a => latestMsg[a.id]);
   if (!chats.length) {
@@ -5730,7 +5732,7 @@ function showAvatarTip(inputId) {
           <span>&#10060;</span><span style="font-size:13px;color:#EF4444">선글라스 · 마스크 착용 사진</span>
         </div>
       </div>
-      <button onclick="document.getElementById('${inputId}').click();document.getElementById('avatar-tip-overlay').remove()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
+      <label for="${inputId}" onclick="document.getElementById('avatar-tip-overlay').remove()" style="display:block;width:100%;padding:15px;background:#FF4B4B;color:#fff;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;text-align:center;box-sizing:border-box">사진 선택하기</label>
     </div>`;
   document.body.appendChild(el);
 }
@@ -9487,7 +9489,7 @@ function showOwnerAvatarTip(inputId) {
           <span>&#10060;</span><span style="font-size:13px;color:#EF4444">저작권 위반 이미지 · 타업체 사진</span>
         </div>
       </div>
-      <button onclick="document.getElementById('${inputId}').click();document.getElementById('owner-avatar-tip-overlay').remove()" style="width:100%;padding:15px;background:#FF4B4B;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">사진 선택하기</button>
+      <label for="${inputId}" onclick="document.getElementById('owner-avatar-tip-overlay').remove()" style="display:block;width:100%;padding:15px;background:#FF4B4B;color:#fff;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;text-align:center;box-sizing:border-box">사진 선택하기</label>
     </div>`;
   document.body.appendChild(el);
 }
