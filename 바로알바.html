@@ -2952,6 +2952,7 @@ async function loadJobs() {
     // 이미 지원한 공고 → 제외하지 않고 applied_status 마킹 (그레이 표시용)
     if (currentUser && !isGuest) {
       const wRes = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+      if (wRes.error && wRes.error.code !== 'PGRST116') console.warn('[jobs] worker lookup failed:', wRes.error.message);
       const wid = wRes.data?.id || '';
       if (wid) {
         const { data: myApps } = await db.from('applications')
@@ -3376,6 +3377,7 @@ function setupMessageNotifications() {
       const chatOpen = document.getElementById('wchat-overlay')?.classList.contains('open');
       if (chatOpen && _wchatAppId === payload.application_id) return;
       const badge = document.getElementById('chat-unread-badge');
+      if (!badge) return;
       const cnt = parseInt(badge.textContent || '0') + 1;
       badge.textContent = cnt;
       badge.style.display = 'flex';
