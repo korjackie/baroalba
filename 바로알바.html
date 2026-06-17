@@ -1097,6 +1097,7 @@
     <div class="chip" data-cat="이사도우미" onclick="setCategory(this, '이사도우미')">🚚이사</div>
     <div class="chip" data-cat="운반/짐 이동" onclick="setCategory(this, '운반/짐 이동')">📦운반</div>
     <div class="chip" data-cat="퀵배달" onclick="setCategory(this, '퀵배달')">🛵퀵</div>
+    <div class="chip" data-cat="청소 대행" onclick="setCategory(this, '청소 대행')">🧹청소대행</div>
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
     <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
@@ -7074,7 +7075,7 @@ const _STATUS_BADGE = {
 };
 
 function makeApplicantCardHtml(a, opts = {}) {
-  const { stopProp = false, isFav = false, isCmp = false, showExtras = false } = opts;
+  const { stopProp = false, isFav = false, isCmp = false, showExtras = false, lastWorked = null } = opts;
   const sp = 'event.stopPropagation();';
   const w = a.workers;
   const wid = w?.id || '';
@@ -7086,6 +7087,12 @@ function makeApplicantCardHtml(a, opts = {}) {
   const attendanceHtml = total > 0
     ? ` · <span style="color:${noshow > 0 ? '#dc2626' : '#16a34a'};font-weight:700">출근율 ${Math.round(reviews/total*100)}%</span>${noshow > 0 ? ` <span style="color:#dc2626">⚠️노쇼${noshow}</span>` : ''}`
     : '';
+  const trustBadge = (() => {
+    if (total < 3) return '';
+    if (noshow === 0 && reviews / total >= 0.95) return '<span style="font-size:10px;font-weight:900;background:#dcfce7;color:#16a34a;padding:2px 6px;border-radius:6px;margin-left:4px">✓우수</span>';
+    if (noshow > 0) return '<span style="font-size:10px;font-weight:900;background:#fff1f2;color:#be123c;padding:2px 6px;border-radius:6px;margin-left:4px">⚠노쇼</span>';
+    return '';
+  })();
   const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
   const b = _STATUS_BADGE[a.status] || _STATUS_BADGE.pending;
   const badge = `<span style="background:${b.bg};color:${b.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap">${b.label}</span>`;
@@ -7127,13 +7134,24 @@ function makeApplicantCardHtml(a, opts = {}) {
     <div class="ac-top" onclick="${sp}openWorkerProfileDirect('${a.id}')">
       <div class="applicant-avatar">${avatarSvg}</div>
       <div class="ac-info">
-        <div class="ac-name">${quickBadge}${name}${jobTitle}</div>
-        <div class="ac-meta">★ ${rating} · 완료 ${reviews}건${attendanceHtml}${phone ? ' · '+phone : ''}</div>
+        <div class="ac-name">${quickBadge}${name}${trustBadge}${jobTitle}</div>
+        <div class="ac-meta">★ ${rating} · 완료 ${reviews}건${attendanceHtml}${phone ? ' · '+phone : ''}${showExtras && lastWorked ? ` · <span style="color:#94a3b8">근무 ${formatRelativeDate(lastWorked)}</span>` : ''}</div>
       </div>
       ${badge}
     </div>
     <div class="ac-actions" onclick="${sp}">${actions}</div>
   </div>`;
+}
+
+function formatRelativeDate(dateStr) {
+  if (!dateStr) return '';
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+  if (diff === 0) return '오늘';
+  if (diff === 1) return '어제';
+  if (diff < 7) return `${diff}일 전`;
+  if (diff < 30) return `${Math.floor(diff / 7)}주 전`;
+  if (diff < 365) return `${Math.floor(diff / 30)}개월 전`;
+  return `${Math.floor(diff / 365)}년 전`;
 }
 
 // 하위 호환용 래퍼 (기존 buildStatusHtml 호출부는 모두 makeApplicantCardHtml로 대체됨)
@@ -7577,7 +7595,20 @@ async function loadApplicants() {
     .order('applied_at', { ascending: false });
 
   if (error) { showToast('지원자 불러오기 실패'); return; }
-  _allApplicants = data || [];
+  const apps = data || [];
+  // 마지막 근무일 배치 조회
+  const wIds = apps.map(a => a.workers?.id).filter(Boolean);
+  let lastWorkedMap = {};
+  if (wIds.length) {
+    const { data: lw } = await db.from('applications')
+      .select('worker_id, completed_at')
+      .in('worker_id', wIds)
+      .eq('status', 'completed')
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false });
+    (lw || []).forEach(j => { if (!lastWorkedMap[j.worker_id]) lastWorkedMap[j.worker_id] = j.completed_at; });
+  }
+  _allApplicants = apps.map(a => ({ ...a, _lastWorked: lastWorkedMap[a.workers?.id] || null }));
   renderApplicants(_allApplicants);
 }
 
@@ -7587,15 +7618,23 @@ function renderApplicants(apps) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">아직 지원자가 없어요</div></div>';
     return;
   }
-  // 즐겨찾기 먼저, 나머지 최신순
-  const sorted = [...apps].sort((a,b) => {
+  // 즐겨찾기 → 노쇼 없는 사람 → 출근율 높은 순 → 최신순
+  const sorted = [...apps].sort((a, b) => {
     const af = _favWorkers.has(a.workers?.id), bf = _favWorkers.has(b.workers?.id);
-    return af === bf ? 0 : af ? -1 : 1;
+    if (af !== bf) return af ? -1 : 1;
+    const aNs = (a.workers?.noshow_count || 0) > 0;
+    const bNs = (b.workers?.noshow_count || 0) > 0;
+    if (aNs !== bNs) return aNs ? 1 : -1;
+    const aRev = a.workers?.review_count || 0, aNo = a.workers?.noshow_count || 0;
+    const bRev = b.workers?.review_count || 0, bNo = b.workers?.noshow_count || 0;
+    const aRate = (aRev + aNo) > 0 ? aRev / (aRev + aNo) : 0.5;
+    const bRate = (bRev + bNo) > 0 ? bRev / (bRev + bNo) : 0.5;
+    return bRate - aRate;
   });
   el.innerHTML = sorted.map(a => {
     const isFav = _favWorkers.has(a.workers?.id);
     const isCmp = _compareSet.has(a.id);
-    return makeApplicantCardHtml(a, { stopProp: true, showExtras: true, isFav, isCmp });
+    return makeApplicantCardHtml(a, { stopProp: true, showExtras: true, isFav, isCmp, lastWorked: a._lastWorked });
   }).join('');
   const fab = document.getElementById('compare-fab');
   if (fab) fab.style.display = _compareSet.size === 2 ? 'flex' : 'none';
