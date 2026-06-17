@@ -1094,7 +1094,9 @@
     <div class="chip" data-cat="커플알바" onclick="setCategory(this, '커플알바')">커플알바</div>
     <div class="chip" data-cat="컨텐츠" onclick="setCategory(this, '컨텐츠')">촬영/컨텐츠</div>
     <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">챌린지</div>
-    <div class="chip" data-cat="이사도우미" onclick="setCategory(this, '이사도우미')">이사도우미</div>
+    <div class="chip" data-cat="이사도우미" onclick="setCategory(this, '이사도우미')">🚚이사</div>
+    <div class="chip" data-cat="운반/짐 이동" onclick="setCategory(this, '운반/짐 이동')">📦운반</div>
+    <div class="chip" data-cat="퀵배달" onclick="setCategory(this, '퀵배달')">🛵퀵</div>
     <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
     <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
     <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0">필터</div>
@@ -1188,7 +1190,10 @@
         <button class="srch-cat-btn" data-cat="유튜브/틱톡" onclick="setSrchCat(this,'유튜브/틱톡')">유튜브/틱톡</button>
         <button class="srch-cat-btn" data-cat="모델/촬영" onclick="setSrchCat(this,'모델/촬영')">모델/촬영</button>
         <button class="srch-cat-btn" data-cat="챌린지" onclick="setSrchCat(this,'챌린지')">챌린지</button>
-        <button class="srch-cat-btn" data-cat="이사도우미" onclick="setSrchCat(this,'이사도우미')">이사도우미</button>
+        <button class="srch-cat-btn" data-cat="이사도우미" onclick="setSrchCat(this,'이사도우미')">🚚이사</button>
+        <button class="srch-cat-btn" data-cat="운반/짐 이동" onclick="setSrchCat(this,'운반/짐 이동')">📦운반</button>
+        <button class="srch-cat-btn" data-cat="퀵배달" onclick="setSrchCat(this,'퀵배달')">🛵퀵배달</button>
+        <button class="srch-cat-btn" data-cat="청소 대행" onclick="setSrchCat(this,'청소 대행')">🧹청소</button>
         <button class="srch-cat-btn" data-cat="반려동물 산책" onclick="setSrchCat(this,'반려동물 산책')">펫 돌봄</button>
         <button class="srch-cat-btn" data-cat="__errand__" onclick="setSrchCat(this,'__errand__')">심부름/대행</button>
         <button class="srch-cat-btn" data-cat="기타" onclick="setSrchCat(this,'기타')">기타</button>
@@ -3048,7 +3053,8 @@ function renderMarkers() {
   const ERRAND_ICON_MAP = {
     '물건 픽업/전달':'\u{1F4E6}','대리 줄서기':'\u{1F9CD}','서류/우편':'\u{1F4EE}','쇼핑 대행':'\u{1F6D2}',
     '벌레 퇴치':'\u{1FAB2}','반려동물 산책':'\u{1F415}','이사/짐 보조':'\u{1F69A}','음식 배달':'\u{1F371}',
-    '차량 이동/주차':'\u{1F697}','약국/병원 대행':'\u{1F48A}','장보기 대행':'\u{1F96C}','기타 심부름':'\u{1F3C3}'
+    '차량 이동/주차':'\u{1F697}','약국/병원 대행':'\u{1F48A}','장보기 대행':'\u{1F96C}','기타 심부름':'\u{1F3C3}',
+    '운반/짐 이동':'\u{1F4E6}','퀵배달':'\u{1F6F5}','청소 대행':'\u{1F9F9}','이사도우미':'\u{1F69A}'
   };
   const ERRAND_CAT_NAMES = new Set(Object.keys(ERRAND_ICON_MAP));
 
@@ -3058,8 +3064,10 @@ function renderMarkers() {
     '이벤트':'이벤트', '커플알바':'커플', '컨텐츠':'촬영', '챌린지':'챌린지',
     '물건 픽업/전달':'픽업', '대리 줄서기':'줄서기', '서류/우편':'서류',
     '쇼핑 대행':'쇼핑', '벌레 퇴치':'해충', '반려동물 산책':'펫돌봄',
-    '이사/짐 보조':'이사', '음식 배달':'배달', '차량 이동/주차':'주차대행',
-    '약국/병원 대행':'병원대행', '장보기 대행':'장보기', '기타 심부름':'심부름'
+    '이사/짐 보조':'이사', '이사도우미':'이사', '음식 배달':'배달',
+    '차량 이동/주차':'주차대행', '약국/병원 대행':'병원대행',
+    '장보기 대행':'장보기', '기타 심부름':'심부름',
+    '운반/짐 이동':'운반', '퀵배달':'퀵', '청소 대행':'청소'
   };
 
   jobs.forEach(job => {
@@ -7073,6 +7081,11 @@ function makeApplicantCardHtml(a, opts = {}) {
   const name = w?.name || '이름없음';
   const rating = w?.rating != null ? Number(w.rating).toFixed(1) : '-';
   const reviews = w?.review_count || 0;
+  const noshow = w?.noshow_count || 0;
+  const total = reviews + noshow;
+  const attendanceHtml = total > 0
+    ? ` · <span style="color:${noshow > 0 ? '#dc2626' : '#16a34a'};font-weight:700">출근율 ${Math.round(reviews/total*100)}%</span>${noshow > 0 ? ` <span style="color:#dc2626">⚠️노쇼${noshow}</span>` : ''}`
+    : '';
   const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
   const b = _STATUS_BADGE[a.status] || _STATUS_BADGE.pending;
   const badge = `<span style="background:${b.bg};color:${b.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap">${b.label}</span>`;
@@ -7115,7 +7128,7 @@ function makeApplicantCardHtml(a, opts = {}) {
       <div class="applicant-avatar">${avatarSvg}</div>
       <div class="ac-info">
         <div class="ac-name">${quickBadge}${name}${jobTitle}</div>
-        <div class="ac-meta">★ ${rating} · 완료 ${reviews}건${phone ? ' · '+phone : ''}</div>
+        <div class="ac-meta">★ ${rating} · 완료 ${reviews}건${attendanceHtml}${phone ? ' · '+phone : ''}</div>
       </div>
       ${badge}
     </div>
@@ -9220,10 +9233,13 @@ const ERRAND_CATEGORIES = [
   { name: '벌레 퇴치',     icon: '\u{1FAB2}', display_order: 5  },
   { name: '반려동물 산책', icon: '\u{1F415}', display_order: 6  },
   { name: '이사/짐 보조',  icon: '\u{1F69A}', display_order: 7  },
-  { name: '음식 배달',     icon: '\u{1F371}', display_order: 8  },
-  { name: '차량 이동/주차',icon: '\u{1F697}', display_order: 9  },
-  { name: '약국/병원 대행',icon: '\u{1F48A}', display_order: 10 },
-  { name: '장보기 대행',   icon: '\u{1F96C}', display_order: 11 },
+  { name: '운반/짐 이동',  icon: '\u{1F4E6}', display_order: 8  },
+  { name: '퀵배달',        icon: '\u{1F6F5}', display_order: 9  },
+  { name: '청소 대행',     icon: '\u{1F9F9}', display_order: 10 },
+  { name: '음식 배달',     icon: '\u{1F371}', display_order: 11 },
+  { name: '차량 이동/주차',icon: '\u{1F697}', display_order: 12 },
+  { name: '약국/병원 대행',icon: '\u{1F48A}', display_order: 13 },
+  { name: '장보기 대행',   icon: '\u{1F96C}', display_order: 14 },
   { name: '기타 심부름',   icon: '\u{1F3C3}', display_order: 99 },
 ];
 
