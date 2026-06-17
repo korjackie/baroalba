@@ -117,50 +117,43 @@
     }
     .filter-row::-webkit-scrollbar { display: none; }
 
-    /* ── 라벨형 2단 필터 ── */
-    .filter-row-labeled {
+    /* ── 드롭다운 필터 바 ── */
+    .filter-bar {
       display: flex;
       align-items: center;
-      min-height: 34px;
-      padding: 2px 0;
-    }
-    .filter-row-labeled + .filter-row-labeled {
-      border-top: 1px solid #f0f0f0;
-    }
-    .filter-type-lbl {
-      flex-shrink: 0;
-      width: 38px;
-      font-size: 10px;
-      font-weight: 800;
-      color: #c0c0c0;
-      text-align: center;
-      padding-left: 12px;
-      letter-spacing: -0.2px;
-    }
-    .filter-lbl-divider {
-      flex-shrink: 0;
-      width: 1px;
-      height: 14px;
-      background: #e8e8e8;
-      margin: 0 6px 0 4px;
-    }
-    .filter-chips-scroll {
-      flex: 1;
-      display: flex;
       gap: 6px;
-      overflow-x: auto;
-      padding: 4px 0;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+      padding: 7px 0 5px;
+      pointer-events: all;
     }
-    .filter-chips-scroll::-webkit-scrollbar { display: none; }
-    .filter-actions {
+    .filter-drop-btn {
       flex-shrink: 0;
-      display: flex;
-      gap: 4px;
-      padding-right: 12px;
-      padding-left: 4px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      color: #444;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      transition: all 0.15s;
     }
+    .filter-drop-btn.open,
+    .filter-drop-btn.sel { background: #111; border-color: #111; color: #fff; }
+    .filter-sheet {
+      display: none;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      margin-top: 4px;
+      padding: 10px 12px 12px;
+      flex-wrap: wrap;
+      gap: 6px;
+      pointer-events: all;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .filter-sheet.open { display: flex; }
 
     .chip {
       flex-shrink: 0;
@@ -1153,43 +1146,42 @@
       <input id="search-input" type="text" placeholder="지역, 업종 검색" readonly onfocus="this.blur();openSearchOverlay()">
     </div>
   </div>
-  <!-- 업종 필터 -->
-  <div class="filter-row-labeled">
-    <span class="filter-type-lbl">업종</span>
-    <div class="filter-lbl-divider"></div>
-    <div class="filter-chips-scroll" id="filter-row">
-      <div class="chip active" data-cat="" onclick="setCategory(this, '')">전체</div>
-      <div class="chip" data-cat="F&B"  onclick="setCategory(this, 'F&B')">F&B</div>
-      <div class="chip" data-cat="물류" onclick="setCategory(this, '물류')">운송/물류</div>
-      <div class="chip" data-cat="판매" onclick="setCategory(this, '판매')">판매</div>
-      <div class="chip" data-cat="청소" onclick="setCategory(this, '청소')">청소</div>
-      <div class="chip" data-cat="이벤트" onclick="setCategory(this, '이벤트')">이벤트</div>
-      <div class="chip" data-cat="커플알바" onclick="setCategory(this, '커플알바')">커플알바</div>
-      <div class="chip" data-cat="컨텐츠" onclick="setCategory(this, '컨텐츠')">촬영/컨텐츠</div>
-      <div class="chip" data-cat="챌린지" onclick="setCategory(this, '챌린지')">챌린지</div>
-      <div class="chip" data-cat="이사도우미" onclick="setCategory(this, '이사도우미')">🚚이사</div>
-      <div class="chip" data-cat="운반/짐 이동" onclick="setCategory(this, '운반/짐 이동')">📦운반</div>
-      <div class="chip" data-cat="퀵배달" onclick="setCategory(this, '퀵배달')">🛵퀵</div>
-      <div class="chip" data-cat="청소 대행" onclick="setCategory(this, '청소 대행')">🧹청소대행</div>
-      <div class="chip" data-cat="__errand__" onclick="setCategory(this, '__errand__')">심부름</div>
-      <div class="chip" data-cat="__lesson__" onclick="setCategory(this, '__lesson__')">🧑‍🏫 레슨/과외</div>
+  <!-- 단일 필터 바 -->
+  <div class="filter-bar">
+    <button class="filter-drop-btn" id="flt-cat-btn" onclick="toggleFilterSheet('cat')">업종 ▾</button>
+    <button class="filter-drop-btn" id="flt-type-btn" onclick="toggleFilterSheet('type')">형태 ▾</button>
+    <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)" style="flex-shrink:0">ASAP</div>
+    <div style="margin-left:auto;display:flex;gap:5px;flex-shrink:0">
+      <div class="chip" id="chip-sort-btn" onclick="toggleSort()" style="padding:6px 10px">↕ 거리순</div>
+      <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px">필터</div>
     </div>
   </div>
-  <!-- 형태 필터 -->
-  <div class="filter-row-labeled">
-    <span class="filter-type-lbl">형태</span>
-    <div class="filter-lbl-divider"></div>
-    <div class="filter-chips-scroll">
-      <div class="chip" id="chip-dday"     onclick="toggleDday(this)">D-DAY</div>
-      <div class="chip" data-cat="__regular__" onclick="setCategory(this,'__regular__')">정기</div>
-      <div class="chip" data-cat="__short__"   onclick="setCategory(this,'__short__')">단기</div>
-      <div class="chip" data-cat="__spot__"    onclick="setCategory(this,'__spot__')">스팟</div>
-      <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)">ASAP</div>
+  <!-- 업종 드롭다운 시트 -->
+  <div class="filter-sheet" id="filter-sheet-cat">
+    <div id="filter-row" style="display:contents">
+      <div class="chip active" data-cat="" onclick="setCategory(this,'');closeFilterSheet()">전체</div>
+      <div class="chip" data-cat="F&B"         onclick="setCategory(this,'F&B');closeFilterSheet()">F&B</div>
+      <div class="chip" data-cat="물류"         onclick="setCategory(this,'물류');closeFilterSheet()">운송/물류</div>
+      <div class="chip" data-cat="판매"         onclick="setCategory(this,'판매');closeFilterSheet()">판매</div>
+      <div class="chip" data-cat="청소"         onclick="setCategory(this,'청소');closeFilterSheet()">청소</div>
+      <div class="chip" data-cat="이벤트"       onclick="setCategory(this,'이벤트');closeFilterSheet()">이벤트</div>
+      <div class="chip" data-cat="커플알바"     onclick="setCategory(this,'커플알바');closeFilterSheet()">커플알바</div>
+      <div class="chip" data-cat="컨텐츠"       onclick="setCategory(this,'컨텐츠');closeFilterSheet()">촬영/컨텐츠</div>
+      <div class="chip" data-cat="챌린지"       onclick="setCategory(this,'챌린지');closeFilterSheet()">챌린지</div>
+      <div class="chip" data-cat="이사도우미"   onclick="setCategory(this,'이사도우미');closeFilterSheet()">🚚이사</div>
+      <div class="chip" data-cat="운반/짐 이동" onclick="setCategory(this,'운반/짐 이동');closeFilterSheet()">📦운반</div>
+      <div class="chip" data-cat="퀵배달"       onclick="setCategory(this,'퀵배달');closeFilterSheet()">🛵퀵</div>
+      <div class="chip" data-cat="청소 대행"    onclick="setCategory(this,'청소 대행');closeFilterSheet()">🧹청소대행</div>
+      <div class="chip" data-cat="__errand__"   onclick="setCategory(this,'__errand__');closeFilterSheet()">심부름</div>
+      <div class="chip" data-cat="__lesson__"   onclick="setCategory(this,'__lesson__');closeFilterSheet()">🧑‍🏫 레슨/과외</div>
     </div>
-    <div class="filter-actions">
-      <div class="chip" id="chip-sort-btn" onclick="toggleSort()">↕ 거리순</div>
-      <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()">필터</div>
-    </div>
+  </div>
+  <!-- 형태 드롭다운 시트 -->
+  <div class="filter-sheet" id="filter-sheet-type">
+    <div class="chip" id="chip-dday"        onclick="toggleDday(this);closeFilterSheet()">D-DAY</div>
+    <div class="chip" data-cat="__regular__" onclick="setCategory(this,'__regular__');closeFilterSheet()">정기</div>
+    <div class="chip" data-cat="__short__"   onclick="setCategory(this,'__short__');closeFilterSheet()">단기</div>
+    <div class="chip" data-cat="__spot__"    onclick="setCategory(this,'__spot__');closeFilterSheet()">스팟</div>
   </div>
 </div>
 
@@ -4397,6 +4389,43 @@ function setMyLocationMarker(latlng) {
 }
 
 // ── 필터 ─────────────────────────────────────────────────
+let _activeFilterSheet = null;
+function toggleFilterSheet(type) {
+  const catSheet  = document.getElementById('filter-sheet-cat');
+  const typeSheet = document.getElementById('filter-sheet-type');
+  const catBtn    = document.getElementById('flt-cat-btn');
+  const typeBtn   = document.getElementById('flt-type-btn');
+  const isAlreadyOpen = _activeFilterSheet === type;
+  catSheet.classList.remove('open');  typeSheet.classList.remove('open');
+  catBtn.classList.remove('open');    typeBtn.classList.remove('open');
+  if (!isAlreadyOpen) {
+    (type === 'cat' ? catSheet : typeSheet).classList.add('open');
+    (type === 'cat' ? catBtn  : typeBtn).classList.add('open');
+    _activeFilterSheet = type;
+  } else { _activeFilterSheet = null; }
+}
+function closeFilterSheet() {
+  document.getElementById('filter-sheet-cat')?.classList.remove('open');
+  document.getElementById('filter-sheet-type')?.classList.remove('open');
+  document.getElementById('flt-cat-btn')?.classList.remove('open');
+  document.getElementById('flt-type-btn')?.classList.remove('open');
+  _activeFilterSheet = null;
+}
+function _updateFilterBtn(type, label) {
+  const catLabels = {'F&B':'F&B','물류':'운송/물류','판매':'판매','청소':'청소','이벤트':'이벤트','커플알바':'커플알바','컨텐츠':'촬영','챌린지':'챌린지','이사도우미':'이사','운반/짐 이동':'운반','퀵배달':'퀵','청소 대행':'청소대행','__errand__':'심부름','__lesson__':'레슨/과외'};
+  const typeLabels = {'__regular__':'정기','__short__':'단기','__spot__':'스팟'};
+  const btn = document.getElementById(type === 'cat' ? 'flt-cat-btn' : 'flt-type-btn');
+  if (!btn) return;
+  if (!label) {
+    btn.textContent = (type === 'cat' ? '업종' : '형태') + ' ▾';
+    btn.classList.remove('sel');
+  } else {
+    const name = type === 'cat' ? (catLabels[label] || label) : (typeLabels[label] || label);
+    btn.textContent = name + ' ✓';
+    btn.classList.add('sel');
+  }
+}
+
 function setCategory(el, cat) {
   if (cat === '__lesson__') {
     document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
@@ -4420,8 +4449,15 @@ function setCategory(el, cat) {
 
   document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  if (newWT) { currentCategory = ''; currentWorkType = newWT; }
-  else { currentCategory = cat; currentWorkType = ''; }
+  if (newWT) {
+    currentCategory = ''; currentWorkType = newWT;
+    _updateFilterBtn('type', newWT);
+    _updateFilterBtn('cat', '');
+  } else {
+    currentCategory = cat; currentWorkType = '';
+    _updateFilterBtn('cat', cat);
+    _updateFilterBtn('type', '');
+  }
   loadJobs();
 }
 
