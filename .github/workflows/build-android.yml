@@ -45,19 +45,17 @@ jobs:
             -keypass baroalba2026 \
             -dname "CN=MultiMOVE, OU=바로알바, O=MultiMOVE Co Ltd, L=Seoul, ST=Seoul, C=KR"
 
-      - name: Setup Gradle wrapper
+      - name: Setup Gradle
         working-directory: android
         run: |
           curl -L https://services.gradle.org/distributions/gradle-8.4-bin.zip -o gradle.zip
           unzip -q gradle.zip
-          ./gradle-8.4/bin/gradle wrapper
-          chmod +x gradlew
 
       - name: Build AAB
         working-directory: android
         env:
           KEY_PASSWORD: baroalba2026
-        run: ./gradlew bundleRelease --no-daemon
+        run: ./gradle-8.4/bin/gradle bundleRelease --no-daemon --stacktrace
 
       - name: Print SHA-256 fingerprint
         run: |
