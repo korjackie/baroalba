@@ -23,6 +23,7 @@ jobs:
 
       - name: Generate launcher icons
         run: |
+          sudo apt-get install -y imagemagick
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
           mkdir -p android/app/src/main/res/mipmap-xhdpi
