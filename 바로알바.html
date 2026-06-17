@@ -1159,29 +1159,29 @@
   <!-- 업종 드롭다운 시트 -->
   <div class="filter-sheet" id="filter-sheet-cat">
     <div id="filter-row" style="display:contents">
-      <div class="chip active" data-cat="" onclick="setCategory(this,'');closeFilterSheet()">전체</div>
-      <div class="chip" data-cat="F&B"         onclick="setCategory(this,'F&B');closeFilterSheet()">F&B</div>
-      <div class="chip" data-cat="물류"         onclick="setCategory(this,'물류');closeFilterSheet()">운송/물류</div>
-      <div class="chip" data-cat="판매"         onclick="setCategory(this,'판매');closeFilterSheet()">판매</div>
-      <div class="chip" data-cat="청소"         onclick="setCategory(this,'청소');closeFilterSheet()">청소</div>
-      <div class="chip" data-cat="이벤트"       onclick="setCategory(this,'이벤트');closeFilterSheet()">이벤트</div>
-      <div class="chip" data-cat="커플알바"     onclick="setCategory(this,'커플알바');closeFilterSheet()">커플알바</div>
-      <div class="chip" data-cat="컨텐츠"       onclick="setCategory(this,'컨텐츠');closeFilterSheet()">촬영/컨텐츠</div>
-      <div class="chip" data-cat="챌린지"       onclick="setCategory(this,'챌린지');closeFilterSheet()">챌린지</div>
-      <div class="chip" data-cat="이사도우미"   onclick="setCategory(this,'이사도우미');closeFilterSheet()">🚚이사</div>
-      <div class="chip" data-cat="운반/짐 이동" onclick="setCategory(this,'운반/짐 이동');closeFilterSheet()">📦운반</div>
-      <div class="chip" data-cat="퀵배달"       onclick="setCategory(this,'퀵배달');closeFilterSheet()">🛵퀵</div>
-      <div class="chip" data-cat="청소 대행"    onclick="setCategory(this,'청소 대행');closeFilterSheet()">🧹청소대행</div>
-      <div class="chip" data-cat="__errand__"   onclick="setCategory(this,'__errand__');closeFilterSheet()">심부름</div>
-      <div class="chip" data-cat="__lesson__"   onclick="setCategory(this,'__lesson__');closeFilterSheet()">🧑‍🏫 레슨/과외</div>
+      <div class="chip active" data-cat="" onclick="toggleCategoryChip(this,'')">전체</div>
+      <div class="chip" data-cat="F&B"         onclick="toggleCategoryChip(this,'F&B')">F&B</div>
+      <div class="chip" data-cat="물류"         onclick="toggleCategoryChip(this,'물류')">운송/물류</div>
+      <div class="chip" data-cat="판매"         onclick="toggleCategoryChip(this,'판매')">판매</div>
+      <div class="chip" data-cat="청소"         onclick="toggleCategoryChip(this,'청소')">청소</div>
+      <div class="chip" data-cat="이벤트"       onclick="toggleCategoryChip(this,'이벤트')">이벤트</div>
+      <div class="chip" data-cat="커플알바"     onclick="toggleCategoryChip(this,'커플알바')">커플알바</div>
+      <div class="chip" data-cat="컨텐츠"       onclick="toggleCategoryChip(this,'컨텐츠')">촬영/컨텐츠</div>
+      <div class="chip" data-cat="챌린지"       onclick="toggleCategoryChip(this,'챌린지')">챌린지</div>
+      <div class="chip" data-cat="이사도우미"   onclick="toggleCategoryChip(this,'이사도우미')">🚚이사</div>
+      <div class="chip" data-cat="운반/짐 이동" onclick="toggleCategoryChip(this,'운반/짐 이동')">📦운반</div>
+      <div class="chip" data-cat="퀵배달"       onclick="toggleCategoryChip(this,'퀵배달')">🛵퀵</div>
+      <div class="chip" data-cat="청소 대행"    onclick="toggleCategoryChip(this,'청소 대행')">🧹청소대행</div>
+      <div class="chip" data-cat="__errand__"   onclick="toggleCategoryChip(this,'__errand__')">심부름</div>
+      <div class="chip" data-cat="__lesson__"   onclick="toggleCategoryChip(this,'__lesson__')">🧑‍🏫 레슨/과외</div>
     </div>
   </div>
-  <!-- 형태 드롭다운 시트 -->
+  <!-- 형태 드롭다운 시트 (복수 선택) -->
   <div class="filter-sheet" id="filter-sheet-type">
-    <div class="chip" id="chip-dday"        onclick="toggleDday(this);closeFilterSheet()">D-DAY</div>
-    <div class="chip" data-cat="__regular__" onclick="setCategory(this,'__regular__');closeFilterSheet()">정기</div>
-    <div class="chip" data-cat="__short__"   onclick="setCategory(this,'__short__');closeFilterSheet()">단기</div>
-    <div class="chip" data-cat="__spot__"    onclick="setCategory(this,'__spot__');closeFilterSheet()">스팟</div>
+    <div class="chip" id="chip-dday"         onclick="toggleDday(this)">D-DAY</div>
+    <div class="chip" data-cat="__regular__" onclick="toggleWorkTypeChip(this,'__regular__')">정기</div>
+    <div class="chip" data-cat="__short__"   onclick="toggleWorkTypeChip(this,'__short__')">단기</div>
+    <div class="chip" data-cat="__spot__"    onclick="toggleWorkTypeChip(this,'__spot__')">스팟</div>
   </div>
 </div>
 
@@ -3004,8 +3004,11 @@ function saveMapCenter(lat, lng) {
   localStorage.setItem('mapCenter', JSON.stringify(mapCenter));
 }
 let currentRadius = APP_CONFIG.DEFAULT_RADIUS_M;
-let currentCategory = '';
-let currentWorkType = '';
+let currentCategory = '';   // 하위 호환용 (레거시)
+let currentWorkType = '';   // 하위 호환용 (레거시)
+let selectedCategories = new Set();  // 업종 복수 선택
+let selectedWorkTypes  = new Set();  // 형태 복수 선택 (regular/short/spot/errand)
+let includeLesson = false;           // 레슨/과외 마커 포함
 let urgentOnly = false;
 let sortByWage = false;
 let sortMode = 'dist'; // dist|wage_desc|wage_asc|date_asc|date_desc
@@ -3212,7 +3215,7 @@ async function loadJobs() {
       user_lat: mapCenter.lat,
       user_lng: mapCenter.lng,
       radius_meters: currentRadius,
-      job_category: currentCategory || null
+      job_category: selectedCategories.size === 1 ? [...selectedCategories][0] : null
     });
     if (error) throw error;
 
@@ -3239,10 +3242,15 @@ async function loadJobs() {
     const todayStr = new Date().toISOString().slice(0, 10);
     result = result.filter(j => !j.work_end_date || j.work_end_date >= todayStr);
 
-    if (currentWorkType === 'errand')        result = result.filter(j => j.work_type === 'errand');
-    else if (currentWorkType === 'regular') result = result.filter(j => j.work_type === 'regular');
-    else if (currentWorkType === 'short')   result = result.filter(j => j.work_type === 'short');
-    else if (currentWorkType === 'spot')    result = result.filter(j => !j.work_type || j.work_type === 'spot');
+    // 복수 카테고리 클라이언트 필터 (2개 이상 선택 시)
+    if (selectedCategories.size > 1) result = result.filter(j => selectedCategories.has(j.category));
+    // 형태 복수 필터
+    if (selectedWorkTypes.size > 0) {
+      result = result.filter(j => {
+        if (selectedWorkTypes.has('spot'))    return !j.work_type || j.work_type === 'spot';
+        return selectedWorkTypes.has(j.work_type);
+      });
+    }
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
     if      (sortMode === 'wage_desc') result.sort((a,b) => b.current_wage - a.current_wage);
     else if (sortMode === 'wage_asc')  result.sort((a,b) => a.current_wage - b.current_wage);
@@ -4389,6 +4397,68 @@ function setMyLocationMarker(latlng) {
 }
 
 // ── 필터 ─────────────────────────────────────────────────
+// ── 복수 필터 선택 ─────────────────────────────────────────
+const _CAT_LABEL = {'F&B':'F&B','물류':'운송/물류','판매':'판매','청소':'청소','이벤트':'이벤트','커플알바':'커플알바','컨텐츠':'촬영','챌린지':'챌린지','이사도우미':'이사','운반/짐 이동':'운반','퀵배달':'퀵','청소 대행':'청소대행','__errand__':'심부름'};
+const _TYPE_LABEL = {'regular':'정기','short':'단기','spot':'스팟','errand':'심부름'};
+const _WT_MAP = {'__regular__':'regular','__short__':'short','__spot__':'spot','__errand__':'errand'};
+
+function _syncCatBtn() {
+  const btn = document.getElementById('flt-cat-btn');
+  if (!btn) return;
+  const total = selectedCategories.size + (includeLesson ? 1 : 0);
+  if (total === 0) { btn.textContent = '업종 ▾'; btn.classList.remove('sel'); }
+  else if (total === 1) {
+    const cat = includeLesson && !selectedCategories.size ? '레슨/과외' : (_CAT_LABEL[[...selectedCategories][0]] || [...selectedCategories][0]);
+    btn.textContent = cat + ' ✓'; btn.classList.add('sel');
+  } else { btn.textContent = `업종 ${total}개 ✓`; btn.classList.add('sel'); }
+}
+function _syncTypeBtn() {
+  const btn = document.getElementById('flt-type-btn');
+  if (!btn) return;
+  const dday = document.getElementById('chip-dday')?.classList.contains('active');
+  const total = selectedWorkTypes.size + (dday ? 1 : 0);
+  if (total === 0) { btn.textContent = '형태 ▾'; btn.classList.remove('sel'); }
+  else if (total === 1) {
+    const lbl = dday && !selectedWorkTypes.size ? 'D-DAY' : (_TYPE_LABEL[[...selectedWorkTypes][0]] || '형태');
+    btn.textContent = lbl + ' ✓'; btn.classList.add('sel');
+  } else { btn.textContent = `형태 ${total}개 ✓`; btn.classList.add('sel'); }
+}
+
+function toggleCategoryChip(el, cat) {
+  // 전체 리셋
+  if (cat === '') {
+    selectedCategories.clear(); includeLesson = false;
+    document.querySelectorAll('#filter-sheet-cat .chip[data-cat]').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    _clearLessonOverlays();
+    _syncCatBtn(); loadJobs(); return;
+  }
+  // 레슨/과외 → 마커 토글 (패널 없이)
+  if (cat === '__lesson__') {
+    includeLesson = !includeLesson;
+    el.classList.toggle('active', includeLesson);
+    document.querySelector('#filter-sheet-cat .chip[data-cat=""]')?.classList.remove('active');
+    if (includeLesson) { loadLessons(); } else { _clearLessonOverlays(); }
+    _syncCatBtn(); return;
+  }
+  // 일반 업종 토글
+  if (selectedCategories.has(cat)) selectedCategories.delete(cat);
+  else selectedCategories.add(cat);
+  el.classList.toggle('active', selectedCategories.has(cat));
+  // 아무것도 선택 안 됐으면 전체 활성화
+  const hasAny = selectedCategories.size > 0 || includeLesson;
+  document.querySelector('#filter-sheet-cat .chip[data-cat=""]')?.classList.toggle('active', !hasAny);
+  _syncCatBtn(); loadJobs();
+}
+
+function toggleWorkTypeChip(el, raw) {
+  const wt = _WT_MAP[raw] || raw;
+  if (selectedWorkTypes.has(wt)) selectedWorkTypes.delete(wt);
+  else selectedWorkTypes.add(wt);
+  el.classList.toggle('active', selectedWorkTypes.has(wt));
+  _syncTypeBtn(); loadJobs();
+}
+
 let _activeFilterSheet = null;
 function toggleFilterSheet(type) {
   const catSheet  = document.getElementById('filter-sheet-cat');
@@ -4472,6 +4542,7 @@ function toggleDday(el) {
   el.classList.toggle('active', dateFilter === 'today');
   const advChip = document.getElementById('chip-adv-filter');
   if (advChip) { const a = minWageFilter > 10000 || dateFilter || timeFilter; advChip.classList.toggle('active', a); advChip.textContent = a ? '필터●' : '필터'; }
+  _syncTypeBtn();
   loadJobs();
 }
 
