@@ -599,6 +599,11 @@ const _isNaverCallback = _hashParams.has('access_token') &&
 // Supabase 에러 리다이렉트 감지 (만료된 재설정 링크 등)
 const _hashError = _hashParams.get('error');
 const _hashErrorCode = _hashParams.get('error_code');
+// 이 탭이 이메일 재설정 링크로 직접 열린 탭인지 감지
+const _isRecoveryLink = _hashParams.get('type') === 'recovery' || _hadCodeParam;
+if (_isRecoveryLink) {
+  try { sessionStorage.setItem('baroalba_this_tab_is_reset', '1'); } catch(e) {}
+}
 
 // ── Supabase 초기화 ────────────────────────────────────────
 const { createClient } = supabase;
@@ -620,9 +625,22 @@ db.auth.onAuthStateChange(async (event, session) => {
   // 비밀번호 재설정 이벤트 — implicit(hash) 및 PKCE(?code=) 양쪽 모두 처리
   if (event === 'PASSWORD_RECOVERY' && session) {
     _inPasswordRecovery = true;
-    const show = () => showInlineResetForm();
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
-    else show();
+    const isEmailTab = !!sessionStorage.getItem('baroalba_this_tab_is_reset');
+    const hasOriginalTab = !!localStorage.getItem('baroalba_reset_initiated');
+    if (isEmailTab && hasOriginalTab) {
+      // 이메일 링크로 열린 새 탭 + 원래 탭이 존재 → 원래 탭에 신호, 이 탭은 로그인 화면으로
+      try { localStorage.setItem('baroalba_recovery_ready', Date.now().toString()); } catch(x) {}
+      history.replaceState({}, '', window.location.pathname);
+      const show = () => { hideLoading(); showLoginScreen(); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+      else show();
+    } else if (isEmailTab) {
+      // 이메일 링크로 열린 탭이지만 원래 탭 없음 (다른 기기 or 탭 닫힌 경우) → 이 탭에 폼 표시
+      const show = () => showInlineResetForm();
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+      else show();
+    }
+    // 크로스탭 브로드캐스트(원래 탭) → storage 리스너가 별도 처리
     return;
   }
 
@@ -663,6 +681,18 @@ db.auth.onAuthStateChange(async (event, session) => {
     }
     showLoading('앱으로 이동 중...');
     goToApp();
+  }
+});
+
+// 원래 탭: 이메일 탭이 baroalba_recovery_ready를 설정하면 재설정 폼 표시
+window.addEventListener('storage', (e) => {
+  if (e.key === 'baroalba_recovery_ready' && e.newValue) {
+    try { localStorage.removeItem('baroalba_recovery_ready'); } catch(x) {}
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', showInlineResetForm);
+    } else {
+      showInlineResetForm();
+    }
   }
 });
 
@@ -984,6 +1014,7 @@ async function sendPasswordReset() {
     result.textContent = '오류: ' + error.message;
     result.style.color = '#EF4444';
   } else {
+    try { localStorage.setItem('baroalba_reset_initiated', Date.now().toString()); } catch(x) {}
     result.textContent = '✅ 재설정 링크를 이메일로 보냈습니다. 링크를 클릭하면 이 화면에서 바로 비밀번호를 재설정할 수 있습니다.';
     result.style.color = '#16a34a';
   }
@@ -1010,7 +1041,8 @@ async function doInlineReset() {
   const { error } = await db.auth.updateUser({ password: pw1 });
   if (error) { showMsg('오류: ' + error.message, '#EF4444'); btn.disabled = false; btn.textContent = '비밀번호 변경'; return; }
   await db.auth.signOut();
-  ['baroalba_reset_initiated','baroalba_reset_session_ready','baroalba_reset_handled'].forEach(k => localStorage.removeItem(k));
+  ['baroalba_reset_initiated','baroalba_reset_session_ready','baroalba_reset_handled','baroalba_recovery_ready'].forEach(k => localStorage.removeItem(k));
+  try { sessionStorage.removeItem('baroalba_this_tab_is_reset'); } catch(x) {}
   showMsg('✅ 비밀번호가 변경됐습니다!', '#16a34a');
   btn.style.display = 'none';
   setTimeout(() => { document.getElementById('screen-inline-reset').style.display = 'none'; showLoginScreen(); }, 1500);
