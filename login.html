@@ -860,8 +860,11 @@ async function submitNewPassword() {
     errEl.textContent = '오류: ' + error.message;
     errEl.style.display = 'block';
   } else {
-    showLoading('완료! 앱으로 이동 중...');
-    goToApp();
+    await db.auth.signOut();
+    _pwRecoveryMode = false;
+    document.getElementById('screen-pw-reset').style.display = 'none';
+    showLoginScreen();
+    setTimeout(() => alert('✅ 비밀번호가 변경됐습니다. 새 비밀번호로 로그인해주세요.'), 100);
   }
 }
 
