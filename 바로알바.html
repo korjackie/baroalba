@@ -1150,7 +1150,7 @@
     .booking-day-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
 
 </style>
-  <script src="https://js.tosspayments.com/v2/standard"></script>
+  <script src="https://js.tosspayments.com/v1"></script>
 </head>
 <body>
 
@@ -12080,8 +12080,23 @@ const PLAN_INFO = {
   basic: { name: '베이직 플랜', amount: '₩9,900/월',  monthly: 9900 },
   pro:   { name: '프로 플랜',   amount: '₩29,900/월', monthly: 29900 },
 };
-const TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW';
-let _tossWidgets = null;
+const TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW'; // API 개별 연동 키 (v1 SDK용)
+let _selectedPayMethod = '카드';
+
+function onPayMethodChange() {
+  const checked = document.querySelector('input[name="pay-method"]:checked');
+  if (checked) _selectedPayMethod = checked.value;
+  // 선택된 항목 테두리 강조
+  ['card','transfer','kakaopay','tosspay'].forEach(id => {
+    const wrap = document.getElementById('pay-method-' + id + '-wrap');
+    if (wrap) wrap.style.borderColor = '#e5e7eb';
+  });
+  if (checked) {
+    const map = { '카드':'card', '계좌이체':'transfer', '카카오페이':'kakaopay', '토스페이':'tosspay' };
+    const wrap = document.getElementById('pay-method-' + map[checked.value] + '-wrap');
+    if (wrap) wrap.style.borderColor = '#C8102E';
+  }
+}
 
 const PLAN_DETAILS = {
   basic: {
@@ -12178,56 +12193,38 @@ async function selectPlan(plan) {
   if (plan === 'free') { showToast('무료 플랜은 언제든 해지 시 자동 전환됩니다'); return; }
   if (!currentUser) { showLoginPrompt('로그인이 필요해요', '플랜 구독은 로그인 후 이용 가능합니다.'); return; }
   _selectedPlan = plan;
+  _selectedPayMethod = '카드';
   const info = PLAN_INFO[plan];
   document.getElementById('pay-title').textContent = info.name + ' 구독';
   document.getElementById('pay-plan-name').textContent = info.name;
   document.getElementById('pay-amount').textContent = info.amount;
   renderPlanDetails(plan);
-  document.getElementById('pay-widget-error').style.display = 'none';
-  document.getElementById('payment-method').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">결제 수단 불러오는 중...</div>';
-  document.getElementById('agreement').innerHTML = '';
-  const btn = document.getElementById('payment-confirm-btn');
-  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.textContent = '결제 수단 로드 중...'; }
+  // 결제수단 초기화 (카드 기본 선택)
+  const cardRadio = document.querySelector('input[name="pay-method"][value="카드"]');
+  if (cardRadio) { cardRadio.checked = true; onPayMethodChange(); }
   document.getElementById('payment-overlay').style.display = 'block';
-  try {
-    if (typeof TossPayments === 'undefined') throw new Error('토스 SDK가 로드되지 않았습니다. 페이지를 새로고침 해주세요.');
-    const tp = TossPayments(TOSS_CLIENT_KEY);
-    _tossWidgets = tp.widgets({ customerKey: `baro-${currentUser.id}` });
-    await _tossWidgets.setAmount({ currency: 'KRW', value: info.monthly });
-    await Promise.all([
-      _tossWidgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
-      _tossWidgets.renderAgreement({ selector: '#agreement', variantKey: 'AGREEMENT' }),
-    ]);
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '결제하기'; }
-  } catch (e) {
-    console.error('Toss widget error:', e);
-    document.getElementById('payment-method').innerHTML = '';
-    document.getElementById('pay-widget-error').style.display = 'block';
-    document.getElementById('pay-widget-error').textContent = '결제 위젯 오류: ' + e.message;
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '결제하기'; }
-    _tossWidgets = null;
-  }
 }
 
 function closePayment() {
   document.getElementById('payment-overlay').style.display = 'none';
-  _tossWidgets = null;
   _selectedPlan = null;
 }
 
 async function requestTossPayment() {
-  if (!_tossWidgets) { showToast('결제 수단을 선택해주세요'); return; }
   if (!_selectedPlan) return;
+  if (typeof TossPayments === 'undefined') { showToast('결제 모듈 로드 실패. 페이지를 새로고침 해주세요.'); return; }
   const btn = document.getElementById('payment-confirm-btn');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
   const info = PLAN_INFO[_selectedPlan];
   const orderId = `baro-${_selectedPlan}-${Date.now()}`;
   const base = window.location.origin + window.location.pathname;
   try {
-    await _tossWidgets.requestPayment({
+    const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+    await tossPayments.requestPayment(_selectedPayMethod, {
+      amount: info.monthly,
       orderId,
       orderName: info.name + ' 월 구독',
-      successUrl: `${base}?payment=success&orderId=${orderId}&plan=${_selectedPlan}`,
+      successUrl: `${base}?payment=success&orderId=${orderId}&plan=${_selectedPlan}&amount=${info.monthly}`,
       failUrl: `${base}?payment=fail`,
       customerEmail: currentUser.email || '',
       customerName: currentUser.user_metadata?.full_name || '사업주',
@@ -12761,16 +12758,30 @@ async function deleteBizPhoto(photoId) {
       · 환불: 미사용 시 7일 이내 고객센터 문의 (jackie@multimove.co.kr)
     </div>
 
-    <!-- 위젯 오류 안내 -->
-    <div id="pay-widget-error" style="display:none;padding:14px;background:#fff0f0;border-radius:10px;border:1px solid #fca5a5;margin-bottom:16px;font-size:12px;color:#991b1b;text-align:center">
-      결제 위젯을 불러오지 못했습니다.<br>잠시 후 다시 시도하거나 고객센터로 문의해주세요.
+    <!-- 결제 수단 선택 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:10px">결제 수단 선택</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:border-color 0.2s" id="pay-method-card-wrap">
+          <input type="radio" name="pay-method" value="카드" onchange="onPayMethodChange()" checked style="accent-color:#C8102E;width:16px;height:16px">
+          <span style="font-size:13px;font-weight:700;color:#222">💳 신용·체크카드</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer" id="pay-method-transfer-wrap">
+          <input type="radio" name="pay-method" value="계좌이체" onchange="onPayMethodChange()" style="accent-color:#C8102E;width:16px;height:16px">
+          <span style="font-size:13px;font-weight:700;color:#222">🏦 계좌이체</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer" id="pay-method-kakaopay-wrap">
+          <input type="radio" name="pay-method" value="카카오페이" onchange="onPayMethodChange()" style="accent-color:#C8102E;width:16px;height:16px">
+          <span style="font-size:13px;font-weight:700;color:#222">🟡 카카오페이</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer" id="pay-method-tosspay-wrap">
+          <input type="radio" name="pay-method" value="토스페이" onchange="onPayMethodChange()" style="accent-color:#C8102E;width:16px;height:16px">
+          <span style="font-size:13px;font-weight:700;color:#222">🔵 토스페이</span>
+        </label>
+      </div>
     </div>
 
-    <!-- 토스 결제 위젯 -->
-    <div id="payment-method"></div>
-    <div id="agreement" style="margin-top:10px"></div>
-
-    <button id="payment-confirm-btn" onclick="requestTossPayment()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;margin-top:20px">결제하기</button>
+    <button id="payment-confirm-btn" onclick="requestTossPayment()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">결제하기</button>
   </div>
 </div>
 </body>
