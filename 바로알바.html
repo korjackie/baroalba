@@ -1000,6 +1000,17 @@
     .same-day-wrap { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#F0FDF4; border:1.5px solid #BBF7D0; border-radius:14px; cursor:pointer; }
     .same-day-track { width:44px; height:24px; background:#ddd; border-radius:12px; position:relative; transition:background 0.2s; flex-shrink:0; }
     .same-day-knob  { position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:left 0.2s; }
+    /* ── 노쇼 보증금 ── */
+    .deposit-wrap { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#FFF1F2; border:1.5px solid #FECDD3; border-radius:14px; cursor:pointer; }
+    .deposit-track { width:44px; height:24px; background:#ddd; border-radius:12px; position:relative; transition:background 0.2s; flex-shrink:0; }
+    .deposit-knob  { position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:left 0.2s; }
+    .deposit-amt-btn { padding:7px 14px; background:#fff; border:1.5px solid #ddd; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; color:#555; transition:all 0.15s; }
+    .deposit-amt-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
+    /* ── 채팅 스와이프 나가기 ── */
+    .chat-swipe-wrap { position:relative; overflow:hidden; border-radius:16px; margin-bottom:8px; }
+    .chat-swipe-inner { background:#fff; border-radius:16px; padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:transform 0.25s ease; box-shadow:0 1px 6px rgba(0,0,0,0.05); touch-action:pan-y; }
+    .chat-swipe-inner.revealed { transform:translateX(-72px); border-radius:16px 0 0 16px; }
+    .chat-leave-btn { position:absolute; right:0; top:0; bottom:0; width:72px; background:#ef4444; color:#fff; border:none; font-size:12px; font-weight:800; cursor:pointer; border-radius:0 16px 16px 0; }
 
     /* ── 하단 내비 ── */
     .owner-nav-badge { position:absolute; top:4px; right:calc(50% - 18px); min-width:16px; height:16px; padding:0 4px; background:var(--red); color:#fff; border-radius:8px; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; line-height:1; }
@@ -1534,6 +1545,10 @@
     <!-- 당일정산 배지 -->
     <div id="d-same-day" style="display:none;margin:0 20px 12px">
       <span style="display:inline-flex;align-items:center;gap:6px;background:#F0FDF4;color:#16a34a;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px">&#128180; 당일정산 — 근무 당일 현금 지급</span>
+    </div>
+    <!-- 노쇼 보증금 배지 -->
+    <div id="d-deposit" style="display:none;margin:0 20px 12px">
+      <span id="d-deposit-badge" style="display:inline-flex;align-items:center;gap:6px;background:#FFF1F2;color:#C8102E;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px">&#128737; 노쇼 보증금</span>
     </div>
 
     <div style="display:flex;gap:10px;margin:0 20px">
@@ -2349,10 +2364,17 @@
       <button onclick="closeCommunityPost()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;flex-shrink:0">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:0 20px" id="comm-post-body"></div>
-    <div style="padding:12px 16px;border-top:1px solid #f0f0f0;display:flex;gap:8px;flex-shrink:0;background:#fff">
-      <input id="comm-comment-input" placeholder="댓글 입력..." maxlength="200"
-        style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:13px;outline:none;font-family:inherit">
-      <button onclick="submitCommunityComment()" style="padding:10px 16px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer">등록</button>
+    <div style="border-top:1px solid #f0f0f0;background:#fff;flex-shrink:0">
+      <div style="padding:6px 16px 0;display:flex;align-items:center">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:#888;user-select:none">
+          <input type="checkbox" id="comm-comment-anon" style="width:14px;height:14px;accent-color:var(--red)"> 익명으로 작성
+        </label>
+      </div>
+      <div style="padding:8px 16px 12px;display:flex;gap:8px">
+        <input id="comm-comment-input" placeholder="댓글 입력..." maxlength="200"
+          style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:13px;outline:none;font-family:inherit">
+        <button onclick="submitCommunityComment()" style="padding:10px 16px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:13px;font-weight:700;cursor:pointer">등록</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3013,6 +3035,31 @@
         <input type="hidden" id="f-same-day-on" value="false">
       </div>
 
+      <!-- 노쇼 보증금 -->
+      <div class="form-group">
+        <div class="deposit-wrap" onclick="setDeposit(document.getElementById('f-deposit-on').value !== 'true')">
+          <div>
+            <div style="font-size:14px;font-weight:800;color:#C8102E">&#128737; 노쇼 보증금</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">지원자 사전 동의 — 노쇼 시 업주에게 보상</div>
+          </div>
+          <div class="deposit-track" id="deposit-track">
+            <div class="deposit-knob" id="deposit-knob"></div>
+          </div>
+        </div>
+        <input type="hidden" id="f-deposit-on" value="false">
+        <input type="hidden" id="f-deposit-amount" value="0">
+        <div id="deposit-amount-row" style="display:none;margin-top:10px">
+          <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">보증금액 선택</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="deposit-amt-btn" data-amt="5000" onclick="setDepositAmount(5000)">5,000원</button>
+            <button type="button" class="deposit-amt-btn" data-amt="10000" onclick="setDepositAmount(10000)">10,000원</button>
+            <button type="button" class="deposit-amt-btn" data-amt="20000" onclick="setDepositAmount(20000)">20,000원</button>
+            <button type="button" class="deposit-amt-btn" data-amt="30000" onclick="setDepositAmount(30000)">30,000원</button>
+          </div>
+          <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.5">&#128274; 실결제 기능은 준비 중입니다. 현재는 지원자가 동의 후 구두 약속 방식으로 운영됩니다.</div>
+        </div>
+      </div>
+
       <!-- 프리미엄 노출 토글 -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f8;border-radius:12px">
         <div>
@@ -3217,7 +3264,7 @@ async function openDeepLink(jobId) {
       .select(`id, title, category, base_wage, current_wage, status, lat, lng,
                start_time, duration_hours, needed_count, filled_count,
                description, surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
-               work_type, same_day_payment,
+               work_type, same_day_payment, noshow_deposit,
                businesses(name, rating, kindness_rating, review_count)`)
       .eq('id', jobId).single();
     if (!data) { showToast('해당 공고를 찾을 수 없어요' + (dlErr ? ': ' + dlErr.message : '')); return; }
@@ -3589,6 +3636,15 @@ function openDetail(jobId) {
   // 당일정산 배지
   document.getElementById('d-same-day').style.display = job.same_day_payment ? 'block' : 'none';
 
+  // 노쇼 보증금 배지
+  const depositAmt = job.noshow_deposit || 0;
+  if (depositAmt > 0) {
+    document.getElementById('d-deposit-badge').textContent = '\u{1F6E1} 노쇼 보증금 ' + depositAmt.toLocaleString() + '원 — 지원 시 동의';
+    document.getElementById('d-deposit').style.display = 'block';
+  } else {
+    document.getElementById('d-deposit').style.display = 'none';
+  }
+
   // 지원하기 버튼 초기화
   const applyBtn = document.getElementById('d-apply-btn');
   applyBtn.style.background = '';
@@ -3657,6 +3713,14 @@ async function applyJob() {
   }
 
   const btn = document.getElementById('d-apply-btn');
+
+  // 노쇼 보증금 동의 확인
+  const depositEl = document.getElementById('d-deposit');
+  if (depositEl && depositEl.style.display !== 'none') {
+    const depositTxt = document.getElementById('d-deposit-badge')?.textContent || '노쇼 보증금';
+    if (!confirm(depositTxt + '\n\n이 공고는 노쇼 보증금이 설정되어 있습니다.\n지원 시 동의한 것으로 간주됩니다.\n\n계속 지원하시겠어요?')) return;
+  }
+
   btn.textContent = '지원 중...';
   btn.disabled = true;
 
@@ -3714,6 +3778,12 @@ function setupMessageNotifications() {
   _workerGlobalChatSub = db.channel(`worker-${currentUser.id}-notify`)
     .on('broadcast', { event: 'new_msg' }, ({ payload }) => {
       if (!payload || payload.sender_id === currentUser.id) return;
+      // 나간 채팅에서 새 메시지 오면 자동 복원
+      if (payload.application_id) {
+        const hidden = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
+        const idx = hidden.indexOf(payload.application_id);
+        if (idx !== -1) { hidden.splice(idx, 1); localStorage.setItem('baroalba_hidden_chats', JSON.stringify(hidden)); }
+      }
       const chatOpen = document.getElementById('wchat-overlay')?.classList.contains('open');
       if (chatOpen && _wchatAppId === payload.application_id) return;
       const badge = document.getElementById('chat-unread-badge');
@@ -3747,6 +3817,25 @@ async function refreshWorkerChatBadge() {
 
 // ── 채팅 (알바생) ─────────────────────────────────────────
 let _wchatAppId = null, _wchatSub = null;
+
+function _chatItemClick(e, appId, bizName) {
+  // 스와이프 열린 상태면 클릭 흡수 (열린 패널 닫기만)
+  const inner = e.currentTarget;
+  if (inner && inner.classList.contains('revealed')) {
+    inner.classList.remove('revealed');
+    e.stopPropagation();
+    return;
+  }
+  openWChat(appId, bizName);
+}
+
+function leaveChatItem(appId) {
+  const hidden = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
+  if (!hidden.includes(appId)) hidden.push(appId);
+  localStorage.setItem('baroalba_hidden_chats', JSON.stringify(hidden));
+  const wrap = document.getElementById('csw-' + appId);
+  if (wrap) wrap.remove();
+}
 
 async function openWChat(applicationId, bizName) {
   if (!applicationId) { showToast('채팅을 열 수 없습니다 (ID 없음)'); return; }
@@ -4289,7 +4378,8 @@ async function loadMyChatList() {
     else badge.style.display = 'none';
   }
 
-  const chats = apps.filter(a => latestMsg[a.id]);
+  const hiddenChats = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
+  const chats = apps.filter(a => latestMsg[a.id] && !hiddenChats.includes(a.id));
   if (!chats.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원 후 업주와 채팅할 수 있어요</div></div>';
     return;
@@ -4307,22 +4397,62 @@ async function loadMyChatList() {
     const avatarKey = bizName || jobTitle || '업주';
     const ac = avatarColor(avatarKey);
     window._chatBizNames[a.id] = displayName;
-    return `<div onclick="openWChat('${a.id}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
-      <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${avatarKey.charAt(0)}</div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-          <div style="font-size:14px;font-weight:800;color:#222">${displayName}</div>
-          <div style="font-size:11px;color:#bbb">${time}</div>
+    return `<div class="chat-swipe-wrap" id="csw-${a.id}">
+      <div class="chat-swipe-inner" data-app-id="${a.id}" data-biz-name="${displayName}" onclick="_chatItemClick(event,'${a.id}','${displayName}')">
+        <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${avatarKey.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+            <div style="font-size:14px;font-weight:800;color:#222">${displayName}</div>
+            <div style="font-size:11px;color:#bbb">${time}</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
+            ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
+          </div>
+          <div style="font-size:11px;color:#bbb;margin-top:2px">${a.job_postings?.title || ''}</div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
-          ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
-        </div>
-        <div style="font-size:11px;color:#bbb;margin-top:2px">${a.job_postings?.title || ''}</div>
       </div>
+      <button class="chat-leave-btn" onclick="leaveChatItem('${a.id}')">나가기</button>
     </div>`;
   }).join('');
   el.innerHTML = chatRows;
+
+  // 스와이프 이벤트 등록
+  el.querySelectorAll('.chat-swipe-wrap').forEach(wrap => {
+    let sx = 0, sy = 0;
+    wrap.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    wrap.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > Math.abs(dy) * 1.5 && Math.abs(dx) > 36) {
+        const inner = wrap.querySelector('.chat-swipe-inner');
+        // 다른 열린 항목 닫기
+        el.querySelectorAll('.chat-swipe-inner.revealed').forEach(o => { if (o !== inner) o.classList.remove('revealed'); });
+        inner.classList.toggle('revealed', dx < 0);
+      }
+    }, { passive: true });
+  });
+
+  // 롱프레스 이벤트 등록
+  el.querySelectorAll('.chat-swipe-inner').forEach(inner => {
+    let lpTimer;
+    inner.addEventListener('pointerdown', () => {
+      lpTimer = setTimeout(() => {
+        const appId = inner.dataset.appId, name = inner.dataset.bizName;
+        if (confirm('"' + name + '" 채팅방을 나가시겠어요?\n새 메시지가 오면 자동으로 다시 표시됩니다.')) leaveChatItem(appId);
+      }, 600);
+    });
+    inner.addEventListener('pointermove', () => clearTimeout(lpTimer));
+    inner.addEventListener('pointerup', () => clearTimeout(lpTimer));
+    inner.addEventListener('pointercancel', () => clearTimeout(lpTimer));
+  });
+
+  // 외부 클릭 시 모든 스와이프 닫기
+  document.addEventListener('click', function _closeSwipes(e) {
+    if (!e.target.closest('.chat-swipe-wrap')) {
+      el.querySelectorAll('.chat-swipe-inner.revealed').forEach(i => i.classList.remove('revealed'));
+    }
+  }, { once: false, capture: true });
 }
 
 function chatListClick(e) {
@@ -7252,7 +7382,8 @@ async function submitCommunityComment() {
   if (!content) return;
 
   const role = currentUser?.user_metadata?.baroalba_role;
-  const insertData = { post_id: _commCurrentPostId, content, is_anonymous: false };
+  const anonChk = document.getElementById('comm-comment-anon');
+  const insertData = { post_id: _commCurrentPostId, content, is_anonymous: !!(anonChk && anonChk.checked) };
 
   if (role === 'business') {
     const { data: b } = await db.from('businesses').select('id').eq('kakao_uid', currentUser.id).single();
@@ -7267,9 +7398,12 @@ async function submitCommunityComment() {
   const { error } = await db.from('community_comments').insert(insertData);
   if (error) { showToast('댓글 실패: ' + error.message); return; }
 
-  await db.rpc('refresh_comments_count', { p_post_id: _commCurrentPostId });
+  // 댓글수 직접 증가 (RPC 대신)
+  const { data: cur } = await db.from('community_posts').select('comments_count').eq('id', _commCurrentPostId).single();
+  await db.from('community_posts').update({ comments_count: (cur?.comments_count || 0) + 1 }).eq('id', _commCurrentPostId);
 
   input.value = '';
+  if (anonChk) anonChk.checked = false;
   loadCommunityPosts(_commCurrentCat);
   await openCommunityPost(_commCurrentPostId);
 }
@@ -8954,8 +9088,9 @@ function openPostingForm() {
   document.getElementById('surge-knob').style.left = '2px';
   document.getElementById('surge-settings').style.display = 'none';
   document.getElementById('surge-preview').textContent = '';
-  // 당일정산 초기화
+  // 당일정산 + 노쇼보증금 초기화
   setSameDay(false);
+  setDeposit(false);
   renderMyPlacesQuick();
   // 기본 장소가 있으면 자동 적용
   const defaultPlace = _bizPlaces.find(p => p.is_default);
@@ -9047,6 +9182,9 @@ function openEditForm(jobId) {
   }
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
+  const dep = p.noshow_deposit || 0;
+  setDeposit(dep > 0);
+  if (dep > 0) setDepositAmount(dep);
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -9332,6 +9470,7 @@ async function submitPosting() {
     surge_amount:       surgeEnabled ? surgeAmount : null,
     surge_interval_min: surgeEnabled ? surgeInterval : null,
     same_day_payment:   sameDayPayment,
+    noshow_deposit:     document.getElementById('f-deposit-on').value === 'true' ? (parseInt(document.getElementById('f-deposit-amount')?.value) || 0) : 0,
     work_type:          workType,
     work_days:          workDays || null,
     work_end_date:      workType === 'short' ? periodEnd : null,
@@ -9419,6 +9558,22 @@ function setSameDay(val) {
   document.getElementById('f-same-day-on').value = val ? 'true' : 'false';
   document.getElementById('same-day-track').style.background = val ? '#16a34a' : '#ddd';
   document.getElementById('same-day-knob').style.left = val ? '22px' : '2px';
+}
+
+// ── 노쇼 보증금 토글 ─────────────────────────────────────
+function setDeposit(val) {
+  document.getElementById('f-deposit-on').value = val ? 'true' : 'false';
+  document.getElementById('deposit-track').style.background = val ? '#C8102E' : '#ddd';
+  document.getElementById('deposit-knob').style.left = val ? '22px' : '2px';
+  document.getElementById('deposit-amount-row').style.display = val ? 'block' : 'none';
+  if (val) {
+    const cur = parseInt(document.getElementById('f-deposit-amount')?.value) || 0;
+    if (!cur) setDepositAmount(10000);
+  }
+}
+function setDepositAmount(amt) {
+  document.querySelectorAll('.deposit-amt-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.amt) === amt));
+  document.getElementById('f-deposit-amount').value = amt;
 }
 
 // ── 공고 복사 재등록 ──────────────────────────────────────
