@@ -559,7 +559,8 @@
 
 <script>
 // ── 잔여 쿼리파라미터 정리 (auth_type=reprompt 등 Naver가 반환한 쿼리 제거) ──
-if (window.location.search) {
+// Supabase PKCE code= 는 제거하지 않음 (제거하면 복구/OAuth 처리 불가)
+if (window.location.search && !window.location.search.includes('code=')) {
   history.replaceState({}, '', window.location.pathname + window.location.hash);
 }
 
