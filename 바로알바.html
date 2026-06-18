@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="바로알바">
@@ -63,7 +63,7 @@
     }
 
     /* ── 지도 ── */
-    #map { position: fixed; top: calc(var(--header-h) + var(--sat)); left: 0; right: 0; bottom: var(--nav-h); }
+    #map { position: fixed; top: calc(var(--header-h) + var(--sat)); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab)); }
 
     /* ── 상단 검색바 ── */
     .top-bar {
@@ -656,7 +656,7 @@
 
     /* ── 내지원 / 채팅 패널 ── */
     .full-panel {
-      position: fixed; top: var(--sat); left: 0; right: 0; bottom: var(--nav-h);
+      position: fixed; top: var(--sat); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab));
       background: #f5f5f5; z-index: 300; display: none;
       flex-direction: column; overflow-y: auto;
     }
@@ -2582,7 +2582,6 @@
 <div class="tabs">
   <button class="tab-btn active" onclick="ownerSwitchTab('postings',this)">내 공고</button>
   <button class="tab-btn" onclick="ownerSwitchTab('applicants',this)">지원자</button>
-  <button class="tab-btn" onclick="ownerSwitchTab('settings',this)">업체 설정</button>
 </div>
 
 <!-- 내 공고 탭 -->
@@ -2617,6 +2616,11 @@
     </div>
   </div>
 
+  <div style="margin:0 16px 10px">
+    <button onclick="openOwnerSettings()" style="width:100%;padding:12px 16px;background:#fff;border:1.5px solid #f0f0f0;border-radius:12px;font-size:13px;font-weight:700;color:#222;cursor:pointer;display:flex;align-items:center;justify-content:space-between;box-sizing:border-box">
+      <span>⚙️ 업체 설정 / 장소 관리</span><span style="color:#aaa;font-size:16px">›</span>
+    </button>
+  </div>
   <div class="section-head">
     <div class="section-title" data-i18n="section_my_postings">내 공고 목록</div>
   </div>
@@ -4545,7 +4549,7 @@ async function loadMyChatList() {
     .eq('worker_id', worker.id);
 
   if (!apps || !apps.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원 후 업주와 채팅할 수 있어요</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">채팅을 시작해보세요</div></div>';
     return;
   }
 
@@ -4571,7 +4575,7 @@ async function loadMyChatList() {
   const hiddenChats = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
   const chats = apps.filter(a => latestMsg[a.id] && !hiddenChats.includes(a.id));
   if (!chats.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원 후 업주와 채팅할 수 있어요</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">채팅을 시작해보세요</div></div>';
     return;
   }
 
@@ -10082,7 +10086,8 @@ async function loadOwnerChatList() {
   el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
   if (!bizRecord) return;
 
-  const jobIds = postings.map(p => p.id);
+  const { data: myJobs } = await db.from('job_postings').select('id').eq('business_id', bizRecord.id);
+  const jobIds = (myJobs || []).map(j => j.id);
   if (!jobIds.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-weight:700">등록한 공고가 없어요</div></div>';
     return;
@@ -10119,7 +10124,7 @@ async function loadOwnerChatList() {
 
   const chats = apps.filter(a => latestMsg[a.id]);
   if (!chats.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">지원자를 수락하면 채팅이 시작됩니다</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">채팅을 시작해보세요</div></div>';
     return;
   }
 
