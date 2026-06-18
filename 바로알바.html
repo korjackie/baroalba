@@ -50,7 +50,7 @@
       position: fixed; top: 0; left: 0; right: 0;
       height: calc(var(--header-h) + var(--sat-safe));
       padding-top: var(--sat-safe);
-      background: #fff; z-index: 300;
+      background: linear-gradient(to bottom, #C8102E var(--sat-safe), #fff var(--sat-safe)); z-index: 300;
       display: flex; align-items: center; justify-content: space-between;
       padding-left: 14px; padding-right: 14px;
       border-bottom: 1px solid #f0f0f0;
@@ -781,7 +781,7 @@
     /* ── 헤더 ── */
     .header {
       position: sticky; top:0; z-index:100;
-      background:#fff; padding:14px 16px 12px;
+      background: linear-gradient(to bottom, #C8102E var(--sat-safe), #fff var(--sat-safe)); padding:calc(14px + var(--sat-safe)) 16px 12px;
       border-bottom:1px solid #f0f0f0;
       box-shadow:0 1px 8px rgba(0,0,0,0.06);
       display:flex; align-items:center; justify-content:space-between;
