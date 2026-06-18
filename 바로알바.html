@@ -6170,7 +6170,7 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills, photo_url, activity_area, activity_lat, activity_lng')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   // 프로필 사진
