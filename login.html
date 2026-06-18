@@ -559,14 +559,10 @@
 
 <script>
 // ── 잔여 쿼리파라미터 정리 (auth_type=reprompt 등 Naver가 반환한 쿼리 제거) ──
-// Supabase PKCE code= 는 제거하지 않음 (제거하면 복구/OAuth 처리 불가)
-// Supabase가 나중에 URL을 정리하기 전에 미리 캡처
-const _hadCodeParam = window.location.search.includes('code=');
-if (window.location.search && !_hadCodeParam) {
+// Supabase PKCE code= 는 제거하지 않음 (제거하면 OAuth 처리 불가)
+if (window.location.search && !window.location.search.includes('code=')) {
   history.replaceState({}, '', window.location.pathname + window.location.hash);
 }
-// 재설정 링크로 진입 시 게스트 플래그 제거 (게스트 플래그가 있으면 goToApp()이 모든 체크를 우회함)
-if (_hadCodeParam) localStorage.removeItem('baroalba_guest');
 
 // ── 해시 최우선 캡처 (Supabase가 지우기 전에) ─────────────
 const _initHash = window.location.hash;
@@ -593,48 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
-function _isRecentPasswordReset() {
-  const ts = parseInt(localStorage.getItem('baroalba_pw_reset_ts') || '0');
-  return ts > 0 && (Date.now() - ts) < 30 * 60 * 1000; // 30분으로 확장
-}
-let _showingResetScreen = false;
-
-function _showPwResetScreen() {
-  _showingResetScreen = true;
-  document.getElementById('splash')?.classList.add('hidden');
-  document.getElementById('screen-pw-reset').style.display = 'flex';
-}
-
 db.auth.onAuthStateChange(async (event, session) => {
-  if (_showingResetScreen) return;
-
-  if (event === 'PASSWORD_RECOVERY') {
-    _showPwResetScreen(); return;
-  }
-
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    if (_hadCodeParam) {
-      if (event === 'INITIAL_SESSION') return; // SIGNED_IN 이벤트에서 처리
-
-      // SIGNED_IN + code= → 서버에서 최신 사용자 정보 직접 조회 (JWT 캐시 우회)
-      const { data: userData } = await db.auth.getUser();
-      if (_showingResetScreen) return; // getUser() 대기 중 PASSWORD_RECOVERY가 먼저 처리한 경우
-
-      // 1순위: 서버의 recovery_sent_at (30분 이내)
-      const recoverySentAt = userData?.user?.recovery_sent_at;
-      if (recoverySentAt && (Date.now() - new Date(recoverySentAt).getTime()) < 30 * 60 * 1000) {
-        _showPwResetScreen(); return;
-      }
-      // 2순위: localStorage 플래그 (같은 브라우저 요청 시, 30분 이내)
-      if (_isRecentPasswordReset()) {
-        _showPwResetScreen(); return;
-      }
-      // recovery가 아님 (이메일 확인 등) → 앱으로
-      showLoading('앱으로 이동 중...'); goToApp();
-      return;
-    }
-
-    // 일반 로그인 (code= 없음)
     if (event === 'SIGNED_IN') {
       const u = session.user;
       const meta = u.user_metadata || {};
@@ -669,10 +625,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.body.prepend(banner);
   }
 
-  // 게스트도 앱으로 (단, 재설정 링크로 진입한 경우는 제외)
-  if (!_hadCodeParam && localStorage.getItem('baroalba_guest')) { goToApp(); return; }
+  // 게스트도 앱으로
+  if (localStorage.getItem('baroalba_guest')) { goToApp(); return; }
 
-  // 안전 타이머: getSession 응답 없어도 2초 후 무조건 로그인 화면 표시
+  // 안전 타이머: getSession 응답 없어도 2초 후 로그인 화면 표시
   const safetyTimer = setTimeout(showLoginScreen, 2000);
 
   try {
@@ -681,13 +637,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     const { data } = await Promise.race([sessionPromise, timeoutPromise.then(() => ({ data: { session: null } }))]);
     if (data?.session) {
       clearTimeout(safetyTimer);
-      // code= 파라미터(PKCE) 또는 type=recovery(implicit) 있으면 onAuthStateChange에 맡김
-      if (_hadCodeParam ||
-          window.location.hash.includes('type=recovery') ||
-          window.location.search.includes('type=recovery')) return;
       // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
       setTimeout(() => {
-        if (!_showingResetScreen && !_isRecentPasswordReset() && document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
+        if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
           goToApp();
         }
       }, 1500);
@@ -715,6 +667,7 @@ async function loginKakao() {
 // ── 구글 로그인 ────────────────────────────────────────────
 function isInAppBrowser() {
   const ua = navigator.userAgent;
+  if (ua.includes('BaroAlbaApp')) return false; // 바로알바 앱 내장 WebView
   return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line|MicroMessenger/i.test(ua) ||
     (ua.includes('Android') && /; wv\)/.test(ua));
 }
@@ -939,9 +892,8 @@ async function sendPasswordReset() {
   if (!email) { showError('이메일을 입력해주세요.'); return; }
   showLoading('발송 중...');
   // 재설정 요청 시 플래그 저장 (5분 유효)
-  localStorage.setItem('baroalba_pw_reset_ts', Date.now().toString());
   const { error } = await db.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/login.html'
+    redirectTo: window.location.origin + '/reset.html'
   });
   hideLoading();
   const result = document.getElementById('find-pw-result');

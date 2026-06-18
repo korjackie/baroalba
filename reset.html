@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#C8102E">
+  <title>바로알바 — 비밀번호 재설정</title>
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #C8102E;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 24px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+    .icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
+    .title { font-size: 22px; font-weight: 900; color: #222; text-align: center; margin-bottom: 6px; }
+    .sub { font-size: 14px; color: #888; text-align: center; margin-bottom: 28px; }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #eee;
+      border-radius: 12px;
+      font-size: 15px;
+      color: #222;
+      outline: none;
+      background: #fafafa;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #C8102E; background: #fff; }
+    input::placeholder { color: #ccc; }
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: #C8102E;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .btn:disabled { background: #ddd; cursor: default; }
+    .msg { font-size: 13px; text-align: center; margin-top: 14px; display: none; }
+    .msg.error { color: #EF4444; }
+    .msg.success { color: #16a34a; }
+    .spinner-wrap { text-align: center; padding: 20px 0; display: none; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #eee;
+      border-top-color: #C8102E;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🔑</div>
+  <div class="title">새 비밀번호 설정</div>
+  <div class="sub">6자 이상 새 비밀번호를 입력해주세요</div>
+
+  <div class="spinner-wrap" id="spinner-wrap">
+    <div class="spinner"></div>
+    <p style="font-size:13px;color:#888;margin-top:10px">확인 중...</p>
+  </div>
+
+  <div id="form-wrap">
+    <input id="pw1" type="password" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password">
+    <input id="pw2" type="password" placeholder="비밀번호 확인" autocomplete="new-password">
+    <button class="btn" id="btn" onclick="doReset()">비밀번호 변경</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = 'msg ' + type;
+  el.style.display = 'block';
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  // code= 파라미터 없으면 유효하지 않은 접근
+  if (!window.location.search.includes('code=') && !window.location.hash.includes('access_token')) {
+    showMsg('유효하지 않은 링크입니다. 비밀번호 재설정을 다시 요청해주세요.', 'error');
+    document.getElementById('form-wrap').style.display = 'none';
+    setTimeout(() => { window.location.href = '/login.html'; }, 3000);
+    return;
+  }
+
+  document.getElementById('spinner-wrap').style.display = 'block';
+  document.getElementById('form-wrap').style.display = 'none';
+
+  // Supabase가 code= 교환 후 세션 반환
+  const { data, error } = await db.auth.getSession();
+  document.getElementById('spinner-wrap').style.display = 'none';
+  document.getElementById('form-wrap').style.display = 'block';
+
+  if (error || !data?.session) {
+    showMsg('링크가 만료됐습니다. 비밀번호 재설정을 다시 요청해주세요.', 'error');
+    document.getElementById('btn').disabled = true;
+    setTimeout(() => { window.location.href = '/login.html'; }, 3000);
+  }
+});
+
+async function doReset() {
+  const pw1 = document.getElementById('pw1').value;
+  const pw2 = document.getElementById('pw2').value;
+  if (pw1.length < 6) { showMsg('비밀번호는 6자 이상이어야 합니다.', 'error'); return; }
+  if (pw1 !== pw2)    { showMsg('비밀번호가 일치하지 않습니다.', 'error'); return; }
+
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.textContent = '변경 중...';
+
+  const { error } = await db.auth.updateUser({ password: pw1 });
+  if (error) {
+    showMsg('오류: ' + error.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '비밀번호 변경';
+    return;
+  }
+
+  await db.auth.signOut();
+  showMsg('✅ 비밀번호가 변경됐습니다!', 'success');
+  btn.style.display = 'none';
+  setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doReset();
+});
+</script>
+</body>
+</html>

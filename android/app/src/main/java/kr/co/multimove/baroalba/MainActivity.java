@@ -52,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         }
 
+        // 바로알바 앱 식별자 추가 — isInAppBrowser() 오인식 방지
+        s.setUserAgentString(s.getUserAgentString() + " BaroAlbaApp/1.0");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
