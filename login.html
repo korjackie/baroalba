@@ -560,7 +560,9 @@
 <script>
 // ── 잔여 쿼리파라미터 정리 (auth_type=reprompt 등 Naver가 반환한 쿼리 제거) ──
 // Supabase PKCE code= 는 제거하지 않음 (제거하면 복구/OAuth 처리 불가)
-if (window.location.search && !window.location.search.includes('code=')) {
+// Supabase가 나중에 URL을 정리하기 전에 미리 캡처
+const _hadCodeParam = window.location.search.includes('code=');
+if (window.location.search && !_hadCodeParam) {
   history.replaceState({}, '', window.location.pathname + window.location.hash);
 }
 
@@ -594,21 +596,41 @@ function _isRecentPasswordReset() {
   return ts > 0 && (Date.now() - ts) < 5 * 60 * 1000;
 }
 let _showingResetScreen = false;
+let _codeWaitTimer = null;
 function _showPwResetScreen() {
+  if (_codeWaitTimer) { clearTimeout(_codeWaitTimer); _codeWaitTimer = null; }
   _showingResetScreen = true;
   document.getElementById('splash')?.classList.add('hidden');
   document.getElementById('screen-pw-reset').style.display = 'flex';
 }
 
 db.auth.onAuthStateChange(async (event, session) => {
-  if (_showingResetScreen) return; // 재설정 화면 표시 중 → 모든 이벤트 차단
+  if (_showingResetScreen) return;
+
   if (event === 'PASSWORD_RECOVERY') {
     _showPwResetScreen(); return;
   }
+
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    if (_isRecentPasswordReset() && window.location.search.includes('code=')) {
-      _showPwResetScreen(); return;
+    if (_hadCodeParam) {
+      // login.html?code=... 로 진입한 경우 = 비밀번호 재설정 링크 클릭
+      // Supabase는 code 교환 후 URL을 정리하기 때문에 window.location.search에는 code=가 없음
+      // _hadCodeParam으로 체크해야 정확함
+      if (_isRecentPasswordReset()) {
+        // 같은 브라우저에서 요청한 경우 → 즉시 재설정 화면 표시
+        _showPwResetScreen(); return;
+      }
+      // 다른 브라우저/시크릿 창: PASSWORD_RECOVERY 이벤트를 최대 3초 대기
+      // (SIGNED_IN 직후 PASSWORD_RECOVERY가 발생하면 _showPwResetScreen으로 이동)
+      if (event === 'SIGNED_IN' && !_codeWaitTimer) {
+        _codeWaitTimer = setTimeout(() => {
+          if (!_showingResetScreen) { showLoading('앱으로 이동 중...'); goToApp(); }
+        }, 3000);
+      }
+      return;
     }
+
+    // 일반 로그인 (code= 없음)
     if (event === 'SIGNED_IN') {
       const u = session.user;
       const meta = u.user_metadata || {};
@@ -656,7 +678,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (data?.session) {
       clearTimeout(safetyTimer);
       // code= 파라미터(PKCE) 또는 type=recovery(implicit) 있으면 onAuthStateChange에 맡김
-      if (window.location.search.includes('code=') ||
+      if (_hadCodeParam ||
           window.location.hash.includes('type=recovery') ||
           window.location.search.includes('type=recovery')) return;
       // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
