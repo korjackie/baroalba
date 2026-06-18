@@ -589,18 +589,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
-let _pwRecoveryMode = false;
+function _isRecentPasswordReset() {
+  const ts = parseInt(localStorage.getItem('baroalba_pw_reset_ts') || '0');
+  return ts > 0 && (Date.now() - ts) < 5 * 60 * 1000; // 5분 이내
+}
+function _showPwResetScreen() {
+  localStorage.removeItem('baroalba_pw_reset_ts');
+  document.getElementById('splash')?.classList.add('hidden');
+  document.getElementById('screen-pw-reset').style.display = 'flex';
+}
+
 db.auth.onAuthStateChange(async (event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
-    _pwRecoveryMode = true;
-    document.getElementById('splash')?.classList.add('hidden');
-    const el = document.getElementById('screen-pw-reset');
-    el.style.display = 'flex';
-    return;
+    _showPwResetScreen(); return;
   }
-  if (_pwRecoveryMode) return; // 비번 재설정 모드 중엔 앱 이동 차단
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    // 신규 OAuth 가입 시 workers 레코드 자동 생성 (기존 레코드는 덮어쓰지 않음)
+    // 최근 5분 내 재설정 요청 + code= 파라미터 → 재설정 화면
+    if (_isRecentPasswordReset() && window.location.search.includes('code=')) {
+      _showPwResetScreen(); return;
+    }
     if (event === 'SIGNED_IN') {
       const u = session.user;
       const meta = u.user_metadata || {};
@@ -609,17 +616,6 @@ db.auth.onAuthStateChange(async (event, session) => {
         { kakao_uid: u.id, name: displayName, email: u.email || '', phone: meta.phone || '' },
         { ignoreDuplicates: true }
       ).then(null, () => {});
-    }
-    // code= 파라미터(PKCE)가 있을 때: recovery 세션이면 비번 재설정 화면으로
-    if (window.location.search.includes('code=')) {
-      if (session?.user?.recovery_sent_at) {
-        _pwRecoveryMode = true;
-        document.getElementById('splash')?.classList.add('hidden');
-        document.getElementById('screen-pw-reset').style.display = 'flex';
-        return;
-      }
-      await new Promise(r => setTimeout(r, 500));
-      if (_pwRecoveryMode) return;
     }
     showLoading('앱으로 이동 중...');
     goToApp();
@@ -867,8 +863,8 @@ async function submitNewPassword() {
     errEl.textContent = '오류: ' + error.message;
     errEl.style.display = 'block';
   } else {
+    localStorage.removeItem('baroalba_pw_reset_ts');
     await db.auth.signOut();
-    _pwRecoveryMode = false;
     document.getElementById('screen-pw-reset').style.display = 'none';
     showLoginScreen();
     setTimeout(() => alert('✅ 비밀번호가 변경됐습니다. 새 비밀번호로 로그인해주세요.'), 100);
@@ -914,6 +910,8 @@ async function sendPasswordReset() {
   const email = document.getElementById('find-pw-email').value.trim();
   if (!email) { showError('이메일을 입력해주세요.'); return; }
   showLoading('발송 중...');
+  // 재설정 요청 시 플래그 저장 (5분 유효)
+  localStorage.setItem('baroalba_pw_reset_ts', Date.now().toString());
   const { error } = await db.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.origin + '/login.html'
   });
