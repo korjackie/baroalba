@@ -12137,11 +12137,13 @@ async function selectPlan(plan) {
   document.getElementById('pay-title').textContent = info.name + ' 구독';
   document.getElementById('pay-plan-name').textContent = info.name;
   document.getElementById('pay-amount').textContent = info.amount;
-  document.getElementById('payment-method').innerHTML = '';
+  document.getElementById('payment-method').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">결제 수단 불러오는 중...</div>';
   document.getElementById('agreement').innerHTML = '';
+  const btn = document.getElementById('payment-confirm-btn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
   document.getElementById('payment-overlay').style.display = 'block';
-  // 토스 위젯 로드
   try {
+    if (typeof TossPayments === 'undefined') throw new Error('토스 SDK가 로드되지 않았습니다');
     const tp = TossPayments(TOSS_CLIENT_KEY);
     _tossWidgets = tp.widgets({ customerKey: `baro-${currentUser.id}` });
     await _tossWidgets.setAmount({ currency: 'KRW', value: info.monthly });
@@ -12149,18 +12151,27 @@ async function selectPlan(plan) {
       _tossWidgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
       _tossWidgets.renderAgreement({ selector: '#agreement', variantKey: 'AGREEMENT' }),
     ]);
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
   } catch (e) {
+    console.error('Toss widget error:', e);
+    document.getElementById('payment-method').innerHTML = '';
     showToast('결제 위젯 로드 실패: ' + e.message);
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    _tossWidgets = null;
   }
 }
 
 function closePayment() {
   document.getElementById('payment-overlay').style.display = 'none';
   _tossWidgets = null;
+  _selectedPlan = null;
 }
 
 async function requestTossPayment() {
-  if (!_tossWidgets || !_selectedPlan) return;
+  if (!_tossWidgets) { showToast('결제 수단을 선택해주세요'); return; }
+  if (!_selectedPlan) return;
+  const btn = document.getElementById('payment-confirm-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
   const info = PLAN_INFO[_selectedPlan];
   const orderId = `baro-${_selectedPlan}-${Date.now()}`;
   const base = window.location.origin + window.location.pathname;
@@ -12174,7 +12185,9 @@ async function requestTossPayment() {
       customerName: currentUser.user_metadata?.full_name || '사업주',
     });
   } catch (e) {
-    if (e.code !== 'USER_CANCEL') showToast('결제 오류: ' + e.message);
+    console.error('Toss requestPayment error:', e);
+    if (e.code !== 'USER_CANCEL') showToast('결제 오류: ' + (e.message || JSON.stringify(e)));
+    if (btn) { btn.disabled = false; btn.textContent = '결제하기'; }
   }
 }
 
