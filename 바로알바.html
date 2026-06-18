@@ -5378,7 +5378,7 @@ async function loadDashboard() {
   try {
     const [workerRes, bizRes, lessonRes] = await Promise.all([
       db.from('workers').select('id').eq('kakao_uid', currentUser.id).maybeSingle(),
-      db.from('businesses').select('id').eq('owner_kakao_uid', currentUser.id).maybeSingle(),
+      db.from('businesses').select('id').eq('kakao_uid', currentUser.id).maybeSingle(),
       db.from('lesson_profiles').select('id').eq('worker_kakao_uid', currentUser.id).eq('is_active', true)
     ]);
     if (workerRes.data) {
@@ -5526,8 +5526,8 @@ function setNav(el, tab) {
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
     if (mapLocBtn) mapLocBtn.style.display = 'none';
-    if (currentUser?.user_metadata?.baroalba_role === 'business') {
-      // 업주: owner panel + 채팅 패널로 직접 이동
+    if (currentUser?.user_metadata?.baroalba_role === 'business' || bizRecord) {
+      // 업주/통합계정: owner panel 채팅으로 이동
       openOwnerPanel('chats');
     } else {
       panelChats.classList.add('show');
