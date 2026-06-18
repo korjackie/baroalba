@@ -10976,7 +10976,6 @@ async function markMessagesRead(appId) {
 }
 
 // ── 업주 글로벌 채팅 알림 (Broadcast 방식 - RLS 우회) ──
-let _ownerGlobalChatSub = null;
 function subscribeOwnerGlobalChat() {
   if (!currentUser) return;
   if (_ownerGlobalChatSub) { try { _ownerGlobalChatSub.unsubscribe(); } catch(e) {} _ownerGlobalChatSub = null; }
