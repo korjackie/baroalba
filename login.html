@@ -609,6 +609,11 @@ db.auth.onAuthStateChange(async (event, session) => {
         { ignoreDuplicates: true }
       ).then(null, () => {});
     }
+    // code= 파라미터가 있으면(PKCE) PASSWORD_RECOVERY가 뒤에 올 수 있으므로 잠깐 대기
+    if (window.location.search.includes('code=')) {
+      await new Promise(r => setTimeout(r, 300));
+      if (_pwRecoveryMode) return;
+    }
     showLoading('앱으로 이동 중...');
     goToApp();
   }
