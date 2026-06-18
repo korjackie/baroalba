@@ -1184,6 +1184,7 @@
       <button class="filter-drop-btn" id="flt-type-btn" onclick="toggleFilterSheet('type')" style="flex-shrink:0">근무타입 ▾</button>
       <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)" style="flex-shrink:0">급구</div>
       <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0">레슨/과외 ▾</button>
+      <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0">전문기술 ▾</button>
     </div>
     <div class="filter-bar-actions">
       <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px">필터</div>
@@ -1213,6 +1214,36 @@
     <div class="chip" data-cat="__regular__" onclick="toggleWorkTypeChip(this,'__regular__')">정기</div>
     <div class="chip" data-cat="__short__"   onclick="toggleWorkTypeChip(this,'__short__')">단기</div>
     <div class="chip" data-cat="__spot__"    onclick="toggleWorkTypeChip(this,'__spot__')">스팟</div>
+  </div>
+  <!-- 전문기술 드롭다운 시트 (중간카테고리 복수선택) -->
+  <div class="filter-sheet" id="filter-sheet-technical">
+    <div class="chip active" data-tmid="" onclick="toggleTechnicalChip(this,'')">전체</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 현장·시설 —</div>
+    <div class="chip" data-tmid="설비·수리"  onclick="toggleTechnicalChip(this,'설비·수리')">🔧 설비·수리</div>
+    <div class="chip" data-tmid="전기·전자"  onclick="toggleTechnicalChip(this,'전기·전자')">⚡ 전기·전자</div>
+    <div class="chip" data-tmid="인테리어"   onclick="toggleTechnicalChip(this,'인테리어')">🏠 인테리어</div>
+    <div class="chip" data-tmid="청소·방역"  onclick="toggleTechnicalChip(this,'청소·방역')">🧹 청소·방역</div>
+    <div class="chip" data-tmid="이사·운반"  onclick="toggleTechnicalChip(this,'이사·운반')">🚚 이사·운반</div>
+    <div class="chip" data-tmid="조경·정원"  onclick="toggleTechnicalChip(this,'조경·정원')">🌿 조경·정원</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 크리에이티브 —</div>
+    <div class="chip" data-tmid="사진 촬영"      onclick="toggleTechnicalChip(this,'사진 촬영')">📸 사진 촬영</div>
+    <div class="chip" data-tmid="영상 촬영·편집" onclick="toggleTechnicalChip(this,'영상 촬영·편집')">🎬 영상 촬영·편집</div>
+    <div class="chip" data-tmid="그래픽·디자인"  onclick="toggleTechnicalChip(this,'그래픽·디자인')">🎨 그래픽·디자인</div>
+    <div class="chip" data-tmid="웹디자인·UI"    onclick="toggleTechnicalChip(this,'웹디자인·UI')">💻 웹디자인·UI</div>
+    <div class="chip" data-tmid="SNS·마케팅"     onclick="toggleTechnicalChip(this,'SNS·마케팅')">📱 SNS·마케팅</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— IT·개발 —</div>
+    <div class="chip" data-tmid="웹·앱 개발"      onclick="toggleTechnicalChip(this,'웹·앱 개발')">⌨️ 웹·앱 개발</div>
+    <div class="chip" data-tmid="데이터 분석"     onclick="toggleTechnicalChip(this,'데이터 분석')">📊 데이터 분석</div>
+    <div class="chip" data-tmid="자동화·스크립트" onclick="toggleTechnicalChip(this,'자동화·스크립트')">🤖 자동화·스크립트</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 뷰티·케어 —</div>
+    <div class="chip" data-tmid="헤어"          onclick="toggleTechnicalChip(this,'헤어')">💇 헤어</div>
+    <div class="chip" data-tmid="메이크업·네일" onclick="toggleTechnicalChip(this,'메이크업·네일')">💅 메이크업·네일</div>
+    <div class="chip" data-tmid="피부 관리"     onclick="toggleTechnicalChip(this,'피부 관리')">✨ 피부 관리</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 언어·기타 —</div>
+    <div class="chip" data-tmid="번역·통역"     onclick="toggleTechnicalChip(this,'번역·통역')">🌐 번역·통역</div>
+    <div class="chip" data-tmid="행사·MC"       onclick="toggleTechnicalChip(this,'행사·MC')">🎤 행사·MC</div>
+    <div class="chip" data-tmid="음식·케이터링" onclick="toggleTechnicalChip(this,'음식·케이터링')">🍽️ 음식·케이터링</div>
+    <div class="chip" data-tmid="기타 전문"     onclick="toggleTechnicalChip(this,'기타 전문')">⭐ 기타 전문</div>
   </div>
   <!-- 레슨/과외 드롭다운 시트 (중간카테고리 복수선택) -->
   <div class="filter-sheet" id="filter-sheet-lesson">
@@ -3351,6 +3382,15 @@ async function loadJobs() {
 
     // 복수 카테고리 클라이언트 필터 (2개 이상 선택 시)
     if (selectedCategories.size > 1) result = result.filter(j => selectedCategories.has(j.category));
+    // 전문기술 mid 필터
+    if (includeTechnical) {
+      if (_technicalFilterMids.size > 0) {
+        const validCats = new Set([..._technicalFilterMids]);
+        result = result.filter(j => j.job_type === 'technical' && validCats.has(j.category));
+      } else {
+        result = result.filter(j => j.job_type === 'technical');
+      }
+    }
     // 형태 복수 필터
     if (selectedWorkTypes.size > 0) {
       result = result.filter(j => {
@@ -4594,6 +4634,8 @@ const _WT_MAP = {'__regular__':'regular','__short__':'short','__spot__':'spot','
 
 let _lessonFilterMains = new Set(); // 지도 필터: 선택된 메인(레슨/과외)
 let _lessonFilterMids  = new Set(); // 지도 필터: 선택된 중간카테고리
+let includeTechnical = false;       // 전문기술 필터 활성화
+let _technicalFilterMids = new Set(); // 선택된 전문기술 leaf 카테고리
 
 function _syncCatBtn() {
   const btn = document.getElementById('flt-cat-btn');
@@ -4605,6 +4647,36 @@ function _syncCatBtn() {
     btn.textContent = cat + ' ✓'; btn.classList.add('sel');
   } else { btn.textContent = `카테고리 ${total}개 ✓`; btn.classList.add('sel'); }
 }
+function _syncTechnicalBtn() {
+  const btn = document.getElementById('flt-technical-btn');
+  if (!btn) return;
+  if (!includeTechnical) { btn.textContent = '전문기술 ▾'; btn.classList.remove('sel'); return; }
+  const n = _technicalFilterMids.size;
+  if (n === 0) { btn.textContent = '전문기술 전체 ✓'; btn.classList.add('sel'); }
+  else if (n === 1) { btn.textContent = [..._technicalFilterMids][0] + ' ✓'; btn.classList.add('sel'); }
+  else { btn.textContent = `전문기술 ${n}개 ✓`; btn.classList.add('sel'); }
+}
+
+function toggleTechnicalChip(el, mid) {
+  if (mid === '') {
+    includeTechnical = false;
+    _technicalFilterMids.clear();
+    document.querySelectorAll('#filter-sheet-technical .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    document.querySelector('#filter-sheet-technical .chip[data-tmid=""]')?.classList.remove('active');
+    includeTechnical = true;
+    if (_technicalFilterMids.has(mid)) { _technicalFilterMids.delete(mid); el.classList.remove('active'); }
+    else { _technicalFilterMids.add(mid); el.classList.add('active'); }
+    if (_technicalFilterMids.size === 0) {
+      includeTechnical = false;
+      document.querySelector('#filter-sheet-technical .chip[data-tmid=""]')?.classList.add('active');
+    }
+  }
+  _syncTechnicalBtn();
+  loadJobs();
+}
+
 function _syncLessonBtn() {
   const btn = document.getElementById('flt-lesson-btn');
   if (!btn) return;
@@ -4728,27 +4800,29 @@ function toggleWorkTypeChip(el, raw) {
 
 let _activeFilterSheet = null;
 function toggleFilterSheet(type) {
-  const catSheet    = document.getElementById('filter-sheet-cat');
-  const typeSheet   = document.getElementById('filter-sheet-type');
-  const lessonSheet = document.getElementById('filter-sheet-lesson');
-  const catBtn      = document.getElementById('flt-cat-btn');
-  const typeBtn     = document.getElementById('flt-type-btn');
-  const lessonBtn   = document.getElementById('flt-lesson-btn');
+  const catSheet       = document.getElementById('filter-sheet-cat');
+  const typeSheet      = document.getElementById('filter-sheet-type');
+  const lessonSheet    = document.getElementById('filter-sheet-lesson');
+  const technicalSheet = document.getElementById('filter-sheet-technical');
+  const catBtn         = document.getElementById('flt-cat-btn');
+  const typeBtn        = document.getElementById('flt-type-btn');
+  const lessonBtn      = document.getElementById('flt-lesson-btn');
+  const technicalBtn   = document.getElementById('flt-technical-btn');
   const isAlreadyOpen = _activeFilterSheet === type;
-  [catSheet, typeSheet, lessonSheet].forEach(s => s?.classList.remove('open'));
-  [catBtn, typeBtn, lessonBtn].forEach(b => b?.classList.remove('open'));
+  [catSheet, typeSheet, lessonSheet, technicalSheet].forEach(s => s?.classList.remove('open'));
+  [catBtn, typeBtn, lessonBtn, technicalBtn].forEach(b => b?.classList.remove('open'));
   if (!isAlreadyOpen) {
-    const sheet = type === 'cat' ? catSheet : type === 'type' ? typeSheet : lessonSheet;
-    const btn   = type === 'cat' ? catBtn   : type === 'type' ? typeBtn   : lessonBtn;
+    const sheet = type === 'cat' ? catSheet : type === 'type' ? typeSheet : type === 'technical' ? technicalSheet : lessonSheet;
+    const btn   = type === 'cat' ? catBtn   : type === 'type' ? typeBtn   : type === 'technical' ? technicalBtn   : lessonBtn;
     sheet?.classList.add('open');
     btn?.classList.add('open');
     _activeFilterSheet = type;
   } else { _activeFilterSheet = null; }
 }
 function closeFilterSheet() {
-  ['filter-sheet-cat','filter-sheet-type','filter-sheet-lesson'].forEach(id =>
+  ['filter-sheet-cat','filter-sheet-type','filter-sheet-lesson','filter-sheet-technical'].forEach(id =>
     document.getElementById(id)?.classList.remove('open'));
-  ['flt-cat-btn','flt-type-btn','flt-lesson-btn'].forEach(id =>
+  ['flt-cat-btn','flt-type-btn','flt-lesson-btn','flt-technical-btn'].forEach(id =>
     document.getElementById(id)?.classList.remove('open'));
   _activeFilterSheet = null;
 }
@@ -10597,17 +10671,46 @@ const DEFAULT_CATEGORIES = [
   { name:'기타',       icon:'\u{1F4CB}', display_order:99 },
 ];
 
-// 전문기술직(바로기사) 카테고리
-const TECHNICAL_CATEGORIES = [
-  { name:'수리/배관',   icon:'\u{1F527}' },
-  { name:'전기/전자',   icon:'⚡' },
-  { name:'인테리어',    icon:'\u{1F3E0}' },
-  { name:'이사/운반',   icon:'\u{1F69A}' },
-  { name:'가구/설치',   icon:'\u{1F6CB}' },
-  { name:'자물쇠/도어락',icon:'\u{1F511}' },
-  { name:'청소/방역',   icon:'\u{1F9FD}' },
-  { name:'기타 기술직', icon:'\u{1F528}' },
-];
+// 전문기술직 — 중간카테고리 그룹 구조
+const TECHNICAL_MIDS = {
+  '현장·시설': [
+    {v:'설비·수리',  e:'🔧'},
+    {v:'전기·전자',  e:'⚡'},
+    {v:'인테리어',   e:'🏠'},
+    {v:'청소·방역',  e:'🧹'},
+    {v:'이사·운반',  e:'🚚'},
+    {v:'조경·정원',  e:'🌿'},
+    {v:'기타 현장',  e:'🔨'},
+  ],
+  '크리에이티브': [
+    {v:'사진 촬영',      e:'📸'},
+    {v:'영상 촬영·편집', e:'🎬'},
+    {v:'그래픽·디자인',  e:'🎨'},
+    {v:'웹디자인·UI',    e:'💻'},
+    {v:'SNS·마케팅',     e:'📱'},
+  ],
+  'IT·개발': [
+    {v:'웹·앱 개발',      e:'⌨️'},
+    {v:'데이터 분석',     e:'📊'},
+    {v:'자동화·스크립트', e:'🤖'},
+    {v:'기타 IT',         e:'💾'},
+  ],
+  '뷰티·케어': [
+    {v:'헤어',          e:'💇'},
+    {v:'메이크업·네일', e:'💅'},
+    {v:'피부 관리',     e:'✨'},
+  ],
+  '언어·기타': [
+    {v:'번역·통역',     e:'🌐'},
+    {v:'행사·MC',       e:'🎤'},
+    {v:'음식·케이터링', e:'🍽️'},
+    {v:'기타 전문',     e:'⭐'},
+  ],
+};
+// 필터/폼에서 flat list 필요할 때 사용
+const TECHNICAL_CATEGORIES = Object.values(TECHNICAL_MIDS).flat().map(c => ({ name: c.v, icon: c.e }));
+// mid → 포함 leaf 카테고리 배열
+function _getTechnicalCatsForMid(mid) { return (TECHNICAL_MIDS[mid] || []).map(c => c.v); }
 
 // 돌봄·케어(바로돌봄) 카테고리
 const CARE_CATEGORIES = [
@@ -10670,11 +10773,14 @@ function setJobType(type) {
 
   // 카테고리 업데이트
   const sel = document.getElementById('f-category');
-  const list = isErrand ? ERRAND_CATEGORIES
-    : type === 'technical' ? TECHNICAL_CATEGORIES
-    : type === 'care' ? CARE_CATEGORIES
-    : categories;
-  sel.innerHTML = list.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
+  if (type === 'technical') {
+    sel.innerHTML = Object.entries(TECHNICAL_MIDS).map(([grp, cats]) =>
+      `<optgroup label="${grp}">${cats.map(c => `<option value="${c.v}">${c.e} ${c.v}</option>`).join('')}</optgroup>`
+    ).join('');
+  } else {
+    const list = isErrand ? ERRAND_CATEGORIES : type === 'care' ? CARE_CATEGORIES : categories;
+    sel.innerHTML = list.map(c => `<option value="${c.name}">${c.icon || ''} ${c.name}</option>`).join('');
+  }
 
   // 라벨/플레이스홀더 업데이트
   const meta = JOB_TYPE_META[type];
