@@ -1485,6 +1485,17 @@
   <button class="guest-login-btn" onclick="goToLogin()">로그인</button>
 </div>
 
+<!-- 게스트 로그인 유도 모달 -->
+<div id="guest-login-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeGuestLoginModal()">
+  <div style="background:#fff;border-radius:24px 24px 0 0;padding:32px 24px calc(32px + var(--sab-safe));width:100%;max-width:480px;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">🔐</div>
+    <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:8px" id="guest-modal-title">로그인이 필요해요</div>
+    <div style="font-size:14px;color:#666;line-height:1.7;margin-bottom:28px" id="guest-modal-desc">지원하려면 로그인이 필요합니다.<br>30초면 가입 완료!</div>
+    <button onclick="goToLogin()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer;margin-bottom:10px">로그인 / 회원가입</button>
+    <button onclick="closeGuestLoginModal()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">나중에</button>
+  </div>
+</div>
+
 <!-- 업주 지도 열람 모드 배너 -->
 <div id="owner-browse-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#C8102E;color:#fff;padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px">
   <span style="font-size:13px;font-weight:700">&#128506; 지도 열람 중</span>
@@ -3702,7 +3713,16 @@ function renderList() {
   renderTodayPick();
 
   if (jobs.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">\u{1F605}</div><div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내 공고가 없어요</div></div>`;
+    const nextRadius = currentRadius < 3000 ? 3 : currentRadius < 5000 ? 5 : currentRadius < 10000 ? 10 : null;
+    const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">반경 ${nextRadius}km로 늘리기</button>` : '';
+    const guestBtn = isGuest ? `<button onclick="showLoginPrompt('공고를 올려보세요!','업주로 로그인하면 직접 알바 공고를 올릴 수 있어요.')" style="margin-top:8px;padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:block;width:100%">공고 올리기 (업주)</button>` : '';
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내<br>공고가 없어요</div>
+      <div style="font-size:12px;color:#bbb;margin-top:6px">다른 지역을 탐색하거나 반경을 늘려보세요</div>
+      ${expandBtn}
+      ${guestBtn}
+    </div>`;
     return;
   }
 
@@ -3894,13 +3914,21 @@ function isRealJobId(id) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
+function showLoginPrompt(title, desc) {
+  document.getElementById('guest-modal-title').textContent = title || '로그인이 필요해요';
+  document.getElementById('guest-modal-desc').innerHTML = (desc || '지원하려면 로그인이 필요합니다.<br>30초면 가입 완료!');
+  const m = document.getElementById('guest-login-modal');
+  m.style.display = 'flex';
+}
+function closeGuestLoginModal() {
+  document.getElementById('guest-login-modal').style.display = 'none';
+}
+
 async function applyJob() {
-  if (isGuest) {
-    showToast('로그인 후 지원할 수 있어요');
-    setTimeout(() => goToLogin(), 1500);
+  if (isGuest || !currentUser) {
+    showLoginPrompt('로그인 후 지원할 수 있어요', '공고에 지원하고 업주와 채팅하려면<br>로그인이 필요합니다. 30초면 완료!');
     return;
   }
-  if (!currentUser) { showToast('로그인이 필요합니다'); return; }
   if (!selectedJobId) return;
   if (!isRealJobId(selectedJobId)) {
     showToast('\u{1F9EA} 테스트 공고입니다\n실제 등록된 공고에만 지원 가능해요');
