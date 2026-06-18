@@ -9934,7 +9934,13 @@ function openEditForm(jobId) {
       document.getElementById('location-result').style.display = 'block';
     }
   }
-  if (surgeOn !== (p.is_quick || false)) toggleSurge();
+  if (surgeOn !== (p.surge_enabled || false)) toggleSurge();
+  if (p.surge_enabled) {
+    if (p.surge_max_wage)     document.getElementById('f-surge-max').value = p.surge_max_wage;
+    if (p.surge_amount)       document.getElementById('f-surge-amount').value = p.surge_amount;
+    if (p.surge_interval_min) document.getElementById('f-surge-interval').value = p.surge_interval_min;
+    updateSurgePreview();
+  }
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
   const dep = p.noshow_deposit || 0;
