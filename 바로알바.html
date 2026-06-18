@@ -1261,6 +1261,13 @@
     <div class="chip" data-lmain="과외" data-lmid="수학/과학"  onclick="toggleLessonChip(this,'과외','수학/과학')">📐 수학/과학</div>
     <div class="chip" data-lmain="과외" data-lmid="국어/인문"  onclick="toggleLessonChip(this,'과외','국어/인문')">📝 국어/인문</div>
     <div class="chip" data-lmain="과외" data-lmid="기타(과외)" onclick="toggleLessonChip(this,'과외','기타(과외)')">기타</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="" onclick="toggleLessonChip(this,'전문기술','')">🔧 전문기술</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 전문기술 —</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="현장·시설"   onclick="toggleLessonChip(this,'전문기술','현장·시설')">🔧 현장·시설</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="크리에이티브" onclick="toggleLessonChip(this,'전문기술','크리에이티브')">🎨 크리에이티브</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="IT·개발"     onclick="toggleLessonChip(this,'전문기술','IT·개발')">💻 IT·개발</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="뷰티·케어"   onclick="toggleLessonChip(this,'전문기술','뷰티·케어')">💄 뷰티·케어</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="언어·기타"   onclick="toggleLessonChip(this,'전문기술','언어·기타')">🌐 언어·기타</div>
   </div>
 </div>
 
@@ -2202,6 +2209,8 @@
       style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">🎾 레슨</button>
     <button id="lp-tab-tutoring" onclick="filterLessonMain(this,'과외')"
       style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">📚 과외</button>
+    <button id="lp-tab-technical" onclick="filterLessonMain(this,'전문기술')"
+      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">🔧 전문기술</button>
   </div>
   <!-- 서브 카테고리 칩 -->
   <div id="lesson-subcat-row" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:10px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
@@ -2224,6 +2233,7 @@
     <div style="display:flex;gap:8px;margin-bottom:16px" id="lr-main-cat-row">
       <button type="button" class="booking-day-btn active" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'레슨')">🎾 레슨</button>
       <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'과외')">📚 과외</button>
+      <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'전문기술')">🔧 전문기술</button>
     </div>
 
     <!-- 중간 카테고리 (분야) -->
@@ -2249,10 +2259,10 @@
       <button type="button" class="booking-day-btn" onclick="selectLrLocType(this,'비대면')">💻 비대면(온라인)</button>
     </div>
 
-    <label class="lesson-form-label">강의 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">수강생에게 보이는 한 줄 설명</span></label>
+    <label class="lesson-form-label" id="lr-detail-label">강의 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">수강생에게 보이는 한 줄 설명</span></label>
     <input id="lr-detail" class="lesson-form-input" placeholder="예) 골프 국가대표 출신 · 초보 전문 / 중국 10년 거주 원어민급">
 
-    <label class="lesson-form-label">1회 기본 단가 (원) *</label>
+    <label class="lesson-form-label" id="lr-price-label">1회 기본 단가 (원) *</label>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <input id="lr-price" class="lesson-form-input" type="number" placeholder="예) 50000" style="flex:2;margin-bottom:0">
       <input id="lr-duration" class="lesson-form-input" type="number" placeholder="분" value="60" style="flex:1;margin-bottom:0">
@@ -7970,19 +7980,25 @@ let _lessonSubFilter  = '';
 let _lessonOverlays   = [];   // 지도 마커 배열
 
 const LESSON_MIDS = {
-  '레슨': [{v:'스포츠',e:'⚽'},{v:'음악',e:'🎵'},{v:'댄스',e:'💃'},{v:'미술',e:'🎨'},{v:'기타',e:''}],
-  '과외': [{v:'어학',e:'🌍'},{v:'수학/과학',e:'📐'},{v:'국어/인문',e:'📝'},{v:'기타(과외)',e:''}]
+  '레슨':     [{v:'스포츠',e:'⚽'},{v:'음악',e:'🎵'},{v:'댄스',e:'💃'},{v:'미술',e:'🎨'},{v:'기타',e:''}],
+  '과외':     [{v:'어학',e:'🌍'},{v:'수학/과학',e:'📐'},{v:'국어/인문',e:'📝'},{v:'기타(과외)',e:''}],
+  '전문기술': [{v:'현장·시설',e:'🔧'},{v:'크리에이티브',e:'🎨'},{v:'IT·개발',e:'💻'},{v:'뷰티·케어',e:'💄'},{v:'언어·기타',e:'🌐'}]
 };
 const LESSON_SUBS = {
-  '스포츠':   [{v:'골프',e:'⛳'},{v:'테니스',e:'🎾'},{v:'탁구',e:'🏓'},{v:'수영',e:'🏊'},{v:'PT/필라테스',e:'💪'},{v:'배드민턴',e:'🏸'},{v:'클라이밍',e:'🧗'},{v:'요가',e:'🧘'}],
-  '음악':     [{v:'보컬',e:'🎤'},{v:'기타',e:'🎸'},{v:'피아노',e:'🎹'},{v:'드럼',e:'🥁'},{v:'바이올린',e:'🎻'},{v:'우쿨렐레',e:'🎵'}],
-  '댄스':     [{v:'K-pop댄스',e:'🕺'},{v:'발레',e:'🩰'},{v:'힙합',e:'💃'},{v:'현대무용',e:'🩱'},{v:'재즈댄스',e:'✨'}],
-  '미술':     [{v:'그림/수채화',e:'🎨'},{v:'디자인',e:'✏️'},{v:'공예',e:'🖼️'},{v:'캘리그라피',e:'🖊️'}],
-  '기타': [],
-  '어학':     [{v:'영어',e:'🇺🇸'},{v:'중국어',e:'🇨🇳'},{v:'일본어',e:'🇯🇵'},{v:'스페인어',e:'🇪🇸'},{v:'기타외국어',e:'🌐'}],
-  '수학/과학': [{v:'수학',e:'📐'},{v:'과학',e:'🔬'},{v:'물리',e:'⚡'},{v:'화학',e:'🧪'},{v:'생물',e:'🌿'}],
-  '국어/인문': [{v:'국어',e:'📝'},{v:'역사',e:'📖'},{v:'논술',e:'✍️'},{v:'한국사',e:'🏛️'},{v:'사회',e:'🗺️'}],
-  '기타(과외)': []
+  '스포츠':      [{v:'골프',e:'⛳'},{v:'테니스',e:'🎾'},{v:'탁구',e:'🏓'},{v:'수영',e:'🏊'},{v:'PT/필라테스',e:'💪'},{v:'배드민턴',e:'🏸'},{v:'클라이밍',e:'🧗'},{v:'요가',e:'🧘'}],
+  '음악':        [{v:'보컬',e:'🎤'},{v:'기타',e:'🎸'},{v:'피아노',e:'🎹'},{v:'드럼',e:'🥁'},{v:'바이올린',e:'🎻'},{v:'우쿨렐레',e:'🎵'}],
+  '댄스':        [{v:'K-pop댄스',e:'🕺'},{v:'발레',e:'🩰'},{v:'힙합',e:'💃'},{v:'현대무용',e:'🩱'},{v:'재즈댄스',e:'✨'}],
+  '미술':        [{v:'그림/수채화',e:'🎨'},{v:'디자인',e:'✏️'},{v:'공예',e:'🖼️'},{v:'캘리그라피',e:'🖊️'}],
+  '기타':        [],
+  '어학':        [{v:'영어',e:'🇺🇸'},{v:'중국어',e:'🇨🇳'},{v:'일본어',e:'🇯🇵'},{v:'스페인어',e:'🇪🇸'},{v:'기타외국어',e:'🌐'}],
+  '수학/과학':   [{v:'수학',e:'📐'},{v:'과학',e:'🔬'},{v:'물리',e:'⚡'},{v:'화학',e:'🧪'},{v:'생물',e:'🌿'}],
+  '국어/인문':   [{v:'국어',e:'📝'},{v:'역사',e:'📖'},{v:'논술',e:'✍️'},{v:'한국사',e:'🏛️'},{v:'사회',e:'🗺️'}],
+  '기타(과외)':  [],
+  '현장·시설':   [{v:'설비·수리',e:'🔧'},{v:'전기·전자',e:'⚡'},{v:'인테리어',e:'🏠'},{v:'청소·방역',e:'🧹'},{v:'이사·운반',e:'🚚'},{v:'조경·정원',e:'🌿'}],
+  '크리에이티브':[{v:'사진 촬영',e:'📸'},{v:'영상 촬영·편집',e:'🎬'},{v:'그래픽·디자인',e:'🎨'},{v:'웹디자인·UI',e:'💻'},{v:'SNS·마케팅',e:'📱'},{v:'3D·모션',e:'✨'}],
+  'IT·개발':     [{v:'웹·앱 개발',e:'⌨️'},{v:'데이터 분석',e:'📊'},{v:'자동화·스크립트',e:'🤖'},{v:'기타 IT',e:'💾'}],
+  '뷰티·케어':   [{v:'헤어',e:'💇'},{v:'메이크업·네일',e:'💅'},{v:'피부 관리',e:'✨'}],
+  '언어·기타':   [{v:'번역·통역',e:'🌐'},{v:'행사·MC',e:'🎤'},{v:'음식·케이터링',e:'🍽️'},{v:'기타 전문',e:'⭐'}],
 };
 
 function openLessonPanel() {
@@ -8008,7 +8024,7 @@ function _clearLessonOverlays() {
 function filterLessonMain(el, main) {
   _lessonMainFilter = main; _lessonSubFilter = '';
   // 탭 스타일
-  ['lp-tab-all','lp-tab-lesson','lp-tab-tutoring'].forEach(id => {
+  ['lp-tab-all','lp-tab-lesson','lp-tab-tutoring','lp-tab-technical'].forEach(id => {
     const t = document.getElementById(id);
     if (t) { t.style.borderBottomColor='transparent'; t.style.color='#888'; }
   });
@@ -8055,7 +8071,8 @@ async function loadLessons() {
       );
     }
     if (!lessons.length) {
-      el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>';
+      const emptyTxt = _lessonMainFilter === '전문기술' ? '등록된 전문기술 서비스가 없어요' : '등록된 레슨/과외가 없어요';
+      el.innerHTML = `<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">${emptyTxt}<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>`;
       return;
     }
     el.innerHTML = lessons.map(p => makeLessonCardHtml(p)).join('');
@@ -8276,6 +8293,18 @@ function selectLessonMainCat(el, cat) {
   document.getElementById('lesson-subject-chips').innerHTML = '';
   document.getElementById('lr-subject-label').style.display = 'none';
   document.getElementById('lr-subject-custom').value = '';
+  // 전문기술 선택 시 레이블/플레이스홀더 변경
+  const isTech = cat === '전문기술';
+  const detailLbl = document.getElementById('lr-detail-label');
+  const priceLbl  = document.getElementById('lr-price-label');
+  const detailInp = document.getElementById('lr-detail');
+  if (detailLbl) detailLbl.innerHTML = isTech
+    ? '서비스 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">의뢰인에게 보이는 한 줄 설명</span>'
+    : '강의 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">수강생에게 보이는 한 줄 설명</span>';
+  if (priceLbl)  priceLbl.textContent = isTech ? '건당 / 시간당 단가 (원) *' : '1회 기본 단가 (원) *';
+  if (detailInp) detailInp.placeholder = isTech
+    ? '예) 사진 촬영 10년 경력 · 제품/프로필/웨딩 가능'
+    : '예) 골프 국가대표 출신 · 초보 전문 / 중국 10년 거주 원어민급';
 }
 function selectLessonMidCat(el, mid) {
   _selectedMidCategory = mid; _selectedLessonSubject = '';
