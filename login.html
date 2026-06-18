@@ -565,6 +565,8 @@ const _hadCodeParam = window.location.search.includes('code=');
 if (window.location.search && !_hadCodeParam) {
   history.replaceState({}, '', window.location.pathname + window.location.hash);
 }
+// 재설정 링크로 진입 시 게스트 플래그 제거 (게스트 플래그가 있으면 goToApp()이 모든 체크를 우회함)
+if (_hadCodeParam) localStorage.removeItem('baroalba_guest');
 
 // ── 해시 최우선 캡처 (Supabase가 지우기 전에) ─────────────
 const _initHash = window.location.hash;
@@ -613,15 +615,17 @@ db.auth.onAuthStateChange(async (event, session) => {
 
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
     if (_hadCodeParam) {
-      // login.html?code=... 로 진입한 경우 = 비밀번호 재설정 링크 클릭
-      // Supabase는 code 교환 후 URL을 정리하기 때문에 window.location.search에는 code=가 없음
-      // _hadCodeParam으로 체크해야 정확함
-      if (_isRecentPasswordReset()) {
-        // 같은 브라우저에서 요청한 경우 → 즉시 재설정 화면 표시
+      // login.html?code=... 진입 = 비밀번호 재설정 링크
+      // 1순위: session.user.recovery_sent_at (브라우저/localStorage 무관, 가장 신뢰성 높음)
+      const recoverySentAt = session?.user?.recovery_sent_at;
+      if (recoverySentAt && (Date.now() - new Date(recoverySentAt).getTime()) < 10 * 60 * 1000) {
         _showPwResetScreen(); return;
       }
-      // 다른 브라우저/시크릿 창: PASSWORD_RECOVERY 이벤트를 최대 3초 대기
-      // (SIGNED_IN 직후 PASSWORD_RECOVERY가 발생하면 _showPwResetScreen으로 이동)
+      // 2순위: localStorage 플래그 (같은 브라우저 요청 시)
+      if (_isRecentPasswordReset()) {
+        _showPwResetScreen(); return;
+      }
+      // 3순위: PASSWORD_RECOVERY 이벤트 대기 (최대 3초)
       if (event === 'SIGNED_IN' && !_codeWaitTimer) {
         _codeWaitTimer = setTimeout(() => {
           if (!_showingResetScreen) { showLoading('앱으로 이동 중...'); goToApp(); }
@@ -665,8 +669,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.body.prepend(banner);
   }
 
-  // 게스트도 앱으로
-  if (localStorage.getItem('baroalba_guest')) { goToApp(); return; }
+  // 게스트도 앱으로 (단, 재설정 링크로 진입한 경우는 제외)
+  if (!_hadCodeParam && localStorage.getItem('baroalba_guest')) { goToApp(); return; }
 
   // 안전 타이머: getSession 응답 없어도 2초 후 무조건 로그인 화면 표시
   const safetyTimer = setTimeout(showLoginScreen, 2000);
