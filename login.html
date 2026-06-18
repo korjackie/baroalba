@@ -591,20 +591,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 function _isRecentPasswordReset() {
   const ts = parseInt(localStorage.getItem('baroalba_pw_reset_ts') || '0');
-  return ts > 0 && (Date.now() - ts) < 5 * 60 * 1000; // 5분 이내
+  return ts > 0 && (Date.now() - ts) < 5 * 60 * 1000;
 }
+let _showingResetScreen = false;
 function _showPwResetScreen() {
-  localStorage.removeItem('baroalba_pw_reset_ts');
+  _showingResetScreen = true;
   document.getElementById('splash')?.classList.add('hidden');
   document.getElementById('screen-pw-reset').style.display = 'flex';
 }
 
 db.auth.onAuthStateChange(async (event, session) => {
+  if (_showingResetScreen) return; // 재설정 화면 표시 중 → 모든 이벤트 차단
   if (event === 'PASSWORD_RECOVERY') {
     _showPwResetScreen(); return;
   }
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    // 최근 5분 내 재설정 요청 + code= 파라미터 → 재설정 화면
     if (_isRecentPasswordReset() && window.location.search.includes('code=')) {
       _showPwResetScreen(); return;
     }
@@ -660,7 +661,7 @@ window.addEventListener('DOMContentLoaded', async () => {
           window.location.search.includes('type=recovery')) return;
       // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
       setTimeout(() => {
-        if (!_pwRecoveryMode && document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
+        if (!_showingResetScreen && !_isRecentPasswordReset() && document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
           goToApp();
         }
       }, 1500);
@@ -864,6 +865,7 @@ async function submitNewPassword() {
     errEl.style.display = 'block';
   } else {
     localStorage.removeItem('baroalba_pw_reset_ts');
+    _showingResetScreen = false;
     await db.auth.signOut();
     document.getElementById('screen-pw-reset').style.display = 'none';
     showLoginScreen();
