@@ -4010,15 +4010,19 @@ async function refreshWorkerChatBadge() {
 // ── 채팅 (알바생) ─────────────────────────────────────────
 let _wchatAppId = null, _wchatSub = null;
 
-function _chatItemClick(e, appId, bizName) {
-  // 스와이프 열린 상태면 클릭 흡수 (열린 패널 닫기만)
+function _chatItemClick(e, appId, name, side) {
   const inner = e.currentTarget;
   if (inner && inner.classList.contains('revealed')) {
     inner.classList.remove('revealed');
     e.stopPropagation();
     return;
   }
-  openWChat(appId, bizName);
+  // 업주 side면 owner 채팅(chat-overlay), worker side면 worker 채팅(wchat-overlay)
+  if (side === 'owner') {
+    openChat(appId, name);
+  } else {
+    openWChat(appId, name);
+  }
 }
 
 function leaveChatItem(appId) {
@@ -4535,27 +4539,57 @@ function avatarColor(str) {
   return AVATAR_PALETTE[h];
 }
 
-// ── 채팅 목록 ─────────────────────────────────────────────
+// ── 채팅 목록 (통합: worker로 지원한 채팅 + 업주로 받은 채팅) ────────────
 async function loadMyChatList() {
   if (isGuest || !currentUser) return;
   const el = document.getElementById('my-chats-list');
   el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
 
-  const { data: worker } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!worker) { el.innerHTML = ''; return; }
+  const allApps = [];
+  const appMap = {};
 
-  const { data: apps } = await db.from('applications')
-    .select('id, job_postings(title, businesses(name))')
-    .eq('worker_id', worker.id);
+  const [workerRes, bizRes] = await Promise.all([
+    db.from('workers').select('id').eq('kakao_uid', currentUser.id).maybeSingle(),
+    db.from('businesses').select('id').eq('kakao_uid', currentUser.id).maybeSingle()
+  ]);
 
-  if (!apps || !apps.length) {
+  // 1. 내가 지원한 채팅 (worker side)
+  if (workerRes.data) {
+    const { data: apps } = await db.from('applications')
+      .select('id, job_postings(title, businesses(name))')
+      .eq('worker_id', workerRes.data.id);
+    (apps || []).forEach(a => {
+      const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.job_postings?.businesses?.name || '업체', side: 'worker' };
+      allApps.push(obj);
+      appMap[a.id] = obj;
+    });
+  }
+
+  // 2. 내 공고에 지원한 채팅 (owner side)
+  const biz = bizRecord || bizRes.data;
+  if (biz) {
+    const { data: myJobs } = await db.from('job_postings').select('id').eq('business_id', biz.id);
+    if (myJobs?.length) {
+      const { data: apps } = await db.from('applications')
+        .select('id, workers(name), job_postings(title)')
+        .in('job_posting_id', myJobs.map(j => j.id));
+      (apps || []).forEach(a => {
+        if (!appMap[a.id]) {
+          const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.workers?.name || '지원자', side: 'owner' };
+          allApps.push(obj);
+          appMap[a.id] = obj;
+        }
+      });
+    }
+  }
+
+  if (!allApps.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">채팅을 시작해보세요</div></div>';
     return;
   }
 
-  const appIds = apps.map(a => a.id);
   const { data: messages } = await db.from('messages')
-    .select('*').in('application_id', appIds)
+    .select('*').in('application_id', allApps.map(a => a.id))
     .order('created_at', { ascending: false });
 
   const latestMsg = {}, unreadCnt = {};
@@ -4573,37 +4607,33 @@ async function loadMyChatList() {
   }
 
   const hiddenChats = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
-  const chats = apps.filter(a => latestMsg[a.id] && !hiddenChats.includes(a.id));
+  const chats = allApps.filter(a => latestMsg[a.id] && !hiddenChats.includes(a.id));
+  chats.sort((a, b) => new Date(latestMsg[b.id].created_at) - new Date(latestMsg[a.id].created_at));
+
   if (!chats.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">채팅을 시작해보세요</div></div>';
     return;
   }
 
-  window._chatBizNames = window._chatBizNames || {};
   const chatRows = chats.map(a => {
     const msg = latestMsg[a.id];
     const unread = unreadCnt[a.id] || 0;
     const isMine = msg.sender_id === currentUser.id;
     const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    const bizName = a.job_postings?.businesses?.name || '';
-    const jobTitle = a.job_postings?.title || '';
-    const displayName = bizName || jobTitle || '업주';
-    const avatarKey = bizName || jobTitle || '업주';
-    const ac = avatarColor(avatarKey);
-    window._chatBizNames[a.id] = displayName;
+    const ac = avatarColor(a.counterpartName);
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
-      <div class="chat-swipe-inner" data-app-id="${a.id}" data-biz-name="${displayName}" onclick="_chatItemClick(event,'${a.id}','${displayName}')">
-        <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${avatarKey.charAt(0)}</div>
+      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')">
+        <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-            <div style="font-size:14px;font-weight:800;color:#222">${displayName}</div>
+            <div style="font-size:14px;font-weight:800;color:#222">${a.counterpartName}</div>
             <div style="font-size:11px;color:#bbb">${time}</div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
             <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
             ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
           </div>
-          <div style="font-size:11px;color:#bbb;margin-top:2px">${a.job_postings?.title || ''}</div>
+          <div style="font-size:11px;color:#bbb;margin-top:2px">${a.title}</div>
         </div>
       </div>
       <button class="chat-leave-btn" onclick="leaveChatItem('${a.id}')">나가기</button>
@@ -5526,13 +5556,8 @@ function setNav(el, tab) {
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
     if (mapLocBtn) mapLocBtn.style.display = 'none';
-    if (currentUser?.user_metadata?.baroalba_role === 'business' || bizRecord) {
-      // 업주/통합계정: owner panel 채팅으로 이동
-      openOwnerPanel('chats');
-    } else {
-      panelChats.classList.add('show');
-      loadMyChatList();
-    }
+    panelChats.classList.add('show');
+    loadMyChatList();
   } else if (tab === 'profile') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
