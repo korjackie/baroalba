@@ -609,9 +609,15 @@ db.auth.onAuthStateChange(async (event, session) => {
         { ignoreDuplicates: true }
       ).then(null, () => {});
     }
-    // code= 파라미터가 있으면(PKCE) PASSWORD_RECOVERY가 뒤에 올 수 있으므로 잠깐 대기
+    // code= 파라미터(PKCE)가 있을 때: recovery 세션이면 비번 재설정 화면으로
     if (window.location.search.includes('code=')) {
-      await new Promise(r => setTimeout(r, 300));
+      if (session?.user?.recovery_sent_at) {
+        _pwRecoveryMode = true;
+        document.getElementById('splash')?.classList.add('hidden');
+        document.getElementById('screen-pw-reset').style.display = 'flex';
+        return;
+      }
+      await new Promise(r => setTimeout(r, 500));
       if (_pwRecoveryMode) return;
     }
     showLoading('앱으로 이동 중...');
