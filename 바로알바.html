@@ -12085,19 +12085,14 @@ const PLAN_INFO = {
 const TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW'; // API 개별 연동 키 (v1 SDK용)
 let _selectedPayMethod = '카드';
 
-function onPayMethodChange() {
-  const checked = document.querySelector('input[name="pay-method"]:checked');
-  if (checked) _selectedPayMethod = checked.value;
-  // 선택된 항목 테두리 강조
-  ['card','transfer','kakaopay','naverpay','tosspay'].forEach(id => {
-    const wrap = document.getElementById('pay-method-' + id + '-wrap');
-    if (wrap) wrap.style.borderColor = '#e5e7eb';
+function selectPayMethod(el, method) {
+  _selectedPayMethod = method;
+  document.querySelectorAll('#pay-method-grid > div').forEach(d => {
+    d.style.border = '1.5px solid #e5e7eb';
+    d.style.background = '#fff';
   });
-  if (checked) {
-    const map = { '카드':'card', '계좌이체':'transfer', '카카오페이':'kakaopay', '네이버페이':'naverpay', '토스페이':'tosspay' };
-    const wrap = document.getElementById('pay-method-' + map[checked.value] + '-wrap');
-    if (wrap) wrap.style.borderColor = '#C8102E';
-  }
+  el.style.border = '2px solid #C8102E';
+  el.style.background = '#fff9f9';
 }
 
 const PLAN_DETAILS = {
@@ -12202,8 +12197,8 @@ async function selectPlan(plan) {
   document.getElementById('pay-amount').textContent = info.amount;
   renderPlanDetails(plan);
   // 결제수단 초기화 (카드 기본 선택)
-  const cardRadio = document.querySelector('input[name="pay-method"][value="카드"]');
-  if (cardRadio) { cardRadio.checked = true; onPayMethodChange(); }
+  const cardEl = document.getElementById('pm-card');
+  if (cardEl) selectPayMethod(cardEl, '카드');
   document.getElementById('payment-overlay').style.display = 'block';
 }
 
@@ -12772,30 +12767,89 @@ async function deleteBizPhoto(photoId) {
 
     <!-- 결제 수단 선택 -->
     <div style="margin-bottom:20px">
-      <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:10px">결제 수단 선택</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #C8102E;border-radius:10px;cursor:pointer" id="pay-method-card-wrap">
-          <input type="radio" name="pay-method" value="카드" onchange="onPayMethodChange()" checked style="accent-color:#C8102E;width:16px;height:16px;flex-shrink:0">
-          <span style="font-size:15px">💳</span>
-          <span style="font-size:13px;font-weight:700;color:#222">신용·체크카드</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer" id="pay-method-transfer-wrap">
-          <input type="radio" name="pay-method" value="계좌이체" onchange="onPayMethodChange()" style="accent-color:#C8102E;width:16px;height:16px;flex-shrink:0">
-          <span style="font-size:15px">🏦</span>
-          <span style="font-size:13px;font-weight:700;color:#222">계좌이체</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer" id="pay-method-kakaopay-wrap">
-          <input type="radio" name="pay-method" value="카카오페이" onchange="onPayMethodChange()" style="accent-color:#C8102E;width:16px;height:16px;flex-shrink:0">
-          <span style="background:#FFE812;color:#3A1D1D;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:900;font-family:sans-serif;letter-spacing:-0.3px">kakao pay</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer" id="pay-method-naverpay-wrap">
-          <input type="radio" name="pay-method" value="네이버페이" onchange="onPayMethodChange()" style="accent-color:#C8102E;width:16px;height:16px;flex-shrink:0">
-          <span style="background:#03C75A;color:#fff;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:900;font-family:sans-serif;letter-spacing:-0.3px">N Pay</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer" id="pay-method-tosspay-wrap">
-          <input type="radio" name="pay-method" value="토스페이" onchange="onPayMethodChange()" style="accent-color:#C8102E;width:16px;height:16px;flex-shrink:0">
-          <span style="background:#0064FF;color:#fff;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:900;font-family:sans-serif;letter-spacing:-0.3px">toss pay</span>
-        </label>
+      <div style="font-size:12px;color:#999;margin-bottom:10px">결제 수단 선택</div>
+      <div id="pay-method-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+
+        <!-- 신용·체크카드 -->
+        <div id="pm-card" onclick="selectPayMethod(this,'카드')"
+          style="border:2px solid #C8102E;background:#fff9f9;border-radius:12px;padding:16px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.15s">
+          <svg width="42" height="28" viewBox="0 0 42 28" fill="none">
+            <rect width="42" height="28" rx="5" fill="#dde3ed"/>
+            <rect y="7" width="42" height="7" fill="#a0aec0"/>
+            <rect x="4" y="19" width="12" height="3" rx="1.5" fill="#a0aec0"/>
+            <rect x="31" y="17" width="7" height="6" rx="1" fill="#c0c8d8"/>
+          </svg>
+          <span style="font-size:11px;color:#333">신용·체크카드</span>
+        </div>
+
+        <!-- 계좌이체 -->
+        <div id="pm-transfer" onclick="selectPayMethod(this,'계좌이체')"
+          style="border:1.5px solid #e5e7eb;background:#fff;border-radius:12px;padding:16px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.15s">
+          <svg width="38" height="32" viewBox="0 0 38 32" fill="none">
+            <polygon points="19,2 2,13 36,13" fill="#e2e8f0" stroke="#a0aec0" stroke-width="1.5" stroke-linejoin="round"/>
+            <rect x="4" y="13" width="6" height="17" fill="#cbd5e1"/>
+            <rect x="12" y="13" width="6" height="17" fill="#cbd5e1"/>
+            <rect x="20" y="13" width="6" height="17" fill="#cbd5e1"/>
+            <rect x="28" y="13" width="6" height="17" fill="#cbd5e1"/>
+            <rect x="1" y="30" width="36" height="2" rx="1" fill="#94a3b8"/>
+          </svg>
+          <span style="font-size:11px;color:#333">계좌이체</span>
+        </div>
+
+        <!-- 카카오페이 -->
+        <div id="pm-kakaopay" onclick="selectPayMethod(this,'카카오페이')"
+          style="border:1.5px solid #e5e7eb;background:#fff;border-radius:12px;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:76px;overflow:hidden;transition:all 0.15s">
+          <svg width="100%" height="76" viewBox="0 0 160 76" preserveAspectRatio="xMidYMid meet">
+            <rect width="160" height="76" fill="#fff"/>
+            <!-- Kakao 말풍선 아이콘 -->
+            <g transform="translate(28,14)">
+              <ellipse cx="24" cy="20" rx="24" ry="20" fill="#FFDE00"/>
+              <ellipse cx="24" cy="20" rx="24" ry="20" fill="#FFDE00"/>
+              <path d="M24 32 Q18 38 14 36 Q20 34 22 30" fill="#FFDE00"/>
+              <path d="M13 20 Q13 14 20 14 L20 18 Q16 18 16 20 L16 26 L13 26Z" fill="#3A1D1D"/>
+              <path d="M22 14 L22 26 L25 26 L25 21 L30 26 L34 26 L28 19.5 L34 14 L30 14 L25 19 L25 14Z" fill="#3A1D1D"/>
+            </g>
+            <text x="84" y="41" text-anchor="start" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#3A1D1D">pay</text>
+          </svg>
+        </div>
+
+        <!-- 네이버페이 -->
+        <div id="pm-naverpay" onclick="selectPayMethod(this,'네이버페이')"
+          style="border:1.5px solid #e5e7eb;background:#fff;border-radius:12px;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:76px;overflow:hidden;transition:all 0.15s">
+          <svg width="100%" height="76" viewBox="0 0 160 76" preserveAspectRatio="xMidYMid meet">
+            <rect width="160" height="76" fill="#fff"/>
+            <!-- N 사각 아이콘 -->
+            <rect x="44" y="20" width="36" height="36" rx="7" fill="#03C75A"/>
+            <text x="62" y="46" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="22" font-weight="900" fill="#fff">N</text>
+            <text x="91" y="43" text-anchor="start" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#333">Pay</text>
+          </svg>
+        </div>
+
+        <!-- 토스페이 -->
+        <div id="pm-tosspay" onclick="selectPayMethod(this,'토스페이')"
+          style="border:1.5px solid #e5e7eb;background:#fff;border-radius:12px;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:76px;overflow:hidden;transition:all 0.15s">
+          <svg width="100%" height="76" viewBox="0 0 160 76" preserveAspectRatio="xMidYMid meet">
+            <rect width="160" height="76" fill="#fff"/>
+            <!-- toss 로고 - 파란 원 + 텍스트 -->
+            <circle cx="46" cy="38" r="20" fill="#0064FF"/>
+            <text x="46" y="44" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="900" fill="#fff">t</text>
+            <text x="76" y="44" text-anchor="start" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#0064FF">pay</text>
+          </svg>
+        </div>
+
+        <!-- 페이코 -->
+        <div id="pm-payco" onclick="selectPayMethod(this,'페이코')"
+          style="border:1.5px solid #e5e7eb;background:#fff;border-radius:12px;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:76px;overflow:hidden;transition:all 0.15s">
+          <svg width="100%" height="76" viewBox="0 0 160 76" preserveAspectRatio="xMidYMid meet">
+            <rect width="160" height="76" fill="#fff"/>
+            <!-- PAYCO 원형 P 아이콘 + 텍스트 -->
+            <circle cx="46" cy="38" r="20" fill="#FF4E3B"/>
+            <circle cx="46" cy="38" r="14" fill="#fff"/>
+            <text x="46" y="43" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="#FF4E3B">P</text>
+            <text x="76" y="44" text-anchor="start" font-family="Arial,sans-serif" font-size="15" font-weight="800" fill="#FF4E3B" letter-spacing="1">PAYCO</text>
+          </svg>
+        </div>
+
       </div>
     </div>
 
