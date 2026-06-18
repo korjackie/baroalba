@@ -543,6 +543,22 @@
 <!-- 네이버 SDK 렌더링 영역 (숨김) -->
 <div id="naverIdLogin"></div>
 
+<!-- 비밀번호 재설정 인라인 화면 (이메일 링크 클릭 후 기존 탭에서 표시) -->
+<div id="screen-inline-reset" style="display:none;position:fixed;inset:0;z-index:3000;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:#C8102E;">
+  <div style="background:#fff;border-radius:24px;padding:36px 24px 40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="font-size:48px;text-align:center;margin-bottom:16px">🔑</div>
+    <div style="font-size:22px;font-weight:900;color:#222;text-align:center;margin-bottom:6px">새 비밀번호 설정</div>
+    <div style="font-size:14px;color:#888;text-align:center;margin-bottom:28px">6자 이상 새 비밀번호를 입력해주세요</div>
+    <input id="inline-pw1" type="password" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password"
+      style="width:100%;padding:14px 16px;border:1.5px solid #eee;border-radius:12px;font-size:15px;color:#222;outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
+    <input id="inline-pw2" type="password" placeholder="비밀번호 확인" autocomplete="new-password"
+      style="width:100%;padding:14px 16px;border:1.5px solid #eee;border-radius:12px;font-size:15px;color:#222;outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
+    <button id="inline-btn" onclick="doInlineReset()"
+      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px;">비밀번호 변경</button>
+    <div id="inline-msg" style="font-size:13px;text-align:center;margin-top:14px;display:none;"></div>
+  </div>
+</div>
+
 <!-- 네이버 이메일 확인 안내 오버레이 -->
 <div id="screen-naver-magic" style="display:none;position:fixed;inset:0;z-index:2000;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;background:#fff;text-align:center;overflow-y:auto">
   <div style="font-size:56px;margin-bottom:20px">📧</div>
@@ -913,9 +929,40 @@ async function sendPasswordReset() {
     result.textContent = '오류: ' + error.message;
     result.style.color = '#EF4444';
   } else {
-    result.textContent = '✅ 재설정 링크를 이메일로 보냈습니다. 메일함을 확인해주세요.';
+    result.textContent = '✅ 재설정 링크를 이메일로 보냈습니다. 링크를 클릭하면 이 화면에서 바로 비밀번호를 재설정할 수 있습니다.';
     result.style.color = '#16a34a';
   }
+}
+
+// ── 인라인 비밀번호 재설정 ──────────────────────────────────
+// reset.html이 ?code= 처리 완료 후 신호를 보내면 기존 탭에서 재설정 폼 표시
+window.addEventListener('storage', (e) => {
+  if (e.key === 'baroalba_reset_session_ready') showInlineResetForm();
+});
+
+async function showInlineResetForm() {
+  const { data } = await db.auth.getSession();
+  if (!data?.session) return;
+  localStorage.setItem('baroalba_reset_handled', '1');
+  document.getElementById('screen-inline-reset').style.display = 'flex';
+}
+
+async function doInlineReset() {
+  const pw1 = document.getElementById('inline-pw1').value;
+  const pw2 = document.getElementById('inline-pw2').value;
+  const msg = document.getElementById('inline-msg');
+  const btn = document.getElementById('inline-btn');
+  const showMsg = (t, c) => { msg.textContent = t; msg.style.color = c; msg.style.display = 'block'; };
+  if (pw1.length < 6) { showMsg('비밀번호는 6자 이상이어야 합니다.', '#EF4444'); return; }
+  if (pw1 !== pw2)    { showMsg('비밀번호가 일치하지 않습니다.', '#EF4444'); return; }
+  btn.disabled = true; btn.textContent = '변경 중...';
+  const { error } = await db.auth.updateUser({ password: pw1 });
+  if (error) { showMsg('오류: ' + error.message, '#EF4444'); btn.disabled = false; btn.textContent = '비밀번호 변경'; return; }
+  await db.auth.signOut();
+  ['baroalba_reset_initiated','baroalba_reset_session_ready','baroalba_reset_handled'].forEach(k => localStorage.removeItem(k));
+  showMsg('✅ 비밀번호가 변경됐습니다!', '#16a34a');
+  btn.style.display = 'none';
+  setTimeout(() => { document.getElementById('screen-inline-reset').style.display = 'none'; showLoginScreen(); }, 1500);
 }
 
 // ── 헬퍼 ──────────────────────────────────────────────────

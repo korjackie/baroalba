@@ -127,8 +127,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('form-wrap').style.display = 'block';
 
   if (data?.session) {
-    // 다른 탭(앱 화면)에 비밀번호 재설정 시작 신호 → 로그인 화면으로 이동시킴
     localStorage.setItem('baroalba_reset_initiated', Date.now().toString());
+    // login.html 기존 탭에 재설정 세션 준비됐다는 신호 전송
+    localStorage.setItem('baroalba_reset_session_ready', '1');
+    // 1초 후 기존 탭이 받아갔는지 확인 → 받아갔으면 이 탭은 폼 숨기기
+    setTimeout(() => {
+      if (localStorage.getItem('baroalba_reset_handled')) {
+        document.getElementById('form-wrap').innerHTML =
+          '<p style="text-align:center;color:#888;font-size:14px;line-height:1.8">✅ 다른 탭에서 비밀번호 재설정 화면이 열렸습니다.<br>이 탭은 닫아도 됩니다.</p>';
+      }
+    }, 1000);
   }
 
   if (error || !data?.session) {
