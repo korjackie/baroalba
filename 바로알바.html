@@ -2508,8 +2508,22 @@
   </div>
 </div>
 
+<!-- 공고 공유 모달 (업주 공고관리에서 사용) -->
+<div class="detail-overlay" id="share-overlay" style="z-index:600" onclick="if(event.target===this)closeShareModal()">
+  <div class="detail-sheet" style="padding:20px 20px 32px">
+    <div class="detail-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font-size:17px;font-weight:800;color:#222">공고 공유하기</span><button onclick="closeShareModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1">✕</button></div>
+    <div style="padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#555;word-break:break-all;margin-bottom:12px" id="share-url-text">-</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="copyShareUrl()" style="flex:1;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#128203; 링크 복사</button>
+      <button onclick="shareKakao()" style="flex:1;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#128172; 카카오톡</button>
+    </div>
+    <button id="share-native-btn" onclick="shareNative()" style="display:none;width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#8599; 더 보내기 (SNS/문자)</button>
+  </div>
+</div>
+
 <!-- 업주 채팅 오버레이 (지원자와 대화 / 레슨 상담) -->
-<div class="detail-overlay" id="chat-overlay" onclick="if(event.target===this)closeChat()">
+<div class="detail-overlay" id="chat-overlay" style="z-index:600" onclick="if(event.target===this)closeChat()">
   <div class="detail-sheet" style="height:80vh;display:flex;flex-direction:column;padding:0">
     <div class="detail-handle" style="flex-shrink:0"></div>
     <div style="padding:12px 20px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
@@ -7144,7 +7158,7 @@ async function runSearch() {
     const today = new Date().toISOString().slice(0, 10);
     let q = db.from('job_postings').select(`
       id, title, category, work_type, status,
-      current_wage, wage_delta, start_time, duration_hours,
+      base_wage, current_wage, start_time, duration_hours,
       needed_count, filled_count, address, lat, lng, work_end_date,
       businesses(name)
     `).neq('status', 'closed')
@@ -7171,7 +7185,7 @@ async function runSearch() {
     const { data, error } = await q.order('created_at', { ascending: false }).limit(60);
     if (error) throw error;
 
-    const list = data || [];
+    const list = (data || []).map(j => ({ ...j, wage_delta: (j.current_wage||0) - (j.base_wage||0) }));
     document.getElementById('srch-count').textContent = list.length;
     renderSearchResults(list);
   } catch (e) {
@@ -9888,7 +9902,7 @@ async function submitPosting() {
     if (!editingId) {
       const { data: fresh } = await db.from('job_postings')
         .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
-      openShareModal(fresh?.id);
+      openShareModal(fresh?.id, true);
     } else {
       showToast('✅ 공고가 수정됐습니다');
     }
@@ -10901,14 +10915,21 @@ function subscribeOwnerGlobalChat() {
 // ── 공유 ───────────────────────────────────────────────────
 let _shareJobId = null;
 
-function openShareModal(jobId) {
+function openShareModal(jobId, showPostedToast) {
   _shareJobId = jobId;
   const base = 'https://baroalba.multimove.co.kr/%EB%B0%94%EB%A1%9C%EC%95%8C%EB%B0%94.html';
   const url = jobId ? `${base}?job=${encodeURIComponent(jobId)}` : base;
   document.getElementById('share-url-text').textContent = url;
   document.getElementById('share-native-btn').style.display = navigator.share ? 'block' : 'none';
   document.getElementById('share-overlay').classList.add('open');
-  showToast('✅ 공고가 등록됐습니다');
+  if (showPostedToast) showToast('✅ 공고가 등록됐습니다');
+}
+function closeShareModal() {
+  document.getElementById('share-overlay').classList.remove('open');
+}
+function shareNative() {
+  const url = document.getElementById('share-url-text').textContent;
+  navigator.share({ title: '바로알바 공고', url }).catch(() => {});
 }
 
 function copyShareUrl() {
