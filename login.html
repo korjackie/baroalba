@@ -454,7 +454,7 @@
       <!-- 비밀번호 재설정 패널 -->
       <div class="find-panel" id="find-pw-panel">
         <div class="find-panel-title">🔑 비밀번호 재설정</div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:10px">가입한 이메일로 재설정 링크를 보내드립니다</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:10px">가입한 이메일로 6자리 인증 코드를 보내드립니다</div>
         <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E;line-height:1.6">
           ⚠️ <strong>카카오·네이버·구글</strong>로 가입하신 경우 해당 앱에서 직접 비밀번호를 찾아주세요.<br>
           이메일 재설정은 <strong>이메일로 직접 가입</strong>하신 분만 이용 가능합니다.
@@ -462,7 +462,11 @@
         <div class="form-group" style="margin-bottom:10px">
           <input class="form-input" id="find-pw-email" type="email" placeholder="가입한 이메일 주소">
         </div>
-        <button class="submit-btn" style="padding:12px" onclick="sendPasswordReset()">재설정 링크 발송</button>
+        <button class="submit-btn" style="padding:12px" id="find-pw-send-btn" onclick="sendPasswordOtp()">인증 코드 발송</button>
+        <div id="find-pw-otp-row" style="display:none;margin-top:10px">
+          <input class="form-input" id="find-pw-otp" type="text" inputmode="numeric" maxlength="6" placeholder="이메일로 받은 6자리 코드" style="letter-spacing:6px;font-size:18px;font-weight:700;text-align:center;margin-bottom:8px">
+          <button class="submit-btn" style="padding:12px;background:#16a34a" onclick="verifyPasswordOtp()">코드 확인 → 비밀번호 변경</button>
+        </div>
         <div class="find-result" id="find-pw-result"></div>
       </div>
     </div>
@@ -621,6 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 let _inPasswordRecovery = false;
+let _inOtpPasswordReset = false;
 db.auth.onAuthStateChange(async (event, session) => {
   // 비밀번호 재설정 이벤트 — implicit(hash) 및 PKCE(?code=) 양쪽 모두 처리
   if (event === 'PASSWORD_RECOVERY' && session) {
@@ -660,6 +665,14 @@ db.auth.onAuthStateChange(async (event, session) => {
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
     // PASSWORD_RECOVERY 직후 SIGNED_IN이 연달아 오는 경우 자동 로그인 차단
     if (_inPasswordRecovery) return;
+    // OTP 인증 완료 → 비밀번호 재설정 폼 표시 (새 탭 없음)
+    if (_inOtpPasswordReset) {
+      _inOtpPasswordReset = false;
+      const show = () => showInlineResetForm();
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+      else show();
+      return;
+    }
     // 이 탭이 PKCE 재설정 링크로 열린 경우 → 인라인 재설정 폼 표시 (fallback)
     if (_hadCodeParam && event === 'SIGNED_IN') {
       const show = () => showInlineResetForm();
@@ -999,13 +1012,15 @@ async function findId() {
   }
 }
 
-async function sendPasswordReset() {
+let _otpEmail = '';
+
+async function sendPasswordOtp() {
   const email = document.getElementById('find-pw-email').value.trim();
   if (!email) { showError('이메일을 입력해주세요.'); return; }
   showLoading('발송 중...');
-  // 재설정 요청 시 플래그 저장 (5분 유효)
-  const { error } = await db.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/login.html'
+  const { error } = await db.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false }
   });
   hideLoading();
   const result = document.getElementById('find-pw-result');
@@ -1014,10 +1029,30 @@ async function sendPasswordReset() {
     result.textContent = '오류: ' + error.message;
     result.style.color = '#EF4444';
   } else {
-    try { localStorage.setItem('baroalba_reset_initiated', Date.now().toString()); } catch(x) {}
-    result.textContent = '✅ 재설정 링크를 이메일로 보냈습니다. 링크를 클릭하면 이 화면에서 바로 비밀번호를 재설정할 수 있습니다.';
+    _otpEmail = email;
+    document.getElementById('find-pw-otp-row').style.display = 'block';
+    document.getElementById('find-pw-send-btn').textContent = '코드 재발송';
+    document.getElementById('find-pw-otp').focus();
+    result.textContent = '✅ 이메일로 6자리 코드를 보냈습니다. 코드를 입력해주세요.';
     result.style.color = '#16a34a';
   }
+}
+
+async function verifyPasswordOtp() {
+  const token = document.getElementById('find-pw-otp').value.trim();
+  if (token.length < 6) { showError('6자리 코드를 입력해주세요.'); return; }
+  showLoading('확인 중...');
+  _inOtpPasswordReset = true;
+  const { error } = await db.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
+  hideLoading();
+  if (error) {
+    _inOtpPasswordReset = false;
+    const result = document.getElementById('find-pw-result');
+    result.style.display = 'block';
+    result.textContent = '코드가 올바르지 않거나 만료됐습니다. 다시 시도해주세요.';
+    result.style.color = '#EF4444';
+  }
+  // 성공 시 onAuthStateChange(SIGNED_IN)에서 _inOtpPasswordReset 감지 → showInlineResetForm()
 }
 
 // ── 인라인 비밀번호 재설정 ──────────────────────────────────
