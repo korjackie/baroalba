@@ -203,6 +203,8 @@
     .v-chip.active { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; font-weight: 700; }
     .s-chip.active { background: #fff0f0; border-color: #FFAAAA; color: var(--red); font-weight: 700; }
     .l-chip.active { background: #F0FDF4; border-color: #16a34a; color: #16a34a; font-weight: 700; }
+    .lang-level-btn { padding:5px 10px; border-radius:6px; border:1.5px solid #e5e7eb; background:#f8f8f8; color:#666; font-size:12px; font-weight:600; cursor:pointer; }
+    .lang-level-btn.active { background:#F0FDF4; border-color:#16a34a; color:#16a34a; font-weight:700; }
 
     /* ── 반경 표시 ── */
     .radius-badge {
@@ -2067,6 +2069,35 @@
                 <button onclick="addOtherLang()" data-i18n="lang_other_add" style="padding:8px 14px;background:#4ade80;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">+ 추가</button>
               </div>
               <div id="lang-other-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
+              <!-- 언어 숙련도 패널 -->
+              <div id="lang-prof-panel" style="display:none;margin-top:10px;padding:14px;background:#f0fdf4;border-radius:10px;border:1.5px solid #bbf7d0">
+                <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:12px" id="lang-prof-title">한국어 숙련도 설정</div>
+                <div style="display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center">
+                  <div style="font-size:12px;color:#555;font-weight:600">말하기</div>
+                  <div style="display:flex;gap:4px" id="lang-prof-speak">
+                    <button type="button" class="lang-level-btn" data-skill="speak" data-v="상" onclick="setLangLevel(this)">상</button>
+                    <button type="button" class="lang-level-btn" data-skill="speak" data-v="중" onclick="setLangLevel(this)">중</button>
+                    <button type="button" class="lang-level-btn" data-skill="speak" data-v="하" onclick="setLangLevel(this)">하</button>
+                  </div>
+                  <div style="font-size:12px;color:#555;font-weight:600">독해</div>
+                  <div style="display:flex;gap:4px" id="lang-prof-read">
+                    <button type="button" class="lang-level-btn" data-skill="read" data-v="상" onclick="setLangLevel(this)">상</button>
+                    <button type="button" class="lang-level-btn" data-skill="read" data-v="중" onclick="setLangLevel(this)">중</button>
+                    <button type="button" class="lang-level-btn" data-skill="read" data-v="하" onclick="setLangLevel(this)">하</button>
+                  </div>
+                  <div style="font-size:12px;color:#555;font-weight:600">쓰기</div>
+                  <div style="display:flex;gap:4px" id="lang-prof-write">
+                    <button type="button" class="lang-level-btn" data-skill="write" data-v="상" onclick="setLangLevel(this)">상</button>
+                    <button type="button" class="lang-level-btn" data-skill="write" data-v="중" onclick="setLangLevel(this)">중</button>
+                    <button type="button" class="lang-level-btn" data-skill="write" data-v="하" onclick="setLangLevel(this)">하</button>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:12px">
+                  <button type="button" onclick="confirmLangProficiency()" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
+                  <button type="button" onclick="cancelLangProficiency()" style="padding:8px 14px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer">취소</button>
+                  <button type="button" id="lang-prof-remove-btn" onclick="removeLangProficiency()" style="padding:8px 12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:none">삭제</button>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -2079,12 +2110,16 @@
             <div style="font-size:11px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:8px">업주에게만 공개</div>
           </div>
           <div style="padding:14px;background:#f8f8f8;border-radius:12px">
-            <div style="font-size:12px;color:#777;margin-bottom:12px">
+            <div style="font-size:12px;color:#777;margin-bottom:4px">
               <strong style="color:#444">업무 관련 자격 및 증빙서류</strong>를 자유롭게 추가하세요.
+            </div>
+            <div style="font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.7">
+              📋 서류명을 입력하고 <strong style="color:#888">업로드</strong>를 눌러 이미지 또는 PDF를 첨부하세요.<br>
+              등록된 서류는 <strong style="color:#888">지원한 공고의 업주에게만 공개</strong>됩니다. (최대 10MB)
             </div>
             <div id="other-cert-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
             <div style="display:flex;gap:8px;align-items:center">
-              <input id="other-cert-name" type="text" placeholder="서류명 (예: 보건증, 운전면허)" maxlength="30"
+              <input id="other-cert-name" type="text" placeholder="서류명 (예: 보건증, 운전면허, 자격증명)" maxlength="30"
                 style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit">
               <label style="padding:9px 16px;background:var(--red);color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
                 업로드<input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
@@ -6151,17 +6186,8 @@ async function loadWorkerProfileForm() {
         if (el) { el.textContent = '✅ 등록됨'; el.style.color = '#16a34a'; }
       }
     });
-    const otherFiles = certFiles.filter(f => f.name.startsWith('other-'));
-    const listEl = document.getElementById('other-cert-list');
-    if (listEl && otherFiles.length) {
-      otherFiles.forEach(f => {
-        const item = document.createElement('div');
-        item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;border-radius:8px;border:1px solid #e5e7eb';
-        item.innerHTML = `<span style="font-size:12px">\u{1F4CE}</span><span style="font-size:12px;font-weight:600;color:#333;flex:1">${f.name.replace(/^other-\d+-?/, '').replace(/\.[^.]+$/, '') || '기타서류'}</span><span style="font-size:11px;color:#16a34a;font-weight:700">✅ 등록됨</span>`;
-        listEl.appendChild(item);
-      });
-    }
   }
+  loadOtherCerts().catch(() => {});
   const birthEl = document.getElementById('worker-birth');
   if (w.birth_date) {
     birthEl.value = w.birth_date;
@@ -6555,6 +6581,96 @@ const CERT_META = {
   sanitation: { label: '위생교육 수료증',     file: 'sanitation',    statusId: 'cert-status-sanitation' },
 };
 
+// ── 증빙서류 메타 관리 (Supabase storage _meta.json) ────────
+async function getDocMeta() {
+  try {
+    const { data } = await db.storage.from('health-certs').download(`${currentUser.id}/_meta.json`);
+    if (!data) return {};
+    return JSON.parse(await data.text());
+  } catch { return {}; }
+}
+
+async function setDocMeta(meta) {
+  const blob = new Blob([JSON.stringify(meta)], { type:'application/json' });
+  await db.storage.from('health-certs').upload(`${currentUser.id}/_meta.json`, blob, { upsert:true });
+}
+
+function renderOtherCertItem(filename, displayName, signedUrl) {
+  const fn = filename.replace(/'/g, "\\'");
+  const listEl = document.getElementById('other-cert-list');
+  if (!listEl) return;
+  const item = document.createElement('div');
+  item.dataset.path = filename;
+  item.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;flex-wrap:wrap';
+  item.innerHTML = `
+    <span style="font-size:14px">📎</span>
+    <a href="${signedUrl||'#'}" target="_blank" style="flex:1;font-size:12px;font-weight:600;color:#333;text-decoration:none;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${displayName}">${displayName}</a>
+    <button type="button" onclick="renameOtherCert('${fn}')" style="font-size:11px;color:#555;background:#f0f0f0;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">이름변경</button>
+    <label style="font-size:11px;color:#3b82f6;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">파일변경<input type="file" accept="image/*,application/pdf" style="display:none" onchange="reuploadOtherCert('${fn}',this)"></label>
+    <button type="button" onclick="deleteOtherCert('${fn}')" style="font-size:11px;color:#dc2626;background:#fee2e2;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">삭제</button>`;
+  listEl.appendChild(item);
+}
+
+async function loadOtherCerts() {
+  if (!currentUser) return;
+  const listEl = document.getElementById('other-cert-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  const { data: files } = await db.storage.from('health-certs').list(currentUser.id);
+  if (!files?.length) return;
+  const otherFiles = files.filter(f => f.name.startsWith('other-'));
+  if (!otherFiles.length) return;
+  const meta = await getDocMeta();
+  for (const f of otherFiles) {
+    const displayName = meta[f.name] || f.name.replace(/^other-\d+-?/, '').replace(/\.[^.]+$/, '') || '기타서류';
+    const { data: urlData } = await db.storage.from('health-certs').createSignedUrl(`${currentUser.id}/${f.name}`, 3600);
+    renderOtherCertItem(f.name, displayName, urlData?.signedUrl || '');
+  }
+}
+
+async function renameOtherCert(filename) {
+  const newName = prompt('새 서류명을 입력하세요:', '');
+  if (!newName?.trim()) return;
+  const meta = await getDocMeta();
+  meta[filename] = newName.trim();
+  await setDocMeta(meta);
+  const el = document.querySelector(`[data-path="${filename}"] a`);
+  if (el) { el.textContent = newName.trim(); el.title = newName.trim(); }
+  showToast('✅ 이름이 변경됐습니다');
+}
+
+async function reuploadOtherCert(filename, input) {
+  const file = input.files[0];
+  if (!file || !currentUser) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 파일만 가능합니다'); return; }
+  showToast('업로드 중...');
+  const ext = file.name.split('.').pop();
+  const meta = await getDocMeta();
+  const displayName = meta[filename] || filename;
+  // Delete old file
+  await db.storage.from('health-certs').remove([`${currentUser.id}/${filename}`]);
+  // Upload new file with same display name but new timestamp
+  const newFilename = `other-${Date.now()}.${ext}`;
+  const { error } = await db.storage.from('health-certs').upload(`${currentUser.id}/${newFilename}`, file, { upsert:false });
+  if (error) { showToast('업로드 실패: ' + error.message); return; }
+  delete meta[filename];
+  meta[newFilename] = displayName;
+  await setDocMeta(meta);
+  await loadOtherCerts();
+  showToast('✅ 파일이 변경됐습니다');
+}
+
+async function deleteOtherCert(filename) {
+  if (!confirm('이 서류를 삭제하시겠습니까?')) return;
+  await db.storage.from('health-certs').remove([`${currentUser.id}/${filename}`]);
+  const meta = await getDocMeta();
+  delete meta[filename];
+  await setDocMeta(meta);
+  const el = document.querySelector(`[data-path="${filename}"]`);
+  if (el) el.remove();
+  showToast('삭제됐습니다');
+}
+
 async function uploadDoc(certType, input) {
   const file = input.files[0];
   if (!file || !currentUser) return;
@@ -6564,17 +6680,16 @@ async function uploadDoc(certType, input) {
 
   if (certType === 'other') {
     const nameInput = document.getElementById('other-cert-name');
-    const certName = nameInput?.value.trim() || '기타서류';
-    const path = `${currentUser.id}/other-${Date.now()}.${ext}`;
-    const { error } = await db.storage.from('health-certs').upload(path, file, { upsert: false });
+    const certName = nameInput?.value.trim();
+    if (!certName) { showToast('서류명을 먼저 입력해주세요'); input.value = ''; return; }
+    const filename = `other-${Date.now()}.${ext}`;
+    const { error } = await db.storage.from('health-certs').upload(`${currentUser.id}/${filename}`, file, { upsert:false });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
-    const listEl = document.getElementById('other-cert-list');
-    if (listEl) {
-      const item = document.createElement('div');
-      item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;border-radius:8px;border:1px solid #e5e7eb';
-      item.innerHTML = `<span style="font-size:12px">\u{1F4CE}</span><span style="font-size:12px;font-weight:600;color:#333;flex:1">${certName}</span><span style="font-size:11px;color:#16a34a;font-weight:700">✅ 등록됨</span>`;
-      listEl.appendChild(item);
-    }
+    const meta = await getDocMeta();
+    meta[filename] = certName;
+    await setDocMeta(meta);
+    const { data: urlData } = await db.storage.from('health-certs').createSignedUrl(`${currentUser.id}/${filename}`, 3600);
+    renderOtherCertItem(filename, certName, urlData?.signedUrl || '');
     if (nameInput) nameInput.value = '';
     showToast(`✅ ${certName} 등록됐습니다`);
     return;
@@ -6632,14 +6747,37 @@ function renderStrengthChips(arr) {
   });
 }
 
+// ── 언어 숙련도 ─────────────────────────────────────────
+const LANG_LABELS = { ko:'🇰🇷 한국어', en:'🇺🇸 영어', zh:'🇨🇳 중국어', ja:'🇯🇵 일본어', vi:'🇻🇳 베트남어', ru:'🇷🇺 러시아어' };
+let _langProfTarget = null;  // { type:'preset'|'other', code, name }
+let _langProfLevels = { speak:'중', read:'중', write:'중' };
+
+function parseLangEntry(entry) {
+  if (entry.includes('::')) {
+    const p = entry.split('::');
+    if (p[0] === 'other') return { type:'other', code:'other::'+p[1], name:p[1], speak:p[2]||'중', read:p[3]||'중', write:p[4]||'중' };
+    return { type:'preset', code:p[0], speak:p[1]||'중', read:p[2]||'중', write:p[3]||'중' };
+  }
+  if (entry.startsWith('other:')) return { type:'other', code:'other::'+entry.slice(6), name:entry.slice(6), speak:'중', read:'중', write:'중' };
+  return { type:'preset', code:entry, speak:'중', read:'중', write:'중' };
+}
+
+function encodeLangEntry(p) {
+  if (p.type === 'other') return `other::${p.name}::${p.speak}::${p.read}::${p.write}`;
+  return `${p.code}::${p.speak}::${p.read}::${p.write}`;
+}
+
 function toggleLangAbility(el) {
-  const l = el.dataset.l;
-  if (_workerLanguages.includes(l)) {
-    _workerLanguages = _workerLanguages.filter(x => x !== l);
-    el.classList.remove('active');
+  const code = el.dataset.l;
+  const existing = _workerLanguages.find(e => parseLangEntry(e).code === code);
+  _langProfTarget = { type:'preset', code };
+  if (existing) {
+    const p = parseLangEntry(existing);
+    _langProfLevels = { speak:p.speak, read:p.read, write:p.write };
+    openLangProfPanel(LANG_LABELS[code] || code, true);
   } else {
-    _workerLanguages.push(l);
-    el.classList.add('active');
+    _langProfLevels = { speak:'중', read:'중', write:'중' };
+    openLangProfPanel(LANG_LABELS[code] || code, false);
   }
 }
 
@@ -6647,33 +6785,113 @@ function addOtherLang() {
   const input = document.getElementById('lang-other-input');
   const val = input.value.trim();
   if (!val) return;
-  const key = 'other:' + val;
-  if (_workerLanguages.includes(key)) { showToast('이미 추가된 언어입니다'); return; }
-  _workerLanguages.push(key);
-  input.value = '';
-  renderOtherLangChips();
+  const exists = _workerLanguages.some(e => { const p = parseLangEntry(e); return p.type === 'other' && p.name === val; });
+  if (exists) { showToast('이미 추가된 언어입니다'); return; }
+  _langProfTarget = { type:'other', name:val };
+  _langProfLevels = { speak:'중', read:'중', write:'중' };
+  openLangProfPanel('🌐 ' + val, false);
 }
 
-function removeOtherLang(key) {
-  _workerLanguages = _workerLanguages.filter(l => l !== key);
-  renderOtherLangChips();
+function openLangProfPanel(displayName, isEdit) {
+  const panel = document.getElementById('lang-prof-panel');
+  if (!panel) return;
+  document.getElementById('lang-prof-title').textContent = displayName + ' 숙련도 설정';
+  ['speak','read','write'].forEach(skill => {
+    document.querySelectorAll(`#lang-prof-${skill} .lang-level-btn`).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.v === _langProfLevels[skill]);
+    });
+  });
+  document.getElementById('lang-prof-remove-btn').style.display = isEdit ? '' : 'none';
+  panel.style.display = '';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function setLangLevel(btn) {
+  const skill = btn.dataset.skill;
+  _langProfLevels[skill] = btn.dataset.v;
+  btn.closest('div').querySelectorAll('.lang-level-btn').forEach(b => b.classList.toggle('active', b === btn));
+}
+
+function confirmLangProficiency() {
+  if (!_langProfTarget) return;
+  const { speak, read, write } = _langProfLevels;
+  if (_langProfTarget.type === 'preset') {
+    const code = _langProfTarget.code;
+    _workerLanguages = _workerLanguages.filter(e => parseLangEntry(e).code !== code);
+    _workerLanguages.push(`${code}::${speak}::${read}::${write}`);
+    updatePresetLangChips();
+  } else {
+    const name = _langProfTarget.name;
+    _workerLanguages = _workerLanguages.filter(e => { const p = parseLangEntry(e); return !(p.type === 'other' && p.name === name); });
+    _workerLanguages.push(`other::${name}::${speak}::${read}::${write}`);
+    const input = document.getElementById('lang-other-input');
+    if (input) input.value = '';
+    renderOtherLangChips();
+  }
+  cancelLangProficiency();
+}
+
+function cancelLangProficiency() {
+  const panel = document.getElementById('lang-prof-panel');
+  if (panel) panel.style.display = 'none';
+  _langProfTarget = null;
+}
+
+function removeLangProficiency() {
+  if (!_langProfTarget) return;
+  if (_langProfTarget.type === 'preset') {
+    const code = _langProfTarget.code;
+    _workerLanguages = _workerLanguages.filter(e => parseLangEntry(e).code !== code);
+    updatePresetLangChips();
+  } else {
+    const name = _langProfTarget.name;
+    _workerLanguages = _workerLanguages.filter(e => { const p = parseLangEntry(e); return !(p.type === 'other' && p.name === name); });
+    renderOtherLangChips();
+  }
+  cancelLangProficiency();
+}
+
+function updatePresetLangChips() {
+  document.querySelectorAll('#lang-ability-chips .l-chip').forEach(el => {
+    const code = el.dataset.l;
+    const entry = _workerLanguages.find(e => parseLangEntry(e).code === code);
+    if (entry) {
+      const p = parseLangEntry(entry);
+      el.classList.add('active');
+      el.textContent = (LANG_LABELS[code] || code) + ` · ${p.speak}/${p.read}/${p.write}`;
+    } else {
+      el.classList.remove('active');
+      el.textContent = LANG_LABELS[code] || code;
+    }
+  });
 }
 
 function renderOtherLangChips() {
-  const others = _workerLanguages.filter(l => l.startsWith('other:'));
+  const others = _workerLanguages.filter(e => parseLangEntry(e).type === 'other');
   const container = document.getElementById('lang-other-chips');
   if (!container) return;
-  container.innerHTML = others.map(l => {
-    const name = l.slice(6);
-    return `<span class="l-chip active" style="display:inline-flex;align-items:center;gap:4px">\u{1F310} ${name}<button onclick="removeOtherLang('${l}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:inherit;padding:0;line-height:1">✕</button></span>`;
+  container.innerHTML = others.map(e => {
+    const p = parseLangEntry(e);
+    const key = e.replace(/'/g, "\\'");
+    return `<span class="l-chip active" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer" onclick="editOtherLang('${key}')">🌐 ${p.name} · ${p.speak}/${p.read}/${p.write}<button type="button" onclick="event.stopPropagation();removeOtherLangByName('${p.name.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:inherit;padding:0;line-height:1;margin-left:2px">✕</button></span>`;
   }).join('');
 }
 
+function editOtherLang(entry) {
+  const p = parseLangEntry(entry);
+  _langProfTarget = { type:'other', name:p.name };
+  _langProfLevels = { speak:p.speak, read:p.read, write:p.write };
+  openLangProfPanel('🌐 ' + p.name, true);
+}
+
+function removeOtherLangByName(name) {
+  _workerLanguages = _workerLanguages.filter(e => { const p = parseLangEntry(e); return !(p.type === 'other' && p.name === name); });
+  renderOtherLangChips();
+}
+
 function renderLangAbilityChips(arr) {
-  _workerLanguages = arr || [];
-  document.querySelectorAll('#lang-ability-chips .l-chip').forEach(el => {
-    el.classList.toggle('active', _workerLanguages.includes(el.dataset.l));
-  });
+  _workerLanguages = (arr || []);
+  updatePresetLangChips();
   renderOtherLangChips();
 }
 
