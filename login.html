@@ -616,6 +616,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 db.auth.onAuthStateChange(async (event, session) => {
+  // 재설정 링크로 열렸지만 코드 교환 실패 (만료 or 이미 사용됨)
+  if (_hadCodeParam && event === 'INITIAL_SESSION' && !session) {
+    history.replaceState({}, '', window.location.pathname);
+    const show = () => {
+      showLoginScreen();
+      setTimeout(() => showToast('비밀번호 재설정 링크가 만료됐어요. 이메일을 다시 요청해주세요.'), 400);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+    else show();
+    return;
+  }
+
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
     // 이 탭이 재설정 링크로 열린 경우 → 인라인 재설정 폼 표시
     if (_hadCodeParam && event === 'SIGNED_IN') {
