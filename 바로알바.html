@@ -1708,10 +1708,9 @@
     <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
     <div class="nav-label">바로알바</div>
   </button>
-  <button class="nav-item" onclick="setNav(this, 'chats')" style="position:relative">
-    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+  <button class="nav-item" onclick="setNav(this, 'chats')">
+    <div class="nav-icon" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="chat-unread-badge" style="display:none;position:absolute;top:-5px;right:-6px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:15px;text-align:center">0</span></div>
     <div class="nav-label">채팅</div>
-    <span id="chat-unread-badge" style="display:none;position:absolute;top:2px;right:8px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
   </button>
   <button class="nav-item" onclick="setNav(this, 'profile')">
     <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
@@ -4732,7 +4731,7 @@ async function loadMyChatList() {
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
             <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
-            ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
+            ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;line-height:1">${unread}</div>` : ''}
           </div>
           <div style="font-size:11px;color:#bbb;margin-top:2px">${a.title}</div>
         </div>
@@ -4760,16 +4759,22 @@ async function loadMyChatList() {
 
   // 롱프레스 이벤트 등록
   el.querySelectorAll('.chat-swipe-inner').forEach(inner => {
-    let lpTimer;
+    let lpTimer, lpStartX, lpStartY, lpFired = false;
     inner.addEventListener('pointerdown', e => {
+      lpFired = false;
+      lpStartX = e.clientX; lpStartY = e.clientY;
       lpTimer = setTimeout(() => {
+        lpFired = true;
         const appId = inner.dataset.appId, name = inner.dataset.name;
         confirmLeaveChat(appId, name);
       }, 600);
     });
-    inner.addEventListener('pointermove', () => clearTimeout(lpTimer));
+    inner.addEventListener('pointermove', e => {
+      if (Math.abs(e.clientX - lpStartX) > 10 || Math.abs(e.clientY - lpStartY) > 10) clearTimeout(lpTimer);
+    });
     inner.addEventListener('pointerup', () => clearTimeout(lpTimer));
     inner.addEventListener('pointercancel', () => clearTimeout(lpTimer));
+    inner.addEventListener('click', e => { if (lpFired) { e.stopImmediatePropagation(); lpFired = false; } });
     inner.addEventListener('contextmenu', e => e.preventDefault());
   });
 
