@@ -4047,6 +4047,7 @@ async function loadMyApplications() {
     const cancelDlPassed = a.status === 'accepted' && a.cancel_deadline && new Date(a.cancel_deadline) <= new Date();
     const canCancel  = a.status === 'pending' || a.status === 'reviewing' || (a.status === 'accepted' && !cancelDlPassed);
     const isAccepted = a.status === 'accepted';
+    const canChat    = ['pending','reviewing','accepted'].includes(a.status);
 
     const cancelDlChip = (() => {
       if (a.status !== 'accepted' || !a.cancel_deadline) return '';
@@ -4116,7 +4117,7 @@ async function loadMyApplications() {
       ${biz.phone ? `<div style="font-size:12px;color:#888;margin-top:2px">\u{1F4DE} ${fmtPhone(biz.phone)}</div>` : ''}
 
       <!-- 액션 버튼 -->
-      ${isAccepted ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} 업주에게 문의하기</button>` : ''}
+      ${canChat ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} 업주에게 문의하기</button>` : ''}
       ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
   }).join('');
@@ -4202,6 +4203,7 @@ async function openApplicationJobDetail(jobPostingId) {
   const _dlPassed  = myApp?.status === 'accepted' && myApp?.cancel_deadline && new Date(myApp.cancel_deadline) <= new Date();
   const canCancel  = myApp && (myApp.status === 'pending' || myApp.status === 'reviewing' || (myApp.status === 'accepted' && !_dlPassed));
   const isAccepted = myApp && myApp.status === 'accepted';
+  const canChat    = myApp && ['pending','reviewing','accepted'].includes(myApp.status);
 
   body.innerHTML = `
     <div style="padding:0 20px 20px">
@@ -4297,7 +4299,7 @@ async function openApplicationJobDetail(jobPostingId) {
       </div>` : ''}
 
       <!-- 지원 관련 버튼 -->
-      ${isAccepted ? `<button onclick="openWChat('${myApp.id}','${biz.name||'업주'}')" style="width:100%;padding:14px;background:#3B82F6;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4AC} 업주에게 문의하기</button>` : ''}
+      ${canChat ? `<button onclick="openWChat('${myApp.id}','${biz.name||'업주'}')" style="width:100%;padding:14px;background:${isAccepted?'#3B82F6':'#f0f4ff'};color:${isAccepted?'#fff':'#3B82F6'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4AC} 업주에게 문의하기</button>` : ''}
       ${canCancel ? `<button onclick="cancelApplication('${myApp.id}')" style="width:100%;padding:14px;background:#FFF0F0;color:#C8102E;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
 }
