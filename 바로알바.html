@@ -5416,7 +5416,7 @@ async function loadDashboard() {
       appCount = apps?.length || 0;
     }
     if (bizRes.data) {
-      const { data: posts } = await db.from('job_postings').select('id').eq('business_id', bizRes.data.id).eq('is_active', true);
+      const { data: posts } = await db.from('job_postings').select('id').eq('business_id', bizRes.data.id).eq('status', 'open');
       postingCount = posts?.length || 0;
     }
     lessonCount = lessonRes.data?.length || 0;
