@@ -6138,15 +6138,16 @@ function openProfile() {
     pEl.style.display = 'block';
     // profile-biz-btn removed
     document.getElementById('profile-pw-section').style.display = provider === 'email' ? 'block' : 'none';
-    document.getElementById('worker-profile-edit').style.display = role === 'business' ? 'none' : 'block';
-    document.getElementById('worker-cert-section').style.display = role === 'business' ? 'none' : 'block';
+    document.getElementById('worker-profile-edit').style.display = 'block';
+    document.getElementById('worker-cert-section').style.display = 'block';
     document.getElementById('worker-grade-section').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('owner-profile-edit').style.display = 'none';
     document.getElementById('owner-settings-shortcut').style.display = role === 'business' ? 'block' : 'none';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
-    if (role !== 'business') { loadWorkerProfileForm(); loadWorkerGrade(); }
-    else { loadOwnerProfileForm(); }
+    loadWorkerProfileForm();
+    if (role !== 'business') loadWorkerGrade();
+    else loadOwnerProfileForm();
   } else {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
@@ -7046,8 +7047,13 @@ async function _doSaveAllProfileSettings() {
   currentLang = _pendingLang;
   localStorage.setItem('baroalba_lang', currentLang);
   const role = currentUser?.user_metadata?.baroalba_role;
-  const ok = role === 'business' ? await saveOwnerProfile() : await saveWorkerProfile();
-  if (ok) location.reload();
+  const workerOk = await saveWorkerProfile();
+  if (role === 'business') {
+    const ownerOk = await saveOwnerProfile();
+    if (workerOk && ownerOk) location.reload();
+  } else {
+    if (workerOk) location.reload();
+  }
 }
 
 function closeProfileIfBg(e) {
