@@ -5459,8 +5459,9 @@ async function loadDashboard() {
       const { data: apps } = await db.from('applications').select('id').eq('worker_id', workerRes.data.id).in('status', ['pending', 'accepted']);
       appCount = apps?.length || 0;
     }
-    if (bizRes.data) {
-      const { data: posts } = await db.from('job_postings').select('id').eq('business_id', bizRes.data.id).eq('status', 'open');
+    const biz = bizRecord || bizRes.data;
+    if (biz) {
+      const { data: posts } = await db.from('job_postings').select('id').eq('business_id', biz.id).eq('status', 'open');
       postingCount = posts?.length || 0;
     }
     lessonCount = lessonRes.data?.length || 0;
@@ -8064,18 +8065,17 @@ function openPostingDetail(jobId) {
       </div>
 
       <!-- 액션 버튼 -->
-      <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
-          ${isOpen ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:12px;background:#FFF7ED;color:#F59E0B;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⚡ +1,000원</button>
-          <button onclick="openSurgeScheduler('${p.id}',${p.current_wage})" id="surge-sched-btn-${p.id}" style="flex:1;padding:12px;background:${getSurgeSchedule(p.id)?'#FEF3C7':'#f5f5f5'};color:${getSurgeSchedule(p.id)?'#D97706':'#888'};border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${getSurgeSchedule(p.id)?'⏰ 예약됨':'⏰ 자동서지'}</button>` : ''}
-          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:12px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✏️ 수정</button>
+          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#f5f5f5;color:#222;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">수정</button>
+          <button onclick="toggleStatus('${p.id}','${p.status}')" style="flex:1;padding:14px;background:${isOpen?'transparent':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
         </div>
         <div style="display:flex;gap:8px">
-          <button onclick="openShareModal('${p.id}')" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⤴ 공유</button>
-          <button onclick="copyPosting('${p.id}')" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">\u{1F4CB} 복사</button>
-          <button onclick="toggleStatus('${p.id}','${p.status}')" style="flex:1;padding:12px;background:${isOpen?'#fff0f0':'#f0fdf4'};color:${isOpen?'#EF4444':'#16a34a'};border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
+          ${isOpen ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚡ 서지</button>` : ''}
+          <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">공유</button>
+          <button onclick="copyPosting('${p.id}')" style="flex:1;padding:10px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">복사</button>
         </div>
-        <button onclick="deletePosting('${p.id}')" style="width:100%;padding:12px;background:#fff;color:#EF4444;border:1.5px solid #EF4444;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">\u{1F5D1} 공고 삭제</button>
+        <button onclick="deletePosting('${p.id}')" style="background:none;border:none;color:#EF4444;font-size:13px;padding:6px;cursor:pointer;width:100%;text-align:center;font-weight:600">공고 삭제</button>
       </div>
     </div>`;
 
