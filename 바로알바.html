@@ -1150,6 +1150,7 @@
     .booking-day-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
 
 </style>
+  <script src="https://js.tosspayments.com/v2/standard"></script>
 </head>
 <body>
 
@@ -3373,6 +3374,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     setTimeout(subscribePush, 3000); // 푸시 구독 등록
+    // 결제 완료 후 리다이렉트 처리
+    setTimeout(handlePaymentResult, 500);
     const isCommunityMode = !!new URLSearchParams(location.search).get('community');
     if (isCommunityMode) {
       setTimeout(() => openCommunityPanel(), 800);
@@ -12077,6 +12080,8 @@ const PLAN_INFO = {
   basic: { name: '베이직 플랜', amount: '₩9,900/월',  monthly: 9900 },
   pro:   { name: '프로 플랜',   amount: '₩29,900/월', monthly: 29900 },
 };
+const TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW';
+let _tossWidgets = null;
 
 function renderPlanUI() {
   const badge = document.getElementById('plan-badge');
@@ -12123,25 +12128,92 @@ function setAgeLimit(val) {
   el.querySelector('div').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
 }
 
-function selectPlan(plan) {
+async function selectPlan(plan) {
   if (plan === _currentPlan) { showToast('현재 이용 중인 플랜입니다'); return; }
   if (plan === 'free') { showToast('무료 플랜은 언제든 해지 시 자동 전환됩니다'); return; }
+  if (!currentUser) { showLoginPrompt('로그인이 필요해요', '플랜 구독은 로그인 후 이용 가능합니다.'); return; }
   _selectedPlan = plan;
   const info = PLAN_INFO[plan];
   document.getElementById('pay-title').textContent = info.name + ' 구독';
   document.getElementById('pay-plan-name').textContent = info.name;
   document.getElementById('pay-amount').textContent = info.amount;
+  document.getElementById('payment-method').innerHTML = '';
+  document.getElementById('agreement').innerHTML = '';
   document.getElementById('payment-overlay').style.display = 'block';
+  // 토스 위젯 로드
+  try {
+    const tp = TossPayments(TOSS_CLIENT_KEY);
+    _tossWidgets = tp.widgets({ customerKey: `baro-${currentUser.id}` });
+    await _tossWidgets.setAmount({ currency: 'KRW', value: info.monthly });
+    await Promise.all([
+      _tossWidgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
+      _tossWidgets.renderAgreement({ selector: '#agreement', variantKey: 'AGREEMENT' }),
+    ]);
+  } catch (e) {
+    showToast('결제 위젯 로드 실패: ' + e.message);
+  }
 }
 
 function closePayment() {
   document.getElementById('payment-overlay').style.display = 'none';
+  _tossWidgets = null;
 }
 
-function startTossPayment() {
-  showToast('결제 기능은 곧 오픈 예정입니다!\n사전 신청: jackie@multimove.co.kr');
-  closePayment();
+async function requestTossPayment() {
+  if (!_tossWidgets || !_selectedPlan) return;
+  const info = PLAN_INFO[_selectedPlan];
+  const orderId = `baro-${_selectedPlan}-${Date.now()}`;
+  const base = window.location.origin + window.location.pathname;
+  try {
+    await _tossWidgets.requestPayment({
+      orderId,
+      orderName: info.name + ' 월 구독',
+      successUrl: `${base}?payment=success&orderId=${orderId}&plan=${_selectedPlan}`,
+      failUrl: `${base}?payment=fail`,
+      customerEmail: currentUser.email || '',
+      customerName: currentUser.user_metadata?.full_name || '사업주',
+    });
+  } catch (e) {
+    if (e.code !== 'USER_CANCEL') showToast('결제 오류: ' + e.message);
+  }
 }
+
+// 결제 완료 후 URL 파라미터 처리
+async function handlePaymentResult() {
+  const params = new URLSearchParams(window.location.search);
+  const result = params.get('payment');
+  if (!result) return;
+  // URL 파라미터 제거
+  window.history.replaceState({}, '', window.location.pathname);
+  if (result === 'fail') { showToast('결제가 취소됐습니다'); return; }
+  if (result !== 'success') return;
+  const paymentKey = params.get('paymentKey');
+  const orderId = params.get('orderId');
+  const amount = params.get('amount');
+  const plan = params.get('plan');
+  if (!paymentKey || !orderId || !amount) return;
+  showToast('결제 확인 중...');
+  try {
+    const res = await fetch('/api/toss-confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentKey, orderId, amount: Number(amount), plan, businessId: currentUser?.id }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ 결제가 완료됐습니다! ' + PLAN_INFO[plan]?.name + ' 이용을 시작합니다.');
+      _currentPlan = plan;
+      renderPlanUI();
+    } else {
+      showToast('결제 확인 실패: ' + (data.error || '오류'));
+    }
+  } catch (e) {
+    showToast('결제 확인 중 오류가 발생했습니다');
+  }
+}
+
+// 기존 startTossPayment 호환 (버튼에서 혹시 호출 시)
+function startTossPayment() { requestTossPayment(); }
 
 // ── 시작/종료 시간 셀렉트 헬퍼 ──────────────────────────────
 function buildTimeSelects() {
@@ -12601,5 +12673,22 @@ async function deleteBizPhoto(photoId) {
 }
 
 </script>
+
+<!-- 토스페이먼츠 결제 오버레이 -->
+<div id="payment-overlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="max-width:480px;margin:0 auto;padding:20px 16px 60px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button onclick="closePayment()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#222;padding:4px;line-height:1">←</button>
+      <div id="pay-title" style="font-size:18px;font-weight:900;color:#222">플랜 구독</div>
+    </div>
+    <div style="padding:16px;background:#f8f8f8;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <span id="pay-plan-name" style="font-size:14px;font-weight:700;color:#333"></span>
+      <span id="pay-amount" style="font-size:18px;font-weight:900;color:#C8102E"></span>
+    </div>
+    <div id="payment-method"></div>
+    <div id="agreement" style="margin-top:10px"></div>
+    <button id="payment-confirm-btn" onclick="requestTossPayment()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;margin-top:20px">결제하기</button>
+  </div>
+</div>
 </body>
 </html>
