@@ -119,6 +119,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('spinner-wrap').style.display = 'none';
   document.getElementById('form-wrap').style.display = 'block';
 
+  if (data?.session) {
+    // 다른 탭(앱 화면)에 비밀번호 재설정 시작 신호 → 로그인 화면으로 이동시킴
+    localStorage.setItem('baroalba_reset_initiated', Date.now().toString());
+  }
+
   if (error || !data?.session) {
     showMsg('링크가 만료됐습니다. 비밀번호 재설정을 다시 요청해주세요.', 'error');
     document.getElementById('btn').disabled = true;
