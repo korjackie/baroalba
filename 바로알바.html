@@ -1013,9 +1013,9 @@
     .deposit-amt-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
     /* ── 채팅 스와이프 나가기 ── */
     .chat-swipe-wrap { position:relative; overflow:hidden; border-radius:16px; margin-bottom:8px; }
-    .chat-swipe-inner { background:#fff; border-radius:16px; padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:transform 0.25s ease; box-shadow:0 1px 6px rgba(0,0,0,0.05); touch-action:pan-y; }
+    .chat-swipe-inner { position:relative; z-index:1; background:#fff; border-radius:16px; padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:transform 0.25s ease; box-shadow:0 1px 6px rgba(0,0,0,0.05); touch-action:pan-y; }
     .chat-swipe-inner.revealed { transform:translateX(-72px); border-radius:16px 0 0 16px; }
-    .chat-leave-btn { position:absolute; right:0; top:0; bottom:0; width:72px; background:#ef4444; color:#fff; border:none; font-size:12px; font-weight:800; cursor:pointer; border-radius:0 16px 16px 0; }
+    .chat-leave-btn { position:absolute; right:0; top:0; bottom:0; width:72px; background:#ef4444; color:#fff; border:none; font-size:13px; font-weight:800; cursor:pointer; border-radius:0 16px 16px 0; z-index:0; }
 
     /* ── 하단 내비 ── */
     .owner-nav-badge { position:absolute; top:4px; right:calc(50% - 18px); min-width:16px; height:16px; padding:0 4px; background:var(--red); color:#fff; border-radius:8px; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; line-height:1; }
@@ -2081,7 +2081,15 @@
         </div>
 
 
-        <!-- 업주 프로필 편집 (business 역할만 표시) -->
+        <!-- 업체 설정 바로가기 (business 계정만) -->
+        <div id="owner-settings-shortcut" style="display:none;margin-bottom:14px">
+          <button onclick="openOwnerSettings()" style="width:100%;padding:14px 16px;background:#fff;border:1.5px solid #f0f0f0;border-radius:14px;font-size:14px;font-weight:700;color:#222;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left">
+            <span>&#127978; 업체 설정 / 장소 관리</span>
+            <span style="color:#aaa;font-size:18px">›</span>
+          </button>
+        </div>
+
+        <!-- 업주 프로필 편집 (마이페이지에서는 숨김 — 업체 설정 패널에서 관리) -->
         <div id="owner-profile-edit" style="display:none;margin-bottom:14px">
           <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">&#127978; 업체 정보</div>
           <div style="display:flex;flex-direction:column;gap:8px">
@@ -2500,6 +2508,27 @@
   </div>
 </div>
 
+<!-- 업주 채팅 오버레이 (지원자와 대화 / 레슨 상담) -->
+<div class="detail-overlay" id="chat-overlay" onclick="if(event.target===this)closeChat()">
+  <div class="detail-sheet" style="height:80vh;display:flex;flex-direction:column;padding:0">
+    <div class="detail-handle" style="flex-shrink:0"></div>
+    <div style="padding:12px 20px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
+      </div>
+      <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:12px 16px;border-top:1px solid #f0f0f0;display:flex;gap:8px;flex-shrink:0">
+      <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
+        style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
+      <button onclick="sendChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer">전송</button>
+    </div>
+  </div>
+</div>
+
 <!-- 토스트 -->
 
 <!-- ── owner 기능 패널 (공고 관리 전체화면 패널) ── -->
@@ -2539,6 +2568,7 @@
 <div class="tabs">
   <button class="tab-btn active" onclick="ownerSwitchTab('postings',this)">내 공고</button>
   <button class="tab-btn" onclick="ownerSwitchTab('applicants',this)">지원자</button>
+  <button class="tab-btn" onclick="ownerSwitchTab('settings',this)">업체 설정</button>
 </div>
 
 <!-- 내 공고 탭 -->
@@ -3583,7 +3613,7 @@ function renderMarkers() {
 
   // 카테고리 → 마커 짧은 이름
   const CAT_SHORT = {
-    'F&B':'주방', '물류':'운송', '판매':'판매', '청소':'청소',
+    'F&B':'F&B', '물류':'운송', '판매':'판매', '청소':'청소',
     '이벤트':'이벤트', '커플알바':'커플', '컨텐츠':'촬영', '챌린지':'챌린지',
     '물건 픽업/전달':'픽업', '대리 줄서기':'줄서기', '서류/우편':'서류',
     '쇼핑 대행':'쇼핑', '벌레 퇴치':'해충', '반려동물 산책':'펫돌봄',
@@ -5129,23 +5159,29 @@ function copyWorkerShareUrl() {
     .catch(() => { showToast('복사 실패. URL을 직접 선택해 복사해주세요.'); });
 }
 function shareJobKakao() {
+  if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
   if (!window.Kakao?.isInitialized?.()) {
     showToast('카카오 공유를 사용할 수 없습니다. 링크 복사를 이용해주세요');
     return;
   }
   const job = _shareJobData;
   const url = `${location.href.split('?')[0]}?job=${job.id}`;
-  Kakao.Share.sendDefault({
-    objectType: 'feed',
-    content: {
-      title: job.title || '알바 공고',
-      description: `\u{1F4CD} ${job.address?.split('\n')[0] || ''} | \u{1F4B0} ${job.wage ? job.wage.toLocaleString()+'원' : ''}`,
-      imageUrl: `${location.origin}/icons/logo-share.png`,
-      link: { mobileWebUrl: url, webUrl: url }
-    },
-    buttons: [{ title: '공고 보러 가기', link: { mobileWebUrl: url, webUrl: url } }]
-  });
-  closeWorkerShare();
+  const wage = job.current_wage || job.wage;
+  try {
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: job.title || '알바 공고',
+        description: `\u{1F4CD} ${job.address?.split('\n')[0] || ''} | \u{1F4B0} ${wage ? wage.toLocaleString()+'원' : ''}`,
+        imageUrl: `${location.origin}/icons/logo-share.png`,
+        link: { mobileWebUrl: url, webUrl: url }
+      },
+      buttons: [{ title: '공고 보러 가기', link: { mobileWebUrl: url, webUrl: url } }]
+    });
+    closeWorkerShare();
+  } catch(e) {
+    showToast('카카오 공유 오류: ' + e.message);
+  }
 }
 function shareJobNative() {
   const job = _shareJobData;
@@ -5389,14 +5425,20 @@ function openOwnerPanel(tab) {
   panel.style.display = 'block';
   const fab = document.getElementById('posting-fab');
   if (fab) fab.style.display = 'flex';
-  const switchToTab = (t) => {
-    const idx = t === 'applicants' ? 1 : 0;
-    ownerSwitchTab(t, document.querySelectorAll('.tab-btn')[idx]);
+  const doTab = (t) => {
+    if (t === 'chats') {
+      document.getElementById('panel-owner-chats').classList.add('show');
+      loadOwnerChatList();
+    } else if (t === 'applicants') {
+      ownerSwitchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
+    } else if (t) {
+      ownerSwitchTab(t, document.querySelectorAll('.tab-btn')[0]);
+    }
   };
   if (!bizRecord) {
-    initOwnerFeatures().then(() => { if (tab) switchToTab(tab); }).catch(console.error);
+    initOwnerFeatures().then(() => { if (tab) doTab(tab); }).catch(console.error);
   } else {
-    if (tab) switchToTab(tab);
+    if (tab) doTab(tab);
   }
 }
 
@@ -5466,8 +5508,13 @@ function setNav(el, tab) {
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
     if (mapLocBtn) mapLocBtn.style.display = 'none';
-    panelChats.classList.add('show');
-    loadMyChatList();
+    if (currentUser?.user_metadata?.baroalba_role === 'business') {
+      // 업주: owner panel + 채팅 패널로 직접 이동
+      openOwnerPanel('chats');
+    } else {
+      panelChats.classList.add('show');
+      loadMyChatList();
+    }
   } else if (tab === 'profile') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
@@ -5888,7 +5935,8 @@ function openProfile() {
     document.getElementById('worker-profile-edit').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('worker-cert-section').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('worker-grade-section').style.display = role === 'business' ? 'none' : 'block';
-    document.getElementById('owner-profile-edit').style.display = role === 'business' ? 'block' : 'none';
+    document.getElementById('owner-profile-edit').style.display = 'none';
+    document.getElementById('owner-settings-shortcut').style.display = role === 'business' ? 'block' : 'none';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
     if (role !== 'business') { loadWorkerProfileForm(); loadWorkerGrade(); }
@@ -10088,6 +10136,10 @@ async function loadOwnerChatList() {
 
 // ── 유틸 ──────────────────────────────────────────────────
 function ownerSwitchTab(name, btn) {
+  if (name === 'settings') {
+    openOwnerSettings();
+    return;
+  }
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
@@ -10203,7 +10255,7 @@ async function loadOwnerMapJobs() {
   else if (_ownerSortMode === 'date_desc') jobs.sort((a,b) => (b.start_time||'').localeCompare(a.start_time||''));
 
   const CAT_SHORT_O = {
-    'F&B':'주방', '물류':'운송', '판매':'판매', '청소':'청소', '이벤트':'이벤트',
+    'F&B':'F&B', '물류':'운송', '판매':'판매', '청소':'청소', '이벤트':'이벤트',
     '이사도우미':'이사', '컨텐츠':'촬영', '물건 픽업/전달':'픽업', '대리 줄서기':'줄서기',
     '벌레 퇴치':'벌레', '반려동물 산책':'펫돌봄', '음식 배달':'배달',
   };
