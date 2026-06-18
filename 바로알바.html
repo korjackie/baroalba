@@ -3156,6 +3156,15 @@
 const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
 
+// 비밀번호 재설정 페이지가 열리면 이 탭을 로그인 화면으로 보냄
+// sessionStorage로 "밀려난 탭" 표시 → 로그인 후 이 탭은 자동 이동 안 함
+window.addEventListener('storage', (e) => {
+  if (e.key === 'baroalba_reset_initiated') {
+    sessionStorage.setItem('baroalba_displaced_by_reset', '1');
+    window.location.href = '/login.html';
+  }
+});
+
 let kakaoMap = null;
 const _savedCenter = JSON.parse(localStorage.getItem('mapCenter') || 'null');
 let mapCenter = _savedCenter || { lat: APP_CONFIG.DEFAULT_LAT, lng: APP_CONFIG.DEFAULT_LNG };
