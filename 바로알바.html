@@ -2008,7 +2008,7 @@
                 <input id="skill-input" type="text" placeholder="스킬 입력 후 추가 (예: 바리스타)" maxlength="20"
                   onkeydown="if(event.key==='Enter'){event.preventDefault();addSkillTag()}"
                   style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
-                <button onclick="addSkillTag()" data-i18n="skill_add" style="padding:9px 14px;background:#f0f0f0;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#555">추가</button>
+                <button onclick="addSkillTag()" data-i18n="skill_add" style="padding:9px 16px;background:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;white-space:nowrap;flex-shrink:0">+ 추가</button>
               </div>
             </div>
             <!-- 이동수단 -->
@@ -2067,7 +2067,7 @@
               </div>
               <div style="display:flex;gap:6px;margin-top:8px">
                 <input type="text" id="lang-other-input" placeholder="기타 언어 직접입력 (예: 태국어)" style="flex:1;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addOtherLang()">
-                <button onclick="addOtherLang()" data-i18n="lang_other_add" style="padding:8px 14px;background:#4ade80;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">+ 추가</button>
+                <button onclick="addOtherLang()" data-i18n="lang_other_add" style="padding:8px 16px;background:#C8102E;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">+ 추가</button>
               </div>
               <div id="lang-other-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
               <!-- 언어 숙련도 패널 -->
@@ -2111,19 +2111,16 @@
             <div style="font-size:11px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:8px">업주에게만 공개</div>
           </div>
           <div style="padding:14px;background:#f8f8f8;border-radius:12px">
-            <div style="font-size:12px;color:#777;margin-bottom:4px">
-              <strong style="color:#444">업무 관련 자격 및 증빙서류</strong>를 자유롭게 추가하세요.
+            <div style="font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.8">
+              📋 서류명을 입력하고 <strong style="color:#C8102E">+ 업로드</strong>를 눌러 이미지 또는 PDF를 첨부하세요.<br>
+              등록된 서류는 <strong style="color:#666">지원한 공고의 업주에게만 공개</strong>됩니다. (최대 10MB)
             </div>
-            <div style="font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.7">
-              📋 서류명을 입력하고 <strong style="color:#888">업로드</strong>를 눌러 이미지 또는 PDF를 첨부하세요.<br>
-              등록된 서류는 <strong style="color:#888">지원한 공고의 업주에게만 공개</strong>됩니다. (최대 10MB)
-            </div>
-            <div id="other-cert-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+            <div id="other-cert-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
             <div style="display:flex;gap:8px;align-items:center">
               <input id="other-cert-name" type="text" placeholder="서류명 (예: 보건증, 운전면허, 자격증명)" maxlength="30"
-                style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit">
-              <label style="padding:9px 16px;background:var(--red);color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
-                업로드<input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
+                style="flex:1;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
+              <label style="padding:10px 16px;background:#C8102E;color:#fff;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+                + 업로드<input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
               </label>
             </div>
           </div>
@@ -6604,13 +6601,17 @@ function renderOtherCertItem(filename, displayName, signedUrl) {
   if (!listEl) return;
   const item = document.createElement('div');
   item.dataset.path = filename;
-  item.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;flex-wrap:wrap';
+  item.style.cssText = 'padding:10px 12px;background:#fff;border-radius:10px;border:1px solid #e5e7eb';
   item.innerHTML = `
-    <span style="font-size:14px">📎</span>
-    <a href="${signedUrl||'#'}" target="_blank" style="flex:1;font-size:12px;font-weight:600;color:#333;text-decoration:none;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${displayName}">${displayName}</a>
-    <button type="button" onclick="renameOtherCert('${fn}')" style="font-size:11px;color:#555;background:#f0f0f0;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">이름변경</button>
-    <label style="font-size:11px;color:#3b82f6;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">파일변경<input type="file" accept="image/*,application/pdf" style="display:none" onchange="reuploadOtherCert('${fn}',this)"></label>
-    <button type="button" onclick="deleteOtherCert('${fn}')" style="font-size:11px;color:#dc2626;background:#fee2e2;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0">삭제</button>`;
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:15px;flex-shrink:0">📎</span>
+      <a href="${signedUrl||'#'}" target="_blank" style="flex:1;font-size:13px;font-weight:600;color:#222;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${displayName}">${displayName}</a>
+      <div style="display:flex;gap:5px;flex-shrink:0">
+        <button type="button" onclick="renameOtherCert('${fn}')" style="font-size:11px;color:#fff;background:#C8102E;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">수정</button>
+        <label style="font-size:11px;color:#fff;background:#C8102E;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap;display:inline-block">파일<input type="file" accept="image/*,application/pdf" style="display:none" onchange="reuploadOtherCert('${fn}',this)"></label>
+        <button type="button" onclick="deleteOtherCert('${fn}')" style="font-size:11px;color:#C8102E;background:#fee2e2;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">삭제</button>
+      </div>
+    </div>`;
   listEl.appendChild(item);
 }
 
