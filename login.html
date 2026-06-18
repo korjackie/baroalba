@@ -464,7 +464,7 @@
         </div>
         <button class="submit-btn" style="padding:12px" id="find-pw-send-btn" onclick="sendPasswordOtp()">인증 코드 발송</button>
         <div id="find-pw-otp-row" style="display:none;margin-top:10px">
-          <input class="form-input" id="find-pw-otp" type="text" inputmode="numeric" maxlength="6" placeholder="이메일로 받은 6자리 코드" style="letter-spacing:6px;font-size:18px;font-weight:700;text-align:center;margin-bottom:8px">
+          <input class="form-input" id="find-pw-otp" type="text" inputmode="numeric" maxlength="8" placeholder="이메일로 받은 8자리 코드" style="letter-spacing:6px;font-size:18px;font-weight:700;text-align:center;margin-bottom:8px">
           <button class="submit-btn" style="padding:12px;background:#16a34a" onclick="verifyPasswordOtp()">코드 확인 → 비밀번호 변경</button>
         </div>
         <div class="find-result" id="find-pw-result"></div>
@@ -1033,14 +1033,14 @@ async function sendPasswordOtp() {
     document.getElementById('find-pw-otp-row').style.display = 'block';
     document.getElementById('find-pw-send-btn').textContent = '코드 재발송';
     document.getElementById('find-pw-otp').focus();
-    result.textContent = '✅ 이메일로 6자리 코드를 보냈습니다. 코드를 입력해주세요.';
+    result.textContent = '✅ 이메일로 8자리 코드를 보냈습니다. 코드를 입력해주세요.';
     result.style.color = '#16a34a';
   }
 }
 
 async function verifyPasswordOtp() {
   const token = document.getElementById('find-pw-otp').value.trim();
-  if (token.length < 6) { showError('6자리 코드를 입력해주세요.'); return; }
+  if (token.length < 8) { showError('8자리 코드를 입력해주세요.'); return; }
   showLoading('확인 중...');
   _inOtpPasswordReset = true;
   const { error } = await db.auth.verifyOtp({ email: _otpEmail, token, type: 'email' });
