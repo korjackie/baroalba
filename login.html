@@ -646,8 +646,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     const { data } = await Promise.race([sessionPromise, timeoutPromise.then(() => ({ data: { session: null } }))]);
     if (data?.session) {
       clearTimeout(safetyTimer);
-      // recovery URL이면 onAuthStateChange(PASSWORD_RECOVERY)에 맡기고 여기선 이동 안 함
-      if (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery')) return;
+      // code= 파라미터(PKCE) 또는 type=recovery(implicit) 있으면 onAuthStateChange에 맡김
+      if (window.location.search.includes('code=') ||
+          window.location.hash.includes('type=recovery') ||
+          window.location.search.includes('type=recovery')) return;
       // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
       setTimeout(() => {
         if (!_pwRecoveryMode && document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
