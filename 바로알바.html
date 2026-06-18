@@ -1695,9 +1695,10 @@
     <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
     <div class="nav-label">바로알바</div>
   </button>
-  <button class="nav-item" onclick="setNav(this, 'chats')">
+  <button class="nav-item" onclick="setNav(this, 'chats')" style="position:relative">
     <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
     <div class="nav-label">채팅</div>
+    <span id="chat-unread-badge" style="display:none;position:absolute;top:2px;right:8px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
   </button>
   <button class="nav-item" onclick="setNav(this, 'profile')">
     <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
@@ -3975,12 +3976,13 @@ function setupMessageNotifications() {
       var idx = hidden.indexOf(payload.application_id);
       if (idx !== -1) { hidden.splice(idx, 1); localStorage.setItem('baroalba_hidden_chats', JSON.stringify(hidden)); }
     }
+    showToast('\u{1F4AC} 새 메시지: ' + (payload.content || '').slice(0, 20) + ((payload.content || '').length > 20 ? '...' : ''));
     var badge = document.getElementById('chat-unread-badge');
-    if (!badge) return;
-    var cnt = parseInt(badge.textContent || '0') + 1;
-    badge.textContent = cnt;
-    badge.style.display = 'flex';
-    showToast('💬 새 메시지: ' + (payload.content || '').slice(0, 20) + ((payload.content || '').length > 20 ? '...' : ''));
+    if (badge) {
+      var cnt = parseInt(badge.textContent || '0') + 1;
+      badge.textContent = cnt;
+      badge.style.display = 'flex';
+    }
   }
 
   _workerGlobalChatSub = db.channel('worker-' + currentUser.id + '-notify')
