@@ -596,6 +596,9 @@ const _hashParams = new URLSearchParams(_initHash.slice(1));
 const _isNaverCallback = _hashParams.has('access_token') &&
                          _hashParams.has('state') &&
                          !_hashParams.has('type');
+// Supabase 에러 리다이렉트 감지 (만료된 재설정 링크 등)
+const _hashError = _hashParams.get('error');
+const _hashErrorCode = _hashParams.get('error_code');
 
 // ── Supabase 초기화 ────────────────────────────────────────
 const { createClient } = supabase;
@@ -660,6 +663,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 재설정 링크로 열린 탭: onAuthStateChange(SIGNED_IN)가 처리하므로 대기
   if (_hadCodeParam) { showLoading('링크 확인 중...'); return; }
+
+  // URL에 에러가 포함된 경우 (만료된 재설정 링크, 허용되지 않은 URL 등)
+  if (_hashError) {
+    history.replaceState({}, '', window.location.pathname);
+    showLoginScreen();
+    const msg = (_hashErrorCode === 'otp_expired' || _hashErrorCode?.startsWith('otp'))
+      ? '비밀번호 재설정 링크가 만료됐어요. 다시 요청해주세요.'
+      : '링크가 유효하지 않아요. 비밀번호 재설정을 다시 요청해주세요.';
+    setTimeout(() => showToast(msg), 400);
+    return;
+  }
 
   // 게스트도 앱으로
   if (localStorage.getItem('baroalba_guest')) { goToApp(); return; }
