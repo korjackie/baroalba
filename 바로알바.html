@@ -2228,11 +2228,17 @@
 
     <!-- 중간 카테고리 (분야) -->
     <label class="lesson-form-label">분야 *</label>
-    <div id="lr-mid-cat-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div style="position:relative;margin-bottom:14px">
+      <div id="lr-mid-cat-row" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px"></div>
+    </div>
 
     <!-- 서브 카테고리 (가로 스크롤) -->
     <label class="lesson-form-label" id="lr-subject-label" style="display:none">종목 / 과목</label>
-    <div id="lesson-subject-chips" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:10px"></div>
+    <div style="position:relative;margin-bottom:10px">
+      <button id="lr-chips-prev" onclick="_scrollChips(-1)" style="display:none;position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.95);box-shadow:0 1px 6px rgba(0,0,0,0.18);font-size:14px;cursor:pointer;line-height:1">‹</button>
+      <div id="lesson-subject-chips" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;padding-left:2px;padding-right:2px"></div>
+      <button id="lr-chips-next" onclick="_scrollChips(1)" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.95);box-shadow:0 1px 6px rgba(0,0,0,0.18);font-size:14px;cursor:pointer;line-height:1">›</button>
+    </div>
     <input id="lr-subject-custom" class="lesson-form-input" placeholder="직접 입력 (예: 배드민턴, 드럼 등)" style="margin-bottom:14px">
 
     <!-- 수업 형태 -->
@@ -8263,6 +8269,20 @@ function _renderRegisterSubChips(key) {
   const subs = LESSON_SUBS[key] || [];
   document.getElementById('lesson-subject-chips').innerHTML =
     subs.map(s => `<button type="button" class="booking-day-btn" style="flex-shrink:0;white-space:nowrap" onclick="selectLessonSubject(this,'${s.v}')">${s.e} ${s.v}</button>`).join('');
+  _updateChipsArrows();
+}
+function _scrollChips(dir) {
+  const el = document.getElementById('lesson-subject-chips');
+  if (el) el.scrollBy({ left: dir * 160, behavior: 'smooth' });
+}
+function _updateChipsArrows() {
+  const el = document.getElementById('lesson-subject-chips');
+  const prev = document.getElementById('lr-chips-prev');
+  const next = document.getElementById('lr-chips-next');
+  if (!el || !prev || !next) return;
+  const hasOverflow = el.scrollWidth > el.clientWidth + 4;
+  prev.style.display = hasOverflow ? 'block' : 'none';
+  next.style.display = hasOverflow ? 'block' : 'none';
 }
 function selectLessonSubject(el, val) {
   document.querySelectorAll('#lesson-subject-chips .booking-day-btn').forEach(b => b.classList.remove('active'));
