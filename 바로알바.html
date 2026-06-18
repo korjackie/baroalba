@@ -5104,9 +5104,15 @@ function applyRecentSearch(q) {
 
 // ── 공고 공유 ────────────────────────────────────────────
 let _shareJobData = null;
-function shareJob() {
-  const job = jobs.find(j => j.id === selectedJobId);
-  if (!job) return;
+async function shareJob() {
+  if (!selectedJobId) return;
+  let job = jobs.find(j => j.id === selectedJobId);
+  if (!job) {
+    // jobs 배열에 없으면 DB에서 직접 조회 (새 공고 등)
+    const { data } = await db.from('job_postings').select('id, title, address, current_wage').eq('id', selectedJobId).single();
+    if (!data) { showToast('공고 정보를 불러올 수 없어요.'); return; }
+    job = data;
+  }
   _shareJobData = job;
   const url = `${location.origin}${location.pathname}?job=${job.id}`;
   document.getElementById('worker-share-url').textContent = url;
