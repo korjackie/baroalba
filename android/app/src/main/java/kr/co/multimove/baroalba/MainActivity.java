@@ -65,10 +65,13 @@ public class MainActivity extends AppCompatActivity {
                 String url = req.getUrl().toString();
                 // 앱 도메인 — WebView에서 직접 처리
                 if (url.startsWith("https://baroalba.multimove.co.kr")) return false;
-                // OAuth 공급자 — WebView 내에서 처리 (외부 브라우저 차단)
-                if (url.startsWith("https://nid.naver.com")) return false;
-                if (url.startsWith("https://accounts.google.com")) return false;
-                if (url.startsWith("https://kauth.kakao.com")) return false;
+                // OAuth 전체 리다이렉트 체인 — WebView 내에서 처리 (외부 브라우저 차단)
+                if (url.contains(".supabase.co")) return false;       // Supabase OAuth 시작점 (핵심 누락 수정)
+                if (url.contains(".google.com")) return false;        // accounts.google.com 등 구글 전체
+                if (url.contains("naver.com")) return false;          // 네이버 로그인
+                if (url.contains("kakao.com")) return false;          // 카카오 로그인
+                // intent:// — Google이 WebView 감지 시 외부 브라우저 강제 오픈에 사용하는 스킴, 차단
+                if (url.startsWith("intent://")) return true;
                 // 그 외 외부 URL — 시스템 브라우저로 열기
                 if (url.startsWith("http://") || url.startsWith("https://")) {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
