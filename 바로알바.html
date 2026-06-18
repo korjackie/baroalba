@@ -5551,7 +5551,10 @@ async function loadDashboard() {
 }
 
 function openDashPanel(which) {
-  if (!currentUser) { goToLogin(); return; }
+  if (isGuest || !currentUser) {
+    showLoginPrompt('로그인이 필요해요', '지원 현황, 공고 관리 등<br>모든 서비스 기능은 로그인 후 이용 가능합니다.');
+    return;
+  }
   if (which === 'applications') {
     document.getElementById('panel-applications')?.classList.add('show');
     switchAppSubtab('status');
@@ -5623,6 +5626,10 @@ function goToPostJob() {
 }
 
 function setNav(el, tab) {
+  if ((isGuest || !currentUser) && tab === 'chats') {
+    showLoginPrompt('채팅하려면 로그인이 필요해요', '공고에 지원하고 업주와<br>채팅하려면 로그인이 필요합니다.<br>30초면 완료!');
+    return;
+  }
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
   const swipeScreen = document.getElementById('swipe-screen');
