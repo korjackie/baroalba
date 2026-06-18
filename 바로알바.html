@@ -1002,7 +1002,7 @@
     @keyframes spin { to{transform:rotate(360deg)} }
 
     /* ── 토스트 ── */
-    .toast { position:fixed; bottom:calc(var(--nav-h)+20px); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:700; padding:10px 18px; border-radius:20px; z-index:9999; white-space:nowrap; transition:opacity 0.3s; pointer-events:none; }
+    .toast { position:fixed; bottom:calc(var(--nav-h)+20px); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:700; padding:10px 18px; border-radius:20px; z-index:20000; white-space:nowrap; transition:opacity 0.3s; pointer-events:none; }
     .toast.hidden { opacity:0; }
 
     /* ── 당일정산 토글 ── */
@@ -12083,6 +12083,51 @@ const PLAN_INFO = {
 const TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW';
 let _tossWidgets = null;
 
+const PLAN_DETAILS = {
+  basic: {
+    color: '#C8102E',
+    badge: '베이직',
+    features: [
+      '📢 공고 등록 슬롯 <strong>5개</strong> (무료: 1개)',
+      '⚡ 시급 서지 자동 스케줄 설정',
+      '👥 지원자 2명 나란히 비교',
+      '📋 공고 복사 1클릭 재등록',
+      '📊 공고별 조회수 트래킹',
+      '⭐ 즐겨찾는 알바생 북마크',
+    ],
+  },
+  pro: {
+    color: '#7C3AED',
+    badge: '프로',
+    features: [
+      '🔥 프리미엄 노출 — 검색 상단 고정 (지원율 3배)',
+      '📢 공고 등록 슬롯 <strong>무제한</strong>',
+      '⚡ 시급 서지 자동 스케줄 설정',
+      '👥 지원자 2명 나란히 비교',
+      '📋 공고 복사 1클릭 재등록',
+      '📊 공고별 조회수 트래킹',
+      '⭐ 즐겨찾는 알바생 북마크',
+      '🎯 베이직 플랜 모든 기능 포함',
+    ],
+  },
+};
+
+function renderPlanDetails(plan) {
+  const el = document.getElementById('pay-plan-details');
+  if (!el) return;
+  const d = PLAN_DETAILS[plan];
+  if (!d) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="border:2px solid ${d.color}22;border-radius:12px;overflow:hidden">
+      <div style="background:${d.color}11;padding:10px 14px;border-bottom:1px solid ${d.color}22">
+        <span style="font-size:12px;font-weight:800;color:${d.color}">${d.badge} 플랜 혜택</span>
+      </div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:7px">
+        ${d.features.map(f => `<div style="font-size:12px;color:#333;line-height:1.4">${f}</div>`).join('')}
+      </div>
+    </div>`;
+}
+
 function renderPlanUI() {
   const badge = document.getElementById('plan-badge');
   if (!badge) return;
@@ -12137,13 +12182,15 @@ async function selectPlan(plan) {
   document.getElementById('pay-title').textContent = info.name + ' 구독';
   document.getElementById('pay-plan-name').textContent = info.name;
   document.getElementById('pay-amount').textContent = info.amount;
+  renderPlanDetails(plan);
+  document.getElementById('pay-widget-error').style.display = 'none';
   document.getElementById('payment-method').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">결제 수단 불러오는 중...</div>';
   document.getElementById('agreement').innerHTML = '';
   const btn = document.getElementById('payment-confirm-btn');
-  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.textContent = '결제 수단 로드 중...'; }
   document.getElementById('payment-overlay').style.display = 'block';
   try {
-    if (typeof TossPayments === 'undefined') throw new Error('토스 SDK가 로드되지 않았습니다');
+    if (typeof TossPayments === 'undefined') throw new Error('토스 SDK가 로드되지 않았습니다. 페이지를 새로고침 해주세요.');
     const tp = TossPayments(TOSS_CLIENT_KEY);
     _tossWidgets = tp.widgets({ customerKey: `baro-${currentUser.id}` });
     await _tossWidgets.setAmount({ currency: 'KRW', value: info.monthly });
@@ -12151,12 +12198,13 @@ async function selectPlan(plan) {
       _tossWidgets.renderPaymentMethods({ selector: '#payment-method', variantKey: 'DEFAULT' }),
       _tossWidgets.renderAgreement({ selector: '#agreement', variantKey: 'AGREEMENT' }),
     ]);
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '결제하기'; }
   } catch (e) {
     console.error('Toss widget error:', e);
     document.getElementById('payment-method').innerHTML = '';
-    showToast('결제 위젯 로드 실패: ' + e.message);
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    document.getElementById('pay-widget-error').style.display = 'block';
+    document.getElementById('pay-widget-error').textContent = '결제 위젯 오류: ' + e.message;
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '결제하기'; }
     _tossWidgets = null;
   }
 }
@@ -12689,17 +12737,39 @@ async function deleteBizPhoto(photoId) {
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch">
-  <div style="max-width:480px;margin:0 auto;padding:20px 16px 60px">
+  <div style="max-width:480px;margin:0 auto;padding:20px 16px 80px">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
       <button onclick="closePayment()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#222;padding:4px;line-height:1">←</button>
       <div id="pay-title" style="font-size:18px;font-weight:900;color:#222">플랜 구독</div>
     </div>
-    <div style="padding:16px;background:#f8f8f8;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+
+    <!-- 플랜 요금 -->
+    <div style="padding:16px;background:#f8f8f8;border-radius:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
       <span id="pay-plan-name" style="font-size:14px;font-weight:700;color:#333"></span>
       <span id="pay-amount" style="font-size:18px;font-weight:900;color:#C8102E"></span>
     </div>
+
+    <!-- 플랜 상세 혜택 -->
+    <div id="pay-plan-details" style="margin-bottom:20px"></div>
+
+    <!-- 이용 안내 -->
+    <div style="padding:14px;background:#fffbeb;border-radius:10px;border:1px solid #fde68a;margin-bottom:20px;font-size:12px;color:#92400e;line-height:1.7">
+      📋 <strong>이용 안내</strong><br>
+      · 구독 기간: 결제일로부터 <strong>30일</strong><br>
+      · 자동 갱신 없음 — 만료 전 재결제 필요<br>
+      · 결제 후 즉시 플랜 활성화<br>
+      · 환불: 미사용 시 7일 이내 고객센터 문의 (jackie@multimove.co.kr)
+    </div>
+
+    <!-- 위젯 오류 안내 -->
+    <div id="pay-widget-error" style="display:none;padding:14px;background:#fff0f0;border-radius:10px;border:1px solid #fca5a5;margin-bottom:16px;font-size:12px;color:#991b1b;text-align:center">
+      결제 위젯을 불러오지 못했습니다.<br>잠시 후 다시 시도하거나 고객센터로 문의해주세요.
+    </div>
+
+    <!-- 토스 결제 위젯 -->
     <div id="payment-method"></div>
     <div id="agreement" style="margin-top:10px"></div>
+
     <button id="payment-confirm-btn" onclick="requestTossPayment()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;margin-top:20px">결제하기</button>
   </div>
 </div>
