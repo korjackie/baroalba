@@ -3963,29 +3963,39 @@ function showAppliedState(applicationId) {
 
 
 // ── 채팅 알림 (전역 — Broadcast 방식, RLS 우회) ────────────
-let _workerGlobalChatSub = null;
+let _workerGlobalChatSub = null, _ownerGlobalChatSub = null;
 function setupMessageNotifications() {
   if (isGuest || !currentUser) return;
   if (_workerGlobalChatSub) { try { _workerGlobalChatSub.unsubscribe(); } catch(e) {} _workerGlobalChatSub = null; }
+  if (_ownerGlobalChatSub) { try { _ownerGlobalChatSub.unsubscribe(); } catch(e) {} _ownerGlobalChatSub = null; }
 
+  const _onNewMsg = (isOwnerSide) => ({ payload }) => {
+    if (!payload || payload.sender_id === currentUser.id) return;
+    if (payload.application_id) {
+      const hidden = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
+      const idx = hidden.indexOf(payload.application_id);
+      if (idx !== -1) { hidden.splice(idx, 1); localStorage.setItem('baroalba_hidden_chats', JSON.stringify(hidden)); }
+    }
+    const wOpen = document.getElementById('wchat-overlay')?.classList.contains('open');
+    const cOpen = document.getElementById('chat-overlay')?.classList.contains('open');
+    if (isOwnerSide && cOpen && _chatAppId === payload.application_id) return;
+    if (!isOwnerSide && wOpen && _wchatAppId === payload.application_id) return;
+    const badge = document.getElementById('chat-unread-badge');
+    if (!badge) return;
+    const cnt = parseInt(badge.textContent || '0') + 1;
+    badge.textContent = cnt;
+    badge.style.display = 'flex';
+    showToast('\u{1F4AC} 새 메시지: ' + (payload.content || '').slice(0, 20) + ((payload.content || '').length > 20 ? '…' : ''));
+  };
+
+  // 알바생 입장: 업주가 보낸 메시지 수신
   _workerGlobalChatSub = db.channel(`worker-${currentUser.id}-notify`)
-    .on('broadcast', { event: 'new_msg' }, ({ payload }) => {
-      if (!payload || payload.sender_id === currentUser.id) return;
-      // 나간 채팅에서 새 메시지 오면 자동 복원
-      if (payload.application_id) {
-        const hidden = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
-        const idx = hidden.indexOf(payload.application_id);
-        if (idx !== -1) { hidden.splice(idx, 1); localStorage.setItem('baroalba_hidden_chats', JSON.stringify(hidden)); }
-      }
-      const chatOpen = document.getElementById('wchat-overlay')?.classList.contains('open');
-      if (chatOpen && _wchatAppId === payload.application_id) return;
-      const badge = document.getElementById('chat-unread-badge');
-      if (!badge) return;
-      const cnt = parseInt(badge.textContent || '0') + 1;
-      badge.textContent = cnt;
-      badge.style.display = 'flex';
-      showToast('\u{1F4AC} 새 메시지: ' + (payload.content || '').slice(0, 20) + ((payload.content || '').length > 20 ? '…' : ''));
-    })
+    .on('broadcast', { event: 'new_msg' }, _onNewMsg(false))
+    .subscribe();
+
+  // 업주 입장: 알바생이 보낸 메시지 수신
+  _ownerGlobalChatSub = db.channel(`owner-${currentUser.id}-notify`)
+    .on('broadcast', { event: 'new_msg' }, _onNewMsg(true))
     .subscribe();
 }
 
@@ -6943,13 +6953,13 @@ async function subscribePush() {
     const reg = await navigator.serviceWorker.ready;
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return;
+    // 기존 구독 취소 후 재구독 (VAPID 키 변경 시 반드시 필요)
     let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
-    }
+    if (sub) await sub.unsubscribe();
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
     await db.from('push_subscriptions')
       .upsert({ user_id: currentUser.id, subscription: sub.toJSON() }, { onConflict: 'user_id' });
   } catch(e) {
