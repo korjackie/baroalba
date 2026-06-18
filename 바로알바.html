@@ -3167,6 +3167,32 @@ let currentUser = null;
 let isGuest = false;
 let sheetState = 'peek'; // peek | half | full
 
+// ── 뒤로가기 전역 핸들러 ──────────────────────────────────
+const _PANEL_CLOSE_MAP = {
+  'panel-lesson-manage': () => closeLessonManagePanel(),
+  'panel-community':     () => closeCommunityPanel(),
+  'panel-applications':  () => document.getElementById('panel-applications')?.classList.remove('show'),
+  'panel-profile':       () => document.getElementById('panel-profile')?.classList.remove('show'),
+  'panel-posting-detail':() => document.getElementById('panel-posting-detail')?.classList.remove('show'),
+  'panel-app-job-detail':() => document.getElementById('panel-app-job-detail')?.classList.remove('show'),
+  'panel-owner-settings':() => { document.getElementById('panel-owner-settings')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
+  'panel-owner-chats':   () => { document.getElementById('panel-owner-chats')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
+  'panel-owner-map':     () => { document.getElementById('panel-owner-map')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
+};
+history.pushState({ panel: null }, ''); // 초기 기준점
+window.addEventListener('popstate', () => {
+  // 가장 위에 열린 full-panel 찾기 (z-index 내림차순)
+  const visible = [...document.querySelectorAll('.full-panel.show')]
+    .sort((a, b) => (parseInt(b.style.zIndex) || 100) - (parseInt(a.style.zIndex) || 100));
+  if (visible.length) {
+    const id = visible[0].id;
+    const closeFn = _PANEL_CLOSE_MAP[id];
+    if (closeFn) closeFn();
+    else visible[0].classList.remove('show');
+    history.pushState({ panel: null }, ''); // 다음 뒤로가기를 위한 상태 재설정
+  }
+});
+
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
@@ -7180,6 +7206,7 @@ function _buildWriteCats() {
 
 function openCommunityPanel() {
   document.getElementById('panel-community').classList.add('show');
+  history.pushState({ panel: 'community' }, '');
   _buildCommTabs();
   loadCommunityPosts('all');
 }
@@ -8475,6 +8502,7 @@ function openLessonManagePanel() {
   document.getElementById('panel-profile').classList.remove('show');
   setTimeout(() => {
     document.getElementById('panel-lesson-manage').classList.add('show');
+    history.pushState({ panel: 'lesson-manage' }, '');
     loadMyLessons();
   }, 50);
 }
