@@ -2095,15 +2095,6 @@
           </div>
         </div>
 
-        <!-- 비밀번호 변경 (이메일 로그인 전용) -->
-        <div id="profile-pw-section" style="display:none;margin-bottom:10px">
-          <button id="profile-pw-toggle-btn" onclick="toggleProfilePwForm()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left">비밀번호 변경</button>
-          <div id="profile-pw-form" style="display:none;margin-top:8px;padding:14px;background:#f8f8f8;border-radius:14px">
-            <input id="profile-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box">
-            <input id="profile-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
-            <button id="profile-pw-submit-btn" onclick="submitProfilePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
-          </div>
-        </div>
 
         <!-- 언어 토글 -->
         <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:10px">
@@ -2166,21 +2157,22 @@
           </div>
         </div>
 
-        <!-- 비밀번호 변경 -->
-        <div style="background:#f8f9fa;border-radius:14px;padding:16px;margin-bottom:14px">
-          <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px">🔐 비밀번호 변경</div>
-          <input id="pw-change-new" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;box-sizing:border-box">
-          <input id="pw-change-confirm" type="password" placeholder="새 비밀번호 확인" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;box-sizing:border-box">
-          <button onclick="changePassword()" style="width:100%;padding:11px;background:#333;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">비밀번호 변경</button>
-          <div id="pw-change-msg" style="font-size:12px;text-align:center;margin-top:8px;display:none"></div>
-        </div>
 
         <!-- 저장 -->
         <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">저장하기</button>
 
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <button id="worker-logout-btn" onclick="doLogout()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">로그아웃</button>
-          <button id="worker-delete-btn" onclick="deleteUserAccount()" style="flex:1;padding:14px;background:#FFF0F0;color:#C8102E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+        <!-- 계정 메뉴 -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">계정</div>
+          <div style="background:#fff;border-radius:14px;border:1px solid #f0f0f0;overflow:hidden">
+            <div onclick="openAccountInfoModal()" style="display:flex;align-items:center;padding:15px 16px;cursor:pointer;border-bottom:1px solid #f5f5f5;-webkit-tap-highlight-color:transparent">
+              <div style="flex:1;font-size:15px;font-weight:700;color:#222">회원정보 변경</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div id="worker-logout-btn" onclick="doLogout()" style="display:flex;align-items:center;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+              <div style="flex:1;font-size:15px;font-weight:700;color:#555">로그아웃</div>
+            </div>
+          </div>
         </div>
         <div style="display:flex;justify-content:center;gap:20px;padding-bottom:8px">
           <a id="worker-terms-link" href="./terms.html" style="font-size:11px;color:#bbb;text-decoration:none">이용약관</a>
@@ -2201,6 +2193,33 @@
     </div>
   </div>
 </div>
+</div>
+
+<!-- 회원정보 변경 오버레이 (알바생) -->
+<div id="modal-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;overflow-y:auto">
+  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
+    <button onclick="closeAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="font-size:17px;font-weight:900;color:#222">회원정보 변경</div>
+  </div>
+  <div style="padding:20px">
+    <div id="profile-pw-section" style="display:none;margin-bottom:24px">
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">비밀번호 변경</div>
+      <div id="profile-pw-form" style="background:#fff;border-radius:14px;padding:16px">
+        <input id="profile-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box">
+        <input id="profile-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+        <button id="profile-pw-submit-btn" onclick="submitProfilePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">계정 탈퇴</div>
+      <div style="background:#fff;border-radius:14px;padding:16px">
+        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:14px">탈퇴 시 지원 이력 등 모든 데이터가 삭제되며 복구되지 않습니다.</div>
+        <button id="worker-delete-btn" onclick="deleteUserAccount()" style="width:100%;padding:13px;background:#FFF0F0;color:#C8102E;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ── 레슨/과외 탐색 패널 ── -->
@@ -2805,21 +2824,48 @@
     <div id="admin-cat-section" style="display:none;background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #dbeafe"></div>
 
     <!-- 계정 관리 -->
-    <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
-      <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:12px">🔐 계정 관리</div>
-      <button onclick="document.getElementById('owner-pw-form').style.display=document.getElementById('owner-pw-form').style.display==='none'?'block':'none'" style="width:100%;padding:11px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">비밀번호 변경</button>
-      <div id="owner-pw-form" style="display:none;padding:12px;background:#f8f8f8;border-radius:10px;margin-bottom:8px">
-        <input id="owner-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:8px">
-        <input id="owner-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:8px">
-        <button onclick="changeOwnerPassword()" style="width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">변경하기</button>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">계정</div>
+      <div style="background:#fff;border-radius:14px;border:1px solid #f0f0f0;overflow:hidden">
+        <div onclick="openOwnerAccountInfoModal()" style="display:flex;align-items:center;padding:15px 16px;cursor:pointer;border-bottom:1px solid #f5f5f5;-webkit-tap-highlight-color:transparent">
+          <div style="flex:1;font-size:15px;font-weight:700;color:#222">회원정보 변경</div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div onclick="if(confirm('로그아웃 하시겠어요?'))doLogout()" style="display:flex;align-items:center;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="flex:1;font-size:15px;font-weight:700;color:#555">로그아웃</div>
+        </div>
       </div>
-      <button onclick="if(confirm('로그아웃 하시겠어요?'))doLogout()" style="width:100%;padding:11px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">로그아웃</button>
-      <button onclick="deleteOwnerAccount()" style="width:100%;padding:11px;background:#fff;color:#EF4444;border:1.5px solid #FCA5A5;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">회원 탈퇴</button>
     </div>
 
   </div>
 </div>
 <!-- ── panel-owner 닫기 ── -->
+<!-- 회원정보 변경 오버레이 (업주) -->
+<div id="modal-owner-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;overflow-y:auto">
+  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
+    <button onclick="closeOwnerAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="font-size:17px;font-weight:900;color:#222">회원정보 변경</div>
+  </div>
+  <div style="padding:20px">
+    <div style="margin-bottom:24px">
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">비밀번호 변경</div>
+      <div style="background:#fff;border-radius:14px;padding:16px">
+        <input id="owner-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <input id="owner-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px">
+        <button onclick="changeOwnerPassword()" style="width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">계정 탈퇴</div>
+      <div style="background:#fff;border-radius:14px;padding:16px">
+        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:14px">탈퇴 시 등록한 공고와 지원자 데이터가 모두 삭제되며 복구가 불가능합니다.</div>
+        <button onclick="deleteOwnerAccount()" style="width:100%;padding:13px;background:#FFF0F0;color:#C8102E;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- 내 위치 FAB -->
@@ -5826,7 +5872,6 @@ function openProfile() {
     pEl.style.display = 'block';
     // profile-biz-btn removed
     document.getElementById('profile-pw-section').style.display = provider === 'email' ? 'block' : 'none';
-    document.getElementById('profile-pw-form').style.display = 'none';
     document.getElementById('worker-profile-edit').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('worker-cert-section').style.display = role === 'business' ? 'none' : 'block';
     document.getElementById('worker-grade-section').style.display = role === 'business' ? 'none' : 'block';
@@ -6609,10 +6654,10 @@ function showDisclaimerSheet(onConfirm) {
   el.querySelector('#disclaimer-ok-btn').onclick = () => { el.remove(); if (onConfirm) onConfirm(); };
 }
 
-function toggleProfilePwForm() {
-  const f = document.getElementById('profile-pw-form');
-  f.style.display = f.style.display === 'none' ? 'block' : 'none';
-}
+function openAccountInfoModal() { document.getElementById('modal-account-info').style.display = 'block'; }
+function closeAccountInfoModal() { document.getElementById('modal-account-info').style.display = 'none'; }
+function openOwnerAccountInfoModal() { document.getElementById('modal-owner-account-info').style.display = 'block'; }
+function closeOwnerAccountInfoModal() { document.getElementById('modal-owner-account-info').style.display = 'none'; }
 
 async function submitProfilePw() {
   const pw  = document.getElementById('profile-new-pw').value;
@@ -6622,9 +6667,9 @@ async function submitProfilePw() {
   const { error } = await db.auth.updateUser({ password: pw });
   if (error) { showToast('변경 실패: ' + error.message); return; }
   showToast('✅ 비밀번호가 변경됐어요');
-  document.getElementById('profile-pw-form').style.display = 'none';
   document.getElementById('profile-new-pw').value = '';
   document.getElementById('profile-new-pw2').value = '';
+  closeAccountInfoModal();
 }
 
 async function changePassword() {
