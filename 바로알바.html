@@ -2509,8 +2509,8 @@
 </div>
 
 <!-- 공고 공유 모달 (업주 공고관리에서 사용) -->
-<div class="detail-overlay" id="share-overlay" style="z-index:600" onclick="if(event.target===this)closeShareModal()">
-  <div class="detail-sheet" style="padding:20px 20px 32px">
+<div class="detail-overlay" id="share-overlay" style="z-index:600;align-items:center;justify-content:center" onclick="if(event.target===this)closeShareModal()">
+  <div class="detail-sheet" style="border-radius:24px;width:90vw;max-width:440px;padding:20px 20px 32px">
     <div class="detail-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font-size:17px;font-weight:800;color:#222">공고 공유하기</span><button onclick="closeShareModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1">✕</button></div>
     <div style="padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#555;word-break:break-all;margin-bottom:12px" id="share-url-text">-</div>
@@ -4010,6 +4010,50 @@ async function refreshWorkerChatBadge() {
 // ── 채팅 (알바생) ─────────────────────────────────────────
 let _wchatAppId = null, _wchatSub = null;
 
+// 지원자 카드 상단 클릭 → 지원자 상세 정보 바텀시트
+async function openWorkerProfileDirect(appId) {
+  let app = (_allApplicants || []).find(a => a.id === appId);
+  if (!app) {
+    const { data } = await db.from('applications')
+      .select('*, workers(id, name, phone, rating, review_count, noshow_count, skills), job_postings(title)')
+      .eq('id', appId).maybeSingle();
+    if (!data) return;
+    app = data;
+  }
+  const w = app.workers;
+  if (!w) return;
+  document.getElementById('_wd-sheet')?.remove();
+  const el = document.createElement('div');
+  el.id = '_wd-sheet';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  const rating = w.rating != null ? Number(w.rating).toFixed(1) : '-';
+  const reviews = w.review_count || 0;
+  const noshow = w.noshow_count || 0;
+  const phone = w.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
+  const b = _STATUS_BADGE[app.status] || _STATUS_BADGE.pending;
+  const wname = (w.name || '이름없음').replace(/'/g, '&#39;');
+  const close = `document.getElementById('_wd-sheet').remove();`;
+  let actionBtns = `<button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💬 채팅</button>`;
+  if (!['accepted','completed'].includes(app.status))
+    actionBtns += `<button onclick="${close}updateApplication('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 합격</button>`;
+  if (!['rejected','completed'].includes(app.status))
+    actionBtns += `<button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
+  el.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 20px 40px;max-height:72vh;overflow-y:auto">
+    <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 16px"></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div style="width:52px;height:52px;border-radius:50%;background:#f4f4f4;border:2px solid #eee;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <div style="flex:1"><div style="font-size:18px;font-weight:900;color:#222">${w.name || '이름없음'}</div><div style="font-size:13px;color:#888;margin-top:2px">★ ${rating} · 완료 ${reviews}건 · 노쇼 ${noshow}건</div></div>
+      <span style="background:${b.bg};color:${b.color};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800">${b.label}</span>
+    </div>
+    <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;margin-bottom:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:3px">지원 공고</div><div style="font-size:14px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div></div>
+    ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:13px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone}</a>` : ''}
+    <div style="display:flex;gap:8px;margin-bottom:10px">${actionBtns}</div>
+    <button onclick="${close}" style="width:100%;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+  </div>`;
+  document.body.appendChild(el);
+}
+
 function _chatItemClick(e, appId, name, side) {
   const inner = e.currentTarget;
   if (inner && inner.classList.contains('revealed')) {
@@ -4662,7 +4706,7 @@ async function loadMyChatList() {
     let lpTimer;
     inner.addEventListener('pointerdown', () => {
       lpTimer = setTimeout(() => {
-        const appId = inner.dataset.appId, name = inner.dataset.bizName;
+        const appId = inner.dataset.appId, name = inner.dataset.name;
         if (confirm('"' + name + '" 채팅방을 나가시겠어요?\n새 메시지가 오면 자동으로 다시 표시됩니다.')) leaveChatItem(appId);
       }, 600);
     });
@@ -9582,6 +9626,7 @@ function openEditForm(jobId) {
       document.getElementById('location-result').style.display = 'block';
     }
   }
+  if (surgeOn !== (p.is_quick || false)) toggleSurge();
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
   const dep = p.noshow_deposit || 0;
