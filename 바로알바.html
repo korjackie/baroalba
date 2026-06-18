@@ -2166,6 +2166,15 @@
           </div>
         </div>
 
+        <!-- 비밀번호 변경 -->
+        <div style="background:#f8f9fa;border-radius:14px;padding:16px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px">🔐 비밀번호 변경</div>
+          <input id="pw-change-new" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;box-sizing:border-box">
+          <input id="pw-change-confirm" type="password" placeholder="새 비밀번호 확인" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;box-sizing:border-box">
+          <button onclick="changePassword()" style="width:100%;padding:11px;background:#333;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">비밀번호 변경</button>
+          <div id="pw-change-msg" style="font-size:12px;text-align:center;margin-top:8px;display:none"></div>
+        </div>
+
         <!-- 저장 -->
         <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">저장하기</button>
 
@@ -6611,6 +6620,24 @@ async function submitProfilePw() {
   document.getElementById('profile-pw-form').style.display = 'none';
   document.getElementById('profile-new-pw').value = '';
   document.getElementById('profile-new-pw2').value = '';
+}
+
+async function changePassword() {
+  const pw  = document.getElementById('pw-change-new')?.value || '';
+  const pw2 = document.getElementById('pw-change-confirm')?.value || '';
+  const msg = document.getElementById('pw-change-msg');
+  if (!msg) return;
+  msg.style.display = 'none';
+  if (pw.length < 6) { msg.textContent = '비밀번호는 6자 이상이어야 합니다.'; msg.style.color = '#C8102E'; msg.style.display = 'block'; return; }
+  if (pw !== pw2)    { msg.textContent = '비밀번호가 일치하지 않습니다.'; msg.style.color = '#C8102E'; msg.style.display = 'block'; return; }
+  const { error } = await db.auth.updateUser({ password: pw });
+  if (error) { msg.textContent = '변경 실패: ' + error.message; msg.style.color = '#C8102E'; }
+  else {
+    msg.textContent = '✅ 비밀번호가 변경됐습니다.'; msg.style.color = '#16a34a';
+    document.getElementById('pw-change-new').value = '';
+    document.getElementById('pw-change-confirm').value = '';
+  }
+  msg.style.display = 'block';
 }
 
 async function deleteUserAccount() {

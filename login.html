@@ -588,14 +588,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
+let _pwRecoveryMode = false;
 db.auth.onAuthStateChange(async (event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
-    // 비밀번호 재설정 링크로 접속한 경우 → 새 비밀번호 입력 화면 표시
+    _pwRecoveryMode = true;
     document.getElementById('splash')?.classList.add('hidden');
     const el = document.getElementById('screen-pw-reset');
     el.style.display = 'flex';
     return;
   }
+  if (_pwRecoveryMode) return; // 비번 재설정 모드 중엔 앱 이동 차단
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
     // 신규 OAuth 가입 시 workers 레코드 자동 생성 (기존 레코드는 덮어쓰지 않음)
     if (event === 'SIGNED_IN') {
@@ -644,9 +646,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     const { data } = await Promise.race([sessionPromise, timeoutPromise.then(() => ({ data: { session: null } }))]);
     if (data?.session) {
       clearTimeout(safetyTimer);
+      // recovery URL이면 onAuthStateChange(PASSWORD_RECOVERY)에 맡기고 여기선 이동 안 함
+      if (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery')) return;
       // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
       setTimeout(() => {
-        if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
+        if (!_pwRecoveryMode && document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
           goToApp();
         }
       }, 1500);
