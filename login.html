@@ -615,7 +615,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
+let _inPasswordRecovery = false;
 db.auth.onAuthStateChange(async (event, session) => {
+  // 비밀번호 재설정 이벤트 — implicit(hash) 및 PKCE(?code=) 양쪽 모두 처리
+  if (event === 'PASSWORD_RECOVERY' && session) {
+    _inPasswordRecovery = true;
+    const show = () => showInlineResetForm();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+    else show();
+    return;
+  }
+
   // 재설정 링크로 열렸지만 코드 교환 실패 (만료 or 이미 사용됨)
   if (_hadCodeParam && event === 'INITIAL_SESSION' && !session) {
     history.replaceState({}, '', window.location.pathname);
@@ -630,7 +640,9 @@ db.auth.onAuthStateChange(async (event, session) => {
   }
 
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    // 이 탭이 재설정 링크로 열린 경우 → 인라인 재설정 폼 표시
+    // PASSWORD_RECOVERY 직후 SIGNED_IN이 연달아 오는 경우 자동 로그인 차단
+    if (_inPasswordRecovery) return;
+    // 이 탭이 PKCE 재설정 링크로 열린 경우 → 인라인 재설정 폼 표시 (fallback)
     if (_hadCodeParam && event === 'SIGNED_IN') {
       const show = () => showInlineResetForm();
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
