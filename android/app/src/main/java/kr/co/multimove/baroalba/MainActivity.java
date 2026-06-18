@@ -52,8 +52,9 @@ public class MainActivity extends AppCompatActivity {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         }
 
-        // 바로알바 앱 식별자 추가 — isInAppBrowser() 오인식 방지
-        s.setUserAgentString(s.getUserAgentString() + " BaroAlbaApp/1.0");
+        // ; wv) 제거 → 구글 OAuth 차단 방지 / BaroAlbaApp 식별자 추가
+        String ua = s.getUserAgentString().replace("; wv)", ")");
+        s.setUserAgentString(ua + " BaroAlbaApp/1.0");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -61,12 +62,16 @@ public class MainActivity extends AppCompatActivity {
                 String url = req.getUrl().toString();
                 // 앱 도메인 — WebView에서 직접 처리
                 if (url.startsWith("https://baroalba.multimove.co.kr")) return false;
-                // OAuth/외부 URL — 시스템 브라우저/앱으로 열기
+                // OAuth 공급자 — WebView 내에서 처리 (외부 브라우저 차단)
+                if (url.startsWith("https://nid.naver.com")) return false;
+                if (url.startsWith("https://accounts.google.com")) return false;
+                if (url.startsWith("https://kauth.kakao.com")) return false;
+                // 그 외 외부 URL — 시스템 브라우저로 열기
                 if (url.startsWith("http://") || url.startsWith("https://")) {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
                     return true;
                 }
-                // 카카오/네이버 딥링크 스킴
+                // 딥링크 스킴
                 try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
                 return true;
             }

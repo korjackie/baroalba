@@ -591,6 +591,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 db.auth.onAuthStateChange(async (event, session) => {
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+    // 비밀번호 재설정 진행 중이면 자동 로그인 차단
+    if (localStorage.getItem('baroalba_reset_initiated')) return;
     if (event === 'SIGNED_IN') {
       const u = session.user;
       const meta = u.user_metadata || {};
@@ -636,6 +638,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
     const { data } = await Promise.race([sessionPromise, timeoutPromise.then(() => ({ data: { session: null } }))]);
     if (data?.session) {
+      // 비밀번호 재설정 진행 중이면 로그인 화면 표시
+      if (localStorage.getItem('baroalba_reset_initiated')) {
+        clearTimeout(safetyTimer);
+        showLoginScreen();
+        return;
+      }
       clearTimeout(safetyTimer);
       // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
       setTimeout(() => {
@@ -962,10 +970,10 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isAndroid = /Android/.test(navigator.userAgent);
 
 function initInstallUI() {
-  // 이미 설치된 앱 안에서 실행 중이면 숨김
   if (isStandalone) return;
-  // 인앱 브라우저에서는 설치 불가
   if (isInAppBrowser()) return;
+  // 바로알바 앱 WebView에서는 설치 버튼 불필요
+  if (navigator.userAgent.includes('BaroAlbaApp')) return;
 
   const area = document.getElementById('install-area');
 
@@ -979,6 +987,7 @@ function initInstallUI() {
 }
 
 window.addEventListener('beforeinstallprompt', e => {
+  if (navigator.userAgent.includes('BaroAlbaApp')) { e.preventDefault(); return; }
   e.preventDefault();
   _installPrompt = e;
   const area = document.getElementById('install-area');

@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#C8102E">
   <title>바로알바 — 비밀번호 재설정</title>
+  <script>
+    // Supabase SDK 로딩 전에 동기적으로 신호 설정
+    // reset.html은 반드시 ?code= 파라미터와 함께 열림
+    if (window.location.search.includes('code=')) {
+      try { localStorage.setItem('baroalba_reset_initiated', Date.now().toString()); } catch(e) {}
+    }
+  </script>
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -150,6 +157,7 @@ async function doReset() {
   }
 
   await db.auth.signOut();
+  localStorage.removeItem('baroalba_reset_initiated'); // 완료 후 플래그 제거
   showMsg('✅ 비밀번호가 변경됐습니다!', 'success');
   btn.style.display = 'none';
   setTimeout(() => { window.location.href = '/login.html'; }, 1500);
