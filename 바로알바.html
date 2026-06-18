@@ -6140,14 +6140,14 @@ function openProfile() {
     document.getElementById('profile-pw-section').style.display = provider === 'email' ? 'block' : 'none';
     document.getElementById('worker-profile-edit').style.display = 'block';
     document.getElementById('worker-cert-section').style.display = 'block';
-    document.getElementById('worker-grade-section').style.display = role === 'business' ? 'none' : 'block';
+    document.getElementById('worker-grade-section').style.display = 'block';
     document.getElementById('owner-profile-edit').style.display = 'none';
     document.getElementById('owner-settings-shortcut').style.display = role === 'business' ? 'block' : 'none';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
     loadWorkerProfileForm();
-    if (role !== 'business') loadWorkerGrade();
-    else loadOwnerProfileForm();
+    loadWorkerGrade();
+    loadOwnerProfileForm();
   } else {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
@@ -7023,11 +7023,11 @@ async function loadOwnerProfileForm() {
 }
 
 async function saveOwnerProfile() {
-  if (!currentUser) return;
-  const name = document.getElementById('owner-biz-name').value.trim();
-  const phone = document.getElementById('owner-biz-phone').value.trim();
-  const description = document.getElementById('owner-biz-desc').value.trim();
-  if (!name) { showToast('업체명을 입력해주세요'); return false; }
+  if (!currentUser) return true;
+  const name = document.getElementById('owner-biz-name')?.value.trim();
+  const phone = document.getElementById('owner-biz-phone')?.value.trim();
+  const description = document.getElementById('owner-biz-desc')?.value.trim();
+  if (!name) return true; // 업체명 없으면 조용히 통과 (비업주 계정)
   const { error } = await db.from('businesses')
     .update({ name, phone, description }).eq('kakao_uid', currentUser.id);
   if (error) { showToast('저장 실패: ' + error.message); return false; }
@@ -7046,14 +7046,9 @@ async function saveAllProfileSettings() {
 async function _doSaveAllProfileSettings() {
   currentLang = _pendingLang;
   localStorage.setItem('baroalba_lang', currentLang);
-  const role = currentUser?.user_metadata?.baroalba_role;
   const workerOk = await saveWorkerProfile();
-  if (role === 'business') {
-    const ownerOk = await saveOwnerProfile();
-    if (workerOk && ownerOk) location.reload();
-  } else {
-    if (workerOk) location.reload();
-  }
+  await saveOwnerProfile();
+  if (workerOk) location.reload();
 }
 
 function closeProfileIfBg(e) {
