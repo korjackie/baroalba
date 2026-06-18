@@ -3348,7 +3348,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  try { initMap(); } catch(e) { console.error('initMap 실패:', e); }
+  try { initMap(); } catch(e) { console.error('initMap 실패:', e); document.getElementById('map-loading')?.classList.add('hidden'); }
   setupSheet();
   setupSearch();
   applyLang();
@@ -3968,33 +3968,27 @@ function setupMessageNotifications() {
   if (_workerGlobalChatSub) { try { _workerGlobalChatSub.unsubscribe(); } catch(e) {} _workerGlobalChatSub = null; }
   if (_ownerGlobalChatSub) { try { _ownerGlobalChatSub.unsubscribe(); } catch(e) {} _ownerGlobalChatSub = null; }
 
-  const _onNewMsg = (isOwnerSide) => ({ payload }) => {
+  function _handleNewMsg(payload) {
     if (!payload || payload.sender_id === currentUser.id) return;
     if (payload.application_id) {
-      const hidden = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
-      const idx = hidden.indexOf(payload.application_id);
+      var hidden = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
+      var idx = hidden.indexOf(payload.application_id);
       if (idx !== -1) { hidden.splice(idx, 1); localStorage.setItem('baroalba_hidden_chats', JSON.stringify(hidden)); }
     }
-    const wOpen = document.getElementById('wchat-overlay')?.classList.contains('open');
-    const cOpen = document.getElementById('chat-overlay')?.classList.contains('open');
-    if (isOwnerSide && cOpen && _chatAppId === payload.application_id) return;
-    if (!isOwnerSide && wOpen && _wchatAppId === payload.application_id) return;
-    const badge = document.getElementById('chat-unread-badge');
+    var badge = document.getElementById('chat-unread-badge');
     if (!badge) return;
-    const cnt = parseInt(badge.textContent || '0') + 1;
+    var cnt = parseInt(badge.textContent || '0') + 1;
     badge.textContent = cnt;
     badge.style.display = 'flex';
-    showToast('\u{1F4AC} 새 메시지: ' + (payload.content || '').slice(0, 20) + ((payload.content || '').length > 20 ? '…' : ''));
-  };
+    showToast('💬 새 메시지: ' + (payload.content || '').slice(0, 20) + ((payload.content || '').length > 20 ? '...' : ''));
+  }
 
-  // 알바생 입장: 업주가 보낸 메시지 수신
-  _workerGlobalChatSub = db.channel(`worker-${currentUser.id}-notify`)
-    .on('broadcast', { event: 'new_msg' }, _onNewMsg(false))
+  _workerGlobalChatSub = db.channel('worker-' + currentUser.id + '-notify')
+    .on('broadcast', { event: 'new_msg' }, function(e) { _handleNewMsg(e.payload); })
     .subscribe();
 
-  // 업주 입장: 알바생이 보낸 메시지 수신
-  _ownerGlobalChatSub = db.channel(`owner-${currentUser.id}-notify`)
-    .on('broadcast', { event: 'new_msg' }, _onNewMsg(true))
+  _ownerGlobalChatSub = db.channel('owner-' + currentUser.id + '-notify')
+    .on('broadcast', { event: 'new_msg' }, function(e) { _handleNewMsg(e.payload); })
     .subscribe();
 }
 
