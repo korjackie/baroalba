@@ -3671,8 +3671,8 @@ function renderList() {
           <div class="card-title">${job.title}</div>
         </div>
         <div class="card-right">
-          <div class="card-wage">${job.current_wage.toLocaleString()}원${job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
-          ${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}
+          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
+          <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}</div>
           ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">최대 ${job.surge_max_wage.toLocaleString()}원</div>` : ''}
         </div>
       </div>
@@ -6806,11 +6806,15 @@ function startSurgeTimers() {
   jobs.filter(j => j.surge_enabled && j.surge_interval_min).forEach(job => {
     const intervalMs = job.surge_interval_min * 60 * 1000;
     const updated = new Date(job.updated_at || Date.now());
-    const handle = setInterval(() => {
+    let lastCycleApplied = Math.floor((Date.now() - updated.getTime()) / intervalMs);
+
+    const handle = setInterval(async () => {
       const cnt = document.getElementById(`scnt-${job.id}`);
       const bar = document.getElementById(`sbar-${job.id}`);
       if (!cnt) { clearInterval(handle); return; }
+
       const elapsed = Date.now() - updated.getTime();
+      const currentCycle = Math.floor(elapsed / intervalMs);
       const remaining = intervalMs - (elapsed % intervalMs);
       const pct = Math.max(0, (remaining / intervalMs) * 100);
       const m = Math.floor(remaining / 60000);
@@ -6820,6 +6824,38 @@ function startSurgeTimers() {
       if (remaining < 10000) {
         cnt.style.color = '#C8102E';
         bar.style.background = '#C8102E';
+      } else {
+        cnt.style.color = '';
+        bar.style.background = '';
+      }
+
+      // 사이클 완료 → 가격 인상
+      if (currentCycle > lastCycleApplied) {
+        lastCycleApplied = currentCycle;
+        const maxWage = job.surge_max_wage || 9999999;
+        if ((job.current_wage || 0) < maxWage) {
+          const newWage = Math.min((job.current_wage || job.base_wage) + (job.surge_amount || 1000), maxWage);
+          job.current_wage = newWage;
+          job.wage_delta = newWage - (job.base_wage || newWage);
+          // DB 업데이트
+          db.from('job_postings').update({ current_wage: newWage }).eq('id', job.id).then(null, console.warn);
+          // 카드 DOM 직접 업데이트
+          const wageEl = document.getElementById(`wage-${job.id}`);
+          const deltaWrap = document.getElementById(`wagedelta-${job.id}`);
+          if (wageEl) {
+            wageEl.innerHTML = newWage.toLocaleString() + '원' +
+              (job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : '');
+          }
+          if (deltaWrap) {
+            deltaWrap.innerHTML = `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>`;
+          }
+          // 타이머 배경 잠깐 강조
+          const timerEl = document.getElementById(`stimer-${job.id}`);
+          if (timerEl) {
+            timerEl.style.background = 'linear-gradient(90deg,#FFE0B2,#FFF3E0)';
+            setTimeout(() => { if (timerEl) timerEl.style.background = ''; }, 1500);
+          }
+        }
       }
     }, 1000);
     surgeTimerHandles.push(handle);
