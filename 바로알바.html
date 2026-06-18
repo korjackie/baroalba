@@ -40,14 +40,16 @@
       --sheet-peek: 56px;
       --sat: env(safe-area-inset-top, 0px);
       --sab: env(safe-area-inset-bottom, 0px);
+      --sat-safe: max(var(--sat), env(safe-area-inset-top, 0px));
+      --sab-safe: max(var(--sab), env(safe-area-inset-bottom, 0px));
     }
     html, body { height: 100%; overflow: hidden; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f5f5f5; }
 
     /* ── 앱 헤더 ── */
     .app-header {
       position: fixed; top: 0; left: 0; right: 0;
-      height: calc(var(--header-h) + var(--sat));
-      padding-top: var(--sat);
+      height: calc(var(--header-h) + var(--sat-safe));
+      padding-top: var(--sat-safe);
       background: #fff; z-index: 300;
       display: flex; align-items: center; justify-content: space-between;
       padding-left: 14px; padding-right: 14px;
@@ -63,12 +65,12 @@
     }
 
     /* ── 지도 ── */
-    #map { position: fixed; top: calc(var(--header-h) + var(--sat)); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab)); }
+    #map { position: fixed; top: calc(var(--header-h) + var(--sat-safe)); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab-safe)); }
 
     /* ── 상단 검색바 ── */
     .top-bar {
       position: fixed;
-      top: calc(var(--header-h) + var(--sat)); left: 0; right: 0;
+      top: calc(var(--header-h) + var(--sat-safe)); left: 0; right: 0;
       z-index: 200;
       padding: 12px 14px 0;
       pointer-events: none;
@@ -603,8 +605,8 @@
     .bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: calc(var(--nav-h) + var(--sab));
-      padding-bottom: var(--sab);
+      height: calc(var(--nav-h) + var(--sab-safe));
+      padding-bottom: var(--sab-safe);
       background: #fff;
       border-top: 1px solid #f0f0f0;
       display: flex;
@@ -656,7 +658,7 @@
 
     /* ── 내지원 / 채팅 패널 ── */
     .full-panel {
-      position: fixed; top: var(--sat); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab));
+      position: fixed; top: var(--sat-safe); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab-safe));
       background: #f5f5f5; z-index: 300; display: none;
       flex-direction: column; overflow-y: auto;
     }
