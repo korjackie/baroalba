@@ -3348,7 +3348,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  initMap();
+  try { initMap(); } catch(e) { console.error('initMap 실패:', e); }
   setupSheet();
   setupSearch();
   applyLang();
@@ -3359,7 +3359,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (deepJobId) openDeepLink(deepJobId);
   setupRealtime();
   setupMessageNotifications();
-  if (!isGuest) subscribePush();
   if (currentUser) initOwnerFeatures().catch(console.error);
 
   // owner.html에서 돌아올 때 탭 복원
