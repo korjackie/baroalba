@@ -2013,59 +2013,73 @@
             </div>
             <!-- 이동수단 -->
             <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div onclick="toggleProfileSection('vehicles')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
                 <span style="font-size:13px;font-weight:700;color:#222" data-i18n="vehicle_section">🚗 이동수단</span>
-                <span style="font-size:11px;color:#bbb" data-i18n="multi_select">복수 선택 가능</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span id="vehicles-summary" style="font-size:11px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                  <span id="vehicles-arrow" style="font-size:11px;color:#bbb">▼</span>
+                </div>
               </div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px" id="vehicle-chips">
-                <button type="button" data-v="bicycle"      onclick="toggleVehicle(this)" class="v-chip">자전거</button>
-                <button type="button" data-v="kickboard"    onclick="toggleVehicle(this)" class="v-chip">킥보드</button>
-                <button type="button" data-v="motorcycle"   onclick="toggleVehicle(this)" class="v-chip">오토바이</button>
-                <button type="button" data-v="car_compact"  onclick="toggleVehicle(this)" class="v-chip">차량 소형</button>
-                <button type="button" data-v="car_midsize"  onclick="toggleVehicle(this)" class="v-chip">차량 중형</button>
-                <button type="button" data-v="car_suv"      onclick="toggleVehicle(this)" class="v-chip">차량 SUV</button>
-                <button type="button" data-v="car_large"    onclick="toggleVehicle(this)" class="v-chip">차량 대형</button>
-                <button type="button" data-v="truck"        onclick="toggleVehicle(this)" class="v-chip">트럭/화물</button>
+              <div id="vehicles-body" style="display:none;margin-top:10px">
+                <div style="display:flex;flex-wrap:wrap;gap:6px" id="vehicle-chips">
+                  <button type="button" data-v="bicycle"      onclick="toggleVehicle(this)" class="v-chip">자전거</button>
+                  <button type="button" data-v="kickboard"    onclick="toggleVehicle(this)" class="v-chip">킥보드</button>
+                  <button type="button" data-v="motorcycle"   onclick="toggleVehicle(this)" class="v-chip">오토바이</button>
+                  <button type="button" data-v="car_compact"  onclick="toggleVehicle(this)" class="v-chip">차량 소형</button>
+                  <button type="button" data-v="car_midsize"  onclick="toggleVehicle(this)" class="v-chip">차량 중형</button>
+                  <button type="button" data-v="car_suv"      onclick="toggleVehicle(this)" class="v-chip">차량 SUV</button>
+                  <button type="button" data-v="car_large"    onclick="toggleVehicle(this)" class="v-chip">차량 대형</button>
+                  <button type="button" data-v="truck"        onclick="toggleVehicle(this)" class="v-chip">트럭/화물</button>
+                </div>
               </div>
             </div>
 
             <!-- 나의 강점 -->
             <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div onclick="toggleProfileSection('strengths')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
                 <span style="font-size:13px;font-weight:700;color:#222" data-i18n="strength_section">⭐ 나의 강점</span>
-                <span style="font-size:11px;color:#bbb" data-i18n="strength_max">최대 5개</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span id="strengths-summary" style="font-size:11px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                  <span id="strengths-arrow" style="font-size:11px;color:#bbb">▼</span>
+                </div>
               </div>
-              <div data-i18n="strength_desc" style="font-size:11px;color:#aaa;margin-bottom:10px">선택 안해도 됩니다 · 업주에게 어필할 매력포인트를 골라보세요</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px" id="strength-chips">
-                <button type="button" data-s="strong"      onclick="toggleStrength(this)" class="s-chip">힘이 강함</button>
-                <button type="button" data-s="speed"       onclick="toggleStrength(this)" class="s-chip">스피드</button>
-                <button type="button" data-s="numbers"     onclick="toggleStrength(this)" class="s-chip">숫자에 밝음</button>
-                <button type="button" data-s="design"      onclick="toggleStrength(this)" class="s-chip">디자인 안목</button>
-                <button type="button" data-s="experience"  onclick="toggleStrength(this)" class="s-chip">다양한 경험</button>
-                <button type="button" data-s="always_on"   onclick="toggleStrength(this)" class="s-chip">상시출동 가능</button>
-                <button type="button" data-s="educated"    onclick="toggleStrength(this)" class="s-chip">좋은 학벌</button>
-                <button type="button" data-s="kind"        onclick="toggleStrength(this)" class="s-chip">친절함</button>
-                <button type="button" data-s="driving"     onclick="toggleStrength(this)" class="s-chip">운전 능숙</button>
-                <button type="button" data-s="language"    onclick="toggleStrength(this)" class="s-chip">외국어 가능</button>
-                <button type="button" data-s="detail"      onclick="toggleStrength(this)" class="s-chip">꼼꼼함</button>
-                <button type="button" data-s="stamina"     onclick="toggleStrength(this)" class="s-chip">체력 강함</button>
-                <button type="button" data-s="night"       onclick="toggleStrength(this)" class="s-chip">야간 가능</button>
-                <button type="button" data-s="clean"       onclick="toggleStrength(this)" class="s-chip">청결 철저</button>
-                <button type="button" data-s="photo"       onclick="toggleStrength(this)" class="s-chip">사진/영상</button>
-                <button type="button" data-s="cooking"     onclick="toggleStrength(this)" class="s-chip">요리 잘 함</button>
-                <button type="button" data-s="elderly"     onclick="toggleStrength(this)" class="s-chip">어르신 친화</button>
-                <button type="button" data-s="pet"         onclick="toggleStrength(this)" class="s-chip">반려동물 OK</button>
-                <button type="button" data-s="handyman"    onclick="toggleStrength(this)" class="s-chip">손재주 있음</button>
-                <button type="button" data-s="moving"      onclick="toggleStrength(this)" class="s-chip">이사/운반 경험</button>
+              <div id="strengths-body" style="display:none;margin-top:10px">
+                <div data-i18n="strength_desc" style="font-size:11px;color:#aaa;margin-bottom:10px">선택 안해도 됩니다 · 업주에게 어필할 매력포인트를 골라보세요</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px" id="strength-chips">
+                  <button type="button" data-s="strong"      onclick="toggleStrength(this)" class="s-chip">힘이 강함</button>
+                  <button type="button" data-s="speed"       onclick="toggleStrength(this)" class="s-chip">스피드</button>
+                  <button type="button" data-s="numbers"     onclick="toggleStrength(this)" class="s-chip">숫자에 밝음</button>
+                  <button type="button" data-s="design"      onclick="toggleStrength(this)" class="s-chip">디자인 안목</button>
+                  <button type="button" data-s="experience"  onclick="toggleStrength(this)" class="s-chip">다양한 경험</button>
+                  <button type="button" data-s="always_on"   onclick="toggleStrength(this)" class="s-chip">상시출동 가능</button>
+                  <button type="button" data-s="educated"    onclick="toggleStrength(this)" class="s-chip">좋은 학벌</button>
+                  <button type="button" data-s="kind"        onclick="toggleStrength(this)" class="s-chip">친절함</button>
+                  <button type="button" data-s="driving"     onclick="toggleStrength(this)" class="s-chip">운전 능숙</button>
+                  <button type="button" data-s="language"    onclick="toggleStrength(this)" class="s-chip">외국어 가능</button>
+                  <button type="button" data-s="detail"      onclick="toggleStrength(this)" class="s-chip">꼼꼼함</button>
+                  <button type="button" data-s="stamina"     onclick="toggleStrength(this)" class="s-chip">체력 강함</button>
+                  <button type="button" data-s="night"       onclick="toggleStrength(this)" class="s-chip">야간 가능</button>
+                  <button type="button" data-s="clean"       onclick="toggleStrength(this)" class="s-chip">청결 철저</button>
+                  <button type="button" data-s="photo"       onclick="toggleStrength(this)" class="s-chip">사진/영상</button>
+                  <button type="button" data-s="cooking"     onclick="toggleStrength(this)" class="s-chip">요리 잘 함</button>
+                  <button type="button" data-s="elderly"     onclick="toggleStrength(this)" class="s-chip">어르신 친화</button>
+                  <button type="button" data-s="pet"         onclick="toggleStrength(this)" class="s-chip">반려동물 OK</button>
+                  <button type="button" data-s="handyman"    onclick="toggleStrength(this)" class="s-chip">손재주 있음</button>
+                  <button type="button" data-s="moving"      onclick="toggleStrength(this)" class="s-chip">이사/운반 경험</button>
+                </div>
               </div>
             </div>
 
             <!-- 구사 가능 언어 -->
             <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div onclick="toggleProfileSection('languages')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
                 <span style="font-size:13px;font-weight:700;color:#222" data-i18n="lang_ability">🌐 구사 가능 언어</span>
-                <span style="font-size:11px;color:#bbb" data-i18n="multi_select">복수 선택 가능</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span id="languages-summary" style="font-size:11px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                  <span id="languages-arrow" style="font-size:11px;color:#bbb">▼</span>
+                </div>
               </div>
+              <div id="languages-body" style="display:none;margin-top:10px">
               <div style="display:flex;flex-wrap:wrap;gap:6px" id="lang-ability-chips">
                 <button type="button" data-l="ko" onclick="toggleLangAbility(this)" class="l-chip">&#127472;&#127479; 한국어</button>
                 <button type="button" data-l="en" onclick="toggleLangAbility(this)" class="l-chip">&#127482;&#127480; 영어</button>
@@ -2108,6 +2122,7 @@
                   <button type="button" id="lang-prof-remove-btn" onclick="removeLangProficiency()" style="padding:8px 12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:none">삭제</button>
                 </div>
               </div>
+              </div><!-- /languages-body -->
             </div>
 
           </div>
@@ -3128,7 +3143,7 @@
         </div>
         <input type="hidden" id="f-surge-enabled" value="false">
 
-        <div id="surge-settings" style="display:none;margin-top:10px;background:#f8f8f8;border-radius:14px;padding:14px;display:none">
+        <div id="surge-settings" style="display:none;margin-top:10px;background:#f8f8f8;border-radius:14px;padding:14px">
           <div class="form-row" style="margin-bottom:10px">
             <div class="form-group">
               <label class="form-label">최대 시급 (원)</label>
@@ -6229,8 +6244,8 @@ async function loadWorkerProfileForm() {
   }
   if (w.gender) setGender(w.gender);
   else if (meta.gender) setGender(meta.gender);
-  // 모든 필드 세팅 완료 후 완성도 계산 (renderSkillTags 시점엔 아직 phone/bio/gender 미적용)
-  setTimeout(() => updateProfileCompletion(), 0);
+  // 모든 필드 세팅 완료 후 완성도 + 섹션 요약 업데이트
+  setTimeout(() => { updateProfileCompletion(); updateAllProfileSummaries(); }, 0);
 }
 
 async function loadWorkerGrade() {
@@ -6745,6 +6760,44 @@ function toggleStrength(el) {
     _workerStrengths.push(s);
     el.classList.add('active');
   }
+}
+
+function toggleProfileSection(id) {
+  const body = document.getElementById(id + '-body');
+  const arrow = document.getElementById(id + '-arrow');
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  if (isOpen) {
+    updateProfileSectionSummary(id);
+    body.style.display = 'none';
+    if (arrow) arrow.textContent = '▼';
+  } else {
+    body.style.display = 'block';
+    if (arrow) arrow.textContent = '▲';
+  }
+}
+
+function updateProfileSectionSummary(id) {
+  const el = document.getElementById(id + '-summary');
+  if (!el) return;
+  let text = '';
+  if (id === 'vehicles') {
+    const sel = [...document.querySelectorAll('#vehicle-chips .v-chip.active')].map(b => b.textContent.trim());
+    text = sel.length ? sel.join(' · ') : '미선택';
+  } else if (id === 'strengths') {
+    const sel = [...document.querySelectorAll('#strength-chips .s-chip.active')].map(b => b.textContent.trim());
+    text = sel.length ? (sel.slice(0, 3).join(' · ') + (sel.length > 3 ? ' 외 ' + (sel.length - 3) + '개' : '')) : '미선택';
+  } else if (id === 'languages') {
+    const preset = [...document.querySelectorAll('#lang-ability-chips .l-chip.active')].map(b => b.textContent.trim().split(' ').slice(-1)[0]);
+    const others = _workerLanguages.filter(e => parseLangEntry(e).type === 'other').map(e => parseLangEntry(e).name);
+    const all = [...preset, ...others];
+    text = all.length ? all.join(' · ') : '미선택';
+  }
+  el.textContent = text;
+}
+
+function updateAllProfileSummaries() {
+  ['vehicles', 'strengths', 'languages'].forEach(id => updateProfileSectionSummary(id));
 }
 
 function renderVehicleChips(arr) {
@@ -9935,8 +9988,15 @@ function openEditForm(jobId) {
       document.getElementById('location-result').style.display = 'block';
     }
   }
-  if (surgeOn !== (p.surge_enabled || false)) toggleSurge();
+  surgeOn = false;
+  document.getElementById('f-surge-enabled').value = 'false';
+  document.getElementById('surge-toggle').style.background = '#ddd';
+  document.getElementById('surge-knob').style.left = '2px';
+  document.getElementById('surge-settings').style.display = 'none';
+  document.getElementById('surge-preview').textContent = '';
+  document.getElementById('f-surge-max').value = '';
   if (p.surge_enabled) {
+    toggleSurge();
     if (p.surge_max_wage)     document.getElementById('f-surge-max').value = p.surge_max_wage;
     if (p.surge_amount)       document.getElementById('f-surge-amount').value = p.surge_amount;
     if (p.surge_interval_min) document.getElementById('f-surge-interval').value = p.surge_interval_min;
