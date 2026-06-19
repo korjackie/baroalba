@@ -5395,18 +5395,36 @@ function shareJobKakao() {
     buttons: [{ title: '공고 보러 가기', link: { mobileWebUrl: url, webUrl: url } }]
   };
 
-  // PWA standalone: createDefaultUrl() + window.open(_blank) 로 Chrome/CCT에서 열어
-  // intent:kakaolink:// 스킴 처리 우회
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone
     || document.referrer.includes('android-app://');
-  if (isStandalone && window.Kakao?.Share?.createDefaultUrl) {
-    try {
-      const shareUrl = Kakao.Share.createDefaultUrl(shareParams);
-      window.open(shareUrl, '_blank');
+  if (isStandalone) {
+    if (window.Kakao?.Share?.createDefaultUrl) {
+      try {
+        let kakaoUrl = Kakao.Share.createDefaultUrl(shareParams);
+        // createDefaultUrl이 Android에서 intent:kakaolink://... 를 반환함
+        // intent: 접두사 + #Intent;...end 접미사 제거 → kakaolink:// 순수 커스텀 스킴으로
+        // Android OS가 kakaolink:// 를 직접 처리 → 카카오톡 앱 실행
+        if (kakaoUrl.startsWith('intent:')) {
+          kakaoUrl = kakaoUrl.slice(7);
+          const intentIdx = kakaoUrl.indexOf('#Intent;');
+          if (intentIdx > -1) kakaoUrl = kakaoUrl.slice(0, intentIdx);
+        }
+        window.location.href = kakaoUrl;
+        setTimeout(() => closeWorkerShare(), 300);
+        return;
+      } catch(e) {}
+    }
+    // 폴백: 시스템 공유 시트
+    if (navigator.share) {
+      navigator.share({ title: job.title || '바로알바 공고', text: `${job.title || '알바 공고'} - 바로알바`, url })
+        .then(() => closeWorkerShare()).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url);
+      showToast('링크가 복사됐습니다');
       closeWorkerShare();
-      return;
-    } catch(e) {}
+    }
+    return;
   }
 
   if (!window.Kakao?.isInitialized?.()) {
@@ -11428,17 +11446,25 @@ function shareKakao() {
     buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }],
   };
 
-  // PWA standalone: createDefaultUrl() + window.open(_blank) 로 Chrome/CCT에서 열어
-  // intent:kakaolink:// 스킴 처리 우회
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone
     || document.referrer.includes('android-app://');
-  if (isStandalone && window.Kakao?.Share?.createDefaultUrl) {
-    try {
-      const shareUrl = Kakao.Share.createDefaultUrl(shareParams);
-      window.open(shareUrl, '_blank');
-      return;
-    } catch(e) {}
+  if (isStandalone) {
+    if (window.Kakao?.Share?.createDefaultUrl) {
+      try {
+        let kakaoUrl = Kakao.Share.createDefaultUrl(shareParams);
+        if (kakaoUrl.startsWith('intent:')) {
+          kakaoUrl = kakaoUrl.slice(7);
+          const intentIdx = kakaoUrl.indexOf('#Intent;');
+          if (intentIdx > -1) kakaoUrl = kakaoUrl.slice(0, intentIdx);
+        }
+        window.location.href = kakaoUrl;
+        return;
+      } catch(e) {}
+    }
+    if (navigator.share) navigator.share({ title: '바로알바 공고', text: '지금 바로 지원하세요!', url }).catch(() => {});
+    else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
+    return;
   }
 
   if (!window.Kakao?.isInitialized?.()) {
