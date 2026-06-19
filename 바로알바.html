@@ -8276,6 +8276,7 @@ function renderPostings() {
           <span style="font-size:11px;color:#888;font-weight:600">${p.category}</span>
           ${workTypeBadge}
           ${jobTypeBadge}
+          ${p.surge_enabled ? '<span style="font-size:10px;font-weight:800;background:#FFF3E0;color:#FF9500;padding:2px 7px;border-radius:6px">⚡ 번개</span>' : ''}
           ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:6px">PRO</span>' : ''}
           ${p.age_limit ? '<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:2px 6px;border-radius:6px">18+</span>' : ''}
           ${isExpired ? '<span style="font-size:10px;font-weight:700;background:#FEF2F2;color:#EF4444;padding:2px 6px;border-radius:6px">기간만료</span>' : ''}
