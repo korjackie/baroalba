@@ -9388,23 +9388,31 @@ async function checkSurgeSchedules() {
 async function checkSurgeIntervals() {
   if (!bizRecord) return;
   const { data: surgePostings } = await db.from('job_postings')
-    .select('id, current_wage, surge_max_wage, surge_amount, surge_interval_min, updated_at')
+    .select('id, current_wage, base_wage, surge_max_wage, surge_amount, surge_interval_min, updated_at')
     .eq('surge_enabled', true)
     .eq('business_id', bizRecord.id)
     .in('status', ['open', 'urgent']);
   if (!surgePostings?.length) return;
   const now = Date.now();
+  let anyUpdated = false;
   for (const p of surgePostings) {
     const intervalMs = (p.surge_interval_min || 30) * 60 * 1000;
     const lastUpdate = new Date(p.updated_at).getTime();
-    if (now - lastUpdate < intervalMs) continue;
-    const newWage = (p.current_wage || 0) + (p.surge_amount || 1000);
-    if (p.surge_max_wage && newWage > p.surge_max_wage) continue;
+    const elapsed = now - lastUpdate;
+    if (elapsed < intervalMs) continue;
+    // 경과된 사이클 수 계산 → 한 번에 모두 적용
+    const cyclesPassed = Math.floor(elapsed / intervalMs);
+    const maxWage = p.surge_max_wage || 9999999;
+    const currentWage = p.current_wage || p.base_wage || 0;
+    const newWage = Math.min(currentWage + (p.surge_amount || 1000) * cyclesPassed, maxWage);
+    if (newWage <= currentWage) continue;
     await db.from('job_postings')
-      .update({ current_wage: newWage, status: 'urgent' })
+      .update({ current_wage: newWage, status: 'urgent', updated_at: new Date().toISOString() })
       .eq('id', p.id);
-    showToast(`⚡ ${p.id.slice(0,6)} 시급 자동 인상 → ${newWage.toLocaleString()}원`);
+    anyUpdated = true;
+    showToast(`⚡ 시급 자동 인상 → ${newWage.toLocaleString()}원 (+${(newWage - currentWage).toLocaleString()}원)`);
   }
+  if (anyUpdated) loadPostings();
 }
 
 // ── 상태 토글 ─────────────────────────────────────────────
