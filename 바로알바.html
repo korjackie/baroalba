@@ -1448,8 +1448,8 @@
     </div>
     <div style="padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#555;word-break:break-all;margin-bottom:10px" id="worker-share-url">-</div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="copyWorkerShareUrl()" style="flex:1;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#128203; 링크 복사</button>
-      <button onclick="shareJobKakao()" style="flex:1;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#128172; 카카오톡</button>
+      <button onclick="copyWorkerShareUrl()" style="flex:1;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>링크 복사</button>
+      <button onclick="shareJobKakao()" style="flex:1;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>카카오톡</button>
     </div>
     <button id="worker-share-native-btn" onclick="shareJobNative()" style="display:none;width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">↗ 더 보내기 (SNS/문자)</button>
   </div>
@@ -1616,7 +1616,7 @@
       <button id="d-bookmark-btn" onclick="toggleBookmark(selectedJobId)" title="북마크"
         style="width:52px;height:52px;flex-shrink:0;background:#f5f5f5;border:none;border-radius:16px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">&#128278;</button>
       <button onclick="shareJob()" title="공유"
-        style="width:52px;height:52px;flex-shrink:0;background:#f5f5f5;border:none;border-radius:16px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">⤴</button>
+        style="width:52px;height:52px;flex-shrink:0;background:#FEE500;border:none;border-radius:16px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3C1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
     </div>
     <div style="text-align:right;margin:8px 20px 0">
       <button onclick="openReportModal('job', selectedJobId)" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
@@ -2583,8 +2583,8 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font-size:17px;font-weight:800;color:#222">공고 공유하기</span><button onclick="closeShareModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1">✕</button></div>
     <div style="padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#555;word-break:break-all;margin-bottom:12px" id="share-url-text">-</div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="copyShareUrl()" style="flex:1;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#128203; 링크 복사</button>
-      <button onclick="shareKakao()" style="flex:1;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#128172; 카카오톡</button>
+      <button onclick="copyShareUrl()" style="flex:1;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>링크 복사</button>
+      <button onclick="shareKakao()" style="flex:1;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>카카오톡</button>
     </div>
     <button id="share-native-btn" onclick="shareNative()" style="display:none;width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">&#8599; 더 보내기 (SNS/문자)</button>
   </div>
@@ -8431,13 +8431,13 @@ function openPostingDetail(jobId) {
       <!-- 액션 버튼 -->
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
-          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#f5f5f5;color:#222;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">수정</button>
-          <button onclick="toggleStatus('${p.id}','${p.status}')" style="flex:1;padding:14px;background:${isOpen?'transparent':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
+          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#fff;color:#333;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>수정</button>
+          <button onclick="toggleStatus('${p.id}','${p.status}')" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
         </div>
         <div style="display:flex;gap:8px">
-          ${isOpen ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚡ 서지</button>` : ''}
-          <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">공유</button>
-          <button onclick="copyPosting('${p.id}')" style="flex:1;padding:10px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">복사</button>
+          ${isOpen ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚡ 서지</button>` : ''}
+          <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#FEE500;color:#3C1E1E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>공유</button>
+          <button onclick="copyPosting('${p.id}')" style="flex:1;padding:10px;background:#F0F9FF;color:#0284C7;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>복사</button>
         </div>
         <button onclick="deletePosting('${p.id}')" style="background:none;border:none;color:#EF4444;font-size:13px;padding:6px;cursor:pointer;width:100%;text-align:center;font-weight:600">공고 삭제</button>
       </div>
