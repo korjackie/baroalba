@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="바로알바">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -6157,7 +6158,7 @@ function openProfile() {
     document.getElementById('worker-cert-section').style.display = 'block';
     document.getElementById('worker-grade-section').style.display = 'block';
     document.getElementById('owner-profile-edit').style.display = 'none';
-    document.getElementById('owner-settings-shortcut').style.display = role === 'business' ? 'block' : 'none';
+    document.getElementById('owner-settings-shortcut').style.display = 'none';
     document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
     loadWorkerProfileForm();
@@ -11392,18 +11393,31 @@ function copyShareUrl() {
 
 function shareKakao() {
   const url = document.getElementById('share-url-text').textContent;
+  // Android PWA / WebView 에서는 intent:kakaolink:// 스킴 미지원 → 네이티브 공유
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone
+    || document.referrer.includes('android-app://');
+  if (isStandalone && navigator.share) {
+    navigator.share({ title: '바로알바 공고', text: '지금 바로 지원하세요!', url }).catch(() => {});
+    return;
+  }
   if (!window.Kakao) { showToast('카카오 SDK 로딩 중입니다'); return; }
   if (!Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
-  Kakao.Share.sendDefault({
-    objectType: 'feed',
-    content: {
-      title: '바로알바 — 지금 바로 지원하세요!',
-      description: '실시간 지도 기반 알바 매칭. 지금 공고를 확인해보세요.',
-      imageUrl: 'https://baroalba.multimove.co.kr/icons/og-share.png',
-      link: { mobileWebUrl: url, webUrl: url },
-    },
-    buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }],
-  });
+  try {
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: '바로알바 — 지금 바로 지원하세요!',
+        description: '실시간 지도 기반 알바 매칭. 지금 공고를 확인해보세요.',
+        imageUrl: 'https://baroalba.multimove.co.kr/icons/og-share.png',
+        link: { mobileWebUrl: url, webUrl: url },
+      },
+      buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }],
+    });
+  } catch(e) {
+    if (navigator.share) navigator.share({ title: '바로알바 공고', url }).catch(() => {});
+    else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
+  }
 }
 
 function shareNative() {
