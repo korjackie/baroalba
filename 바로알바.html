@@ -2376,6 +2376,29 @@
         </div>
 
 
+        <!-- 공고 알림 구독 -->
+        <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px;margin-top:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:800;color:#222">🔔 맞춤 공고 알림</div>
+            <label style="position:relative;width:44px;height:24px;cursor:pointer;display:inline-block">
+              <input type="checkbox" id="notify-enabled-toggle" onchange="onNotifyToggle(this)" style="opacity:0;width:0;height:0;position:absolute">
+              <span id="notify-track" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+              <span id="notify-thumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+            </label>
+          </div>
+          <div id="notify-pref-body" style="display:none">
+            <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:8px">원하는 업종 (미선택 = 전체)</div>
+            <div id="notify-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+            <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:6px">최소 시급</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" id="notify-min-wage" placeholder="0" min="0" step="500"
+                style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;outline:none;box-sizing:border-box">
+              <span style="font-size:13px;color:#888;font-weight:700;white-space:nowrap">원 이상</span>
+            </div>
+            <div style="font-size:11px;color:#bbb;margin-top:6px">조건에 맞는 새 공고 등록 시 즉시 알림을 보내드립니다</div>
+          </div>
+        </div>
+
         <!-- 저장 -->
         <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">저장하기</button>
 
@@ -6483,6 +6506,44 @@ function openProfile() {
 
 let _workerGender = null;
 let _workerEdu = null;
+let _notifyCategories = [];
+
+function onNotifyToggle(cb) {
+  const on = cb.checked;
+  document.getElementById('notify-track').style.background = on ? 'var(--red)' : '#ddd';
+  document.getElementById('notify-thumb').style.left = on ? '22px' : '2px';
+  document.getElementById('notify-pref-body').style.display = on ? 'block' : 'none';
+  if (on) _buildNotifyCatChips();
+}
+
+function _buildNotifyCatChips() {
+  const el = document.getElementById('notify-cat-chips');
+  if (!el || el.children.length) return; // 이미 렌더됨
+  const cats = Object.keys(CAT_EMOJI);
+  el.innerHTML = cats.map(c => `
+    <button type="button" data-cat="${c}" onclick="toggleNotifyCat(this)"
+      style="padding:6px 12px;border-radius:8px;border:1.5px solid #e5e7eb;background:#f8f8f8;color:#555;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s"
+      class="${_notifyCategories.includes(c) ? 'ncat-active' : ''}">${CAT_EMOJI[c] || ''} ${c}</button>`).join('');
+  _syncNotifyCatStyles();
+}
+
+function toggleNotifyCat(btn) {
+  const cat = btn.dataset.cat;
+  const idx = _notifyCategories.indexOf(cat);
+  if (idx >= 0) _notifyCategories.splice(idx, 1); else _notifyCategories.push(cat);
+  btn.classList.toggle('ncat-active', _notifyCategories.includes(cat));
+  _syncNotifyCatStyles();
+}
+
+function _syncNotifyCatStyles() {
+  document.querySelectorAll('#notify-cat-chips button').forEach(b => {
+    const active = _notifyCategories.includes(b.dataset.cat);
+    b.style.background = active ? '#fff0f0' : '#f8f8f8';
+    b.style.borderColor = active ? '#FFAAAA' : '#e5e7eb';
+    b.style.color = active ? 'var(--red)' : '#555';
+    b.style.fontWeight = active ? '700' : '600';
+  });
+}
 
 function setEdu(btn) {
   _workerEdu = btn.dataset.edu;
@@ -6502,7 +6563,7 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng, notify_enabled, notify_categories, notify_min_wage')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   // 프로필 사진
@@ -6565,6 +6626,18 @@ async function loadWorkerProfileForm() {
     document.querySelectorAll('#edu-chips .edu-chip').forEach(el => {
       el.classList.toggle('active', el.dataset.edu === w.education);
     });
+  }
+  // 알림 설정 복원
+  const notifyOn = !!w.notify_enabled;
+  const notifyToggle = document.getElementById('notify-enabled-toggle');
+  if (notifyToggle) {
+    notifyToggle.checked = notifyOn;
+    document.getElementById('notify-track').style.background = notifyOn ? 'var(--red)' : '#ddd';
+    document.getElementById('notify-thumb').style.left = notifyOn ? '22px' : '2px';
+    document.getElementById('notify-pref-body').style.display = notifyOn ? 'block' : 'none';
+    _notifyCategories = Array.isArray(w.notify_categories) ? [...w.notify_categories] : [];
+    document.getElementById('notify-min-wage').value = w.notify_min_wage || '';
+    if (notifyOn) _buildNotifyCatChips();
   }
   else if (meta.gender) setGender(meta.gender);
   // 모든 필드 세팅 완료 후 완성도 + 섹션 요약 업데이트
@@ -7369,6 +7442,10 @@ async function saveWorkerProfile() {
   const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng };
   if (_workerGender) payload.gender = _workerGender;
   if (_workerEdu) payload.education = _workerEdu;
+  const notifyOn = document.getElementById('notify-enabled-toggle')?.checked || false;
+  payload.notify_enabled = notifyOn;
+  payload.notify_categories = notifyOn ? _notifyCategories : [];
+  payload.notify_min_wage = notifyOn ? (parseInt(document.getElementById('notify-min-wage')?.value) || 0) : 0;
   let { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error?.message?.includes('languages')) {
     // languages 컬럼 미존재 → 없이 재저장 (DDL 실행 전 임시 처리)
@@ -10847,12 +10924,47 @@ async function submitPosting() {
       const { data: fresh } = await db.from('job_postings')
         .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
       openShareModal(fresh?.id, true);
+      // 비동기로 매칭 알림 발송 (UI 차단 없음)
+      notifyMatchingWorkers(category, wage, addrText).catch(() => {});
     } else {
       showToast('✅ 공고가 수정됐습니다');
     }
   } finally {
     btn.disabled = false;
     btn.textContent = btnOrigText;
+  }
+}
+
+// ── 맞춤 공고 알림 발송 ────────────────────────────────────
+async function notifyMatchingWorkers(category, wage, address) {
+  try {
+    // notify_enabled=true 이고 최소시급 조건 맞는 알바생 조회 (최대 50명)
+    const { data: workers } = await db.from('workers')
+      .select('kakao_uid, notify_categories, notify_min_wage')
+      .eq('notify_enabled', true)
+      .lte('notify_min_wage', wage)
+      .limit(50);
+    if (!workers?.length) return;
+
+    const targets = workers.filter(w => {
+      const cats = w.notify_categories;
+      return !cats?.length || cats.includes(category); // 빈 배열 = 전체 업종
+    });
+    if (!targets.length) return;
+
+    const bizName = bizRecord?.name || '업주';
+    const title = `🔔 ${category} 새 공고 — ${bizName}`;
+    const body = `시급 ${wage.toLocaleString()}원 · ${address || '위치 확인'}`;
+
+    await Promise.allSettled(targets.map(w =>
+      fetch('/api/send-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: w.kakao_uid, title, body, url: './바로알바.html' })
+      })
+    ));
+  } catch(e) {
+    console.log('notify error:', e.message);
   }
 }
 
