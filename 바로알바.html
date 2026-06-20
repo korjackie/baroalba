@@ -3363,8 +3363,9 @@ let _myAge = null;
 let markers = [];
 let overlays = [];
 let selectedJobId = null;
-let jobImgFiles = []; // 새로 추가할 이미지 파일
-let jobImgUrls  = []; // 기존 이미지 URL (수정 시)
+let jobImgs = []; // {src: blobUrl|existingUrl, file: File|null} - 순서 = 대표 우선
+let _jobImgCropQueue = [];
+let _jobImgDragSrc = null;
 let myLocationOverlay = null;
 let _locationWatchId = null;
 let minWageFilter = 0;
@@ -6444,7 +6445,7 @@ function updateAgePreview(val) {
 let _cropper = null;
 let _cropCallback = null;
 
-function openCropModal(file, callback) {
+function openCropModal(file, callback, aspectRatio = 1) {
   if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다'); return; }
   const reader = new FileReader();
   reader.onload = e => {
@@ -6454,7 +6455,7 @@ function openCropModal(file, callback) {
     if (_cropper) { _cropper.destroy(); _cropper = null; }
     img.onload = () => {
       _cropper = new Cropper(img, {
-        aspectRatio: 1,
+        aspectRatio: aspectRatio,
         viewMode: 1,
         dragMode: 'move',
         autoCropArea: 0.85,
@@ -6557,8 +6558,9 @@ function wPhotoDrop(e, photoId, el) {
   _wDragSrcId = null;
 }
 
-function _setupTouchDnd(grid, swapFn) {
+function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
   let srcEl = null, ghostEl = null;
+  const sel = '[' + attr + ']';
   grid.querySelectorAll('[draggable]').forEach(el => {
     el.addEventListener('touchstart', e => {
       srcEl = el;
@@ -6582,7 +6584,7 @@ function _setupTouchDnd(grid, swapFn) {
       const under = document.elementFromPoint(t.clientX, t.clientY);
       ghostEl.style.visibility = '';
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
-      const tgt = under?.closest('[data-photo-id]');
+      const tgt = under?.closest(sel);
       if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
@@ -6592,8 +6594,8 @@ function _setupTouchDnd(grid, swapFn) {
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
       const t = e.changedTouches[0];
       const under = document.elementFromPoint(t.clientX, t.clientY);
-      const tgt = under?.closest('[data-photo-id]');
-      if (tgt && tgt !== srcEl) swapFn(srcEl.dataset.photoId, tgt.dataset.photoId);
+      const tgt = under?.closest(sel);
+      if (tgt && tgt !== srcEl) swapFn(srcEl.getAttribute(attr), tgt.getAttribute(attr));
       srcEl = null;
     }, { passive: true });
   });
@@ -9980,8 +9982,7 @@ function openPostingForm() {
   document.getElementById('naver-url-status').style.display = 'none';
   document.getElementById('f-naver-url-input').value = '';
   // 사진 초기화
-  jobImgFiles = []; jobImgUrls = [];
-  document.getElementById('f-main-img-idx').value = '0';
+  jobImgs = [];
   renderJobImgPreview();
   // surge 초기화
   surgeOn = false;
@@ -10063,9 +10064,11 @@ function openEditForm(jobId) {
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat;
   document.getElementById('f-lng').value = p.lng;
-  // 기존 사진 로드
-  jobImgFiles = []; jobImgUrls = p.images || [];
-  document.getElementById('f-main-img-idx').value = String(p.main_image_idx || 0);
+  // 기존 사진 로드 (main_image_idx가 가리키는 사진을 첫 번째로)
+  const _rawImgs = p.images || [];
+  const _mi = p.main_image_idx || 0;
+  jobImgs = _rawImgs.map(url => ({ src: url, file: null }));
+  if (_mi > 0 && _mi < jobImgs.length) { const [m] = jobImgs.splice(_mi, 1); jobImgs.unshift(m); }
   renderJobImgPreview();
   if (p.start_time) {
     const s = new Date(p.start_time);
@@ -10112,48 +10115,51 @@ function closePostingForm() { document.getElementById('form-overlay').classList.
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
 function addJobImages(input) {
-  const MAX = 3;
-  const total = jobImgUrls.length + jobImgFiles.length;
-  const remaining = MAX - total;
+  const remaining = 3 - jobImgs.length;
   if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); input.value = ''; return; }
-  const files = Array.from(input.files).slice(0, remaining);
-  files.forEach(f => jobImgFiles.push({ file: f, blob: URL.createObjectURL(f) }));
-  renderJobImgPreview();
+  _jobImgCropQueue = Array.from(input.files).slice(0, remaining);
   input.value = '';
+  processNextJobImgCrop();
+}
+
+function processNextJobImgCrop() {
+  if (!_jobImgCropQueue.length) { renderJobImgPreview(); return; }
+  const file = _jobImgCropQueue.shift();
+  openCropModal(file, blob => {
+    jobImgs.push({ src: URL.createObjectURL(blob), file: new File([blob], 'job.jpg', { type: 'image/jpeg' }) });
+    processNextJobImgCrop();
+  }, NaN); // 자유 비율 (가로/세로 제한 없음)
 }
 
 function renderJobImgPreview() {
   const container = document.getElementById('job-img-preview');
   if (!container) return;
-  const mainIdx = parseInt(document.getElementById('f-main-img-idx')?.value || '0');
-  const all = [...jobImgUrls.map(u => u), ...jobImgFiles.map(f => f.blob)];
-  container.innerHTML = all.map((src, i) => `
-    <div style="position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;border:${i === mainIdx ? '3px solid var(--red)' : '2px solid #eee'};cursor:pointer;flex-shrink:0" onclick="setMainJobImg(${i})">
-      <img src="${src}" style="width:100%;height:100%;object-fit:cover">
-      ${i === mainIdx ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px">대표</div>' : ''}
-      <button onclick="removeJobImg(event,${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
+  container.innerHTML = jobImgs.map((img, i) => `
+    <div draggable="true" data-job-img-idx="${i}"
+      ondragstart="_jobImgDragSrc=${i};event.dataTransfer.effectAllowed='move'"
+      ondragover="event.preventDefault();event.dataTransfer.dropEffect='move'"
+      ondragenter="if(!this.contains(event.relatedTarget)){this.style.outline='3px solid var(--red)';this.style.outlineOffset='-3px'}"
+      ondragleave="if(!this.contains(event.relatedTarget)){this.style.outline='';this.style.outlineOffset=''}"
+      ondrop="event.preventDefault();this.style.outline='';this.style.outlineOffset='';if(_jobImgDragSrc!==null&&_jobImgDragSrc!==${i})jobImgSwap(_jobImgDragSrc,${i});_jobImgDragSrc=null"
+      style="position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;border:${i === 0 ? '3px solid var(--red)' : '2px solid #eee'};cursor:grab;flex-shrink:0">
+      <img src="${img.src}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
+      ${i === 0 ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">대표</div>' : ''}
+      <button onclick="event.stopPropagation();removeJobImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
     </div>`).join('');
   const addBtn = document.getElementById('job-img-add-btn');
-  if (addBtn) addBtn.style.display = all.length >= 3 ? 'none' : 'inline-flex';
+  if (addBtn) addBtn.style.display = jobImgs.length >= 3 ? 'none' : 'inline-flex';
+  _setupTouchDnd(container, (a, b) => jobImgSwap(parseInt(a), parseInt(b)), 'data-job-img-idx');
 }
 
-function setMainJobImg(idx) {
-  document.getElementById('f-main-img-idx').value = String(idx);
+function jobImgSwap(a, b) {
+  if (a < 0 || b < 0 || a >= jobImgs.length || b >= jobImgs.length) return;
+  [jobImgs[a], jobImgs[b]] = [jobImgs[b], jobImgs[a]];
   renderJobImgPreview();
 }
 
-function removeJobImg(e, idx) {
-  e.stopPropagation();
-  const urlCount = jobImgUrls.length;
-  if (idx < urlCount) {
-    jobImgUrls.splice(idx, 1);
-  } else {
-    const fi = idx - urlCount;
-    URL.revokeObjectURL(jobImgFiles[fi].blob);
-    jobImgFiles.splice(fi, 1);
-  }
-  const cur = parseInt(document.getElementById('f-main-img-idx')?.value || '0');
-  if (cur >= jobImgUrls.length + jobImgFiles.length) document.getElementById('f-main-img-idx').value = '0';
+function removeJobImg(idx) {
+  if (jobImgs[idx]?.src.startsWith('blob:')) URL.revokeObjectURL(jobImgs[idx].src);
+  jobImgs.splice(idx, 1);
   renderJobImgPreview();
 }
 
@@ -10456,25 +10462,26 @@ async function submitPosting() {
   const btnOrigText = editingId ? t('form_submit_edit') : t('form_submit_post');
   btn.disabled = true; btn.textContent = '저장 중...';
 
-  // 새 이미지 업로드
-  const _uploadedUrls = [...jobImgUrls];
-  if (jobImgFiles.length > 0) {
-    btn.textContent = '사진 업로드 중...';
-    for (const imgObj of jobImgFiles) {
-      const ext = (imgObj.file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z]/g, '') || 'jpg';
-      const path = sess.user.id + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.' + ext;
+  // 이미지 업로드 (새 파일만, 기존 URL은 그대로 유지)
+  const _uploadedUrls = [];
+  if (jobImgs.some(img => img.file)) btn.textContent = '사진 업로드 중...';
+  for (const img of jobImgs) {
+    if (!img.file) {
+      _uploadedUrls.push(img.src); // 기존 URL 유지
+    } else {
+      const path = sess.user.id + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg';
       try {
         const r = await fetch(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/job-images/' + path, {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': imgObj.file.type || 'image/jpeg' },
-          body: imgObj.file
+          headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'image/jpeg' },
+          body: img.file
         });
         if (r.ok) _uploadedUrls.push(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/public/job-images/' + path);
       } catch(e) {}
     }
   }
   payload.images = _uploadedUrls;
-  payload.main_image_idx = _uploadedUrls.length ? Math.min(parseInt(document.getElementById('f-main-img-idx')?.value || '0'), _uploadedUrls.length - 1) : 0;
+  payload.main_image_idx = 0; // 배열 첫 번째가 항상 대표
   btn.textContent = '저장 중...';
 
   try {
@@ -12936,8 +12943,9 @@ async function bizPhotoDrop(e, photoId, el) {
   await loadBizPhotos();
 }
 
-function _setupTouchDnd(grid, swapFn) {
+function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
   let srcEl = null, ghostEl = null;
+  const sel = '[' + attr + ']';
   grid.querySelectorAll('[draggable]').forEach(el => {
     el.addEventListener('touchstart', e => {
       srcEl = el;
@@ -12961,7 +12969,7 @@ function _setupTouchDnd(grid, swapFn) {
       const under = document.elementFromPoint(t.clientX, t.clientY);
       ghostEl.style.visibility = '';
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
-      const tgt = under?.closest('[data-photo-id]');
+      const tgt = under?.closest(sel);
       if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
@@ -12971,8 +12979,8 @@ function _setupTouchDnd(grid, swapFn) {
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
       const t = e.changedTouches[0];
       const under = document.elementFromPoint(t.clientX, t.clientY);
-      const tgt = under?.closest('[data-photo-id]');
-      if (tgt && tgt !== srcEl) swapFn(srcEl.dataset.photoId, tgt.dataset.photoId);
+      const tgt = under?.closest(sel);
+      if (tgt && tgt !== srcEl) swapFn(srcEl.getAttribute(attr), tgt.getAttribute(attr));
       srcEl = null;
     }, { passive: true });
   });
