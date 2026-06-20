@@ -1603,6 +1603,9 @@
 
     <div class="detail-desc" id="d-desc"></div>
 
+    <!-- 공고 사진 -->
+    <div id="d-images" style="display:none;margin-bottom:4px"></div>
+
     <!-- 당일정산 배지 -->
     <div id="d-same-day" style="display:none;margin:0 20px 12px">
       <span style="display:inline-flex;align-items:center;gap:6px;background:#F0FDF4;color:#16a34a;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px">&#128180; 당일정산 — 근무 당일 현금 지급</span>
@@ -3239,6 +3242,19 @@
         <textarea class="form-textarea" id="f-desc" placeholder="업무 내용, 우대사항, 제공 혜택 등"></textarea>
       </div>
 
+      <!-- 공고 사진 (최대 3장) -->
+      <div class="form-group">
+        <label class="form-label">공고 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></label>
+        <div id="job-img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <label for="job-img-input" id="job-img-add-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          사진 추가
+        </label>
+        <input type="file" id="job-img-input" accept="image/*" multiple style="display:none" onchange="addJobImages(this)">
+        <input type="hidden" id="f-main-img-idx" value="0">
+        <div style="font-size:11px;color:#aaa;margin-top:6px">첫 번째 사진이 대표 · 탭하면 대표 변경</div>
+      </div>
+
       <!-- 당일 정산 토글 -->
       <div class="form-group">
         <div class="same-day-wrap" onclick="setSameDay(document.getElementById('f-same-day-on').value !== 'true')">
@@ -3347,6 +3363,8 @@ let _myAge = null;
 let markers = [];
 let overlays = [];
 let selectedJobId = null;
+let jobImgFiles = []; // 새로 추가할 이미지 파일
+let jobImgUrls  = []; // 기존 이미지 URL (수정 시)
 let myLocationOverlay = null;
 let _locationWatchId = null;
 let minWageFilter = 0;
@@ -3910,6 +3928,26 @@ function openDetail(jobId) {
   document.getElementById('d-needed').textContent = `${job.needed_count - job.filled_count}/${job.needed_count}명`;
   document.getElementById('d-dist').textContent = dist;
   document.getElementById('d-desc').textContent = job.description || '';
+
+  // 공고 사진 (RPC 결과에 없을 수 있으므로 별도 fetch)
+  const _dImgEl = document.getElementById('d-images');
+  if (_dImgEl) {
+    _dImgEl.style.display = 'none';
+    _dImgEl.innerHTML = '';
+    fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + jobId + '&select=images,main_image_idx', {
+      headers: { 'apikey': APP_CONFIG.SUPABASE_ANON_KEY }
+    }).then(r => r.json()).then(rows => {
+      const imgs = rows[0]?.images;
+      if (!imgs || !imgs.length) return;
+      const mainIdx = rows[0]?.main_image_idx || 0;
+      const ordered = [...imgs];
+      if (mainIdx > 0 && mainIdx < ordered.length) { const [m] = ordered.splice(mainIdx, 1); ordered.unshift(m); }
+      _dImgEl.innerHTML = '<div style="overflow-x:auto;display:flex;gap:8px;padding:0 20px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">' +
+        ordered.map(u => '<img src="' + u + '" onclick="openImgViewer(\'' + u + '\')" style="height:175px;' + (ordered.length === 1 ? 'width:calc(100% - 40px);' : 'min-width:240px;max-width:240px;') + 'object-fit:cover;border-radius:14px;cursor:pointer;flex-shrink:0">').join('') +
+        '</div>';
+      _dImgEl.style.display = 'block';
+    }).catch(() => {});
+  }
 
   if (hasSurge) {
     document.getElementById('d-surge').style.display = 'inline-flex';
@@ -9941,6 +9979,10 @@ function openPostingForm() {
 
   document.getElementById('naver-url-status').style.display = 'none';
   document.getElementById('f-naver-url-input').value = '';
+  // 사진 초기화
+  jobImgFiles = []; jobImgUrls = [];
+  document.getElementById('f-main-img-idx').value = '0';
+  renderJobImgPreview();
   // surge 초기화
   surgeOn = false;
   document.getElementById('f-surge-enabled').value = 'false';
@@ -10021,6 +10063,10 @@ function openEditForm(jobId) {
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat;
   document.getElementById('f-lng').value = p.lng;
+  // 기존 사진 로드
+  jobImgFiles = []; jobImgUrls = p.images || [];
+  document.getElementById('f-main-img-idx').value = String(p.main_image_idx || 0);
+  renderJobImgPreview();
   if (p.start_time) {
     const s = new Date(p.start_time);
     setTimeSelects('start', s);
@@ -10064,6 +10110,60 @@ function openEditForm(jobId) {
 
 function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
+
+function addJobImages(input) {
+  const MAX = 3;
+  const total = jobImgUrls.length + jobImgFiles.length;
+  const remaining = MAX - total;
+  if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); input.value = ''; return; }
+  const files = Array.from(input.files).slice(0, remaining);
+  files.forEach(f => jobImgFiles.push({ file: f, blob: URL.createObjectURL(f) }));
+  renderJobImgPreview();
+  input.value = '';
+}
+
+function renderJobImgPreview() {
+  const container = document.getElementById('job-img-preview');
+  if (!container) return;
+  const mainIdx = parseInt(document.getElementById('f-main-img-idx')?.value || '0');
+  const all = [...jobImgUrls.map(u => u), ...jobImgFiles.map(f => f.blob)];
+  container.innerHTML = all.map((src, i) => `
+    <div style="position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;border:${i === mainIdx ? '3px solid var(--red)' : '2px solid #eee'};cursor:pointer;flex-shrink:0" onclick="setMainJobImg(${i})">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover">
+      ${i === mainIdx ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px">대표</div>' : ''}
+      <button onclick="removeJobImg(event,${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
+    </div>`).join('');
+  const addBtn = document.getElementById('job-img-add-btn');
+  if (addBtn) addBtn.style.display = all.length >= 3 ? 'none' : 'inline-flex';
+}
+
+function setMainJobImg(idx) {
+  document.getElementById('f-main-img-idx').value = String(idx);
+  renderJobImgPreview();
+}
+
+function removeJobImg(e, idx) {
+  e.stopPropagation();
+  const urlCount = jobImgUrls.length;
+  if (idx < urlCount) {
+    jobImgUrls.splice(idx, 1);
+  } else {
+    const fi = idx - urlCount;
+    URL.revokeObjectURL(jobImgFiles[fi].blob);
+    jobImgFiles.splice(fi, 1);
+  }
+  const cur = parseInt(document.getElementById('f-main-img-idx')?.value || '0');
+  if (cur >= jobImgUrls.length + jobImgFiles.length) document.getElementById('f-main-img-idx').value = '0';
+  renderJobImgPreview();
+}
+
+function openImgViewer(url) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick = () => ov.remove();
+  ov.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:10px">';
+  document.body.appendChild(ov);
+}
 
 function setLocTab(n) {
   [1, 2, 3].forEach(i => {
@@ -10355,6 +10455,27 @@ async function submitPosting() {
   const btn = document.getElementById('submit-btn');
   const btnOrigText = editingId ? t('form_submit_edit') : t('form_submit_post');
   btn.disabled = true; btn.textContent = '저장 중...';
+
+  // 새 이미지 업로드
+  const _uploadedUrls = [...jobImgUrls];
+  if (jobImgFiles.length > 0) {
+    btn.textContent = '사진 업로드 중...';
+    for (const imgObj of jobImgFiles) {
+      const ext = (imgObj.file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z]/g, '') || 'jpg';
+      const path = sess.user.id + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.' + ext;
+      try {
+        const r = await fetch(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/job-images/' + path, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': imgObj.file.type || 'image/jpeg' },
+          body: imgObj.file
+        });
+        if (r.ok) _uploadedUrls.push(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/public/job-images/' + path);
+      } catch(e) {}
+    }
+  }
+  payload.images = _uploadedUrls;
+  payload.main_image_idx = _uploadedUrls.length ? Math.min(parseInt(document.getElementById('f-main-img-idx')?.value || '0'), _uploadedUrls.length - 1) : 0;
+  btn.textContent = '저장 중...';
 
   try {
 
