@@ -151,8 +151,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void applySafeArea() {
         if (webView == null) return;
-        String js = "document.documentElement.style.setProperty('--sat','" + safeTop + "px');" +
-                    "document.documentElement.style.setProperty('--sab','" + safeBottom + "px');";
+        float density = getResources().getDisplayMetrics().density;
+        int topDp  = Math.round(safeTop  / density);
+        int botDp  = Math.round(safeBottom / density);
+        String js = "document.documentElement.style.setProperty('--sat','" + topDp + "px');" +
+                    "document.documentElement.style.setProperty('--sab','" + botDp + "px');";
         webView.evaluateJavascript(js, null);
     }
 
