@@ -1622,6 +1622,10 @@
       <button onclick="shareJob()" title="공유"
         style="width:52px;height:52px;flex-shrink:0;background:#FEE500;border:none;border-radius:16px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3C1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
     </div>
+    <!-- 근무완료 후 업주 평점 -->
+    <div id="d-rate-row" style="display:none;margin:8px 20px 0">
+      <button id="d-rate-btn" onclick="openBizRatingModal()" style="width:100%;padding:13px;background:#FEF3C7;border:none;border-radius:14px;font-size:14px;font-weight:800;color:#D97706;cursor:pointer">⭐ 업주 평점 남기기</button>
+    </div>
     <div style="text-align:right;margin:8px 20px 0">
       <button onclick="openReportModal('job', selectedJobId)" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
     </div>
@@ -1644,6 +1648,36 @@
         <button onclick="closeCropModal()" style="flex:1;padding:13px;background:#f5f5f5;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:#555">취소</button>
         <button onclick="applyCrop()" style="flex:2;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">적용</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 업주 평점 모달 -->
+<div class="modal-overlay" id="biz-rating-modal" onclick="if(event.target===this)closeBizRatingModal()" style="z-index:1200;align-items:flex-end;display:none">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 36px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">업주 평점 남기기</div>
+      <button onclick="closeBizRatingModal()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px 20px 0">
+      <div id="biz-rating-biz-name" style="font-size:15px;font-weight:700;color:#555;margin-bottom:20px;text-align:center"></div>
+      <!-- 별점 -->
+      <div style="text-align:center;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:700;color:#888;margin-bottom:10px">전반적인 만족도</div>
+        <div id="biz-star-row" style="display:flex;justify-content:center;gap:8px;margin-bottom:4px">
+          <span data-v="1" onclick="setBizStar(1)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="2" onclick="setBizStar(2)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="3" onclick="setBizStar(3)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="4" onclick="setBizStar(4)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="5" onclick="setBizStar(5)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+        </div>
+        <div id="biz-star-label" style="font-size:13px;font-weight:700;color:#F59E0B;min-height:18px"></div>
+      </div>
+      <input type="hidden" id="biz-rating-val" value="0">
+      <input type="hidden" id="biz-rating-app-id" value="">
+      <!-- 리뷰 텍스트 -->
+      <textarea id="biz-review-text" placeholder="근무 환경, 업주 태도 등 솔직한 후기를 남겨주세요 (선택)" style="width:100%;margin-top:16px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;resize:none;height:90px;font-family:inherit;box-sizing:border-box;outline:none"></textarea>
+      <button onclick="submitBizRating()" style="width:100%;margin-top:12px;padding:15px;background:var(--red);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer" id="biz-rating-submit-btn">평점 등록</button>
     </div>
   </div>
 </div>
@@ -3980,6 +4014,11 @@ function openDetail(jobId) {
 
   // 북마크 버튼 상태 초기화
   document.getElementById('d-bookmark-btn').textContent = '\u{1F516}';
+  // 평점 버튼 초기화
+  const _rateRow = document.getElementById('d-rate-row');
+  if (_rateRow) { _rateRow.style.display = 'none'; }
+  const _rateBtn = document.getElementById('d-rate-btn');
+  if (_rateBtn) { _rateBtn.textContent = '⭐ 업주 평점 남기기'; _rateBtn.style.background = '#FEF3C7'; _rateBtn.style.color = '#D97706'; _rateBtn.onclick = openBizRatingModal; _rateBtn.style.cursor = 'pointer'; }
 
   document.getElementById('detail-overlay').classList.add('open');
   checkAlreadyApplied(jobId);
@@ -4100,6 +4139,70 @@ function showAppliedState(applicationId) {
   btn.textContent = '\u{1F4AC} 업주에게 문의하기';
   btn.disabled = false;
   btn.onclick = () => openWChat(applicationId, jobs.find(j=>j.id===selectedJobId)?.biz_name || '업주');
+}
+
+const _BIZ_STAR_LABELS = ['', '별로예요', '그저그래요', '보통이에요', '좋아요', '최고예요!'];
+let _bizRatingAppId = null;
+
+function openBizRatingModal() {
+  const btn = document.getElementById('d-rate-btn');
+  _bizRatingAppId = btn?.dataset.appId || null;
+  const bizName = jobs.find(j => j.id === selectedJobId)?.biz_name || '업주';
+  document.getElementById('biz-rating-biz-name').textContent = bizName;
+  document.getElementById('biz-rating-val').value = '0';
+  document.getElementById('biz-review-text').value = '';
+  document.getElementById('biz-star-label').textContent = '';
+  document.querySelectorAll('#biz-star-row span').forEach(s => { s.textContent = '☆'; s.style.color = '#ddd'; });
+  document.getElementById('biz-rating-modal').style.display = 'flex';
+}
+
+function closeBizRatingModal() {
+  document.getElementById('biz-rating-modal').style.display = 'none';
+}
+
+function setBizStar(val) {
+  document.getElementById('biz-rating-val').value = String(val);
+  document.querySelectorAll('#biz-star-row span').forEach(s => {
+    const sv = parseInt(s.dataset.v);
+    s.textContent = sv <= val ? '★' : '☆';
+    s.style.color = sv <= val ? '#F59E0B' : '#ddd';
+    s.style.transform = sv === val ? 'scale(1.25)' : 'scale(1)';
+    setTimeout(() => { s.style.transform = 'scale(1)'; }, 150);
+  });
+  document.getElementById('biz-star-label').textContent = _BIZ_STAR_LABELS[val] || '';
+}
+
+async function submitBizRating() {
+  const rating = parseFloat(document.getElementById('biz-rating-val').value);
+  if (!rating || rating < 1) { showToast('별점을 선택해주세요'); return; }
+  if (!_bizRatingAppId) { showToast('오류: 지원 정보가 없습니다'); return; }
+  const review = document.getElementById('biz-review-text').value.trim();
+  const sess = currentSession;
+  if (!sess) { showToast('로그인이 필요합니다'); return; }
+  const btn = document.getElementById('biz-rating-submit-btn');
+  btn.disabled = true; btn.textContent = '등록 중...';
+  try {
+    const res = await fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/applications?id=eq.' + _bizRatingAppId, {
+      method: 'PATCH',
+      headers: { 'apikey': APP_CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ biz_rating: rating, biz_review: review || null })
+    });
+    if (!res.ok) throw new Error('status ' + res.status);
+    closeBizRatingModal();
+    showToast('✅ 평점이 등록됐습니다!');
+    // 버튼 상태 업데이트
+    const rateRow = document.getElementById('d-rate-row');
+    const rateBtn = document.getElementById('d-rate-btn');
+    if (rateRow && rateBtn) {
+      rateBtn.textContent = '⭐ 평점 ' + rating + '점 남김';
+      rateBtn.style.background = '#f0fdf4'; rateBtn.style.color = '#16a34a';
+      rateBtn.onclick = null; rateBtn.style.cursor = 'default';
+    }
+  } catch(e) {
+    showToast('등록 실패: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '평점 등록';
+  }
 }
 
 
@@ -4996,9 +5099,26 @@ async function checkAlreadyApplied(jobId) {
     if (we) { console.error('checkAlreadyApplied: worker 조회 실패', we); return; }
     if (!worker) return;
     const { data: app, error: ae } = await db.from('applications')
-      .select('id').eq('job_posting_id', jobId).eq('worker_id', worker.id).single();
+      .select('id, status, biz_rating').eq('job_posting_id', jobId).eq('worker_id', worker.id).single();
     if (ae && ae.code !== 'PGRST116') console.error('checkAlreadyApplied: 지원 조회 실패', ae);
-    if (app) showAppliedState(app.id);
+    if (app) {
+      showAppliedState(app.id);
+      // 근무 완료 + 아직 평점 없으면 평점 버튼 표시
+      const rateRow = document.getElementById('d-rate-row');
+      if (rateRow) {
+        if (app.status === 'completed' && !app.biz_rating) {
+          rateRow.style.display = 'block';
+          document.getElementById('d-rate-btn').dataset.appId = app.id;
+        } else if (app.status === 'completed' && app.biz_rating) {
+          rateRow.style.display = 'block';
+          const btn = document.getElementById('d-rate-btn');
+          btn.textContent = '⭐ 평점 ' + app.biz_rating + '점 남김';
+          btn.style.background = '#f0fdf4'; btn.style.color = '#16a34a'; btn.onclick = null; btn.style.cursor = 'default';
+        } else {
+          rateRow.style.display = 'none';
+        }
+      }
+    }
   } catch(e) { console.error('checkAlreadyApplied:', e); }
 }
 
