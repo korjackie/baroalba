@@ -3252,7 +3252,7 @@
         </label>
         <input type="file" id="job-img-input" accept="image/*" multiple style="display:none" onchange="addJobImages(this)">
         <input type="hidden" id="f-main-img-idx" value="0">
-        <div style="font-size:11px;color:#aaa;margin-top:6px">첫 번째 사진이 대표 · 탭하면 대표 변경</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">드래그로 순서 변경 · 사진 탭하면 크롭 편집 · 1번이 대표</div>
       </div>
 
       <!-- 당일 정산 토글 -->
@@ -10117,18 +10117,22 @@ function closeFormIfBg(e) { if (e.target === document.getElementById('form-overl
 function addJobImages(input) {
   const remaining = 3 - jobImgs.length;
   if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); input.value = ''; return; }
-  _jobImgCropQueue = Array.from(input.files).slice(0, remaining);
+  const files = Array.from(input.files).slice(0, remaining);
   input.value = '';
-  processNextJobImgCrop();
+  if (!files.length) return;
+  // 바로 미리보기 추가 (썸네일 탭으로 개별 크롭 편집 가능)
+  files.forEach(f => jobImgs.push({ src: URL.createObjectURL(f), file: f }));
+  renderJobImgPreview();
 }
 
-function processNextJobImgCrop() {
-  if (!_jobImgCropQueue.length) { renderJobImgPreview(); return; }
-  const file = _jobImgCropQueue.shift();
-  openCropModal(file, blob => {
-    jobImgs.push({ src: URL.createObjectURL(blob), file: new File([blob], 'job.jpg', { type: 'image/jpeg' }) });
-    processNextJobImgCrop();
-  }, NaN); // 자유 비율 (가로/세로 제한 없음)
+function editJobImg(idx) {
+  const img = jobImgs[idx];
+  if (!img || !img.file) return; // 기존 URL 이미지는 크롭 불가
+  openCropModal(img.file, blob => {
+    URL.revokeObjectURL(img.src);
+    jobImgs[idx] = { src: URL.createObjectURL(blob), file: new File([blob], 'job.jpg', { type: 'image/jpeg' }) };
+    renderJobImgPreview();
+  }, NaN);
 }
 
 function renderJobImgPreview() {
@@ -10142,7 +10146,9 @@ function renderJobImgPreview() {
       ondragleave="if(!this.contains(event.relatedTarget)){this.style.outline='';this.style.outlineOffset=''}"
       ondrop="event.preventDefault();this.style.outline='';this.style.outlineOffset='';if(_jobImgDragSrc!==null&&_jobImgDragSrc!==${i})jobImgSwap(_jobImgDragSrc,${i});_jobImgDragSrc=null"
       style="position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;border:${i === 0 ? '3px solid var(--red)' : '2px solid #eee'};cursor:grab;flex-shrink:0">
-      <img src="${img.src}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
+      <img src="${img.src}" onclick="editJobImg(${i})" style="width:100%;height:100%;object-fit:cover;cursor:${img.file ? 'pointer' : 'default'}">
+      <!-- 순서 번호 뱃지 -->
+      <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i === 0 ? 'var(--red)' : 'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i + 1}</div>
       ${i === 0 ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">대표</div>' : ''}
       <button onclick="event.stopPropagation();removeJobImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
     </div>`).join('');
