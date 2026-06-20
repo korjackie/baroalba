@@ -724,8 +724,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (isInAppBrowser()) {
     const banner = document.createElement('div');
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;font-size:12px;font-weight:700;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
-    banner.innerHTML = `<span>더 나은 경험을 위해 Chrome에서 열어주세요</span>
-      <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:800">Chrome으로 열기</button>`;
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    banner.innerHTML = `<span>더 나은 경험을 위해 ${isIOS ? 'Safari' : 'Chrome'}에서 열어주세요</span>
+      <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:800">${isIOS ? 'Safari' : 'Chrome'}으로 열기</button>`;
     document.body.prepend(banner);
   }
 
@@ -799,17 +800,19 @@ function isInAppBrowser() {
 
 function openInChrome() {
   const url = location.href;
-  if (/Android/i.test(navigator.userAgent)) {
-    // Android: intent 스킴으로 Chrome 강제 실행
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) {
     location.href = 'intent://' + url.replace(/^https?:\/\//, '') +
       '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' +
       encodeURIComponent(url) + ';end';
+  } else if (/iPhone|iPad|iPod/i.test(ua)) {
+    // iOS: Safari로 열기
+    location.href = url;
   } else {
-    // iOS: 클립보드에 복사 후 안내
     navigator.clipboard?.writeText(url).then(() => {
       alert('주소가 복사됐습니다.\nSafari 또는 Chrome을 열고 붙여넣기 해주세요.');
     }).catch(() => {
-      alert('Chrome 앱을 열고 아래 주소를 입력해주세요:\n' + url);
+      alert('브라우저를 열고 아래 주소를 입력해주세요:\n' + url);
     });
   }
 }
