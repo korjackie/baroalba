@@ -196,6 +196,8 @@
     }
     .chip.active { background: #111; border-color: #111; color: #fff; font-weight: 700; }
 
+    .edu-chip { padding: 7px 13px; border-radius: 8px; border: 1.5px solid #e5e7eb; background: #f8f8f8; color: #555; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .edu-chip.active { background: #FFF0F0; border-color: #FFAAAA; color: var(--red); font-weight: 700; }
     .v-chip, .s-chip, .l-chip {
       padding: 7px 13px; border-radius: 8px; border: 1.5px solid #e5e7eb;
       background: #f8f8f8; color: #555; font-size: 12px; font-weight: 600;
@@ -2123,6 +2125,17 @@
               <div data-i18n="exp_label" style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">경력/특기</div>
               <textarea id="worker-experience" placeholder="관련 경력이나 보유 스킬을 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
             </div>
+            <div>
+              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">학력</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="edu-chips">
+                <button type="button" data-edu="중졸이하"    onclick="setEdu(this)" class="edu-chip">중졸 이하</button>
+                <button type="button" data-edu="고등학교재학" onclick="setEdu(this)" class="edu-chip">고등학교 재학</button>
+                <button type="button" data-edu="고졸"        onclick="setEdu(this)" class="edu-chip">고졸</button>
+                <button type="button" data-edu="대학교재학"  onclick="setEdu(this)" class="edu-chip">대학교 재학</button>
+                <button type="button" data-edu="대졸"        onclick="setEdu(this)" class="edu-chip">대졸</button>
+                <button type="button" data-edu="대학원이상"  onclick="setEdu(this)" class="edu-chip">대학원 이상</button>
+              </div>
+            </div>
             <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
               <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:10px">🏷️ <span data-i18n="skill_label">보유 스킬 태그</span></div>
               <div id="skill-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:28px"></div>
@@ -3365,7 +3378,7 @@
         <div id="job-img-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px"></div>
         <label id="job-img-add-btn" style="display:flex;align-items:center;justify-content:center;height:64px;background:#fff;border:2px dashed #ddd;border-radius:12px;cursor:pointer;width:100%;box-sizing:border-box">
           <span style="font-size:26px;color:#ccc;line-height:1">+</span>
-          <input type="file" id="job-img-input" accept="image/*" style="display:none" onchange="addJobImages(this)">
+          <input type="file" id="job-img-input" accept="image/*" multiple style="display:none" onchange="addJobImages(this)">
         </label>
         <input type="hidden" id="f-main-img-idx" value="0">
         <div style="font-size:11px;color:#aaa;margin-top:6px">사진 탭하면 크롭 편집 · 1번이 대표</div>
@@ -6469,6 +6482,13 @@ function openProfile() {
 
 
 let _workerGender = null;
+let _workerEdu = null;
+
+function setEdu(btn) {
+  _workerEdu = btn.dataset.edu;
+  document.querySelectorAll('#edu-chips .edu-chip').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+}
 
 function setGender(val) {
   _workerGender = val;
@@ -6482,7 +6502,7 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   // 프로필 사진
@@ -6540,6 +6560,12 @@ async function loadWorkerProfileForm() {
     selEl.style.display = 'flex';
   }
   if (w.gender) setGender(w.gender);
+  if (w.education) {
+    _workerEdu = w.education;
+    document.querySelectorAll('#edu-chips .edu-chip').forEach(el => {
+      el.classList.toggle('active', el.dataset.edu === w.education);
+    });
+  }
   else if (meta.gender) setGender(meta.gender);
   // 모든 필드 세팅 완료 후 완성도 + 섹션 요약 업데이트
   setTimeout(() => { updateProfileCompletion(); updateAllProfileSummaries(); }, 0);
@@ -7300,6 +7326,7 @@ function updateProfileCompletion() {
     { label: '거주지',   ok: !!document.getElementById('worker-region')?.value },
     { label: '자기소개', ok: (document.getElementById('worker-bio')?.value?.trim().length || 0) > 10 },
     { label: '경력/특기',ok: !!document.getElementById('worker-experience')?.value },
+    { label: '학력',     ok: !!_workerEdu },
     { label: '스킬 태그',ok: _workerSkills.length > 0 },
   ];
   const done = checks.filter(c => c.ok).length;
@@ -7341,6 +7368,7 @@ async function saveWorkerProfile() {
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
   const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng };
   if (_workerGender) payload.gender = _workerGender;
+  if (_workerEdu) payload.education = _workerEdu;
   let { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error?.message?.includes('languages')) {
     // languages 컬럼 미존재 → 없이 재저장 (DDL 실행 전 임시 처리)
