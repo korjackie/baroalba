@@ -1558,9 +1558,15 @@
   <div class="detail-sheet" id="detail-sheet">
     <div class="detail-handle"></div>
     <div class="detail-header">
-      <div class="detail-status-row">
-        <span class="detail-status" id="d-status"></span>
-        <span class="detail-cat" id="d-cat"></span>
+      <div class="detail-status-row" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="detail-status" id="d-status"></span>
+          <span class="detail-cat" id="d-cat"></span>
+        </div>
+        <button onclick="openReportModal('job', selectedJobId)" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:2px 0;font-weight:600;line-height:1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          신고하기
+        </button>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span id="d-type-badge"></span>
@@ -1580,7 +1586,7 @@
         ⬆ 시급 인상 <span id="d-surge-amt"></span>
       </div>
       <div class="detail-wage-base" id="d-base-wage"></div>
-      <button onclick="openWageCalc()" style="position:absolute;top:12px;right:14px;background:#F0FDF4;border:none;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:800;color:#16a34a;cursor:pointer">🧮 급여 계산</button>
+      <button onclick="openWageCalc()" style="position:absolute;top:12px;right:14px;background:#F3F4F6;border:none;border-radius:10px;padding:6px 11px;font-size:11px;font-weight:700;color:#6B7280;cursor:pointer;display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>급여 계산</button>
     </div>
 
     <div class="detail-info-grid">
@@ -1626,9 +1632,6 @@
     <!-- 근무완료 후 업주 평점 -->
     <div id="d-rate-row" style="display:none;margin:8px 20px 0">
       <button id="d-rate-btn" onclick="openBizRatingModal()" style="width:100%;padding:13px;background:#FEF3C7;border:none;border-radius:14px;font-size:14px;font-weight:800;color:#D97706;cursor:pointer">⭐ 업주 평점 남기기</button>
-    </div>
-    <div style="text-align:right;margin:8px 20px 0">
-      <button onclick="openReportModal('job', selectedJobId)" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
     </div>
   </div>
 </div>
@@ -3340,11 +3343,11 @@
       <div class="form-group">
         <label class="form-label">공고 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></label>
         <div id="job-img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-        <label for="job-img-input" id="job-img-add-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;background:#fafafa;box-sizing:border-box">
+        <label id="job-img-add-btn" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;background:#fafafa;box-sizing:border-box;overflow:hidden">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           사진 추가
+          <input type="file" id="job-img-input" accept="image/*" multiple style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0">
         </label>
-        <input type="file" id="job-img-input" accept="image/*" multiple style="display:none">
         <input type="hidden" id="f-main-img-idx" value="0">
         <div style="font-size:11px;color:#aaa;margin-top:6px">드래그로 순서 변경 · 사진 탭하면 크롭 편집 · 1번이 대표</div>
       </div>
