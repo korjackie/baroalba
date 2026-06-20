@@ -766,13 +766,14 @@
     .surge-timer-bar { height:100%; background:linear-gradient(90deg,#FF9500,#FFB300); border-radius:3px; transition:width 1s linear; }
     .surge-timer-count { font-weight:900; color:#FF6F00; font-size:13px; min-width:45px; text-align:right; }
 
-    .empty-state {
-      text-align: center;
-      padding: 32px 20px;
-      color: #bbb;
-    }
-    .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-txt  { font-size: 14px; font-weight: 600; }
+    .empty-state { text-align:center; padding:32px 20px; color:#bbb; }
+    .empty-icon { font-size:48px; margin-bottom:12px; display:inline-block; animation:emptyFloat 2.5s ease-in-out infinite; }
+    .empty-txt  { font-size:14px; font-weight:600; }
+    @keyframes emptyFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .sk-card { background:#fff;border-radius:16px;padding:16px;margin:8px 0;box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+    .sk-line { background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px; }
   
 
   /* ── owner panel CSS (병합) ── */
@@ -3504,6 +3505,22 @@ function dismissInstall() {
   localStorage.setItem('pwa_install_dismissed', '1');
 }
 
+// iOS Safari 홈화면 추가 안내 배너
+(function() {
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const inNativeApp = /BaroAlbaApp/i.test(navigator.userAgent);
+  if (!isIOS || isStandalone || inNativeApp || localStorage.getItem('ios_install_dismissed')) return;
+  setTimeout(() => {
+    if (window.navigator.standalone) return;
+    const el = document.createElement('div');
+    el.id = 'ios-install-banner';
+    el.style.cssText = 'position:fixed;bottom:calc(var(--nav-h) + var(--sab-safe) + 10px);left:12px;right:12px;background:#1a1a1a;color:#fff;border-radius:16px;padding:14px 16px;z-index:400;box-shadow:0 4px 20px rgba(0,0,0,0.35);display:flex;align-items:center;gap:12px;animation:slideUp 0.3s ease';
+    el.innerHTML = `<span style="font-size:22px">📲</span><div style="flex:1"><div style="font-size:13px;font-weight:800;margin-bottom:2px">앱처럼 사용하기</div><div style="font-size:11px;color:#bbb">하단 <b style="color:#fff">공유 버튼</b> → <b style="color:#fff">홈 화면에 추가</b></div></div><button onclick="document.getElementById('ios-install-banner').remove();localStorage.setItem('ios_install_dismissed','1')" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px 6px;line-height:1">✕</button>`;
+    document.body.appendChild(el);
+  }, 3000);
+})();
+
 // ── 딥링크 ────────────────────────────────────────────────
 async function openDeepLink(jobId) {
   // 이미 로드된 목록에서 먼저 탐색
@@ -3562,6 +3579,8 @@ async function loadCategoriesWorker() {
 }
 
 async function loadJobs() {
+  const _skList = document.getElementById('job-list');
+  if (_skList) _skList.innerHTML = Array(4).fill(`<div class="sk-card"><div class="sk-line" style="height:16px;width:55%;margin-bottom:8px"></div><div class="sk-line" style="height:22px;width:38%;margin-bottom:10px"></div><div style="display:flex;gap:8px"><div class="sk-line" style="height:13px;width:30%"></div><div class="sk-line" style="height:13px;width:25%"></div></div></div>`).join('');
   try {
     // 지도가 초기화되었으면 현재 시각적 중심 사용 (저장값 override)
     if (kakaoMap) {
@@ -6016,6 +6035,7 @@ async function flyCard(card, dir) {
     }
   }
 
+  if (navigator.vibrate) navigator.vibrate(dir === 'right' ? 50 : dir === 'up' ? [30,20,30] : 20);
   const targets = { left:[-1200,100,'-30deg'], right:[1200,100,'30deg'], up:[0,-1200,'0deg'] };
   const [tx, ty, rot] = targets[dir];
   card.style.transform = `translate(${tx}px,${ty}px) rotate(${rot})`;
@@ -10506,6 +10526,7 @@ function setupRealtime() {
       showToast('\u{1F514} 새 지원자가 있습니다!');
       loadApplicants();
       loadPostings();
+      updateOwnerNotiBadge();
     })
     .subscribe();
 
