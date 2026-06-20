@@ -1614,6 +1614,23 @@
 
     <div class="detail-desc" id="d-desc"></div>
 
+    <!-- 위치 섹션 -->
+    <div id="d-location-section" style="display:none;margin:0 20px 16px">
+      <div style="font-size:11px;font-weight:900;color:#aaa;letter-spacing:0.5px;margin-bottom:8px">📍 근무 위치</div>
+      <div style="background:#f8f9fa;border-radius:14px;overflow:hidden">
+        <!-- 미니 지도 -->
+        <div id="d-mini-map" style="width:100%;height:160px;background:#e5e7eb"></div>
+        <!-- 주소 + 버튼 -->
+        <div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div id="d-address-text" style="font-size:13px;color:#333;font-weight:600;line-height:1.4;flex:1"></div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button onclick="copyDetailAddress()" style="padding:6px 11px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;font-size:11px;font-weight:700;color:#555;cursor:pointer">복사</button>
+            <button onclick="openKakaoMapApp()" style="padding:6px 11px;background:#FEE500;border:none;border-radius:8px;font-size:11px;font-weight:700;color:#3C1E1E;cursor:pointer">지도 앱</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 공고 사진 -->
     <div id="d-images" style="display:none;margin-bottom:4px"></div>
 
@@ -2129,7 +2146,8 @@
             </div>
             <div>
               <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">학력</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px" id="edu-chips">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="edu-chips">
+                <button type="button" data-edu=""           onclick="setEdu(this)" class="edu-chip" style="grid-column:1/-1;color:#aaa">선택 안함</button>
                 <button type="button" data-edu="중졸이하"    onclick="setEdu(this)" class="edu-chip">중졸 이하</button>
                 <button type="button" data-edu="고등학교재학" onclick="setEdu(this)" class="edu-chip">고등학교 재학</button>
                 <button type="button" data-edu="고졸"        onclick="setEdu(this)" class="edu-chip">고졸</button>
@@ -4128,6 +4146,9 @@ function openDetail(jobId) {
     document.getElementById('d-deposit').style.display = 'none';
   }
 
+  // 위치 섹션 렌더링
+  _renderDetailLocation(job);
+
   // 지원하기 버튼 초기화
   const applyBtn = document.getElementById('d-apply-btn');
   applyBtn.style.background = '';
@@ -4174,6 +4195,74 @@ function openDetail(jobId) {
 
   // 지도 해당 위치로 이동
   kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
+}
+
+let _detailMiniMap = null;
+let _detailJob = null;
+
+function _renderDetailLocation(job) {
+  _detailJob = job;
+  const section = document.getElementById('d-location-section');
+  const addrEl = document.getElementById('d-address-text');
+  const miniMapEl = document.getElementById('d-mini-map');
+  if (!section || !addrEl || !miniMapEl) return;
+
+  const hasLatLng = job.lat && job.lng;
+  const hasAddr = job.address && job.address.trim();
+
+  if (!hasLatLng && !hasAddr) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  addrEl.textContent = hasAddr ? job.address.split('\n')[0] : '위치 정보 있음';
+
+  if (!hasLatLng) {
+    miniMapEl.style.display = 'none';
+    return;
+  }
+  miniMapEl.style.display = 'block';
+
+  // 카카오맵 SDK 로드 확인 후 미니맵 생성
+  const _initMiniMap = () => {
+    // 이전 맵 인스턴스 제거
+    miniMapEl.innerHTML = '';
+    const container = miniMapEl;
+    const options = { center: new kakao.maps.LatLng(job.lat, job.lng), level: 4 };
+    _detailMiniMap = new kakao.maps.Map(container, options);
+    _detailMiniMap.setDraggable(false);
+    _detailMiniMap.setZoomable(false);
+    const marker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(job.lat, job.lng), map: _detailMiniMap });
+  };
+
+  if (typeof kakao !== 'undefined' && kakao.maps) {
+    _initMiniMap();
+  } else {
+    miniMapEl.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#aaa">지도 로딩 중...</div>';
+    const _wait = setInterval(() => {
+      if (typeof kakao !== 'undefined' && kakao.maps) { clearInterval(_wait); _initMiniMap(); }
+    }, 300);
+  }
+}
+
+function copyDetailAddress() {
+  const addr = _detailJob?.address?.split('\n')[0] || '';
+  if (!addr) { showToast('주소 정보가 없어요'); return; }
+  navigator.clipboard?.writeText(addr).then(() => showToast('주소가 복사됐어요')).catch(() => showToast(addr));
+}
+
+function openKakaoMapApp() {
+  if (!_detailJob) return;
+  const { lat, lng, address, title } = _detailJob;
+  const name = encodeURIComponent(title || '근무지');
+  if (lat && lng) {
+    window.open(`https://map.kakao.com/link/map/${name},${lat},${lng}`, '_blank');
+  } else if (address) {
+    window.open(`https://map.kakao.com/link/search/${encodeURIComponent(address.split('\n')[0])}`, '_blank');
+  } else {
+    showToast('위치 정보가 없어요');
+  }
 }
 
 function closeDetail(e) {
@@ -6628,7 +6717,7 @@ function _syncNotifyCatStyles() {
 }
 
 function setEdu(btn) {
-  _workerEdu = btn.dataset.edu;
+  _workerEdu = btn.dataset.edu || null;
   document.querySelectorAll('#edu-chips .edu-chip').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -6703,12 +6792,10 @@ async function loadWorkerProfileForm() {
     selEl.style.display = 'flex';
   }
   if (w.gender) setGender(w.gender);
-  if (w.education) {
-    _workerEdu = w.education;
-    document.querySelectorAll('#edu-chips .edu-chip').forEach(el => {
-      el.classList.toggle('active', el.dataset.edu === w.education);
-    });
-  }
+  _workerEdu = w.education || null;
+  document.querySelectorAll('#edu-chips .edu-chip').forEach(el => {
+    el.classList.toggle('active', el.dataset.edu === (w.education || ''));
+  });
   // 알림 설정 복원
   const notifyOn = !!w.notify_enabled;
   const notifyToggle = document.getElementById('notify-enabled-toggle');
