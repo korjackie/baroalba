@@ -3342,14 +3342,13 @@
       <!-- 공고 사진 (최대 3장) -->
       <div class="form-group">
         <label class="form-label">공고 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></label>
-        <div id="job-img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-        <label id="job-img-add-btn" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;background:#fafafa;box-sizing:border-box;overflow:hidden">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          사진 추가
+        <div id="job-img-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px"></div>
+        <label id="job-img-add-btn" style="display:flex;align-items:center;justify-content:center;height:64px;background:#fff;border:2px dashed #ddd;border-radius:12px;cursor:pointer;width:100%;box-sizing:border-box">
+          <span style="font-size:26px;color:#ccc;line-height:1">+</span>
           <input type="file" id="job-img-input" accept="image/*" style="display:none" onchange="addJobImages(this)">
         </label>
         <input type="hidden" id="f-main-img-idx" value="0">
-        <div style="font-size:11px;color:#aaa;margin-top:6px">드래그로 순서 변경 · 사진 탭하면 크롭 편집 · 1번이 대표</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">사진 탭하면 크롭 편집 · 1번이 대표</div>
       </div>
 
       <!-- 당일 정산 토글 -->
@@ -10336,7 +10335,7 @@ function renderJobImgPreview() {
       ondragenter="if(!this.contains(event.relatedTarget)){this.style.outline='3px solid var(--red)';this.style.outlineOffset='-3px'}"
       ondragleave="if(!this.contains(event.relatedTarget)){this.style.outline='';this.style.outlineOffset=''}"
       ondrop="event.preventDefault();this.style.outline='';this.style.outlineOffset='';if(_jobImgDragSrc!==null&&_jobImgDragSrc!==${i})jobImgSwap(_jobImgDragSrc,${i});_jobImgDragSrc=null"
-      style="position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;border:${i === 0 ? '3px solid var(--red)' : '2px solid #eee'};cursor:grab;flex-shrink:0">
+      style="position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:${i === 0 ? '3px solid var(--red)' : '2px solid #eee'};cursor:grab">
       <img src="${img.src}" onclick="editJobImg(${i})" style="width:100%;height:100%;object-fit:cover;cursor:${img.file ? 'pointer' : 'default'}">
       <!-- 순서 번호 뱃지 -->
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i === 0 ? 'var(--red)' : 'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i + 1}</div>
@@ -10344,7 +10343,7 @@ function renderJobImgPreview() {
       <button onclick="event.stopPropagation();removeJobImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
     </div>`).join('');
   const addBtn = document.getElementById('job-img-add-btn');
-  if (addBtn) addBtn.style.display = jobImgs.length >= 3 ? 'none' : 'inline-flex';
+  if (addBtn) addBtn.style.display = jobImgs.length >= 3 ? 'none' : 'flex';
   _setupTouchDnd(container, (a, b) => jobImgSwap(parseInt(a), parseInt(b)), 'data-job-img-idx');
 }
 
