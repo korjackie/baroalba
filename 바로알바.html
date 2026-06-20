@@ -3340,10 +3340,10 @@
       <div class="form-group">
         <label class="form-label">공고 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></label>
         <div id="job-img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-        <button type="button" id="job-img-add-btn" onclick="document.getElementById('job-img-input').click()" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;background:#fafafa">
+        <label for="job-img-input" id="job-img-add-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;background:#fafafa;box-sizing:border-box">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           사진 추가
-        </button>
+        </label>
         <input type="file" id="job-img-input" accept="image/*" multiple style="display:none">
         <input type="hidden" id="f-main-img-idx" value="0">
         <div style="font-size:11px;color:#aaa;margin-top:6px">드래그로 순서 변경 · 사진 탭하면 크롭 편집 · 1번이 대표</div>
