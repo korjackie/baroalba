@@ -1573,13 +1573,14 @@
       </div>
     </div>
 
-    <div class="detail-wage-box">
+    <div class="detail-wage-box" style="position:relative">
       <div class="detail-wage-label">시급</div>
       <div class="detail-wage-val" id="d-wage"></div>
       <div class="detail-wage-surge" id="d-surge" style="display:none">
         ⬆ 시급 인상 <span id="d-surge-amt"></span>
       </div>
       <div class="detail-wage-base" id="d-base-wage"></div>
+      <button onclick="openWageCalc()" style="position:absolute;top:12px;right:14px;background:#F0FDF4;border:none;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:800;color:#16a34a;cursor:pointer">🧮 급여 계산</button>
     </div>
 
     <div class="detail-info-grid">
@@ -1648,6 +1649,65 @@
         <button onclick="closeCropModal()" style="flex:1;padding:13px;background:#f5f5f5;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:#555">취소</button>
         <button onclick="applyCrop()" style="flex:2;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">적용</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 급여 계산기 모달 -->
+<div class="modal-overlay" id="wage-calc-modal" onclick="if(event.target===this)closeWageCalc()" style="z-index:1200;align-items:flex-end;display:none">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 36px;animation:slideUp 0.3s ease;max-height:92vh;overflow-y:auto">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1">
+      <div style="font-size:17px;font-weight:800;color:#222">🧮 급여 계산기</div>
+      <button onclick="closeWageCalc()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px">
+      <!-- 입력 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">시급 (원)</div>
+          <input id="wc-wage" type="number" value="10030" oninput="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:700;box-sizing:border-box;outline:none">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">하루 근무시간</div>
+          <input id="wc-hours" type="number" value="8" min="1" max="12" step="0.5" oninput="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:700;box-sizing:border-box;outline:none">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">주당 근무일수</div>
+          <input id="wc-days" type="number" value="5" min="1" max="7" oninput="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:700;box-sizing:border-box;outline:none">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">공제 방식</div>
+          <select id="wc-tax" onchange="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:700;box-sizing:border-box;outline:none;background:#fff">
+            <option value="0.033">3.3% (프리랜서)</option>
+            <option value="0.094">9.4% (4대보험)</option>
+            <option value="0">공제 없음</option>
+          </select>
+        </div>
+      </div>
+      <!-- 결과 -->
+      <div style="background:#f8fafc;border-radius:16px;padding:16px 18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#888;font-weight:600">일급</span>
+          <span id="wc-daily" style="font-size:15px;font-weight:800;color:#222"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#888;font-weight:600">주급</span>
+          <span id="wc-weekly" style="font-size:15px;font-weight:800;color:#222"></span>
+        </div>
+        <div id="wc-holiday-row" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#16a34a;font-weight:700">+ 주휴수당</span>
+          <span id="wc-holiday" style="font-size:15px;font-weight:800;color:#16a34a"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#888;font-weight:600">월급 (세전)</span>
+          <span id="wc-monthly" style="font-size:15px;font-weight:800;color:#222"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0">
+          <span style="font-size:14px;color:#C8102E;font-weight:800">실수령액 (월)</span>
+          <span id="wc-net" style="font-size:18px;font-weight:900;color:#C8102E"></span>
+        </div>
+      </div>
+      <div id="wc-holiday-notice" style="margin-top:10px;font-size:11px;color:#aaa;line-height:1.5"></div>
     </div>
   </div>
 </div>
@@ -3280,11 +3340,11 @@
       <div class="form-group">
         <label class="form-label">공고 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></label>
         <div id="job-img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-        <label id="job-img-add-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;position:relative;overflow:hidden">
+        <button type="button" id="job-img-add-btn" onclick="document.getElementById('job-img-input').click()" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;background:#fafafa">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           사진 추가
-          <input type="file" id="job-img-input" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="addJobImages(this)">
-        </label>
+        </button>
+        <input type="file" id="job-img-input" accept="image/*" multiple style="display:none">
         <input type="hidden" id="f-main-img-idx" value="0">
         <div style="font-size:11px;color:#aaa;margin-top:6px">드래그로 순서 변경 · 사진 탭하면 크롭 편집 · 1번이 대표</div>
       </div>
@@ -10235,22 +10295,28 @@ function closePostingForm() { document.getElementById('form-overlay').classList.
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
 function addJobImages(input) {
+  const fileList = input.files;
+  if (!fileList || !fileList.length) { showToast('선택된 파일이 없습니다'); return; }
   const remaining = 3 - jobImgs.length;
   if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); return; }
-  const fileList = input.files;
-  if (!fileList || !fileList.length) return;
-  // input.value 초기화는 비동기로 (iOS WebKit: 동기 clear 시 FileList 무효화 버그)
   const files = Array.from(fileList).slice(0, remaining);
-  setTimeout(() => { try { input.value = ''; } catch(e) {} }, 100);
   let added = 0;
   files.forEach(f => {
     try {
       jobImgs.push({ src: URL.createObjectURL(f), file: f });
       added++;
-    } catch(e) { showToast('사진 오류: ' + (f.name || '알 수 없음')); }
+    } catch(e) { showToast('사진 오류: ' + (f.name || f.type || '알 수 없음')); }
   });
-  if (added > 0) renderJobImgPreview();
+  // iOS WebKit: value 초기화는 항상 비동기로
+  setTimeout(() => { try { input.value = ''; } catch(e) {} }, 200);
+  if (added > 0) { renderJobImgPreview(); showToast('📷 ' + added + '장 추가됨'); }
 }
+
+// job-img-input 이벤트: onchange 인라인 대신 addEventListener (iOS 호환성 향상)
+document.addEventListener('DOMContentLoaded', function() {
+  const ji = document.getElementById('job-img-input');
+  if (ji) ji.addEventListener('change', function() { addJobImages(this); });
+});
 
 function editJobImg(idx) {
   const img = jobImgs[idx];
@@ -10294,6 +10360,63 @@ function removeJobImg(idx) {
   if (jobImgs[idx]?.src.startsWith('blob:')) URL.revokeObjectURL(jobImgs[idx].src);
   jobImgs.splice(idx, 1);
   renderJobImgPreview();
+}
+
+// ── 급여 계산기 ────────────────────────────────────────────
+function openWageCalc(prefillWage) {
+  const w = prefillWage || (jobs.find(j => j.id === selectedJobId)?.current_wage) || 10030;
+  document.getElementById('wc-wage').value = w;
+  document.getElementById('wc-hours').value = 8;
+  document.getElementById('wc-days').value = 5;
+  document.getElementById('wc-tax').value = '0.033';
+  document.getElementById('wage-calc-modal').style.display = 'flex';
+  calcWage();
+}
+
+function closeWageCalc() {
+  document.getElementById('wage-calc-modal').style.display = 'none';
+}
+
+function calcWage() {
+  const wage  = parseFloat(document.getElementById('wc-wage').value)  || 0;
+  const hours = parseFloat(document.getElementById('wc-hours').value) || 0;
+  const days  = parseFloat(document.getElementById('wc-days').value)  || 0;
+  const tax   = parseFloat(document.getElementById('wc-tax').value)   || 0;
+
+  const daily   = wage * hours;
+  const weekly  = daily * days;
+  const weeklyH = days * hours; // 주당 총 근무시간
+
+  // 주휴수당: 주 15시간 이상 시 (주 근무시간 / 40) × 8 × 시급
+  const hasHoliday = weeklyH >= 15;
+  const holidayPay = hasHoliday ? Math.round((weeklyH / 40) * 8 * wage) : 0;
+
+  // 월급: (주급 + 주휴수당) × 4.345주
+  const monthly = Math.round((weekly + holidayPay) * 4.345);
+  const net     = Math.round(monthly * (1 - tax));
+
+  const fmt = n => n.toLocaleString('ko-KR') + '원';
+
+  document.getElementById('wc-daily').textContent   = fmt(Math.round(daily));
+  document.getElementById('wc-weekly').textContent  = fmt(Math.round(weekly));
+  document.getElementById('wc-monthly').textContent = fmt(monthly);
+  document.getElementById('wc-net').textContent     = fmt(net);
+
+  const hrEl = document.getElementById('wc-holiday-row');
+  const hlEl = document.getElementById('wc-holiday');
+  if (hasHoliday) {
+    hrEl.style.display = 'flex';
+    hlEl.textContent = '+' + fmt(holidayPay) + ' / 주';
+    document.getElementById('wc-holiday-notice').textContent =
+      '✅ 주 ' + weeklyH + '시간 근무 → 주휴수당 대상 (주 15시간 이상). 월급에 포함됨.';
+  } else {
+    hrEl.style.display = 'none';
+    document.getElementById('wc-holiday-notice').textContent =
+      '⚠️ 주 ' + weeklyH + '시간 근무 → 주휴수당 미해당 (주 15시간 미만).';
+  }
+
+  const taxPct = tax > 0 ? (tax * 100).toFixed(1) + '% 공제 후' : '공제 없음';
+  document.getElementById('wc-net').parentElement.children[0].textContent = '실수령액 (' + taxPct + ')';
 }
 
 function openImgViewer(url) {
