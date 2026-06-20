@@ -3246,11 +3246,11 @@
       <div class="form-group">
         <label class="form-label">공고 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></label>
         <div id="job-img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-        <label for="job-img-input" id="job-img-add-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700">
+        <label id="job-img-add-btn" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;position:relative;overflow:hidden">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           사진 추가
+          <input type="file" id="job-img-input" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="addJobImages(this)">
         </label>
-        <input type="file" id="job-img-input" accept="image/*" multiple style="display:none" onchange="addJobImages(this)">
         <input type="hidden" id="f-main-img-idx" value="0">
         <div style="font-size:11px;color:#aaa;margin-top:6px">드래그로 순서 변경 · 사진 탭하면 크롭 편집 · 1번이 대표</div>
       </div>
@@ -10116,13 +10116,20 @@ function closeFormIfBg(e) { if (e.target === document.getElementById('form-overl
 
 function addJobImages(input) {
   const remaining = 3 - jobImgs.length;
-  if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); input.value = ''; return; }
-  const files = Array.from(input.files).slice(0, remaining);
-  input.value = '';
-  if (!files.length) return;
-  // 바로 미리보기 추가 (썸네일 탭으로 개별 크롭 편집 가능)
-  files.forEach(f => jobImgs.push({ src: URL.createObjectURL(f), file: f }));
-  renderJobImgPreview();
+  if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); return; }
+  const fileList = input.files;
+  if (!fileList || !fileList.length) return;
+  // input.value 초기화는 비동기로 (iOS WebKit: 동기 clear 시 FileList 무효화 버그)
+  const files = Array.from(fileList).slice(0, remaining);
+  setTimeout(() => { try { input.value = ''; } catch(e) {} }, 100);
+  let added = 0;
+  files.forEach(f => {
+    try {
+      jobImgs.push({ src: URL.createObjectURL(f), file: f });
+      added++;
+    } catch(e) { showToast('사진 오류: ' + (f.name || '알 수 없음')); }
+  });
+  if (added > 0) renderJobImgPreview();
 }
 
 function editJobImg(idx) {

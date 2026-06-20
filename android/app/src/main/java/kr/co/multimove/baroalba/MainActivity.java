@@ -200,8 +200,17 @@ public class MainActivity extends AppCompatActivity {
         if (req == REQ_FILE) {
             Uri[] results = null;
             if (res == Activity.RESULT_OK && data != null) {
-                String str = data.getDataString();
-                if (str != null) results = new Uri[]{Uri.parse(str)};
+                if (data.getClipData() != null) {
+                    // 다중 파일 선택
+                    android.content.ClipData clip = data.getClipData();
+                    results = new Uri[clip.getItemCount()];
+                    for (int i = 0; i < clip.getItemCount(); i++) {
+                        results[i] = clip.getItemAt(i).getUri();
+                    }
+                } else if (data.getDataString() != null) {
+                    // 단일 파일 선택
+                    results = new Uri[]{Uri.parse(data.getDataString())};
+                }
             }
             if (fileCb != null) { fileCb.onReceiveValue(results); fileCb = null; }
         }
