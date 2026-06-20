@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.GeolocationPermissions;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -19,7 +20,10 @@ import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,16 +33,26 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private ValueCallback<Uri[]> fileCb;
+    private int safeTop = 0, safeBottom = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // targetSdk 35 강제 edge-to-edge 비활성화 — 상태바/내비게이션바 침범 방지
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_main);
 
         webView = findViewById(R.id.webview);
+
+        // 실제 시스템바 높이를 읽어 CSS --sat / --sab 변수로 주입
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            safeTop    = bars.top;
+            safeBottom = bars.bottom;
+            applySafeArea();
+            return WindowInsetsCompat.CONSUMED;
+        });
+
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -59,32 +73,47 @@ public class MainActivity extends AppCompatActivity {
         String ua = s.getUserAgentString().replace("; wv)", ")");
         s.setUserAgentString(ua + " BaroAlbaApp/1.0");
 
+        webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 String url = req.getUrl().toString();
-                // 앱 도메인 — WebView에서 직접 처리
                 if (url.startsWith("https://baroalba.multimove.co.kr")) return false;
-                // OAuth 전체 리다이렉트 체인 — WebView 내에서 처리 (외부 브라우저 차단)
-                if (url.contains(".supabase.co")) return false;       // Supabase OAuth 시작점 (핵심 누락 수정)
-                if (url.contains(".google.com")) return false;        // accounts.google.com 등 구글 전체
-                if (url.contains("naver.com")) return false;          // 네이버 로그인
-                if (url.contains("kakao.com")) return false;          // 카카오 로그인
-                // intent:// — Google이 WebView 감지 시 외부 브라우저 강제 오픈에 사용하는 스킴, 차단
-                if (url.startsWith("intent://")) return true;
-                // 그 외 외부 URL — 시스템 브라우저로 열기
+                if (url.contains(".supabase.co")) return false;
+                if (url.contains(".google.com")) return false;
+                if (url.contains("naver.com")) return false;
+                // intent: 스킴은 kakao.com 체크보다 먼저 처리
+                // (Kakao SDK가 생성하는 intent:kakaolink://...에 sharer.kakao.com이 포함되어
+                //  kakao.com 조건에 걸려 WebView가 직접 로드 시도 → ERR_UNKNOWN_URL_SCHEME 발생)
+                if (url.startsWith("intent:")) {
+                    try {
+                        Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                        startActivity(intent);
+                    } catch (Exception ignored) {}
+                    return true;
+                }
+                if (url.startsWith("kakaolink://") || url.startsWith("kakao://")) {
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
+                    return true;
+                }
+                if (url.contains("kakao.com")) return false;
                 if (url.startsWith("http://") || url.startsWith("https://")) {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
                     return true;
                 }
-                // 딥링크 스킴
                 try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                // 페이지 로드 완료 후 safe area 재적용 (초기 로드 타이밍 보장)
+                applySafeArea();
             }
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
-            // 파일 선택 (프로필 사진 업로드 등)
             @Override
             public boolean onShowFileChooser(WebView wv, ValueCallback<Uri[]> cb,
                                              FileChooserParams params) {
@@ -99,7 +128,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
 
-            // 위치 권한
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin,
                                                            GeolocationPermissions.Callback cb) {
@@ -112,21 +140,25 @@ public class MainActivity extends AppCompatActivity {
                 cb.invoke(origin, true, false);
             }
 
-            // 카메라 등 미디어 권한
             @Override
             public void onPermissionRequest(PermissionRequest request) {
                 request.grant(request.getResources());
             }
         });
 
-        // 딥링크로 앱이 열린 경우 (비밀번호 재설정, OAuth 콜백)
         webView.loadUrl(resolveUrl(getIntent()));
+    }
+
+    private void applySafeArea() {
+        if (webView == null) return;
+        String js = "document.documentElement.style.setProperty('--sat','" + safeTop + "px');" +
+                    "document.documentElement.style.setProperty('--sab','" + safeBottom + "px');";
+        webView.evaluateJavascript(js, null);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        // 앱 실행 중 딥링크 수신 (비밀번호 재설정 이메일 링크 등)
         webView.loadUrl(resolveUrl(intent));
     }
 
@@ -136,6 +168,18 @@ public class MainActivity extends AppCompatActivity {
             if (url.startsWith("https://baroalba.multimove.co.kr")) return url;
         }
         return START_URL;
+    }
+
+    private class AndroidBridge {
+        @JavascriptInterface
+        public void share(String title, String text, String url) {
+            String content = text + "\n" + url;
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, content);
+            startActivity(Intent.createChooser(shareIntent, "공유하기"));
+        }
     }
 
     @Override
