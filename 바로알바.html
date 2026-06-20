@@ -3346,7 +3346,7 @@
         <label id="job-img-add-btn" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:76px;border:2px dashed #ddd;border-radius:12px;cursor:pointer;color:#bbb;font-size:10px;font-weight:700;background:#fafafa;box-sizing:border-box;overflow:hidden">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           사진 추가
-          <input type="file" id="job-img-input" accept="image/*" multiple style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0">
+          <input type="file" id="job-img-input" accept="image/*" style="display:none" onchange="addJobImages(this)">
         </label>
         <input type="hidden" id="f-main-img-idx" value="0">
         <div style="font-size:11px;color:#aaa;margin-top:6px">드래그로 순서 변경 · 사진 탭하면 크롭 편집 · 1번이 대표</div>
@@ -10315,11 +10315,6 @@ function addJobImages(input) {
   if (added > 0) { renderJobImgPreview(); showToast('📷 ' + added + '장 추가됨'); }
 }
 
-// job-img-input 이벤트: onchange 인라인 대신 addEventListener (iOS 호환성 향상)
-document.addEventListener('DOMContentLoaded', function() {
-  const ji = document.getElementById('job-img-input');
-  if (ji) ji.addEventListener('change', function() { addJobImages(this); });
-});
 
 function editJobImg(idx) {
   const img = jobImgs[idx];
