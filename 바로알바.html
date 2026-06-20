@@ -5388,7 +5388,30 @@ function shareJobKakao() {
       const text = (job.title || '알바 공고') + (wage ? ` | ${wage.toLocaleString()}원` : '') + ' - 바로알바';
       window.AndroidBridge.share('바로알바 공고', text, url);
       closeWorkerShare();
-    } else if (navigator.share) {
+      return;
+    }
+    // Kakao SDK로 kakaolink:// URL 추출 후 직접 이동
+    if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
+    if (window.Kakao?.isInitialized?.()) {
+      try {
+        const wage = job.current_wage || job.wage;
+        const intentUrl = Kakao.Share.createDefaultUrl({
+          objectType: 'feed',
+          content: {
+            title: job.title || '알바 공고',
+            description: `${job.address?.split('\n')[0] || ''} | ${wage ? wage.toLocaleString()+'원' : ''}`,
+            imageUrl: `${location.origin}/icons/logo-share.png`,
+            link: { mobileWebUrl: url, webUrl: url }
+          },
+          buttons: [{ title: '공고 보러 가기', link: { mobileWebUrl: url, webUrl: url } }]
+        });
+        if (typeof intentUrl === 'string') {
+          const kakaoUrl = intentUrl.replace(/^intent:/, '').replace(/#Intent;[\s\S]*$/, '');
+          if (kakaoUrl.startsWith('kakaolink://')) { window.location.href = kakaoUrl; closeWorkerShare(); return; }
+        }
+      } catch(e) {}
+    }
+    if (navigator.share) {
       navigator.share({ title: job.title || '바로알바 공고', text: `${job.title || '알바 공고'} - 바로알바`, url })
         .then(() => closeWorkerShare()).catch(() => {});
     } else {
@@ -11421,7 +11444,29 @@ function shareKakao() {
   if (/Android/i.test(navigator.userAgent)) {
     if (window.AndroidBridge) {
       window.AndroidBridge.share('바로알바 공고', '지금 바로 지원하세요!', url);
-    } else if (navigator.share) {
+      return;
+    }
+    // Kakao SDK로 kakaolink:// URL 추출 후 직접 이동
+    if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
+    if (window.Kakao?.isInitialized?.()) {
+      try {
+        const intentUrl = Kakao.Share.createDefaultUrl({
+          objectType: 'feed',
+          content: {
+            title: '바로알바 — 지금 바로 지원하세요!',
+            description: '실시간 지도 기반 알바 매칭. 지금 공고를 확인해보세요.',
+            imageUrl: 'https://baroalba.multimove.co.kr/icons/og-share.png',
+            link: { mobileWebUrl: url, webUrl: url }
+          },
+          buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }]
+        });
+        if (typeof intentUrl === 'string') {
+          const kakaoUrl = intentUrl.replace(/^intent:/, '').replace(/#Intent;[\s\S]*$/, '');
+          if (kakaoUrl.startsWith('kakaolink://')) { window.location.href = kakaoUrl; return; }
+        }
+      } catch(e) {}
+    }
+    if (navigator.share) {
       navigator.share({ title: '바로알바 공고', text: '지금 바로 지원하세요!', url }).catch(() => {});
     } else {
       navigator.clipboard?.writeText(url);
