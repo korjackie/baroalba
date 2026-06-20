@@ -5381,46 +5381,40 @@ function shareJobKakao() {
   const job = _shareJobData;
   if (!job) { showToast('공고 정보를 불러올 수 없어요.'); return; }
   const url = `${location.href.split('?')[0]}?job=${job.id}`;
-  if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
 
-  const wage = job.current_wage || job.wage;
-  const shareParams = {
-    objectType: 'feed',
-    content: {
-      title: job.title || '알바 공고',
-      description: `\u{1F4CD} ${job.address?.split('\n')[0] || ''} | \u{1F4B0} ${wage ? wage.toLocaleString()+'원' : ''}`,
-      imageUrl: `${location.origin}/icons/logo-share.png`,
-      link: { mobileWebUrl: url, webUrl: url }
-    },
-    buttons: [{ title: '공고 보러 가기', link: { mobileWebUrl: url, webUrl: url } }]
-  };
-
-  if (window.Kakao?.Share?.createDefaultUrl) {
-    try {
-      let shareUrl = Kakao.Share.createDefaultUrl(shareParams);
-      if (shareUrl.startsWith('intent:')) {
-        shareUrl = shareUrl.slice(7);
-        const i = shareUrl.indexOf('#Intent;');
-        if (i > -1) shareUrl = shareUrl.slice(0, i);
-        window.location.href = shareUrl;
-      } else if (shareUrl.startsWith('kakaolink://')) {
-        window.location.href = shareUrl;
-      } else {
-        window.open(shareUrl, '_blank');
-      }
-      setTimeout(() => closeWorkerShare(), 300);
-      return;
-    } catch(e) {}
+  // Android: intent:kakaolink:// 스킴 처리 불가 → 시스템 공유 시트
+  if (/Android/i.test(navigator.userAgent)) {
+    if (navigator.share) {
+      navigator.share({ title: job.title || '바로알바 공고', text: `${job.title || '알바 공고'} - 바로알바`, url })
+        .then(() => closeWorkerShare()).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url);
+      showToast('링크가 복사됐습니다');
+      closeWorkerShare();
+    }
+    return;
   }
 
+  // iOS / 데스크탑: Kakao SDK
+  if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
   if (!window.Kakao?.isInitialized?.()) {
     if (navigator.share) navigator.share({ title: job.title || '바로알바 공고', url }).catch(() => {});
     else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
     closeWorkerShare();
     return;
   }
+  const wage = job.current_wage || job.wage;
   try {
-    Kakao.Share.sendDefault(shareParams);
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: job.title || '알바 공고',
+        description: `\u{1F4CD} ${job.address?.split('\n')[0] || ''} | \u{1F4B0} ${wage ? wage.toLocaleString()+'원' : ''}`,
+        imageUrl: `${location.origin}/icons/logo-share.png`,
+        link: { mobileWebUrl: url, webUrl: url }
+      },
+      buttons: [{ title: '공고 보러 가기', link: { mobileWebUrl: url, webUrl: url } }]
+    });
     closeWorkerShare();
   } catch(e) {
     if (navigator.share) navigator.share({ title: job.title || '바로알바 공고', url }).catch(() => {});
@@ -11419,46 +11413,38 @@ function copyShareUrl() {
 
 function shareKakao() {
   const url = document.getElementById('share-url-text').textContent;
-  if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
 
-  const shareParams = {
-    objectType: 'feed',
-    content: {
-      title: '바로알바 — 지금 바로 지원하세요!',
-      description: '실시간 지도 기반 알바 매칭. 지금 공고를 확인해보세요.',
-      imageUrl: 'https://baroalba.multimove.co.kr/icons/og-share.png',
-      link: { mobileWebUrl: url, webUrl: url },
-    },
-    buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }],
-  };
-
-  if (window.Kakao?.Share?.createDefaultUrl) {
-    try {
-      let shareUrl = Kakao.Share.createDefaultUrl(shareParams);
-      // Android: intent:kakaolink://...#Intent;...;end → kakaolink://... (OS 딥링크)
-      // PWA/브라우저 모두 kakaolink:// 는 Android OS가 카카오톡으로 라우팅
-      if (shareUrl.startsWith('intent:')) {
-        shareUrl = shareUrl.slice(7);
-        const i = shareUrl.indexOf('#Intent;');
-        if (i > -1) shareUrl = shareUrl.slice(0, i);
-        window.location.href = shareUrl;
-      } else if (shareUrl.startsWith('kakaolink://')) {
-        window.location.href = shareUrl; // iOS
-      } else {
-        window.open(shareUrl, '_blank'); // 데스크탑: sharer.kakao.com
-      }
-      return;
-    } catch(e) {}
+  // Android Chrome/PWA: Kakao SDK가 내부적으로 intent:kakaolink:// 생성 → ERR_UNKNOWN_URL_SCHEME
+  // intent: 스킴은 Android Chrome PWA에서 구조적으로 처리 불가
+  // → 시스템 공유 시트(navigator.share)로 공유 후 카카오톡 선택
+  if (/Android/i.test(navigator.userAgent)) {
+    if (navigator.share) {
+      navigator.share({ title: '바로알바 공고', text: '지금 바로 지원하세요!', url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url);
+      showToast('링크가 복사됐습니다');
+    }
+    return;
   }
 
-  // createDefaultUrl 없거나 실패 → sendDefault
+  // iOS / 데스크탑: Kakao SDK 정상 동작
+  if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
   if (!window.Kakao?.isInitialized?.()) {
     if (navigator.share) navigator.share({ title: '바로알바 공고', url }).catch(() => {});
     else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
     return;
   }
   try {
-    Kakao.Share.sendDefault(shareParams);
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: '바로알바 — 지금 바로 지원하세요!',
+        description: '실시간 지도 기반 알바 매칭. 지금 공고를 확인해보세요.',
+        imageUrl: 'https://baroalba.multimove.co.kr/icons/og-share.png',
+        link: { mobileWebUrl: url, webUrl: url },
+      },
+      buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }],
+    });
   } catch(e) {
     if (navigator.share) navigator.share({ title: '바로알바 공고', url }).catch(() => {});
     else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
