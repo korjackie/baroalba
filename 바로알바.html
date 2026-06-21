@@ -3590,31 +3590,34 @@ window.addEventListener('popstate', () => {
   }
 });
 
-// ── 채팅 키보드 대응 (visualViewport) ────────────────────
+// ── 채팅 키보드 대응 ──────────────────────────────────────
 (function() {
-  if (!window.visualViewport) return;
   const CHAT_IDS = ['wchat-overlay', 'chat-overlay'];
+
   function adjust() {
-    const kb = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+    // visualViewport: iOS/삼성인터넷. window resize: Android Chrome
+    const vvh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const kb = Math.max(0, window.innerHeight - vvh);
     CHAT_IDS.forEach(id => {
       const overlay = document.getElementById(id);
       if (!overlay || !overlay.classList.contains('open')) return;
       const sheet = overlay.querySelector('.detail-sheet');
-      if (sheet) {
-        sheet.style.transform = `translateY(-${kb}px)`;
-        sheet.style.height = `calc(80vh + ${kb}px)`;
-      }
+      if (sheet) sheet.style.transform = kb > 80 ? `translateY(-${kb}px)` : '';
     });
   }
+
   function reset() {
     CHAT_IDS.forEach(id => {
       const sheet = document.getElementById(id)?.querySelector('.detail-sheet');
-      if (sheet) { sheet.style.transform = ''; sheet.style.height = ''; }
+      if (sheet) sheet.style.transform = '';
     });
   }
-  window.visualViewport.addEventListener('resize', adjust);
-  window.visualViewport.addEventListener('scroll', adjust);
-  // 채팅 닫힐때 리셋
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjust);
+    window.visualViewport.addEventListener('scroll', adjust);
+  }
+  window.addEventListener('resize', adjust);
   document.addEventListener('chat-closed', reset);
 })();
 
