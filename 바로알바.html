@@ -6228,8 +6228,11 @@ function aiRecordSignal(category, wage, score) {
     }
     prefs.totalSignals = (prefs.totalSignals || 0) + (score > 0 ? 1 : 0);
     localStorage.setItem(_aiKey(), JSON.stringify(prefs));
-    // 3개 이상 양성 신호 쌓이면 추천 섹션 갱신
     if (prefs.totalSignals >= 3) renderAiRecommendations();
+    // Supabase 비동기 저장 (기기 간 동기화)
+    if (currentUser && !isGuest) {
+      db.from('workers').update({ ai_prefs: prefs }).eq('kakao_uid', currentUser.id).catch(() => {});
+    }
   } catch(e) {}
 }
 
@@ -6770,7 +6773,7 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng, notify_enabled, notify_categories, notify_min_wage')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng, notify_enabled, notify_categories, notify_min_wage, ai_prefs')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   // 프로필 사진
@@ -6843,6 +6846,17 @@ async function loadWorkerProfileForm() {
     _notifyCategories = Array.isArray(w.notify_categories) ? [...w.notify_categories] : [];
     document.getElementById('notify-min-wage').value = w.notify_min_wage || '';
     if (notifyOn) _buildNotifyCatChips();
+  }
+  // ai_prefs: 서버값이 더 많은 신호면 로컬에 덮어쓰기 (기기 간 동기화)
+  if (w.ai_prefs && typeof w.ai_prefs === 'object') {
+    try {
+      const localRaw = localStorage.getItem(_aiKey());
+      const local = localRaw ? JSON.parse(localRaw) : { totalSignals: 0 };
+      if ((w.ai_prefs.totalSignals || 0) > (local.totalSignals || 0)) {
+        localStorage.setItem(_aiKey(), JSON.stringify(w.ai_prefs));
+        renderAiRecommendations();
+      }
+    } catch(e) {}
   }
   else if (meta.gender) setGender(meta.gender);
   // 모든 필드 세팅 완료 후 완성도 + 섹션 요약 업데이트
@@ -7884,7 +7898,7 @@ async function doLogout() {
 }
 
 // ── Web Push 구독 ─────────────────────────────────────────
-const VAPID_PUBLIC_KEY = 'BFSD0Hz6Ea-3OXh10PuSS-QKFYVMqgsjMJ6hAetgHTFk61jALpvJShrWem3kEK-5pvjXY9d3nChxh0ldmLnFV8M';
+const VAPID_PUBLIC_KEY = 'BPVIiIOwTmprH-GOodwKdzAEpq1C8j-7D3GWWM5-LzA9r9fFAPER-VSdSguAWs1ZDzMqqTMpN1ON8wjNsDxZ7UM';
 
 function urlBase64ToUint8Array(b64) {
   const pad = '='.repeat((4 - b64.length % 4) % 4);
