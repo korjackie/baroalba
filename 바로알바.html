@@ -2749,7 +2749,7 @@
 
 <!-- 채팅 (전체화면) -->
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
-  <div id="wchat-header" style="padding-top:max(env(safe-area-inset-top, 0px) + 12px, 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="wchat-header" style="padding-top:max(calc(env(safe-area-inset-top, 0px) + 12px), 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
@@ -2757,7 +2757,7 @@
     <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
   <!-- 메시지+입력창 스크롤 컨테이너: 브라우저가 input focus 시 자동 스크롤 -->
-  <div id="wchat-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+  <div id="wchat-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column">
     <div id="wchat-messages" style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0"></div>
     <!-- 입력창: sticky bottom → 브라우저가 키보드 위로 올림 -->
     <div id="wchat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
@@ -2786,14 +2786,14 @@
 
 <!-- 업주 채팅 (전체화면) -->
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-header" style="padding-top:max(env(safe-area-inset-top, 0px) + 12px, 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="chat-header" style="padding-top:max(calc(env(safe-area-inset-top, 0px) + 12px), 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
     </div>
     <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
-  <div id="chat-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+  <div id="chat-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column">
     <div id="chat-messages" style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0"></div>
     <div id="chat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
       <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
@@ -4676,7 +4676,6 @@ async function openWChat(applicationId, bizName) {
   document.getElementById('wchat-title').textContent = name;
   document.getElementById('wchat-sub').textContent = name + '와 실시간 대화';
   const _wo = document.getElementById('wchat-overlay');
-  _wo.style.top = ''; _wo.style.height = ''; _wo.style.bottom = '';
   _wo.style.display = 'flex';
   document.getElementById('wchat-input').value = '';
   try {
@@ -9824,7 +9823,6 @@ function _openLessonChatOverlay(inquiryId, workerName, workerKakaoUid) {
   document.getElementById('chat-title').textContent = workerName + ' 강사님과 상담';
   document.getElementById('chat-sub').textContent = '레슨 관련 무료 상담';
   const _co1 = document.getElementById('chat-overlay');
-  _co1.style.top = ''; _co1.style.height = ''; _co1.style.bottom = '';
   _co1.style.display = 'flex';
   document.getElementById('chat-input').value = '';
   loadChatMessages();
@@ -12257,7 +12255,6 @@ async function openChat(applicationId, workerName) {
   document.getElementById('chat-title').textContent = workerName + '님과 채팅';
   document.getElementById('chat-sub').textContent = '지원자와 실시간 대화';
   const _co2 = document.getElementById('chat-overlay');
-  _co2.style.top = ''; _co2.style.height = ''; _co2.style.bottom = '';
   _co2.style.display = 'flex';
   document.getElementById('chat-input').value = '';
   // 알바생 user_id(kakao_uid) 조회 — Push 알림 전송에 사용
