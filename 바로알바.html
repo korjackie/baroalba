@@ -1599,7 +1599,7 @@
     </div>
 
     <div class="detail-wage-box" style="position:relative">
-      <div class="detail-wage-label">시급</div>
+      <div class="detail-wage-label" id="d-wage-label">시급</div>
       <div class="detail-wage-val" id="d-wage"></div>
       <div class="detail-wage-surge" id="d-surge" style="display:none">
         ⬆ 시급 인상 <span id="d-surge-amt"></span>
@@ -1791,7 +1791,7 @@
     <div style="padding:20px 20px 0">
       <div id="apply-msg-job-title" style="font-size:13px;font-weight:700;color:#888;margin-bottom:14px"></div>
       <div style="position:relative">
-        <textarea id="apply-msg-text" maxlength="200" placeholder="업주에게 간단히 자신을 소개해보세요&#10;예) 성실하고 시간 약속 철저히 지킵니다. 잘 부탁드립니다!" style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;resize:none;height:110px;font-family:inherit;box-sizing:border-box;outline:none;line-height:1.6" oninput="document.getElementById('apply-msg-count').textContent=this.value.length"></textarea>
+        <textarea id="apply-msg-text" maxlength="200" placeholder="업주에게 간단히 자신을 소개해보세요&#10;예) 성실하고 시간 약속 철저히 지킵니다. 잘 부탁드립니다!" style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;resize:none;height:110px;font-family:inherit;box-sizing:border-box;outline:none;line-height:1.6" oninput="document.getElementById('apply-msg-count').textContent=this.value.length" onfocus="setTimeout(()=>this.scrollIntoView({block:'nearest',behavior:'smooth'}),350)"></textarea>
         <span id="apply-msg-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:#bbb;pointer-events:none">0</span>
         <span style="position:absolute;bottom:10px;right:28px;font-size:11px;color:#bbb;pointer-events:none">/200</span>
       </div>
@@ -2749,8 +2749,7 @@
 
 <!-- 채팅 (전체화면) -->
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100%;box-sizing:border-box;z-index:500;background:#fff;flex-direction:column">
-  <!-- 헤더: 상태바 높이만큼 padding-top (JS로 동적 설정) -->
-  <div id="wchat-header" style="padding-top:max(calc(var(--sat-safe, 0px) + 12px), 40px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="wchat-header" style="padding-top:calc(var(--status-bar-h, 28px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
@@ -2787,7 +2786,7 @@
 
 <!-- 업주 채팅 (전체화면) -->
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100%;box-sizing:border-box;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-header" style="padding-top:max(calc(var(--sat-safe, 0px) + 12px), 40px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="chat-header" style="padding-top:calc(var(--status-bar-h, 28px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
@@ -3237,9 +3236,21 @@
         </div>
       </div>
 
+      <!-- 급여 유형 선택 -->
       <div class="form-group">
-        <label class="form-label" id="f-wage-label">시급 (원) *</label>
-        <input class="form-input" id="f-wage" type="number" min="10030" placeholder="10030" oninput="checkMinWage(this.value)">
+        <label class="form-label">급여 유형 *</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="wage-type-btns">
+          <button type="button" onclick="setWageType('hourly')"  id="wt-hourly"  style="padding:8px 14px;border-radius:20px;border:2px solid #C8102E;background:#C8102E;color:#fff;font-size:13px;font-weight:800;cursor:pointer">시급</button>
+          <button type="button" onclick="setWageType('daily')"   id="wt-daily"   style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">일급</button>
+          <button type="button" onclick="setWageType('per-job')" id="wt-per-job" style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">건당</button>
+          <button type="button" onclick="setWageType('monthly')" id="wt-monthly" style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">월급</button>
+          <button type="button" onclick="setWageType('other')"   id="wt-other"   style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">기타</button>
+        </div>
+        <input type="hidden" id="f-wage-type" value="hourly">
+        <label class="form-label" id="f-wage-label">금액 (원) *</label>
+        <input class="form-input" id="f-wage" type="number" min="0" placeholder="10030" oninput="checkMinWage(this.value)">
+        <!-- 기타 직접 입력 -->
+        <input class="form-input" id="f-wage-other" type="text" placeholder="예) 협의 후 결정, 건당 50,000원" style="display:none;margin-top:8px">
         <div id="wage-warn" style="display:none;font-size:11px;color:#EF4444;font-weight:700;margin-top:4px">⚠️ 2025년 최저시급(10,030원) 미만입니다</div>
       </div>
 
@@ -3591,6 +3602,19 @@ window.addEventListener('popstate', () => {
   }
 });
 
+
+// ── 상태표시줄 높이 감지 (standalone PWA에서 env(safe-area-inset-top)=0인 경우 대비) ──
+(function() {
+  var probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden';
+  document.documentElement.appendChild(probe);
+  var sat = probe.offsetHeight;
+  probe.remove();
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (isStandalone && sat === 0) sat = 28; // Android 비노치 기기 기본 상태표시줄 높이
+  document.documentElement.style.setProperty('--status-bar-h', sat + 'px');
+})();
 
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
@@ -4117,7 +4141,15 @@ function openDetail(jobId) {
   }
   document.getElementById('d-biz').textContent = job.biz_name;
   document.getElementById('d-rating').textContent = `★ ${job.biz_rating || '-'} (${job.biz_reviews || 0}개)`;
-  document.getElementById('d-wage').textContent = job.current_wage.toLocaleString() + '원';
+  const wageLabels = { hourly:'시급', daily:'일급', 'per-job':'건당', monthly:'월급', other:'급여' };
+  const wLabelEl = document.getElementById('d-wage-label');
+  if (wLabelEl) wLabelEl.textContent = wageLabels[job.wage_type] || '시급';
+  const dWageEl = document.getElementById('d-wage');
+  if (job.wage_type === 'other' && job.wage_label) {
+    dWageEl.textContent = job.wage_label;
+  } else {
+    dWageEl.textContent = (job.current_wage || 0).toLocaleString() + '원';
+  }
   document.getElementById('d-time').textContent = job.start_time ? formatTime(job.start_time) : '미정';
   document.getElementById('d-duration').textContent = job.duration_hours + '시간';
   document.getElementById('d-needed').textContent = `${job.needed_count - job.filled_count}/${job.needed_count}명`;
@@ -4636,7 +4668,11 @@ async function openWChat(applicationId, bizName) {
   _wchatAppId = applicationId;
   document.getElementById('wchat-title').textContent = name;
   document.getElementById('wchat-sub').textContent = name + '와 실시간 대화';
-  document.getElementById('wchat-overlay').style.display = 'flex';
+  const _wo = document.getElementById('wchat-overlay');
+  const _vv = window.visualViewport;
+  _wo.style.top    = _vv ? Math.round(_vv.offsetTop) + 'px' : '0';
+  _wo.style.height = _vv ? Math.round(_vv.height)    + 'px' : '100%';
+  _wo.style.display = 'flex';
   document.getElementById('wchat-input').value = '';
   try {
     await loadWChatMessages();
@@ -4667,41 +4703,38 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 높이 대응 (navigator.virtualKeyboard API) ───────
+// ── 키보드 대응: visualViewport 기반 오버레이 동적 리사이즈 ──
 (function() {
-  var OVERLAY_IDS = ['wchat-overlay', 'chat-overlay'];
+  var FULLSCREEN_IDS = ['wchat-overlay', 'chat-overlay'];
+  var SHEET_IDS      = ['apply-msg-modal'];
 
-  function applyKb(kbH) {
-    OVERLAY_IDS.forEach(function(id) {
+  function syncAll() {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    var top = Math.round(vv.offsetTop);
+    var h   = Math.round(vv.height);
+
+    // 전체화면 오버레이: 가시 영역에 맞게 top/height 재설정
+    FULLSCREEN_IDS.forEach(function(id) {
       var el = document.getElementById(id);
       if (!el || el.style.display === 'none') return;
-      el.style.paddingBottom = kbH > 0 ? kbH + 'px' : '';
+      el.style.top    = top + 'px';
+      el.style.height = h   + 'px';
+      el.style.paddingBottom = '';
+    });
+
+    // 바텀시트 모달: 키보드 높이만큼 bottom을 올려서 시트가 키보드 위에 위치
+    var kbH = Math.max(0, window.innerHeight - vv.height - top);
+    SHEET_IDS.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el || el.style.display === 'none') return;
+      el.style.bottom = kbH > 0 ? kbH + 'px' : '';
     });
   }
 
-  // ① VirtualKeyboard API (Chrome 110+ / Samsung Internet 23+) — 가장 정확
-  if ('virtualKeyboard' in navigator) {
-    navigator.virtualKeyboard.overlaysContent = true;
-    navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
-      applyKb(e.target.boundingRect.height || 0);
-    });
-  }
-
-  // ② window.resize 폴백 — Chrome Android에서 innerHeight 변화 감지
-  var baseH = window.innerHeight;
-  window.addEventListener('resize', function() {
-    var diff = baseH - window.innerHeight;
-    if (diff > 80) applyKb(diff);
-    else if (diff < 10) applyKb(0);
-  });
-
-  // ③ visualViewport 폴백
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function() {
-      var diff = window.innerHeight - window.visualViewport.height;
-      if (diff > 80) applyKb(diff);
-      else if (diff < 10) applyKb(0);
-    });
+    window.visualViewport.addEventListener('resize', syncAll);
+    window.visualViewport.addEventListener('scroll', syncAll);
   }
 })();
 
@@ -9787,7 +9820,11 @@ function _openLessonChatOverlay(inquiryId, workerName, workerKakaoUid) {
   _chatWorkerUserId = workerKakaoUid;
   document.getElementById('chat-title').textContent = workerName + ' 강사님과 상담';
   document.getElementById('chat-sub').textContent = '레슨 관련 무료 상담';
-  document.getElementById('chat-overlay').style.display = 'flex';
+  const _co1 = document.getElementById('chat-overlay');
+  const _vv1 = window.visualViewport;
+  _co1.style.top    = _vv1 ? Math.round(_vv1.offsetTop) + 'px' : '0';
+  _co1.style.height = _vv1 ? Math.round(_vv1.height)    + 'px' : '100%';
+  _co1.style.display = 'flex';
   document.getElementById('chat-input').value = '';
   loadChatMessages();
   subscribeChatMessages();
@@ -10022,8 +10059,39 @@ async function updateStats() {
 }
 
 function checkMinWage(val) {
+  const type = document.getElementById('f-wage-type')?.value || 'hourly';
   const w = document.getElementById('wage-warn');
-  if (w) w.style.display = (val && parseInt(val) < 10030) ? 'block' : 'none';
+  if (w) w.style.display = (type === 'hourly' && val && parseInt(val) < 10030) ? 'block' : 'none';
+}
+
+function setWageType(type) {
+  document.getElementById('f-wage-type').value = type;
+  const labels = { hourly:'시급', daily:'일급', 'per-job':'건당', monthly:'월급', other:'기타' };
+  const placeholders = { hourly:'10030', daily:'80000', 'per-job':'50000', monthly:'2500000', other:'' };
+  // 버튼 스타일 갱신
+  ['hourly','daily','per-job','monthly','other'].forEach(t => {
+    const btn = document.getElementById('wt-' + t);
+    if (!btn) return;
+    const on = t === type;
+    btn.style.background = on ? '#C8102E' : '#fff';
+    btn.style.color = on ? '#fff' : '#888';
+    btn.style.borderColor = on ? '#C8102E' : '#eee';
+  });
+  // 라벨·입력 갱신
+  const lbl = document.getElementById('f-wage-label');
+  const inp = document.getElementById('f-wage');
+  const otherInp = document.getElementById('f-wage-other');
+  if (type === 'other') {
+    if (lbl) lbl.style.display = 'none';
+    if (inp) inp.style.display = 'none';
+    if (otherInp) otherInp.style.display = 'block';
+    document.getElementById('wage-warn').style.display = 'none';
+  } else {
+    if (lbl) { lbl.style.display = ''; lbl.textContent = labels[type] + ' (원) *'; }
+    if (inp) { inp.style.display = ''; inp.placeholder = placeholders[type] || '0'; inp.min = type === 'hourly' ? 10030 : 0; }
+    if (otherInp) otherInp.style.display = 'none';
+    checkMinWage(inp?.value);
+  }
 }
 
 // ── 시급 서지 ─────────────────────────────────────────────
@@ -11112,7 +11180,9 @@ function showMiniMap(lat, lng, addr) {
 async function submitPosting() {
   const title = document.getElementById('f-title').value.trim();
   const category = document.getElementById('f-category').value;
-  const wage = parseInt(document.getElementById('f-wage').value);
+  const wageType = document.getElementById('f-wage-type')?.value || 'hourly';
+  const wageOther = document.getElementById('f-wage-other')?.value.trim() || '';
+  const wage = wageType === 'other' ? 0 : parseInt(document.getElementById('f-wage').value);
   const needed = parseInt(document.getElementById('f-needed').value);
   const lat = parseFloat(document.getElementById('f-lat').value);
   const lng = parseFloat(document.getElementById('f-lng').value);
@@ -11132,7 +11202,13 @@ async function submitPosting() {
   const duration = isErrand ? errandDuration : (startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null);
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
-  if (!wage || (!isErrand && wage < 10030)) { showToast(isErrand ? '건당 금액을 입력해주세요' : '시급은 2025 최저임금(10,030원) 이상이어야 해요'); return; }
+  if (wageType === 'other') {
+    if (!wageOther) { showToast('급여 조건을 입력해주세요'); return; }
+  } else if (wageType === 'hourly' && (!wage || wage < 10030)) {
+    showToast('시급은 2025 최저임금(10,030원) 이상이어야 해요'); return;
+  } else if (wageType !== 'hourly' && !wage) {
+    showToast('금액을 입력해주세요'); return;
+  }
   if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
   if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
   // 위치는 반드시 탭에서 명시적으로 설정해야 함 (제출 시 자동 지오코딩 없음)
@@ -11170,7 +11246,10 @@ async function submitPosting() {
   const payload = {
     business_id: bizRecord.id,
     title, category, description: desc,
-    current_wage: wage,
+    wage_type: wageType,
+    wage_label: wageType === 'other' ? wageOther : null,
+    current_wage: wageType === 'other' ? 0 : wage,
+    base_wage: wageType === 'other' ? 0 : wage,
     lat: finalLat, lng: finalLng,
     address: addrText,
     duration_hours: duration,
@@ -12176,7 +12255,11 @@ async function openChat(applicationId, workerName) {
   _chatWorkerUserId = null;
   document.getElementById('chat-title').textContent = workerName + '님과 채팅';
   document.getElementById('chat-sub').textContent = '지원자와 실시간 대화';
-  document.getElementById('chat-overlay').style.display = 'flex';
+  const _co2 = document.getElementById('chat-overlay');
+  const _vv2 = window.visualViewport;
+  _co2.style.top    = _vv2 ? Math.round(_vv2.offsetTop) + 'px' : '0';
+  _co2.style.height = _vv2 ? Math.round(_vv2.height)    + 'px' : '100%';
+  _co2.style.display = 'flex';
   document.getElementById('chat-input').value = '';
   // 알바생 user_id(kakao_uid) 조회 — Push 알림 전송에 사용
   const { data: app } = await db.from('applications')
