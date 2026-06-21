@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -4708,10 +4708,10 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 대응 (다중 fallback) ──
-// 방법1: interactive-widget=resizes-content → 뷰포트 자체 축소, bottom:0 자동 상승
-// 방법2: navigator.virtualKeyboard.geometrychange → 키보드 높이 감지 → paddingBottom
-// 방법3: visualViewport.resize → 브라우저 모드 폴백
+// ── 키보드 대응 ──
+// 방법1: navigator.virtualKeyboard (Chrome 94+) → overlaysContent=true → geometrychange
+// 방법2: window.resize 피크높이 추적 (TWA adjustResize 폴백)
+// 방법3: visualViewport.resize (브라우저 모드 폴백)
 (function() {
   var CHAT_IDS = ['wchat-overlay', 'chat-overlay'];
   var MODAL_ID = 'apply-msg-modal';
@@ -4727,22 +4727,29 @@ function scrollChatToBottom(scrollId) {
     if (modal) modal.style.bottom = kbH > 50 ? kbH + 'px' : '';
   }
 
-  // 방법2: Virtual Keyboard API (Samsung Internet 23+, Chrome 94+)
+  // 방법1: Virtual Keyboard API (Chrome 94+, Samsung Internet 23+)
+  // overlaysContent=true → 키보드가 콘텐츠 위에 뜸 → geometrychange로 높이 감지
   if ('virtualKeyboard' in navigator) {
     navigator.virtualKeyboard.overlaysContent = true;
     navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
       applyKbOffset(e.target.boundingRect.height || 0);
     });
-  }
-
-  // 방법3: visualViewport resize (브라우저 모드 / resizes-content 미지원 기기 폴백)
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function() {
-      // virtualKeyboard가 이미 처리하면 중복 적용 안 함
-      if ('virtualKeyboard' in navigator) return;
-      var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+  } else {
+    // 방법2: window.resize – TWA adjustResize 모드에서 innerHeight가 줄어듦
+    var _peakH = window.innerHeight;
+    window.addEventListener('resize', function() {
+      _peakH = Math.max(_peakH, window.innerHeight);
+      var kbH = Math.max(0, _peakH - window.innerHeight);
       applyKbOffset(kbH);
     });
+
+    // 방법3: visualViewport (브라우저 모드)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function() {
+        var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+        applyKbOffset(kbH);
+      });
+    }
   }
 
   // 채팅 닫힐 때 paddingBottom 초기화
