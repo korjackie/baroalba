@@ -1694,6 +1694,31 @@
   </div>
 </div>
 
+<!-- 온보딩 튜토리얼 -->
+<div id="onboarding-overlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:3000;flex-direction:column;align-items:center;justify-content:space-between;padding:var(--sat,0) 0 var(--sab,0)">
+  <!-- 스킵 버튼 -->
+  <div style="width:100%;display:flex;justify-content:flex-end;padding:16px 20px;box-sizing:border-box">
+    <button onclick="closeOnboarding()" style="background:none;border:none;font-size:14px;color:#bbb;font-weight:600;cursor:pointer;padding:6px 10px">건너뛰기</button>
+  </div>
+  <!-- 슬라이드 영역 -->
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px;text-align:center;width:100%;box-sizing:border-box">
+    <div id="ob-emoji" style="font-size:72px;line-height:1;margin-bottom:24px"></div>
+    <div id="ob-title" style="font-size:22px;font-weight:900;color:#111;margin-bottom:12px;line-height:1.3"></div>
+    <div id="ob-desc" style="font-size:15px;color:#555;font-weight:500;line-height:1.6;margin-bottom:24px;white-space:pre-line"></div>
+    <div id="ob-tip" style="background:#FFF5F5;border-radius:14px;padding:14px 20px;font-size:13px;font-weight:700;color:#C8102E;line-height:1.8;width:100%;box-sizing:border-box"></div>
+  </div>
+  <!-- 하단 네비게이션 -->
+  <div style="width:100%;padding:24px 28px 28px;box-sizing:border-box">
+    <!-- dots -->
+    <div style="display:flex;justify-content:center;gap:6px;margin-bottom:20px">
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <button id="ob-next-btn" onclick="obNext()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:16px;font-size:17px;font-weight:900;cursor:pointer">다음 →</button>
+  </div>
+</div>
+
 <!-- QR 공고 출력 모달 -->
 <div class="modal-overlay" id="qr-modal" onclick="if(event.target===this)closeQRModal()" style="z-index:700;align-items:center;justify-content:center;display:none;padding:20px">
   <div style="background:#fff;border-radius:20px;width:100%;max-width:380px;overflow:hidden">
@@ -2221,6 +2246,39 @@
                   onkeydown="if(event.key==='Enter'){event.preventDefault();addSkillTag()}"
                   style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
                 <button onclick="addSkillTag()" data-i18n="skill_add" style="padding:9px 16px;background:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;white-space:nowrap;flex-shrink:0">+ 추가</button>
+              </div>
+            </div>
+            <!-- 희망직종 -->
+            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
+              <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:10px">🎯 희망직종 <span style="font-size:11px;color:#aaa;font-weight:500">(복수선택)</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="pref-cat-chips">
+                <button type="button" data-cat="F&amp;B"    onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F37D} F&amp;B</button>
+                <button type="button" data-cat="물류"    onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F4E6} 물류</button>
+                <button type="button" data-cat="판매"    onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F6CD} 판매</button>
+                <button type="button" data-cat="청소"    onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F9F9} 청소</button>
+                <button type="button" data-cat="이벤트"  onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F389} 이벤트</button>
+                <button type="button" data-cat="커플알바" onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F491} 커플알바</button>
+                <button type="button" data-cat="컨텐츠"  onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F4F1} 컨텐츠</button>
+                <button type="button" data-cat="챌린지"  onclick="togglePrefCat(this)" class="pref-cat-chip">\u{1F3C6} 챌린지</button>
+              </div>
+            </div>
+            <!-- 근무가능 요일/시간대 -->
+            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
+              <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:10px">\u{1F4C5} 근무가능 요일/시간대</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="avail-day-btns">
+                <button type="button" data-day="월" onclick="toggleAvailDay(this)" class="avail-day-btn">월</button>
+                <button type="button" data-day="화" onclick="toggleAvailDay(this)" class="avail-day-btn">화</button>
+                <button type="button" data-day="수" onclick="toggleAvailDay(this)" class="avail-day-btn">수</button>
+                <button type="button" data-day="목" onclick="toggleAvailDay(this)" class="avail-day-btn">목</button>
+                <button type="button" data-day="금" onclick="toggleAvailDay(this)" class="avail-day-btn">금</button>
+                <button type="button" data-day="토" onclick="toggleAvailDay(this)" class="avail-day-btn">토</button>
+                <button type="button" data-day="일" onclick="toggleAvailDay(this)" class="avail-day-btn">일</button>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="avail-time-chips">
+                <button type="button" data-time="오전" onclick="toggleAvailTime(this)" class="pref-cat-chip">오전 (06~12)</button>
+                <button type="button" data-time="오후" onclick="toggleAvailTime(this)" class="pref-cat-chip">오후 (12~18)</button>
+                <button type="button" data-time="저녁" onclick="toggleAvailTime(this)" class="pref-cat-chip">저녁 (18~22)</button>
+                <button type="button" data-time="야간" onclick="toggleAvailTime(this)" class="pref-cat-chip">야간 (22~06)</button>
               </div>
             </div>
             <!-- 이동수단 -->
@@ -4198,7 +4256,7 @@ function renderUrgentFeed() {
     const _ap1 = (job.address||'').split('\n');
     const _da1 = _ap1[0] ? (_ap1[1] ? _ap1[0] + ' · ' + _ap1[1].split(' ').slice(0,3).join(' ') : _ap1[0]) : null;
     const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da1 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
-    const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
+    const emoji = getCatEmoji(job.category);
     const bg = CAT_BG[job.category] || '#f5f5f5';
     return `
     <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:140px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid #C8102E">
@@ -5509,7 +5567,7 @@ async function loadMyChatList() {
             <div style="font-size:11px;color:#bbb">${time}</div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
+            <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content?.startsWith('[img]') ? '\u{1F4F7} 사진' : msg.content}</div>
             ${unread > 0 ? `<div id="unread-badge-${a.id}" style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;line-height:1">${unread}</div>` : ''}
           </div>
           <div style="font-size:11px;color:#bbb;margin-top:2px">${a.title}</div>
@@ -6717,8 +6775,45 @@ function initSwipe() {
   renderSwipeStack();
 }
 
-const CAT_EMOJI = { 'F&B':'\u{1F37D}','물류':'\u{1F4E6}','판매':'\u{1F6CD}','청소':'\u{1F9F9}','이벤트':'\u{1F389}','커플알바':'\u{1F491}','컨텐츠':'\u{1F4F1}','챌린지':'\u{1F3C6}' };
-const CAT_BG = { 'F&B':'#FFF8E1','물류':'#F3F0FF','판매':'#E6FBF4','청소':'#F3F4F6','이벤트':'#FDF2F8','커플알바':'#FFF0F5','컨텐츠':'#F0F4FF','챌린지':'#FFF3E0' };
+const CAT_EMOJI = {
+  // 일반 알바
+  'F&B':'\u{1F37D}','물류':'\u{1F4E6}','판매':'\u{1F6CD}','청소':'\u{1F9F9}',
+  '의류/패션':'\u{1F457}','의료/병원':'\u{1F3E5}','이벤트':'\u{1F389}',
+  '숙박/호텔':'\u{1F3E8}','교육/과외':'\u{1F4DA}','스포츠/레저':'\u{26BD}',
+  '뷰티/헤어':'\u{1F485}','커플알바':'\u{1F491}','컨텐츠':'\u{1F4F1}',
+  '유튜브/틱톡':'\u{1F3AC}','모델/촬영':'\u{1F4F8}','이사도우미':'\u{1F69A}',
+  '챌린지':'\u{1F3C6}','기타':'\u{1F4CB}',
+  // 심부름
+  '물건 픽업/전달':'\u{1F4E6}','대리 줄서기':'\u{1F9CD}','서류/우편':'\u{1F4EE}',
+  '쇼핑 대행':'\u{1F6D2}','벌레 퇴치':'\u{1FAB2}','반려동물 산책':'\u{1F415}',
+  '이사/짐 보조':'\u{1F69A}','운반/짐 이동':'\u{1F4E6}','퀵배달':'\u{1F6F5}',
+  '청소 대행':'\u{1F9F9}','음식 배달':'\u{1F371}','차량 이동/주차':'\u{1F697}',
+  '약국/병원 대행':'\u{1F48A}','장보기 대행':'\u{1F96C}','기타 심부름':'\u{1F3C3}',
+  // 돌봄·케어
+  '반려동물케어':'\u{1F43E}','아이돌봄':'\u{1F476}','어르신돌봄':'\u{1F474}',
+  '병원동행':'\u{1F3E5}','가사도우미':'\u{1F3E1}',
+  // 전문기술직
+  '설비·수리':'\u{1F527}','전기·전자':'\u{26A1}','인테리어':'\u{1F3E0}',
+  '청소·방역':'\u{1F9F9}','이사·운반':'\u{1F69A}','조경·정원':'\u{1F33F}',
+  '사진 촬영':'\u{1F4F8}','영상 촬영·편집':'\u{1F3AC}','그래픽·디자인':'\u{1F3A8}',
+  '웹디자인·UI':'\u{1F4BB}','SNS·마케팅':'\u{1F4F1}','3D·모션':'\u{2728}',
+  '웹·앱 개발':'\u{2328}','데이터 분석':'\u{1F4CA}','자동화·스크립트':'\u{1F916}',
+  '기타 IT':'\u{1F4BE}','헤어':'\u{1F487}','메이크업·네일':'\u{1F485}','피부 관리':'\u{2728}',
+};
+function getCatEmoji(cat) { return CAT_EMOJI[cat] || '\u{1F4BC}'; }
+const CAT_BG = {
+  'F&B':'#FFF8E1','물류':'#F3F0FF','판매':'#E6FBF4','청소':'#F3F4F6',
+  '의류/패션':'#FDF2F8','의료/병원':'#F0FDF4','이벤트':'#FDF2F8',
+  '숙박/호텔':'#FFF7ED','교육/과외':'#EFF6FF','스포츠/레저':'#F0FDF4',
+  '뷰티/헤어':'#FDF2F8','커플알바':'#FFF0F5','컨텐츠':'#F0F4FF',
+  '유튜브/틱톡':'#FEF2F2','모델/촬영':'#FDF2F8','이사도우미':'#F3F0FF',
+  '챌린지':'#FFF3E0','기타':'#F9FAFB',
+  '청소·방역':'#F3F4F6','설비·수리':'#FFF7ED','전기·전자':'#FFFBEB',
+  '인테리어':'#FFF7ED','이사·운반':'#F3F0FF','조경·정원':'#F0FDF4',
+  '사진 촬영':'#FDF2F8','영상 촬영·편집':'#FEF2F2','그래픽·디자인':'#FDF2F8',
+  '웹디자인·UI':'#EFF6FF','반려동물케어':'#F0FDF4','아이돌봄':'#FFF7ED',
+  '어르신돌봄':'#FFF7ED','가사도우미':'#F3F4F6',
+};
 
 function renderSwipeStack() {
   const stack = document.getElementById('swipe-stack');
@@ -6761,7 +6856,7 @@ function makeSwipeCard(job, isTop) {
   card.dataset.top = isTop;
   card.dataset.jobId = job.id;
   const bg = CAT_BG[job.category] || '#f5f5f5';
-  const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
+  const emoji = getCatEmoji(job.category);
   const _apSw = (job.address || '').split('\n');
   const _addrFallback = _apSw[0] ? (_apSw[1] ? _apSw[0] + ' · ' + _apSw[1].split(' ').slice(0,3).join(' ') : _apSw[0]) : null;
   const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_addrFallback || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
@@ -7184,7 +7279,7 @@ function setGender(val) {
 
 async function loadWorkerProfileForm() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng, notify_enabled, notify_categories, notify_min_wage, ai_prefs')
+  const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng, notify_enabled, notify_categories, notify_min_wage, ai_prefs, pref_categories, avail_days, avail_times')
     .eq('kakao_uid', currentUser.id).single();
   if (!w) return;
   // 프로필 사진
@@ -7242,6 +7337,14 @@ async function loadWorkerProfileForm() {
     selEl.style.display = 'flex';
   }
   if (w.gender) setGender(w.gender);
+  // 희망직종 복원
+  _prefCats = Array.isArray(w.pref_categories) ? [...w.pref_categories] : [];
+  document.querySelectorAll('#pref-cat-chips .pref-cat-chip').forEach(btn => btn.classList.toggle('on', _prefCats.includes(btn.dataset.cat)));
+  // 근무가능 요일/시간대 복원
+  _availDays = Array.isArray(w.avail_days) ? [...w.avail_days] : [];
+  _availTimes = Array.isArray(w.avail_times) ? [...w.avail_times] : [];
+  document.querySelectorAll('#avail-day-btns .avail-day-btn').forEach(btn => btn.classList.toggle('on', _availDays.includes(btn.dataset.day)));
+  document.querySelectorAll('#avail-time-chips .pref-cat-chip').forEach(btn => btn.classList.toggle('on', _availTimes.includes(btn.dataset.time)));
   _workerEdu = w.education || null;
   document.querySelectorAll('#edu-chips .edu-chip').forEach(el => {
     el.classList.toggle('active', el.dataset.edu === (w.education || ''));
@@ -7766,6 +7869,77 @@ async function uploadDoc(certType, input) {
 let _workerVehicles = [];
 let _workerStrengths = [];
 let _workerLanguages = [];
+let _prefCats = [];
+let _availDays = [];
+let _availTimes = [];
+
+function togglePrefCat(btn) {
+  const cat = btn.dataset.cat;
+  const idx = _prefCats.indexOf(cat);
+  if (idx >= 0) { _prefCats.splice(idx, 1); btn.classList.remove('on'); }
+  else { _prefCats.push(cat); btn.classList.add('on'); }
+}
+function toggleAvailDay(btn) {
+  const day = btn.dataset.day;
+  const idx = _availDays.indexOf(day);
+  if (idx >= 0) { _availDays.splice(idx, 1); btn.classList.remove('on'); }
+  else { _availDays.push(day); btn.classList.add('on'); }
+}
+function toggleAvailTime(btn) {
+  const time = btn.dataset.time;
+  const idx = _availTimes.indexOf(time);
+  if (idx >= 0) { _availTimes.splice(idx, 1); btn.classList.remove('on'); }
+  else { _availTimes.push(time); btn.classList.add('on'); }
+}
+
+// ── 온보딩 튜토리얼 ──────────────────────────────────────
+const _OB_KEY = 'baroalba_ob_v1';
+let _obStep = 0;
+const _OB_SLIDES = [
+  {
+    emoji: '⚡',
+    title: '바로알바에 오신 걸 환영해요!',
+    desc: '당일정산·당일매칭으로\n가장 빠른 알바 플랫폼입니다',
+    tip: '\u{1F4B0} 당일정산 — 근무 당일 현금 지급\n\u{1F4CD} 위치기반 — 근처 공고 바로 확인\n⚡ 즉시지원 — 클릭 한 번으로 바로 지원'
+  },
+  {
+    emoji: '\u{1F464}',
+    title: '알바를 찾고 있나요?',
+    desc: '프로필을 완성하면\n업주가 먼저 찾아옵니다',
+    tip: '\u{1F4CB} 탭메뉴 → 지원관리에서 지원현황 확인\n\u{1F464} 탭메뉴 → 프로필관리에서 내 정보 등록\n\u{1F50D} 지도에서 근처 공고를 탐색해보세요'
+  },
+  {
+    emoji: '\u{1F3E2}',
+    title: '알바를 구하고 있나요?',
+    desc: '공고를 등록하면\n지원자가 바로 나타납니다',
+    tip: '\u{1F4DD} 탭메뉴 → 공고관리 → 공고 등록하기\n\u{1F4CA} 실시간 지원자 현황 확인 가능\n\u{1F4AC} 채팅으로 지원자와 바로 소통'
+  }
+];
+function showOnboarding() {
+  const el = document.getElementById('onboarding-overlay');
+  if (!el) return;
+  _obStep = 0;
+  _renderObSlide();
+  el.style.display = 'flex';
+}
+function closeOnboarding() {
+  const el = document.getElementById('onboarding-overlay');
+  if (el) el.style.display = 'none';
+  localStorage.setItem(_OB_KEY, '1');
+}
+function _renderObSlide() {
+  const s = _OB_SLIDES[_obStep];
+  document.getElementById('ob-emoji').textContent = s.emoji;
+  document.getElementById('ob-title').textContent = s.title;
+  document.getElementById('ob-desc').textContent = s.desc;
+  document.getElementById('ob-tip').innerHTML = s.tip.split('\n').map(l => '<div>' + l + '</div>').join('');
+  document.querySelectorAll('#onboarding-overlay .ob-dot').forEach((d, i) => d.classList.toggle('active', i === _obStep));
+  document.getElementById('ob-next-btn').textContent = _obStep === _OB_SLIDES.length - 1 ? '\u{1F680} 시작하기' : '다음 →';
+}
+function obNext() {
+  if (_obStep < _OB_SLIDES.length - 1) { _obStep++; _renderObSlide(); }
+  else closeOnboarding();
+}
 
 function toggleVehicle(el) {
   const v = el.dataset.v;
@@ -8070,7 +8244,7 @@ async function saveWorkerProfile() {
   const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
   const name = meta.full_name || currentUser.email?.split('@')[0] || '알바생';
-  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng };
+  const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng, pref_categories: _prefCats, avail_days: _availDays, avail_times: _availTimes };
   if (_workerGender) payload.gender = _workerGender;
   if (_workerEdu) payload.education = _workerEdu;
   const notifyOn = document.getElementById('notify-enabled-toggle')?.checked || false;
@@ -9236,6 +9410,9 @@ async function initOwnerFeatures() {
   if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
   currentSession = session;
+
+  // 첫 로그인 온보딩 튜토리얼
+  if (!localStorage.getItem(_OB_KEY)) setTimeout(showOnboarding, 800);
 
   // 업주 레코드 조회
   const { data: biz } = await db.from('businesses')
@@ -11920,7 +12097,7 @@ async function loadOwnerChatList() {
           <div style="font-size:11px;color:#bbb">${time}</div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
+          <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content?.startsWith('[img]') ? '\u{1F4F7} 사진' : msg.content}</div>
           ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
         </div>
         <div style="font-size:11px;color:#bbb;margin-top:2px">${a.job_postings?.title || ''}</div>
@@ -12767,11 +12944,11 @@ function shareNative() {
 
 // ── 카테고리 ───────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [
-  { name:'F&B',        icon:'☕', display_order:1  },
+  { name:'F&B',        icon:'\u{1F37D}', display_order:1  },
   { name:'물류',       icon:'\u{1F4E6}', display_order:2  },
   { name:'판매',       icon:'\u{1F6CD}', display_order:3  },
   { name:'청소',       icon:'\u{1F9F9}', display_order:4  },
-  { name:'의류/패션',  icon:'\u{1F455}', display_order:5  },
+  { name:'의류/패션',  icon:'\u{1F457}', display_order:5  },
   { name:'의료/병원',  icon:'\u{1F3E5}', display_order:6  },
   { name:'이벤트',     icon:'\u{1F389}', display_order:7  },
   { name:'숙박/호텔',  icon:'\u{1F3E8}', display_order:8  },

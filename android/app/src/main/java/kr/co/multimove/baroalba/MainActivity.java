@@ -187,12 +187,15 @@ public class MainActivity extends AppCompatActivity {
         try {
             Intent intent;
             if (captureMode) {
-                java.io.File photoFile = java.io.File.createTempFile("photo_", ".jpg", getCacheDir());
+                // 외부 파일 디렉토리 사용 (더 높은 호환성)
+                java.io.File dir = getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES);
+                if (dir == null) dir = getCacheDir();
+                java.io.File photoFile = java.io.File.createTempFile("photo_", ".jpg", dir);
                 pendingPhotoUri = FileProvider.getUriForFile(
                     this, "kr.co.multimove.baroalba.fileprovider", photoFile);
                 intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
-                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
             } else {
                 intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
