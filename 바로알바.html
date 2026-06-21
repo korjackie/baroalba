@@ -4657,25 +4657,32 @@ function closeWChat() {
   const IDS = ['wchat-overlay', 'chat-overlay'];
   function adjust() {
     const vv = window.visualViewport;
-    if (!vv) return;
+    const h = vv ? vv.height : window.innerHeight;
+    const t = vv ? vv.offsetTop : 0;
     IDS.forEach(id => {
       const el = document.getElementById(id);
       if (!el || el.style.display === 'none') return;
-      el.style.height = vv.height + 'px';
-      el.style.top = vv.offsetTop + 'px';
+      el.style.position = 'fixed';
+      el.style.top = t + 'px';
+      el.style.left = '0';
+      el.style.right = '0';
+      el.style.bottom = 'auto';
+      el.style.height = h + 'px';
     });
-  }
-  function reset(id) {
-    const el = document.getElementById(id);
-    if (el) { el.style.height = ''; el.style.top = ''; }
   }
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', adjust);
     window.visualViewport.addEventListener('scroll', adjust);
   }
   window.addEventListener('resize', adjust);
+  // input focus 시 300ms 후 재조정 (키보드 애니메이션 완료 대기)
+  document.addEventListener('focusin', function(e) {
+    if (e.target.id === 'wchat-input' || e.target.id === 'chat-input') {
+      setTimeout(adjust, 100);
+      setTimeout(adjust, 350);
+    }
+  });
   window._adjustChatViewport = adjust;
-  window._resetChatViewport = reset;
 })();
 
 // ── 내 지원 현황 ──────────────────────────────────────────
