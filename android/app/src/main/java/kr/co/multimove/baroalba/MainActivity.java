@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
                             photoFile);
                         intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
+                        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     } else {
                         intent = params.createIntent();
                     }

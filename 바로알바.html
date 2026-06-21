@@ -5521,7 +5521,7 @@ function closeMediaPanel(prefix) {
 async function uploadChatImage(file) {
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await db.storage.from('chat-images').upload(path, file, { contentType: file.type });
+  const { error } = await db.storage.from('chat-images').upload(path, file, { contentType: file.type || 'image/jpeg' });
   if (error) throw error;
   const { data } = db.storage.from('chat-images').getPublicUrl(path);
   return data.publicUrl;
@@ -5531,6 +5531,7 @@ async function sendWChatImage(inputEl) {
   const file = inputEl.files[0];
   if (!file) return;
   inputEl.value = '';
+  closeMediaPanel('wchat');
   if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
   showToast('이미지 전송 중...');
   try {
@@ -5543,6 +5544,7 @@ async function sendChatImage(inputEl) {
   const file = inputEl.files[0];
   if (!file) return;
   inputEl.value = '';
+  closeMediaPanel('chat');
   if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
   showToast('이미지 전송 중...');
   try {
