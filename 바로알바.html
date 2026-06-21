@@ -2748,8 +2748,8 @@
 </div>
 
 <!-- 채팅 (전체화면) -->
-<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
-  <div id="wchat-header" style="padding-top:max(calc(env(safe-area-inset-top, 0px) + 12px), 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+<div id="wchat-overlay" style="display:none;position:fixed;top:var(--status-bar-h,0px);left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
+  <div id="wchat-header" style="padding-top:12px;padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
@@ -2782,8 +2782,8 @@
 </div>
 
 <!-- 업주 채팅 (전체화면) -->
-<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-header" style="padding-top:max(calc(env(safe-area-inset-top, 0px) + 12px), 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+<div id="chat-overlay" style="display:none;position:fixed;top:var(--status-bar-h,0px);left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
+  <div id="chat-header" style="padding-top:12px;padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
