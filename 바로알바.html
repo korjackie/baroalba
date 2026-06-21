@@ -2748,20 +2748,25 @@
 </div>
 
 <!-- 채팅 (전체화면) -->
-<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;z-index:500;background:#fff;flex-direction:column">
-  <div style="padding-top:max(env(safe-area-inset-top,0px),0px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
-    <div style="padding-top:12px">
+<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
+  <!-- 헤더: 상태바 높이만큼 padding-top (JS로 동적 설정) -->
+  <div id="wchat-header" style="padding:12px 20px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+    <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
     </div>
-    <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;padding-top:12px">✕</button>
+    <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
-  <div id="wchat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
-  <div id="wchat-input-bar" style="padding:10px 16px;border-top:1px solid #f0f0f0;display:flex;gap:8px;align-items:center;background:#fff;flex-shrink:0">
-    <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
-      style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
-    <button onclick="sendWChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+  <!-- 메시지+입력창 스크롤 컨테이너: 브라우저가 input focus 시 자동 스크롤 -->
+  <div id="wchat-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+    <div id="wchat-messages" style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0"></div>
+    <!-- 입력창: sticky bottom → 브라우저가 키보드 위로 올림 -->
+    <div id="wchat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
+      <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
+        style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
+      <button onclick="sendWChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+    </div>
   </div>
 </div>
 
@@ -2780,20 +2785,22 @@
 </div>
 
 <!-- 업주 채팅 (전체화면) -->
-<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;z-index:600;background:#fff;flex-direction:column">
-  <div style="padding-top:max(env(safe-area-inset-top,0px),0px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
-    <div style="padding-top:12px">
+<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
+  <div id="chat-header" style="padding:12px 20px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+    <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
     </div>
-    <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;padding-top:12px">✕</button>
+    <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
-  <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
-  <div id="chat-input-bar" style="padding:10px 16px;border-top:1px solid #f0f0f0;display:flex;gap:8px;align-items:center;background:#fff;flex-shrink:0">
-    <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
-      style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
-    <button onclick="sendChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+  <div id="chat-scroll" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+    <div id="chat-messages" style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0"></div>
+    <div id="chat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
+      <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
+        style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
+      <button onclick="sendChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+    </div>
   </div>
 </div>
 
@@ -4651,44 +4658,23 @@ function closeWChat() {
   _wchatAppId = null;
 }
 
-// ── 채팅 오버레이 키보드 대응 ──────────────────────────────
+// ── 채팅 상태바 높이 설정 ──────────────────────────────────
 (function() {
-  const IDS = ['wchat-overlay', 'chat-overlay'];
-  var _baseH = window.innerHeight;
-
-  function getVisibleH() {
-    // visualViewport가 있으면 우선 사용, 없으면 innerHeight
-    if (window.visualViewport) return window.visualViewport.height;
-    return window.innerHeight;
-  }
-
-  function applyH() {
-    var h = getVisibleH();
-    IDS.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && el.style.display !== 'none') el.style.height = h + 'px';
-    });
-  }
-
-  // resize: Chrome Android에서 innerHeight가 줄어들 때 발생
-  window.addEventListener('resize', applyH);
-
-  // visualViewport resize: iOS / 일부 Samsung Internet
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', applyH);
-    window.visualViewport.addEventListener('scroll', applyH);
-  }
-
-  // input focus 시 100/300/600ms 간격으로 재측정 (키보드 애니메이션 대기)
-  document.addEventListener('focusin', function(e) {
-    if (e.target.id !== 'wchat-input' && e.target.id !== 'chat-input') return;
-    setTimeout(applyH, 100);
-    setTimeout(applyH, 300);
-    setTimeout(applyH, 600);
+  // window.screenTop: 브라우저 콘텐츠 영역과 화면 상단 사이 거리 (≈ 상태바 높이)
+  var sbh = 0;
+  try { sbh = Math.max(0, Math.min(window.screenTop || window.screenY || 0, 80)); } catch(e) {}
+  if (sbh === 0) sbh = 28; // 삼성 갤럭시 기본값 28px
+  ['wchat-header','chat-header'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.paddingTop = (12 + sbh) + 'px';
   });
-
-  window._chatApplyH = applyH;
 })();
+
+// ── 채팅 메시지 스크롤 (scroll 컨테이너 기준) ─────────────
+function scrollChatToBottom(scrollId) {
+  var el = document.getElementById(scrollId);
+  if (el) el.scrollTop = el.scrollHeight;
+}
 
 
 // ── 내 지원 현황 ──────────────────────────────────────────
@@ -5346,7 +5332,8 @@ function renderWChatMessages(msgs) {
       <div style="font-size:10px;color:#bbb">${time}${isMine && m.is_read ? ' · 읽음' : ''}</div>
     </div>`;
   }).join('');
-  el.scrollTop = el.scrollHeight;
+  const sc = document.getElementById('wchat-scroll');
+  if (sc) sc.scrollTop = sc.scrollHeight;
 }
 
 function subscribeWChatMessages() {
@@ -5363,7 +5350,8 @@ function subscribeWChatMessages() {
       div.innerHTML = `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${msg.content}</div>
         <div style="font-size:10px;color:#bbb">${time}</div>`;
       el.appendChild(div);
-      el.scrollTop = el.scrollHeight;
+      const sc = document.getElementById('wchat-scroll');
+      if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
     }).subscribe();
 }
@@ -12206,7 +12194,8 @@ function renderChatMessages(msgs) {
       <div style="font-size:10px;color:#bbb">${time}${isMine && m.is_read ? ' · 읽음' : ''}</div>
     </div>`;
   }).join('');
-  el.scrollTop = el.scrollHeight;
+  const csc = document.getElementById('chat-scroll');
+  if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
 }
 
 function subscribeChatMessages() {
@@ -12223,7 +12212,8 @@ function subscribeChatMessages() {
       div.innerHTML = `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${msg.content}</div>
         <div style="font-size:10px;color:#bbb">${time}</div>`;
       el.appendChild(div);
-      el.scrollTop = el.scrollHeight;
+      const csc = document.getElementById('chat-scroll');
+      if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
       if (!isMine) markMessagesRead(_chatAppId);
     }).subscribe();
 }
