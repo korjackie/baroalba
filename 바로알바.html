@@ -1624,7 +1624,7 @@
         <div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
           <div id="d-address-text" style="font-size:13px;color:#333;font-weight:600;line-height:1.4;flex:1"></div>
           <div style="display:flex;gap:6px;flex-shrink:0">
-            <button onclick="copyDetailAddress()" style="padding:6px 11px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;font-size:11px;font-weight:700;color:#555;cursor:pointer">복사</button>
+            <button id="d-addr-copy-btn" onclick="copyDetailAddress()" style="display:none;padding:6px 11px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;font-size:11px;font-weight:700;color:#555;cursor:pointer">복사</button>
             <button onclick="openKakaoMapApp()" style="padding:6px 11px;background:#FEE500;border:none;border-radius:8px;font-size:11px;font-weight:700;color:#3C1E1E;cursor:pointer">지도 앱</button>
           </div>
         </div>
@@ -4157,8 +4157,12 @@ function openDetail(jobId) {
       const addr = rows[0]?.address;
       if (addr) {
         job.address = addr;
-        const addrEl = document.getElementById('d-address-text');
-        if (addrEl && selectedJobId === jobId) addrEl.textContent = addr.split('\n')[0];
+        if (selectedJobId === jobId) {
+          const addrEl = document.getElementById('d-address-text');
+          const copyBtn = document.getElementById('d-addr-copy-btn');
+          if (addrEl) { addrEl.textContent = addr.split('\n')[0]; addrEl.style.color = '#333'; }
+          if (copyBtn) copyBtn.style.display = 'block';
+        }
       }
     }).catch(() => {});
   }
@@ -4232,7 +4236,15 @@ function _renderDetailLocation(job) {
   }
 
   section.style.display = 'block';
-  addrEl.textContent = hasAddr ? job.address.split('\n')[0] : '위치 정보 있음';
+  const copyBtn = document.getElementById('d-addr-copy-btn');
+  if (hasAddr) {
+    addrEl.textContent = job.address.split('\n')[0];
+    if (copyBtn) copyBtn.style.display = 'block';
+  } else {
+    addrEl.textContent = '지도에서 위치 확인';
+    addrEl.style.color = '#aaa';
+    if (copyBtn) copyBtn.style.display = 'none';
+  }
 
   if (!hasLatLng) {
     miniMapEl.style.display = 'none';
@@ -4242,14 +4254,17 @@ function _renderDetailLocation(job) {
 
   // 카카오맵 SDK 로드 확인 후 미니맵 생성
   const _initMiniMap = () => {
-    // 이전 맵 인스턴스 제거
     miniMapEl.innerHTML = '';
-    const container = miniMapEl;
-    const options = { center: new kakao.maps.LatLng(job.lat, job.lng), level: 4 };
-    _detailMiniMap = new kakao.maps.Map(container, options);
+    const latlng = new kakao.maps.LatLng(job.lat, job.lng);
+    _detailMiniMap = new kakao.maps.Map(miniMapEl, { center: latlng, level: 3 });
     _detailMiniMap.setDraggable(false);
     _detailMiniMap.setZoomable(false);
-    const marker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(job.lat, job.lng), map: _detailMiniMap });
+    // relayout 후 마커 추가 (숨겨진 컨테이너 대응)
+    setTimeout(() => {
+      _detailMiniMap.relayout();
+      _detailMiniMap.setCenter(latlng);
+      new kakao.maps.Marker({ position: latlng, map: _detailMiniMap });
+    }, 380);
   };
 
   if (typeof kakao !== 'undefined' && kakao.maps) {
