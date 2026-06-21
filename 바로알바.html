@@ -3309,7 +3309,10 @@
       <div class="form-group">
         <label class="form-label" id="f-time-label">시작 시간 *</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input class="form-input" id="f-start-date" type="date" style="flex:1.6;min-width:0">
+          <select class="form-select" id="f-start-year"  style="flex:1.2;min-width:0" onchange="syncDateHidden()"></select>
+          <select class="form-select" id="f-start-month" style="flex:0.9;min-width:0" onchange="syncDateHidden()"></select>
+          <select class="form-select" id="f-start-day"   style="flex:0.8;min-width:0" onchange="syncDateHidden()"></select>
+          <input type="hidden" id="f-start-date">
           <select class="form-select" id="f-start-hour" style="flex:1;min-width:0"></select>
           <select class="form-select" id="f-start-min" style="flex:0.9;min-width:0"></select>
         </div>
@@ -4703,28 +4706,24 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 대응: visualViewport 기반 오버레이 동적 리사이즈 ──
+// ── 키보드 대응 (Samsung Internet + Chrome 통합) ──────────
 (function() {
   var FULLSCREEN_IDS = ['wchat-overlay', 'chat-overlay'];
   var SHEET_IDS      = ['apply-msg-modal'];
+  var _vkActive = false; // virtualKeyboard API 활성화 여부
 
-  function syncAll() {
-    var vv = window.visualViewport;
-    if (!vv) return;
-    var top = Math.round(vv.offsetTop);
-    var h   = Math.round(vv.height);
-
-    // 전체화면 오버레이: 가시 영역에 맞게 top/height 재설정
+  function applySize(visH, kbH) {
+    visH = Math.round(visH);
+    kbH  = Math.round(kbH);
+    // 전체화면 오버레이: 키보드 위 가시 영역 높이로 축소
     FULLSCREEN_IDS.forEach(function(id) {
       var el = document.getElementById(id);
       if (!el || el.style.display === 'none') return;
-      el.style.top    = top + 'px';
-      el.style.height = h   + 'px';
+      el.style.height        = visH + 'px';
+      el.style.top           = '0';
       el.style.paddingBottom = '';
     });
-
-    // 바텀시트 모달: 키보드 높이만큼 bottom을 올려서 시트가 키보드 위에 위치
-    var kbH = Math.max(0, window.innerHeight - vv.height - top);
+    // 바텀시트: 키보드 높이만큼 위로 밀기
     SHEET_IDS.forEach(function(id) {
       var el = document.getElementById(id);
       if (!el || el.style.display === 'none') return;
@@ -4732,9 +4731,42 @@ function scrollChatToBottom(scrollId) {
     });
   }
 
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', syncAll);
-    window.visualViewport.addEventListener('scroll', syncAll);
+  // ① Samsung Internet / Chrome 94+ — VirtualKeyboard API
+  // overlaysContent=true 시 키보드 높이를 geometrychange 이벤트로 정확히 받음
+  if ('virtualKeyboard' in navigator) {
+    _vkActive = true;
+    navigator.virtualKeyboard.overlaysContent = true;
+    navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
+      var kbH  = Math.round(e.target.boundingRect.height || 0);
+      var visH = window.innerHeight - kbH;
+      applySize(visH, kbH);
+    });
+  }
+
+  // ② visualViewport resize — Chrome Android 브라우저 모드 폴백
+  if (window.visualViewport && !_vkActive) {
+    window.visualViewport.addEventListener('resize', function() {
+      var vv   = window.visualViewport;
+      var visH = vv.height;
+      var kbH  = Math.max(0, window.innerHeight - visH - Math.round(vv.offsetTop));
+      applySize(visH, kbH);
+    });
+    window.visualViewport.addEventListener('scroll', function() {
+      var vv   = window.visualViewport;
+      var visH = vv.height;
+      var kbH  = Math.max(0, window.innerHeight - visH - Math.round(vv.offsetTop));
+      applySize(visH, kbH);
+    });
+  }
+
+  // ③ window resize 최후 폴백
+  if (!_vkActive && !window.visualViewport) {
+    var baseH = window.innerHeight;
+    window.addEventListener('resize', function() {
+      var diff = baseH - window.innerHeight;
+      if (diff > 80)     applySize(window.innerHeight, diff);
+      else if (diff < 10) applySize(baseH, 0);
+    });
   }
 })();
 
@@ -6306,6 +6338,24 @@ function setNav(el, tab) {
     if (mapLocBtn) mapLocBtn.style.display = 'none';
     panelChats.classList.add('show');
     loadMyChatList();
+    // 채팅 탭 진입 시 모든 미읽음 메시지 일괄 읽음 처리 → 배지 즉시 초기화
+    (async function() {
+      try {
+        if (currentUser) {
+          const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+          if (w) {
+            const { data: apps } = await db.from('applications').select('id').eq('worker_id', w.id);
+            if (apps?.length) {
+              await db.from('messages').update({ is_read: true })
+                .in('application_id', apps.map(a => a.id))
+                .neq('sender_id', currentUser.id);
+            }
+          }
+          const badge = document.getElementById('chat-unread-badge');
+          if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
+        }
+      } catch(e) {}
+    })();
   } else if (tab === 'profile') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
@@ -13413,6 +13463,7 @@ function startTossPayment() { requestTossPayment(); }
 
 // ── 시작/종료 시간 셀렉트 헬퍼 ──────────────────────────────
 function buildTimeSelects() {
+  initDateSelects();
   ['f-start-hour','f-end-hour'].forEach(id => {
     const el = document.getElementById(id);
     if (!el || el.options.length) return;
@@ -13438,13 +13489,57 @@ function buildTimeSelects() {
   });
 }
 
+function initDateSelects() {
+  const yearEl  = document.getElementById('f-start-year');
+  const monthEl = document.getElementById('f-start-month');
+  const dayEl   = document.getElementById('f-start-day');
+  if (!yearEl) return;
+  const now = new Date();
+  yearEl.innerHTML = '';
+  for (let y = now.getFullYear(); y <= now.getFullYear() + 2; y++) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y + '년';
+    yearEl.appendChild(o);
+  }
+  monthEl.innerHTML = '';
+  for (let mo = 1; mo <= 12; mo++) {
+    const o = document.createElement('option');
+    o.value = String(mo).padStart(2,'0'); o.textContent = mo + '월';
+    monthEl.appendChild(o);
+  }
+  dayEl.innerHTML = '';
+  for (let d = 1; d <= 31; d++) {
+    const o = document.createElement('option');
+    o.value = String(d).padStart(2,'0'); o.textContent = d + '일';
+    dayEl.appendChild(o);
+  }
+  // 오늘 날짜로 기본값
+  yearEl.value  = now.getFullYear();
+  monthEl.value = String(now.getMonth()+1).padStart(2,'0');
+  dayEl.value   = String(now.getDate()).padStart(2,'0');
+  syncDateHidden();
+}
+
+function syncDateHidden() {
+  const y  = document.getElementById('f-start-year')?.value  || '';
+  const mo = document.getElementById('f-start-month')?.value || '';
+  const d  = document.getElementById('f-start-day')?.value   || '';
+  const hidden = document.getElementById('f-start-date');
+  if (hidden && y && mo && d) hidden.value = `${y}-${mo}-${d}`;
+}
+
 function setTimeSelects(prefix, date) {
-  const d = document.getElementById('f-start-date');
-  if (prefix === 'start' && d) {
-    const y = date.getFullYear();
+  if (prefix === 'start') {
+    const y  = date.getFullYear();
     const mo = String(date.getMonth()+1).padStart(2,'0');
-    const day = String(date.getDate()).padStart(2,'0');
-    d.value = `${y}-${mo}-${day}`;
+    const d  = String(date.getDate()).padStart(2,'0');
+    const yEl = document.getElementById('f-start-year');
+    const mEl = document.getElementById('f-start-month');
+    const dEl = document.getElementById('f-start-day');
+    if (yEl) yEl.value = y;
+    if (mEl) mEl.value = mo;
+    if (dEl) dEl.value = d;
+    syncDateHidden();
   }
   const h = document.getElementById(`f-${prefix}-hour`);
   const m = document.getElementById(`f-${prefix}-min`);
