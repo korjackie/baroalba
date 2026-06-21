@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -2748,7 +2748,7 @@
 </div>
 
 <!-- 채팅 (전체화면) -->
-<div id="wchat-overlay" style="display:none;position:fixed;top:var(--status-bar-h,0px);left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
+<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
   <div id="wchat-header" style="padding-top:12px;padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
@@ -2782,7 +2782,7 @@
 </div>
 
 <!-- 업주 채팅 (전체화면) -->
-<div id="chat-overlay" style="display:none;position:fixed;top:var(--status-bar-h,0px);left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
+<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
   <div id="chat-header" style="padding-top:12px;padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
@@ -4709,12 +4709,10 @@ function scrollChatToBottom(scrollId) {
 }
 
 // ── 키보드 대응 ──
-// 방법1: navigator.virtualKeyboard (Chrome 94+) → overlaysContent=true → geometrychange
-// 방법2: window.resize 피크높이 추적 (TWA adjustResize 폴백)
-// 방법3: visualViewport.resize (브라우저 모드 폴백)
+// viewport-fit=cover 제거 → TWA adjustResize가 자연스럽게 동작
+// window.resize 피크높이 추적으로 키보드 높이 감지
 (function() {
   var CHAT_IDS = ['wchat-overlay', 'chat-overlay'];
-  var MODAL_ID = 'apply-msg-modal';
 
   function applyKbOffset(kbH) {
     CHAT_IDS.forEach(function(id) {
@@ -4723,36 +4721,25 @@ function scrollChatToBottom(scrollId) {
         el.style.paddingBottom = kbH > 50 ? kbH + 'px' : '';
       }
     });
-    var modal = document.getElementById(MODAL_ID);
+    var modal = document.getElementById('apply-msg-modal');
     if (modal) modal.style.bottom = kbH > 50 ? kbH + 'px' : '';
   }
 
-  // 방법1: Virtual Keyboard API (Chrome 94+, Samsung Internet 23+)
-  // overlaysContent=true → 키보드가 콘텐츠 위에 뜸 → geometrychange로 높이 감지
-  if ('virtualKeyboard' in navigator) {
-    navigator.virtualKeyboard.overlaysContent = true;
-    navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
-      applyKbOffset(e.target.boundingRect.height || 0);
-    });
-  } else {
-    // 방법2: window.resize – TWA adjustResize 모드에서 innerHeight가 줄어듦
-    var _peakH = window.innerHeight;
-    window.addEventListener('resize', function() {
-      _peakH = Math.max(_peakH, window.innerHeight);
-      var kbH = Math.max(0, _peakH - window.innerHeight);
-      applyKbOffset(kbH);
-    });
+  // window.resize: TWA(adjustResize)에서 키보드 열리면 innerHeight 감소
+  var _peakH = window.innerHeight;
+  window.addEventListener('resize', function() {
+    _peakH = Math.max(_peakH, window.innerHeight);
+    applyKbOffset(Math.max(0, _peakH - window.innerHeight));
+  });
 
-    // 방법3: visualViewport (브라우저 모드)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', function() {
-        var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
-        applyKbOffset(kbH);
-      });
-    }
+  // visualViewport: 브라우저 탭 모드 폴백
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+      var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+      if (kbH > 50) applyKbOffset(kbH);
+    });
   }
 
-  // 채팅 닫힐 때 paddingBottom 초기화
   window._clearChatKbOffset = function() {
     CHAT_IDS.forEach(function(id) {
       var el = document.getElementById(id);
