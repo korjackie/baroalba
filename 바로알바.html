@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -4652,38 +4652,6 @@ function closeWChat() {
   _wchatAppId = null;
 }
 
-// ── 채팅 오버레이 키보드 대응 (visualViewport로 높이 직접 조정) ──
-(function() {
-  const IDS = ['wchat-overlay', 'chat-overlay'];
-  function adjust() {
-    const vv = window.visualViewport;
-    const h = vv ? vv.height : window.innerHeight;
-    const t = vv ? vv.offsetTop : 0;
-    IDS.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el || el.style.display === 'none') return;
-      el.style.position = 'fixed';
-      el.style.top = t + 'px';
-      el.style.left = '0';
-      el.style.right = '0';
-      el.style.bottom = 'auto';
-      el.style.height = h + 'px';
-    });
-  }
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', adjust);
-    window.visualViewport.addEventListener('scroll', adjust);
-  }
-  window.addEventListener('resize', adjust);
-  // input focus 시 300ms 후 재조정 (키보드 애니메이션 완료 대기)
-  document.addEventListener('focusin', function(e) {
-    if (e.target.id === 'wchat-input' || e.target.id === 'chat-input') {
-      setTimeout(adjust, 100);
-      setTimeout(adjust, 350);
-    }
-  });
-  window._adjustChatViewport = adjust;
-})();
 
 // ── 내 지원 현황 ──────────────────────────────────────────
 async function loadMyApplications() {
