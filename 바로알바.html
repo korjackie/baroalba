@@ -2749,7 +2749,7 @@
 
 <!-- 채팅 (전체화면) -->
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
-  <div id="wchat-statusbar-strip" style="height:var(--status-bar-h,28px);background:#C8102E;flex-shrink:0"></div>
+  <div id="wchat-statusbar-strip" style="height:max(env(safe-area-inset-top,0px),30px);background:#C8102E;flex-shrink:0"></div>
   <div id="wchat-header" style="padding-top:12px;padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
@@ -2784,7 +2784,7 @@
 
 <!-- 업주 채팅 (전체화면) -->
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-statusbar-strip" style="height:var(--status-bar-h,28px);background:#C8102E;flex-shrink:0"></div>
+  <div id="chat-statusbar-strip" style="height:max(env(safe-area-inset-top,0px),30px);background:#C8102E;flex-shrink:0"></div>
   <div id="chat-header" style="padding-top:12px;padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
@@ -4744,6 +4744,19 @@ function scrollChatToBottom(scrollId) {
 
   window.visualViewport.addEventListener('resize', adjustInputPosition);
   window.visualViewport.addEventListener('scroll', adjustInputPosition);
+
+  // visualViewport.resize가 늦거나 안 오는 경우: focus/blur 직접 감지
+  ['wchat-input', 'chat-input'].forEach(function(id) {
+    var inp = document.getElementById(id);
+    if (!inp) return;
+    inp.addEventListener('focus', function() {
+      setTimeout(adjustInputPosition, 350);
+      setTimeout(adjustInputPosition, 600);
+    });
+    inp.addEventListener('blur', function() {
+      setTimeout(function() { adjustInputPosition(); }, 200);
+    });
+  });
 
   window._clearChatKbOffset = function() {
     INPUT_BAR_IDS.forEach(function(id) {
