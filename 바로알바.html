@@ -4402,6 +4402,8 @@ async function submitApplyWithMsg(skipMsg) {
     } else {
       showToast('✅ 지원 완료!');
       showAppliedState(appData.id);
+      // 업주에게 새 지원자 Push 알림
+      _notifyOwnerNewApplicant(selectedJobId);
     }
   } catch(e) {
     showToast('오류: ' + e.message);
@@ -10494,6 +10496,26 @@ async function updateApplication(appId, status) {
   }
   loadApplicants();
   loadPostings();
+}
+
+async function _notifyOwnerNewApplicant(jobId) {
+  try {
+    const { data: jp } = await db.from('job_postings')
+      .select('title, businesses(kakao_uid)').eq('id', jobId).single();
+    const ownerUid = jp?.businesses?.kakao_uid;
+    if (!ownerUid) return;
+    const workerName = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '알바생';
+    fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: ownerUid,
+        title: '📨 새 지원자가 있어요',
+        body: `${workerName}님이 "${jp?.title || '공고'}"에 지원했습니다`,
+        url: '/바로알바.html'
+      })
+    }).catch(() => {});
+  } catch(e) {}
 }
 
 async function sendAppStatusPush(appId, status) {
