@@ -3601,13 +3601,21 @@ window.addEventListener('popstate', () => {
       if (!overlay || !overlay.classList.contains('open')) return;
       const sheet = overlay.querySelector('.detail-sheet');
       if (sheet) {
-        sheet.style.marginBottom = kb + 'px';
-        sheet.style.maxHeight = `calc(80vh - ${kb}px)`;
+        sheet.style.transform = `translateY(-${kb}px)`;
+        sheet.style.height = `calc(80vh + ${kb}px)`;
       }
+    });
+  }
+  function reset() {
+    CHAT_IDS.forEach(id => {
+      const sheet = document.getElementById(id)?.querySelector('.detail-sheet');
+      if (sheet) { sheet.style.transform = ''; sheet.style.height = ''; }
     });
   }
   window.visualViewport.addEventListener('resize', adjust);
   window.visualViewport.addEventListener('scroll', adjust);
+  // 채팅 닫힐때 리셋
+  document.addEventListener('chat-closed', reset);
 })();
 
 // ── 초기화 ────────────────────────────────────────────────
@@ -4659,7 +4667,11 @@ async function openWChat(applicationId, bizName) {
   try {
     await loadWChatMessages();
     subscribeWChatMessages();
-    markWMessagesRead(applicationId).then(() => refreshWorkerChatBadge());
+    markWMessagesRead(applicationId).then(() => {
+      refreshWorkerChatBadge();
+      const b = document.getElementById(`unread-badge-${applicationId}`);
+      if (b) b.remove();
+    });
   } catch(e) {
     console.error('채팅 로드 실패:', e);
     document.getElementById('wchat-messages').innerHTML = '<div style="text-align:center;color:#e53e3e;font-size:13px;margin-top:40px">채팅을 불러오지 못했습니다<br>잠시 후 다시 시도해주세요</div>';
@@ -4670,6 +4682,7 @@ function closeWChat() {
   document.getElementById('wchat-overlay')?.classList.remove('open');
   if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
+  document.dispatchEvent(new Event('chat-closed'));
 }
 
 // ── 내 지원 현황 ──────────────────────────────────────────
@@ -5246,7 +5259,7 @@ async function loadMyChatList() {
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
             <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content}</div>
-            ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;line-height:1">${unread}</div>` : ''}
+            ${unread > 0 ? `<div id="unread-badge-${a.id}" style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;line-height:1">${unread}</div>` : ''}
           </div>
           <div style="font-size:11px;color:#bbb;margin-top:2px">${a.title}</div>
         </div>
@@ -12160,6 +12173,7 @@ function closeChat() {
   _chatAppId = null;
   _chatInquiryId = null;
   _chatWorkerUserId = null;
+  document.dispatchEvent(new Event('chat-closed'));
 }
 
 async function loadChatMessages() {
