@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "709646230220",
+    "project_id": "baroalba-32850",
+    "storage_bucket": "baroalba-32850.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709646230220:android:f7fd6abde15cb5525c1869",
+        "android_client_info": {
+          "package_name": "kr.co.multimove.baroalba"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7Yhh-dVnRJzX40AxGHODZu52uYrgcHqM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

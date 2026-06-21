@@ -3,5 +3,10 @@
     <style name="Theme.LauncherActivity" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimary</item>
+        <!-- 상태바/네비게이션바 투명 처리 (edge-to-edge) -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- 밝은 배경 위에서 상태바 아이콘을 어둡게 (시간·배터리 검정색) -->
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

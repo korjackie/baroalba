@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 디자인 개선안 비교</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f0f0f0; color: #222; }
+
+  .page-title {
+    text-align: center; padding: 32px 20px 24px;
+    font-size: 22px; font-weight: 900; color: #111;
+    background: #fff; border-bottom: 1px solid #eee;
+  }
+  .page-title span { font-size: 14px; color: #888; font-weight: 400; display: block; margin-top: 6px; }
+
+  .section { padding: 40px 20px 20px; }
+  .section-title {
+    font-size: 18px; font-weight: 900; color: #111;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    width: 28px; height: 28px; background: #FF4B4B; color: #fff;
+    border-radius: 50%; font-size: 13px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .section-desc { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.6; }
+  .verdict {
+    font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 20px;
+    display: inline-block; margin-left: 8px;
+    vertical-align: middle;
+  }
+  .verdict.impact-high { background: #FEF2F2; color: #DC2626; }
+  .verdict.impact-mid  { background: #FFF7ED; color: #D97706; }
+  .verdict.impact-low  { background: #F0FDF4; color: #16a34a; }
+
+  .compare-row {
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .compare-col {
+    flex: 1;
+  }
+  .compare-label {
+    font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    padding: 6px 12px; border-radius: 6px 6px 0 0;
+    display: inline-block;
+  }
+  .compare-label.before { background: #e5e7eb; color: #6b7280; }
+  .compare-label.after  { background: #FF4B4B; color: #fff; }
+
+  .phone-frame {
+    width: 100%; background: #fff;
+    border-radius: 0 16px 16px 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .phone-frame.before-frame { border-radius: 0 16px 16px 16px; }
+  .phone-frame.after-frame  { border-radius: 0 16px 16px 16px; }
+
+  /* ─ 공통 변수 ─ */
+  :root {
+    --red: #FF4B4B;
+    --red-new: #FF4B4B;
+    --nav-h: 60px;
+  }
+
+  /* ══════════════════════════════════════
+     [1] 하단 네비게이션
+  ══════════════════════════════════════ */
+  .nav-old, .nav-new {
+    display: flex; height: 60px; border-top: 1px solid #f0f0f0;
+    background: #fff;
+  }
+  .nav-old .ni, .nav-new .ni {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    cursor: pointer; position: relative;
+  }
+  .nav-old .ni .icon { font-size: 22px; line-height: 1; }
+  .nav-old .ni .lbl  { font-size: 10px; color: #bbb; font-weight: 600; }
+  .nav-old .ni.active .lbl { color: #FF4B4B; font-weight: 800; }
+
+  /* 새 아이콘 */
+  .nav-new .ni svg { width: 22px; height: 22px; }
+  .nav-new .ni .lbl { font-size: 10px; color: #bbb; font-weight: 600; }
+  .nav-new .ni.active .lbl { color: #FF4B4B; font-weight: 800; }
+  .nav-new .ni.active svg path,
+  .nav-new .ni.active svg circle,
+  .nav-new .ni.active svg line,
+  .nav-new .ni.active svg polyline,
+  .nav-new .ni.active svg rect { stroke: #FF4B4B; }
+  .nav-new .ni.active::after {
+    content: ''; position: absolute; top: 0; left: 25%; right: 25%; height: 2px;
+    background: #FF4B4B; border-radius: 0 0 2px 2px;
+  }
+  .nav-new .ni svg path, .nav-new .ni svg circle,
+  .nav-new .ni svg line, .nav-new .ni svg polyline,
+  .nav-new .ni svg rect { stroke: #bbb; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ══════════════════════════════════════
+     [2] 공고 카드
+  ══════════════════════════════════════ */
+  .job-card-old {
+    background: #fff; border-radius: 16px; padding: 14px 16px;
+    margin: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  .job-card-old .tag-row { display: flex; gap: 6px; margin-bottom: 8px; }
+  .job-card-old .tag { font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; }
+  .job-card-old .title { font-size: 15px; font-weight: 900; color: #111; margin-bottom: 3px; }
+  .job-card-old .biz   { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .job-card-old .wage  { font-size: 18px; font-weight: 900; color: #FF4B4B; margin-bottom: 8px; }
+  .job-card-old .info-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .job-card-old .chip { font-size: 11px; color: #555; background: #f5f5f5; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+  .job-card-old .apply-btn { width: 100%; margin-top: 10px; padding: 11px; background: #FF4B4B; color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; }
+
+  .job-card-new {
+    background: #fff; border-radius: 14px; padding: 16px;
+    margin: 10px 12px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+  }
+  .job-card-new .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .job-card-new .badge-urgent { font-size: 10px; font-weight: 700; color: #DC2626; background: #FEF2F2; padding: 2px 8px; border-radius: 20px; }
+  .job-card-new .badge-spot   { font-size: 10px; font-weight: 700; color: #2563EB; background: #EFF6FF; padding: 2px 8px; border-radius: 20px; }
+  .job-card-new .dist { font-size: 11px; color: #bbb; font-weight: 600; }
+  .job-card-new .title { font-size: 16px; font-weight: 800; color: #111; margin-bottom: 2px; letter-spacing: -0.3px; }
+  .job-card-new .biz   { font-size: 12px; color: #999; margin-bottom: 12px; }
+  .job-card-new .wage-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 12px; }
+  .job-card-new .wage  { font-size: 22px; font-weight: 900; color: #FF4B4B; letter-spacing: -0.5px; }
+  .job-card-new .wage-unit { font-size: 13px; color: #aaa; font-weight: 600; }
+  .job-card-new .info-row { display: flex; gap: 5px; flex-wrap: wrap; }
+  .job-card-new .chip { font-size: 11px; color: #666; background: #f7f7f7; padding: 4px 9px; border-radius: 20px; font-weight: 600; border: none; }
+  .job-card-new .apply-btn { width: 100%; margin-top: 12px; padding: 12px; background: #FF4B4B; color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; }
+
+  /* ══════════════════════════════════════
+     [3] 섹션 헤더 / 프로필
+  ══════════════════════════════════════ */
+  .section-headers-old { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .sec-h-old { font-size: 12px; color: #888; font-weight: 700; }
+
+  .section-headers-new { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .sec-h-new { font-size: 12px; color: #999; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip-old { font-size: 12px; padding: 6px 12px; border-radius: 20px; border: 1.5px solid #eee; color: #444; cursor: pointer; }
+  .chip-old.active { background: #FF4B4B; border-color: #FF4B4B; color: #fff; }
+  .chip-new { font-size: 12px; padding: 6px 12px; border-radius: 8px; background: #f5f5f5; color: #555; cursor: pointer; border: none; font-weight: 600; }
+  .chip-new.active { background: #fff0f0; color: #FF4B4B; font-weight: 700; outline: 1.5px solid #FFAAAA; }
+
+  /* ══════════════════════════════════════
+     [4] 색상 팔레트
+  ══════════════════════════════════════ */
+  .palette { display: flex; gap: 8px; padding: 16px; }
+  .swatch { width: 44px; height: 44px; border-radius: 10px; }
+  .swatch-label { font-size: 10px; color: #888; text-align: center; margin-top: 4px; }
+
+  /* ══════════════════════════════════════
+     [5] 필터 칩 (카테고리)
+  ══════════════════════════════════════ */
+  .filter-row-old { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; background: transparent; }
+  .filter-row-old::-webkit-scrollbar { display: none; }
+  .fchip-old { white-space: nowrap; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; background: #fff; border: 1.5px solid #eee; color: #666; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .fchip-old.active { background: #FF4B4B; border-color: #FF4B4B; color: #fff; }
+
+  .filter-row-new { display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px; background: transparent; }
+  .filter-row-new::-webkit-scrollbar { display: none; }
+  .fchip-new { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; background: #fff; border: 1px solid #ebebeb; color: #555; cursor: pointer; }
+  .fchip-new.active { background: #111; border-color: #111; color: #fff; font-weight: 700; }
+
+  /* ══════════════════════════════════════
+     [6] 마커
+  ══════════════════════════════════════ */
+  .marker-demo { position: relative; height: 100px; background: #e8e0d5; display: flex; align-items: center; justify-content: center; gap: 40px; }
+  /* old marker */
+  .mk-old { display: flex; flex-direction: column; align-items: center; }
+  .mk-old-bubble { background: #fff; border: 3px solid #FF4B4B; border-radius: 14px; padding: 8px 14px; text-align: center; }
+  .mk-old-bubble .w { font-size: 14px; font-weight: 900; color: #FF4B4B; }
+  .mk-old-bubble .s { font-size: 10px; color: #888; }
+  .mk-old-bubble .d { font-size: 10px; color: #888; }
+  .mk-old-tail { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #FF4B4B; }
+  /* new marker */
+  .mk-new { display: flex; flex-direction: column; align-items: center; }
+  .mk-new-bubble { background: #fff; border-radius: 10px; padding: 6px 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.18); }
+  .mk-new-bubble .w { font-size: 14px; font-weight: 900; color: #FF4B4B; }
+  .mk-new-tail { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #fff; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); }
+
+  /* ══════════════════════════════════════
+     [7] 바텀시트 헤더
+  ══════════════════════════════════════ */
+  .sheet-old { background: #fff; border-radius: 20px 20px 0 0; padding: 0; }
+  .sheet-old-handle { width: 40px; height: 4px; background: #e5e5e5; border-radius: 2px; margin: 12px auto 14px; }
+  .sheet-old-title { font-size: 13px; font-weight: 800; color: #111; padding: 0 16px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f5f5f5; }
+  .sheet-old-title span { font-size: 11px; color: #aaa; font-weight: 600; }
+
+  .sheet-new { background: #fff; border-radius: 16px 16px 0 0; padding: 0; }
+  .sheet-new-handle { width: 32px; height: 3px; background: #e0e0e0; border-radius: 2px; margin: 10px auto 12px; }
+  .sheet-new-title { font-size: 13px; font-weight: 700; color: #555; padding: 0 16px 12px; display: flex; justify-content: space-between; align-items: center; }
+  .sheet-new-title .count { font-size: 13px; font-weight: 800; color: #111; }
+  .sheet-new-title .sort { font-size: 11px; color: #aaa; font-weight: 600; display: flex; align-items: center; gap: 3px; }
+
+  /* ══════════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════════ */
+  .divider { height: 1px; background: #eee; margin: 0 16px; }
+  .bg-map { background: #e8e0d5; height: 120px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 12px; }
+  .header-old { background: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f5f5f5; }
+  .header-old .logo { font-size: 18px; font-weight: 900; color: #FF4B4B; display: flex; align-items: center; gap: 6px; }
+  .header-new { background: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; }
+  .header-new .logo { font-size: 17px; font-weight: 900; color: #111; display: flex; align-items: center; gap: 6px; }
+  .header-new .logo span { color: #FF4B4B; }
+
+  /* search bar */
+  .search-old { margin: 10px 12px; display: flex; gap: 8px; }
+  .search-old input { flex: 1; background: #fff; border: none; border-radius: 14px; padding: 10px 14px; font-size: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); outline: none; }
+  .search-new { margin: 10px 12px; }
+  .search-new input { width: 100%; background: #f5f5f5; border: none; border-radius: 10px; padding: 11px 14px; font-size: 14px; outline: none; color: #222; }
+
+  .improvement-note {
+    background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px;
+    padding: 12px 14px; font-size: 12px; color: #166534; line-height: 1.7;
+    margin-top: 16px;
+  }
+  .improvement-note strong { font-weight: 800; }
+
+  @media (max-width: 600px) {
+    .compare-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  바로알바 디자인 개선안 비교
+  <span>Before → After / 각 항목별 적용 전·후를 실제 UI로 비교</span>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 1: 하단 네비게이션
+══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">1</div>
+    하단 네비게이션 아이콘
+    <span class="verdict impact-high">임팩트 ★★★</span>
+  </div>
+  <div class="section-desc">이모지 아이콘 → 단색 SVG 아이콘. 당근마켓·네이버 등 모든 주요 앱이 SVG 사용. 가장 "AI 느낌" 제거 효과가 큰 변경입니다.</div>
+
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame before-frame">
+        <nav class="nav-old">
+          <div class="ni active">
+            <div class="icon">🌍</div>
+            <div class="lbl" style="color:#FF4B4B;font-weight:800">지도</div>
+          </div>
+          <div class="ni">
+            <div class="icon">💝</div>
+            <div class="lbl">스와이프</div>
+          </div>
+          <div class="ni">
+            <div class="icon">📋</div>
+            <div class="lbl">내 지원</div>
+          </div>
+          <div class="ni">
+            <div class="icon">💬</div>
+            <div class="lbl">채팅</div>
+          </div>
+          <div class="ni">
+            <div class="icon">👤</div>
+            <div class="lbl">마이페이지</div>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame after-frame">
+        <nav class="nav-new">
+          <div class="ni active">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <div class="lbl" style="color:#FF4B4B;font-weight:800">지도</div>
+          </div>
+          <div class="ni">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <div class="lbl">스와이프</div>
+          </div>
+          <div class="ni">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <div class="lbl">내 지원</div>
+          </div>
+          <div class="ni">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <div class="lbl">채팅</div>
+          </div>
+          <div class="ni">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="lbl">마이페이지</div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <div class="improvement-note">
+    <strong>변경 포인트:</strong> 이모지(🌍💝📋💬👤) → Feather Icons 스타일 단색 SVG<br>
+    Active 상태: 이모지 색 변화 → 아이콘 빨간색 + 상단 바 라인 추가<br>
+    <strong>효과:</strong> 즉시 "앱다운" 느낌, 브랜드 일관성
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 2: 공고 카드
+══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">2</div>
+    공고 카드 디자인
+    <span class="verdict impact-high">임팩트 ★★★</span>
+  </div>
+  <div class="section-desc">그림자 과함 + 이모지 남발 → 깔끔한 경계선 + 정보 위계 정리</div>
+
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame before-frame">
+        <div class="job-card-old">
+          <div class="tag-row">
+            <span class="tag" style="background:#FFF5F5;color:#FF4B4B">⚡ 스팟</span>
+            <span class="tag" style="background:#f5f5f5;color:#666">F&B</span>
+          </div>
+          <div class="title">카페 바리스타 구함</div>
+          <div class="biz">☕ 스타벅스 신촌점 · 📍 서울 서대문구</div>
+          <div class="wage">💰 15,000원/시간</div>
+          <div class="info-row">
+            <span class="chip">🕐 6/18 10:00</span>
+            <span class="chip">⏱ 4시간</span>
+            <span class="chip">👥 1명</span>
+          </div>
+          <button class="apply-btn">⚡ 바로 지원하기</button>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame after-frame">
+        <div class="job-card-new">
+          <div class="top-row">
+            <div style="display:flex;gap:5px">
+              <span class="badge-urgent">급구</span>
+              <span class="badge-spot">스팟</span>
+            </div>
+            <span class="dist">1.2km</span>
+          </div>
+          <div class="title">카페 바리스타 구함</div>
+          <div class="biz">스타벅스 신촌점</div>
+          <div class="wage-row">
+            <span class="wage">15,000</span>
+            <span class="wage-unit">원/시간</span>
+          </div>
+          <div class="info-row">
+            <span class="chip">6/18 10:00</span>
+            <span class="chip">4시간</span>
+            <span class="chip">서대문구</span>
+          </div>
+          <button class="apply-btn">지원하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="improvement-note">
+    <strong>변경 포인트:</strong><br>
+    · 강한 drop shadow → 얇은 outline shadow (0 1px 6px)<br>
+    · 이모지(💰🕐⏱👥) 제거 → 텍스트만<br>
+    · 시급 크기 키움 (18px→22px) + 단위 분리로 가독성 향상<br>
+    · 버튼 "⚡ 바로 지원하기" → "지원하기" (간결)
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 3: 카테고리 필터 칩
+══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">3</div>
+    카테고리 필터 칩
+    <span class="verdict impact-mid">임팩트 ★★</span>
+  </div>
+  <div class="section-desc">흰 배경 + 테두리 방식 → 채워진 스타일. Active 시 빨강 대신 블랙으로 강조 (더 고급스러운 느낌)</div>
+
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame before-frame" style="padding: 8px 0">
+        <div class="filter-row-old">
+          <div class="fchip-old active">전체</div>
+          <div class="fchip-old">☕ F&B</div>
+          <div class="fchip-old">📦 물류</div>
+          <div class="fchip-old">🛍 판매</div>
+          <div class="fchip-old">🧹 청소</div>
+          <div class="fchip-old">🎉 이벤트</div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame after-frame" style="padding: 8px 0">
+        <div class="filter-row-new">
+          <div class="fchip-new active">전체</div>
+          <div class="fchip-new">F&B</div>
+          <div class="fchip-new">물류</div>
+          <div class="fchip-new">판매</div>
+          <div class="fchip-new">청소</div>
+          <div class="fchip-new">이벤트</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="improvement-note">
+    <strong>변경 포인트:</strong> Active = 블랙 배경 (빨강→검정으로 더 모던)<br>
+    이모지 제거 → 텍스트만 (공간 절약 + 깔끔)<br>
+    border-radius: 20px(알약형) → 6px(모서리만 살짝)
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 4: 검색바 + 헤더
+══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">4</div>
+    헤더 + 검색바
+    <span class="verdict impact-mid">임팩트 ★★</span>
+  </div>
+  <div class="section-desc">흰 그림자 카드형 검색창 → 회색 배경 인라인 스타일. 더 네이티브 앱스러운 느낌.</div>
+
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame before-frame">
+        <div class="header-old">
+          <div class="logo">
+            <div style="width:28px;height:28px;background:#FF4B4B;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px">🅱</div>
+            바로알바
+          </div>
+          <div style="font-size:20px">🔔</div>
+        </div>
+        <div class="search-old">
+          <input placeholder="🔍 지역, 업종 검색">
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame after-frame">
+        <div class="header-new">
+          <div class="logo">
+            <div style="width:26px;height:26px;background:#FF4B4B;border-radius:7px;display:flex;align-items:center;justify-content:center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>
+            </div>
+            <span>바로<span>알바</span></span>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
+        <div class="search-new">
+          <input placeholder="지역, 업종 검색">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="improvement-note">
+    <strong>변경 포인트:</strong><br>
+    · 검색창: 흰 카드+그림자 → 회색 배경 플랫 스타일<br>
+    · 🔔 이모지 → SVG 벨 아이콘<br>
+    · 로고: 텍스트+이모지 → 브랜드 심볼(GPS 아이콘) + 텍스트
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 5: 지도 마커
+══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">5</div>
+    지도 마커 버블
+    <span class="verdict impact-low">임팩트 ★</span>
+  </div>
+  <div class="section-desc">3줄 정보 마커 → 시급 1줄만. 탭 시 상세 표시. 지도가 더 깨끗해 보임.</div>
+
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame before-frame">
+        <div class="marker-demo">
+          <div class="mk-old">
+            <div class="mk-old-bubble">
+              <div class="w">1.5만/시간</div>
+              <div class="s">유승준</div>
+              <div class="d">6/18 11:00</div>
+            </div>
+            <div class="mk-old-tail"></div>
+          </div>
+          <div class="mk-old">
+            <div class="mk-old-bubble" style="border-color:#16a34a">
+              <div class="w" style="color:#16a34a">1.2만/시간</div>
+              <div class="s">카페이름</div>
+              <div class="d">6/19 09:00</div>
+            </div>
+            <div class="mk-old-tail" style="border-top-color:#16a34a"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame after-frame">
+        <div class="marker-demo">
+          <div class="mk-new">
+            <div class="mk-new-bubble">
+              <div class="w">1.5만원</div>
+            </div>
+            <div class="mk-new-tail"></div>
+          </div>
+          <div class="mk-new">
+            <div class="mk-new-bubble">
+              <div class="w" style="color:#16a34a">1.2만원</div>
+            </div>
+            <div class="mk-new-tail"></div>
+          </div>
+          <div class="mk-new" style="opacity:0.6">
+            <div class="mk-new-bubble" style="background:#f5f5f5">
+              <div class="w" style="color:#aaa;font-size:11px">지원완료</div>
+            </div>
+            <div class="mk-new-tail" style="border-top-color:#f5f5f5"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="improvement-note">
+    <strong>변경 포인트:</strong><br>
+    · 마커: 업체명+날짜 제거 → 시급만 표시 (지도 덜 복잡)<br>
+    · 지원완료 마커: opacity 0.65 회색으로 명확히 구분<br>
+    · 테두리 두께 3px→없음, 그림자로 대체
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 6: 프로필 섹션 헤더
+══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">6</div>
+    프로필 섹션 헤더 + 태그 칩
+    <span class="verdict impact-mid">임팩트 ★★</span>
+  </div>
+  <div class="section-desc">이모지 넘치는 섹션 헤더 → 깔끔한 레이블. 강점 칩 스타일 개선.</div>
+
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame before-frame">
+        <div class="section-headers-old">
+          <div>
+            <div class="sec-h-old">🚗 보유 이동수단 <span style="font-weight:400;color:#bbb">(복수 선택)</span></div>
+            <div class="chip-row" style="margin-top:6px">
+              <span class="chip-old active">🚲 자전거</span>
+              <span class="chip-old">🛴 킥보드</span>
+              <span class="chip-old active">🚗 차량(소형)</span>
+            </div>
+          </div>
+          <div>
+            <div class="sec-h-old">✨ 나의 강점 <span style="font-weight:400;color:#bbb">(복수 선택, 최대 5개)</span></div>
+            <div class="chip-row" style="margin-top:6px">
+              <span class="chip-old active" style="border-color:#FF4B4B;color:#FF4B4B">💪 힘이 강함</span>
+              <span class="chip-old">⚡ 스피드</span>
+              <span class="chip-old active" style="border-color:#FF4B4B;color:#FF4B4B">🌙 야간 가능</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame after-frame">
+        <div class="section-headers-new">
+          <div>
+            <div class="sec-h-new">이동수단 · 복수 선택</div>
+            <div class="chip-row" style="margin-top:8px">
+              <span class="chip-new active">자전거</span>
+              <span class="chip-new">킥보드</span>
+              <span class="chip-new active">차량 소형</span>
+            </div>
+          </div>
+          <div>
+            <div class="sec-h-new">나의 강점 · 최대 5개</div>
+            <div class="chip-row" style="margin-top:8px">
+              <span class="chip-new active">힘이 강함</span>
+              <span class="chip-new">스피드</span>
+              <span class="chip-new active">야간 가능</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="improvement-note">
+    <strong>변경 포인트:</strong><br>
+    · 헤더: 이모지 제거, uppercase + letter-spacing으로 세련된 레이블<br>
+    · 칩: 원형 테두리 → 둥근 사각형, Active = 빨간 outline<br>
+    · 칩 안의 이모지 제거 → 텍스트만 (더 빠른 스캔)
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 7: 바텀시트
+══════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">7</div>
+    바텀시트 헤더
+    <span class="verdict impact-low">임팩트 ★</span>
+  </div>
+  <div class="section-desc">핸들 + 타이틀 정보 표시 방식 개선</div>
+
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame before-frame">
+        <div class="sheet-old">
+          <div class="sheet-old-handle"></div>
+          <div class="sheet-old-title">
+            주변 공고 <strong style="color:#FF4B4B">3개</strong>
+            <span>↑ 거리순</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame after-frame">
+        <div class="sheet-new">
+          <div class="sheet-new-handle"></div>
+          <div class="sheet-new-title">
+            <div>주변 공고 <span class="count">3</span></div>
+            <div class="sort">거리순 ↕</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     OVERALL SUMMARY
+══════════════════════════════════ -->
+<div class="section">
+  <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07)">
+    <div style="font-size:16px;font-weight:900;margin-bottom:16px;color:#111">📋 작업 우선순위 제안</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FEF2F2;border-radius:10px">
+        <div style="width:28px;height:28px;background:#DC2626;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0">1</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#111">하단 네비게이션 SVG 아이콘</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">가장 눈에 띄는 변화, 작업량 적음 · 30분</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FFF7ED;border-radius:10px">
+        <div style="width:28px;height:28px;background:#D97706;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0">2</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#111">공고 카드 + 필터 칩 개선</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">이모지 제거 + 그림자 정리 · 1시간</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#F0FDF4;border-radius:10px">
+        <div style="width:28px;height:28px;background:#16a34a;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0">3</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#111">프로필 섹션 헤더 + 검색창</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">내부 페이지 마무리 · 45분</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#EFF6FF;border-radius:10px">
+        <div style="width:28px;height:28px;background:#2563EB;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0">4</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#111">마커 버블 + 바텀시트</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">선택적, 마이너한 개선 · 30분</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:12px;background:#f8f8f8;border-radius:10px;font-size:12px;color:#666;line-height:1.7">
+      💡 <strong style="color:#111">전체 적용 시</strong> 코드 변경량은 적지만 앱의 "완성도 느낌"이 크게 달라집니다.<br>
+      한 번에 다 바꾸거나, 1번(네비)만 먼저 적용해서 비교해볼 수 있습니다.
+    </div>
+  </div>
+</div>
+
+<div style="height:40px"></div>
+
+</body>
+</html>

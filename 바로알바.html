@@ -1043,8 +1043,7 @@
       /* 지원자 프로필 / 채팅 모달 */
       #worker-profile-overlay { align-items:center; justify-content:center; }
       #worker-profile-overlay > div { border-radius:20px; width:480px; max-width:90vw; max-height:85vh; overflow-y:auto; }
-      #chat-overlay { align-items:center; justify-content:center; }
-      #chat-overlay > div { border-radius:20px; width:480px; max-width:90vw; max-height:85vh; }
+      /* chat-overlay는 모바일과 동일하게 전체화면 유지 */
 
       /* 공유 모달 */
       #share-overlay > div { width:480px; max-width:90vw; }
@@ -2786,6 +2785,11 @@
         </div>
       </div>
     </div>
+    <div id="wchat-img-preview-bar" style="display:none;padding:8px 16px;background:#f8f8f8;border-top:1px solid #eee;align-items:center;gap:10px">
+      <img id="wchat-img-preview-thumb" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #ddd">
+      <span style="font-size:13px;color:#555;flex:1">사진 선택됨 — 전송 버튼을 누르세요</span>
+      <button onclick="cancelWChatImage()" style="background:none;border:none;font-size:20px;color:#aaa;cursor:pointer;padding:4px">✕</button>
+    </div>
     <div style="padding:10px 16px;display:flex;gap:8px;align-items:center">
       <button onclick="toggleMediaPanel('wchat')" id="wchat-plus-btn" style="width:36px;height:36px;flex-shrink:0;background:#f0f0f0;border:none;border-radius:50%;font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;transition:transform 0.2s">+</button>
       <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
@@ -2842,6 +2846,11 @@
           <span style="font-size:11px;color:#555;font-weight:600">카메라</span>
         </div>
       </div>
+    </div>
+    <div id="chat-img-preview-bar" style="display:none;padding:8px 16px;background:#f8f8f8;border-top:1px solid #eee;align-items:center;gap:10px">
+      <img id="chat-img-preview-thumb" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #ddd">
+      <span style="font-size:13px;color:#555;flex:1">사진 선택됨 — 전송 버튼을 누르세요</span>
+      <button onclick="cancelChatImage()" style="background:none;border:none;font-size:20px;color:#aaa;cursor:pointer;padding:4px">✕</button>
     </div>
     <div style="padding:10px 16px;display:flex;gap:8px;align-items:center">
       <button onclick="toggleMediaPanel('chat')" id="chat-plus-btn" style="width:36px;height:36px;flex-shrink:0;background:#f0f0f0;border:none;border-radius:50%;font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;transition:transform 0.2s">+</button>
@@ -4750,6 +4759,8 @@ function closeWChat() {
   if (window._clearChatKbOffset) window._clearChatKbOffset();
   if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
+  const chatBtn = document.querySelectorAll('.nav-item')[3];
+  if (chatBtn) setNav(chatBtn, 'chats');
 }
 
 
@@ -4758,6 +4769,21 @@ function scrollChatToBottom(scrollId) {
   var el = document.getElementById(scrollId);
   if (el) el.scrollTop = el.scrollHeight;
 }
+
+// ── FCM 토큰 수신 → Supabase 저장 ──
+window._onFCMToken = async function(token) {
+  if (!window.currentUser || !window.db) return;
+  const payload = [
+    { user_id: currentUser.id, token, updated_at: new Date().toISOString() }
+  ];
+  // kakao_uid로도 저장 (업주 푸시 식별용)
+  const kakaoUid = currentUser.user_metadata?.kakao_uid ||
+                   currentUser.user_metadata?.provider_id;
+  if (kakaoUid && kakaoUid !== currentUser.id) {
+    payload.push({ user_id: kakaoUid, token, updated_at: new Date().toISOString() });
+  }
+  await db.from('fcm_tokens').upsert(payload, { onConflict: 'user_id' });
+};
 
 // ── 키보드 대응 (v202: 네이티브 IME 인셋 브리지) ──
 (function() {
@@ -5527,12 +5553,49 @@ async function uploadChatImage(file) {
   return data.publicUrl;
 }
 
-async function sendWChatImage(inputEl) {
+let _pendingWChatFile = null;
+let _pendingChatFile = null;
+
+function sendWChatImage(inputEl) {
   const file = inputEl.files[0];
   if (!file) return;
   inputEl.value = '';
   closeMediaPanel('wchat');
   if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
+  _pendingWChatFile = file;
+  const bar = document.getElementById('wchat-img-preview-bar');
+  const thumb = document.getElementById('wchat-img-preview-thumb');
+  thumb.src = URL.createObjectURL(file);
+  bar.style.display = 'flex';
+}
+
+function cancelWChatImage() {
+  _pendingWChatFile = null;
+  document.getElementById('wchat-img-preview-bar').style.display = 'none';
+}
+
+function sendChatImage(inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  inputEl.value = '';
+  closeMediaPanel('chat');
+  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
+  _pendingChatFile = file;
+  const bar = document.getElementById('chat-img-preview-bar');
+  const thumb = document.getElementById('chat-img-preview-thumb');
+  thumb.src = URL.createObjectURL(file);
+  bar.style.display = 'flex';
+}
+
+function cancelChatImage() {
+  _pendingChatFile = null;
+  document.getElementById('chat-img-preview-bar').style.display = 'none';
+}
+
+async function _uploadAndSendWChatImage() {
+  const file = _pendingWChatFile;
+  _pendingWChatFile = null;
+  document.getElementById('wchat-img-preview-bar').style.display = 'none';
   showToast('이미지 전송 중...');
   try {
     const url = await uploadChatImage(file);
@@ -5540,12 +5603,10 @@ async function sendWChatImage(inputEl) {
   } catch(e) { showToast('이미지 전송 실패'); }
 }
 
-async function sendChatImage(inputEl) {
-  const file = inputEl.files[0];
-  if (!file) return;
-  inputEl.value = '';
-  closeMediaPanel('chat');
-  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
+async function _uploadAndSendChatImage() {
+  const file = _pendingChatFile;
+  _pendingChatFile = null;
+  document.getElementById('chat-img-preview-bar').style.display = 'none';
   showToast('이미지 전송 중...');
   try {
     const url = await uploadChatImage(file);
@@ -5577,6 +5638,7 @@ async function _doSendWChat(content) {
 }
 
 async function sendWChatMessage() {
+  if (_pendingWChatFile) { await _uploadAndSendWChatImage(); return; }
   const input = document.getElementById('wchat-input');
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
@@ -12426,6 +12488,8 @@ function closeChat() {
   _chatAppId = null;
   _chatInquiryId = null;
   _chatWorkerUserId = null;
+  const chatBtn = document.querySelectorAll('.nav-item')[3];
+  if (chatBtn) setNav(chatBtn, 'chats');
 }
 
 async function loadChatMessages() {
@@ -12497,6 +12561,7 @@ async function _doSendChat(content) {
 }
 
 async function sendChatMessage() {
+  if (_pendingChatFile) { await _uploadAndSendChatImage(); return; }
   const input = document.getElementById('chat-input');
   const content = input.value.trim();
   if (!content) return;

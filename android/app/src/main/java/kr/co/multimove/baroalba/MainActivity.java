@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.webkit.GeolocationPermissions;
 import androidx.core.content.FileProvider;
+import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.File;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
@@ -168,6 +169,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
                 request.grant(request.getResources());
+            }
+        });
+
+        // POST_NOTIFICATIONS 런타임 권한 (Android 13+)
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_PERM);
+            }
+        }
+
+        // FCM 토큰 취득 → JS로 전달
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                String token = task.getResult();
+                String js = "if(window._onFCMToken)window._onFCMToken('" + token + "');";
+                webView.post(() -> webView.evaluateJavascript(js, null));
             }
         });
 
