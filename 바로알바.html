@@ -2750,7 +2750,7 @@
 <!-- 채팅 (전체화면) -->
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
   <!-- 헤더: 상태바 높이만큼 padding-top (JS로 동적 설정) -->
-  <div id="wchat-header" style="padding:12px 20px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="wchat-header" style="padding-top:calc(var(--sat-safe, 0px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
@@ -2764,7 +2764,8 @@
     <div id="wchat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
       <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
         style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}"
+        onfocus="setTimeout(()=>this.scrollIntoView({block:'nearest',behavior:'smooth'}),300)">
       <button onclick="sendWChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
@@ -2786,7 +2787,7 @@
 
 <!-- 업주 채팅 (전체화면) -->
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-header" style="padding:12px 20px 10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="chat-header" style="padding-top:calc(var(--sat-safe, 0px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
@@ -2798,7 +2799,8 @@
     <div id="chat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
       <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
         style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"
+        onfocus="setTimeout(()=>this.scrollIntoView({block:'nearest',behavior:'smooth'}),300)">
       <button onclick="sendChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
@@ -4658,17 +4660,6 @@ function closeWChat() {
   _wchatAppId = null;
 }
 
-// ── 채팅 상태바 높이 설정 ──────────────────────────────────
-(function() {
-  // window.screenTop: 브라우저 콘텐츠 영역과 화면 상단 사이 거리 (≈ 상태바 높이)
-  var sbh = 0;
-  try { sbh = Math.max(0, Math.min(window.screenTop || window.screenY || 0, 80)); } catch(e) {}
-  if (sbh === 0) sbh = 28; // 삼성 갤럭시 기본값 28px
-  ['wchat-header','chat-header'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.style.paddingTop = (12 + sbh) + 'px';
-  });
-})();
 
 // ── 채팅 메시지 스크롤 (scroll 컨테이너 기준) ─────────────
 function scrollChatToBottom(scrollId) {
@@ -11429,7 +11420,7 @@ async function setupOwnerChatNotify() {
       if (msg.sender_id === currentUser?.id) return;
 
       // 채팅창 열려있으면 건너뜀
-      const chatOpen = document.getElementById('chat-overlay')?.classList.contains('open');
+      const chatOpen = document.getElementById('chat-overlay')?.style.display === 'flex';
       if (chatOpen) return;
 
       showToast('\u{1F4AC} 새 메시지: ' + msg.content.slice(0, 20) + (msg.content.length > 20 ? '…' : ''));
@@ -12267,7 +12258,7 @@ function subscribeOwnerGlobalChat() {
   _ownerGlobalChatSub = db.channel(`owner-${currentUser.id}-notify`)
     .on('broadcast', { event: 'new_msg' }, ({ payload }) => {
       if (!payload || payload.sender_id === currentUser.id) return;
-      const chatOpen = document.getElementById('chat-overlay')?.classList.contains('open');
+      const chatOpen = document.getElementById('chat-overlay')?.style.display === 'flex';
       if (chatOpen && _chatAppId === payload.application_id) return;
       const badge = document.getElementById('owner-chat-badge');
       if (badge) {
