@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="virtual-keyboard" content="overlays-content">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -2754,7 +2755,7 @@
 
 <!-- 채팅 (전체화면) -->
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
-  <div style="height:max(env(safe-area-inset-top,0px),40px);background:#C8102E;flex-shrink:0"></div>
+  <div style="height:env(safe-area-inset-top,28px);background:#C8102E;flex-shrink:0"></div>
   <div id="wchat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
@@ -2766,6 +2767,8 @@
     <div id="wchat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
   </div>
   <div id="wchat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
+    <input type="file" id="wchat-img-input" accept="image/*" style="display:none" onchange="sendWChatImage(this)">
+    <button onclick="document.getElementById('wchat-img-input').click()" style="width:40px;height:40px;flex-shrink:0;background:#f5f5f5;border:none;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
     <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
       style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
@@ -2789,7 +2792,7 @@
 
 <!-- 업주 채팅 (전체화면) -->
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
-  <div style="height:max(env(safe-area-inset-top,0px),40px);background:#C8102E;flex-shrink:0"></div>
+  <div style="height:env(safe-area-inset-top,28px);background:#C8102E;flex-shrink:0"></div>
   <div id="chat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
@@ -2801,6 +2804,8 @@
     <div id="chat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
   </div>
   <div id="chat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
+    <input type="file" id="chat-img-input" accept="image/*" style="display:none" onchange="sendChatImage(this)">
+    <button onclick="document.getElementById('chat-img-input').click()" style="width:40px;height:40px;flex-shrink:0;background:#f5f5f5;border:none;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
     <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
       style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
@@ -4681,6 +4686,7 @@ async function openWChat(applicationId, bizName) {
   document.getElementById('wchat-sub').textContent = name + '와 실시간 대화';
   const _wo = document.getElementById('wchat-overlay');
   _wo.style.display = 'flex';
+  history.pushState({ overlay: 'wchat' }, '');
   document.getElementById('wchat-input').value = '';
   try {
     await loadWChatMessages();
@@ -4712,13 +4718,57 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 대응 ──
-// virtualKeyboard.overlaysContent=true → env(keyboard-inset-height) CSS 자동 반영
-// CSS <style>에 padding-bottom:env(keyboard-inset-height,0px) 적용 (이벤트 불필요)
+// ── 키보드 대응 (v199: 3중 방어) ──
+// 1) meta virtual-keyboard + navigator.virtualKeyboard → env(keyboard-inset-height) CSS 자동
+// 2) visualViewport.height 직접 읽기 (focus 후 300/600ms 지연)
+// 3) visualViewport resize/scroll 이벤트 리스너
 (function() {
   if ('virtualKeyboard' in navigator) {
     navigator.virtualKeyboard.overlaysContent = true;
   }
+
+  function applyKbPad(overlayEl) {
+    function check() {
+      var vvH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      var kbH = Math.max(0, window.innerHeight - vvH);
+      overlayEl.style.paddingBottom = kbH > 80 ? kbH + 'px' : '';
+    }
+    check(); setTimeout(check, 300); setTimeout(check, 650);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', check);
+      window.visualViewport.addEventListener('scroll', check);
+      overlayEl._vkClean = function() {
+        window.visualViewport.removeEventListener('resize', check);
+        window.visualViewport.removeEventListener('scroll', check);
+        overlayEl._vkClean = null;
+      };
+    }
+  }
+  function clearKbPad(overlayEl) {
+    if (overlayEl._vkClean) overlayEl._vkClean();
+    setTimeout(function() { overlayEl.style.paddingBottom = ''; }, 200);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var wi = document.getElementById('wchat-input');
+    var ci = document.getElementById('chat-input');
+    var wo = document.getElementById('wchat-overlay');
+    var co = document.getElementById('chat-overlay');
+    if (wi && wo) {
+      wi.addEventListener('focus', function() { applyKbPad(wo); });
+      wi.addEventListener('blur',  function() { clearKbPad(wo); });
+    }
+    if (ci && co) {
+      ci.addEventListener('focus', function() { applyKbPad(co); });
+      ci.addEventListener('blur',  function() { clearKbPad(co); });
+    }
+
+    // 뒤로가기 버튼 처리
+    window.addEventListener('popstate', function() {
+      if (co && co.style.display === 'flex') { closeChat(); return; }
+      if (wo && wo.style.display === 'flex') { closeWChat(); }
+    });
+  });
 
   window._clearChatKbOffset = function() { void 0; };
 })();
@@ -5362,6 +5412,14 @@ async function loadWChatMessages() {
   renderWChatMessages(data || []);
 }
 
+function _chatBubble(content, isMine) {
+  if (content && content.startsWith('[img]')) {
+    const url = content.slice(5);
+    return `<img src="${url}" style="max-width:220px;border-radius:12px;display:block;cursor:pointer;border:1px solid #eee" onclick="window.open('${url}','_blank')" loading="lazy">`;
+  }
+  return `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${content}</div>`;
+}
+
 function renderWChatMessages(msgs) {
   const el = document.getElementById('wchat-messages');
   if (!msgs.length) {
@@ -5372,7 +5430,7 @@ function renderWChatMessages(msgs) {
     const isMine = m.sender_id === currentUser?.id;
     const time = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
     return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px">
-      <div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${m.content}</div>
+      ${_chatBubble(m.content, isMine)}
       <div style="font-size:10px;color:#bbb">${time}${isMine && m.is_read ? ' · 읽음' : ''}</div>
     </div>`;
   }).join('');
@@ -5391,8 +5449,7 @@ function subscribeWChatMessages() {
       const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
       const div = document.createElement('div');
       div.style.cssText = `display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px`;
-      div.innerHTML = `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${msg.content}</div>
-        <div style="font-size:10px;color:#bbb">${time}</div>`;
+      div.innerHTML = `${_chatBubble(msg.content, isMine)}<div style="font-size:10px;color:#bbb">${time}</div>`;
       el.appendChild(div);
       const sc = document.getElementById('wchat-scroll');
       if (sc) sc.scrollTop = sc.scrollHeight;
@@ -5400,17 +5457,42 @@ function subscribeWChatMessages() {
     }).subscribe();
 }
 
-async function sendWChatMessage() {
-  const input = document.getElementById('wchat-input');
-  const content = input.value.trim();
+async function uploadChatImage(file) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await db.storage.from('chat-images').upload(path, file, { contentType: file.type });
+  if (error) throw error;
+  const { data } = db.storage.from('chat-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function sendWChatImage(inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  inputEl.value = '';
+  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
+  showToast('이미지 전송 중...');
+  try {
+    const url = await uploadChatImage(file);
+    await _doSendWChat('[img]' + url);
+  } catch(e) { showToast('이미지 전송 실패'); }
+}
+
+async function sendChatImage(inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  inputEl.value = '';
+  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
+  showToast('이미지 전송 중...');
+  try {
+    const url = await uploadChatImage(file);
+    await _doSendChat('[img]' + url);
+  } catch(e) { showToast('이미지 전송 실패'); }
+}
+
+async function _doSendWChat(content) {
   if (!content || !_wchatAppId) return;
-  input.value = '';
-  await db.from('messages').insert({
-    application_id: _wchatAppId,
-    sender_id: currentUser.id,
-    content,
-  });
-  // Broadcast to owner's channel (RLS 우회 - postgres_changes 대신)
+  await db.from('messages').insert({ application_id: _wchatAppId, sender_id: currentUser.id, content });
   try {
     const { data: ad } = await db.from('applications')
       .select('job_postings(businesses(kakao_uid))').eq('id', _wchatAppId).single();
@@ -5423,19 +5505,22 @@ async function sendWChatMessage() {
           setTimeout(() => ch.unsubscribe(), 1500);
         }
       });
-      fetch('/api/send-push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: ownerUid,
-          title: '\u{1F4AC} 바로알바 - 새 메시지',
-          body: content.length > 40 ? content.slice(0, 40) + '…' : content,
-          url: '/바로알바.html'
-        })
-      }).catch(() => {});
+      const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
+      fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ user_id:ownerUid, title:'💬 바로알바 - 새 메시지', body:pushBody, url:'/바로알바.html' })
+      }).catch(()=>{});
     }
   } catch(e) {}
 }
+
+async function sendWChatMessage() {
+  const input = document.getElementById('wchat-input');
+  const content = input.value.trim();
+  if (!content || !_wchatAppId) return;
+  input.value = '';
+  await _doSendWChat(content);
+}
+
 
 async function markWMessagesRead(appId) {
   await db.from('messages').update({ is_read: true })
@@ -12255,6 +12340,7 @@ async function openChat(applicationId, workerName) {
   document.getElementById('chat-sub').textContent = '지원자와 실시간 대화';
   const _co2 = document.getElementById('chat-overlay');
   _co2.style.display = 'flex';
+  history.pushState({ overlay: 'chat' }, '');
   document.getElementById('chat-input').value = '';
   // 알바생 user_id(kakao_uid) 조회 — Push 알림 전송에 사용
   const { data: app } = await db.from('applications')
@@ -12297,7 +12383,7 @@ function renderChatMessages(msgs) {
     const isMine = m.sender_id === currentUser?.id;
     const time = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
     return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px">
-      <div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${m.content}</div>
+      ${_chatBubble(m.content, isMine)}
       <div style="font-size:10px;color:#bbb">${time}${isMine && m.is_read ? ' · 읽음' : ''}</div>
     </div>`;
   }).join('');
@@ -12316,8 +12402,7 @@ function subscribeChatMessages() {
       const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
       const div = document.createElement('div');
       div.style.cssText = `display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px`;
-      div.innerHTML = `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${msg.content}</div>
-        <div style="font-size:10px;color:#bbb">${time}</div>`;
+      div.innerHTML = `${_chatBubble(msg.content, isMine)}<div style="font-size:10px;color:#bbb">${time}</div>`;
       el.appendChild(div);
       const csc = document.getElementById('chat-scroll');
       if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
@@ -12325,38 +12410,35 @@ function subscribeChatMessages() {
     }).subscribe();
 }
 
-async function sendChatMessage() {
-  const input = document.getElementById('chat-input');
-  const content = input.value.trim();
+async function _doSendChat(content) {
   if (!content || (!_chatAppId && !_chatInquiryId)) return;
-  input.value = '';
   const msgRow = { sender_id: currentUser.id, content };
   if (_chatInquiryId) msgRow.inquiry_id = _chatInquiryId;
   else msgRow.application_id = _chatAppId;
   await db.from('messages').insert(msgRow);
-  // 알바생 Broadcast 알림 (RLS 우회)
   if (_chatWorkerUserId) {
     try {
       const ch = db.channel(`worker-${_chatWorkerUserId}-notify`);
       ch.subscribe(status => {
         if (status === 'SUBSCRIBED') {
-          ch.send({ type: 'broadcast', event: 'new_msg', payload: { application_id: _chatAppId, content, sender_id: currentUser.id } });
+          ch.send({ type:'broadcast', event:'new_msg', payload:{ application_id:_chatAppId, content, sender_id:currentUser.id } });
           setTimeout(() => ch.unsubscribe(), 1500);
         }
       });
     } catch(e) {}
-    // Push 알림도 병행
-    fetch('/api/send-push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: _chatWorkerUserId,
-        title: '💬 바로알바 - 새 메시지',
-        body: content.length > 40 ? content.slice(0, 40) + '…' : content,
-        url: '/바로알바.html'
-      })
-    }).catch(() => {});
+    const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
+    fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id:_chatWorkerUserId, title:'💬 바로알바 - 새 메시지', body:pushBody, url:'/바로알바.html' })
+    }).catch(()=>{});
   }
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  await _doSendChat(content);
 }
 
 async function markMessagesRead(appId) {
