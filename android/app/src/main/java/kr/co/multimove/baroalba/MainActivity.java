@@ -32,8 +32,9 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainActivity extends AppCompatActivity {
 
     private static final String START_URL = "https://baroalba.multimove.co.kr/login.html";
-    private static final int REQ_FILE = 1;
-    private static final int REQ_PERM  = 2;
+    private static final int REQ_FILE   = 1;
+    private static final int REQ_PERM   = 2;
+    private static final int REQ_CAMERA = 3;
 
     private WebView webView;
     private ValueCallback<Uri[]> fileCb;
@@ -132,26 +133,15 @@ public class MainActivity extends AppCompatActivity {
                 if (fileCb != null) { fileCb.onReceiveValue(null); fileCb = null; }
                 fileCb = cb;
                 captureMode = params.isCaptureEnabled();
-                try {
-                    Intent intent;
-                    if (captureMode) {
-                        File photoFile = File.createTempFile("photo_", ".jpg", getCacheDir());
-                        pendingPhotoUri = FileProvider.getUriForFile(
-                            MainActivity.this,
-                            "kr.co.multimove.baroalba.fileprovider",
-                            photoFile);
-                        intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
-                        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    } else {
-                        intent = params.createIntent();
+                if (captureMode) {
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(MainActivity.this,
+                                new String[]{Manifest.permission.CAMERA}, REQ_CAMERA);
+                        return true;
                     }
-                    startActivityForResult(intent, REQ_FILE);
-                } catch (Exception e) {
-                    fileCb = null;
-                    return false;
                 }
-                return true;
+                return launchFileOrCamera();
             }
 
             @Override
@@ -191,6 +181,41 @@ public class MainActivity extends AppCompatActivity {
         });
 
         webView.loadUrl(resolveUrl(getIntent()));
+    }
+
+    private boolean launchFileOrCamera() {
+        try {
+            Intent intent;
+            if (captureMode) {
+                java.io.File photoFile = java.io.File.createTempFile("photo_", ".jpg", getCacheDir());
+                pendingPhotoUri = FileProvider.getUriForFile(
+                    this, "kr.co.multimove.baroalba.fileprovider", photoFile);
+                intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            } else {
+                intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+            }
+            startActivityForResult(intent, REQ_FILE);
+            return true;
+        } catch (Exception e) {
+            if (fileCb != null) { fileCb.onReceiveValue(null); fileCb = null; }
+            return false;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_CAMERA) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                launchFileOrCamera();
+            } else {
+                if (fileCb != null) { fileCb.onReceiveValue(null); fileCb = null; }
+            }
+        }
     }
 
     private void applySafeArea() {
