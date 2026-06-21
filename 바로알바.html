@@ -398,9 +398,10 @@
       border-radius: 20px 20px 0 0;
       box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
       transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-      max-height: 75vh;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
     .sheet-peek   { transform: translateY(calc(100% - var(--sheet-peek))); }
     .sheet-half   { transform: translateY(30%); }
@@ -427,6 +428,7 @@
 
     .job-list {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       padding: 0 14px 16px;
       -webkit-overflow-scrolling: touch;
@@ -6880,7 +6882,7 @@ function makeSwipeCard(job, isTop) {
 
   card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden;cursor:grab;touch-action:none;user-select:none;display:flex;flex-direction:column;`;
 
-  // 공고 업로드 사진 lazy-load (최상단 카드만)
+  // 공고 업로드 사진 lazy-load — 우측 섬네일로 표시
   if (isTop) {
     setTimeout(() => {
       fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + job.id + '&select=images,main_image_idx', {
@@ -6890,41 +6892,43 @@ function makeSwipeCard(job, isTop) {
         if (!imgs?.length) return;
         const mi = rows[0]?.main_image_idx || 0;
         const mainImg = imgs[Math.min(mi, imgs.length - 1)] || imgs[0];
-        const header = card.querySelector('[data-card-header]');
-        if (!header) return;
-        header.style.backgroundImage = `url(${mainImg})`;
-        header.style.backgroundSize = 'cover';
-        header.style.backgroundPosition = 'center';
-        const overlay = header.querySelector('[data-header-overlay]');
-        if (overlay) overlay.style.display = 'flex';
+        const thumb = card.querySelector('[data-card-thumb]');
+        if (!thumb) return;
+        thumb.innerHTML = `<img src="${mainImg}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;cursor:pointer;display:block" onclick="event.stopPropagation();openImgViewer('${mainImg}')" loading="lazy">`;
+        thumb.style.display = 'block';
+        const countEl = card.querySelector('[data-img-count]');
+        if (countEl && imgs.length > 1) countEl.textContent = `+${imgs.length - 1}`;
       }).catch(() => {});
     }, 100);
   }
 
   card.innerHTML = `
     <!-- 상단 컬러 헤더: 카테고리 + 업체명 -->
-    <div data-card-header style="background:${bg};padding:22px 20px 16px;flex-shrink:0;position:relative;min-height:110px">
-      <div data-header-overlay style="display:none;position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.55) 100%);border-radius:0"></div>
-      <div style="position:relative;z-index:1">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="font-size:44px;line-height:1">${emoji}</div>
+    <div data-card-header style="background:${bg};padding:18px 16px 14px;flex-shrink:0;position:relative">
+      <div style="display:flex;align-items:flex-start;gap:10px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:3px">${job.category}</div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <div style="font-size:16px;font-weight:900;color:#111">${job.biz_name || ''}</div>
-            ${job.biz_rating ? `<span style="background:#FEF3C7;color:#D97706;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">★${job.biz_rating}</span>` : ''}
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:32px;line-height:1">${emoji}</span>
+            <div>
+              <div style="font-size:11px;font-weight:800;color:#555">${job.category}</div>
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+                <div style="font-size:15px;font-weight:900;color:#111">${job.biz_name || ''}</div>
+                ${job.biz_rating ? `<span style="background:#FEF3C7;color:#D97706;font-size:10px;font-weight:900;padding:1px 6px;border-radius:20px">★${job.biz_rating}</span>` : ''}
+                ${isUrgent ? '<span style="background:#C8102E;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">\u{1F525} 급구</span>' : ''}
+              </div>
+            </div>
+          </div>
+          <div style="font-size:18px;font-weight:900;color:#111;line-height:1.3;margin-bottom:4px">${job.title}</div>
+          <div style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,0.07);border-radius:20px;padding:3px 8px">
+            <span style="font-size:12px">\u{1F4CD}</span>
+            <span style="font-size:12px;font-weight:800;color:#333">${dist}</span>
           </div>
         </div>
-        ${isUrgent ? '<span style="background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0">\u{1F525} 급구</span>' : ''}
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-        <div style="font-size:20px;font-weight:900;color:#111;line-height:1.3;flex:1">${job.title}</div>
-        <div style="display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.07);border-radius:20px;padding:4px 10px;white-space:nowrap;flex-shrink:0">
-          <span style="font-size:13px">\u{1F4CD}</span>
-          <span style="font-size:13px;font-weight:800;color:#333">${dist}</span>
+        <!-- 공고 사진 섬네일 -->
+        <div data-card-thumb style="display:none;width:72px;height:72px;flex-shrink:0;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
+          <span data-img-count style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:5px;z-index:1"></span>
         </div>
       </div>
-      </div><!-- z-index wrapper -->
     </div><!-- card-header -->
 
     <!-- 핵심 정보 블록 -->
