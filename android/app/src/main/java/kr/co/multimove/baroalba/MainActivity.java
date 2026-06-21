@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private ValueCallback<Uri[]> fileCb;
+    private boolean captureMode = false;
     private int safeTop = 0, safeBottom = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -44,12 +46,18 @@ public class MainActivity extends AppCompatActivity {
 
         webView = findViewById(R.id.webview);
 
-        // 실제 시스템바 높이를 읽어 CSS --sat / --sab 변수로 주입
+        // 시스템바 + IME(키보드) 높이를 읽어 CSS 변수로 주입
         ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             safeTop    = bars.top;
             safeBottom = bars.bottom;
             applySafeArea();
+
+            boolean imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+            int imeHeight = imeVisible ? Math.max(0, imeInsets.bottom - bars.bottom) : 0;
+            applyKbHeight(imeHeight);
+
             return WindowInsetsCompat.CONSUMED;
         });
 
@@ -119,8 +127,15 @@ public class MainActivity extends AppCompatActivity {
                                              FileChooserParams params) {
                 if (fileCb != null) { fileCb.onReceiveValue(null); fileCb = null; }
                 fileCb = cb;
+                captureMode = params.isCaptureEnabled();
                 try {
-                    startActivityForResult(params.createIntent(), REQ_FILE);
+                    Intent intent;
+                    if (captureMode) {
+                        intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    } else {
+                        intent = params.createIntent();
+                    }
+                    startActivityForResult(intent, REQ_FILE);
                 } catch (Exception e) {
                     fileCb = null;
                     return false;
@@ -157,6 +172,14 @@ public class MainActivity extends AppCompatActivity {
         String js = "document.documentElement.style.setProperty('--sat','" + topDp + "px');" +
                     "document.documentElement.style.setProperty('--sab','" + botDp + "px');";
         webView.evaluateJavascript(js, null);
+    }
+
+    private void applyKbHeight(int pxHeight) {
+        if (webView == null) return;
+        float density = getResources().getDisplayMetrics().density;
+        final int dp = Math.round(pxHeight / density);
+        webView.post(() -> webView.evaluateJavascript(
+            "if(window._onNativeKbChange)window._onNativeKbChange(" + dp + ");", null));
     }
 
     @Override
@@ -199,19 +222,18 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(req, res, data);
         if (req == REQ_FILE) {
             Uri[] results = null;
-            if (res == Activity.RESULT_OK && data != null) {
-                if (data.getClipData() != null) {
-                    // 다중 파일 선택
+            if (res == Activity.RESULT_OK) {
+                if (data != null && data.getClipData() != null) {
                     android.content.ClipData clip = data.getClipData();
                     results = new Uri[clip.getItemCount()];
                     for (int i = 0; i < clip.getItemCount(); i++) {
                         results[i] = clip.getItemAt(i).getUri();
                     }
-                } else if (data.getDataString() != null) {
-                    // 단일 파일 선택
-                    results = new Uri[]{Uri.parse(data.getDataString())};
+                } else if (data != null && data.getData() != null) {
+                    results = new Uri[]{data.getData()};
                 }
             }
+            captureMode = false;
             if (fileCb != null) { fileCb.onReceiveValue(results); fileCb = null; }
         }
     }

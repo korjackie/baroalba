@@ -4759,11 +4759,17 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 대응 (v200: innerHeight+visualViewport 폴링) ──
+// ── 키보드 대응 (v202: 네이티브 IME 인셋 브리지) ──
 (function() {
-  // VirtualKeyboard API 보조 (지원 시)
-  if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
+  // 네이티브 WebView → JS 브리지: MainActivity가 IME 높이를 dp로 직접 전달
+  window._onNativeKbChange = function(dp) {
+    var wo = document.getElementById('wchat-overlay');
+    var co = document.getElementById('chat-overlay');
+    if (wo && wo.style.display === 'flex') wo.style.paddingBottom = dp > 80 ? dp + 'px' : '';
+    if (co && co.style.display === 'flex') co.style.paddingBottom = dp > 80 ? dp + 'px' : '';
+  };
 
+  // 브라우저 환경 폴백 (WebView 외에서 접속 시)
   function applyKbPad(overlayEl) {
     var baseH = window.innerHeight;
     var baseVV = window.visualViewport ? window.visualViewport.height : baseH;
