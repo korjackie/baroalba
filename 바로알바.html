@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -2748,9 +2748,9 @@
 </div>
 
 <!-- 채팅 (전체화면) -->
-<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
+<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100%;box-sizing:border-box;z-index:500;background:#fff;flex-direction:column">
   <!-- 헤더: 상태바 높이만큼 padding-top (JS로 동적 설정) -->
-  <div id="wchat-header" style="padding-top:calc(var(--sat-safe, 0px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="wchat-header" style="padding-top:max(calc(var(--sat-safe, 0px) + 12px), 40px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
@@ -2786,8 +2786,8 @@
 </div>
 
 <!-- 업주 채팅 (전체화면) -->
-<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-header" style="padding-top:calc(var(--sat-safe, 0px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100%;box-sizing:border-box;z-index:600;background:#fff;flex-direction:column">
+  <div id="chat-header" style="padding-top:max(calc(var(--sat-safe, 0px) + 12px), 40px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
@@ -4666,6 +4666,44 @@ function scrollChatToBottom(scrollId) {
   var el = document.getElementById(scrollId);
   if (el) el.scrollTop = el.scrollHeight;
 }
+
+// ── 키보드 높이 대응 (navigator.virtualKeyboard API) ───────
+(function() {
+  var OVERLAY_IDS = ['wchat-overlay', 'chat-overlay'];
+
+  function applyKb(kbH) {
+    OVERLAY_IDS.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el || el.style.display === 'none') return;
+      el.style.paddingBottom = kbH > 0 ? kbH + 'px' : '';
+    });
+  }
+
+  // ① VirtualKeyboard API (Chrome 110+ / Samsung Internet 23+) — 가장 정확
+  if ('virtualKeyboard' in navigator) {
+    navigator.virtualKeyboard.overlaysContent = true;
+    navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
+      applyKb(e.target.boundingRect.height || 0);
+    });
+  }
+
+  // ② window.resize 폴백 — Chrome Android에서 innerHeight 변화 감지
+  var baseH = window.innerHeight;
+  window.addEventListener('resize', function() {
+    var diff = baseH - window.innerHeight;
+    if (diff > 80) applyKb(diff);
+    else if (diff < 10) applyKb(0);
+  });
+
+  // ③ visualViewport 폴백
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+      var diff = window.innerHeight - window.visualViewport.height;
+      if (diff > 80) applyKb(diff);
+      else if (diff < 10) applyKb(0);
+    });
+  }
+})();
 
 
 // ── 내 지원 현황 ──────────────────────────────────────────
