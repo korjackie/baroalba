@@ -4765,8 +4765,9 @@ function scrollChatToBottom(scrollId) {
   window._onNativeKbChange = function(dp) {
     var wo = document.getElementById('wchat-overlay');
     var co = document.getElementById('chat-overlay');
-    if (wo && wo.style.display === 'flex') wo.style.paddingBottom = dp > 80 ? dp + 'px' : '';
-    if (co && co.style.display === 'flex') co.style.paddingBottom = dp > 80 ? dp + 'px' : '';
+    var val = dp > 80 ? (dp + 16) + 'px' : '';
+    if (wo && wo.style.display === 'flex') wo.style.paddingBottom = val;
+    if (co && co.style.display === 'flex') co.style.paddingBottom = val;
   };
 
   // 브라우저 환경 폴백 (WebView 외에서 접속 시)

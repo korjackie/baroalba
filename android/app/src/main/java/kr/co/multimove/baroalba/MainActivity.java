@@ -10,6 +10,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.webkit.GeolocationPermissions;
+import androidx.core.content.FileProvider;
+import java.io.File;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private ValueCallback<Uri[]> fileCb;
     private boolean captureMode = false;
+    private Uri pendingPhotoUri = null;
     private int safeTop = 0, safeBottom = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -131,7 +134,13 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Intent intent;
                     if (captureMode) {
+                        File photoFile = File.createTempFile("photo_", ".jpg", getCacheDir());
+                        pendingPhotoUri = FileProvider.getUriForFile(
+                            MainActivity.this,
+                            "kr.co.multimove.baroalba.fileprovider",
+                            photoFile);
                         intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, pendingPhotoUri);
                     } else {
                         intent = params.createIntent();
                     }
@@ -223,7 +232,9 @@ public class MainActivity extends AppCompatActivity {
         if (req == REQ_FILE) {
             Uri[] results = null;
             if (res == Activity.RESULT_OK) {
-                if (data != null && data.getClipData() != null) {
+                if (captureMode && pendingPhotoUri != null) {
+                    results = new Uri[]{pendingPhotoUri};
+                } else if (data != null && data.getClipData() != null) {
                     android.content.ClipData clip = data.getClipData();
                     results = new Uri[clip.getItemCount()];
                     for (int i = 0; i < clip.getItemCount(); i++) {
@@ -234,6 +245,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             captureMode = false;
+            pendingPhotoUri = null;
             if (fileCb != null) { fileCb.onReceiveValue(results); fileCb = null; }
         }
     }
