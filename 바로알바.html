@@ -4752,15 +4752,18 @@ async function openWChat(applicationId, bizName) {
   }
 }
 
-function closeWChat() {
+function closeWChat(navigate = true) {
   const wo = document.getElementById('wchat-overlay');
+  if (!wo) return;
   wo.style.display = 'none';
   wo.style.paddingBottom = '';
   if (window._clearChatKbOffset) window._clearChatKbOffset();
   if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
-  const chatBtn = document.querySelectorAll('.nav-item')[3];
-  if (chatBtn) setNav(chatBtn, 'chats');
+  if (navigate) {
+    const chatBtn = document.querySelectorAll('.nav-item')[3];
+    if (chatBtn) setNav(chatBtn, 'chats');
+  }
 }
 
 
@@ -6461,7 +6464,8 @@ function setNav(el, tab) {
 
   // 탭 전환 시 열린 오버레이/패널 모두 닫기
   closeOwnerPanel();
-  closeWChat();
+  closeWChat(false);
+  closeChat(false);
   document.getElementById('detail-overlay')?.classList.remove('open');
   document.getElementById('panel-app-job-detail')?.classList.remove('show');
   document.getElementById('panel-community')?.classList.remove('show');
@@ -12479,8 +12483,9 @@ async function openChat(applicationId, workerName) {
   });
 }
 
-function closeChat() {
+function closeChat(navigate = true) {
   const co = document.getElementById('chat-overlay');
+  if (!co) return;
   co.style.display = 'none';
   co.style.paddingBottom = '';
   if (window._clearChatKbOffset) window._clearChatKbOffset();
@@ -12488,8 +12493,10 @@ function closeChat() {
   _chatAppId = null;
   _chatInquiryId = null;
   _chatWorkerUserId = null;
-  const chatBtn = document.querySelectorAll('.nav-item')[3];
-  if (chatBtn) setNav(chatBtn, 'chats');
+  if (navigate) {
+    const chatBtn = document.querySelectorAll('.nav-item')[3];
+    if (chatBtn) setNav(chatBtn, 'chats');
+  }
 }
 
 async function loadChatMessages() {
