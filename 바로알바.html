@@ -3623,10 +3623,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
       reg.update();
     }).catch(()=>{});
-    // 새 SW가 활성화되면 즉시 최신 버전 로드
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+    // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
   }
 
   // 카카오 공유 SDK 초기화 (지도 SDK kakao.maps와 별개)
@@ -4710,53 +4707,55 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 대응 ──
+// ── 키보드 대응 (visualViewport 단독) ──
 (function() {
-  var CHAT_IDS = ['wchat-overlay', 'chat-overlay'];
+  if (!window.visualViewport) return;
 
-  function applyKbOffset(kbH) {
-    CHAT_IDS.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && el.style.display === 'flex') {
-        el.style.paddingBottom = kbH > 30 ? kbH + 'px' : '';
+  var INPUT_BAR_IDS = ['wchat-input-bar', 'chat-input-bar'];
+
+  function adjustInputPosition() {
+    var vp = window.visualViewport;
+    var kbH = window.innerHeight - vp.height - vp.offsetTop;
+    if (kbH < 0) kbH = 0;
+
+    INPUT_BAR_IDS.forEach(function(id) {
+      var bar = document.getElementById(id);
+      if (!bar) return;
+      if (kbH > 100) {
+        bar.style.position = 'fixed';
+        bar.style.bottom = kbH + 'px';
+        bar.style.left = '0';
+        bar.style.right = '0';
+        bar.style.zIndex = '700';
+        bar.style.transition = 'bottom 0.1s ease-out';
+      } else {
+        bar.style.position = '';
+        bar.style.bottom = '';
+        bar.style.left = '';
+        bar.style.right = '';
+        bar.style.zIndex = '';
+        bar.style.transition = '';
       }
     });
+
     var modal = document.getElementById('apply-msg-modal');
-    if (modal) modal.style.bottom = kbH > 30 ? kbH + 'px' : '';
+    if (modal) modal.style.bottom = kbH > 100 ? kbH + 'px' : '';
   }
 
-  // 방법1: virtualKeyboard API (Chrome94+ TWA edge-to-edge)
-  if ('virtualKeyboard' in navigator) {
-    navigator.virtualKeyboard.overlaysContent = true;
-    navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
-      applyKbOffset(e.target.boundingRect.height || 0);
-    });
-  }
-
-  // 방법2: window.resize (adjustResize TWA, API와 병행)
-  var _peakH = 0;
-  function initPeak() { _peakH = window.innerHeight; }
-  if (document.readyState === 'complete') initPeak();
-  else window.addEventListener('load', initPeak);
-  window.addEventListener('resize', function() {
-    if (!_peakH) _peakH = window.innerHeight;
-    _peakH = Math.max(_peakH, window.innerHeight);
-    var kbH = Math.max(0, _peakH - window.innerHeight);
-    if (kbH > 30 || kbH === 0) applyKbOffset(kbH);
-  });
-
-  // 방법3: visualViewport (브라우저 탭)
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function() {
-      var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
-      applyKbOffset(kbH);
-    });
-  }
+  window.visualViewport.addEventListener('resize', adjustInputPosition);
+  window.visualViewport.addEventListener('scroll', adjustInputPosition);
 
   window._clearChatKbOffset = function() {
-    CHAT_IDS.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.style.paddingBottom = '';
+    INPUT_BAR_IDS.forEach(function(id) {
+      var bar = document.getElementById(id);
+      if (bar) {
+        bar.style.position = '';
+        bar.style.bottom = '';
+        bar.style.left = '';
+        bar.style.right = '';
+        bar.style.zIndex = '';
+        bar.style.transition = '';
+      }
     });
   };
 })();
