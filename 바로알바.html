@@ -1547,6 +1547,21 @@
       <button onclick="document.getElementById('job-search-input').value='';filterJobsByKeyword('')" style="background:none;border:none;color:#bbb;font-size:14px;cursor:pointer;padding:0;line-height:1">✕</button>
     </div>
   </div>
+  <!-- 알림 허용 배너 -->
+  <div id="push-banner" style="display:none;margin:8px 16px;background:linear-gradient(135deg,#fff5f5,#fff);border:1.5px solid #fde0e0;border-radius:16px;padding:14px 16px">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="font-size:28px;line-height:1;flex-shrink:0">🔔</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">알림을 허용해주세요</div>
+        <div style="font-size:12px;color:#888;line-height:1.5">새 공고·채팅 메시지를<br>앱이 꺼져있어도 바로 받을 수 있어요</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="allowPushFromBanner()" style="flex:1;padding:9px 0;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">허용하기</button>
+          <button onclick="dismissPushBanner()" style="padding:9px 16px;background:#f5f5f5;color:#aaa;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">나중에</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- AI 맞춤 추천 섹션 (이력 3개 이상 쌓이면 표시) -->
   <div id="ai-rec-section" style="display:none;background:#F8F9FA;border-radius:0 0 16px 16px;margin-bottom:6px"></div>
   <div class="job-list" id="job-list">
@@ -3587,7 +3602,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
-    setTimeout(subscribePush, 3000); // 푸시 구독 등록
+    setTimeout(checkPushPermission, 3000); // 알림 배너 표시
     // 결제 완료 후 리다이렉트 처리
     setTimeout(handlePaymentResult, 500);
     const isCommunityMode = !!new URLSearchParams(location.search).get('community');
@@ -7895,6 +7910,30 @@ async function doLogout() {
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
   location.href = '/login.html';
+}
+
+// ── 알림 배너 ─────────────────────────────────────────────
+function checkPushPermission() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  // 이미 허용됐으면 그냥 구독 등록
+  if (Notification.permission === 'granted') { subscribePush(); return; }
+  // 영구 거절됐으면 배너 표시 안 함
+  if (Notification.permission === 'denied') return;
+  // "나중에" 누른 지 3일 이내면 표시 안 함
+  const snoozed = localStorage.getItem('push_banner_snooze');
+  if (snoozed && Date.now() - parseInt(snoozed) < 3 * 24 * 60 * 60 * 1000) return;
+  const banner = document.getElementById('push-banner');
+  if (banner) banner.style.display = 'block';
+}
+
+async function allowPushFromBanner() {
+  document.getElementById('push-banner').style.display = 'none';
+  await subscribePush();
+}
+
+function dismissPushBanner() {
+  document.getElementById('push-banner').style.display = 'none';
+  localStorage.setItem('push_banner_snooze', Date.now().toString());
 }
 
 // ── Web Push 구독 ─────────────────────────────────────────
