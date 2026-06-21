@@ -4160,7 +4160,7 @@ function openDetail(jobId) {
         if (selectedJobId === jobId) {
           const addrEl = document.getElementById('d-address-text');
           const copyBtn = document.getElementById('d-addr-copy-btn');
-          if (addrEl) { addrEl.textContent = addr.split('\n')[0]; addrEl.style.color = '#333'; }
+          if (addrEl) { const _p = addr.split('\n'); addrEl.textContent = _p.length > 1 ? _p[1] : _p[0]; addrEl.style.color = '#333'; }
           if (copyBtn) copyBtn.style.display = 'block';
         }
       }
@@ -4238,7 +4238,10 @@ function _renderDetailLocation(job) {
   section.style.display = 'block';
   const copyBtn = document.getElementById('d-addr-copy-btn');
   if (hasAddr) {
-    addrEl.textContent = job.address.split('\n')[0];
+    const parts = job.address.split('\n');
+    // "업체명\n도로명주소" 포맷이면 도로명주소 우선, 아니면 전체 표시
+    addrEl.textContent = parts.length > 1 ? parts[1] : parts[0];
+    addrEl.style.color = '#333';
     if (copyBtn) copyBtn.style.display = 'block';
   } else {
     addrEl.textContent = '지도에서 위치 확인';
@@ -4278,8 +4281,10 @@ function _renderDetailLocation(job) {
 }
 
 function copyDetailAddress() {
-  const addr = _detailJob?.address?.split('\n')[0] || '';
-  if (!addr) { showToast('주소 정보가 없어요'); return; }
+  const raw = _detailJob?.address || '';
+  if (!raw) { showToast('주소 정보가 없어요'); return; }
+  const parts = raw.split('\n');
+  const addr = parts.length > 1 ? parts[1] : parts[0];
   navigator.clipboard?.writeText(addr).then(() => showToast('주소가 복사됐어요')).catch(() => showToast(addr));
 }
 
