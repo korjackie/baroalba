@@ -12149,7 +12149,7 @@ async function sendChatMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         user_id: _chatWorkerUserId,
-        title: `\u{1F4AC} 바로알바 - ${bizRecord?.name || '업주'} 메시지`,
+        title: '💬 바로알바 - 새 메시지',
         body: content.length > 40 ? content.slice(0, 40) + '…' : content,
         url: '/바로알바.html'
       })
