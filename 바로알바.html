@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -509,6 +509,11 @@
       background: rgba(0,0,0,0.5);
     }
     .modal-overlay.open { display: flex; }
+
+    /* ── 키보드 오버레이 대응 (Virtual Keyboard API CSS) ── */
+    #wchat-overlay, #chat-overlay {
+      padding-bottom: env(keyboard-inset-height, 0px);
+    }
 
     /* ── 공고 상세 모달 ── */
     .detail-overlay {
@@ -2749,12 +2754,13 @@
 
 <!-- 채팅 (전체화면) -->
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
-  <div id="wchat-header" style="padding-top:16px;padding-left:20px;padding-right:20px;padding-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#C8102E">
+  <div style="height:max(env(safe-area-inset-top,0px),40px);background:#C8102E;flex-shrink:0"></div>
+  <div id="wchat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
-      <div style="font-size:16px;font-weight:800;color:#fff" id="wchat-title">채팅</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px" id="wchat-sub"></div>
+      <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
     </div>
-    <button onclick="closeWChat()" style="font-size:22px;color:rgba(255,255,255,0.85);background:none;border:none;cursor:pointer">✕</button>
+    <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
   <div id="wchat-scroll" style="flex:1;min-height:0;overflow-y:auto">
     <div id="wchat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
@@ -2783,12 +2789,13 @@
 
 <!-- 업주 채팅 (전체화면) -->
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-header" style="padding-top:16px;padding-left:20px;padding-right:20px;padding-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#C8102E">
+  <div style="height:max(env(safe-area-inset-top,0px),40px);background:#C8102E;flex-shrink:0"></div>
+  <div id="chat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
-      <div style="font-size:16px;font-weight:800;color:#fff" id="chat-title">채팅</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px" id="chat-sub"></div>
+      <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
     </div>
-    <button onclick="closeChat()" style="font-size:22px;color:rgba(255,255,255,0.85);background:none;border:none;cursor:pointer">✕</button>
+    <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
   <div id="chat-scroll" style="flex:1;min-height:0;overflow-y:auto">
     <div id="chat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
@@ -4706,35 +4713,14 @@ function scrollChatToBottom(scrollId) {
 }
 
 // ── 키보드 대응 ──
-// viewport-fit=cover 제거 → TWA adjustResize 동작 → 키보드 열릴 때 viewport 축소
-// position:fixed;bottom:0 오버레이가 자동으로 키보드 위에 위치함 (JS 불필요)
-// 아래는 혹시 모를 비정상 케이스 대비 window.resize 피크높이 방식 유지
+// virtualKeyboard.overlaysContent=true → env(keyboard-inset-height) CSS 자동 반영
+// CSS <style>에 padding-bottom:env(keyboard-inset-height,0px) 적용 (이벤트 불필요)
 (function() {
-  var OVERLAY_IDS = ['wchat-overlay', 'chat-overlay'];
-  var _peakH = 0;
-
-  function applyKbOffset(kbH) {
-    OVERLAY_IDS.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && el.style.display === 'flex') {
-        el.style.paddingBottom = kbH > 50 ? kbH + 'px' : '';
-      }
-    });
+  if ('virtualKeyboard' in navigator) {
+    navigator.virtualKeyboard.overlaysContent = true;
   }
 
-  window.addEventListener('load', function() { _peakH = window.innerHeight; });
-  window.addEventListener('resize', function() {
-    if (!_peakH) _peakH = window.innerHeight;
-    _peakH = Math.max(_peakH, window.innerHeight);
-    applyKbOffset(Math.max(0, _peakH - window.innerHeight));
-  });
-
-  window._clearChatKbOffset = function() {
-    OVERLAY_IDS.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.style.paddingBottom = '';
-    });
-  };
+  window._clearChatKbOffset = function() { void 0; };
 })();
 
 
