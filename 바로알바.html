@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -2748,8 +2748,8 @@
 </div>
 
 <!-- 채팅 (전체화면) -->
-<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100%;box-sizing:border-box;z-index:500;background:#fff;flex-direction:column">
-  <div id="wchat-header" style="padding-top:calc(var(--status-bar-h, 28px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+<div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
+  <div id="wchat-header" style="padding-top:max(env(safe-area-inset-top, 0px) + 12px, 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
@@ -2785,8 +2785,8 @@
 </div>
 
 <!-- 업주 채팅 (전체화면) -->
-<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;height:100%;box-sizing:border-box;z-index:600;background:#fff;flex-direction:column">
-  <div id="chat-header" style="padding-top:calc(var(--status-bar-h, 28px) + 12px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+<div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
+  <div id="chat-header" style="padding-top:max(env(safe-area-inset-top, 0px) + 12px, 44px);padding-left:20px;padding-right:20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
     <div>
       <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
@@ -3309,10 +3309,10 @@
       <div class="form-group">
         <label class="form-label" id="f-time-label">시작 시간 *</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <select class="form-select" id="f-start-year"  style="flex:1.2;min-width:0" onchange="syncDateHidden()"></select>
-          <select class="form-select" id="f-start-month" style="flex:0.9;min-width:0" onchange="syncDateHidden()"></select>
-          <select class="form-select" id="f-start-day"   style="flex:0.8;min-width:0" onchange="syncDateHidden()"></select>
-          <input type="hidden" id="f-start-date">
+          <div style="flex:1.6;min-width:0;position:relative">
+            <input class="form-input" id="f-start-date" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1;width:100%;height:100%" onchange="updateStartDateDisplay()">
+            <div id="f-start-date-display" class="form-input" style="cursor:pointer;color:#333;pointer-events:none">날짜 선택</div>
+          </div>
           <select class="form-select" id="f-start-hour" style="flex:1;min-width:0"></select>
           <select class="form-select" id="f-start-min" style="flex:0.9;min-width:0"></select>
         </div>
@@ -3621,7 +3621,11 @@ window.addEventListener('popstate', () => {
 
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.update(); // 최신 sw.js 강제 체크
+    }).catch(()=>{});
+  }
 
   // 카카오 공유 SDK 초기화 (지도 SDK kakao.maps와 별개)
   if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
@@ -4672,9 +4676,7 @@ async function openWChat(applicationId, bizName) {
   document.getElementById('wchat-title').textContent = name;
   document.getElementById('wchat-sub').textContent = name + '와 실시간 대화';
   const _wo = document.getElementById('wchat-overlay');
-  const _vv = window.visualViewport;
-  _wo.style.top    = _vv ? Math.round(_vv.offsetTop) + 'px' : '0';
-  _wo.style.height = _vv ? Math.round(_vv.height)    + 'px' : '100%';
+  _wo.style.top = ''; _wo.style.height = ''; _wo.style.bottom = '';
   _wo.style.display = 'flex';
   document.getElementById('wchat-input').value = '';
   try {
@@ -4706,66 +4708,16 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 대응 (Samsung Internet + Chrome 통합) ──────────
+// ── 키보드 대응: interactive-widget=resizes-content 방식 ──
+// viewport meta에 이미 설정됨. 키보드 올라오면 레이아웃 뷰포트 자체가 줄어
+// position:fixed;bottom:0 요소가 자동으로 키보드 위에 위치함.
+// 아래는 해당 API 미지원 구형 브라우저 폴백만 유지.
 (function() {
-  var FULLSCREEN_IDS = ['wchat-overlay', 'chat-overlay'];
-  var SHEET_IDS      = ['apply-msg-modal'];
-  var _vkActive = false; // virtualKeyboard API 활성화 여부
-
-  function applySize(visH, kbH) {
-    visH = Math.round(visH);
-    kbH  = Math.round(kbH);
-    // 전체화면 오버레이: 키보드 위 가시 영역 높이로 축소
-    FULLSCREEN_IDS.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (!el || el.style.display === 'none') return;
-      el.style.height        = visH + 'px';
-      el.style.top           = '0';
-      el.style.paddingBottom = '';
-    });
-    // 바텀시트: 키보드 높이만큼 위로 밀기
-    SHEET_IDS.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (!el || el.style.display === 'none') return;
-      el.style.bottom = kbH > 0 ? kbH + 'px' : '';
-    });
-  }
-
-  // ① Samsung Internet / Chrome 94+ — VirtualKeyboard API
-  // overlaysContent=true 시 키보드 높이를 geometrychange 이벤트로 정확히 받음
-  if ('virtualKeyboard' in navigator) {
-    _vkActive = true;
-    navigator.virtualKeyboard.overlaysContent = true;
-    navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
-      var kbH  = Math.round(e.target.boundingRect.height || 0);
-      var visH = window.innerHeight - kbH;
-      applySize(visH, kbH);
-    });
-  }
-
-  // ② visualViewport resize — Chrome Android 브라우저 모드 폴백
-  if (window.visualViewport && !_vkActive) {
+  if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function() {
-      var vv   = window.visualViewport;
-      var visH = vv.height;
-      var kbH  = Math.max(0, window.innerHeight - visH - Math.round(vv.offsetTop));
-      applySize(visH, kbH);
-    });
-    window.visualViewport.addEventListener('scroll', function() {
-      var vv   = window.visualViewport;
-      var visH = vv.height;
-      var kbH  = Math.max(0, window.innerHeight - visH - Math.round(vv.offsetTop));
-      applySize(visH, kbH);
-    });
-  }
-
-  // ③ window resize 최후 폴백
-  if (!_vkActive && !window.visualViewport) {
-    var baseH = window.innerHeight;
-    window.addEventListener('resize', function() {
-      var diff = baseH - window.innerHeight;
-      if (diff > 80)     applySize(window.innerHeight, diff);
-      else if (diff < 10) applySize(baseH, 0);
+      var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+      document.getElementById('apply-msg-modal') &&
+        (document.getElementById('apply-msg-modal').style.bottom = kbH > 80 ? kbH + 'px' : '');
     });
   }
 })();
@@ -6338,7 +6290,10 @@ function setNav(el, tab) {
     if (mapLocBtn) mapLocBtn.style.display = 'none';
     panelChats.classList.add('show');
     loadMyChatList();
-    // 채팅 탭 진입 시 모든 미읽음 메시지 일괄 읽음 처리 → 배지 즉시 초기화
+    // 배지 즉시 초기화 (DB 응답 전에 먼저)
+    const _badge = document.getElementById('chat-unread-badge');
+    if (_badge) { _badge.textContent = '0'; _badge.style.display = 'none'; }
+    // 그다음 DB 읽음 처리
     (async function() {
       try {
         if (currentUser) {
@@ -6351,8 +6306,6 @@ function setNav(el, tab) {
                 .neq('sender_id', currentUser.id);
             }
           }
-          const badge = document.getElementById('chat-unread-badge');
-          if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
         }
       } catch(e) {}
     })();
@@ -9871,9 +9824,7 @@ function _openLessonChatOverlay(inquiryId, workerName, workerKakaoUid) {
   document.getElementById('chat-title').textContent = workerName + ' 강사님과 상담';
   document.getElementById('chat-sub').textContent = '레슨 관련 무료 상담';
   const _co1 = document.getElementById('chat-overlay');
-  const _vv1 = window.visualViewport;
-  _co1.style.top    = _vv1 ? Math.round(_vv1.offsetTop) + 'px' : '0';
-  _co1.style.height = _vv1 ? Math.round(_vv1.height)    + 'px' : '100%';
+  _co1.style.top = ''; _co1.style.height = ''; _co1.style.bottom = '';
   _co1.style.display = 'flex';
   document.getElementById('chat-input').value = '';
   loadChatMessages();
@@ -12306,9 +12257,7 @@ async function openChat(applicationId, workerName) {
   document.getElementById('chat-title').textContent = workerName + '님과 채팅';
   document.getElementById('chat-sub').textContent = '지원자와 실시간 대화';
   const _co2 = document.getElementById('chat-overlay');
-  const _vv2 = window.visualViewport;
-  _co2.style.top    = _vv2 ? Math.round(_vv2.offsetTop) + 'px' : '0';
-  _co2.style.height = _vv2 ? Math.round(_vv2.height)    + 'px' : '100%';
+  _co2.style.top = ''; _co2.style.height = ''; _co2.style.bottom = '';
   _co2.style.display = 'flex';
   document.getElementById('chat-input').value = '';
   // 알바생 user_id(kakao_uid) 조회 — Push 알림 전송에 사용
@@ -13490,56 +13439,34 @@ function buildTimeSelects() {
 }
 
 function initDateSelects() {
-  const yearEl  = document.getElementById('f-start-year');
-  const monthEl = document.getElementById('f-start-month');
-  const dayEl   = document.getElementById('f-start-day');
-  if (!yearEl) return;
+  // 오늘 날짜를 기본값으로 표시
+  const inp = document.getElementById('f-start-date');
+  if (!inp) return;
   const now = new Date();
-  yearEl.innerHTML = '';
-  for (let y = now.getFullYear(); y <= now.getFullYear() + 2; y++) {
-    const o = document.createElement('option');
-    o.value = y; o.textContent = y + '년';
-    yearEl.appendChild(o);
-  }
-  monthEl.innerHTML = '';
-  for (let mo = 1; mo <= 12; mo++) {
-    const o = document.createElement('option');
-    o.value = String(mo).padStart(2,'0'); o.textContent = mo + '월';
-    monthEl.appendChild(o);
-  }
-  dayEl.innerHTML = '';
-  for (let d = 1; d <= 31; d++) {
-    const o = document.createElement('option');
-    o.value = String(d).padStart(2,'0'); o.textContent = d + '일';
-    dayEl.appendChild(o);
-  }
-  // 오늘 날짜로 기본값
-  yearEl.value  = now.getFullYear();
-  monthEl.value = String(now.getMonth()+1).padStart(2,'0');
-  dayEl.value   = String(now.getDate()).padStart(2,'0');
-  syncDateHidden();
+  const y = now.getFullYear(), mo = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
+  inp.value = `${y}-${mo}-${d}`;
+  inp.min   = `${y}-${mo}-${d}`;
+  updateStartDateDisplay();
 }
 
-function syncDateHidden() {
-  const y  = document.getElementById('f-start-year')?.value  || '';
-  const mo = document.getElementById('f-start-month')?.value || '';
-  const d  = document.getElementById('f-start-day')?.value   || '';
-  const hidden = document.getElementById('f-start-date');
-  if (hidden && y && mo && d) hidden.value = `${y}-${mo}-${d}`;
+function updateStartDateDisplay() {
+  const val = document.getElementById('f-start-date')?.value;
+  const disp = document.getElementById('f-start-date-display');
+  if (!disp) return;
+  if (!val) { disp.textContent = '날짜 선택'; return; }
+  const [y, mo, d] = val.split('-');
+  disp.textContent = `${y}년 ${parseInt(mo)}월 ${parseInt(d)}일`;
 }
+
+function syncDateHidden() {} // 구형 코드 호환 유지
 
 function setTimeSelects(prefix, date) {
   if (prefix === 'start') {
     const y  = date.getFullYear();
     const mo = String(date.getMonth()+1).padStart(2,'0');
     const d  = String(date.getDate()).padStart(2,'0');
-    const yEl = document.getElementById('f-start-year');
-    const mEl = document.getElementById('f-start-month');
-    const dEl = document.getElementById('f-start-day');
-    if (yEl) yEl.value = y;
-    if (mEl) mEl.value = mo;
-    if (dEl) dEl.value = d;
-    syncDateHidden();
+    const inp = document.getElementById('f-start-date');
+    if (inp) { inp.value = `${y}-${mo}-${d}`; updateStartDateDisplay(); }
   }
   const h = document.getElementById(`f-${prefix}-hour`);
   const m = document.getElementById(`f-${prefix}-min`);
