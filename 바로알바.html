@@ -4644,10 +4644,39 @@ async function openWChat(applicationId, bizName) {
 }
 
 function closeWChat() {
-  document.getElementById('wchat-overlay').style.display = 'none';
+  const wo = document.getElementById('wchat-overlay');
+  wo.style.display = 'none';
+  wo.style.height = '';
+  wo.style.top = '';
   if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
 }
+
+// ── 채팅 오버레이 키보드 대응 (visualViewport로 높이 직접 조정) ──
+(function() {
+  const IDS = ['wchat-overlay', 'chat-overlay'];
+  function adjust() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || el.style.display === 'none') return;
+      el.style.height = vv.height + 'px';
+      el.style.top = vv.offsetTop + 'px';
+    });
+  }
+  function reset(id) {
+    const el = document.getElementById(id);
+    if (el) { el.style.height = ''; el.style.top = ''; }
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjust);
+    window.visualViewport.addEventListener('scroll', adjust);
+  }
+  window.addEventListener('resize', adjust);
+  window._adjustChatViewport = adjust;
+  window._resetChatViewport = reset;
+})();
 
 // ── 내 지원 현황 ──────────────────────────────────────────
 async function loadMyApplications() {
@@ -12132,7 +12161,10 @@ async function openChat(applicationId, workerName) {
 }
 
 function closeChat() {
-  document.getElementById('chat-overlay').style.display = 'none';
+  const co = document.getElementById('chat-overlay');
+  co.style.display = 'none';
+  co.style.height = '';
+  co.style.top = '';
   if (_chatSub) { _chatSub.unsubscribe(); _chatSub = null; }
   _chatAppId = null;
   _chatInquiryId = null;
