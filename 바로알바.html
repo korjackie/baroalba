@@ -2756,17 +2756,14 @@
     </div>
     <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
-  <!-- 메시지+입력창 스크롤 컨테이너: 브라우저가 input focus 시 자동 스크롤 -->
-  <div id="wchat-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column">
-    <div id="wchat-messages" style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0"></div>
-    <!-- 입력창: sticky bottom → 브라우저가 키보드 위로 올림 -->
-    <div id="wchat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
-      <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
-        style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}"
-        onfocus="setTimeout(()=>this.scrollIntoView({block:'nearest',behavior:'smooth'}),300)">
-      <button onclick="sendWChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
-    </div>
+  <div id="wchat-scroll" style="flex:1;min-height:0;overflow-y:auto">
+    <div id="wchat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
+  </div>
+  <div id="wchat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
+    <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
+      style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
+    <button onclick="sendWChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
   </div>
 </div>
 
@@ -2793,15 +2790,14 @@
     </div>
     <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
   </div>
-  <div id="chat-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column">
-    <div id="chat-messages" style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0"></div>
-    <div id="chat-input-bar" style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
-      <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
-        style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"
-        onfocus="setTimeout(()=>this.scrollIntoView({block:'nearest',behavior:'smooth'}),300)">
-      <button onclick="sendChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
-    </div>
+  <div id="chat-scroll" style="flex:1;min-height:0;overflow-y:auto">
+    <div id="chat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
+  </div>
+  <div id="chat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0;padding:10px 16px;display:flex;gap:8px;align-items:center">
+    <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
+      style="flex:1;padding:11px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
+    <button onclick="sendChatMessage()" style="padding:11px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
   </div>
 </div>
 
@@ -3623,8 +3619,12 @@ window.addEventListener('popstate', () => {
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').then(reg => {
-      reg.update(); // 최신 sw.js 강제 체크
+      reg.update();
     }).catch(()=>{});
+    // 새 SW가 활성화되면 즉시 최신 버전 로드
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   }
 
   // 카카오 공유 SDK 초기화 (지도 SDK kakao.maps와 별개)
@@ -4695,7 +4695,8 @@ async function openWChat(applicationId, bizName) {
 function closeWChat() {
   const wo = document.getElementById('wchat-overlay');
   wo.style.display = 'none';
-  wo.style.height = '';
+  wo.style.paddingBottom = '';
+  if (window._clearChatKbOffset) window._clearChatKbOffset();
   if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
 }
@@ -4707,18 +4708,50 @@ function scrollChatToBottom(scrollId) {
   if (el) el.scrollTop = el.scrollHeight;
 }
 
-// ── 키보드 대응: interactive-widget=resizes-content 방식 ──
-// viewport meta에 이미 설정됨. 키보드 올라오면 레이아웃 뷰포트 자체가 줄어
-// position:fixed;bottom:0 요소가 자동으로 키보드 위에 위치함.
-// 아래는 해당 API 미지원 구형 브라우저 폴백만 유지.
+// ── 키보드 대응 (다중 fallback) ──
+// 방법1: interactive-widget=resizes-content → 뷰포트 자체 축소, bottom:0 자동 상승
+// 방법2: navigator.virtualKeyboard.geometrychange → 키보드 높이 감지 → paddingBottom
+// 방법3: visualViewport.resize → 브라우저 모드 폴백
 (function() {
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function() {
-      var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
-      document.getElementById('apply-msg-modal') &&
-        (document.getElementById('apply-msg-modal').style.bottom = kbH > 80 ? kbH + 'px' : '');
+  var CHAT_IDS = ['wchat-overlay', 'chat-overlay'];
+  var MODAL_ID = 'apply-msg-modal';
+
+  function applyKbOffset(kbH) {
+    CHAT_IDS.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.style.display === 'flex') {
+        el.style.paddingBottom = kbH > 50 ? kbH + 'px' : '';
+      }
+    });
+    var modal = document.getElementById(MODAL_ID);
+    if (modal) modal.style.bottom = kbH > 50 ? kbH + 'px' : '';
+  }
+
+  // 방법2: Virtual Keyboard API (Samsung Internet 23+, Chrome 94+)
+  if ('virtualKeyboard' in navigator) {
+    navigator.virtualKeyboard.overlaysContent = true;
+    navigator.virtualKeyboard.addEventListener('geometrychange', function(e) {
+      applyKbOffset(e.target.boundingRect.height || 0);
     });
   }
+
+  // 방법3: visualViewport resize (브라우저 모드 / resizes-content 미지원 기기 폴백)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+      // virtualKeyboard가 이미 처리하면 중복 적용 안 함
+      if ('virtualKeyboard' in navigator) return;
+      var kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+      applyKbOffset(kbH);
+    });
+  }
+
+  // 채팅 닫힐 때 paddingBottom 초기화
+  window._clearChatKbOffset = function() {
+    CHAT_IDS.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.paddingBottom = '';
+    });
+  };
 })();
 
 
@@ -12272,8 +12305,8 @@ async function openChat(applicationId, workerName) {
 function closeChat() {
   const co = document.getElementById('chat-overlay');
   co.style.display = 'none';
-  co.style.height = '';
-  co.style.top = '';
+  co.style.paddingBottom = '';
+  if (window._clearChatKbOffset) window._clearChatKbOffset();
   if (_chatSub) { _chatSub.unsubscribe(); _chatSub = null; }
   _chatAppId = null;
   _chatInquiryId = null;
