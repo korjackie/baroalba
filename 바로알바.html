@@ -3719,7 +3719,7 @@ async function openDeepLink(jobId) {
   if (!job) {
     // 없으면 DB에서 직접 조회 (다른 지역 공고)
     const { data, error: dlErr } = await db.from('job_postings')
-      .select(`id, title, category, base_wage, current_wage, status, lat, lng,
+      .select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
                start_time, duration_hours, needed_count, filled_count,
                description, surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
                work_type, same_day_payment, noshow_deposit,
@@ -4146,8 +4146,22 @@ function openDetail(jobId) {
     document.getElementById('d-deposit').style.display = 'none';
   }
 
-  // 위치 섹션 렌더링
-  _renderDetailLocation(job);
+  // 위치 섹션 렌더링 (address 없으면 DB에서 보완)
+  if (job.address) {
+    _renderDetailLocation(job);
+  } else {
+    _renderDetailLocation(job); // lat/lng 우선 표시
+    fetch(`${APP_CONFIG.SUPABASE_URL}/rest/v1/job_postings?id=eq.${jobId}&select=address`, {
+      headers: { 'apikey': APP_CONFIG.SUPABASE_ANON_KEY }
+    }).then(r => r.json()).then(rows => {
+      const addr = rows[0]?.address;
+      if (addr) {
+        job.address = addr;
+        const addrEl = document.getElementById('d-address-text');
+        if (addrEl && selectedJobId === jobId) addrEl.textContent = addr.split('\n')[0];
+      }
+    }).catch(() => {});
+  }
 
   // 지원하기 버튼 초기화
   const applyBtn = document.getElementById('d-apply-btn');
@@ -4165,6 +4179,8 @@ function openDetail(jobId) {
   if (_rateBtn) { _rateBtn.textContent = '⭐ 업주 평점 남기기'; _rateBtn.style.background = '#FEF3C7'; _rateBtn.style.color = '#D97706'; _rateBtn.onclick = openBizRatingModal; _rateBtn.style.cursor = 'pointer'; }
 
   document.getElementById('detail-overlay').classList.add('open');
+  // 오버레이 애니메이션 완료 후 미니맵 relayout (숨겨진 컨테이너에서 초기화 시 크기 0 문제 해결)
+  setTimeout(() => { if (_detailMiniMap) _detailMiniMap.relayout(); }, 350);
   checkAlreadyApplied(jobId);
   checkBookmarkState(jobId);
 
