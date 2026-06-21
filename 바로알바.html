@@ -2109,6 +2109,19 @@
           </div>
         </div>
 
+        <!-- 수입 현황 (알바생만) -->
+        <div id="income-section" style="display:none;margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:14px;font-weight:900;color:#222">\u{1F4B5} 이번 달 수입</div>
+            <div id="income-month-label" style="font-size:12px;color:#aaa;font-weight:700"></div>
+          </div>
+          <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:16px;padding:14px 16px;margin-bottom:8px">
+            <div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:3px">예상 수입 합계</div>
+            <div id="income-total" style="font-size:28px;font-weight:900;color:#15803d">-</div>
+          </div>
+          <div id="income-list" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+
         <!-- 관리자 페이지 진입 (관리자 계정만 표시) -->
         <div id="admin-banner" style="display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer" onclick="location.href='/admin.html'">
           <div style="width:40px;height:40px;border-radius:12px;background:#C8102E;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">⚙️</div>
@@ -7406,6 +7419,7 @@ async function loadWorkerGrade() {
     document.getElementById('stat-apply-count').textContent = total;
     document.getElementById('stat-complete-count').textContent = done;
     document.getElementById('stat-rating').textContent = w?.rating ? `★${w.rating.toFixed(1)}` : '-';
+    loadWorkerIncome();
   }
 
   const rating  = w?.rating      || 0;
@@ -7490,6 +7504,57 @@ function updateAgePreview(val) {
   if (val.length !== 6) { preview.textContent = ''; return; }
   const age = calcAgeFromBirth(val);
   preview.textContent = age ? `만 ${age}세` : '';
+}
+
+async function loadWorkerIncome() {
+  const sec = document.getElementById('income-section');
+  if (!sec || !currentUser) return;
+
+  const { data: wRow } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+  if (!wRow) return;
+
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const from = new Date(y, m, 1).toISOString();
+  const to   = new Date(y, m + 1, 0, 23, 59, 59).toISOString();
+
+  const { data: apps } = await db.from('applications')
+    .select('completed_at, job_postings(title, current_wage, duration_hours, start_time)')
+    .eq('worker_id', wRow.id)
+    .eq('status', 'completed')
+    .gte('completed_at', from)
+    .lte('completed_at', to)
+    .order('completed_at', { ascending: false });
+
+  sec.style.display = 'block';
+  const label = document.getElementById('income-month-label');
+  if (label) label.textContent = `${y}년 ${m + 1}월`;
+
+  const list = apps || [];
+  const total = list.reduce((sum, a) => {
+    const w = a.job_postings?.current_wage || 0;
+    const h = a.job_postings?.duration_hours || 0;
+    return sum + w * h;
+  }, 0);
+
+  document.getElementById('income-total').textContent = total > 0 ? total.toLocaleString() + '원' : '완료된 근무 없음';
+
+  const listEl = document.getElementById('income-list');
+  if (!listEl) return;
+  if (!list.length) { listEl.innerHTML = ''; return; }
+  listEl.innerHTML = list.slice(0, 5).map(a => {
+    const jp = a.job_postings || {};
+    const earned = (jp.current_wage || 0) * (jp.duration_hours || 0);
+    const d = new Date(a.completed_at);
+    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:12px;padding:10px 14px">
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#222">${jp.title || '근무 완료'}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:1px">${dateStr} · ${jp.duration_hours || '-'}시간</div>
+      </div>
+      <div style="font-size:14px;font-weight:900;color:#15803d">${earned > 0 ? '+' + earned.toLocaleString() + '원' : '-'}</div>
+    </div>`;
+  }).join('');
 }
 
 // ── 크롭 모달 ────────────────────────────────────────
@@ -12441,11 +12506,64 @@ function showBarotouipContact(kakaoUid, name, phone) {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
       <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
       <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">&#128100; ${name}님에게 연락</div>
-      <div style="font-size:13px;color:#888;margin-bottom:18px">직접 연락하거나 공고를 공유해보세요</div>
+      <div style="font-size:13px;color:#888;margin-bottom:18px">직접 연락하거나 스카우트 제안을 보내세요</div>
+      <button onclick="showScoutModal('${kakaoUid}','${name.replace(/'/g,"\\'")}');this.closest('div[style*=fixed]').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C8102E,#e53935);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F3AF} 스카우트 제안 보내기</button>
       ${phone ? `<button onclick="window.location.href='tel:${phone}'" style="width:100%;padding:14px;background:#16a34a;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">&#128222; 전화하기 (${phone})</button>` : `<div style="padding:14px;background:#f8f8f8;border-radius:14px;font-size:13px;color:#aaa;text-align:center;margin-bottom:10px">연락처 미공개</div>`}
       <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:13px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
     </div>`;
   document.body.appendChild(el);
+}
+
+function showScoutModal(workerKakaoUid, workerName) {
+  const activePostings = (postings || []).filter(p => p.status === 'open' || p.status === 'urgent');
+  const postingOptions = activePostings.length
+    ? activePostings.map(p => `<option value="${p.id}">${p.title}</option>`).join('')
+    : '<option value="">등록된 공고 없음</option>';
+
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 16px"></div>
+      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">\u{1F3AF} ${workerName}님께 스카우트 제안</div>
+      <div style="font-size:13px;color:#888;margin-bottom:16px">공고를 선택하면 알림이 전송됩니다</div>
+      ${activePostings.length ? `
+      <select id="scout-posting-select" style="width:100%;padding:12px;border:1.5px solid #eee;border-radius:12px;font-size:14px;font-weight:700;margin-bottom:12px;outline:none;background:#fff">
+        ${postingOptions}
+      </select>` : `<div style="padding:12px;background:#fff5f5;border-radius:12px;color:#C8102E;font-size:13px;font-weight:700;margin-bottom:12px;text-align:center">먼저 공고를 등록해주세요</div>`}
+      <textarea id="scout-msg-text" placeholder="추가 메시지 (선택)" style="width:100%;padding:12px;border:1.5px solid #eee;border-radius:12px;font-size:13px;resize:none;height:72px;box-sizing:border-box;margin-bottom:12px;outline:none;font-family:inherit"></textarea>
+      ${activePostings.length ? `<button onclick="sendScoutProposal('${workerKakaoUid}','${workerName.replace(/'/g,"\\'")}',this)" style="width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4E8} 제안 보내기</button>` : ''}
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:13px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+async function sendScoutProposal(workerKakaoUid, workerName, btn) {
+  const sel = document.getElementById('scout-posting-select');
+  const extraMsg = (document.getElementById('scout-msg-text')?.value || '').trim();
+  const postingId = sel?.value;
+  const posting = (postings || []).find(p => p.id === postingId);
+  if (!posting) { showToast('공고를 선택해주세요'); return; }
+
+  const biz = (businesses || []).find(b => b.owner_id === currentUser?.id);
+  const bizName = biz?.name || '업체';
+  const title = `\u{1F3AF} ${bizName}에서 스카우트 제안이 왔어요!`;
+  const body = `"${posting.title}" · ${posting.current_wage?.toLocaleString()}원/시간${extraMsg ? '\n' + extraMsg : ''}`;
+
+  btn.disabled = true; btn.textContent = '전송 중...';
+  try {
+    const res = await fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: workerKakaoUid, title, body, url: '/바로알바.html' })
+    });
+    btn.closest('div[style*=fixed]')?.remove();
+    showToast('✅ 스카우트 제안을 보냈습니다!');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '\u{1F4E8} 제안 보내기';
+    showToast('전송 실패: ' + e.message);
+  }
 }
 
 async function searchOwnerLocation(q) {
