@@ -681,6 +681,14 @@
       position: sticky; top: 0; z-index: 1; flex-shrink: 0;
     }
 
+    /* ── 온보딩 ── */
+    .ob-dot { width:7px;height:7px;border-radius:50%;background:#e5e7eb;transition:all 0.3s;flex-shrink:0; }
+    .ob-dot.active { background:#C8102E;width:20px;border-radius:4px; }
+    /* ── 희망직종/스케줄 칩 ── */
+    .pref-cat-chip { padding:7px 13px;border:1.5px solid #eee;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555;transition:all 0.15s; }
+    .pref-cat-chip.on { background:#C8102E;color:#fff;border-color:#C8102E; }
+    .avail-day-btn { width:38px;height:38px;border:1.5px solid #eee;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555;transition:all 0.15s; }
+    .avail-day-btn.on { background:#C8102E;color:#fff;border-color:#C8102E; }
     /* ── 로딩 ── */
     .map-loading {
       position: fixed;
@@ -4135,7 +4143,8 @@ function renderList() {
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
     const catClass = getCatClass(job.category);
-    const _da0 = (job.address||'').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+    const _ap0 = (job.address||'').split('\n');
+    const _da0 = _ap0[0] ? (_ap0[1] ? _ap0[0] + ' · ' + _ap0[1].split(' ').slice(0,3).join(' ') : _ap0[0]) : null;
     const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da0 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
     const startStr = job.start_time ? formatTime(job.start_time) : '미정';
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
@@ -4186,7 +4195,8 @@ function renderUrgentFeed() {
   if (!urgentJobs.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   feedList.innerHTML = urgentJobs.map(job => {
-    const _da1 = (job.address||'').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+    const _ap1 = (job.address||'').split('\n');
+    const _da1 = _ap1[0] ? (_ap1[1] ? _ap1[0] + ' · ' + _ap1[1].split(' ').slice(0,3).join(' ') : _ap1[0]) : null;
     const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da1 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
     const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
     const bg = CAT_BG[job.category] || '#f5f5f5';
@@ -4217,7 +4227,8 @@ function openDetail(jobId) {
 
   const isUrgent = job.status === 'urgent';
   const hasSurge = job.wage_delta > 0;
-  const _da2 = (job.address||'').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+  const _ap2 = (job.address||'').split('\n');
+  const _da2 = _ap2[0] ? (_ap2[1] ? _ap2[0] + ' · ' + _ap2[1].split(' ').slice(0,3).join(' ') : _ap2[0]) : null;
   const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da2 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
 
   document.getElementById('d-status').textContent = isUrgent ? '\u{1F525} 급구' : '모집중';
@@ -4387,8 +4398,13 @@ function _renderDetailLocation(job) {
   const copyBtn = document.getElementById('d-addr-copy-btn');
   if (hasAddr) {
     const parts = job.address.split('\n');
-    // "업체명\n도로명주소" 포맷이면 도로명주소 우선, 아니면 전체 표시
-    addrEl.textContent = parts.length > 1 ? parts[1] : parts[0];
+    if (parts.length > 1) {
+      // "업체명\n도로명주소" 포맷: 둘 다 표시
+      const shortAddr = parts[1].split(' ').slice(0,3).join(' ');
+      addrEl.innerHTML = '<div style="font-weight:800;color:#222">' + parts[0] + '</div><div style="font-size:12px;color:#777;margin-top:2px">' + shortAddr + '</div>';
+    } else {
+      addrEl.textContent = parts[0];
+    }
     addrEl.style.color = '#333';
     if (copyBtn) copyBtn.style.display = 'block';
   } else {
@@ -6701,7 +6717,7 @@ function initSwipe() {
   renderSwipeStack();
 }
 
-const CAT_EMOJI = { 'F&B':'☕','물류':'\u{1F4E6}','판매':'\u{1F6CD}','청소':'\u{1F9F9}','이벤트':'\u{1F389}','커플알바':'\u{1F491}','컨텐츠':'\u{1F4F1}','챌린지':'\u{1F3C6}' };
+const CAT_EMOJI = { 'F&B':'\u{1F37D}','물류':'\u{1F4E6}','판매':'\u{1F6CD}','청소':'\u{1F9F9}','이벤트':'\u{1F389}','커플알바':'\u{1F491}','컨텐츠':'\u{1F4F1}','챌린지':'\u{1F3C6}' };
 const CAT_BG = { 'F&B':'#FFF8E1','물류':'#F3F0FF','판매':'#E6FBF4','청소':'#F3F4F6','이벤트':'#FDF2F8','커플알바':'#FFF0F5','컨텐츠':'#F0F4FF','챌린지':'#FFF3E0' };
 
 function renderSwipeStack() {
@@ -6746,7 +6762,8 @@ function makeSwipeCard(job, isTop) {
   card.dataset.jobId = job.id;
   const bg = CAT_BG[job.category] || '#f5f5f5';
   const emoji = CAT_EMOJI[job.category] || '\u{1F4BC}';
-  const _addrFallback = (job.address || '').split('\n')[0].split(' ').slice(0,3).join(' ') || null;
+  const _apSw = (job.address || '').split('\n');
+  const _addrFallback = _apSw[0] ? (_apSw[1] ? _apSw[0] + ' · ' + _apSw[1].split(' ').slice(0,3).join(' ') : _apSw[0]) : null;
   const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_addrFallback || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m) + 'm' : (job.distance_m/1000).toFixed(1) + 'km';
 
   // 날짜/시간 포맷
@@ -6768,27 +6785,24 @@ function makeSwipeCard(job, isTop) {
 
   card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden;cursor:grab;touch-action:none;user-select:none;display:flex;flex-direction:column;`;
 
-  // 카카오 Place 이미지 lazy-load (최상단 카드만)
-  if (isTop && job.lat && job.lng && job.biz_name) {
+  // 공고 업로드 사진 lazy-load (최상단 카드만)
+  if (isTop) {
     setTimeout(() => {
-      try {
-        const ps = new kakao.maps.services.Places();
-        ps.keywordSearch(job.biz_name, (data, status) => {
-          if (status !== kakao.maps.services.Status.OK || !data.length) return;
-          // 가장 가까운 결과 사용
-          const placeId = data[0].id;
-          const imgUrl = `https://t1.daumcdn.net/place/thumb/${placeId}`;
-          const header = card.querySelector('[data-card-header]');
-          if (!header) return;
-          header.style.backgroundImage = `url(${imgUrl})`;
-          header.style.backgroundSize = 'cover';
-          header.style.backgroundPosition = 'center';
-          // 텍스트 가독성용 오버레이
-          header.style.position = 'relative';
-          const overlay = header.querySelector('[data-header-overlay]');
-          if (overlay) overlay.style.display = 'flex';
-        }, { x: job.lng, y: job.lat, radius: 500, size: 1 });
-      } catch(e) {}
+      fetch(APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + job.id + '&select=images,main_image_idx', {
+        headers: { 'apikey': APP_CONFIG.SUPABASE_ANON_KEY, 'Accept': 'application/json' }
+      }).then(r => r.json()).then(rows => {
+        const imgs = rows[0]?.images;
+        if (!imgs?.length) return;
+        const mi = rows[0]?.main_image_idx || 0;
+        const mainImg = imgs[Math.min(mi, imgs.length - 1)] || imgs[0];
+        const header = card.querySelector('[data-card-header]');
+        if (!header) return;
+        header.style.backgroundImage = `url(${mainImg})`;
+        header.style.backgroundSize = 'cover';
+        header.style.backgroundPosition = 'center';
+        const overlay = header.querySelector('[data-header-overlay]');
+        if (overlay) overlay.style.display = 'flex';
+      }).catch(() => {});
     }, 100);
   }
 
@@ -11099,7 +11113,11 @@ function openEditForm(jobId) {
     showMiniMap(p.lat, p.lng, p.address || '');
     if (p.address) {
       document.getElementById('f-address').value = p.address;
-      document.getElementById('location-result').textContent = '\u{1F4CD} ' + p.address;
+      const _eParts = p.address.split('\n');
+      const _eLabel = _eParts.length > 1
+        ? _eParts[0] + ' · ' + _eParts[1].split(' ').slice(0,3).join(' ')
+        : _eParts[0];
+      document.getElementById('location-result').textContent = '\u{1F4CD} ' + _eLabel;
       document.getElementById('location-result').style.display = 'block';
     }
   }
@@ -13287,7 +13305,11 @@ function applyPlaceToForm(placeId) {
   document.getElementById('f-lng').value = p.lng;
   if (p.naver_url) document.getElementById('f-naver-link').value = p.naver_url;
   showMiniMap(p.lat, p.lng, p.address || p.name);
-  document.getElementById('location-result').textContent = '\u{1F4CD} ' + p.name + (p.address ? ' · ' + p.address : '');
+  // "업체명\n도로명주소" 포맷으로 저장 — 위치 미설정 방지 + 상세 표기
+  const addrSave = p.name + (p.address ? '\n' + p.address : '');
+  document.getElementById('f-address').value = addrSave;
+  const shortAddr = p.address ? p.address.split(' ').slice(0,3).join(' ') : '';
+  document.getElementById('location-result').textContent = '\u{1F4CD} ' + p.name + (shortAddr ? ' · ' + shortAddr : '');
   document.getElementById('location-result').style.display = 'block';
   showToast(`\u{1F4CD} ${p.name} 선택됨`);
 }
