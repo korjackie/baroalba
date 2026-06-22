@@ -5813,6 +5813,51 @@ function _updateFollowBtn(btn, businessId, bizName) {
   btn.onclick = () => _toggleFollow(businessId, bizName);
 }
 
+// 이름 이니셜 아바타 HTML 반환 (소셜 사진 없을 때)
+function _initialAvatar(char, size) {
+  const c = char || '?';
+  const ac = avatarColor(c);
+  return `<div style="width:${size}px;height:${size}px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.42)}px;font-weight:900;color:${ac.fg}">${c}</div>`;
+}
+
+// 업주 → 알바생 즐겨찾기
+window._myFavWorkers = window._myFavWorkers || new Set();
+
+async function _loadFavWorkers() {
+  if (!bizRecord?.id) return;
+  try {
+    const { data } = await db.from('fav_workers').select('worker_id').eq('business_id', bizRecord.id);
+    window._myFavWorkers = new Set((data || []).map(r => r.worker_id));
+  } catch(e) {}
+}
+
+async function _toggleWorkerFav(workerId, workerName) {
+  if (!bizRecord?.id) { showToast('업주 계정에서만 사용 가능해요'); return; }
+  const isFav = window._myFavWorkers.has(workerId);
+  try {
+    if (isFav) {
+      await db.from('fav_workers').delete().eq('business_id', bizRecord.id).eq('worker_id', workerId);
+      window._myFavWorkers.delete(workerId);
+      showToast(`${workerName} 즐겨찾기 해제`);
+    } else {
+      await db.from('fav_workers').insert({ business_id: bizRecord.id, worker_id: workerId });
+      window._myFavWorkers.add(workerId);
+      showToast(`${workerName} 즐겨찾기 추가`);
+    }
+    _updateFavWorkerBtn(workerId);
+  } catch(e) { showToast('처리 중 오류가 발생했어요'); }
+}
+
+function _updateFavWorkerBtn(workerId) {
+  const btn = document.getElementById('fav-worker-btn');
+  if (!btn) return;
+  const isFav = window._myFavWorkers.has(workerId);
+  btn.textContent = isFav ? '★ 즐겨찾기' : '☆ 즐겨찾기';
+  btn.style.background = isFav ? '#FFF0F0' : '#f5f5f5';
+  btn.style.color = isFav ? '#C8102E' : '#555';
+  btn.style.borderColor = isFav ? '#C8102E' : '#e0e0e0';
+}
+
 async function _renderFollowingSection() {
   const section = document.getElementById('following-section');
   const list = document.getElementById('following-list');
@@ -6066,11 +6111,24 @@ function _showCounterpartProfile(type) {
   const avatarBig = cp.photoUrl
     ? `<img src="${cp.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #eee" onerror="this.style.display='none'">`
     : `<div style="width:80px;height:80px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:${ac.fg}">${(cp.name||'?').charAt(0)}</div>`;
+  const _row = (label, val) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:11px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px;flex-shrink:0">${label}</span><span style="font-size:13px;font-weight:700;color:#222;text-align:right;max-width:65%">${val}</span></div>`;
   const rows = [];
   if (isWorker) {
-    if (cp.age) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">나이</span><span style="font-size:13px;font-weight:700">${cp.age}세</span></div>`);
-    if (cp.gender) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">성별</span><span style="font-size:13px;font-weight:700">${cp.gender === 'M' ? '남성' : cp.gender === 'F' ? '여성' : cp.gender}</span></div>`);
-    if (cp.region) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">지역</span><span style="font-size:13px;font-weight:700">${cp.region}</span></div>`);
+    // 평점/실적 (가장 중요한 정보 최상단)
+    const ratingNum = cp.rating ? parseFloat(cp.rating).toFixed(1) : null;
+    const stars = ratingNum ? '★'.repeat(Math.round(cp.rating)) + '☆'.repeat(5 - Math.round(cp.rating)) : null;
+    const completedCount = cp.reviewCount || 0;
+    const noshowCount = cp.noshowCount || 0;
+    const attendRate = completedCount + noshowCount > 0 ? Math.round(completedCount / (completedCount + noshowCount) * 100) : null;
+    if (ratingNum) rows.push(_row('평점', `<span style="color:#C8102E">${stars}</span> <span style="color:#888;font-size:12px">${ratingNum}</span>`));
+    rows.push(_row('완료 건수', `${completedCount}건${attendRate !== null ? ` · 출근율 ${attendRate}%` : ''}`));
+    // 기본 정보
+    if (cp.age && cp.age >= 10) rows.push(_row('나이', `${cp.age}세`));
+    const genderMap = { M: '남성', F: '여성', male: '남성', female: '여성', 남: '남성', 여: '여성' };
+    if (cp.gender) rows.push(_row('성별', genderMap[cp.gender] || cp.gender));
+    if (cp.region) rows.push(_row('지역', cp.region));
+    if (cp.skills) rows.push(_row('보유 스킬', cp.skills));
+    if (cp.selfIntro) rows.push(`<div style="padding:12px 0;border-bottom:1px solid #f5f5f5"><div style="color:#aaa;font-size:13px;margin-bottom:6px">자기소개</div><div style="font-size:13px;color:#333;line-height:1.6">${cp.selfIntro}</div></div>`);
   } else {
     if (cp.bizType) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">업종</span><span style="font-size:13px;font-weight:700">${cp.bizType}</span></div>`);
     if (cp.region) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">지역</span><span style="font-size:13px;font-weight:700">${cp.region}</span></div>`);
@@ -6079,14 +6137,16 @@ function _showCounterpartProfile(type) {
   modal.id = 'cp-profile-modal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;background:rgba(0,0,0,0.4)';
   const showFollowBtn = !isWorker && cp.id && !bizRecord; // 알바생이 업주 프로필 볼 때만
+  const showFavBtn = isWorker && cp.id && !!bizRecord; // 업주가 알바생 프로필 볼 때 즐겨찾기
   const followBtnHtml = showFollowBtn ? `<button id="follow-modal-btn" style="padding:8px 28px;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;border:1.5px solid;transition:all 0.15s"></button>` : '';
-  modal.innerHTML = `<div style="width:100%;background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 36px;max-height:70vh;overflow-y:auto" onclick="event.stopPropagation()">
+  const favBtnHtml = showFavBtn ? `<button id="fav-worker-btn" onclick="_toggleWorkerFav('${cp.id}','${cp.name}')" style="padding:8px 24px;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;border:1.5px solid #e0e0e0;background:#f5f5f5;color:#555;transition:all 0.15s">즐겨찾기</button>` : '';
+  modal.innerHTML = `<div style="width:100%;background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 36px;max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px">
       ${avatarBig}
       <div style="font-size:18px;font-weight:900;color:#111">${cp.name}</div>
       <div style="font-size:12px;color:#aaa">${isWorker ? '알바지원자' : '업체'}</div>
-      ${followBtnHtml}
+      ${followBtnHtml}${favBtnHtml}
     </div>
     ${rows.length ? `<div style="margin-top:4px">${rows.join('')}</div>` : '<div style="text-align:center;color:#ccc;font-size:13px;padding:16px 0">등록된 추가 정보가 없어요</div>'}
   </div>`;
@@ -6094,6 +6154,7 @@ function _showCounterpartProfile(type) {
     const btn = document.getElementById('follow-modal-btn');
     _updateFollowBtn(btn, cp.id, cp.name);
   }
+  if (showFavBtn) _updateFavWorkerBtn(cp.id);
   modal.addEventListener('click', () => modal.remove());
   document.body.appendChild(modal);
 }
@@ -7680,11 +7741,17 @@ function openProfile() {
     const provider = oauthProvider || meta.provider || currentUser.app_metadata?.provider || '';
     document.getElementById('profile-name').textContent = meta.full_name || currentUser.email?.split('@')[0] || '사용자';
     document.getElementById('profile-email').textContent = currentUser.email || '';
-    // 소셜 아바타 fallback (workers.photo_url 없을 때 카카오/구글 프로필 사진 표시)
-    const socialAvatar = meta.avatar_url || meta.picture || null;
-    if (socialAvatar) {
-      const avatarInner = document.getElementById('header-avatar-inner');
-      if (avatarInner) avatarInner.innerHTML = `<img src="${socialAvatar}" style="width:100%;height:100%;object-fit:cover">`;
+    // 소셜 아바타 fallback — identity_data까지 탐색
+    const identityAvatar = (currentUser.identities || []).find(i => i.identity_data?.avatar_url)?.identity_data?.avatar_url;
+    const socialAvatar = meta.avatar_url || meta.picture || identityAvatar || null;
+    const avatarInner = document.getElementById('header-avatar-inner');
+    if (avatarInner) {
+      if (socialAvatar) {
+        avatarInner.innerHTML = `<img src="${socialAvatar}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${(meta.full_name||'?').charAt(0)}',58)">`;
+      } else {
+        // 소셜 아바타 없으면 이름 이니셜 컬러 원 (회색 빈 원 대신)
+        avatarInner.innerHTML = _initialAvatar((meta.full_name || currentUser.email || '?').charAt(0), 58);
+      }
     }
     const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
     const adminBanner = document.getElementById('admin-banner');
@@ -9542,10 +9609,11 @@ async function updateNotiBadge() {
   if (unread > 0) {
     badge.textContent = unread > 9 ? '9+' : unread;
     badge.style.display = 'flex';
-    if ('setAppBadge' in navigator) navigator.setAppBadge(unread).catch(() => {});
+    // 업주 모드(bizRecord 있음)에서는 앱 배지를 건드리지 않음 — 업주 알림이 기준이어야 함
+    if (!bizRecord && 'setAppBadge' in navigator) navigator.setAppBadge(unread).catch(() => {});
   } else {
     badge.style.display = 'none';
-    if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+    if (!bizRecord && 'clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
   }
 }
 
@@ -13518,11 +13586,11 @@ async function openChat(applicationId, workerName) {
   document.getElementById('chat-input').value = '';
   // 알바생 정보 조회 (Push 알림용 kakao_uid + 프로필)
   const { data: app } = await db.from('applications')
-    .select('workers(id,name,photo_url,kakao_uid,age,gender,region)').eq('id', applicationId).single();
+    .select('workers(id,name,photo_url,kakao_uid,age,gender,region,rating,review_count,noshow_count,self_intro,skills)').eq('id', applicationId).single();
   if (app?.workers?.kakao_uid) _chatWorkerUserId = app.workers.kakao_uid;
   if (app?.workers) {
     const w = app.workers;
-    window._chatCounterpart = { name: w.name || workerName, photoUrl: w.photo_url || null, id: w.id, age: w.age, gender: w.gender, region: w.region, type: 'worker' };
+    window._chatCounterpart = { name: w.name || workerName, photoUrl: w.photo_url || null, id: w.id, age: w.age, gender: w.gender, region: w.region, rating: w.rating, reviewCount: w.review_count, noshowCount: w.noshow_count, selfIntro: w.self_intro, skills: w.skills, type: 'worker' };
     document.getElementById('chat-title').textContent = window._chatCounterpart.name + '님과 채팅';
     _updateCpHeader('chat', window._chatCounterpart);
   }
@@ -14909,8 +14977,13 @@ async function updateOwnerNotiBadge() {
   const bell = document.getElementById('owner-noti-bell');
   if (bell) bell.style.display = 'block';
   if (!badge) return;
-  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.style.display = 'flex'; }
-  else badge.style.display = 'none';
+  if (unread > 0) {
+    badge.textContent = unread > 9 ? '9+' : unread; badge.style.display = 'flex';
+    if ('setAppBadge' in navigator) navigator.setAppBadge(unread).catch(() => {});
+  } else {
+    badge.style.display = 'none';
+    if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
+  }
 }
 
 async function openOwnerNotifications() {
@@ -14918,6 +14991,7 @@ async function openOwnerNotifications() {
   localStorage.setItem(_ownerNotiKey(), Date.now().toString());
   const badge = document.getElementById('owner-noti-badge');
   if (badge) badge.style.display = 'none';
+  if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
 
   const existing = document.getElementById('owner-noti-overlay');
   if (existing) { existing.remove(); return; }
