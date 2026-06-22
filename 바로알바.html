@@ -2886,11 +2886,14 @@
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
   <div style="height:var(--sat-safe);background:#C8102E;flex-shrink:0"></div>
   <div id="wchat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
-    <div>
-      <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
-      <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
+    <div style="display:flex;align-items:center;gap:12px;cursor:pointer;flex:1;min-width:0" onclick="_showCounterpartProfile('wchat')">
+      <div id="wchat-cp-avatar" style="flex-shrink:0"></div>
+      <div style="min-width:0">
+        <div style="font-size:16px;font-weight:800;color:#222" id="wchat-title">채팅</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px" id="wchat-sub"></div>
+      </div>
     </div>
-    <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;margin-left:8px">✕</button>
   </div>
   <div id="wchat-scroll" style="flex:1;min-height:0;overflow-y:auto">
     <div id="wchat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
@@ -2949,11 +2952,14 @@
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
   <div style="height:var(--sat-safe);background:#C8102E;flex-shrink:0"></div>
   <div id="chat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
-    <div>
-      <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
-      <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
+    <div style="display:flex;align-items:center;gap:12px;cursor:pointer;flex:1;min-width:0" onclick="_showCounterpartProfile('chat')">
+      <div id="chat-cp-avatar" style="flex-shrink:0"></div>
+      <div style="min-width:0">
+        <div style="font-size:16px;font-weight:800;color:#222" id="chat-title">채팅</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px" id="chat-sub"></div>
+      </div>
     </div>
-    <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;margin-left:8px">✕</button>
   </div>
   <div id="chat-scroll" style="flex:1;min-height:0;overflow-y:auto">
     <div id="chat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
@@ -5072,12 +5078,23 @@ async function openWChat(applicationId, bizName) {
   if (!applicationId) { showToast('채팅을 열 수 없습니다 (ID 없음)'); return; }
   const name = bizName || (window._chatBizNames && window._chatBizNames[applicationId]) || '업주';
   _wchatAppId = applicationId;
-  document.getElementById('wchat-title').textContent = name;
-  document.getElementById('wchat-sub').textContent = name + '와 실시간 대화';
+  window._wchatCounterpart = { name, photoUrl: null, type: 'business' };
+  document.getElementById('wchat-title').textContent = name + '님과 채팅';
+  document.getElementById('wchat-sub').textContent = '프로필 보기';
+  _updateCpHeader('wchat', window._wchatCounterpart);
   const _wo = document.getElementById('wchat-overlay');
   _wo.style.display = 'flex';
   history.pushState({ overlay: 'wchat' }, '');
   document.getElementById('wchat-input').value = '';
+  // 상대방(업주) 정보 비동기 로드
+  db.from('applications').select('job_postings(businesses(id,name,photo_url,biz_type,region))').eq('id', applicationId).single().then(({ data }) => {
+    const biz = data?.job_postings?.businesses;
+    if (biz) {
+      window._wchatCounterpart = { name: biz.name || name, photoUrl: biz.photo_url || null, id: biz.id, bizType: biz.biz_type, region: biz.region, type: 'business' };
+      document.getElementById('wchat-title').textContent = window._wchatCounterpart.name + '님과 채팅';
+      _updateCpHeader('wchat', window._wchatCounterpart);
+    }
+  });
   try {
     await loadWChatMessages();
     subscribeWChatMessages();
@@ -5902,6 +5919,76 @@ function _chatBubble(content, isMine) {
   return `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${content}</div>`;
 }
 
+function _cpAvatarHtml(cp, size) {
+  if (!cp) return '';
+  const ac = avatarColor(cp.name || '?');
+  if (cp.photoUrl) {
+    return `<img src="${cp.photoUrl}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:1.5px solid #eee" onerror="this.outerHTML='<div style=\\'width:${size}px;height:${size}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:900;color:${ac.fg}\\'>${(cp.name||'?').charAt(0)}</div>'">`;
+  }
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:900;color:${ac.fg}">${(cp.name||'?').charAt(0)}</div>`;
+}
+
+function _updateCpHeader(type, cp) {
+  const avEl = document.getElementById(type === 'wchat' ? 'wchat-cp-avatar' : 'chat-cp-avatar');
+  if (avEl) avEl.innerHTML = _cpAvatarHtml(cp, 38);
+}
+
+function _showCounterpartProfile(type) {
+  const cp = type === 'wchat' ? window._wchatCounterpart : window._chatCounterpart;
+  if (!cp) return;
+  const existing = document.getElementById('cp-profile-modal');
+  if (existing) existing.remove();
+  const isWorker = cp.type === 'worker';
+  const ac = avatarColor(cp.name || '?');
+  const avatarBig = cp.photoUrl
+    ? `<img src="${cp.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #eee" onerror="this.style.display='none'">`
+    : `<div style="width:80px;height:80px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:${ac.fg}">${(cp.name||'?').charAt(0)}</div>`;
+  const rows = [];
+  if (isWorker) {
+    if (cp.age) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">나이</span><span style="font-size:13px;font-weight:700">${cp.age}세</span></div>`);
+    if (cp.gender) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">성별</span><span style="font-size:13px;font-weight:700">${cp.gender === 'M' ? '남성' : cp.gender === 'F' ? '여성' : cp.gender}</span></div>`);
+    if (cp.region) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">지역</span><span style="font-size:13px;font-weight:700">${cp.region}</span></div>`);
+  } else {
+    if (cp.bizType) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">업종</span><span style="font-size:13px;font-weight:700">${cp.bizType}</span></div>`);
+    if (cp.region) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">지역</span><span style="font-size:13px;font-weight:700">${cp.region}</span></div>`);
+  }
+  const modal = document.createElement('div');
+  modal.id = 'cp-profile-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;background:rgba(0,0,0,0.4)';
+  modal.innerHTML = `<div style="width:100%;background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 36px;max-height:70vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px">
+      ${avatarBig}
+      <div style="font-size:18px;font-weight:900;color:#111">${cp.name}</div>
+      <div style="font-size:12px;color:#aaa">${isWorker ? '알바지원자' : '업체'}</div>
+    </div>
+    ${rows.length ? `<div style="margin-top:4px">${rows.join('')}</div>` : '<div style="text-align:center;color:#ccc;font-size:13px;padding:16px 0">등록된 추가 정보가 없어요</div>'}
+  </div>`;
+  modal.addEventListener('click', () => modal.remove());
+  document.body.appendChild(modal);
+}
+
+function _chatMsgRow(m, isMine, time, cp, type) {
+  const bubble = _chatBubble(m.content, isMine);
+  if (isMine) {
+    return `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+      ${bubble}
+      <div style="font-size:10px;color:#bbb">${time}${m.is_read ? ' · 읽음' : ''}</div>
+    </div>`;
+  }
+  const avatar = cp ? `<div onclick="_showCounterpartProfile('${type}')" style="cursor:pointer;flex-shrink:0">${_cpAvatarHtml(cp, 34)}</div>` : '';
+  return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">
+    <div style="display:flex;align-items:flex-end;gap:8px">
+      ${avatar}
+      <div>
+        ${cp ? `<div style="font-size:11px;font-weight:700;color:#777;margin-bottom:3px">${cp.name}</div>` : ''}
+        ${bubble}
+      </div>
+    </div>
+    <div style="font-size:10px;color:#bbb;padding-left:${cp?42:0}px">${time}</div>
+  </div>`;
+}
+
 function renderWChatMessages(msgs) {
   const el = document.getElementById('wchat-messages');
   if (!msgs.length) {
@@ -5911,10 +5998,7 @@ function renderWChatMessages(msgs) {
   el.innerHTML = msgs.map(m => {
     const isMine = m.sender_id === currentUser?.id;
     const time = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
-    return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px">
-      ${_chatBubble(m.content, isMine)}
-      <div style="font-size:10px;color:#bbb">${time}${isMine && m.is_read ? ' · 읽음' : ''}</div>
-    </div>`;
+    return _chatMsgRow(m, isMine, time, isMine ? null : window._wchatCounterpart, 'wchat');
   }).join('');
   const sc = document.getElementById('wchat-scroll');
   if (sc) sc.scrollTop = sc.scrollHeight;
@@ -5930,9 +6014,8 @@ function subscribeWChatMessages() {
       const isMine = msg.sender_id === currentUser?.id;
       const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
       const div = document.createElement('div');
-      div.style.cssText = `display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px`;
-      div.innerHTML = `${_chatBubble(msg.content, isMine)}<div style="font-size:10px;color:#bbb">${time}</div>`;
-      el.appendChild(div);
+      div.innerHTML = _chatMsgRow(msg, isMine, time, isMine ? null : window._wchatCounterpart, 'wchat');
+      el.appendChild(div.firstElementChild || div);
       const sc = document.getElementById('wchat-scroll');
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
@@ -13228,16 +13311,24 @@ async function openChat(applicationId, workerName) {
   _chatAppId = applicationId;
   _chatWorkerName = workerName;
   _chatWorkerUserId = null;
+  window._chatCounterpart = { name: workerName, photoUrl: null, type: 'worker' };
   document.getElementById('chat-title').textContent = workerName + '님과 채팅';
-  document.getElementById('chat-sub').textContent = '지원자와 실시간 대화';
+  document.getElementById('chat-sub').textContent = '프로필 보기';
+  _updateCpHeader('chat', window._chatCounterpart);
   const _co2 = document.getElementById('chat-overlay');
   _co2.style.display = 'flex';
   history.pushState({ overlay: 'chat' }, '');
   document.getElementById('chat-input').value = '';
-  // 알바생 user_id(kakao_uid) 조회 — Push 알림 전송에 사용
+  // 알바생 정보 조회 (Push 알림용 kakao_uid + 프로필)
   const { data: app } = await db.from('applications')
-    .select('workers(kakao_uid)').eq('id', applicationId).single();
+    .select('workers(id,name,photo_url,kakao_uid,age,gender,region)').eq('id', applicationId).single();
   if (app?.workers?.kakao_uid) _chatWorkerUserId = app.workers.kakao_uid;
+  if (app?.workers) {
+    const w = app.workers;
+    window._chatCounterpart = { name: w.name || workerName, photoUrl: w.photo_url || null, id: w.id, age: w.age, gender: w.gender, region: w.region, type: 'worker' };
+    document.getElementById('chat-title').textContent = window._chatCounterpart.name + '님과 채팅';
+    _updateCpHeader('chat', window._chatCounterpart);
+  }
   await loadChatMessages();
   subscribeChatMessages();
   markMessagesRead(applicationId).then(() => {
@@ -13273,16 +13364,13 @@ async function loadChatMessages() {
 function renderChatMessages(msgs) {
   const el = document.getElementById('chat-messages');
   if (!msgs.length) {
-    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>지원자에게 먼저 연락해보세요 \u{1F4AC}</div>';
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>지원자에게 먼저 연락해보세요 💬</div>';
     return;
   }
   el.innerHTML = msgs.map(m => {
     const isMine = m.sender_id === currentUser?.id;
     const time = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
-    return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px">
-      ${_chatBubble(m.content, isMine)}
-      <div style="font-size:10px;color:#bbb">${time}${isMine && m.is_read ? ' · 읽음' : ''}</div>
-    </div>`;
+    return _chatMsgRow(m, isMine, time, isMine ? null : window._chatCounterpart, 'chat');
   }).join('');
   const csc = document.getElementById('chat-scroll');
   if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
@@ -13298,9 +13386,8 @@ function subscribeChatMessages() {
       const isMine = msg.sender_id === currentUser?.id;
       const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
       const div = document.createElement('div');
-      div.style.cssText = `display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};gap:2px`;
-      div.innerHTML = `${_chatBubble(msg.content, isMine)}<div style="font-size:10px;color:#bbb">${time}</div>`;
-      el.appendChild(div);
+      div.innerHTML = _chatMsgRow(msg, isMine, time, isMine ? null : window._chatCounterpart, 'chat');
+      el.appendChild(div.firstElementChild || div);
       const csc = document.getElementById('chat-scroll');
       if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
       if (!isMine) markMessagesRead(_chatAppId);
