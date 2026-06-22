@@ -3889,6 +3889,23 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // ── 탭 클릭 디버그: 어떤 요소가 터치를 가로막는지 추적 ──
+  window._navDebug = true;
+  document.addEventListener('touchstart', function(e) {
+    if (!window._navDebug) return;
+    var el = e.target;
+    if (el.closest('.bottom-nav')) {
+      var blocker = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+      if (blocker && !blocker.closest('.bottom-nav')) {
+        showToast('[차단] ' + (blocker.id || blocker.className.slice(0,30)));
+      }
+    }
+  }, { passive: true });
+  window.onerror = function(msg, src, line) {
+    showToast('[오류] ' + msg.slice(0, 50) + ' L' + line);
+    return false;
+  };
+
   const _tryInitMap = () => {
     try {
       if (window.kakao && window.kakao.maps) { initMap(); }
@@ -5183,11 +5200,13 @@ window._onFCMToken = async function(token) {
   window._lastKbDp = 0;
   window._kbSendGuard = false;
   window._onNativeKbChange = function(dp) {
-    // 메시지 전송 직후 500ms 동안 키보드 내려감 이벤트 무시 (채팅창 깜빡임 방지)
-    if (dp < 80 && window._kbSendGuard) return;
-    window._lastKbDp = dp;
     var wo = document.getElementById('wchat-overlay');
     var co = document.getElementById('chat-overlay');
+    var chatOpen = (wo && wo.style.display === 'flex') || (co && co.style.display === 'flex');
+    // 채팅 오버레이가 열려있을 때는 키보드 내려감(dp<80) 이벤트 완전 무시
+    // (전송 버튼 touchstart에서 포커스 이동 → IME 닫힘 → 깜빡임 현상 방지)
+    if (dp < 80 && chatOpen) return;
+    window._lastKbDp = dp;
     var val = dp > 80 ? (dp + 16) + 'px' : '';
     if (wo && wo.style.display === 'flex') {
       wo.style.paddingBottom = val;
@@ -7101,11 +7120,16 @@ function setNav(el, tab) {
   const panelChats     = document.getElementById('panel-chats');
   const panelProfile   = document.getElementById('panel-profile');
 
-  // 탭 전환 시 열린 오버레이/패널 모두 닫기
+  // 탭 전환 시 열린 오버레이/패널 모두 닫기 (z-index 높은 것 먼저)
   closeOwnerPanel();
   closeWChat(false);
   closeChat(false);
   document.getElementById('cp-profile-modal')?.remove();
+  // z-index:500 이상 오버레이 강제 숨김 (이전 탭에서 남은 레이어 차단 방지)
+  const _wo = document.getElementById('wchat-overlay');
+  if (_wo) _wo.style.display = 'none';
+  const _co = document.getElementById('chat-overlay');
+  if (_co) _co.style.display = 'none';
   document.getElementById('detail-overlay')?.classList.remove('open');
   document.getElementById('panel-app-job-detail')?.classList.remove('show');
   document.getElementById('panel-community')?.classList.remove('show');
