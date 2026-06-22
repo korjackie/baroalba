@@ -5178,24 +5178,28 @@ function scrollChatToBottom(scrollId) {
 
 // ── FCM 토큰 수신 → Supabase 저장 ──
 async function _saveFCMToken(token) {
-  if (!token) { showToast('FCM:토큰없음'); return; }
-  if (!window.currentUser) { showToast('FCM:로그인대기중'); return; }
-  if (!window.db) { showToast('FCM:DB없음'); return; }
+  if (!token || !window.currentUser || !window.db) return;
   const uid = currentUser.id;
   const kakaoUid = currentUser.user_metadata?.kakao_uid || currentUser.user_metadata?.provider_id;
   const payload = [{ user_id: uid, token, updated_at: new Date().toISOString() }];
   if (kakaoUid && kakaoUid !== uid) {
     payload.push({ user_id: kakaoUid, token, updated_at: new Date().toISOString() });
   }
-  showToast('FCM저장시도:uid=' + uid.slice(0,8));
   const { error } = await db.from('fcm_tokens').upsert(payload, { onConflict: 'user_id' });
   if (error) showToast('FCM저장실패: ' + (error.message || error.code));
-  else showToast('FCM저장성공!');
 }
-window._onFCMToken = async function(token) {
+window._onFCMToken = function(token) {
   window._pendingFCMToken = token;
-  showToast('FCM토큰수신');
-  await _saveFCMToken(token);
+  var tries = 0;
+  var tryStore = function() {
+    if (window.currentUser && window.db) {
+      _saveFCMToken(token);
+    } else if (tries < 20) {
+      tries++;
+      setTimeout(tryStore, 500);
+    }
+  };
+  tryStore();
 };
 
 // ── 키보드 대응 (v202: 네이티브 IME 인셋 브리지) ──
