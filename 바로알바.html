@@ -2129,6 +2129,15 @@
           </div>
         </div>
 
+        <!-- 팔로잉 업체 (알바생만) -->
+        <div id="following-section" style="display:none;margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:14px;font-weight:900;color:#222">🔔 팔로잉 업체</div>
+            <div id="following-count" style="font-size:12px;color:#aaa;font-weight:700"></div>
+          </div>
+          <div id="following-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
         <!-- 수입 현황 (알바생만) -->
         <div id="income-section" style="display:none;margin-bottom:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -5719,6 +5728,80 @@ function avatarColor(str) {
   return AVATAR_PALETTE[h];
 }
 
+// ── Follow ────────────────────────────────────────────────
+window._myFollows = new Set();
+window._myWorkerId = null;
+
+async function _loadMyFollows() {
+  if (!currentUser) return;
+  try {
+    const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!w) return;
+    window._myWorkerId = w.id;
+    const { data: rows } = await db.from('follows').select('business_id').eq('worker_id', w.id);
+    window._myFollows = new Set((rows || []).map(r => r.business_id));
+  } catch(e) { console.warn('[follows] load failed:', e); }
+}
+
+async function _toggleFollow(businessId, bizName) {
+  if (!currentUser || !window._myWorkerId) { showToast('로그인이 필요해요'); return; }
+  const isFollowing = window._myFollows.has(businessId);
+  try {
+    if (isFollowing) {
+      await db.from('follows').delete().eq('worker_id', window._myWorkerId).eq('business_id', businessId);
+      window._myFollows.delete(businessId);
+      showToast(`${bizName} 팔로우를 취소했어요`);
+    } else {
+      await db.from('follows').insert({ worker_id: window._myWorkerId, business_id: businessId });
+      window._myFollows.add(businessId);
+      showToast(`${bizName}을 팔로우했어요 🔔`);
+    }
+    // 프로필 모달 버튼 갱신
+    const btn = document.getElementById('follow-modal-btn');
+    if (btn) _updateFollowBtn(btn, businessId, bizName);
+    // 마이페이지 팔로잉 섹션 갱신
+    _renderFollowingSection();
+  } catch(e) { showToast('처리 중 오류가 발생했어요'); console.error(e); }
+}
+
+function _updateFollowBtn(btn, businessId, bizName) {
+  const isFollowing = window._myFollows.has(businessId);
+  btn.textContent = isFollowing ? '✔ 팔로잉' : '+ 팔로우';
+  btn.style.background = isFollowing ? '#f0fdf4' : 'var(--red)';
+  btn.style.color = isFollowing ? '#16a34a' : '#fff';
+  btn.style.borderColor = isFollowing ? '#86efac' : 'var(--red)';
+  btn.onclick = () => _toggleFollow(businessId, bizName);
+}
+
+async function _renderFollowingSection() {
+  const section = document.getElementById('following-section');
+  const list = document.getElementById('following-list');
+  const cnt = document.getElementById('following-count');
+  if (!section || !list) return;
+  if (!window._myWorkerId || window._myFollows.size === 0) {
+    section.style.display = 'none'; return;
+  }
+  section.style.display = 'block';
+  const bizIds = [...window._myFollows];
+  cnt.textContent = `${bizIds.length}개 업체`;
+  const { data: bizList } = await db.from('businesses').select('id, name, photo_url, biz_type, region').in('id', bizIds);
+  if (!bizList?.length) { section.style.display = 'none'; return; }
+  list.innerHTML = bizList.map(b => {
+    const ac = avatarColor(b.name || '?');
+    const avHtml = b.photo_url
+      ? `<img src="${b.photo_url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #eee">`
+      : `<div style="width:44px;height:44px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:${ac.fg};flex-shrink:0">${(b.name||'?').charAt(0)}</div>`;
+    return `<div style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:12px 14px;border:1px solid #f0f0f0">
+      ${avHtml}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:#222">${b.name}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${[b.biz_type, b.region].filter(Boolean).join(' · ') || '업체'}</div>
+      </div>
+      <button onclick="_toggleFollow('${b.id}','${(b.name||'').replace(/'/g,"\\'")}');_renderFollowingSection()" style="padding:6px 14px;background:#f9f9f9;color:#888;border:1px solid #e0e0e0;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">취소</button>
+    </div>`;
+  }).join('');
+}
+
 // ── 채팅 목록 ─────────────────────────────────────────────
 let _chatTab = 'all';
 let _allChats = [], _latestMsg = {}, _unreadCnt = {};
@@ -5955,15 +6038,22 @@ function _showCounterpartProfile(type) {
   const modal = document.createElement('div');
   modal.id = 'cp-profile-modal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;background:rgba(0,0,0,0.4)';
+  const showFollowBtn = !isWorker && cp.id && !bizRecord; // 알바생이 업주 프로필 볼 때만
+  const followBtnHtml = showFollowBtn ? `<button id="follow-modal-btn" style="padding:8px 28px;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;border:1.5px solid;transition:all 0.15s"></button>` : '';
   modal.innerHTML = `<div style="width:100%;background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 36px;max-height:70vh;overflow-y:auto" onclick="event.stopPropagation()">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px">
       ${avatarBig}
       <div style="font-size:18px;font-weight:900;color:#111">${cp.name}</div>
       <div style="font-size:12px;color:#aaa">${isWorker ? '알바지원자' : '업체'}</div>
+      ${followBtnHtml}
     </div>
     ${rows.length ? `<div style="margin-top:4px">${rows.join('')}</div>` : '<div style="text-align:center;color:#ccc;font-size:13px;padding:16px 0">등록된 추가 정보가 없어요</div>'}
   </div>`;
+  if (showFollowBtn) {
+    const btn = document.getElementById('follow-modal-btn');
+    _updateFollowBtn(btn, cp.id, cp.name);
+  }
   modal.addEventListener('click', () => modal.remove());
   document.body.appendChild(modal);
 }
@@ -7759,6 +7849,9 @@ async function loadWorkerGrade() {
     ageEl.textContent = age ? `· ${age}세` : '';
     _myAge = age;
   }
+
+  // 팔로잉 섹션
+  _loadMyFollows().then(() => _renderFollowingSection());
 
   // stats 그리드
   const statsGrid = document.getElementById('worker-stats-grid');
@@ -12323,14 +12416,33 @@ async function submitPosting() {
       const { data: fresh } = await db.from('job_postings')
         .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
       openShareModal(fresh?.id, true);
-      // 비동기로 매칭 알림 발송 (UI 차단 없음)
+      // 비동기로 매칭 알림 발송 + 팔로워 알림 (UI 차단 없음)
       notifyMatchingWorkers(category, wage, addrText).catch(() => {});
+      _notifyFollowers(fresh?.id, title, wage).catch(() => {});
     } else {
       showToast('✅ 공고가 수정됐습니다');
     }
   } finally {
     btn.disabled = false;
     btn.textContent = btnOrigText;
+  }
+}
+
+// ── 팔로워 알림 발송 ──────────────────────────────────────
+async function _notifyFollowers(jobId, title, wage) {
+  if (!bizRecord?.id) return;
+  const { data: followers } = await db.from('follows')
+    .select('workers(kakao_uid, name)').eq('business_id', bizRecord.id);
+  if (!followers?.length) return;
+  const body = `${title}${wage ? ' · ' + wage : ''} 새 공고가 올라왔어요`;
+  for (const f of followers) {
+    const uid = f.workers?.kakao_uid;
+    if (!uid) continue;
+    fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: uid, title: `🔔 ${bizRecord.name}`, body, url: jobId ? `/바로알바.html?job=${jobId}` : '/바로알바.html' })
+    }).catch(() => {});
   }
 }
 
