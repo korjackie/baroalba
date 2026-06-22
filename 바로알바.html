@@ -5181,7 +5181,10 @@ window._onFCMToken = async function(token) {
 (function() {
   // 네이티브 WebView → JS 브리지: MainActivity가 IME 높이를 dp로 직접 전달
   window._lastKbDp = 0;
+  window._kbSendGuard = false;
   window._onNativeKbChange = function(dp) {
+    // 메시지 전송 직후 500ms 동안 키보드 내려감 이벤트 무시 (채팅창 깜빡임 방지)
+    if (dp < 80 && window._kbSendGuard) return;
     window._lastKbDp = dp;
     var wo = document.getElementById('wchat-overlay');
     var co = document.getElementById('chat-overlay');
@@ -6275,6 +6278,9 @@ async function sendWChatMessage() {
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
   if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
+  // 전송 중 키보드 내려감 이벤트 무시 (채팅창 깜빡임 방지)
+  window._kbSendGuard = true;
+  setTimeout(() => { window._kbSendGuard = false; }, 600);
   input.value = '';
   input.focus();
   // guard ON: scrollTop = scrollHeight 시 키보드 닫힘을 onScrollChanged에서 즉시 복구
@@ -7099,6 +7105,7 @@ function setNav(el, tab) {
   closeOwnerPanel();
   closeWChat(false);
   closeChat(false);
+  document.getElementById('cp-profile-modal')?.remove();
   document.getElementById('detail-overlay')?.classList.remove('open');
   document.getElementById('panel-app-job-detail')?.classList.remove('show');
   document.getElementById('panel-community')?.classList.remove('show');
@@ -13572,6 +13579,8 @@ async function sendChatMessage() {
   const content = input.value.trim();
   if (!content) return;
   if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
+  window._kbSendGuard = true;
+  setTimeout(() => { window._kbSendGuard = false; }, 600);
   input.value = '';
   input.focus();
   if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(true);
