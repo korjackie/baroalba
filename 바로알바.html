@@ -5109,7 +5109,9 @@ async function openWChat(applicationId, bizName) {
   history.pushState({ overlay: 'wchat' }, '');
   document.getElementById('wchat-input').value = '';
   // 상대방(업주) 정보 비동기 로드
-  db.from('applications').select('job_postings(businesses(id,name,photo_url,biz_type,region))').eq('id', applicationId).single().then(({ data }) => {
+  const _loadAppId = applicationId;
+  db.from('applications').select('job_postings(businesses(id,name,photo_url,biz_type,region))').eq('id', _loadAppId).single().then(({ data }) => {
+    if (_wchatAppId !== _loadAppId) return; // 이미 다른 채팅방으로 전환됨
     const biz = data?.job_postings?.businesses;
     if (biz) {
       window._wchatCounterpart = { name: biz.name || name, photoUrl: biz.photo_url || null, id: biz.id, bizType: biz.biz_type, region: biz.region, type: 'business' };
@@ -5143,6 +5145,7 @@ function closeWChat(navigate = true) {
   }
   if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
+  window._wchatCounterpart = null;
   if (navigate) {
     const chatBtn = document.querySelectorAll('.nav-item')[3];
     if (chatBtn) setNav(chatBtn, 'chats');
@@ -5757,7 +5760,11 @@ async function _loadMyFollows() {
 }
 
 async function _toggleFollow(businessId, bizName) {
-  if (!currentUser || !window._myWorkerId) { showToast('로그인이 필요해요'); return; }
+  if (!currentUser) { showToast('로그인이 필요해요'); return; }
+  if (!window._myWorkerId) {
+    await _loadMyFollows();
+    if (!window._myWorkerId) { showToast('알바생 계정에서만 사용할 수 있어요'); return; }
+  }
   const isFollowing = window._myFollows.has(businessId);
   try {
     if (isFollowing) {
@@ -12450,7 +12457,8 @@ async function _notifyFollowers(jobId, title, wage) {
   const { data: followers } = await db.from('follows')
     .select('workers(kakao_uid, name)').eq('business_id', bizRecord.id);
   if (!followers?.length) return;
-  const body = `${title}${wage ? ' · ' + wage : ''} 새 공고가 올라왔어요`;
+  const wageStr = wage ? ' · ' + wage.toLocaleString() + '원' : '';
+  const body = `${title}${wageStr} 새 공고가 올라왔어요`;
   for (const f of followers) {
     const uid = f.workers?.kakao_uid;
     if (!uid) continue;
@@ -13475,6 +13483,7 @@ function closeChat(navigate = true) {
   _chatAppId = null;
   _chatInquiryId = null;
   _chatWorkerUserId = null;
+  window._chatCounterpart = null;
   if (navigate) {
     const chatBtn = document.querySelectorAll('.nav-item')[3];
     if (chatBtn) setNav(chatBtn, 'chats');
