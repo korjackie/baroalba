@@ -1623,10 +1623,18 @@
         <span id="d-type-badge"></span>
         <div class="detail-title" id="d-title" style="margin:0"></div>
       </div>
-      <div class="detail-biz">
-        <span id="d-biz"></span>
-        <span>·</span>
-        <span class="detail-rating" id="d-rating"></span>
+      <div class="detail-biz" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div id="d-biz-avatar" onclick="_showDetailBizProfileById()" style="cursor:pointer;flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span id="d-biz" style="cursor:pointer" onclick="_showDetailBizProfileById()"></span>
+            <span>·</span>
+            <span class="detail-rating" id="d-rating"></span>
+          </div>
+          <div id="d-follow-wrap" style="display:none;margin-top:4px">
+            <button id="d-follow-btn" style="padding:4px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:#555">...</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -4577,6 +4585,28 @@ function openDetail(jobId) {
   }
   document.getElementById('d-biz').textContent = job.biz_name;
   document.getElementById('d-rating').textContent = `★ ${job.biz_rating || '-'} (${job.biz_reviews || 0}개)`;
+  // 업주 아바타 + 팔로우 버튼 (알바생일 때만)
+  const _bizAv = document.getElementById('d-biz-avatar');
+  const _bizFwWrap = document.getElementById('d-follow-wrap');
+  const _bizFwBtn = document.getElementById('d-follow-btn');
+  if (_bizAv) {
+    const _ac = avatarColor(job.biz_name || '?');
+    _bizAv.innerHTML = `<div style="width:36px;height:36px;border-radius:10px;background:${_ac.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:${_ac.fg}">${(job.biz_name||'?').charAt(0)}</div>`;
+    _bizAv.setAttribute('data-biz-id', job.business_id || '');
+    _bizAv.setAttribute('data-biz-name', job.biz_name || '');
+  }
+  if (_bizFwWrap && _bizFwBtn && job.business_id && !bizRecord) {
+    _bizFwWrap.style.display = 'block';
+    const _bname = job.biz_name || '';
+    const _bid = job.business_id;
+    if (!window._myFollows) {
+      _loadMyFollows().then(() => _updateFollowBtn(_bizFwBtn, _bid, _bname));
+    } else {
+      _updateFollowBtn(_bizFwBtn, _bid, _bname);
+    }
+  } else if (_bizFwWrap) {
+    _bizFwWrap.style.display = 'none';
+  }
   const wageLabels = { hourly:'시급', daily:'일급', 'per-job':'건당', monthly:'월급', other:'급여' };
   const wLabelEl = document.getElementById('d-wage-label');
   if (wLabelEl) wLabelEl.textContent = wageLabels[job.wage_type] || '시급';
@@ -5656,7 +5686,7 @@ async function openApplicationJobDetail(jobPostingId) {
   panel.classList.add('show');
 
   const { data: j } = await db.from('job_postings')
-    .select('*, businesses(name, rating, kindness_rating, review_count, phone, description, is_verified)')
+    .select('*, businesses(id, name, rating, kindness_rating, review_count, phone, description, is_verified, logo_url)')
     .eq('id', jobPostingId).single();
   if (!j) { showToast('공고 정보를 불러올 수 없어요'); panel.classList.remove('show'); return; }
 
@@ -6356,6 +6386,12 @@ function _bizAvatarHtml(biz, size) {
     return `<img src="${biz.logo_url}" style="width:${size}px;height:${size}px;border-radius:12px;object-fit:cover;border:1.5px solid #eee" onerror="this.outerHTML='<div style=\\'width:${size}px;height:${size}px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:900;color:${ac.fg}\\'>${initial}</div>'">`;
   }
   return `<div style="width:${size}px;height:${size}px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:900;color:${ac.fg}">${initial}</div>`;
+}
+
+function _showDetailBizProfileById() {
+  const avEl = document.getElementById('d-biz-avatar');
+  const bizId = avEl?.getAttribute('data-biz-id');
+  if (bizId) _showDetailBizProfile(bizId);
 }
 
 async function _showDetailBizProfile(bizId) {
