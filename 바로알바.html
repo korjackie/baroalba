@@ -5344,17 +5344,16 @@ async function openWChat(applicationId, bizName) {
   _wo.style.display = 'flex';
   history.pushState({ overlay: 'wchat' }, '');
   document.getElementById('wchat-input').value = '';
-  // 상대방(업주) 정보 비동기 로드
-  const _loadAppId = applicationId;
-  db.from('applications').select('job_postings(businesses(id,name,photo_url,biz_type,region))').eq('id', _loadAppId).single().then(({ data }) => {
-    if (_wchatAppId !== _loadAppId) return; // 이미 다른 채팅방으로 전환됨
-    const biz = data?.job_postings?.businesses;
-    if (biz) {
+  // 상대방(업주) 정보 — 메시지 로드 전에 먼저 fetch (아바타 사진 반영)
+  try {
+    const { data: _appData } = await db.from('applications').select('job_postings(businesses(id,name,photo_url,biz_type,region))').eq('id', applicationId).single();
+    const biz = _appData?.job_postings?.businesses;
+    if (biz && _wchatAppId === applicationId) {
       window._wchatCounterpart = { name: biz.name || name, photoUrl: biz.photo_url || null, id: biz.id, bizType: biz.biz_type, region: biz.region, type: 'business' };
       document.getElementById('wchat-title').textContent = window._wchatCounterpart.name + '님과 채팅';
       _updateCpHeader('wchat', window._wchatCounterpart);
     }
-  });
+  } catch(_e2) {}
   try {
     await loadWChatMessages();
     subscribeWChatMessages();
@@ -6477,10 +6476,10 @@ async function _showCounterpartProfile(type) {
   if (isWorker && cp.id) {
     try {
       const { data: fw } = await db.from('workers')
-        .select('name, photo_url, bio, experience, gender, age, region, skills, vehicles, strengths, languages, pref_categories')
+        .select('name, photo_url, bio, experience, gender, age, region, skills, vehicles, strengths, languages')
         .eq('id', cp.id).single();
       if (fw) {
-        if (fw.photo_url && !cp.photoUrl) cp.photoUrl = fw.photo_url;
+        if (fw.photo_url) cp.photoUrl = fw.photo_url;
         cp.selfIntro = fw.bio || cp.selfIntro;
         cp.skills = fw.skills || cp.skills;
         cp.vehicles = fw.vehicles;
@@ -6490,6 +6489,21 @@ async function _showCounterpartProfile(type) {
         if (fw.gender) cp.gender = fw.gender;
         if (fw.age)    cp.age    = fw.age;
         if (fw.region) cp.region = fw.region;
+      }
+    } catch(e) {}
+  } else if (!isWorker && cp.id) {
+    // 업주 프로필도 최신 photo_url 로드
+    try {
+      const { data: fb } = await db.from('businesses')
+        .select('photo_url, description, rating, review_count, biz_type, region, is_verified')
+        .eq('id', cp.id).single();
+      if (fb) {
+        if (fb.photo_url) cp.photoUrl = fb.photo_url;
+        if (!cp.bizType && fb.biz_type) cp.bizType = fb.biz_type;
+        if (!cp.region && fb.region) cp.region = fb.region;
+        cp.description = fb.description;
+        cp.rating = fb.rating;
+        cp.reviewCount = fb.review_count;
       }
     } catch(e) {}
   }
@@ -6520,8 +6534,15 @@ async function _showCounterpartProfile(type) {
     if (cp.languages && cp.languages.length) rows.push(_row('언어', Array.isArray(cp.languages) ? cp.languages.join(', ') : cp.languages));
     if (cp.selfIntro) rows.push(`<div style="padding:12px 0;border-bottom:1px solid #f5f5f5"><div style="color:#aaa;font-size:13px;margin-bottom:6px">자기소개</div><div style="font-size:13px;color:#333;line-height:1.6">${cp.selfIntro}</div></div>`);
   } else {
-    if (cp.bizType) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">업종</span><span style="font-size:13px;font-weight:700">${cp.bizType}</span></div>`);
-    if (cp.region) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">지역</span><span style="font-size:13px;font-weight:700">${cp.region}</span></div>`);
+    const bizRatingNum = cp.rating ? parseFloat(cp.rating).toFixed(1) : null;
+    if (bizRatingNum) {
+      const bizStars = '★'.repeat(Math.round(cp.rating)) + '☆'.repeat(5 - Math.round(cp.rating));
+      rows.push(_row('평점', `<span style="color:#C8102E">${bizStars}</span> <span style="color:#888;font-size:12px">${bizRatingNum}</span>`));
+    }
+    if (cp.reviewCount) rows.push(_row('리뷰', `${cp.reviewCount}건`));
+    if (cp.bizType) rows.push(_row('업종', cp.bizType));
+    if (cp.region) rows.push(_row('지역', cp.region));
+    if (cp.description) rows.push(`<div style="padding:12px 0;border-bottom:1px solid #f5f5f5"><div style="color:#aaa;font-size:13px;margin-bottom:6px">업체 소개</div><div style="font-size:13px;color:#333;line-height:1.6">${cp.description}</div></div>`);
   }
   const modal = document.createElement('div');
   modal.id = 'cp-profile-modal';
@@ -14157,11 +14178,11 @@ async function openChat(applicationId, workerName) {
   document.getElementById('chat-input').value = '';
   // 알바생 정보 조회 (Push 알림용 kakao_uid + 프로필)
   const { data: app } = await db.from('applications')
-    .select('workers(id,name,photo_url,kakao_uid,age,gender,region,rating,review_count,noshow_count,self_intro,skills)').eq('id', applicationId).single();
+    .select('workers(id,name,photo_url,kakao_uid,age,gender,region,rating,review_count,noshow_count,bio,skills)').eq('id', applicationId).single();
   if (app?.workers?.kakao_uid) _chatWorkerUserId = app.workers.kakao_uid;
   if (app?.workers) {
     const w = app.workers;
-    window._chatCounterpart = { name: w.name || workerName, photoUrl: w.photo_url || null, id: w.id, age: w.age, gender: w.gender, region: w.region, rating: w.rating, reviewCount: w.review_count, noshowCount: w.noshow_count, selfIntro: w.self_intro, skills: w.skills, type: 'worker' };
+    window._chatCounterpart = { name: w.name || workerName, photoUrl: w.photo_url || null, id: w.id, age: w.age, gender: w.gender, region: w.region, rating: w.rating, reviewCount: w.review_count, noshowCount: w.noshow_count, selfIntro: w.bio, skills: w.skills, type: 'worker' };
     document.getElementById('chat-title').textContent = window._chatCounterpart.name + '님과 채팅';
     _updateCpHeader('chat', window._chatCounterpart);
   }
