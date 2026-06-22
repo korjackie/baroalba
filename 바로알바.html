@@ -3889,22 +3889,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // ── 탭 클릭 디버그: 어떤 요소가 터치를 가로막는지 추적 ──
-  window._navDebug = true;
-  document.addEventListener('touchstart', function(e) {
-    if (!window._navDebug) return;
-    var el = e.target;
-    if (el.closest('.bottom-nav')) {
-      var blocker = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-      if (blocker && !blocker.closest('.bottom-nav')) {
-        showToast('[차단] ' + (blocker.id || blocker.className.slice(0,30)));
-      }
-    }
-  }, { passive: true });
-  window.onerror = function(msg, src, line) {
-    showToast('[오류] ' + msg.slice(0, 50) + ' L' + line);
-    return false;
-  };
 
   const _tryInitMap = () => {
     try {
@@ -7697,6 +7681,12 @@ function openProfile() {
     const provider = oauthProvider || meta.provider || currentUser.app_metadata?.provider || '';
     document.getElementById('profile-name').textContent = meta.full_name || currentUser.email?.split('@')[0] || '사용자';
     document.getElementById('profile-email').textContent = currentUser.email || '';
+    // 소셜 아바타 fallback (workers.photo_url 없을 때 카카오/구글 프로필 사진 표시)
+    const socialAvatar = meta.avatar_url || meta.picture || null;
+    if (socialAvatar) {
+      const avatarInner = document.getElementById('header-avatar-inner');
+      if (avatarInner) avatarInner.innerHTML = `<img src="${socialAvatar}" style="width:100%;height:100%;object-fit:cover">`;
+    }
     const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
     const adminBanner = document.getElementById('admin-banner');
     if (adminBanner) adminBanner.style.display = ADMIN_EMAILS.includes(currentUser.email) ? 'flex' : 'none';
