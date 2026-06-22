@@ -11355,6 +11355,8 @@ function openPostingForm() {
     applyPlaceToForm(defaultPlace.id);
   }
   document.getElementById('form-overlay').classList.add('open');
+  const _fab = document.getElementById('posting-fab');
+  if (_fab) _fab.style.display = 'none';
 }
 
 // ── 근무형태 선택 ─────────────────────────────────────────
@@ -11471,7 +11473,11 @@ function openEditForm(jobId) {
   document.getElementById('form-overlay').classList.add('open');
 }
 
-function closePostingForm() { document.getElementById('form-overlay').classList.remove('open'); }
+function closePostingForm() {
+  document.getElementById('form-overlay').classList.remove('open');
+  const _fab = document.getElementById('posting-fab');
+  if (_fab) _fab.style.display = 'flex';
+}
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
 function addJobImages(input) {
@@ -11887,7 +11893,6 @@ async function submitPosting() {
     duration_hours: duration,
     needed_count: needed || 1,
     start_time: startTime.toISOString(),
-    end_time: endTime ? endTime.toISOString() : null,
     status: surgeEnabled ? 'urgent' : 'open',
     surge_enabled:      surgeEnabled,
     surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
