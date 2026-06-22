@@ -2065,9 +2065,15 @@
 </div>
 
 <!-- 채팅 패널 -->
-<div class="full-panel" id="panel-chats">
-  <div class="panel-header">채팅</div>
-  <div style="padding:16px" id="my-chats-list" onclick="chatListClick(event)">
+<div class="full-panel" id="panel-chats" style="display:flex;flex-direction:column">
+  <div class="panel-header" style="flex-shrink:0">채팅</div>
+  <!-- 탭 필터 -->
+  <div style="display:flex;padding:0 16px;border-bottom:1.5px solid #f0f0f0;background:#fff;flex-shrink:0">
+    <button id="chat-tab-all" onclick="setChatTab('all')" style="flex:1;padding:11px 0;font-size:13px;font-weight:800;border:none;background:none;border-bottom:2.5px solid var(--red);color:var(--red);cursor:pointer;margin-bottom:-1.5px">전체</button>
+    <button id="chat-tab-unread" onclick="setChatTab('unread')" style="flex:1;padding:11px 0;font-size:13px;font-weight:700;border:none;background:none;border-bottom:2.5px solid transparent;color:#bbb;cursor:pointer;margin-bottom:-1.5px">안읽음 <span id="chat-unread-tab-cnt" style="display:none;background:var(--red);color:#fff;border-radius:8px;font-size:10px;font-weight:900;padding:1px 5px;vertical-align:middle"></span></button>
+    <button id="chat-tab-fav" onclick="setChatTab('fav')" style="flex:1;padding:11px 0;font-size:13px;font-weight:700;border:none;background:none;border-bottom:2.5px solid transparent;color:#bbb;cursor:pointer;margin-bottom:-1.5px">⭐ 즐겨찾기</button>
+  </div>
+  <div id="my-chats-list" style="flex:1;overflow-y:auto" onclick="chatListClick(event)">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
   </div>
 </div>
@@ -5695,148 +5701,176 @@ function avatarColor(str) {
   return AVATAR_PALETTE[h];
 }
 
-// ── 채팅 목록 (통합: worker로 지원한 채팅 + 업주로 받은 채팅) ────────────
+// ── 채팅 목록 ─────────────────────────────────────────────
+let _chatTab = 'all';
+let _allChats = [], _latestMsg = {}, _unreadCnt = {};
+
+function setChatTab(tab) {
+  _chatTab = tab;
+  ['all','unread','fav'].forEach(t => {
+    const btn = document.getElementById(`chat-tab-${t}`);
+    if (!btn) return;
+    const on = t === tab;
+    btn.style.borderBottom = `2.5px solid ${on ? 'var(--red)' : 'transparent'}`;
+    btn.style.color = on ? 'var(--red)' : '#bbb';
+    btn.style.fontWeight = on ? '800' : '700';
+    btn.style.marginBottom = '-1.5px';
+  });
+  _renderChatList();
+}
+
+function _toggleChatFav(appId, e) {
+  e.stopPropagation();
+  const favs = JSON.parse(localStorage.getItem('baroalba_chat_favs') || '[]');
+  const idx = favs.indexOf(appId);
+  if (idx > -1) favs.splice(idx, 1); else favs.push(appId);
+  localStorage.setItem('baroalba_chat_favs', JSON.stringify(favs));
+  _renderChatList();
+}
+
+function _renderChatList() {
+  const el = document.getElementById('my-chats-list');
+  if (!el) return;
+  const favs = JSON.parse(localStorage.getItem('baroalba_chat_favs') || '[]');
+  let display = _allChats;
+  if (_chatTab === 'unread') display = display.filter(a => (_unreadCnt[a.id] || 0) > 0);
+  if (_chatTab === 'fav')    display = display.filter(a => favs.includes(a.id));
+
+  const totalUnread = _allChats.filter(a => (_unreadCnt[a.id] || 0) > 0).length;
+  const cntEl = document.getElementById('chat-unread-tab-cnt');
+  if (cntEl) { cntEl.textContent = totalUnread; cntEl.style.display = totalUnread > 0 ? 'inline' : 'none'; }
+
+  if (!display.length) {
+    const msg = _chatTab === 'fav' ? '즐겨찾기한 채팅이 없어요' : _chatTab === 'unread' ? '읽지 않은 채팅이 없어요' : '아직 대화가 없어요';
+    el.innerHTML = `<div style="text-align:center;padding:56px 20px;color:#ccc"><div style="font-size:32px;margin-bottom:12px">${_chatTab==='fav'?'⭐':_chatTab==='unread'?'💬':'🗨️'}</div><div style="font-size:15px;font-weight:700;color:#aaa">${msg}</div></div>`;
+    return;
+  }
+
+  el.innerHTML = display.map(a => {
+    const msg = _latestMsg[a.id];
+    const unread = _unreadCnt[a.id] || 0;
+    const isFav = favs.includes(a.id);
+    const isMine = msg.sender_id === currentUser.id;
+    const msgDate = new Date(msg.created_at);
+    const isToday = msgDate.toDateString() === new Date().toDateString();
+    const timeStr = isToday
+      ? msgDate.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })
+      : `${msgDate.getMonth()+1}/${msgDate.getDate()}`;
+    const ac = avatarColor(a.counterpartName);
+    const avatarHtml = a.photoUrl
+      ? `<img src="${a.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #f0f0f0" onerror="this.outerHTML='<div style=\\'width:52px;height:52px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;color:${ac.fg};flex-shrink:0\\'>${a.counterpartName.charAt(0)}</div>'">`
+      : `<div style="width:52px;height:52px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>`;
+    const preview = msg.content?.startsWith('[img]') ? '📷 사진' : (isMine ? `나: ${msg.content}` : msg.content);
+    return `<div class="chat-swipe-wrap" id="csw-${a.id}">
+      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="display:flex;align-items:center;gap:13px;padding:13px 16px;background:${unread>0?'#FFFAFA':'#fff'};border-left:3.5px solid ${unread>0?'var(--red)':'transparent'};transition:background 0.15s">
+        <div style="position:relative;flex-shrink:0">
+          ${avatarHtml}
+          ${unread>0?`<div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid #fff"></div>`:''}
+          ${isFav&&!unread?`<div style="position:absolute;bottom:-1px;right:-1px;font-size:12px;line-height:1;background:#fff;border-radius:50%;padding:1px">⭐</div>`:''}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+            <div style="font-size:15px;font-weight:${unread>0?'900':'700'};color:${unread>0?'#111':'#222'}">${a.counterpartName}</div>
+            <div style="font-size:11px;color:${unread>0?'var(--red)':'#bbb'};font-weight:${unread>0?'700':'400'}">${timeStr}</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div style="font-size:13px;color:${unread>0?'#333':'#aaa'};font-weight:${unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${preview}</div>
+            ${unread>0?`<div style="min-width:20px;height:20px;background:var(--red);color:#fff;border-radius:10px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0">${unread}</div>`:''}
+          </div>
+          <div style="font-size:11px;color:#d0d0d0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
+        </div>
+      </div>
+      <button onclick="_toggleChatFav('${a.id}',event)" style="width:54px;height:100%;background:${isFav?'#FEF9C3':'#FAFAFA'};color:${isFav?'#F59E0B':'#ccc'};border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">${isFav?'⭐':'☆'}</button>
+      <button class="chat-leave-btn" onclick="confirmLeaveChat('${a.id}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.chat-swipe-wrap').forEach(wrap => {
+    let sx = 0, sy = 0;
+    wrap.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+    wrap.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > Math.abs(dy) * 1.5 && Math.abs(dx) > 36) {
+        const inner = wrap.querySelector('.chat-swipe-inner');
+        el.querySelectorAll('.chat-swipe-inner.revealed').forEach(o => { if (o !== inner) o.classList.remove('revealed'); });
+        inner.classList.toggle('revealed', dx < 0);
+      }
+    }, { passive: true });
+  });
+  el.querySelectorAll('.chat-swipe-inner').forEach(inner => {
+    let lpTimer, lpStartX, lpStartY, lpFired = false;
+    inner.addEventListener('pointerdown', e => { lpFired=false; lpStartX=e.clientX; lpStartY=e.clientY; lpTimer=setTimeout(()=>{lpFired=true;confirmLeaveChat(inner.dataset.appId,inner.dataset.name);},600); });
+    inner.addEventListener('pointermove', e => { if(Math.abs(e.clientX-lpStartX)>10||Math.abs(e.clientY-lpStartY)>10)clearTimeout(lpTimer); });
+    inner.addEventListener('pointerup', ()=>clearTimeout(lpTimer));
+    inner.addEventListener('pointercancel', ()=>clearTimeout(lpTimer));
+    inner.addEventListener('click', e => { if(lpFired){e.stopImmediatePropagation();lpFired=false;} });
+    inner.addEventListener('contextmenu', e=>e.preventDefault());
+  });
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.chat-swipe-wrap')) el.querySelectorAll('.chat-swipe-inner.revealed').forEach(i=>i.classList.remove('revealed'));
+  }, {once:false,capture:true});
+}
+
 async function loadMyChatList() {
   if (isGuest || !currentUser) return;
   const el = document.getElementById('my-chats-list');
   el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
 
-  const allApps = [];
-  const appMap = {};
-
+  const allApps = [], appMap = {};
   const [workerRes, bizRes] = await Promise.all([
     db.from('workers').select('id').eq('kakao_uid', currentUser.id).maybeSingle(),
     db.from('businesses').select('id').eq('kakao_uid', currentUser.id).maybeSingle()
   ]);
 
-  // 1. 내가 지원한 채팅 (worker side)
   if (workerRes.data) {
     const { data: apps } = await db.from('applications')
-      .select('id, job_postings(title, businesses(name))')
+      .select('id, job_postings(title, businesses(name, photo_url))')
       .eq('worker_id', workerRes.data.id);
     (apps || []).forEach(a => {
-      const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.job_postings?.businesses?.name || '업체', side: 'worker' };
-      allApps.push(obj);
-      appMap[a.id] = obj;
+      const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.job_postings?.businesses?.name || '업체', photoUrl: a.job_postings?.businesses?.photo_url || null, side: 'worker' };
+      allApps.push(obj); appMap[a.id] = obj;
     });
   }
 
-  // 2. 내 공고에 지원한 채팅 (owner side)
   const biz = bizRecord || bizRes.data;
   if (biz) {
     const { data: myJobs } = await db.from('job_postings').select('id').eq('business_id', biz.id);
     if (myJobs?.length) {
       const { data: apps } = await db.from('applications')
-        .select('id, workers(name), job_postings(title)')
+        .select('id, workers(name, photo_url), job_postings(title)')
         .in('job_posting_id', myJobs.map(j => j.id));
       (apps || []).forEach(a => {
         if (!appMap[a.id]) {
-          const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.workers?.name || '지원자', side: 'owner' };
-          allApps.push(obj);
-          appMap[a.id] = obj;
+          const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.workers?.name || '지원자', photoUrl: a.workers?.photo_url || null, side: 'owner' };
+          allApps.push(obj); appMap[a.id] = obj;
         }
       });
     }
   }
 
   if (!allApps.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">채팅을 시작해보세요</div></div>';
-    return;
+    _allChats = []; _latestMsg = {}; _unreadCnt = {};
+    _renderChatList(); return;
   }
 
   const { data: messages } = await db.from('messages')
     .select('*').in('application_id', allApps.map(a => a.id))
     .order('created_at', { ascending: false });
 
-  const latestMsg = {}, unreadCnt = {};
+  _latestMsg = {}; _unreadCnt = {};
   (messages || []).forEach(m => {
-    if (!latestMsg[m.application_id]) latestMsg[m.application_id] = m;
+    if (!_latestMsg[m.application_id]) _latestMsg[m.application_id] = m;
     if (!m.is_read && m.sender_id !== currentUser.id)
-      unreadCnt[m.application_id] = (unreadCnt[m.application_id] || 0) + 1;
+      _unreadCnt[m.application_id] = (_unreadCnt[m.application_id] || 0) + 1;
   });
 
-  // 채팅 탭 진입 상태이므로 탭 배지는 항상 숨김
   const badge = document.getElementById('chat-unread-badge');
   if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
 
   const hiddenChats = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
-  const chats = allApps.filter(a => latestMsg[a.id] && !hiddenChats.includes(a.id));
-  chats.sort((a, b) => new Date(latestMsg[b.id].created_at) - new Date(latestMsg[a.id].created_at));
-
-  if (!chats.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:15px;font-weight:700">아직 대화가 없어요</div><div style="font-size:13px;margin-top:6px">채팅을 시작해보세요</div></div>';
-    return;
-  }
-
-  const chatRows = chats.map(a => {
-    const msg = latestMsg[a.id];
-    const unread = unreadCnt[a.id] || 0;
-    const isMine = msg.sender_id === currentUser.id;
-    const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    const ac = avatarColor(a.counterpartName);
-    return `<div class="chat-swipe-wrap" id="csw-${a.id}">
-      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')">
-        <div style="width:44px;height:44px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-            <div style="font-size:14px;font-weight:800;color:#222">${a.counterpartName}</div>
-            <div style="font-size:11px;color:#bbb">${time}</div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content?.startsWith('[img]') ? '\u{1F4F7} 사진' : msg.content}</div>
-            ${unread > 0 ? `<div id="unread-badge-${a.id}" style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;line-height:1">${unread}</div>` : ''}
-          </div>
-          <div style="font-size:11px;color:#bbb;margin-top:2px">${a.title}</div>
-        </div>
-      </div>
-      <button class="chat-leave-btn" onclick="confirmLeaveChat('${a.id}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>
-    </div>`;
-  }).join('');
-  el.innerHTML = chatRows;
-
-  // 스와이프 이벤트 등록
-  el.querySelectorAll('.chat-swipe-wrap').forEach(wrap => {
-    let sx = 0, sy = 0;
-    wrap.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
-    wrap.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - sx;
-      const dy = e.changedTouches[0].clientY - sy;
-      if (Math.abs(dx) > Math.abs(dy) * 1.5 && Math.abs(dx) > 36) {
-        const inner = wrap.querySelector('.chat-swipe-inner');
-        // 다른 열린 항목 닫기
-        el.querySelectorAll('.chat-swipe-inner.revealed').forEach(o => { if (o !== inner) o.classList.remove('revealed'); });
-        inner.classList.toggle('revealed', dx < 0);
-      }
-    }, { passive: true });
-  });
-
-  // 롱프레스 이벤트 등록
-  el.querySelectorAll('.chat-swipe-inner').forEach(inner => {
-    let lpTimer, lpStartX, lpStartY, lpFired = false;
-    inner.addEventListener('pointerdown', e => {
-      lpFired = false;
-      lpStartX = e.clientX; lpStartY = e.clientY;
-      lpTimer = setTimeout(() => {
-        lpFired = true;
-        const appId = inner.dataset.appId, name = inner.dataset.name;
-        confirmLeaveChat(appId, name);
-      }, 600);
-    });
-    inner.addEventListener('pointermove', e => {
-      if (Math.abs(e.clientX - lpStartX) > 10 || Math.abs(e.clientY - lpStartY) > 10) clearTimeout(lpTimer);
-    });
-    inner.addEventListener('pointerup', () => clearTimeout(lpTimer));
-    inner.addEventListener('pointercancel', () => clearTimeout(lpTimer));
-    inner.addEventListener('click', e => { if (lpFired) { e.stopImmediatePropagation(); lpFired = false; } });
-    inner.addEventListener('contextmenu', e => e.preventDefault());
-  });
-
-  // 외부 클릭 시 모든 스와이프 닫기
-  document.addEventListener('click', function _closeSwipes(e) {
-    if (!e.target.closest('.chat-swipe-wrap')) {
-      el.querySelectorAll('.chat-swipe-inner.revealed').forEach(i => i.classList.remove('revealed'));
-    }
-  }, { once: false, capture: true });
+  _allChats = allApps.filter(a => _latestMsg[a.id] && !hiddenChats.includes(a.id));
+  _allChats.sort((a, b) => new Date(_latestMsg[b.id].created_at) - new Date(_latestMsg[a.id].created_at));
+  _renderChatList();
 }
 
 function chatListClick(e) {
