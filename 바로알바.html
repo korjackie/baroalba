@@ -4206,9 +4206,6 @@ function renderList() {
   // 투데이 추천 카드 (가장 가까운 급구, 없으면 첫 번째 공고)
   renderTodayPick();
 
-  // 공고 있으면 시트 자동 확장 (peek/half → full)
-  if (jobs.length > 0 && (sheetState === 'peek' || sheetState === 'half')) setSheetState('full');
-
   if (jobs.length === 0) {
     const nextRadius = currentRadius < 3000 ? 3 : currentRadius < 5000 ? 5 : currentRadius < 10000 ? 10 : null;
     const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">반경 ${nextRadius}km로 늘리기</button>` : '';
