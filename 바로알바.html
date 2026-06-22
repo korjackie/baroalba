@@ -4913,6 +4913,23 @@ async function openWChat(applicationId, bizName) {
   _wo.style.display = 'flex';
   history.pushState({ overlay: 'wchat' }, '');
   document.getElementById('wchat-input').value = '';
+  // blur 시 자동 재포커스 — DOM 변경으로 포커스 이탈 시 복구
+  const _wi = document.getElementById('wchat-input');
+  _wi._blurHandler = function() {
+    if (!window.AndroidBridge?.showKeyboard) return;
+    const ov = document.getElementById('wchat-overlay');
+    if (!ov || ov.style.display === 'none') return;
+    const ae = document.activeElement;
+    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA') && ae !== _wi) return;
+    setTimeout(() => {
+      const ov2 = document.getElementById('wchat-overlay');
+      if (ov2 && ov2.style.display !== 'none') {
+        _wi.focus();
+        window.AndroidBridge.showKeyboard();
+      }
+    }, 80);
+  };
+  _wi.addEventListener('blur', _wi._blurHandler);
   try {
     await loadWChatMessages();
     subscribeWChatMessages();
@@ -4933,6 +4950,9 @@ function closeWChat(navigate = true) {
   wo.style.display = 'none';
   wo.style.paddingBottom = '';
   if (window._clearChatKbOffset) window._clearChatKbOffset();
+  // blur 핸들러 제거
+  const _wi = document.getElementById('wchat-input');
+  if (_wi && _wi._blurHandler) { _wi.removeEventListener('blur', _wi._blurHandler); _wi._blurHandler = null; }
   // SHOW_FORCED 해제 — 채팅창 닫을 때 키보드도 같이 내림
   if (window.AndroidBridge && window.AndroidBridge.hideKeyboard) {
     window.AndroidBridge.hideKeyboard();
@@ -5718,14 +5738,13 @@ function subscribeWChatMessages() {
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
       if (isMine) {
-        // scroll 완료 후 IME 재표시 — scrollTop 변경으로 OS가 IME 닫은 뒤 지연 호출
         if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
-          setTimeout(() => window.AndroidBridge.showKeyboard(), 200);
+          // 타이밍 불확실 — 100/300/600ms 3단계 반복으로 DOM+scroll 완료 후 캐치
+          setTimeout(() => window.AndroidBridge.showKeyboard(), 100);
+          setTimeout(() => window.AndroidBridge.showKeyboard(), 300);
+          setTimeout(() => window.AndroidBridge.showKeyboard(), 600);
         } else {
-          requestAnimationFrame(() => {
-            const inp = document.getElementById('wchat-input');
-            if (inp) inp.focus();
-          });
+          setTimeout(() => { const inp = document.getElementById('wchat-input'); if (inp) inp.focus(); }, 100);
         }
       }
     }).subscribe();
@@ -5849,8 +5868,8 @@ async function sendWChatMessage() {
   input.focus();
   if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
     window.AndroidBridge.showKeyboard();
-    // Realtime 콜백 DOM append+scroll 완료 후 한번 더 (보험)
-    setTimeout(() => window.AndroidBridge.showKeyboard(), 500);
+    setTimeout(() => window.AndroidBridge.showKeyboard(), 300);
+    setTimeout(() => window.AndroidBridge.showKeyboard(), 700);
   }
   _doSendWChat(content).catch(() => {});
 }
