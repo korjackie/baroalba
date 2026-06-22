@@ -1603,17 +1603,20 @@
 <!-- 공고 상세 모달 -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
   <div class="detail-sheet" id="detail-sheet">
-    <div class="detail-handle"></div>
+    <div class="detail-handle" id="detail-drag-handle" style="cursor:grab"></div>
     <div class="detail-header">
       <div class="detail-status-row" style="justify-content:space-between">
         <div style="display:flex;align-items:center;gap:8px">
           <span class="detail-status" id="d-status"></span>
           <span class="detail-cat" id="d-cat"></span>
         </div>
-        <button onclick="openReportModal('job', selectedJobId)" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:2px 0;font-weight:600;line-height:1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-          신고하기
-        </button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="openReportModal('job', selectedJobId)" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:2px 0;font-weight:600;line-height:1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            신고하기
+          </button>
+          <button onclick="document.getElementById('detail-overlay').classList.remove('open');selectedJobId=null" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;padding:0 2px;line-height:1;font-weight:300">✕</button>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span id="d-type-badge"></span>
@@ -4361,8 +4364,10 @@ function loadSubwayInfo(jobsList) {
       const el = document.getElementById(`subway-${job.id}`);
       if (status === kakao.maps.services.Status.OK && result.length > 0) {
         const walkMin = Math.ceil(parseInt(result[0].distance)/67);
-        const name = result[0].place_name.replace(/역$/, '').replace(/\s*\([^)]*\)/g,'').trim();
-        const info = `${name}역 도보 ${walkMin}분`;
+        // place_name: "이대역", "이대역 2호선", "이대역(2호선)" 등 모두 처리
+        let sName = result[0].place_name.replace(/\s*\([^)]*\)/g,'').replace(/\s+\d+호선.*/,'').replace(/\s+GTX-[A-Z].*/,'').trim();
+        if (!sName.endsWith('역')) sName += '역';
+        const info = `${sName} 도보 ${walkMin}분`;
         _subwayCache[job.id] = info;
         if (el) el.textContent = '🚇 ' + info;
       } else {
@@ -4553,6 +4558,16 @@ function openDetail(jobId) {
   document.getElementById('d-duration').textContent = job.duration_hours + '시간';
   document.getElementById('d-needed').textContent = `${job.needed_count - job.filled_count}/${job.needed_count}명`;
   document.getElementById('d-dist').textContent = dist;
+  // GPS가 없으면 역지오코딩으로 거리 셀 주소 표시
+  if (job.lat && job.lng && !window._myLat && typeof kakao !== 'undefined' && kakao.maps?.services) {
+    const _gc = new kakao.maps.services.Geocoder();
+    _gc.coord2RegionCode(job.lng, job.lat, (result, status) => {
+      if (status === kakao.maps.services.Status.OK && document.getElementById('d-dist')) {
+        const dong = result.find(r => r.region_type === 'H') || result[0];
+        if (dong) document.getElementById('d-dist').textContent = `${dong.region_2depth_name} ${dong.region_3depth_name}`;
+      }
+    });
+  }
   document.getElementById('d-desc').textContent = job.description || '';
 
   // 공고 사진 (RPC 결과에 없을 수 있으므로 별도 fetch)
@@ -4700,6 +4715,22 @@ function _renderDetailLocation(job) {
     }
     addrEl.style.color = '#333';
     if (copyBtn) copyBtn.style.display = 'block';
+  } else if (hasLatLng && typeof kakao !== 'undefined' && kakao.maps?.services) {
+    // 역지오코딩으로 행정동 주소 표시
+    addrEl.textContent = '위치 불러오는 중...';
+    addrEl.style.color = '#aaa';
+    const geocoder = new kakao.maps.services.Geocoder();
+    geocoder.coord2RegionCode(job.lng, job.lat, (result, status) => {
+      if (status === kakao.maps.services.Status.OK) {
+        const dong = result.find(r => r.region_type === 'H') || result[0];
+        if (dong) {
+          const addrStr = `${dong.region_1depth_name} ${dong.region_2depth_name} ${dong.region_3depth_name}`;
+          addrEl.textContent = addrStr;
+          addrEl.style.color = '#555';
+        }
+      }
+    });
+    if (copyBtn) copyBtn.style.display = 'none';
   } else {
     addrEl.textContent = '지도에서 위치 확인';
     addrEl.style.color = '#aaa';
@@ -4748,8 +4779,9 @@ function _renderDetailLocation(job) {
       ps.categorySearch('SW8', (result, status) => {
         if (status === kakao.maps.services.Status.OK && result.length > 0) {
           const walkMin = Math.ceil(parseInt(result[0].distance) / 67);
-          const name = result[0].place_name.replace(/\s*\([^)]*\)/g, '').trim();
-          const info = `${name} 도보 ${walkMin}분`;
+          let sName = result[0].place_name.replace(/\s*\([^)]*\)/g,'').replace(/\s+\d+호선.*/,'').replace(/\s+GTX-[A-Z].*/,'').trim();
+          if (!sName.endsWith('역')) sName += '역';
+          const info = `${sName} 도보 ${walkMin}분`;
           _subwayCache[job.id] = info;
           _renderDetailSubway(subwayEl, info);
         }
@@ -4815,6 +4847,48 @@ function closeDetail(e) {
     selectedJobId = null;
   }
 }
+
+// 상세 패널 드래그 다운으로 닫기
+(function setupDetailDrag() {
+  let startY = 0, isDragging = false;
+  const getHandle = () => document.getElementById('detail-drag-handle');
+  const getSheet = () => document.getElementById('detail-sheet');
+  const getOverlay = () => document.getElementById('detail-overlay');
+
+  document.addEventListener('touchstart', e => {
+    const handle = getHandle();
+    if (!handle || !handle.contains(e.target)) return;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    const sheet = getSheet();
+    if (sheet) sheet.style.transition = 'none';
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0) {
+      const sheet = getSheet();
+      if (sheet) sheet.style.transform = `translateY(${dy}px)`;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    const sheet = getSheet();
+    if (sheet) {
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+    }
+    if (dy > 120) {
+      const overlay = getOverlay();
+      if (overlay) overlay.classList.remove('open');
+      selectedJobId = null;
+    }
+  }, { passive: true });
+})();
 
 function isRealJobId(id) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
