@@ -6021,11 +6021,17 @@ async function _doSendWChat(content) {
 
 function _hasBadWord(text) {
   return [
+    // 욕설
     /씨[바발벌빨팔]/,/시[바발벌빨팔]/,/ㅅ[ㅂㅃ]/,/ㅆ[ㅂㅃ]/,
     /개새끼|개색끼|개쌔끼/,
     /병신/,/지랄/,
     /존나|졸라|존내/,
-    /창녀|보지|자지/
+    // 성적
+    /창녀|보지|자지|섹스|야동/,
+    // 폭력·위협
+    /살인|살해|죽여|죽이|칼부림|폭행|협박|강간|성폭|납치|테러/,
+    // 도박·불법
+    /불법|마약|대마|필로폰|히로뽕|도박|총기/,
   ].some(p => p.test(text));
 }
 
@@ -12038,6 +12044,7 @@ async function submitPosting() {
   const duration = isErrand ? errandDuration : (startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null);
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
+  if (_hasBadWord(title) || _hasBadWord(desc)) { showToast('제목 또는 설명에 사용할 수 없는 단어가 포함되어 있어요'); return; }
   if (wageType === 'other') {
     if (!wageOther) { showToast('급여 조건을 입력해주세요'); return; }
   } else if (wageType === 'hourly' && (!wage || wage < 10030)) {
