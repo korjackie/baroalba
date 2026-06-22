@@ -3889,7 +3889,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  try { initMap(); } catch(e) { console.error('initMap 실패:', e); document.getElementById('map-loading')?.classList.add('hidden'); }
+  const _tryInitMap = () => {
+    try {
+      if (window.kakao && window.kakao.maps) { initMap(); }
+      else {
+        let _tries = 0;
+        const _wait = setInterval(() => {
+          _tries++;
+          if (window.kakao && window.kakao.maps) { clearInterval(_wait); initMap(); }
+          else if (_tries > 50) { clearInterval(_wait); document.getElementById('map-loading')?.classList.add('hidden'); console.error('kakao.maps 로드 타임아웃'); }
+        }, 200);
+      }
+    } catch(e) { console.error('initMap 실패:', e); document.getElementById('map-loading')?.classList.add('hidden'); }
+  };
+  _tryInitMap();
   setupSheet();
   setupSearch();
   applyLang();
@@ -6066,12 +6079,12 @@ function _chatMsgRow(m, isMine, time, cp, type) {
       <div style="font-size:10px;color:#bbb">${time}${m.is_read ? ' · 읽음' : ''}</div>
     </div>`;
   }
-  const avatar = cp ? `<div onclick="_showCounterpartProfile('${type}')" style="cursor:pointer;flex-shrink:0">${_cpAvatarHtml(cp, 34)}</div>` : '';
+  const avatar = cp ? `<div onclick="_showCounterpartProfile('${type}')" style="cursor:pointer;flex-shrink:0;align-self:flex-end">${_cpAvatarHtml(cp, 34)}</div>` : '';
   return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">
-    <div style="display:flex;align-items:flex-end;gap:8px">
+    <div style="display:flex;align-items:flex-end;gap:8px;max-width:85%;min-width:0">
       ${avatar}
-      <div>
-        ${cp ? `<div style="font-size:11px;font-weight:700;color:#777;margin-bottom:3px">${cp.name}</div>` : ''}
+      <div style="flex:1;min-width:0">
+        ${cp ? `<div style="font-size:11px;font-weight:700;color:#777;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cp.name}</div>` : ''}
         ${bubble}
       </div>
     </div>
@@ -7130,7 +7143,10 @@ function setNav(el, tab) {
     bottomSheet.style.display = '';
     radiusBadge.style.display = '';
     if (mapLocBtn) mapLocBtn.style.display = 'flex';
-    if (tab === 'map') setSheetState('peek');
+    if (tab === 'map') {
+      setSheetState('peek');
+      if (kakaoMap) setTimeout(() => { try { kakaoMap.relayout(); } catch(e) {} }, 50);
+    }
     // 채팅 탭에서 다른 탭으로 이동 시 실제 미읽음 수로 배지 갱신
     refreshWorkerChatBadge();
   }
