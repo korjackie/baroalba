@@ -2910,12 +2910,12 @@
       <button onclick="cancelWChatImage()" style="background:none;border:none;font-size:20px;color:#aaa;cursor:pointer;padding:4px">✕</button>
     </div>
     <div style="padding:10px 16px;display:flex;gap:8px;align-items:center">
-      <button onclick="toggleMediaPanel('wchat')" id="wchat-plus-btn" style="width:36px;height:36px;flex-shrink:0;background:#f0f0f0;border:none;border-radius:50%;font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;transition:transform 0.2s">+</button>
+      <button onmousedown="event.preventDefault()" onclick="toggleMediaPanel('wchat')" id="wchat-plus-btn" style="width:36px;height:36px;flex-shrink:0;background:#f0f0f0;border:none;border-radius:50%;font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;transition:transform 0.2s">+</button>
       <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
         style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
         onfocus="closeMediaPanel('wchat')"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
-      <button onclick="sendWChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+      <button onmousedown="event.preventDefault()" onclick="sendWChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
 </div>
@@ -5832,8 +5832,9 @@ async function sendWChatMessage() {
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
   input.value = '';
-  input.focus(); // 전송 후 키보드 유지
   await _doSendWChat(content);
+  // DB insert + 구독 콜백 완료 후 재포커스 보장
+  requestAnimationFrame(() => { input.focus(); });
 }
 
 
