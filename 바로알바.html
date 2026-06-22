@@ -11969,9 +11969,10 @@ async function submitPosting() {
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
       console.error('save failed', res.status, errBody);
-      let errMsg = '저장 실패 (' + res.status + ')';
-      try { const j = JSON.parse(errBody); if (j.message) errMsg += ': ' + j.message.slice(0, 60); } catch(e) {}
-      showToast(errMsg, 6000);
+      let errDetail = errBody;
+      try { const j = JSON.parse(errBody); errDetail = j.message || j.hint || errBody; } catch(e) {}
+      alert('저장 실패 (' + res.status + ')\n\n' + errDetail);
+      showToast('저장 실패 (' + res.status + ')', 4000);
       return;
     }
 
