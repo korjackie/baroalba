@@ -968,13 +968,13 @@
       background:#fff; border-radius:14px; margin-bottom:10px;
       box-shadow:0 1px 8px rgba(0,0,0,0.07); border-left:4px solid #e5e7eb; overflow:hidden;
     }
-    .applicant-card.s-pending   { border-left-color:#3B82F6; }
-    .applicant-card.s-reviewing { border-left-color:#F59E0B; }
-    .applicant-card.s-accepted  { border-left-color:#22c55e; }
-    .applicant-card.s-rejected  { border-left-color:#d1d5db; }
-    .applicant-card.s-cancelled { border-left-color:#d1d5db; }
-    .applicant-card.s-completed { border-left-color:#15803d; }
-    .applicant-card.s-noshow    { border-left-color:#BE123C; }
+    .applicant-card.s-pending   { border-left-color:#C8102E; }
+    .applicant-card.s-reviewing { border-left-color:#C8102E; }
+    .applicant-card.s-accepted  { border-left-color:#C8102E; }
+    .applicant-card.s-rejected  { border-left-color:#e0e0e0; }
+    .applicant-card.s-cancelled { border-left-color:#e0e0e0; }
+    .applicant-card.s-completed { border-left-color:#bbb; }
+    .applicant-card.s-noshow    { border-left-color:#e0e0e0; }
     .applicant-card.cmp-selected { box-shadow:0 0 0 2px #3B82F6; }
     .ac-top { display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer; }
     .applicant-avatar {
@@ -989,12 +989,12 @@
     .ac-btn { flex:1; padding:8px 4px; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center; white-space:nowrap; transition:opacity 0.1s; }
     .ac-btn:active { opacity:0.75; }
     .ac-chat  { background:#f5f5f5; color:#555; }
-    .ac-pass  { background:#dcfce7; color:#16a34a; font-weight:800; }
-    .ac-fail  { background:#fee2e2; color:#EF4444; }
-    .ac-done  { background:#EFF6FF; color:#3B82F6; font-weight:800; }
+    .ac-pass  { background:#FFF0F0; color:#C8102E; font-weight:800; }
+    .ac-fail  { background:#f5f5f5; color:#888; }
+    .ac-done  { background:#C8102E; color:#fff; font-weight:800; }
     .ac-sub   { background:#f5f5f5; color:#888; font-size:11px; }
-    .ac-rec   { background:#FFF9E6; color:#D97706; }
-    .ac-blk   { background:#FFF1F2; color:#BE123C; }
+    .ac-rec   { background:#f5f5f5; color:#555; }
+    .ac-blk   { background:#f5f5f5; color:#888; }
 
     /* ── 공고 토글 스위치 ── */
     .posting-toggle { width:44px;height:24px;border-radius:12px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0 }
@@ -1874,9 +1874,8 @@
     <div style="padding:20px 20px 0">
       <div id="apply-msg-job-title" style="font-size:13px;font-weight:700;color:#888;margin-bottom:14px"></div>
       <div style="position:relative">
-        <textarea id="apply-msg-text" maxlength="200" placeholder="업주에게 간단히 자신을 소개해보세요&#10;예) 성실하고 시간 약속 철저히 지킵니다. 잘 부탁드립니다!" style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;resize:none;height:110px;font-family:inherit;box-sizing:border-box;outline:none;line-height:1.6" oninput="document.getElementById('apply-msg-count').textContent=this.value.length" onfocus="setTimeout(()=>this.scrollIntoView({block:'nearest',behavior:'smooth'}),350)"></textarea>
-        <span id="apply-msg-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:#bbb;pointer-events:none">0</span>
-        <span style="position:absolute;bottom:10px;right:28px;font-size:11px;color:#bbb;pointer-events:none">/200</span>
+        <textarea id="apply-msg-text" maxlength="200" placeholder="업주에게 간단히 자신을 소개해보세요&#10;예) 성실하고 시간 약속 철저히 지킵니다. 잘 부탁드립니다!" style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;resize:none;height:110px;font-family:inherit;box-sizing:border-box;outline:none;line-height:1.6" oninput="document.getElementById('apply-msg-count').textContent=this.value.length+'/200'" onfocus="setTimeout(()=>this.scrollIntoView({block:'nearest',behavior:'smooth'}),350)"></textarea>
+        <span id="apply-msg-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:#bbb;pointer-events:none">0/200</span>
       </div>
       <button onclick="submitApplyWithMsg()" id="apply-msg-submit-btn" style="width:100%;margin-top:12px;padding:15px;background:var(--red);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer">⚡ 지원하기</button>
       <button onclick="submitApplyWithMsg(true)" style="width:100%;margin-top:8px;padding:12px;background:none;border:none;font-size:13px;color:#bbb;cursor:pointer;font-weight:600">메시지 없이 지원</button>
@@ -10129,7 +10128,7 @@ function renderPostings() {
     const WT = { errand:{bg:'#F3E8FF',color:'#7C3AED',label:'심부름'}, short:{bg:'#EFF6FF',color:'#3B82F6',label:'단기'}, regular:{bg:'#F0FFF4',color:'#16a34a',label:'정기'}, spot:{bg:'#FFF7ED',color:'#F59E0B',label:'스팟'} };
     const wtStyle = WT[p.work_type] || null;
     const workTypeBadge = wtStyle ? `<span style="font-size:10px;font-weight:700;background:${wtStyle.bg};color:${wtStyle.color};padding:2px 7px;border-radius:6px">${wtStyle.label}</span>` : '';
-    const statusDot = p.status === 'urgent' ? `<span style="color:var(--red);font-weight:800;font-size:12px">● ASAP</span>` : p.status === 'open' ? `<span style="color:#22c55e;font-weight:800;font-size:12px">● 모집중</span>` : `<span style="color:#aaa;font-weight:700;font-size:12px">● 마감</span>`;
+    const statusDot = p.status === 'urgent' ? `<span style="color:#C8102E;font-weight:800;font-size:12px">● ASAP</span>` : p.status === 'open' ? `<span style="color:#555;font-weight:700;font-size:12px">● 모집중</span>` : `<span style="color:#bbb;font-weight:600;font-size:12px">● 마감</span>`;
     const timeInfo = workTimeStr ? workTimeStr : workRangeStr ? `~${workRangeStr}` : createdStr;
     return `
     <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}" onclick="openPostingDetail('${p.id}')">
@@ -10196,6 +10195,7 @@ function toggleApplicantInline(jobId) {
 }
 
 function openPostingDetail(jobId) {
+  window._pdJobId = jobId;
   const p = postings.find(x => x.id === jobId);
   if (!p) return;
 
@@ -10391,13 +10391,13 @@ async function deletePosting(jobId) {
 
 // ── 지원자 카드 공통 생성 함수 ──────────────────────────────
 const _STATUS_BADGE = {
-  pending:   { bg:'#EFF6FF', color:'#3B82F6', label:'검토 전' },
-  reviewing: { bg:'#FFF7ED', color:'#F59E0B', label:'검토중' },
-  accepted:  { bg:'#DCFCE7', color:'#16a34a', label:'연락중' },
-  rejected:  { bg:'#F5F5F5', color:'#999',    label:'탈락' },
-  cancelled: { bg:'#F5F5F5', color:'#bbb',    label:'지원취소' },
-  completed: { bg:'#F0FDF4', color:'#15803d', label:'근무완료' },
-  noshow:    { bg:'#FFF1F2', color:'#BE123C', label:'노쇼' },
+  pending:   { bg:'#FFF0F0', color:'#C8102E', label:'검토 전' },
+  reviewing: { bg:'#FFF0F0', color:'#C8102E', label:'검토중' },
+  accepted:  { bg:'#FFF0F0', color:'#C8102E', label:'연락중' },
+  rejected:  { bg:'#F5F5F5', color:'#888',    label:'탈락' },
+  cancelled: { bg:'#F5F5F5', color:'#aaa',    label:'지원취소' },
+  completed: { bg:'#F5F5F5', color:'#555',    label:'근무완료' },
+  noshow:    { bg:'#F5F5F5', color:'#888',    label:'노쇼' },
 };
 
 function makeApplicantCardHtml(a, opts = {}) {
@@ -11140,11 +11140,11 @@ function formatRelativeDate(dateStr) {
 function buildStatusHtml(a, stopProp) { return ''; }
 
 async function loadApplicantCount(jobId) {
-  const { count } = await db.from('applications')
-    .select('id', { count: 'exact', head: true })
+  const { data } = await db.from('applications')
+    .select('id')
     .eq('job_posting_id', jobId);
   const el = document.getElementById(`app-count-${jobId}`);
-  if (el) el.textContent = count || 0;
+  if (el) el.textContent = (data?.length) ?? 0;
 }
 
 async function updateStats() {
@@ -11392,7 +11392,8 @@ async function submitRating(appId, workerId) {
   const { error: appErr } = await db.from('applications').update({
     status: 'completed',
     worker_rating: rating,
-    worker_review: review || null
+    worker_review: review || null,
+    completed_at: new Date().toISOString()
   }).eq('id', appId);
   if (appErr) {
     if (btn) { btn.disabled = false; btn.textContent = '완료 처리'; }
@@ -11427,6 +11428,7 @@ async function submitRating(appId, workerId) {
   window._subRatings = {};
   showToast('\u{1F3C1} 근무 완료 처리됐습니다');
   loadApplicants(); loadPostings();
+  if (window._pdJobId) loadPostingDetailApplicants(window._pdJobId);
 }
 
 async function markNoshow(appId, workerId) {
@@ -11445,6 +11447,7 @@ async function markNoshow(appId, workerId) {
 
   showToast('\u{1F613} 노쇼 처리됐습니다');
   loadApplicants(); loadPostings();
+  if (window._pdJobId) loadPostingDetailApplicants(window._pdJobId);
 }
 
 // ── 지원자 필터 (대시보드 클릭) ──────────────────────────
@@ -14850,11 +14853,15 @@ async function _fetchOwnerNotifications() {
     const name = app.workers?.name || '지원자';
     const title = app.job_postings?.title || '공고';
     if (app.status === 'pending') {
-      items.push({ icon: '\u{1F4E5}', color: '#3B82F6', title: `${name}님이 지원했어요`, body: `"${title}"`, time: app.applied_at });
+      items.push({ icon: '\u{1F4E5}', color: '#C8102E', title: `${name}님이 지원했어요`, body: `"${title}"`, time: app.applied_at });
+    } else if (app.status === 'accepted') {
+      items.push({ icon: '\u{2705}', color: '#C8102E', title: `${name}님 합격 처리됨`, body: `"${title}"`, time: app.updated_at });
     } else if (app.status === 'cancelled') {
       items.push({ icon: '\u{1F6AB}', color: '#aaa', title: `${name}님이 지원 취소했어요`, body: `"${title}"`, time: app.updated_at });
     } else if (app.status === 'completed') {
-      items.push({ icon: '\u{1F3C1}', color: '#16a34a', title: `${name}님 근무 완료`, body: `"${title}"`, time: app.updated_at });
+      items.push({ icon: '\u{1F3C1}', color: '#C8102E', title: `${name}님 근무 완료`, body: `"${title}"`, time: app.updated_at });
+    } else if (app.status === 'noshow') {
+      items.push({ icon: '\u{1F613}', color: '#aaa', title: `${name}님 노쇼 처리됨`, body: `"${title}"`, time: app.updated_at });
     }
   });
 

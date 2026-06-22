@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 디자인 개선 비교 (2026-06-23)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f0f0f0; color: #222; }
+  :root { --red: #C8102E; }
+
+  .page-title {
+    text-align: center; padding: 32px 20px 24px;
+    font-size: 22px; font-weight: 900; color: #111;
+    background: #fff; border-bottom: 1px solid #eee;
+  }
+  .page-title span { font-size: 13px; color: #888; font-weight: 400; display: block; margin-top: 6px; }
+
+  .section { padding: 40px 20px 20px; max-width: 900px; margin: 0 auto; }
+  .section-title {
+    font-size: 17px; font-weight: 900; color: #111;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    width: 26px; height: 26px; background: var(--red); color: #fff;
+    border-radius: 50%; font-size: 12px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .section-desc { font-size: 13px; color: #888; margin-bottom: 18px; line-height: 1.6; padding-left: 34px; }
+
+  .compare-row { display: flex; gap: 16px; align-items: flex-start; }
+  .compare-col { flex: 1; }
+  .compare-label {
+    font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    padding: 5px 12px; border-radius: 6px 6px 0 0; display: inline-block;
+  }
+  .compare-label.before { background: #e5e7eb; color: #6b7280; }
+  .compare-label.after  { background: var(--red); color: #fff; }
+
+  .phone-frame {
+    background: #fff; border-radius: 0 14px 14px 14px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 16px;
+  }
+
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 32px 0 0; }
+
+  /* ── 공통 카드 스타일 ── */
+  .applicant-card {
+    background: #fff; border-radius: 14px; margin-bottom: 10px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.07); border-left: 4px solid #e5e7eb; overflow: hidden;
+  }
+  .ac-top { display: flex; align-items: center; gap: 12px; padding: 13px 14px; }
+  .ac-avatar {
+    width: 42px; height: 42px; border-radius: 50%; background: #f4f4f4;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
+  }
+  .ac-name { font-size: 15px; font-weight: 800; color: #222; }
+  .ac-meta { font-size: 11px; color: #aaa; font-weight: 600; margin-top: 3px; }
+  .badge {
+    font-size: 11px; font-weight: 800; padding: 3px 10px;
+    border-radius: 20px; white-space: nowrap; margin-left: auto;
+  }
+  .ac-actions { display: flex; gap: 6px; padding: 0 14px 12px; }
+  .ac-btn {
+    flex: 1; padding: 8px 4px; border: none; border-radius: 10px;
+    font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; white-space: nowrap;
+  }
+
+  /* ── BEFORE 스타일 ── */
+  .before-card.s-pending   { border-left-color: #3B82F6; }
+  .before-card.s-reviewing { border-left-color: #F59E0B; }
+  .before-card.s-accepted  { border-left-color: #22c55e; }
+  .before-card.s-completed { border-left-color: #15803d; }
+  .before-card.s-noshow    { border-left-color: #BE123C; }
+
+  .before-badge-pending   { background: #EFF6FF; color: #3B82F6; }
+  .before-badge-reviewing { background: #FFF7ED; color: #F59E0B; }
+  .before-badge-accepted  { background: #DCFCE7; color: #16a34a; }
+  .before-badge-completed { background: #F0FDF4; color: #15803d; }
+  .before-badge-noshow    { background: #FFF1F2; color: #BE123C; }
+
+  .before-btn-pass { background: #dcfce7; color: #16a34a; font-weight: 800; }
+  .before-btn-fail { background: #fee2e2; color: #EF4444; }
+  .before-btn-done { background: #EFF6FF; color: #3B82F6; font-weight: 800; }
+  .before-btn-chat { background: #f5f5f5; color: #555; }
+  .before-btn-sub  { background: #f5f5f5; color: #888; font-size: 11px; }
+
+  /* ── AFTER 스타일 ── */
+  .after-card.s-pending   { border-left-color: #C8102E; }
+  .after-card.s-reviewing { border-left-color: #C8102E; }
+  .after-card.s-accepted  { border-left-color: #C8102E; }
+  .after-card.s-completed { border-left-color: #bbb; }
+  .after-card.s-noshow    { border-left-color: #e0e0e0; }
+
+  .after-badge-pending   { background: #FFF0F0; color: #C8102E; }
+  .after-badge-reviewing { background: #FFF0F0; color: #C8102E; }
+  .after-badge-accepted  { background: #FFF0F0; color: #C8102E; }
+  .after-badge-completed { background: #F5F5F5; color: #555; }
+  .after-badge-noshow    { background: #F5F5F5; color: #888; }
+
+  .after-btn-pass { background: #FFF0F0; color: #C8102E; font-weight: 800; }
+  .after-btn-fail { background: #f5f5f5; color: #888; }
+  .after-btn-done { background: #C8102E; color: #fff; font-weight: 800; }
+  .after-btn-chat { background: #f5f5f5; color: #555; }
+  .after-btn-sub  { background: #f5f5f5; color: #888; font-size: 11px; }
+
+  /* ── 공고 모집중 도트 ── */
+  .status-dot-before-open  { color: #22c55e; font-weight: 800; font-size: 12px; }
+  .status-dot-after-open   { color: #555;    font-weight: 700; font-size: 12px; }
+  .status-dot-before-urgent { color: #C8102E; font-weight: 800; font-size: 12px; }
+  .status-dot-after-urgent  { color: #C8102E; font-weight: 800; font-size: 12px; }
+
+  /* ── 포스팅 카드 ── */
+  .posting-card {
+    background: #fff; border-radius: 16px; padding: 14px 16px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.07); margin-bottom: 10px;
+  }
+  .posting-title { font-size: 16px; font-weight: 800; color: #111; margin-bottom: 5px; }
+  .posting-wage  { font-size: 18px; font-weight: 900; color: var(--red); }
+  .posting-meta  { font-size: 11px; color: #888; margin-top: 4px; font-weight: 600; }
+  .app-count-btn {
+    display: flex; align-items: center; gap: 4px; border: none; border-radius: 20px;
+    padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: 700; white-space: nowrap;
+  }
+  .before-app-btn { background: #FFF0F0; color: var(--red); }
+  .after-app-btn  { background: #f5f5f5; color: #555; }
+
+  .change-summary {
+    background: #fff; border-radius: 16px; padding: 20px;
+    margin: 0 auto 40px; max-width: 900px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .change-summary h3 { font-size: 16px; font-weight: 900; margin-bottom: 14px; color: #111; }
+  .change-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 0; border-bottom: 1px solid #f5f5f5;
+  }
+  .change-item:last-child { border-bottom: none; }
+  .change-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--red);
+    flex-shrink: 0; margin-top: 5px;
+  }
+  .change-text { font-size: 13px; color: #444; line-height: 1.6; }
+  .change-label { font-weight: 800; color: #222; display: block; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  바로알바 디자인 개선 비교
+  <span>2026-06-23 작업 · 색상 통일 / 버튼 개선 / 다색 → 레드 단일 테마</span>
+</div>
+
+<!-- 변경 요약 -->
+<div style="max-width:900px;margin:32px auto 0;padding:0 20px">
+  <div class="change-summary">
+    <h3>📋 이번 개선 사항 요약</h3>
+    <div class="change-item">
+      <div class="change-dot"></div>
+      <div class="change-text">
+        <span class="change-label">지원자 카드 테두리 색상 통일</span>
+        파란/주황/초록 등 5가지 색 → 진행중 상태는 바로알바 레드(#C8102E), 완료/탈락/취소는 회색으로 2색 정리
+      </div>
+    </div>
+    <div class="change-item">
+      <div class="change-dot"></div>
+      <div class="change-text">
+        <span class="change-label">지원자 상태 배지 통일</span>
+        검토전(파란)/검토중(주황)/연락중(초록) → 모두 레드 계열로, 탈락/완료/노쇼 → 회색 계열로
+      </div>
+    </div>
+    <div class="change-item">
+      <div class="change-dot"></div>
+      <div class="change-text">
+        <span class="change-label">액션 버튼 색상 정리</span>
+        합격(초록배경) → 레드 배경 / 완료(파란배경) → 레드 채워진 버튼 / 탈락(빨간배경) → 회색 (덜 강조)
+      </div>
+    </div>
+    <div class="change-item">
+      <div class="change-dot"></div>
+      <div class="change-text">
+        <span class="change-label">공고 카드 모집중 도트 색상</span>
+        초록(● 모집중) → 회색 계열로 차분하게, ASAP만 레드 유지
+      </div>
+    </div>
+    <div class="change-item">
+      <div class="change-dot"></div>
+      <div class="change-text">
+        <span class="change-label">버그 수정 (v258)</span>
+        완료/노쇼 처리 후 버튼 즉시 갱신 / 지원자 수 0명 오류 / 예상수입 completed_at 미설정 /
+        업주 알림에 합격·노쇼 상태 추가 / 지원 메시지 글자수 표기 겹침 수정
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 1: 지원자 카드 -->
+<div class="section">
+  <div class="section-title"><div class="num">1</div> 지원자 카드 — 상태 테두리 & 배지 색상</div>
+  <div class="section-desc">진행 중인 상태(검토전/검토중/연락중)는 레드, 종료 상태(완료/탈락/취소/노쇼)는 회색으로 2색 구조 단순화</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame">
+        <!-- 검토전 (파란) -->
+        <div class="applicant-card before-card s-pending">
+          <div class="ac-top">
+            <div class="ac-avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div><div class="ac-name">이승학</div><div class="ac-meta">★ - · 완료 0건</div></div>
+            <span class="badge before-badge-pending">검토 전</span>
+          </div>
+          <div class="ac-actions">
+            <button class="ac-btn before-btn-chat">💬 채팅</button>
+            <button class="ac-btn before-btn-sub">🔍 검토</button>
+            <button class="ac-btn before-btn-pass">✓ 합격</button>
+            <button class="ac-btn before-btn-fail">✗ 탈락</button>
+          </div>
+        </div>
+        <!-- 연락중 (초록) -->
+        <div class="applicant-card before-card s-accepted">
+          <div class="ac-top">
+            <div class="ac-avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div><div class="ac-name">흰색</div><div class="ac-meta">★ 5.0 · 완료 1건 · 출근율 100%</div></div>
+            <span class="badge before-badge-accepted">연락중</span>
+          </div>
+          <div class="ac-actions">
+            <button class="ac-btn before-btn-chat">💬 채팅</button>
+            <button class="ac-btn before-btn-done">🏁 완료</button>
+            <button class="ac-btn before-btn-fail">노쇼</button>
+            <button class="ac-btn before-btn-sub">↩</button>
+          </div>
+        </div>
+        <!-- 근무완료 (진초록) -->
+        <div class="applicant-card before-card s-completed">
+          <div class="ac-top">
+            <div class="ac-avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div><div class="ac-name">김영수</div><div class="ac-meta">★ 4.5 · 완료 3건</div></div>
+            <span class="badge before-badge-completed">근무완료</span>
+          </div>
+          <div class="ac-actions">
+            <button class="ac-btn before-btn-chat">💬 채팅</button>
+            <span style="font-size:13px;letter-spacing:1px;padding:8px 4px">⭐⭐⭐⭐⭐</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame">
+        <!-- 검토전 (레드) -->
+        <div class="applicant-card after-card s-pending">
+          <div class="ac-top">
+            <div class="ac-avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div><div class="ac-name">이승학</div><div class="ac-meta">★ - · 완료 0건</div></div>
+            <span class="badge after-badge-pending">검토 전</span>
+          </div>
+          <div class="ac-actions">
+            <button class="ac-btn after-btn-chat">💬 채팅</button>
+            <button class="ac-btn after-btn-sub">🔍 검토</button>
+            <button class="ac-btn after-btn-pass">✓ 합격</button>
+            <button class="ac-btn after-btn-fail">✗ 탈락</button>
+          </div>
+        </div>
+        <!-- 연락중 (레드) -->
+        <div class="applicant-card after-card s-accepted">
+          <div class="ac-top">
+            <div class="ac-avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div><div class="ac-name">흰색</div><div class="ac-meta">★ 5.0 · 완료 1건 · 출근율 100%</div></div>
+            <span class="badge after-badge-accepted">연락중</span>
+          </div>
+          <div class="ac-actions">
+            <button class="ac-btn after-btn-chat">💬 채팅</button>
+            <button class="ac-btn after-btn-done">🏁 완료</button>
+            <button class="ac-btn after-btn-fail">노쇼</button>
+            <button class="ac-btn after-btn-sub">↩</button>
+          </div>
+        </div>
+        <!-- 근무완료 (회색) -->
+        <div class="applicant-card after-card s-completed">
+          <div class="ac-top">
+            <div class="ac-avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div><div class="ac-name">김영수</div><div class="ac-meta">★ 4.5 · 완료 3건</div></div>
+            <span class="badge after-badge-completed">근무완료</span>
+          </div>
+          <div class="ac-actions">
+            <button class="ac-btn after-btn-chat">💬 채팅</button>
+            <span style="font-size:13px;letter-spacing:1px;padding:8px 4px">⭐⭐⭐⭐⭐</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- Section 2: 공고 카드 모집 상태 -->
+<div class="section">
+  <div class="section-title"><div class="num">2</div> 공고 카드 — 모집중 도트 색상</div>
+  <div class="section-desc">초록색 ● 모집중 표시가 레드 테마와 충돌. ASAP는 레드 유지, 일반 모집중은 회색 계열로 차분하게 처리</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">BEFORE</div>
+      <div class="phone-frame">
+        <div class="posting-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="status-dot-before-open">● 모집중</span>
+            <span style="font-size:11px;color:#888">F&B · 스팟</span>
+          </div>
+          <div class="posting-title">홀서빙 도우미 모집</div>
+          <div class="posting-wage">13,000원 <span style="font-size:13px;font-weight:600;color:#aaa">/시간</span></div>
+          <div class="posting-meta">6/23 14:00 · 4시간</div>
+          <div style="margin-top:10px;display:flex;justify-content:flex-end">
+            <button class="app-count-btn before-app-btn">👥 2명 ▼</button>
+          </div>
+        </div>
+        <div class="posting-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="status-dot-before-urgent">● ASAP</span>
+            <span style="font-size:11px;color:#888">물류 · 단기</span>
+          </div>
+          <div class="posting-title">대굴털 뽑아드립니다</div>
+          <div class="posting-wage">100,000원 <span style="font-size:13px;font-weight:600;color:#aaa">/시간</span></div>
+          <div class="posting-meta">6/23 2:00</div>
+          <div style="margin-top:10px;display:flex;justify-content:flex-end">
+            <button class="app-count-btn before-app-btn">👥 0명 ▼</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">AFTER</div>
+      <div class="phone-frame">
+        <div class="posting-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="status-dot-after-open">● 모집중</span>
+            <span style="font-size:11px;color:#888">F&B · 스팟</span>
+          </div>
+          <div class="posting-title">홀서빙 도우미 모집</div>
+          <div class="posting-wage">13,000원 <span style="font-size:13px;font-weight:600;color:#aaa">/시간</span></div>
+          <div class="posting-meta">6/23 14:00 · 4시간</div>
+          <div style="margin-top:10px;display:flex;justify-content:flex-end">
+            <button class="app-count-btn after-app-btn">👥 2명 ▼</button>
+          </div>
+        </div>
+        <div class="posting-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="status-dot-after-urgent">● ASAP</span>
+            <span style="font-size:11px;color:#888">물류 · 단기</span>
+          </div>
+          <div class="posting-title">대굴털 뽑아드립니다</div>
+          <div class="posting-wage">100,000원 <span style="font-size:13px;font-weight:600;color:#aaa">/시간</span></div>
+          <div class="posting-meta">6/23 2:00</div>
+          <div style="margin-top:10px;display:flex;justify-content:flex-end">
+            <button class="app-count-btn after-app-btn">👥 0명 ▼</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:60px"></div>
+</body>
+</html>
