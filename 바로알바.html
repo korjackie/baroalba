@@ -1043,7 +1043,8 @@
     /* ── 채팅 스와이프 나가기 ── */
     .chat-swipe-wrap { position:relative; overflow:hidden; border-radius:16px; margin-bottom:8px; }
     .chat-swipe-inner { position:relative; z-index:1; background:#fff; border-radius:16px; padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:transform 0.25s ease; box-shadow:0 1px 6px rgba(0,0,0,0.05); touch-action:pan-y; user-select:none; -webkit-user-select:none; }
-    .chat-swipe-inner.revealed { transform:translateX(-72px); border-radius:16px 0 0 16px; }
+    .chat-swipe-inner.revealed { transform:translateX(-126px); border-radius:16px 0 0 16px; }
+    .chat-fav-btn { position:absolute; right:72px; top:0; bottom:0; width:54px; background:#FEF9C3; color:#F59E0B; border:none; font-size:20px; cursor:pointer; z-index:0; display:flex; align-items:center; justify-content:center; }
     .chat-leave-btn { position:absolute; right:0; top:0; bottom:0; width:72px; background:#ef4444; color:#fff; border:none; font-size:13px; font-weight:800; cursor:pointer; border-radius:0 16px 16px 0; z-index:0; }
 
     /* ── 하단 내비 ── */
@@ -5746,7 +5747,7 @@ function _renderChatList() {
     return;
   }
 
-  el.innerHTML = display.map(a => {
+  const _makeChatRow = (a) => {
     const msg = _latestMsg[a.id];
     const unread = _unreadCnt[a.id] || 0;
     const isFav = favs.includes(a.id);
@@ -5757,33 +5758,41 @@ function _renderChatList() {
       ? msgDate.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })
       : `${msgDate.getMonth()+1}/${msgDate.getDate()}`;
     const ac = avatarColor(a.counterpartName);
+    const sz = 46;
     const avatarHtml = a.photoUrl
-      ? `<img src="${a.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #f0f0f0" onerror="this.outerHTML='<div style=\\'width:52px;height:52px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;color:${ac.fg};flex-shrink:0\\'>${a.counterpartName.charAt(0)}</div>'">`
-      : `<div style="width:52px;height:52px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>`;
+      ? `<img src="${a.photoUrl}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #f0f0f0" onerror="this.outerHTML='<div style=\\'width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0\\'>${a.counterpartName.charAt(0)}</div>'">`
+      : `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>`;
     const preview = msg.content?.startsWith('[img]') ? '📷 사진' : (isMine ? `나: ${msg.content}` : msg.content);
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
-      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="display:flex;align-items:center;gap:13px;padding:13px 16px;background:${unread>0?'#FFFAFA':'#fff'};border-left:3.5px solid ${unread>0?'var(--red)':'transparent'};transition:background 0.15s">
+      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':'#fff'};border-left:3.5px solid ${unread>0?'var(--red)':'transparent'}">
         <div style="position:relative;flex-shrink:0">
           ${avatarHtml}
-          ${unread>0?`<div style="position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--red);border-radius:50%;border:2px solid #fff"></div>`:''}
-          ${isFav&&!unread?`<div style="position:absolute;bottom:-1px;right:-1px;font-size:12px;line-height:1;background:#fff;border-radius:50%;padding:1px">⭐</div>`:''}
+          ${unread>0?`<div style="position:absolute;bottom:0;right:0;width:12px;height:12px;background:var(--red);border-radius:50%;border:2px solid #fff"></div>`:''}
         </div>
         <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-            <div style="font-size:15px;font-weight:${unread>0?'900':'700'};color:${unread>0?'#111':'#222'}">${a.counterpartName}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+            <div style="font-size:14px;font-weight:${unread>0?'900':'700'};color:${unread>0?'#111':'#222'}">${a.counterpartName}</div>
             <div style="font-size:11px;color:${unread>0?'var(--red)':'#bbb'};font-weight:${unread>0?'700':'400'}">${timeStr}</div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <div style="font-size:13px;color:${unread>0?'#333':'#aaa'};font-weight:${unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${preview}</div>
-            ${unread>0?`<div style="min-width:20px;height:20px;background:var(--red);color:#fff;border-radius:10px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0">${unread}</div>`:''}
+            <div style="font-size:12px;color:${unread>0?'#333':'#aaa'};font-weight:${unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${preview}</div>
+            ${unread>0?`<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>`:''}
           </div>
-          <div style="font-size:11px;color:#d0d0d0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
+          <div style="font-size:11px;color:#d0d0d0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
         </div>
       </div>
-      <button onclick="_toggleChatFav('${a.id}',event)" style="width:54px;height:100%;background:${isFav?'#FEF9C3':'#FAFAFA'};color:${isFav?'#F59E0B':'#ccc'};border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">${isFav?'⭐':'☆'}</button>
+      <button class="chat-fav-btn" onclick="_toggleChatFav('${a.id}',event)">${isFav?'⭐':'☆'}</button>
       <button class="chat-leave-btn" onclick="confirmLeaveChat('${a.id}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>
     </div>`;
-  }).join('');
+  };
+
+  // 즐겨찾기된 것은 상단 섹션으로, 나머지는 그 아래 일반 목록
+  const favItems = _chatTab === 'all' ? display.filter(a => favs.includes(a.id)) : [];
+  const normalItems = _chatTab === 'all' ? display.filter(a => !favs.includes(a.id)) : display;
+  const favSection = favItems.length
+    ? `<div style="padding:10px 16px 4px;font-size:11px;font-weight:800;color:#F59E0B;letter-spacing:0.3px">⭐ 즐겨찾기</div>${favItems.map(_makeChatRow).join('')}<div style="height:8px;background:#f7f7f7;margin:4px 0"></div><div style="padding:6px 16px 4px;font-size:11px;font-weight:800;color:#aaa;letter-spacing:0.3px">전체</div>`
+    : '';
+  el.innerHTML = favSection + normalItems.map(_makeChatRow).join('');
 
   el.querySelectorAll('.chat-swipe-wrap').forEach(wrap => {
     let sx = 0, sy = 0;
