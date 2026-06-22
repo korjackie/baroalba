@@ -151,6 +151,13 @@ const TRANSLATIONS = {
     loc_tab_place:'플레이스', loc_tab_addr:'주소 검색', loc_tab_direct:'직접 입력',
     work_type_spot:'스팟', work_type_short:'단기', work_type_regular:'정기',
     status_open_label:'모집중', status_closed_label:'마감', status_expired_label:'기간만료',
+    // 지도/목록 UI
+    filter_cat:'카테고리', filter_work_type:'근무타입', filter_lesson:'레슨/과외', filter_technical:'전문기술', filter_more:'필터',
+    sort_dist:'거리순', sort_wage_desc:'시급↑', sort_wage_asc:'시급↓', sort_date_asc:'시작빠른순', sort_date_desc:'시작느린순',
+    nearby_jobs_fmt:'주변 공고 {n}개',
+    today_urgent:'오늘의 급구', ai_rec_title:'맞춤 추천', ai_rec_subtitle:'조회·스와이프 기반',
+    status_ongoing:'진행중', status_not_started:'시작 전', cycle_spot:'하루만',
+    nearby_no_jobs:'주변에 공고가 없어요', expand_radius:'반경 {n}km로 늘리기',
   },
   en: {
     nav_map:'Map', nav_swipe:'Swipe', nav_applications:'Applied', nav_chats:'Chat', nav_profile:'My Page',
@@ -220,6 +227,12 @@ const TRANSLATIONS = {
     loc_tab_place:'Place', loc_tab_addr:'Address', loc_tab_direct:'Manual',
     work_type_spot:'Spot', work_type_short:'Short-term', work_type_regular:'Regular',
     status_open_label:'Open', status_closed_label:'Closed', status_expired_label:'Expired',
+    filter_cat:'Category', filter_work_type:'Work Type', filter_lesson:'Lesson', filter_technical:'Technical', filter_more:'Filter',
+    sort_dist:'Nearest', sort_wage_desc:'Pay↑', sort_wage_asc:'Pay↓', sort_date_asc:'Earliest', sort_date_desc:'Latest',
+    nearby_jobs_fmt:'{n} Nearby Jobs',
+    today_urgent:"Today's Urgent", ai_rec_title:'For You', ai_rec_subtitle:'Based on views & swipes',
+    status_ongoing:'Ongoing', status_not_started:'Not started', cycle_spot:'One day',
+    nearby_no_jobs:'No jobs nearby', expand_radius:'Expand to {n}km',
   },
   zh: {
     nav_map:'地图', nav_swipe:'滑动', nav_applications:'我的申请', nav_chats:'聊天', nav_profile:'我的',
@@ -289,6 +302,12 @@ const TRANSLATIONS = {
     loc_tab_place:'地点搜索', loc_tab_addr:'地址搜索', loc_tab_direct:'手动输入',
     work_type_spot:'一次性', work_type_short:'短期', work_type_regular:'长期',
     status_open_label:'招募中', status_closed_label:'已截止', status_expired_label:'已过期',
+    filter_cat:'类别', filter_work_type:'工作类型', filter_lesson:'课外辅导', filter_technical:'专业技术', filter_more:'筛选',
+    sort_dist:'距离近', sort_wage_desc:'时薪↑', sort_wage_asc:'时薪↓', sort_date_asc:'最早开始', sort_date_desc:'最晚开始',
+    nearby_jobs_fmt:'附近{n}个招聘',
+    today_urgent:'今日急聘', ai_rec_title:'为你推荐', ai_rec_subtitle:'基于浏览和滑动',
+    status_ongoing:'进行中', status_not_started:'未开始', cycle_spot:'仅一天',
+    nearby_no_jobs:'附近没有工作', expand_radius:'扩大到{n}公里',
   },
   ja: {
     nav_map:'地図', nav_swipe:'スワイプ', nav_applications:'応募履歴', nav_chats:'チャット', nav_profile:'マイページ',
@@ -358,6 +377,12 @@ const TRANSLATIONS = {
     loc_tab_place:'プレイス', loc_tab_addr:'住所検索', loc_tab_direct:'直接入力',
     work_type_spot:'スポット', work_type_short:'短期', work_type_regular:'定期',
     status_open_label:'募集中', status_closed_label:'締め切り', status_expired_label:'期間満了',
+    filter_cat:'カテゴリー', filter_work_type:'勤務タイプ', filter_lesson:'レッスン', filter_technical:'専門技術', filter_more:'絞込',
+    sort_dist:'近い順', sort_wage_desc:'時給↑', sort_wage_asc:'時給↓', sort_date_asc:'開始早い', sort_date_desc:'開始遅い',
+    nearby_jobs_fmt:'近くの求人{n}件',
+    today_urgent:'今日の急募', ai_rec_title:'おすすめ', ai_rec_subtitle:'閲覧·スワイプ基準',
+    status_ongoing:'進行中', status_not_started:'開始前', cycle_spot:'1日のみ',
+    nearby_no_jobs:'近くに求人なし', expand_radius:'半径{n}kmに拡大',
   },
   vi: {
     nav_map:'Bản đồ', nav_swipe:'Vuốt', nav_applications:'Đã ứng tuyển', nav_chats:'Chat', nav_profile:'Trang của tôi',
@@ -427,6 +452,12 @@ const TRANSLATIONS = {
     loc_tab_place:'Địa điểm', loc_tab_addr:'Tìm địa chỉ', loc_tab_direct:'Nhập tay',
     work_type_spot:'Một lần', work_type_short:'Ngắn hạn', work_type_regular:'Thường xuyên',
     status_open_label:'Đang tuyển', status_closed_label:'Đã đóng', status_expired_label:'Hết hạn',
+    filter_cat:'Danh mục', filter_work_type:'Loại việc', filter_lesson:'Bài học', filter_technical:'Kỹ thuật', filter_more:'Lọc',
+    sort_dist:'Gần nhất', sort_wage_desc:'Lương↑', sort_wage_asc:'Lương↓', sort_date_asc:'Sớm nhất', sort_date_desc:'Muộn nhất',
+    nearby_jobs_fmt:'{n} việc gần đây',
+    today_urgent:'Việc gấp hôm nay', ai_rec_title:'Gợi ý cho bạn', ai_rec_subtitle:'Dựa trên lượt xem',
+    status_ongoing:'Đang diễn ra', status_not_started:'Chưa bắt đầu', cycle_spot:'Một ngày',
+    nearby_no_jobs:'Không có việc gần đây', expand_radius:'Mở rộng {n}km',
   },
   ru: {
     nav_map:'Карта', nav_swipe:'Свайп', nav_applications:'Заявки', nav_chats:'Чат', nav_profile:'Профиль',
@@ -496,6 +527,12 @@ const TRANSLATIONS = {
     loc_tab_place:'Место', loc_tab_addr:'Адрес', loc_tab_direct:'Вручную',
     work_type_spot:'Разовая', work_type_short:'Краткосрочная', work_type_regular:'Постоянная',
     status_open_label:'Открыт', status_closed_label:'Закрыт', status_expired_label:'Истёк',
+    filter_cat:'Категория', filter_work_type:'Тип работы', filter_lesson:'Урок', filter_technical:'Спецнавык', filter_more:'Фильтр',
+    sort_dist:'Ближние', sort_wage_desc:'Оплата↑', sort_wage_asc:'Оплата↓', sort_date_asc:'По дате↑', sort_date_desc:'По дате↓',
+    nearby_jobs_fmt:'Вакансий рядом: {n}',
+    today_urgent:'Срочно сегодня', ai_rec_title:'Для вас', ai_rec_subtitle:'По просмотрам',
+    status_ongoing:'В процессе', status_not_started:'Не начато', cycle_spot:'Один день',
+    nearby_no_jobs:'Нет вакансий рядом', expand_radius:'Расш. до {n}км',
   },
 };
 
@@ -564,6 +601,11 @@ function applyLang() {
   // ── data-i18n-ph 속성 placeholder 번역 ─────────────────────
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPh);
+  });
+
+  // ── data-i18n-btn: 선택 안 된 상태일 때만 번역 (▾ 추가) ───
+  document.querySelectorAll('[data-i18n-btn]').forEach(el => {
+    if (!el.classList.contains('sel')) el.textContent = t(el.dataset.i18nBtn) + ' ▾';
   });
 
   // ── 이동수단 칩 (data-v) ─────────────────────────────────────
@@ -645,6 +687,39 @@ function applyLang() {
   if (allChip) allChip.textContent = t('cat_all');
   const urgentChip = document.querySelector('[data-urgent]');
   if (urgentChip) urgentChip.textContent = t('cat_urgent');
+
+  // ── 필터 버튼 ─────────────────────────────────────────────
+  const _fCat = document.getElementById('flt-cat-btn');
+  if (_fCat && !_fCat.classList.contains('sel')) _fCat.textContent = t('filter_cat') + ' ▾';
+  const _fType = document.getElementById('flt-type-btn');
+  if (_fType && !_fType.classList.contains('sel')) _fType.textContent = t('filter_work_type') + ' ▾';
+  const _fLesson = document.getElementById('flt-lesson-btn');
+  if (_fLesson && !_fLesson.classList.contains('sel')) _fLesson.textContent = t('filter_lesson') + ' ▾';
+  const _fTech = document.getElementById('flt-technical-btn');
+  if (_fTech && !_fTech.classList.contains('sel')) _fTech.textContent = t('filter_technical') + ' ▾';
+
+  // ── 정렬 라벨 ─────────────────────────────────────────────
+  const _sortEl = document.getElementById('sort-label');
+  if (_sortEl && typeof currentSort !== 'undefined') {
+    const _smap = { dist:'sort_dist', wage_desc:'sort_wage_desc', wage_asc:'sort_wage_asc', date_asc:'sort_date_asc', date_desc:'sort_date_desc' };
+    _sortEl.textContent = t(_smap[currentSort] || 'sort_dist');
+  }
+
+  // ── 주변 공고 카운트 ──────────────────────────────────────
+  const _cntEl = document.getElementById('job-count');
+  const _cntParent = _cntEl?.parentElement;
+  if (_cntParent && _cntParent.classList.contains('sheet-count')) {
+    const _n = _cntEl ? _cntEl.textContent : '0';
+    _cntParent.innerHTML = t('nearby_jobs_fmt').replace('{n}', `<span id="job-count">${_n}</span>`);
+  }
+
+  // ── 오늘의 급구 / AI 추천 헤더 ───────────────────────────
+  const _urgTitle = document.getElementById('urgent-feed-title');
+  if (_urgTitle) _urgTitle.textContent = '🔥 ' + t('today_urgent');
+  const _aiTitle = document.getElementById('ai-rec-title');
+  if (_aiTitle) _aiTitle.textContent = '✨ ' + t('ai_rec_title');
+  const _aiSub = document.getElementById('ai-rec-subtitle');
+  if (_aiSub) _aiSub.textContent = t('ai_rec_subtitle');
 
   // 지원 버튼
   const applyBtn = document.getElementById('d-apply-btn');

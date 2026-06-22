@@ -1215,11 +1215,11 @@
   <!-- 단일 필터 바 -->
   <div class="filter-bar-wrapper">
     <div class="filter-bar">
-      <button class="filter-drop-btn" id="flt-cat-btn" onclick="toggleFilterSheet('cat')" style="flex-shrink:0">카테고리 ▾</button>
-      <button class="filter-drop-btn" id="flt-type-btn" onclick="toggleFilterSheet('type')" style="flex-shrink:0">근무타입 ▾</button>
+      <button class="filter-drop-btn" id="flt-cat-btn" onclick="toggleFilterSheet('cat')" style="flex-shrink:0" data-i18n-btn="filter_cat">카테고리 ▾</button>
+      <button class="filter-drop-btn" id="flt-type-btn" onclick="toggleFilterSheet('type')" style="flex-shrink:0" data-i18n-btn="filter_work_type">근무타입 ▾</button>
       <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)" style="flex-shrink:0">급구</div>
-      <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0">레슨/과외 ▾</button>
-      <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0">전문기술 ▾</button>
+      <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0" data-i18n-btn="filter_lesson">레슨/과외 ▾</button>
+      <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0" data-i18n-btn="filter_technical">전문기술 ▾</button>
     </div>
     <div class="filter-bar-actions">
       <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px">필터</div>
@@ -1583,7 +1583,7 @@
     <!-- 오늘의 급구 피드 -->
     <div id="urgent-feed-section" style="padding:0 0 4px;display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:900;color:#222">🔥 오늘의 급구</div>
+        <div id="urgent-feed-title" style="font-size:13px;font-weight:900;color:#222">🔥 오늘의 급구</div>
         <button onclick="document.getElementById('urgent-feed-section').style.display='none'" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer">접기</button>
       </div>
       <div id="urgent-feed-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none"></div>
@@ -4342,7 +4342,7 @@ function getJobCycleLabel(job) {
   const days = (job.work_days||'').split(',').map(d=>DAY[d.trim()]||d).filter(Boolean).join('·');
   if (job.work_type === 'regular') return days ? `매주 반복 (${days})` : '정기 반복';
   if (job.work_type === 'short')   return days ? `단기 (${days})` : '단기';
-  return '하루만'; // spot
+  return t('cycle_spot'); // spot
 }
 
 // ── 미소 벤치마킹: 지하철역 도보시간 비동기 로드 ──────────
@@ -4364,12 +4364,25 @@ function loadSubwayInfo(jobsList) {
       const el = document.getElementById(`subway-${job.id}`);
       if (status === kakao.maps.services.Status.OK && result.length > 0) {
         const walkMin = Math.ceil(parseInt(result[0].distance)/67);
-        // place_name: "이대역", "이대역 2호선", "이대역(2호선)" 등 모두 처리
-        let sName = result[0].place_name.replace(/\s*\([^)]*\)/g,'').replace(/\s+\d+호선.*/,'').replace(/\s+GTX-[A-Z].*/,'').trim();
-        if (!sName.endsWith('역')) sName += '역';
-        const info = `${sName} 도보 ${walkMin}분`;
+        const _parseStn = name => {
+          const c = name.replace(/\s*\([^)]*\)/g,'').trim();
+          let s = c.replace(/\s+(?:\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선|수인선|경강선|인천\d+호선).*/,'').trim();
+          if (!s.endsWith('역')) s += '역';
+          const m = c.match(/\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선/);
+          return { s, line: m ? m[0] : null };
+        };
+        const { s: sName } = _parseStn(result[0].place_name);
+        const baseDist = parseInt(result[0].distance);
+        const lines = [];
+        for (const r of result) {
+          if (Math.abs(parseInt(r.distance) - baseDist) > 80) break;
+          const { s: s2, line: l } = _parseStn(r.place_name);
+          if (s2 === sName && l && !lines.includes(l)) lines.push(l);
+        }
+        const info = `${sName}${lines.length ? ' ' + lines.join(' ') : ''} 도보 ${walkMin}분`;
         _subwayCache[job.id] = info;
-        if (el) el.textContent = '🚇 ' + info;
+        const _stripL = s => s.replace(/\s+(?:\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선)/g,'');
+        if (el) el.textContent = '🚇 ' + _stripL(info);
       } else {
         _subwayCache[job.id] = null;
         if (el) el.remove();
@@ -4389,7 +4402,9 @@ function renderList() {
     displayJobs = displayJobs.filter(j => (j.address||'').includes(selectedDistrict));
   }
 
-  document.getElementById('job-count').textContent = displayJobs.length;
+  const _sheetCnt = document.querySelector('.sheet-count');
+  if (_sheetCnt) _sheetCnt.innerHTML = t('nearby_jobs_fmt').replace('{n}', `<span id="job-count">${displayJobs.length}</span>`);
+  else { const _jc = document.getElementById('job-count'); if (_jc) _jc.textContent = displayJobs.length; }
   const list = document.getElementById('job-cards-container');
 
   // AI 맞춤 추천 갱신
@@ -4779,9 +4794,22 @@ function _renderDetailLocation(job) {
       ps.categorySearch('SW8', (result, status) => {
         if (status === kakao.maps.services.Status.OK && result.length > 0) {
           const walkMin = Math.ceil(parseInt(result[0].distance) / 67);
-          let sName = result[0].place_name.replace(/\s*\([^)]*\)/g,'').replace(/\s+\d+호선.*/,'').replace(/\s+GTX-[A-Z].*/,'').trim();
-          if (!sName.endsWith('역')) sName += '역';
-          const info = `${sName} 도보 ${walkMin}분`;
+          const _parseStn2 = name => {
+            const c = name.replace(/\s*\([^)]*\)/g,'').trim();
+            let s = c.replace(/\s+(?:\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선|수인선|경강선|인천\d+호선).*/,'').trim();
+            if (!s.endsWith('역')) s += '역';
+            const m = c.match(/\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선/);
+            return { s, line: m ? m[0] : null };
+          };
+          const { s: sName2 } = _parseStn2(result[0].place_name);
+          const baseDist2 = parseInt(result[0].distance);
+          const lines2 = [];
+          for (const r of result) {
+            if (Math.abs(parseInt(r.distance) - baseDist2) > 80) break;
+            const { s: s2, line: l } = _parseStn2(r.place_name);
+            if (s2 === sName2 && l && !lines2.includes(l)) lines2.push(l);
+          }
+          const info = `${sName2}${lines2.length ? ' ' + lines2.join(' ') : ''} 도보 ${walkMin}분`;
           _subwayCache[job.id] = info;
           _renderDetailSubway(subwayEl, info);
         }
@@ -4808,12 +4836,20 @@ function _getSubwayLineColor(stationName) {
 
 function _renderDetailSubway(el, infoStr) {
   if (!infoStr || !el) return;
-  const lineInfo = _getSubwayLineColor(infoStr);
-  const lineBadge = lineInfo
-    ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:${lineInfo.color};color:#fff;font-size:10px;font-weight:900;padding:2px 7px;border-radius:20px;margin-right:5px">${lineInfo.line}</span>`
-    : '';
-  el.innerHTML = `<div style="display:flex;align-items:center;font-size:12px;color:#555;font-weight:600">
-    <span style="font-size:14px;margin-right:5px">🚇</span>${lineBadge}<span>${infoStr.replace(/ \d+호선/g, '')}</span>
+  const LC = _getSubwayLineColor.LINE_COLORS || (() => {
+    const m = {};
+    Object.entries({'1호선':'#0052A4','2호선':'#00A84D','3호선':'#EF7C1C','4호선':'#00A5DE','5호선':'#996CAC','6호선':'#CD7C2F','7호선':'#747F00','8호선':'#E6186C','9호선':'#BDB092','경의중앙선':'#73B2B9','분당선':'#FDD835','신분당선':'#D4003B','GTX-A':'#8B4513','경춘선':'#178946','공항철도':'#4A7BBE','인천1호선':'#7CA8D5','인천2호선':'#F5A200'}).forEach(([k,v])=>m[k]=v);
+    return m;
+  })();
+  let badges = '';
+  for (const [line, color] of Object.entries(LC)) {
+    if (infoStr.includes(line)) {
+      badges += `<span style="display:inline-flex;align-items:center;background:${color};color:#fff;font-size:10px;font-weight:900;padding:2px 7px;border-radius:20px;margin-right:4px;white-space:nowrap">${line}</span>`;
+    }
+  }
+  const cleanText = infoStr.replace(/\s+(?:\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선|인천\d+호선)/g,'').replace(/\s+/g,' ').trim();
+  el.innerHTML = `<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;font-size:12px;color:#555;font-weight:600;padding:0 20px 12px">
+    <span style="font-size:14px;margin-right:4px">🚇</span>${badges}<span>${cleanText}</span>
   </div>`;
   el.style.display = 'block';
 }
@@ -6623,20 +6659,20 @@ function _syncCatBtn() {
   const btn = document.getElementById('flt-cat-btn');
   if (!btn) return;
   const total = selectedCategories.size;
-  if (total === 0) { btn.textContent = '카테고리 ▾'; btn.classList.remove('sel'); }
+  if (total === 0) { btn.textContent = t('filter_cat') + ' ▾'; btn.classList.remove('sel'); }
   else if (total === 1) {
     const cat = _CAT_LABEL[[...selectedCategories][0]] || [...selectedCategories][0];
     btn.textContent = cat + ' ✓'; btn.classList.add('sel');
-  } else { btn.textContent = `카테고리 ${total}개 ✓`; btn.classList.add('sel'); }
+  } else { btn.textContent = `${t('filter_cat')} ${total}✓`; btn.classList.add('sel'); }
 }
 function _syncTechnicalBtn() {
   const btn = document.getElementById('flt-technical-btn');
   if (!btn) return;
-  if (!includeTechnical) { btn.textContent = '전문기술 ▾'; btn.classList.remove('sel'); return; }
+  if (!includeTechnical) { btn.textContent = t('filter_technical') + ' ▾'; btn.classList.remove('sel'); return; }
   const n = _technicalFilterMids.size;
-  if (n === 0) { btn.textContent = '전문기술 전체 ✓'; btn.classList.add('sel'); }
+  if (n === 0) { btn.textContent = t('filter_technical') + ' ✓'; btn.classList.add('sel'); }
   else if (n === 1) { btn.textContent = [..._technicalFilterMids][0] + ' ✓'; btn.classList.add('sel'); }
-  else { btn.textContent = `전문기술 ${n}개 ✓`; btn.classList.add('sel'); }
+  else { btn.textContent = `${t('filter_technical')} ${n}✓`; btn.classList.add('sel'); }
 }
 
 function toggleTechnicalChip(el, mid) {
@@ -6662,13 +6698,13 @@ function toggleTechnicalChip(el, mid) {
 function _syncLessonBtn() {
   const btn = document.getElementById('flt-lesson-btn');
   if (!btn) return;
-  if (!includeLesson) { btn.textContent = '레슨/과외 ▾'; btn.classList.remove('sel'); return; }
+  if (!includeLesson) { btn.textContent = t('filter_lesson') + ' ▾'; btn.classList.remove('sel'); return; }
   const total = _lessonFilterMains.size + _lessonFilterMids.size;
-  if (total === 0) { btn.textContent = '레슨 전체 ✓'; btn.classList.add('sel'); }
+  if (total === 0) { btn.textContent = t('filter_lesson') + ' ✓'; btn.classList.add('sel'); }
   else if (total === 1) {
-    const lbl = _lessonFilterMids.size ? [..._lessonFilterMids][0] : ([..._lessonFilterMains][0] + ' 전체');
+    const lbl = _lessonFilterMids.size ? [..._lessonFilterMids][0] : ([..._lessonFilterMains][0]);
     btn.textContent = lbl + ' ✓'; btn.classList.add('sel');
-  } else { btn.textContent = `레슨 ${total}개 ✓`; btn.classList.add('sel'); }
+  } else { btn.textContent = `${t('filter_lesson')} ${total}✓`; btn.classList.add('sel'); }
 }
 function toggleLessonChip(el, main, mid) {
   if (main === '' && mid === '') {
@@ -6814,7 +6850,7 @@ function _updateFilterBtn(type, label) {
   const btn = document.getElementById(type === 'cat' ? 'flt-cat-btn' : 'flt-type-btn');
   if (!btn) return;
   if (!label) {
-    btn.textContent = (type === 'cat' ? '카테고리' : '근무타입') + ' ▾';
+    btn.textContent = (type === 'cat' ? t('filter_cat') : t('filter_work_type')) + ' ▾';
     btn.classList.remove('sel');
   } else {
     const name = type === 'cat' ? (catLabels[label] || label) : (typeLabels[label] || label);
@@ -6880,7 +6916,7 @@ function calcDDay(st) {
   const today = new Date(); today.setHours(0,0,0,0);
   const d = new Date(st); d.setHours(0,0,0,0);
   const diff = Math.round((d - today) / 86400000);
-  if (diff < 0)   return { str:'진행중', cls:'dd-later' };
+  if (diff < 0)   return { str:t('status_ongoing'), cls:'dd-later' };
   if (diff === 0) return { str:'D-DAY',  cls:'dd-today' };
   if (diff <= 3)  return { str:`D-${diff}`, cls:'dd-soon' };
   return { str:`D-${diff}`, cls:'dd-later' };
@@ -7060,9 +7096,9 @@ function shareJobNative() {
 
 function toggleSort() {
   const cycle  = ['dist','wage_desc','wage_asc','date_asc','date_desc'];
-  const labels = { dist:'거리순', wage_desc:'시급↑', wage_asc:'시급↓', date_asc:'시작빠른순', date_desc:'시작느린순' };
+  const _skeys = { dist:'sort_dist', wage_desc:'sort_wage_desc', wage_asc:'sort_wage_asc', date_asc:'sort_date_asc', date_desc:'sort_date_desc' };
   sortMode = cycle[(cycle.indexOf(sortMode) + 1) % cycle.length];
-  const label = labels[sortMode];
+  const label = t(_skeys[sortMode] || 'sort_dist');
   document.getElementById('sort-label').textContent = label;
   const sortBtn = document.getElementById('chip-sort-btn');
   if (sortBtn) sortBtn.textContent = '↕ ' + label;
@@ -7473,8 +7509,8 @@ function renderAiRecommendations() {
     el.style.display = 'block';
     el.innerHTML = `
       <div style="padding:12px 0 4px;display:flex;align-items:center;gap:6px">
-        <span style="font-size:13px;font-weight:900;color:#222">✨ 맞춤 추천</span>
-        <span style="font-size:11px;color:#bbb;font-weight:600">조회·스와이프 기반</span>
+        <span id="ai-rec-title" style="font-size:13px;font-weight:900;color:#222">✨ ${t('ai_rec_title')}</span>
+        <span id="ai-rec-subtitle" style="font-size:11px;color:#bbb;font-weight:600">${t('ai_rec_subtitle')}</span>
       </div>
       <div style="display:flex;gap:10px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
         ${scored.map(({ job: j }) => {
@@ -8034,7 +8070,8 @@ async function loadWorkerProfileForm() {
     const inner = document.getElementById('header-avatar-inner');
     if (inner) {
       if (w.photo_url) {
-        inner.innerHTML = `<img src="${w.photo_url}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
+        const _fc = (currentUser?.user_metadata?.full_name || currentUser?.email || '?').charAt(0);
+        inner.innerHTML = `<img src="${w.photo_url}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${_fc}',58)">`;
       } else {
         const meta2 = currentUser?.user_metadata || {};
         const identityAvatar = (currentUser.identities || []).find(i => i.identity_data?.avatar_url)?.identity_data?.avatar_url;
@@ -8372,7 +8409,10 @@ async function uploadAvatar(input) {
     const { error: dbErr } = await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
     if (dbErr) { showToast('저장 실패: ' + dbErr.message); return; }
     const inner = document.getElementById('header-avatar-inner');
-    if (inner) inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`;
+    if (inner) {
+      const _fc2 = (currentUser?.user_metadata?.full_name || currentUser?.email || '?').charAt(0);
+      inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${_fc2}',58)">`;
+    }
     showToast('✅ 프로필 사진이 업데이트됐습니다');
   });
 }
@@ -9501,7 +9541,7 @@ function formatTime(iso) {
   const d = new Date(iso);
   const now = new Date();
   const diff = d - now;
-  if (diff < 0) return '진행중';
+  if (diff < 0) return t('status_ongoing');
   if (diff < 3600000) return Math.round(diff/60000) + '분 후';
   if (diff < 86400000) return Math.round(diff/3600000) + '시간 후';
   return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -13292,7 +13332,7 @@ function calcOwnerDDay(st) {
   const today = new Date(); today.setHours(0,0,0,0);
   const d = new Date(st); d.setHours(0,0,0,0);
   const diff = Math.round((d - today) / 86400000);
-  if (diff < 0)   return { str:'진행중', cls:'dd-later' };
+  if (diff < 0)   return { str:t('status_ongoing'), cls:'dd-later' };
   if (diff === 0) return { str:'D-DAY',  cls:'dd-today' };
   if (diff <= 3)  return { str:`D-${diff}`, cls:'dd-soon' };
   return { str:`D-${diff}`, cls:'dd-later' };
@@ -15089,7 +15129,7 @@ function formatTime(iso) {
   if (isNaN(d.getTime())) return '미정';
   const now = new Date();
   const diff = d - now;
-  if (diff < 0) return '진행중';
+  if (diff < 0) return t('status_ongoing');
   if (diff < 3600000) return Math.round(diff/60000) + '분 후';
   if (diff < 86400000) return Math.round(diff/3600000) + '시간 후';
   return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
