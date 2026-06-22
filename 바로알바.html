@@ -2121,7 +2121,7 @@
         <!-- 수입 현황 (알바생만) -->
         <div id="income-section" style="display:none;margin-bottom:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:14px;font-weight:900;color:#222">\u{1F4B5} 이번 달 수입</div>
+            <div style="font-size:14px;font-weight:900;color:#222">💵 이번 달 수입</div>
             <div id="income-month-label" style="font-size:12px;color:#aaa;font-weight:700"></div>
           </div>
           <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:16px;padding:14px 16px;margin-bottom:8px">
@@ -4286,15 +4286,15 @@ function renderUrgentFeed() {
     const emoji = getCatEmoji(job.category);
     const bg = CAT_BG[job.category] || '#f5f5f5';
     return `
-    <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:140px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid #C8102E">
+    <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:150px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid #C8102E">
       <div style="background:${bg};padding:10px 12px 8px;position:relative">
         <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
         <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.biz_name || job.title}</div>
-        <span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">\u{1F525}급구</span>
+        <span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥급구</span>
       </div>
       <div style="padding:8px 10px">
         <div style="font-size:14px;font-weight:900;color:#C8102E">${(job.current_wage/10000).toFixed(1)}만원</div>
-        <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">\u{1F4CD} ${dist}</div>
+        <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">📍 ${dist}</div>
       </div>
     </div>`;
   }).join('');
@@ -4540,11 +4540,13 @@ function copyDetailAddress() {
 function openKakaoMapApp() {
   if (!_detailJob) return;
   const { lat, lng, address, title } = _detailJob;
-  const name = encodeURIComponent(title || '근무지');
+  const addrLine = (address || '').split('\n')[0].trim();
+  // 도착지 이름은 주소로 표시 (공고명 대신)
+  const placeName = encodeURIComponent(addrLine || title || '근무지');
   if (lat && lng) {
-    window.open(`https://map.kakao.com/link/map/${name},${lat},${lng}`, '_blank');
-  } else if (address) {
-    window.open(`https://map.kakao.com/link/search/${encodeURIComponent(address.split('\n')[0])}`, '_blank');
+    window.open(`https://map.kakao.com/link/to/${placeName},${lat},${lng}`, '_blank');
+  } else if (addrLine) {
+    window.open(`https://map.kakao.com/link/search/${encodeURIComponent(addrLine)}`, '_blank');
   } else {
     showToast('위치 정보가 없어요');
   }
@@ -5818,9 +5820,11 @@ async function _doSendWChat(content) {
           setTimeout(() => ch.unsubscribe(), 1500);
         }
       });
+      const senderName = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '알바생';
+      const pushTitle = `💬 ${senderName}`;
       const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
       fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ user_id:ownerUid, title:'💬 바로알바 - 새 메시지', body:pushBody, url:'/바로알바.html' })
+        body: JSON.stringify({ user_id:ownerUid, title:pushTitle, body:pushBody, url:'/바로알바.html' })
       }).catch(()=>{});
     }
   } catch(e) {}
@@ -6770,18 +6774,22 @@ function renderAiRecommendations() {
         <span style="font-size:14px;font-weight:800;color:#222">✨ 맞춤 추천</span>
         <span style="font-size:11px;color:#bbb;font-weight:600">조회·스와이프 기반</span>
       </div>
-      <div style="display:flex;gap:10px;overflow-x:auto;padding:4px 16px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      <div style="display:flex;gap:10px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
         ${scored.map(({ job: j }) => {
           const wage = (j.current_wage || 0).toLocaleString();
           const cat = j.category || '';
           const emoji = CAT_EMOJI[cat] || '💼';
           const urgent = j.status === 'urgent';
           return `
-          <div onclick="openDetail('${j.id}')" style="flex-shrink:0;width:160px;background:#fff;border-radius:14px;padding:12px;box-shadow:0 2px 10px rgba(0,0,0,0.07);cursor:pointer;border:${urgent ? '1.5px solid #FF9500' : '1px solid #f0f0f0'}">
-            <div style="font-size:18px;margin-bottom:6px">${emoji}</div>
-            <div style="font-size:12px;font-weight:800;color:#222;line-height:1.3;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${j.title}</div>
-            <div style="font-size:13px;font-weight:800;color:var(--red)">${wage}원</div>
-            <div style="font-size:10px;color:#bbb;margin-top:3px;font-weight:600">${cat}${urgent ? ' · 🔥급구' : ''}</div>
+          <div onclick="openDetail('${j.id}')" style="flex-shrink:0;width:150px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);cursor:pointer;border:${urgent ? '2px solid #FF9500' : '1px solid #f0f0f0'}">
+            <div style="padding:10px 12px 8px;background:#f8f9fa">
+              <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
+              <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.biz_name || j.title}</div>
+            </div>
+            <div style="padding:8px 10px">
+              <div style="font-size:14px;font-weight:900;color:var(--red)">${wage}원</div>
+              <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">${cat}${urgent ? ' · 🔥급구' : ''}</div>
+            </div>
           </div>`;
         }).join('')}
       </div>`;
@@ -13005,9 +13013,11 @@ async function _doSendChat(content) {
         }
       });
     } catch(e) {}
+    const ownerBiz = (typeof bizRecord !== 'undefined' && bizRecord?.name) || currentUser?.user_metadata?.full_name || '업주';
+    const pushTitle = `💬 ${ownerBiz}`;
     const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
     fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ user_id:_chatWorkerUserId, title:'💬 바로알바 - 새 메시지', body:pushBody, url:'/바로알바.html' })
+      body: JSON.stringify({ user_id:_chatWorkerUserId, title:pushTitle, body:pushBody, url:'/바로알바.html' })
     }).catch(()=>{});
   }
 }
