@@ -5721,9 +5721,9 @@ function subscribeWChatMessages() {
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
       if (isMine) {
-        // Android: 네이티브 IME 강제 재표시 (DOM 변경으로 닫혔을 경우 복구)
+        // scroll 완료 후 IME 재표시 — scrollTop 변경으로 OS가 IME 닫은 뒤 지연 호출
         if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
-          window.AndroidBridge.showKeyboard();
+          setTimeout(() => window.AndroidBridge.showKeyboard(), 200);
         } else {
           requestAnimationFrame(() => {
             const inp = document.getElementById('wchat-input');
@@ -5850,9 +5850,10 @@ async function sendWChatMessage() {
   if (!content || !_wchatAppId) return;
   input.value = '';
   input.focus();
-  // Android: SHOW_FORCED로 키보드 강제 유지 (DOM 변경이 있어도 닫히지 않음)
   if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
     window.AndroidBridge.showKeyboard();
+    // Realtime 콜백 DOM append+scroll 완료 후 한번 더 (보험)
+    setTimeout(() => window.AndroidBridge.showKeyboard(), 500);
   }
   _doSendWChat(content).catch(() => {});
 }
