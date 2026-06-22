@@ -5131,26 +5131,28 @@ window._onFCMToken = async function(token) {
 // ── 키보드 대응 (v202: 네이티브 IME 인셋 브리지) ──
 (function() {
   // 네이티브 WebView → JS 브리지: MainActivity가 IME 높이를 dp로 직접 전달
+  window._lastKbDp = 0;
   window._onNativeKbChange = function(dp) {
+    window._lastKbDp = dp;
     var wo = document.getElementById('wchat-overlay');
     var co = document.getElementById('chat-overlay');
     var val = dp > 80 ? (dp + 16) + 'px' : '';
     if (wo && wo.style.display === 'flex') {
       wo.style.paddingBottom = val;
       if (dp > 80) {
-        requestAnimationFrame(function() {
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
           var sc = document.getElementById('wchat-scroll');
           if (sc) sc.scrollTop = sc.scrollHeight;
-        });
+        }); });
       }
     }
     if (co && co.style.display === 'flex') {
       co.style.paddingBottom = val;
       if (dp > 80) {
-        requestAnimationFrame(function() {
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
           var csc = document.getElementById('chat-scroll');
           if (csc) csc.scrollTop = csc.scrollHeight;
-        });
+        }); });
       }
     }
   };
@@ -5892,12 +5894,15 @@ function subscribeWChatMessages() {
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
       if (isMine) {
-        // guard 해제 후 padding-bottom 재적용 완료 시점에 스크롤 맨 아래로
         if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
-        requestAnimationFrame(() => {
+        const _wo = document.getElementById('wchat-overlay');
+        if (_wo && _wo.style.display === 'flex' && window._lastKbDp > 80) {
+          _wo.style.paddingBottom = (window._lastKbDp + 16) + 'px';
+        }
+        requestAnimationFrame(() => { requestAnimationFrame(() => {
           const sc = document.getElementById('wchat-scroll');
           if (sc) sc.scrollTop = sc.scrollHeight;
-        });
+        }); });
         if (!window.AndroidBridge) {
           setTimeout(() => { const inp = document.getElementById('wchat-input'); if (inp) inp.focus(); }, 100);
         }
@@ -6014,11 +6019,22 @@ async function _doSendWChat(content) {
   } catch(e) {}
 }
 
+function _hasBadWord(text) {
+  return [
+    /씨[바발벌빨팔]/,/시[바발벌빨팔]/,/ㅅ[ㅂㅃ]/,/ㅆ[ㅂㅃ]/,
+    /개새끼|개색끼|개쌔끼/,
+    /병신/,/지랄/,
+    /존나|졸라|존내/,
+    /창녀|보지|자지/
+  ].some(p => p.test(text));
+}
+
 async function sendWChatMessage() {
   if (_pendingWChatFile) { await _uploadAndSendWChatImage(); return; }
   const input = document.getElementById('wchat-input');
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
+  if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
   input.value = '';
   input.focus();
   // guard ON: scrollTop = scrollHeight 시 키보드 닫힘을 onScrollChanged에서 즉시 복구
@@ -11498,6 +11514,9 @@ function openPostingForm() {
   const now = new Date();
   now.setMinutes(0, 0, 0);
   now.setHours(now.getHours() + 1);
+  const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  const dateInp = document.getElementById('f-start-date');
+  if (dateInp) dateInp.min = todayStr;
   setTimeSelects('start', now);
   const end = new Date(now.getTime() + 4 * 3600000);
   setTimeSelects('end', end);
@@ -11597,13 +11616,15 @@ function openEditForm(jobId) {
   jobImgs = _rawImgs.map(url => ({ src: url, file: null }));
   if (_mi > 0 && _mi < jobImgs.length) { const [m] = jobImgs.splice(_mi, 1); jobImgs.unshift(m); }
   renderJobImgPreview();
+  const _todayStr2 = new Date().toISOString().slice(0, 10);
+  const _dateInp2 = document.getElementById('f-start-date');
+  if (_dateInp2) _dateInp2.min = _todayStr2;
   if (p.start_time) {
     const s = new Date(p.start_time);
     setTimeSelects('start', s);
     const endMs = p.end_time ? new Date(p.end_time) : new Date(s.getTime() + (p.duration_hours || 4) * 3600000);
     setTimeSelects('end', endMs);
   } else {
-    // 시간 미정 공고: 내일 오전 9시 기본값 세팅 (유효성 검사 통과용)
     const def = new Date(); def.setDate(def.getDate() + 1); def.setHours(9, 0, 0, 0);
     setTimeSelects('start', def);
     setTimeSelects('end', new Date(def.getTime() + 4 * 3600000));
@@ -13224,10 +13245,14 @@ function subscribeChatMessages() {
       if (!isMine) markMessagesRead(_chatAppId);
       if (isMine) {
         if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
-        requestAnimationFrame(() => {
+        const _co = document.getElementById('chat-overlay');
+        if (_co && _co.style.display === 'flex' && window._lastKbDp > 80) {
+          _co.style.paddingBottom = (window._lastKbDp + 16) + 'px';
+        }
+        requestAnimationFrame(() => { requestAnimationFrame(() => {
           const csc = document.getElementById('chat-scroll');
           if (csc) csc.scrollTop = csc.scrollHeight;
-        });
+        }); });
       }
     }).subscribe();
 }
@@ -13261,6 +13286,7 @@ async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const content = input.value.trim();
   if (!content) return;
+  if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
   input.value = '';
   input.focus();
   if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(true);
