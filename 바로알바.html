@@ -5135,8 +5135,24 @@ window._onFCMToken = async function(token) {
     var wo = document.getElementById('wchat-overlay');
     var co = document.getElementById('chat-overlay');
     var val = dp > 80 ? (dp + 16) + 'px' : '';
-    if (wo && wo.style.display === 'flex') wo.style.paddingBottom = val;
-    if (co && co.style.display === 'flex') co.style.paddingBottom = val;
+    if (wo && wo.style.display === 'flex') {
+      wo.style.paddingBottom = val;
+      if (dp > 80) {
+        requestAnimationFrame(function() {
+          var sc = document.getElementById('wchat-scroll');
+          if (sc) sc.scrollTop = sc.scrollHeight;
+        });
+      }
+    }
+    if (co && co.style.display === 'flex') {
+      co.style.paddingBottom = val;
+      if (dp > 80) {
+        requestAnimationFrame(function() {
+          var csc = document.getElementById('chat-scroll');
+          if (csc) csc.scrollTop = csc.scrollHeight;
+        });
+      }
+    }
   };
 
   // 브라우저 환경 폴백 (WebView 외에서 접속 시)
@@ -5876,8 +5892,12 @@ function subscribeWChatMessages() {
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
       if (isMine) {
-        // guard 해제 (스크롤 완료됐으므로)
+        // guard 해제 후 padding-bottom 재적용 완료 시점에 스크롤 맨 아래로
         if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
+        requestAnimationFrame(() => {
+          const sc = document.getElementById('wchat-scroll');
+          if (sc) sc.scrollTop = sc.scrollHeight;
+        });
         if (!window.AndroidBridge) {
           setTimeout(() => { const inp = document.getElementById('wchat-input'); if (inp) inp.focus(); }, 100);
         }
@@ -13202,7 +13222,13 @@ function subscribeChatMessages() {
       const csc = document.getElementById('chat-scroll');
       if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
       if (!isMine) markMessagesRead(_chatAppId);
-      if (isMine && window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
+      if (isMine) {
+        if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
+        requestAnimationFrame(() => {
+          const csc = document.getElementById('chat-scroll');
+          if (csc) csc.scrollTop = csc.scrollHeight;
+        });
+      }
     }).subscribe();
 }
 
