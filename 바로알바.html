@@ -5821,6 +5821,7 @@ async function sendWChatMessage() {
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
   input.value = '';
+  input.focus(); // 전송 후 키보드 유지
   await _doSendWChat(content);
 }
 

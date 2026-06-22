@@ -47,6 +47,14 @@
 
         </activity>
 
+        <!-- FCM 기본 알림 아이콘 (단색 흰색 벡터) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/red" />
+
         <!-- FCM 푸시 알림 서비스 -->
         <service
             android:name=".MyFirebaseMessagingService"
