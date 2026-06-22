@@ -1549,16 +1549,8 @@
     <div class="sheet-count">주변 공고 <span id="job-count">0</span>개</div>
     <div class="sheet-sort" onclick="toggleSort()">↕ <span id="sort-label">거리순</span></div>
   </div>
-  <!-- 오늘의 급구 피드 -->
-  <div id="urgent-feed-section" style="padding:0 14px 4px;display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:13px;font-weight:900;color:#222">&#128293; 오늘의 급구</div>
-      <button onclick="document.getElementById('urgent-feed-section').style.display='none'" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer">접기</button>
-    </div>
-    <div id="urgent-feed-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none"></div>
-  </div>
-  <!-- 공고 키워드 검색 -->
-  <div style="padding:0 14px 10px">
+  <!-- 공고 키워드 검색 (고정) -->
+  <div style="padding:0 14px 10px;flex-shrink:0">
     <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:12px;padding:9px 12px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="job-search-input" type="text" placeholder="공고명, 업체명, 업종 검색"
@@ -1567,27 +1559,38 @@
       <button onclick="document.getElementById('job-search-input').value='';filterJobsByKeyword('')" style="background:none;border:none;color:#bbb;font-size:14px;cursor:pointer;padding:0;line-height:1">✕</button>
     </div>
   </div>
-  <!-- 알림 허용 배너 -->
-  <div id="push-banner" style="display:none;margin:8px 16px;background:linear-gradient(135deg,#fff5f5,#fff);border:1.5px solid #fde0e0;border-radius:16px;padding:14px 16px">
-    <div style="display:flex;align-items:flex-start;gap:12px">
-      <div style="font-size:28px;line-height:1;flex-shrink:0">🔔</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">알림을 허용해주세요</div>
-        <div style="font-size:12px;color:#888;line-height:1.5">새 공고·채팅 메시지를<br>앱이 꺼져있어도 바로 받을 수 있어요</div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button onclick="allowPushFromBanner()" style="flex:1;padding:9px 0;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">허용하기</button>
-          <button onclick="dismissPushBanner()" style="padding:9px 16px;background:#f5f5f5;color:#aaa;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">나중에</button>
+  <!-- 통합 스크롤 영역: 급구 + 맞춤 + 일반공고 모두 한 번에 스크롤 -->
+  <div class="job-list" id="job-list">
+    <!-- 알림 허용 배너 -->
+    <div id="push-banner" style="display:none;margin:0 0 10px;background:linear-gradient(135deg,#fff5f5,#fff);border:1.5px solid #fde0e0;border-radius:16px;padding:14px 16px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="font-size:28px;line-height:1;flex-shrink:0">🔔</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">알림을 허용해주세요</div>
+          <div style="font-size:12px;color:#888;line-height:1.5">새 공고·채팅 메시지를<br>앱이 꺼져있어도 바로 받을 수 있어요</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button onclick="allowPushFromBanner()" style="flex:1;padding:9px 0;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">허용하기</button>
+            <button onclick="dismissPushBanner()" style="padding:9px 16px;background:#f5f5f5;color:#aaa;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">나중에</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- AI 맞춤 추천 섹션 (이력 3개 이상 쌓이면 표시) -->
-  <div id="ai-rec-section" style="display:none;background:#F8F9FA;border-radius:0 0 16px 16px;margin-bottom:6px"></div>
-  <div class="job-list" id="job-list">
-    <div class="empty-state">
-      <div class="empty-icon">&#128506;</div>
-      <div class="empty-txt">주변 공고를 불러오는 중...</div>
+    <!-- 오늘의 급구 피드 -->
+    <div id="urgent-feed-section" style="padding:0 0 4px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:900;color:#222">🔥 오늘의 급구</div>
+        <button onclick="document.getElementById('urgent-feed-section').style.display='none'" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer">접기</button>
+      </div>
+      <div id="urgent-feed-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none"></div>
+    </div>
+    <!-- AI 맞춤 추천 섹션 -->
+    <div id="ai-rec-section" style="display:none;background:#F8F9FA;border-radius:16px;margin-bottom:10px"></div>
+    <!-- 일반 공고 카드 목록 -->
+    <div id="job-cards-container">
+      <div class="empty-state">
+        <div class="empty-icon">&#128506;</div>
+        <div class="empty-txt">주변 공고를 불러오는 중...</div>
+      </div>
     </div>
   </div>
 </div>
@@ -3995,7 +3998,7 @@ async function loadCategoriesWorker() {
 }
 
 async function loadJobs() {
-  const _skList = document.getElementById('job-list');
+  const _skList = document.getElementById('job-cards-container');
   if (_skList) _skList.innerHTML = Array(4).fill(`<div class="sk-card"><div class="sk-line" style="height:16px;width:55%;margin-bottom:8px"></div><div class="sk-line" style="height:22px;width:38%;margin-bottom:10px"></div><div style="display:flex;gap:8px"><div class="sk-line" style="height:13px;width:30%"></div><div class="sk-line" style="height:13px;width:25%"></div></div></div>`).join('');
   try {
     // 지도가 초기화되었으면 현재 시각적 중심 사용 (저장값 override)
@@ -4097,8 +4100,8 @@ async function loadJobs() {
     renderMarkers();
     renderList();
     // 에러 내용 표시 (디버깅용)
-    const el = document.getElementById('job-list');
-    el.innerHTML = `<div class="empty-state">
+    const el = document.getElementById('job-cards-container');
+    if (el) el.innerHTML = `<div class="empty-state">
       <div class="empty-icon">⚠️</div>
       <div class="empty-txt" style="font-size:12px;color:#e53935">공고 로드 실패<br><span style="font-size:10px;color:#aaa;word-break:break-all">${e.message || JSON.stringify(e)}</span></div>
     </div>`;
@@ -4193,7 +4196,7 @@ function renderMarkers() {
 // ── 목록 렌더링 ───────────────────────────────────────────
 function renderList() {
   document.getElementById('job-count').textContent = jobs.length;
-  const list = document.getElementById('job-list');
+  const list = document.getElementById('job-cards-container');
 
   // AI 맞춤 추천 갱신
   renderAiRecommendations();
@@ -5474,7 +5477,7 @@ function filterJobsByKeyword(keyword) {
   );
   const tempJobs = jobs;
   document.getElementById('job-count').textContent = filtered.length;
-  const list = document.getElementById('job-list');
+  const list = document.getElementById('job-cards-container');
   if (filtered.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">\u{1F50D}</div><div class="empty-txt">"${q}" 검색 결과가 없어요</div></div>`;
     return;
@@ -6472,7 +6475,7 @@ async function searchLocation(q) {
 
 function renderFilteredList(filtered) {
   document.getElementById('job-count').textContent = filtered.length;
-  const list = document.getElementById('job-list');
+  const list = document.getElementById('job-cards-container');
   if (filtered.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">\u{1F50D}</div><div class="empty-txt">검색 결과가 없어요</div></div>`;
     return;
@@ -6673,26 +6676,10 @@ function setNav(el, tab) {
     radiusBadge.style.display = 'none';
     if (mapLocBtn) mapLocBtn.style.display = 'none';
     panelChats.classList.add('show');
-    // 배지 즉시 초기화 → loadMyChatList보다 먼저
+    // 채팅 목록 탭 진입: 배지 숨김 (개별 채팅 열 때만 is_read 처리)
     const _badge = document.getElementById('chat-unread-badge');
-    if (_badge) { _badge.textContent = '0'; _badge.style.display = 'none'; }
+    if (_badge) { _badge.style.display = 'none'; }
     loadMyChatList();
-    // DB 읽음 처리 (비동기)
-    (async function() {
-      try {
-        if (currentUser) {
-          const { data: w } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-          if (w) {
-            const { data: apps } = await db.from('applications').select('id').eq('worker_id', w.id);
-            if (apps?.length) {
-              await db.from('messages').update({ is_read: true })
-                .in('application_id', apps.map(a => a.id))
-                .neq('sender_id', currentUser.id);
-            }
-          }
-        }
-      } catch(e) {}
-    })();
   } else if (tab === 'profile') {
     topBar.style.display      = 'none';
     bottomSheet.style.display = 'none';
@@ -6706,6 +6693,8 @@ function setNav(el, tab) {
     radiusBadge.style.display = '';
     if (mapLocBtn) mapLocBtn.style.display = 'flex';
     if (tab === 'map') setSheetState('peek');
+    // 채팅 탭에서 다른 탭으로 이동 시 실제 미읽음 수로 배지 갱신
+    refreshWorkerChatBadge();
   }
 }
 
