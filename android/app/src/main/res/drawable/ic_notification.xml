@@ -1,32 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  바로알바 알림 아이콘 (과녁+화살 모양)
+  Android 상태표시줄용 단색 벡터 (흰색, 투명 배경)
+  24×24dp viewBox
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- 바로알바 로고: 과녁 타겟 모양 (흰색 단색) -->
-    <!-- 바깥 원 테두리 -->
+    <!-- 바깥 원 (링) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,2A10,10 0,0 1,22 12A10,10 0,0 1,12 22A10,10 0,0 1,2 12A10,10 0,0 1,12 2ZM12,4A8,8 0,0 0,4 12A8,8 0,0 0,12 20A8,8 0,0 0,20 12A8,8 0,0 0,12 4Z"/>
-    <!-- 중간 원 테두리 -->
+        android:pathData="M12,1.5 C17.799,1.5 22.5,6.201 22.5,12 C22.5,17.799 17.799,22.5 12,22.5 C6.201,22.5 1.5,17.799 1.5,12 C1.5,6.201 6.201,1.5 12,1.5 Z M12,3.5 C7.306,3.5 3.5,7.306 3.5,12 C3.5,16.694 7.306,20.5 12,20.5 C16.694,20.5 20.5,16.694 20.5,12 C20.5,7.306 16.694,3.5 12,3.5 Z" />
+
+    <!-- 중간 원 (링) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,7A5,5 0,0 1,17 12A5,5 0,0 1,12 17A5,5 0,0 1,7 12A5,5 0,0 1,12 7ZM12,9A3,3 0,0 0,9 12A3,3 0,0 0,12 15A3,3 0,0 0,15 12A3,3 0,0 0,12 9Z"/>
-    <!-- 중심 점 -->
+        android:pathData="M12,6.5 C15.038,6.5 17.5,8.962 17.5,12 C17.5,15.038 15.038,17.5 12,17.5 C8.962,17.5 6.5,15.038 6.5,12 C6.5,8.962 8.962,6.5 12,6.5 Z M12,8.5 C10.067,8.5 8.5,10.067 8.5,12 C8.5,13.933 10.067,15.5 12,15.5 C13.933,15.5 15.5,13.933 15.5,12 C15.5,10.067 13.933,8.5 12,8.5 Z" />
+
+    <!-- 중심 원 (채움) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,11A1,1 0,0 1,13 12A1,1 0,0 1,12 13A1,1 0,0 1,11 12A1,1 0,0 1,12 11Z"/>
-    <!-- 화살 꼬리 (우상단에서 중심으로) -->
+        android:pathData="M12,10.5 C13.381,10.5 14.5,11.619 14.5,13 C14.5,14.381 13.381,15.5 12,15.5 C10.619,15.5 9.5,14.381 9.5,13 C9.5,11.619 10.619,10.5 12,10.5 Z"
+        android:alpha="0" />
+    <circle
+        android:fillColor="#FFFFFF"
+        android:centerX="12"
+        android:centerY="12"
+        android:radius="1.8" />
+
+    <!-- 화살대 (우상단 → 중심) -->
     <path
         android:fillColor="#FFFFFF"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.5"
+        android:strokeWidth="1.6"
         android:strokeLineCap="round"
-        android:pathData="M15.5,8.5L12,12"/>
+        android:pathData="M16,8 L12,12" />
+
+    <!-- 화살촉 (우상단) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M16.5,6.5L17.5,5.5L18.5,7.5L16.5,8.5L14.5,6.5L16.5,6.5Z"/>
+        android:pathData="M14.5,5.5 L18.5,5.5 L18.5,9.5 L16.8,7.8 L14.2,10.4 L13.1,9.3 L15.7,6.7 Z" />
 
 </vector>

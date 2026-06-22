@@ -5008,7 +5008,13 @@ window._onFCMToken = async function(token) {
     var co = document.getElementById('chat-overlay');
     if (wi && wo) {
       wi.addEventListener('focus', function() { applyKbPad(wo); });
-      wi.addEventListener('blur',  function() { clearKbPad(wo); });
+      wi.addEventListener('blur',  function() {
+        // 150ms 뒤에도 여전히 포커스를 잃은 경우만 키보드 패딩 제거
+        // (메시지 전송 후 즉시 재포커스되면 패딩 유지)
+        setTimeout(function() {
+          if (document.activeElement !== wi) clearKbPad(wo);
+        }, 150);
+      });
     }
     if (ci && co) {
       ci.addEventListener('focus', function() { applyKbPad(co); });
@@ -5704,6 +5710,11 @@ function subscribeWChatMessages() {
       const sc = document.getElementById('wchat-scroll');
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
+      // DOM 조작 후 포커스 복원 (Android WebView 키보드 유지)
+      if (isMine) {
+        const inp = document.getElementById('wchat-input');
+        if (inp) inp.focus();
+      }
     }).subscribe();
 }
 
