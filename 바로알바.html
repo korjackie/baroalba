@@ -25,6 +25,7 @@
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -1749,7 +1750,7 @@
     </div>
     <div id="qr-print-area" style="padding:20px 20px 8px">
       <div style="text-align:center;margin-bottom:14px">
-        <img id="qr-code-img" src="" alt="QR코드" style="width:180px;height:180px;border:1px solid #f0f0f0;border-radius:12px">
+        <canvas id="qr-code-canvas" style="border:1px solid #f0f0f0;border-radius:12px;width:200px;height:200px"></canvas>
       </div>
       <div id="qr-job-info" style="background:#f8f9fa;border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.8;color:#333"></div>
     </div>
@@ -2159,15 +2160,31 @@
 
         <!-- 수입 현황 (알바생만) -->
         <div id="income-section" style="display:none;margin-bottom:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:14px;font-weight:900;color:#222">💵 이번 달 수입</div>
-            <div id="income-month-label" style="font-size:12px;color:#aaa;font-weight:700"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:14px;font-weight:900;color:#222">💵 내 수입 현황</div>
+            <div style="display:flex;gap:5px">
+              <select id="income-year-sel" onchange="loadWorkerIncome()" style="font-size:12px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:10px;padding:4px 8px;background:#fff;color:#333;appearance:none;-webkit-appearance:none;cursor:pointer"></select>
+              <select id="income-month-sel" onchange="loadWorkerIncome()" style="font-size:12px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:10px;padding:4px 8px;background:#fff;color:#333;appearance:none;-webkit-appearance:none;cursor:pointer"></select>
+            </div>
           </div>
-          <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:16px;padding:14px 16px;margin-bottom:8px">
-            <div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:3px">예상 수입 합계</div>
-            <div id="income-total" style="font-size:28px;font-weight:900;color:#15803d">-</div>
+          <!-- 선택 월 수입 카드 -->
+          <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:16px;padding:16px;margin-bottom:10px">
+            <div id="income-month-label" style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:4px"></div>
+            <div id="income-total" style="font-size:30px;font-weight:900;color:#15803d;letter-spacing:-0.5px">-</div>
+            <div id="income-count" style="font-size:11px;color:#16a34a;margin-top:3px;opacity:.8"></div>
           </div>
-          <div id="income-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <!-- 해당 월 근무 목록 -->
+          <div id="income-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
+          <!-- 12개월 바차트 -->
+          <div style="background:#f8f9fa;border-radius:16px;padding:16px">
+            <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:14px">📊 월별 수입 추이</div>
+            <div id="income-chart" style="display:flex;align-items:flex-end;gap:3px;height:72px;padding:0 2px"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px" id="income-chart-labels"></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:11px;color:#888">바로알바 누적 수입</div>
+              <div id="income-cumulative" style="font-size:15px;font-weight:900;color:#15803d">-</div>
+            </div>
+          </div>
         </div>
 
         <!-- 관리자 페이지 진입 (관리자 계정만 표시) -->
@@ -5027,8 +5044,12 @@ function openQRModal() {
   const job = jobs.find(j => j.id === selectedJobId);
   if (!job) return;
   const url = 'https://baroalba.multimove.co.kr/바로알바.html?job=' + job.id;
-  document.getElementById('qr-code-img').src =
-    'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=' + encodeURIComponent(url) + '&choe=UTF-8';
+  const canvas = document.getElementById('qr-code-canvas');
+  if (canvas && typeof QRCode !== 'undefined') {
+    QRCode.toCanvas(canvas, url, { width: 200, margin: 1, color: { dark: '#1a1a1a', light: '#ffffff' } }, err => {
+      if (err) console.error('QR 생성 실패:', err);
+    });
+  }
   const wageLabels = { hourly:'시급', daily:'일급', 'per-job':'건당', monthly:'월급', other:'급여' };
   const wLabel = wageLabels[job.wage_type] || '시급';
   const timeStr = job.start_time ? formatTime(job.start_time) : '미정';
@@ -5052,15 +5073,18 @@ function closeQRModal() {
 function printQR() {
   const job = jobs.find(j => j.id === selectedJobId);
   const title = job ? job.title : '바로알바 공고';
-  const area = document.getElementById('qr-print-area');
+  const canvas = document.getElementById('qr-code-canvas');
+  const qrDataUrl = canvas ? canvas.toDataURL('image/png') : '';
+  const jobInfo = document.getElementById('qr-job-info').innerHTML;
   const pw = window.open('', '_blank', 'width=600,height=800');
   pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>' +
     '<style>body{font-family:"Apple SD Gothic Neo",sans-serif;padding:40px;max-width:500px;margin:0 auto}' +
-    'img{display:block;margin:0 auto 16px}h2{text-align:center;margin-bottom:20px;font-size:20px}' +
-    '#qr-job-info{background:#f8f9fa;border-radius:12px;padding:16px;line-height:1.9;font-size:14px}' +
-    '#qr-job-info b{color:#333}@media print{body{padding:20px}}</style>' +
+    'img.qr{display:block;margin:0 auto 16px;width:200px;height:200px}h2{text-align:center;margin-bottom:20px;font-size:20px}' +
+    '.info{background:#f8f9fa;border-radius:12px;padding:16px;line-height:1.9;font-size:14px}' +
+    '.info b{color:#333}@media print{body{padding:20px}}</style>' +
     '</head><body><h2>📋 알바 공고 모집</h2>' +
-    area.innerHTML + '</body></html>');
+    (qrDataUrl ? '<img class="qr" src="' + qrDataUrl + '" alt="QR">' : '') +
+    '<div class="info">' + jobInfo + '</div></body></html>');
   pw.document.close();
   pw.focus();
   setTimeout(function(){ pw.print(); }, 400);
@@ -8297,55 +8321,145 @@ function updateAgePreview(val) {
   preview.textContent = age ? `만 ${age}세` : '';
 }
 
+let _incomeWorkerId = null;
+
 async function loadWorkerIncome() {
   const sec = document.getElementById('income-section');
   if (!sec || !currentUser) return;
 
-  const { data: wRow } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
-  if (!wRow) return;
+  // worker ID 캐싱
+  if (!_incomeWorkerId) {
+    const { data: wRow } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).single();
+    if (!wRow) return;
+    _incomeWorkerId = wRow.id;
+  }
 
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth();
-  const from = new Date(y, m, 1).toISOString();
-  const to   = new Date(y, m + 1, 0, 23, 59, 59).toISOString();
+  sec.style.display = 'block';
+  _initIncomeSelectors();
 
+  const yearSel  = document.getElementById('income-year-sel');
+  const monthSel = document.getElementById('income-month-sel');
+  const selY = parseInt(yearSel?.value  || new Date().getFullYear());
+  const selM = parseInt(monthSel?.value ?? new Date().getMonth());
+
+  // 선택 월 데이터
+  const from = new Date(selY, selM, 1).toISOString();
+  const to   = new Date(selY, selM + 1, 0, 23, 59, 59).toISOString();
   const { data: apps } = await db.from('applications')
-    .select('completed_at, job_postings(title, current_wage, duration_hours, start_time)')
-    .eq('worker_id', wRow.id)
+    .select('completed_at, job_postings(title, current_wage, duration_hours, wage_type, category)')
+    .eq('worker_id', _incomeWorkerId)
     .eq('status', 'completed')
     .gte('completed_at', from)
     .lte('completed_at', to)
     .order('completed_at', { ascending: false });
 
-  sec.style.display = 'block';
-  const label = document.getElementById('income-month-label');
-  if (label) label.textContent = `${y}년 ${m + 1}월`;
-
   const list = apps || [];
-  const total = list.reduce((sum, a) => {
-    const w = a.job_postings?.current_wage || 0;
-    const h = a.job_postings?.duration_hours || 0;
-    return sum + w * h;
-  }, 0);
-
-  document.getElementById('income-total').textContent = total > 0 ? total.toLocaleString() + '원' : '완료된 근무 없음';
-
-  const listEl = document.getElementById('income-list');
-  if (!listEl) return;
-  if (!list.length) { listEl.innerHTML = ''; return; }
-  listEl.innerHTML = list.slice(0, 5).map(a => {
+  const calcEarned = a => {
     const jp = a.job_postings || {};
-    const earned = (jp.current_wage || 0) * (jp.duration_hours || 0);
+    const w = jp.current_wage || 0;
+    const h = jp.duration_hours || 1;
+    return (jp.wage_type === 'daily' || jp.wage_type === 'per-job') ? w : w * h;
+  };
+  const monthTotal = list.reduce((s, a) => s + calcEarned(a), 0);
+
+  const labelEl = document.getElementById('income-month-label');
+  const totalEl = document.getElementById('income-total');
+  const countEl = document.getElementById('income-count');
+  if (labelEl) labelEl.textContent = `${selY}년 ${selM + 1}월 수입`;
+  if (totalEl) totalEl.textContent = monthTotal > 0 ? monthTotal.toLocaleString() + '원' : '완료된 근무 없음';
+  if (countEl) countEl.textContent = list.length > 0 ? `근무 ${list.length}건` : '';
+
+  // 해당 월 목록
+  const listEl = document.getElementById('income-list');
+  if (listEl) {
+    listEl.innerHTML = list.length ? list.map(a => {
+      const jp = a.job_postings || {};
+      const earned = calcEarned(a);
+      const d = new Date(a.completed_at);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #f0f0f0;border-radius:12px;padding:10px 14px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#222">${jp.title || '근무 완료'}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">${d.getMonth()+1}/${d.getDate()} · ${jp.duration_hours || '-'}시간 · ${jp.category || ''}</div>
+        </div>
+        <div style="font-size:14px;font-weight:900;color:#15803d;white-space:nowrap">+${earned > 0 ? earned.toLocaleString() + '원' : '-'}</div>
+      </div>`;
+    }).join('') : '<div style="text-align:center;font-size:12px;color:#bbb;padding:10px 0">이 달 완료된 근무가 없습니다</div>';
+  }
+
+  // 12개월 바차트 (비동기)
+  _loadIncomeChart(selY, selM);
+}
+
+function _initIncomeSelectors() {
+  const yearSel  = document.getElementById('income-year-sel');
+  const monthSel = document.getElementById('income-month-sel');
+  if (!yearSel || yearSel.options.length > 0) return; // 이미 초기화됨
+  const now = new Date();
+  for (let y = now.getFullYear(); y >= now.getFullYear() - 2; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + '년';
+    if (y === now.getFullYear()) opt.selected = true;
+    yearSel.appendChild(opt);
+  }
+  for (let m = 0; m < 12; m++) {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = (m + 1) + '월';
+    if (m === now.getMonth()) opt.selected = true;
+    monthSel.appendChild(opt);
+  }
+}
+
+async function _loadIncomeChart(selY, selM) {
+  const chartEl  = document.getElementById('income-chart');
+  const labelsEl = document.getElementById('income-chart-labels');
+  const cumEl    = document.getElementById('income-cumulative');
+  if (!chartEl || !_incomeWorkerId) return;
+
+  // 지난 12개월치 조회
+  const now = new Date();
+  const chartFrom = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString();
+  const { data: allApps } = await db.from('applications')
+    .select('completed_at, job_postings(current_wage, duration_hours, wage_type)')
+    .eq('worker_id', _incomeWorkerId)
+    .eq('status', 'completed')
+    .gte('completed_at', chartFrom)
+    .order('completed_at', { ascending: true });
+
+  // 월별 합산
+  const monthly = {};
+  (allApps || []).forEach(a => {
     const d = new Date(a.completed_at);
-    const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
-    return `<div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:12px;padding:10px 14px">
-      <div>
-        <div style="font-size:13px;font-weight:800;color:#222">${jp.title || '근무 완료'}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:1px">${dateStr} · ${jp.duration_hours || '-'}시간</div>
-      </div>
-      <div style="font-size:14px;font-weight:900;color:#15803d">${earned > 0 ? '+' + earned.toLocaleString() + '원' : '-'}</div>
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    const jp = a.job_postings || {};
+    const w = jp.current_wage || 0, h = jp.duration_hours || 1;
+    const earned = (jp.wage_type === 'daily' || jp.wage_type === 'per-job') ? w : w * h;
+    monthly[key] = (monthly[key] || 0) + earned;
+  });
+
+  // 12개월 슬롯 생성
+  const slots = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    slots.push({ y: d.getFullYear(), m: d.getMonth(), key: `${d.getFullYear()}-${d.getMonth()}`, amount: monthly[`${d.getFullYear()}-${d.getMonth()}`] || 0 });
+  }
+
+  const maxAmt = Math.max(...slots.map(s => s.amount), 1);
+  const cumulative = slots.reduce((s, sl) => s + sl.amount, 0);
+  if (cumEl) cumEl.textContent = cumulative > 0 ? cumulative.toLocaleString() + '원' : '-';
+
+  const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  chartEl.innerHTML = slots.map(sl => {
+    const pct = maxAmt > 0 ? Math.max(Math.round((sl.amount / maxAmt) * 100), sl.amount > 0 ? 6 : 2) : 2;
+    const isSel = sl.y === selY && sl.m === selM;
+    const color = isSel ? '#C8102E' : (sl.amount > 0 ? '#22c55e' : '#e5e7eb');
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+      <div title="${sl.amount > 0 ? sl.amount.toLocaleString() + '원' : '없음'}" style="width:100%;background:${color};border-radius:4px 4px 0 0;height:${pct}%;min-height:2px;cursor:pointer" onclick="document.getElementById('income-year-sel').value=${sl.y};document.getElementById('income-month-sel').value=${sl.m};loadWorkerIncome()"></div>
     </div>`;
   }).join('');
+
+  if (labelsEl) labelsEl.innerHTML = slots.map(sl =>
+    `<div style="flex:1;text-align:center;font-size:9px;color:${sl.y===selY&&sl.m===selM?'#C8102E':'#aaa'};font-weight:${sl.y===selY&&sl.m===selM?'900':'600'}">${monthNames[sl.m]}</div>`
+  ).join('');
 }
 
 // ── 크롭 모달 ────────────────────────────────────────
@@ -8402,15 +8516,24 @@ async function uploadAvatar(input) {
   input.value = '';
   openCropModal(file, async blob => {
     showToast('업로드 중...');
-    const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
-    const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
+    // 고정 경로(upsert) — 매번 새 파일 생성 방지
+    const path = `${currentUser.id}/avatar.jpg`;
+    const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
-    const { error: dbErr } = await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
+    // .select() 로 실제 업데이트 여부 확인
+    const { data: updated, error: dbErr } = await db.from('workers')
+      .update({ photo_url: publicUrl })
+      .eq('kakao_uid', currentUser.id)
+      .select('id, photo_url');
     if (dbErr) { showToast('저장 실패: ' + dbErr.message); return; }
+    if (!updated || updated.length === 0) {
+      showToast('⚠️ 알바생 계정을 찾지 못했어요. 업주 계정은 업체 정보에서 사진을 등록하세요.');
+      return;
+    }
+    const _fc2 = (currentUser?.user_metadata?.full_name || currentUser?.email || '?').charAt(0);
     const inner = document.getElementById('header-avatar-inner');
     if (inner) {
-      const _fc2 = (currentUser?.user_metadata?.full_name || currentUser?.email || '?').charAt(0);
       inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${_fc2}',58)">`;
     }
     showToast('✅ 프로필 사진이 업데이트됐습니다');
