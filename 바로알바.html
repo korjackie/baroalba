@@ -4913,23 +4913,6 @@ async function openWChat(applicationId, bizName) {
   _wo.style.display = 'flex';
   history.pushState({ overlay: 'wchat' }, '');
   document.getElementById('wchat-input').value = '';
-  // blur 시 자동 재포커스 — DOM 변경으로 포커스 이탈 시 복구
-  const _wi = document.getElementById('wchat-input');
-  _wi._blurHandler = function() {
-    if (!window.AndroidBridge?.showKeyboard) return;
-    const ov = document.getElementById('wchat-overlay');
-    if (!ov || ov.style.display === 'none') return;
-    const ae = document.activeElement;
-    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA') && ae !== _wi) return;
-    setTimeout(() => {
-      const ov2 = document.getElementById('wchat-overlay');
-      if (ov2 && ov2.style.display !== 'none') {
-        _wi.focus();
-        window.AndroidBridge.showKeyboard();
-      }
-    }, 80);
-  };
-  _wi.addEventListener('blur', _wi._blurHandler);
   try {
     await loadWChatMessages();
     subscribeWChatMessages();
@@ -4950,9 +4933,6 @@ function closeWChat(navigate = true) {
   wo.style.display = 'none';
   wo.style.paddingBottom = '';
   if (window._clearChatKbOffset) window._clearChatKbOffset();
-  // blur 핸들러 제거
-  const _wi = document.getElementById('wchat-input');
-  if (_wi && _wi._blurHandler) { _wi.removeEventListener('blur', _wi._blurHandler); _wi._blurHandler = null; }
   // SHOW_FORCED 해제 — 채팅창 닫을 때 키보드도 같이 내림
   if (window.AndroidBridge && window.AndroidBridge.hideKeyboard) {
     window.AndroidBridge.hideKeyboard();
