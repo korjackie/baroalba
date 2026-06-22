@@ -13202,6 +13202,7 @@ function subscribeChatMessages() {
       const csc = document.getElementById('chat-scroll');
       if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
       if (!isMine) markMessagesRead(_chatAppId);
+      if (isMine && window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
     }).subscribe();
 }
 
@@ -13235,6 +13236,8 @@ async function sendChatMessage() {
   const content = input.value.trim();
   if (!content) return;
   input.value = '';
+  input.focus();
+  if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(true);
   await _doSendChat(content);
 }
 
