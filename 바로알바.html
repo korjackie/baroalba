@@ -2938,7 +2938,7 @@
         style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
         onfocus="closeMediaPanel('wchat')"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
-      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="sendWChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();sendWChatMessage()" onclick="sendWChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
 </div>
@@ -3003,7 +3003,7 @@
         style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
         onfocus="closeMediaPanel('chat')"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
-      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="sendChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();sendChatMessage()" onclick="sendChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
 </div>
