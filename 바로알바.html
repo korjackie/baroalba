@@ -5178,7 +5178,7 @@ function scrollChatToBottom(scrollId) {
 
 // ── FCM 토큰 수신 → Supabase 저장 ──
 async function _saveFCMToken(token) {
-  if (!token || !window.currentUser || !window.db) return;
+  if (!token || !currentUser || !db) return;
   const uid = currentUser.id;
   const kakaoUid = currentUser.user_metadata?.kakao_uid || currentUser.user_metadata?.provider_id;
   const payload = [{ user_id: uid, token, updated_at: new Date().toISOString() }];
@@ -5192,7 +5192,7 @@ window._onFCMToken = function(token) {
   window._pendingFCMToken = token;
   var tries = 0;
   var tryStore = function() {
-    if (window.currentUser && window.db) {
+    if (currentUser && db) {
       _saveFCMToken(token);
     } else if (tries < 20) {
       tries++;
