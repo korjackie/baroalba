@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean captureMode = false;
     private Uri pendingPhotoUri = null;
     private int safeTop = 0, safeBottom = 0;
+    private String latestFCMToken = null; // 페이지 로드 전 수신된 토큰 보관
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -121,8 +122,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                // 페이지 로드 완료 후 safe area 재적용 (초기 로드 타이밍 보장)
                 applySafeArea();
+                // 페이지 로드 완료 후 FCM 토큰 재전달 (타이밍 문제 보완)
+                if (latestFCMToken != null) {
+                    String js = "if(window._onFCMToken)window._onFCMToken('" + latestFCMToken + "');";
+                    view.evaluateJavascript(js, null);
+                }
             }
         });
 
@@ -171,14 +176,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // FCM 토큰 취득 → JS로 전달
+        // FCM 토큰 취득 → 보관 후 JS로 전달 (페이지 로드 전이면 onPageFinished에서 재시도)
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                String token = task.getResult();
-                String js = "if(window._onFCMToken)window._onFCMToken('" + token + "');";
+                latestFCMToken = task.getResult();
+                String js = "if(window._onFCMToken)window._onFCMToken('" + latestFCMToken + "');";
                 webView.post(() -> webView.evaluateJavascript(js, null));
             }
         });
+        // SharedPreferences에 저장된 갱신 토큰도 처리
+        String savedToken = getSharedPreferences("baroalba", MODE_PRIVATE).getString("fcm_token", null);
+        if (savedToken != null) latestFCMToken = savedToken;
 
         webView.loadUrl(resolveUrl(getIntent()));
     }

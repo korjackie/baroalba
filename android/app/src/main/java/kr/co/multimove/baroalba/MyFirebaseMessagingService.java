@@ -35,7 +35,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(String token) {
-        // 토큰 갱신 시 앱이 열려있으면 MainActivity가 재시작에서 갱신함
+        // 토큰 갱신 시 SharedPreferences에 저장 → MainActivity.onResume에서 JS로 전달
+        getSharedPreferences("baroalba", MODE_PRIVATE)
+            .edit().putString("fcm_token", token).apply();
     }
 
     private void showNotification(String title, String body, String url) {

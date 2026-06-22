@@ -3813,6 +3813,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (session) {
     currentUser = session.user;
+    if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     setTimeout(checkPushPermission, 3000); // 알림 배너 표시
@@ -4951,18 +4952,21 @@ function scrollChatToBottom(scrollId) {
 }
 
 // ── FCM 토큰 수신 → Supabase 저장 ──
-window._onFCMToken = async function(token) {
-  if (!window.currentUser || !window.db) return;
+async function _saveFCMToken(token) {
+  if (!token || !window.currentUser || !window.db) return;
   const payload = [
     { user_id: currentUser.id, token, updated_at: new Date().toISOString() }
   ];
-  // kakao_uid로도 저장 (업주 푸시 식별용)
   const kakaoUid = currentUser.user_metadata?.kakao_uid ||
                    currentUser.user_metadata?.provider_id;
   if (kakaoUid && kakaoUid !== currentUser.id) {
     payload.push({ user_id: kakaoUid, token, updated_at: new Date().toISOString() });
   }
   await db.from('fcm_tokens').upsert(payload, { onConflict: 'user_id' });
+}
+window._onFCMToken = async function(token) {
+  window._pendingFCMToken = token; // currentUser 없어도 항상 저장
+  await _saveFCMToken(token);
 };
 
 // ── 키보드 대응 (v202: 네이티브 IME 인셋 브리지) ──
@@ -9541,6 +9545,7 @@ async function initOwnerFeatures() {
   if (!session) { location.href = '/login.html'; return; }
   currentUser = session.user;
   currentSession = session;
+  if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
 
   // 첫 로그인 온보딩 튜토리얼
   if (!localStorage.getItem(_OB_KEY)) setTimeout(showOnboarding, 800);
