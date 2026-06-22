@@ -5191,12 +5191,12 @@ async function _saveFCMToken(token) {
     payload.push({ user_id: kakaoUid, token, updated_at: new Date().toISOString() });
   }
   const { error } = await db.from('fcm_tokens').upsert(payload, { onConflict: 'user_id' });
-  if (error) console.error('[FCM] 저장 실패:', JSON.stringify(error));
-  else console.log('[FCM] 저장 성공 user:', currentUser.id);
+  if (error) showToast('FCM저장실패: ' + (error.message || error.code));
+  else showToast('FCM저장성공');
 }
 window._onFCMToken = async function(token) {
-  window._pendingFCMToken = token; // currentUser 없어도 항상 저장
-  console.log('[FCM] 토큰 수신:', token?.slice(0, 20));
+  window._pendingFCMToken = token;
+  showToast('FCM토큰수신');
   await _saveFCMToken(token);
 };
 
@@ -5226,6 +5226,16 @@ window._onFCMToken = async function(token) {
           var csc = document.getElementById('chat-scroll');
           if (csc) csc.scrollTop = csc.scrollHeight;
         }); });
+      }
+    }
+    var rm = document.getElementById('rating-modal-inner');
+    if (rm) {
+      rm.style.paddingBottom = dp > 80 ? (dp + 40) + 'px' : '40px';
+      if (dp > 80) {
+        requestAnimationFrame(function() {
+          var ta = document.getElementById('review-text');
+          if (ta) ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
       }
     }
   };
@@ -11328,7 +11338,7 @@ function showRatingModal(appId, workerId) {
   window._subRatings = { sincerity: 0, skill: 0, communication: 0 };
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div id="rating-modal-inner" style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-sizing:border-box" onclick="event.stopPropagation()">
       <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">\u{1F3C1} 근무 완료 처리</div>
       <div style="font-size:13px;color:#aaa;margin-bottom:20px">세부 항목별 평점을 남겨주세요</div>
 
@@ -11389,13 +11399,13 @@ async function submitRating(appId, workerId) {
   const { error: appErr } = await db.from('applications').update({
     status: 'completed',
     worker_rating: rating,
-    worker_review: review || null,
-    sincerity_rating: sub.sincerity,
-    skill_rating: sub.skill,
-    communication_rating: sub.communication,
-    completed_at: new Date().toISOString()
+    worker_review: review || null
   }).eq('id', appId);
-  if (appErr) { showToast('처리 실패: ' + appErr.message); return; }
+  if (appErr) {
+    if (btn) { btn.disabled = false; btn.textContent = '완료 처리'; }
+    showToast('처리 실패: ' + appErr.message);
+    return;
+  }
 
   // 2. 워커 평점/완료횟수 업데이트
   if (workerId) {
