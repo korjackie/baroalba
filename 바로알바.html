@@ -3679,6 +3679,30 @@
         </div>
       </div>
 
+      <!-- 재방문 인센티브 -->
+      <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fffbeb;border:1.5px solid #FDE68A;border-radius:12px;cursor:pointer" onclick="toggleReturnBonus()">
+          <div>
+            <div style="font-size:14px;font-weight:800;color:#D97706">⭐ 재방문 인센티브</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">두 번째부터 추가 지급 — 단골 알바생 확보</div>
+          </div>
+          <div id="return-bonus-track" style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;position:relative;transition:background 0.2s;flex-shrink:0">
+            <div id="return-bonus-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.2s"></div>
+          </div>
+        </div>
+        <input type="hidden" id="f-return-bonus-on" value="false">
+        <div id="return-bonus-row" style="display:none;margin-top:10px">
+          <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">인센티브 금액 선택</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="deposit-amt-btn" id="rb-btn-1000" onclick="setReturnBonus(1000)">1,000원</button>
+            <button type="button" class="deposit-amt-btn" id="rb-btn-2000" onclick="setReturnBonus(2000)">2,000원</button>
+            <button type="button" class="deposit-amt-btn" id="rb-btn-3000" onclick="setReturnBonus(3000)">3,000원</button>
+            <button type="button" class="deposit-amt-btn" id="rb-btn-5000" onclick="setReturnBonus(5000)">5,000원</button>
+          </div>
+          <input type="hidden" id="f-return-bonus" value="0">
+        </div>
+      </div>
+
       <!-- 프리미엄 노출 토글 -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f8;border-radius:12px">
         <div>
@@ -11476,9 +11500,10 @@ function openPostingForm() {
   document.getElementById('surge-knob').style.left = '2px';
   document.getElementById('surge-settings').style.display = 'none';
   document.getElementById('surge-preview').textContent = '';
-  // 당일정산 + 노쇼보증금 초기화
+  // 당일정산 + 노쇼보증금 + 재방문인센티브 초기화
   setSameDay(false);
   setDeposit(false);
+  setReturnBonusOn(false);
   renderMyPlacesQuick();
   // 기본 장소가 있으면 자동 적용
   const defaultPlace = _bizPlaces.find(p => p.is_default);
@@ -11600,6 +11625,9 @@ function openEditForm(jobId) {
   const dep = p.noshow_deposit || 0;
   setDeposit(dep > 0);
   if (dep > 0) setDepositAmount(dep);
+  const rb = p.return_bonus || 0;
+  setReturnBonusOn(rb > 0);
+  if (rb > 0) setReturnBonus(rb);
   renderMyPlacesQuick();
   document.getElementById('form-overlay').classList.add('open');
 }
@@ -12031,6 +12059,7 @@ async function submitPosting() {
     surge_interval_min: surgeEnabled ? surgeInterval : null,
     same_day_payment:   sameDayPayment,
     noshow_deposit:     document.getElementById('f-deposit-on').value === 'true' ? (parseInt(document.getElementById('f-deposit-amount')?.value) || 0) : 0,
+    return_bonus:       document.getElementById('f-return-bonus-on').value === 'true' ? (parseInt(document.getElementById('f-return-bonus')?.value) || 0) : 0,
     work_type:          workType,
     work_days:          workDays || null,
     work_end_date:      workType === 'short' ? periodEnd : null,
@@ -12196,6 +12225,28 @@ function setDepositAmount(amt) {
   document.getElementById('f-deposit-amount').value = amt;
 }
 
+// ── 재방문 인센티브 ───────────────────────────────────────
+function toggleReturnBonus() {
+  const cur = document.getElementById('f-return-bonus-on').value === 'true';
+  setReturnBonusOn(!cur);
+}
+function setReturnBonusOn(val) {
+  document.getElementById('f-return-bonus-on').value = val ? 'true' : 'false';
+  document.getElementById('return-bonus-track').style.background = val ? '#D97706' : '#e5e7eb';
+  document.getElementById('return-bonus-knob').style.transform = val ? 'translateX(20px)' : 'none';
+  document.getElementById('return-bonus-row').style.display = val ? 'block' : 'none';
+  if (val) {
+    const cur = parseInt(document.getElementById('f-return-bonus')?.value) || 0;
+    if (!cur) setReturnBonus(3000);
+  }
+}
+function setReturnBonus(amt) {
+  document.querySelectorAll('[id^="rb-btn-"]').forEach(b => {
+    b.classList.toggle('active', b.id === `rb-btn-${amt}`);
+  });
+  document.getElementById('f-return-bonus').value = amt;
+}
+
 // ── 공고 복사 재등록 ──────────────────────────────────────
 function copyPosting(jobId) {
   const p = postings.find(x => x.id === jobId);
@@ -12228,6 +12279,9 @@ function copyPosting(jobId) {
   document.getElementById('surge-preview').textContent = '';
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
+  const _rb2 = p.return_bonus || 0;
+  setReturnBonusOn(_rb2 > 0);
+  if (_rb2 > 0) setReturnBonus(_rb2);
   // 공고 유형(심부름/일반알바 등) 복사
   const jobType = p.work_type === 'errand' ? 'errand' : 'alba';
   setJobType(jobType);
