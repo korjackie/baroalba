@@ -11517,6 +11517,8 @@ function openPostingForm() {
   const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
   const dateInp = document.getElementById('f-start-date');
   if (dateInp) dateInp.min = todayStr;
+  const ps = document.getElementById('f-period-start'); if (ps) ps.min = todayStr;
+  const pe = document.getElementById('f-period-end');   if (pe) pe.min = todayStr;
   setTimeSelects('start', now);
   const end = new Date(now.getTime() + 4 * 3600000);
   setTimeSelects('end', end);
@@ -11619,6 +11621,8 @@ function openEditForm(jobId) {
   const _todayStr2 = new Date().toISOString().slice(0, 10);
   const _dateInp2 = document.getElementById('f-start-date');
   if (_dateInp2) _dateInp2.min = _todayStr2;
+  const _ps2 = document.getElementById('f-period-start'); if (_ps2) _ps2.min = _todayStr2;
+  const _pe2 = document.getElementById('f-period-end');   if (_pe2) _pe2.min = _todayStr2;
   if (p.start_time) {
     const s = new Date(p.start_time);
     setTimeSelects('start', s);
@@ -12071,6 +12075,15 @@ async function submitPosting() {
   const workDays   = document.getElementById('f-work-days').value || '';
   const periodEnd  = document.getElementById('f-period-end').value || null;
   const holidayPay = document.getElementById('f-holiday-pay').value === 'true';
+
+  const _todayChk = new Date().toISOString().slice(0, 10);
+  const _startDateVal = document.getElementById('f-start-date')?.value;
+  if (_startDateVal && _startDateVal < _todayChk) {
+    showToast('시작 날짜는 오늘 이후여야 합니다'); return;
+  }
+  if (workType === 'short' && periodEnd && periodEnd < _todayChk) {
+    showToast('단기 공고 종료일은 오늘 이후여야 합니다'); return;
+  }
 
   const addrText = document.getElementById('f-address')?.value.trim()
     || document.getElementById('f-direct-addr')?.value.trim() || null;
