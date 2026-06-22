@@ -2938,7 +2938,7 @@
         style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
         onfocus="closeMediaPanel('wchat')"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
-      <button onmousedown="event.preventDefault()" onclick="sendWChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="sendWChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
 </div>
@@ -4044,7 +4044,7 @@ async function openDeepLink(jobId) {
       wage_delta: data.current_wage - data.base_wage,
       biz_name: b.name, biz_rating: b.rating,
       biz_kindness: b.kindness_rating, biz_reviews: b.reviews_count,
-      distance_m: 0,
+      distance_m: null,
     };
     jobs = [job, ...jobs];
     // 지도 해당 위치로 이동
@@ -4417,7 +4417,7 @@ function renderList() {
     const isErrand = job.work_type === 'errand';
     const _ap0 = (job.address||'').split('\n');
     const _da0 = _ap0[0] ? (_ap0[1] ? _ap0[0] + ' · ' + _ap0[1].split(' ').slice(0,3).join(' ') : _ap0[0]) : null;
-    const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da0 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
+    const dist = _distStr(job.distance_m, job.lat, job.lng, _da0);
     const startStr = job.start_time ? formatTime(job.start_time) : '미정';
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
     const appSt = job.applied_status;
@@ -4490,7 +4490,7 @@ function renderUrgentFeed() {
   feedList.innerHTML = urgentJobs.map(job => {
     const _ap1 = (job.address||'').split('\n');
     const _da1 = _ap1[0] ? (_ap1[1] ? _ap1[0] + ' · ' + _ap1[1].split(' ').slice(0,3).join(' ') : _ap1[0]) : null;
-    const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da1 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
+    const dist = _distStr(job.distance_m, job.lat, job.lng, _da1);
     const emoji = getCatEmoji(job.category);
     const bg = CAT_BG[job.category] || '#f5f5f5';
     return `
@@ -4522,7 +4522,7 @@ function openDetail(jobId) {
   const hasSurge = job.wage_delta > 0;
   const _ap2 = (job.address||'').split('\n');
   const _da2 = _ap2[0] ? (_ap2[1] ? _ap2[0] + ' · ' + _ap2[1].split(' ').slice(0,3).join(' ') : _ap2[0]) : null;
-  const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da2 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
+  const dist = _distStr(job.distance_m, job.lat, job.lng, _da2);
 
   document.getElementById('d-status').textContent = isUrgent ? '\u{1F525} 급구' : '모집중';
   document.getElementById('d-status').className = `detail-status ${isUrgent ? 'status-urgent' : 'status-open'}`;
@@ -6041,7 +6041,7 @@ function _chatBubble(content, isMine) {
     const url = content.slice(5);
     return `<img src="${url}" style="max-width:220px;border-radius:12px;display:block;cursor:pointer;border:1px solid #eee" onclick="window.open('${url}','_blank')" loading="lazy">`;
   }
-  return `<div style="max-width:75%;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${content}</div>`;
+  return `<div style="max-width:75vw;min-width:2em;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${content}</div>`;
 }
 
 function _cpAvatarHtml(cp, size) {
@@ -6103,14 +6103,14 @@ function _showCounterpartProfile(type) {
 function _chatMsgRow(m, isMine, time, cp, type) {
   const bubble = _chatBubble(m.content, isMine);
   if (isMine) {
-    return `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+    return `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;width:100%">
       ${bubble}
       <div style="font-size:10px;color:#bbb">${time}${m.is_read ? ' · 읽음' : ''}</div>
     </div>`;
   }
   const avatar = cp ? `<div onclick="_showCounterpartProfile('${type}')" style="cursor:pointer;flex-shrink:0;align-self:flex-end">${_cpAvatarHtml(cp, 34)}</div>` : '';
-  return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">
-    <div style="display:flex;align-items:flex-end;gap:8px;max-width:85%;min-width:0">
+  return `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%">
+    <div style="display:flex;align-items:flex-end;gap:8px;max-width:85%;min-width:0;width:100%">
       ${avatar}
       <div style="flex:1;min-width:0">
         ${cp ? `<div style="font-size:11px;font-weight:700;color:#777;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cp.name}</div>` : ''}
@@ -6297,12 +6297,9 @@ async function sendWChatMessage() {
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
   if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
-  // 전송 중 키보드 내려감 이벤트 무시 (채팅창 깜빡임 방지)
-  window._kbSendGuard = true;
-  setTimeout(() => { window._kbSendGuard = false; }, 600);
   input.value = '';
   input.focus();
-  // guard ON: scrollTop = scrollHeight 시 키보드 닫힘을 onScrollChanged에서 즉시 복구
+  if (window.AndroidBridge?.showKeyboard) window.AndroidBridge.showKeyboard();
   if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(true);
   _doSendWChat(content).catch(() => {});
 }
@@ -6351,6 +6348,8 @@ function moveToMyLocation(silent = false) {
   if (_locationWatchId !== null) { navigator.geolocation.clearWatch(_locationWatchId); _locationWatchId = null; }
   let firstFix = true;
   _locationWatchId = navigator.geolocation.watchPosition(pos => {
+    window._myLat = pos.coords.latitude;
+    window._myLng = pos.coords.longitude;
     const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
     setMyLocationMarker(latlng);
     if (firstFix) {
@@ -9226,6 +9225,20 @@ function getCatClass(cat) {
   return map[cat] || '';
 }
 
+function _distStr(distM, lat, lng, addrFallback) {
+  if (distM != null && !isNaN(distM)) {
+    return distM < 1000 ? Math.round(distM)+'m' : (distM/1000).toFixed(1)+'km';
+  }
+  if (lat && lng && window._myLat != null) {
+    const R = 6371e3, toRad = x => x * Math.PI / 180;
+    const dLat = toRad(window._myLat - lat), dLng = toRad(window._myLng - lng);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat))*Math.cos(toRad(window._myLat))*Math.sin(dLng/2)**2;
+    const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return d < 1000 ? Math.round(d)+'m' : (d/1000).toFixed(1)+'km';
+  }
+  return addrFallback || '위치 미설정';
+}
+
 function formatTime(iso) {
   const d = new Date(iso);
   const now = new Date();
@@ -11946,12 +11959,14 @@ function openEditForm(jobId) {
   if (rb > 0) setReturnBonus(rb);
   renderMyPlacesQuick();
   document.getElementById('form-overlay').classList.add('open');
+  const _fab = document.getElementById('posting-fab');
+  if (_fab) _fab.style.display = 'none';
 }
 
 function closePostingForm() {
   document.getElementById('form-overlay').classList.remove('open');
   const _fab = document.getElementById('posting-fab');
-  if (_fab) _fab.style.display = 'flex';
+  if (_fab) _fab.style.display = editingId ? 'flex' : 'flex';
 }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
@@ -12315,6 +12330,7 @@ async function submitPosting() {
   const duration = isErrand ? errandDuration : (startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null);
 
   if (!title) { showToast('직무명을 입력해주세요'); return; }
+  if (_hasBadWord(title) || (desc && _hasBadWord(desc))) { showToast('금지된 표현이 포함되어 있습니다'); return; }
   if (_hasBadWord(title) || _hasBadWord(desc)) { showToast('제목 또는 설명에 사용할 수 없는 단어가 포함되어 있어요'); return; }
   if (wageType === 'other') {
     if (!wageOther) { showToast('급여 조건을 입력해주세요'); return; }
