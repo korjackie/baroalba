@@ -3003,7 +3003,7 @@
         style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
         onfocus="closeMediaPanel('chat')"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
-      <button onclick="sendChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault()" onclick="sendChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
 </div>
@@ -6037,7 +6037,7 @@ function _chatBubble(content, isMine) {
     const url = content.slice(5);
     return `<img src="${url}" style="max-width:220px;border-radius:12px;display:block;cursor:pointer;border:1px solid #eee" onclick="window.open('${url}','_blank')" loading="lazy">`;
   }
-  return `<div style="max-width:75vw;min-width:2em;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${content}</div>`;
+  return `<div style="display:inline-block;max-width:75vw;min-width:2em;padding:10px 14px;border-radius:${isMine?'18px 18px 4px 18px':'18px 18px 18px 4px'};background:${isMine?'var(--red)':'#f0f0f0'};color:${isMine?'#fff':'#222'};font-size:14px;line-height:1.5;word-break:break-word">${content}</div>`;
 }
 
 function _cpAvatarHtml(cp, size) {
@@ -6295,7 +6295,7 @@ async function sendWChatMessage() {
   if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
   input.value = '';
   input.focus();
-  if (window.AndroidBridge?.showKeyboard) window.AndroidBridge.showKeyboard();
+  if (window.AndroidBridge?.showKeyboard && window._lastKbDp < 80) window.AndroidBridge.showKeyboard();
   if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(true);
   _doSendWChat(content).catch(() => {});
 }
@@ -13621,10 +13621,9 @@ async function sendChatMessage() {
   const content = input.value.trim();
   if (!content) return;
   if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
-  window._kbSendGuard = true;
-  setTimeout(() => { window._kbSendGuard = false; }, 600);
   input.value = '';
   input.focus();
+  if (window.AndroidBridge?.showKeyboard && window._lastKbDp < 80) window.AndroidBridge.showKeyboard();
   if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(true);
   await _doSendChat(content);
 }
