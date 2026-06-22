@@ -897,15 +897,15 @@
 
     /* ── FAB ── */
     .fab {
-      position:fixed; right:20px; bottom:calc(var(--nav-h) + 16px);
-      width:56px; height:56px; border-radius:50%;
+      position:fixed; right:16px; bottom:calc(var(--nav-h) + 16px);
+      height:48px; border-radius:28px; padding:0 18px; gap:6px;
       background:var(--red); color:#fff; border:none;
-      font-size:28px; font-weight:300; cursor:pointer;
+      cursor:pointer;
       box-shadow:0 4px 16px rgba(200,16,46,0.4);
       display:flex; align-items:center; justify-content:center;
       z-index:520; transition:transform 0.2s;
     }
-    .fab:active { transform:scale(0.93); }
+    .fab:active { transform:scale(0.96); }
 
     /* ── 공고 등록 바텀시트 + 공용 모달 오버레이 ── */
     .sheet-overlay, .modal-overlay {
@@ -3364,7 +3364,7 @@
 </button>
 
 <!-- FAB -->
-<button class="fab" id="posting-fab" onclick="openPostingForm()" title="공고 등록" style="display:none">+</button>
+<button class="fab" id="posting-fab" onclick="openPostingForm()" title="공고 등록" style="display:none"><span style="font-size:22px;font-weight:300;line-height:1">+</span><span style="font-size:14px;font-weight:800">공고등록</span></button>
 
 <!-- 비교 FAB -->
 <div id="compare-fab" onclick="openCompareModal()" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#3B82F6;color:#fff;border-radius:30px;padding:12px 24px;font-size:14px;font-weight:800;cursor:pointer;z-index:200;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(59,130,246,0.4)">
@@ -3486,7 +3486,7 @@
       <div class="form-group">
         <label class="form-label" id="f-time-label">시작 시간 *</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <div style="flex:1.6;min-width:0;position:relative">
+          <div id="f-start-date-wrap" style="flex:1.6;min-width:0;position:relative">
             <input class="form-input" id="f-start-date" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1;width:100%;height:100%" onchange="updateStartDateDisplay()">
             <div id="f-start-date-display" class="form-input" style="cursor:pointer;color:#333;pointer-events:none">날짜 선택</div>
           </div>
@@ -6769,8 +6769,8 @@ function renderAiRecommendations() {
 
     el.style.display = 'block';
     el.innerHTML = `
-      <div style="padding:12px 16px 4px;display:flex;align-items:center;gap:6px">
-        <span style="font-size:14px;font-weight:800;color:#222">✨ 맞춤 추천</span>
+      <div style="padding:12px 0 4px;display:flex;align-items:center;gap:6px">
+        <span style="font-size:13px;font-weight:900;color:#222">✨ 맞춤 추천</span>
         <span style="font-size:11px;color:#bbb;font-weight:600">조회·스와이프 기반</span>
       </div>
       <div style="display:flex;gap:10px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
@@ -6996,7 +6996,7 @@ function makeSwipeCard(job, isTop) {
       </div>
 
       <!-- 설명 -->
-      <div style="font-size:13px;color:#666;line-height:1.6;background:#f8f8f8;border-radius:12px;padding:10px 12px">
+      <div onclick="event.stopPropagation();openDetail('${job.id}')" style="font-size:13px;color:#666;line-height:1.6;background:#f8f8f8;border-radius:12px;padding:10px 12px;cursor:pointer">
         ${(job.description||'업무 내용을 확인하려면 탭해보세요.').slice(0,70)}${(job.description||'').length>70?'…':''}
       </div>
     </div>
@@ -9766,11 +9766,11 @@ function openPostingDetail(jobId) {
       </div>
 
       <!-- 위치 -->
-      ${p.address ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px">
+      ${(p.address || (p.lat && p.lng)) ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px">
         <span style="font-size:20px">\u{1F4CD}</span>
         <div>
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:2px">위치</div>
-          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${p.address}</div>
+          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${p.address || ('위도 '+p.lat+' / 경도 '+p.lng)}</div>
         </div>
       </div>` : '<div style="background:#FFF7ED;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#F59E0B;font-weight:700">\u{1F4CD} 위치 정보 없음 — 수정 탭에서 위치를 설정해주세요</div>'}
 
@@ -11360,7 +11360,8 @@ function setWorkType(type) {
   const showSched = type !== 'spot' && !isErrand;
   document.getElementById('f-schedule-section').style.display = showSched ? 'block' : 'none';
   document.getElementById('f-start-date').style.display = showSched ? 'none' : '';
-  document.getElementById('f-time-label').textContent = showSched ? '일일 근무 시작 시간 *' : (isErrand ? '심부름 가능 시간 *' : '시작 시간 *');
+  document.getElementById('f-start-date-wrap').style.display = showSched ? 'none' : '';
+  document.getElementById('f-time-label').textContent = showSched ? '근무 시작 시간 (시/분) *' : (isErrand ? '심부름 가능 시간 *' : '시작 시간 *');
   document.getElementById('f-end-time-group').style.display = isErrand ? 'none' : 'block';
   document.getElementById('f-errand-section').style.display = isErrand ? 'block' : 'none';
   document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
@@ -11397,8 +11398,8 @@ function openEditForm(jobId) {
   document.getElementById('f-wage').value = p.base_wage;
   document.getElementById('f-needed').value = p.needed_count;
   document.getElementById('f-desc').value = p.description || '';
-  document.getElementById('f-lat').value = p.lat;
-  document.getElementById('f-lng').value = p.lng;
+  document.getElementById('f-lat').value = p.lat || '';
+  document.getElementById('f-lng').value = p.lng || '';
   // 기존 사진 로드 (main_image_idx가 가리키는 사진을 첫 번째로)
   const _rawImgs = p.images || [];
   const _mi = p.main_image_idx || 0;
@@ -11447,6 +11448,7 @@ function openEditForm(jobId) {
   const dep = p.noshow_deposit || 0;
   setDeposit(dep > 0);
   if (dep > 0) setDepositAmount(dep);
+  renderMyPlacesQuick();
   document.getElementById('form-overlay').classList.add('open');
 }
 
@@ -13648,15 +13650,22 @@ function renderMyPlacesQuick() {
   if (!wrap || !list) return;
   if (!_bizPlaces.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
-  list.innerHTML = _bizPlaces.map(p => `
+  const curLat = parseFloat(document.getElementById('f-lat')?.value);
+  const curLng = parseFloat(document.getElementById('f-lng')?.value);
+  list.innerHTML = _bizPlaces.map(p => {
+    const isActive = !isNaN(curLat) && !isNaN(curLng)
+      ? Math.abs(p.lat - curLat) < 0.0001 && Math.abs(p.lng - curLng) < 0.0001
+      : p.is_default;
+    return `
     <button type="button" onclick="applyPlaceToForm('${p.id}')"
-      style="width:100%;text-align:left;padding:9px 12px;background:${p.is_default?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${p.is_default?'#C8102E':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
+      style="width:100%;text-align:left;padding:9px 12px;background:${isActive?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${isActive?'#C8102E':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
       <span style="font-size:16px">\u{1F4CD}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:#C8102E">(기본)</span>':''}</div>
+        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:#C8102E">(기본)</span>':''}${isActive?' <span style="font-size:10px;color:#C8102E">✓ 선택됨</span>':''}</div>
         <div style="font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.address||''}</div>
       </div>
-    </button>`).join('');
+    </button>`;
+  }).join('');
 }
 
 function applyPlaceToForm(placeId) {

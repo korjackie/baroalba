@@ -1,4 +1,4 @@
-﻿const CACHE = 'baroalba-v218';
+﻿const CACHE = 'baroalba-v219';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
@@ -62,7 +62,7 @@ self.addEventListener('push', e => {
       icon: './icons/icon-192.png',
       badge: './icons/icon-192.png',
       vibrate: [200, 100, 200],
-      tag: 'baroalba-msg',
+      tag: data.tag || ('msg-' + Date.now()),
       renotify: true,
       data: data.url || './바로알바.html',
     })

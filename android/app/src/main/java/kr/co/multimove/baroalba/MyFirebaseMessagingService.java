@@ -60,7 +60,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setContentIntent(pi);
 
         NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (mgr != null) mgr.notify(1001, builder.build());
+        if (mgr != null) mgr.notify((int)(System.currentTimeMillis() % 100000), builder.build());
     }
 
     private void createChannel() {
