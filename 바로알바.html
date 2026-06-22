@@ -1559,6 +1559,10 @@
       <button onclick="document.getElementById('job-search-input').value='';filterJobsByKeyword('')" style="background:none;border:none;color:#bbb;font-size:14px;cursor:pointer;padding:0;line-height:1">✕</button>
     </div>
   </div>
+  <!-- 날짜 슬라이더 -->
+  <div id="date-slider-wrap" style="display:flex;gap:5px;padding:6px 14px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0"></div>
+  <!-- 구별 공고수 필터 칩 -->
+  <div id="district-filter-wrap" style="display:none;gap:5px;padding:0 14px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0"></div>
   <!-- 통합 스크롤 영역: 급구 + 맞춤 + 일반공고 모두 한 번에 스크롤 -->
   <div class="job-list" id="job-list">
     <!-- 알림 허용 배너 -->
@@ -3733,6 +3737,9 @@ function saveMapCenter(lat, lng) {
 let currentRadius = APP_CONFIG.DEFAULT_RADIUS_M;
 let currentCategory = '';   // 하위 호환용 (레거시)
 let currentWorkType = '';   // 하위 호환용 (레거시)
+let selectedDate = null;        // 날짜 슬라이더 필터
+let selectedDistrict = null;    // 구 필터
+const _subwayCache = {};        // 지하철역 검색 캐시
 let selectedCategories = new Set();  // 업종 복수 선택
 let selectedWorkTypes  = new Set();  // 형태 복수 선택 (regular/short/spot/errand)
 let includeLesson = false;           // 레슨/과외 마커 포함
@@ -4095,6 +4102,8 @@ async function loadJobs() {
 
     jobs = result;
     renderMarkers();
+    renderDateSlider();
+    renderDistrictFilter();
     renderList();
   } catch(e) {
     jobs = [];
@@ -4194,9 +4203,112 @@ function renderMarkers() {
   });
 }
 
+// ── 미소 벤치마킹: 날짜 슬라이더 ────────────────────────
+function renderDateSlider() {
+  const wrap = document.getElementById('date-slider-wrap');
+  if (!wrap) return;
+  const today = new Date();
+  const dayNames = ['일','월','화','수','목','금','토'];
+  let html = `<button onclick="selectDate(null)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:${selectedDate===null?'#C8102E':'#f0f0f0'};color:${selectedDate===null?'#fff':'#777'}">전체</button>`;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    const isSel = selectedDate === dateStr;
+    const isSun = d.getDay() === 0, isSat = d.getDay() === 6;
+    const labelColor = isSel ? 'rgba(255,255,255,0.75)' : (isSun ? '#E53935' : isSat ? '#1976D2' : '#999');
+    const numColor   = isSel ? '#fff'                    : (isSun ? '#E53935' : isSat ? '#1976D2' : '#111');
+    html += `<button onclick="selectDate('${dateStr}')" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:5px 11px;border-radius:14px;border:${isSel?'none':'1.5px solid #eee'};cursor:pointer;min-width:40px;background:${isSel?'#C8102E':'#fff'}">
+      <span style="font-size:10px;font-weight:700;color:${labelColor}">${i===0?'오늘':dayNames[d.getDay()]}</span>
+      <span style="font-size:16px;font-weight:900;color:${numColor}">${d.getDate()}</span>
+    </button>`;
+  }
+  wrap.innerHTML = html;
+}
+function selectDate(dateStr) {
+  selectedDate = dateStr;
+  renderDateSlider();
+  renderList();
+}
+
+// ── 미소 벤치마킹: 구별 공고수 필터 ─────────────────────
+function renderDistrictFilter() {
+  const wrap = document.getElementById('district-filter-wrap');
+  if (!wrap) return;
+  const counts = {};
+  jobs.forEach(j => {
+    const m = (j.address||'').match(/([가-힣]+구)/);
+    if (m) counts[m[1]] = (counts[m[1]]||0)+1;
+  });
+  const districts = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if (!districts.length) { wrap.style.display='none'; return; }
+  wrap.style.display = 'flex';
+  let html = `<button onclick="selectDistrict(null)" style="flex-shrink:0;padding:5px 12px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:${selectedDistrict===null?'#222':'#f0f0f0'};color:${selectedDistrict===null?'#fff':'#666'}">전체</button>`;
+  districts.forEach(([d,cnt]) => {
+    const isA = selectedDistrict === d;
+    html += `<button onclick="selectDistrict('${d}')" style="flex-shrink:0;padding:5px 12px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;background:${isA?'#222':'#f0f0f0'};color:${isA?'#fff':'#555'}">${d} <span style="font-size:10px;opacity:0.65">${cnt}</span></button>`;
+  });
+  wrap.innerHTML = html;
+}
+function selectDistrict(d) {
+  selectedDistrict = d;
+  renderDistrictFilter();
+  renderList();
+}
+
+// ── 미소 벤치마킹: 반복 주기 라벨 ───────────────────────
+function getJobCycleLabel(job) {
+  if (job.work_type === 'errand') return null;
+  const DAY = {mon:'월',tue:'화',wed:'수',thu:'목',fri:'금',sat:'토',sun:'일'};
+  const days = (job.work_days||'').split(',').map(d=>DAY[d.trim()]||d).filter(Boolean).join('·');
+  if (job.work_type === 'regular') return days ? `매주 반복 (${days})` : '정기 반복';
+  if (job.work_type === 'short')   return days ? `단기 (${days})` : '단기';
+  return '하루만'; // spot
+}
+
+// ── 미소 벤치마킹: 지하철역 도보시간 비동기 로드 ──────────
+function loadSubwayInfo(jobsList) {
+  if (!window.kakao?.maps?.services) return;
+  const ps = new kakao.maps.services.Places();
+  jobsList.forEach(job => {
+    if (!job.lat || !job.lng) return;
+    if (_subwayCache[job.id] !== undefined) {
+      const el = document.getElementById(`subway-${job.id}`);
+      if (el) {
+        if (_subwayCache[job.id]) el.textContent = '🚇 ' + _subwayCache[job.id];
+        else el.remove();
+      }
+      return;
+    }
+    _subwayCache[job.id] = ''; // 검색 중 표시
+    ps.categorySearch('SW8', (result, status) => {
+      const el = document.getElementById(`subway-${job.id}`);
+      if (status === kakao.maps.services.Status.OK && result.length > 0) {
+        const walkMin = Math.ceil(parseInt(result[0].distance)/67);
+        const name = result[0].place_name.replace(/역$/, '').replace(/\s*\([^)]*\)/g,'').trim();
+        const info = `${name}역 도보 ${walkMin}분`;
+        _subwayCache[job.id] = info;
+        if (el) el.textContent = '🚇 ' + info;
+      } else {
+        _subwayCache[job.id] = null;
+        if (el) el.remove();
+      }
+    }, { location: new kakao.maps.LatLng(job.lat, job.lng), radius: 1500, sort: kakao.maps.services.SortBy.DISTANCE });
+  });
+}
+
 // ── 목록 렌더링 ───────────────────────────────────────────
 function renderList() {
-  document.getElementById('job-count').textContent = jobs.length;
+  // 날짜/구 슬라이더 필터 (displayJobs = 화면에 보이는 공고)
+  let displayJobs = jobs;
+  if (selectedDate) {
+    displayJobs = displayJobs.filter(j => !j.start_time || j.start_time.startsWith(selectedDate));
+  }
+  if (selectedDistrict) {
+    displayJobs = displayJobs.filter(j => (j.address||'').includes(selectedDistrict));
+  }
+
+  document.getElementById('job-count').textContent = displayJobs.length;
   const list = document.getElementById('job-cards-container');
 
   // AI 맞춤 추천 갱신
@@ -4206,7 +4318,7 @@ function renderList() {
   // 투데이 추천 카드 (가장 가까운 급구, 없으면 첫 번째 공고)
   renderTodayPick();
 
-  if (jobs.length === 0) {
+  if (displayJobs.length === 0) {
     const nextRadius = currentRadius < 3000 ? 3 : currentRadius < 5000 ? 5 : currentRadius < 10000 ? 10 : null;
     const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">반경 ${nextRadius}km로 늘리기</button>` : '';
     const guestBtn = isGuest ? `<button onclick="showLoginPrompt('공고를 올려보세요!','업주로 로그인하면 직접 알바 공고를 올릴 수 있어요.')" style="margin-top:8px;padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:block;width:100%">공고 올리기 (업주)</button>` : '';
@@ -4222,10 +4334,11 @@ function renderList() {
 
   surgeTimerHandles.forEach(h => clearInterval(h));
   surgeTimerHandles = [];
-  list.innerHTML = jobs.map(job => {
+  list.innerHTML = displayJobs.map(job => {
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
     const catClass = getCatClass(job.category);
+    const isErrand = job.work_type === 'errand';
     const _ap0 = (job.address||'').split('\n');
     const _da0 = _ap0[0] ? (_ap0[1] ? _ap0[0] + ' · ' + _ap0[1].split(' ').slice(0,3).join(' ') : _ap0[0]) : null;
     const dist = (job.distance_m == null || isNaN(job.distance_m)) ? (_da0 || '위치 미설정') : job.distance_m < 1000 ? Math.round(job.distance_m)+'m' : (job.distance_m/1000).toFixed(1)+'km';
@@ -4234,40 +4347,61 @@ function renderList() {
     const appSt = job.applied_status;
     const APP_LABEL = { pending:'검토중', reviewing:'\u{1F50D} 검토중', accepted:'✅ 합격', completed:'\u{1F3C1} 완료' };
     const appliedBadge = appSt ? `<span style="font-size:11px;font-weight:800;color:#888;background:#f0f0f0;padding:2px 8px;border-radius:10px;margin-left:auto">${APP_LABEL[appSt] || '지원완료'}</span>` : '';
+    // ① 반복 주기 라벨
+    const cycleLabel = getJobCycleLabel(job);
+    const cycleLabelHtml = cycleLabel ? `<span style="font-size:10px;font-weight:800;color:#3B82F6;margin-right:4px">${cycleLabel}</span>` : '';
+    // ② 총액 표시 (시급 × 시간)
+    const totalWageHtml = (!isErrand && job.duration_hours > 0 && job.current_wage > 0)
+      ? `<div style="font-size:10px;color:#aaa;font-weight:600;margin-top:1px">총 ${(job.current_wage * job.duration_hours).toLocaleString()}원</div>`
+      : '';
+    // ③ 재방문 인센티브 배지
+    const returnBadge = (job.return_bonus > 0)
+      ? `<span class="tag" style="background:#FFF8E1;color:#F59E0B;border:1px solid #FDE68A;font-weight:800">⭐ 재방문 +${job.return_bonus.toLocaleString()}원</span>`
+      : '';
+    // ④ 지하철역 span (loadSubwayInfo가 비동기로 채워줌)
+    const subwaySpan = (job.lat && job.lng)
+      ? `<span id="subway-${job.id}" style="color:#888;font-size:11px">🚇 ...</span>`
+      : '';
     return `
     <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')" style="${appSt ? 'opacity:0.65;' : ''}">
+      ${cycleLabelHtml ? `<div style="margin-bottom:2px">${cycleLabelHtml}</div>` : ''}
       <div class="card-top">
         <div class="card-left">
           <div class="card-biz">${job.biz_name}${appliedBadge}</div>
           <div class="card-title">${job.title}</div>
         </div>
         <div class="card-right">
-          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
+          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${isErrand ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
           <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}</div>
+          ${totalWageHtml}
           ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">최대 ${job.surge_max_wage.toLocaleString()}원</div>` : ''}
         </div>
       </div>
       ${surgeTimer}
       <div class="card-tags">
-        ${job.work_type === 'errand'  ? '<span class="tag" style="background:#F3E8FF;color:#7C3AED;font-weight:700">심부름</span>' : ''}
+        ${isErrand ? '<span class="tag" style="background:#F3E8FF;color:#7C3AED;font-weight:700">심부름</span>' : ''}
         ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:700">단기</span>' : ''}
         ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:700">정기</span>' : ''}
         ${isUrgent ? '<span class="tag urgent-tag">ASAP</span>' : ''}
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">번개</span>' : ''}
         ${job.same_day_payment ? '<span class="tag payday-tag">💰 당일정산</span>' : ''}
+        ${returnBadge}
         ${job.category ? `<span class="tag ${catClass}">${job.category}</span>` : ''}
-        <span class="tag">${job.work_type === 'errand' ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
+        <span class="tag">${isErrand ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
         ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
       </div>
       <div class="card-meta">
         <span>${dist}</span>
         <span>${startStr}</span>
+        ${subwaySpan}
         <span class="card-star">★ ${job.biz_rating || '-'}</span>
       </div>
     </div>`;
   }).join('');
 
   setTimeout(startSurgeTimers, 50);
+  // ⑤ 지하철역 비동기 로드
+  setTimeout(() => loadSubwayInfo(displayJobs), 200);
 }
 
 function renderUrgentFeed() {
