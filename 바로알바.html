@@ -3896,7 +3896,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=266').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -4712,8 +4712,8 @@ function openDetail(jobId) {
   if (_qrRow) _qrRow.style.display = (bizRecord && job.business_id === bizRecord.id) ? 'block' : 'none';
 
   // 상세 패널 팔로우 버튼 초기화 (알바생으로 볼 때만)
-  if (biz?.id && !bizRecord) {
-    _initDetailFollowBtn(biz.id, biz.name || '');
+  if (job.business_id && !bizRecord) {
+    _initDetailFollowBtn(job.business_id, job.biz_name || '');
   }
 
   document.getElementById('detail-overlay').classList.add('open');
@@ -5686,7 +5686,7 @@ async function openApplicationJobDetail(jobPostingId) {
   panel.classList.add('show');
 
   const { data: j } = await db.from('job_postings')
-    .select('*, businesses(id, name, rating, kindness_rating, review_count, phone, description, is_verified, logo_url)')
+    .select('*, businesses(id, name, rating, kindness_rating, review_count, phone, description, is_verified, photo_url)')
     .eq('id', jobPostingId).single();
   if (!j) { showToast('공고 정보를 불러올 수 없어요'); panel.classList.remove('show'); return; }
 
@@ -5807,11 +5807,11 @@ async function openApplicationJobDetail(jobPostingId) {
       </div>
 
       <!-- 위치 -->
-      ${j.address ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px">
+      ${(j.address || (j.lat && j.lng)) ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px">
         <span style="font-size:20px">\u{1F4CD}</span>
-        <div>
+        <div style="flex:1">
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:2px">업체 위치</div>
-          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${j.address}</div>
+          <div id="ajd-address-text" style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${(j.address && !j.address.includes('위도') && !j.address.includes('경도')) ? j.address : '위치 확인 중...'}</div>
         </div>
       </div>` : ''}
 
@@ -5825,6 +5825,20 @@ async function openApplicationJobDetail(jobPostingId) {
       ${canChat ? `<button onclick="openWChat('${myApp.id}','${biz.name||'업주'}')" style="width:100%;padding:14px;background:${isAccepted?'#3B82F6':'#f0f4ff'};color:${isAccepted?'#fff':'#3B82F6'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4AC} 업주에게 문의하기</button>` : ''}
       ${canCancel ? `<button onclick="cancelApplication('${myApp.id}')" style="width:100%;padding:14px;background:#FFF0F0;color:#C8102E;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
+
+  // 역지오코딩: 좌표형 주소 → 행정동 주소
+  if (j.lat && j.lng && typeof kakao !== 'undefined' && kakao.maps?.services) {
+    const _addrEl = document.getElementById('ajd-address-text');
+    if (_addrEl && (!j.address || j.address.includes('위도') || j.address.includes('경도'))) {
+      const _gc2 = new kakao.maps.services.Geocoder();
+      _gc2.coord2RegionCode(j.lng, j.lat, (res, st) => {
+        if (st === kakao.maps.services.Status.OK) {
+          const h = res.find(r => r.region_type === 'H') || res[0];
+          if (h && _addrEl) _addrEl.textContent = h.address_name || h.region_1depth_name + ' ' + h.region_2depth_name;
+        }
+      });
+    }
+  }
 }
 
 function showConfirm(message, onOk) {
@@ -6382,8 +6396,9 @@ function _chatBubble(content, isMine) {
 function _bizAvatarHtml(biz, size) {
   const ac = avatarColor(biz.name || '?');
   const initial = (biz.name || '?').charAt(0);
-  if (biz.logo_url) {
-    return `<img src="${biz.logo_url}" style="width:${size}px;height:${size}px;border-radius:12px;object-fit:cover;border:1.5px solid #eee" onerror="this.outerHTML='<div style=\\'width:${size}px;height:${size}px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:900;color:${ac.fg}\\'>${initial}</div>'">`;
+  const photoUrl = biz.photo_url || biz.logo_url;
+  if (photoUrl) {
+    return `<img src="${photoUrl}" style="width:${size}px;height:${size}px;border-radius:12px;object-fit:cover;border:1.5px solid #eee" onerror="this.outerHTML='<div style=\\'width:${size}px;height:${size}px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:900;color:${ac.fg}\\'>${initial}</div>'">`;
   }
   return `<div style="width:${size}px;height:${size}px;border-radius:12px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.38)}px;font-weight:900;color:${ac.fg}">${initial}</div>`;
 }
@@ -6396,14 +6411,14 @@ function _showDetailBizProfileById() {
 
 async function _showDetailBizProfile(bizId) {
   const { data: biz } = await db.from('businesses')
-    .select('id, name, biz_type, region, description, rating, review_count, logo_url, is_verified')
+    .select('id, name, biz_type, region, description, rating, review_count, photo_url, is_verified')
     .eq('id', bizId).single();
   if (!biz) { showToast('업체 정보를 불러올 수 없어요'); return; }
   const existing = document.getElementById('cp-profile-modal');
   if (existing) existing.remove();
   const ac = avatarColor(biz.name || '?');
-  const avatarBig = biz.logo_url
-    ? `<img src="${biz.logo_url}" style="width:72px;height:72px;border-radius:18px;object-fit:cover;border:1.5px solid #eee" onerror="this.style.display='none'">`
+  const avatarBig = biz.photo_url
+    ? `<img src="${biz.photo_url}" style="width:72px;height:72px;border-radius:18px;object-fit:cover;border:1.5px solid #eee" onerror="this.style.display='none'">`
     : `<div style="width:72px;height:72px;border-radius:18px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:${ac.fg}">${(biz.name||'?').charAt(0)}</div>`;
   const showFollow = !!window._myWorkerId || !bizRecord;
   const modal = document.createElement('div');
@@ -6451,12 +6466,33 @@ function _updateCpHeader(type, cp) {
   if (avEl) avEl.innerHTML = _cpAvatarHtml(cp, 38);
 }
 
-function _showCounterpartProfile(type) {
+async function _showCounterpartProfile(type) {
   const cp = type === 'wchat' ? window._wchatCounterpart : window._chatCounterpart;
   if (!cp) return;
   const existing = document.getElementById('cp-profile-modal');
   if (existing) existing.remove();
   const isWorker = cp.type === 'worker';
+
+  // DB에서 최신 전체 프로필 로드
+  if (isWorker && cp.id) {
+    try {
+      const { data: fw } = await db.from('workers')
+        .select('name, photo_url, bio, experience, gender, age, region, skills, vehicles, strengths, languages, pref_categories')
+        .eq('id', cp.id).single();
+      if (fw) {
+        if (fw.photo_url && !cp.photoUrl) cp.photoUrl = fw.photo_url;
+        cp.selfIntro = fw.bio || cp.selfIntro;
+        cp.skills = fw.skills || cp.skills;
+        cp.vehicles = fw.vehicles;
+        cp.strengths = fw.strengths;
+        cp.languages = fw.languages;
+        cp.experience = fw.experience;
+        if (fw.gender) cp.gender = fw.gender;
+        if (fw.age)    cp.age    = fw.age;
+        if (fw.region) cp.region = fw.region;
+      }
+    } catch(e) {}
+  }
   const ac = avatarColor(cp.name || '?');
   const avatarBig = cp.photoUrl
     ? `<img src="${cp.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #eee" onerror="this.style.display='none'">`
@@ -6477,7 +6513,11 @@ function _showCounterpartProfile(type) {
     const genderMap = { M: '남성', F: '여성', male: '남성', female: '여성', 남: '남성', 여: '여성' };
     if (cp.gender) rows.push(_row('성별', genderMap[cp.gender] || cp.gender));
     if (cp.region) rows.push(_row('지역', cp.region));
-    if (cp.skills) rows.push(_row('보유 스킬', cp.skills));
+    if (cp.experience) rows.push(_row('경력', cp.experience));
+    if (cp.skills) rows.push(_row('보유 스킬', Array.isArray(cp.skills) ? cp.skills.join(', ') : cp.skills));
+    if (cp.strengths && cp.strengths.length) rows.push(_row('강점', Array.isArray(cp.strengths) ? cp.strengths.join(' · ') : cp.strengths));
+    if (cp.vehicles && cp.vehicles.length) rows.push(_row('이동수단', Array.isArray(cp.vehicles) ? cp.vehicles.join(', ') : cp.vehicles));
+    if (cp.languages && cp.languages.length) rows.push(_row('언어', Array.isArray(cp.languages) ? cp.languages.join(', ') : cp.languages));
     if (cp.selfIntro) rows.push(`<div style="padding:12px 0;border-bottom:1px solid #f5f5f5"><div style="color:#aaa;font-size:13px;margin-bottom:6px">자기소개</div><div style="font-size:13px;color:#333;line-height:1.6">${cp.selfIntro}</div></div>`);
   } else {
     if (cp.bizType) rows.push(`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="color:#aaa;font-size:13px">업종</span><span style="font-size:13px;font-weight:700">${cp.bizType}</span></div>`);
@@ -8686,7 +8726,7 @@ async function uploadAvatar(input) {
     if (inner) {
       inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${_fc2}',58)">`;
     }
-    showToast('✅ 프로필 사진 저장 완료 (DB: ' + updated[0].photo_url.slice(-20) + ')');
+    showToast('✅ 프로필 사진이 업데이트됐습니다');
   });
 }
 
