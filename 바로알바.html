@@ -431,7 +431,7 @@
       min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 0 14px 16px;
+      padding: 0 14px 100px;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overscroll-behavior: contain;
@@ -1664,13 +1664,15 @@
         <!-- 미니 지도 -->
         <div id="d-mini-map" style="width:100%;height:160px;background:#e5e7eb"></div>
         <!-- 주소 + 버튼 -->
-        <div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
           <div id="d-address-text" style="font-size:13px;color:#333;font-weight:600;line-height:1.4;flex:1"></div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             <button id="d-addr-copy-btn" onclick="copyDetailAddress()" style="display:none;padding:6px 11px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;font-size:11px;font-weight:700;color:#555;cursor:pointer">복사</button>
             <button onclick="openKakaoMapApp()" style="padding:6px 11px;background:#FEE500;border:none;border-radius:8px;font-size:11px;font-weight:700;color:#3C1E1E;cursor:pointer">지도 앱</button>
           </div>
         </div>
+        <!-- 지하철 정보 -->
+        <div id="d-subway-info" style="display:none;padding:0 14px 12px"></div>
       </div>
     </div>
 
@@ -2109,6 +2111,21 @@
             <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">
               <div style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--red);padding:2px 8px;border-radius:6px" id="profile-role">-</div>
               <div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:none" id="profile-provider"></div>
+            </div>
+          </div>
+        </div>
+        <!-- 바로출근 토글 (알바생만) -->
+        <div id="available-now-section" style="display:none;margin-bottom:12px">
+          <div onclick="toggleAvailableNow()" style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:14px;padding:14px 16px;cursor:pointer;transition:background 0.2s" id="available-now-card">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div id="available-now-dot" style="width:10px;height:10px;border-radius:50%;background:#ddd;transition:background 0.3s;flex-shrink:0"></div>
+              <div>
+                <div style="font-size:14px;font-weight:800;color:#222" id="available-now-label">지금 출근 가능</div>
+                <div style="font-size:11px;color:#aaa;margin-top:1px">ON시 업주에게 우선 노출돼요</div>
+              </div>
+            </div>
+            <div id="available-now-toggle" style="width:44px;height:24px;border-radius:12px;background:#ddd;position:relative;transition:background 0.3s;flex-shrink:0">
+              <div id="available-now-thumb" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></div>
             </div>
           </div>
         </div>
@@ -4718,6 +4735,55 @@ function _renderDetailLocation(job) {
       if (typeof kakao !== 'undefined' && kakao.maps) { clearInterval(_wait); _initMiniMap(); }
     }, 300);
   }
+
+  // 지하철 정보 표시
+  const subwayEl = document.getElementById('d-subway-info');
+  if (subwayEl && hasLatLng) {
+    const cached = _subwayCache[job.id];
+    if (cached) {
+      _renderDetailSubway(subwayEl, cached);
+    } else if (cached === undefined && window.kakao?.maps?.services) {
+      subwayEl.style.display = 'none';
+      const ps = new kakao.maps.services.Places();
+      ps.categorySearch('SW8', (result, status) => {
+        if (status === kakao.maps.services.Status.OK && result.length > 0) {
+          const walkMin = Math.ceil(parseInt(result[0].distance) / 67);
+          const name = result[0].place_name.replace(/\s*\([^)]*\)/g, '').trim();
+          const info = `${name} 도보 ${walkMin}분`;
+          _subwayCache[job.id] = info;
+          _renderDetailSubway(subwayEl, info);
+        }
+      }, { location: new kakao.maps.LatLng(job.lat, job.lng), radius: 1500, sort: kakao.maps.services.SortBy.DISTANCE });
+    } else {
+      subwayEl.style.display = 'none';
+    }
+  }
+}
+
+function _getSubwayLineColor(stationName) {
+  const LINE_COLORS = {
+    '1호선':'#0052A4','2호선':'#00A84D','3호선':'#EF7C1C','4호선':'#00A5DE',
+    '5호선':'#996CAC','6호선':'#CD7C2F','7호선':'#747F00','8호선':'#E6186C',
+    '9호선':'#BDB092','경의중앙선':'#73B2B9','분당선':'#FDD835','신분당선':'#D4003B',
+    'GTX-A':'#8B4513','경춘선':'#178946','공항철도':'#4A7BBE','인천1호선':'#7CA8D5',
+    '인천2호선':'#F5A200','수인선':'#F5A200','경강선':'#003DA5',
+  };
+  for (const [k, v] of Object.entries(LINE_COLORS)) {
+    if (stationName.includes(k)) return { line: k, color: v };
+  }
+  return null;
+}
+
+function _renderDetailSubway(el, infoStr) {
+  if (!infoStr || !el) return;
+  const lineInfo = _getSubwayLineColor(infoStr);
+  const lineBadge = lineInfo
+    ? `<span style="display:inline-flex;align-items:center;justify-content:center;background:${lineInfo.color};color:#fff;font-size:10px;font-weight:900;padding:2px 7px;border-radius:20px;margin-right:5px">${lineInfo.line}</span>`
+    : '';
+  el.innerHTML = `<div style="display:flex;align-items:center;font-size:12px;color:#555;font-weight:600">
+    <span style="font-size:14px;margin-right:5px">🚇</span>${lineBadge}<span>${infoStr.replace(/ \d+호선/g, '')}</span>
+  </div>`;
+  el.style.display = 'block';
 }
 
 function copyDetailAddress() {
@@ -5818,6 +5884,35 @@ function _initialAvatar(char, size) {
   const c = char || '?';
   const ac = avatarColor(c);
   return `<div style="width:${size}px;height:${size}px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.42)}px;font-weight:900;color:${ac.fg}">${c}</div>`;
+}
+
+// 바로출근 토글
+let _availableNow = false;
+
+function _setAvailableNowUI(on) {
+  _availableNow = on;
+  const dot = document.getElementById('available-now-dot');
+  const toggle = document.getElementById('available-now-toggle');
+  const thumb = document.getElementById('available-now-thumb');
+  const card = document.getElementById('available-now-card');
+  if (!dot || !toggle || !thumb) return;
+  dot.style.background = on ? '#22c55e' : '#ddd';
+  toggle.style.background = on ? '#22c55e' : '#ddd';
+  thumb.style.left = on ? '22px' : '2px';
+  if (card) card.style.background = on ? '#f0fdf4' : '#f8f8f8';
+}
+
+async function toggleAvailableNow() {
+  if (!currentUser) return;
+  const next = !_availableNow;
+  _setAvailableNowUI(next);
+  const { error } = await db.from('workers').update({ is_available_now: next }).eq('kakao_uid', currentUser.id);
+  if (error) {
+    _setAvailableNowUI(!next); // 롤백
+    showToast('저장 실패: ' + error.message);
+    return;
+  }
+  showToast(next ? '✅ 바로출근 가능 상태가 됐어요' : '바로출근 상태가 해제됐어요');
 }
 
 // 업주 → 알바생 즐겨찾기
@@ -7741,17 +7836,11 @@ function openProfile() {
     const provider = oauthProvider || meta.provider || currentUser.app_metadata?.provider || '';
     document.getElementById('profile-name').textContent = meta.full_name || currentUser.email?.split('@')[0] || '사용자';
     document.getElementById('profile-email').textContent = currentUser.email || '';
-    // 소셜 아바타 fallback — identity_data까지 탐색
-    const identityAvatar = (currentUser.identities || []).find(i => i.identity_data?.avatar_url)?.identity_data?.avatar_url;
-    const socialAvatar = meta.avatar_url || meta.picture || identityAvatar || null;
+    // 아바타는 loadWorkerProfileForm()에서 photo_url 우선으로 처리 — 여기서는 임시 이니셜만 표시
     const avatarInner = document.getElementById('header-avatar-inner');
-    if (avatarInner) {
-      if (socialAvatar) {
-        avatarInner.innerHTML = `<img src="${socialAvatar}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${(meta.full_name||'?').charAt(0)}',58)">`;
-      } else {
-        // 소셜 아바타 없으면 이름 이니셜 컬러 원 (회색 빈 원 대신)
-        avatarInner.innerHTML = _initialAvatar((meta.full_name || currentUser.email || '?').charAt(0), 58);
-      }
+    if (avatarInner && !avatarInner.querySelector('img[src]:not([src=""])')) {
+      const meta2 = currentUser?.user_metadata || {};
+      avatarInner.innerHTML = _initialAvatar((meta2.full_name || currentUser.email || '?').charAt(0), 58);
     }
     const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
     const adminBanner = document.getElementById('admin-banner');
@@ -7866,10 +7955,24 @@ async function loadWorkerProfileForm() {
   const { data: wExtra } = await db.from('workers').select('pref_categories, avail_days, avail_times')
     .eq('kakao_uid', currentUser.id).single().catch(() => ({ data: null }));
   if (!w) return;
-  // 프로필 사진
-  if (w.photo_url) {
+  // 아바타: photo_url → 소셜 → 이니셜 우선순위
+  {
     const inner = document.getElementById('header-avatar-inner');
-    if (inner) inner.innerHTML = `<img src="${w.photo_url}" style="width:100%;height:100%;object-fit:cover">`;
+    if (inner) {
+      if (w.photo_url) {
+        inner.innerHTML = `<img src="${w.photo_url}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
+      } else {
+        const meta2 = currentUser?.user_metadata || {};
+        const identityAvatar = (currentUser.identities || []).find(i => i.identity_data?.avatar_url)?.identity_data?.avatar_url;
+        const socialAvatar = meta2.avatar_url || meta2.picture || identityAvatar || null;
+        if (socialAvatar) {
+          const initChar = (meta2.full_name || currentUser.email || '?').charAt(0);
+          inner.innerHTML = `<img src="${socialAvatar}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${initChar}',58)">`;
+        } else {
+          inner.innerHTML = _initialAvatar((meta2.full_name || currentUser.email || '?').charAt(0), 58);
+        }
+      }
+    }
   }
   // 포트폴리오 사진 로드
   loadWorkerPhotos().catch(() => {});
@@ -7964,7 +8067,14 @@ async function loadWorkerProfileForm() {
 async function loadWorkerGrade() {
   if (!currentUser) return;
   const { data: w } = await db.from('workers')
-    .select('rating, review_count, noshow_count, age, birth_date').eq('kakao_uid', currentUser.id).single();
+    .select('rating, review_count, noshow_count, age, birth_date, is_available_now').eq('kakao_uid', currentUser.id).single();
+
+  // 바로출근 토글
+  const avSec = document.getElementById('available-now-section');
+  if (avSec) {
+    avSec.style.display = 'block';
+    _setAvailableNowUI(!!w?.is_available_now);
+  }
 
   // 나이 헤더 반영
   const ageEl = document.getElementById('profile-age');
@@ -8185,7 +8295,8 @@ async function uploadAvatar(input) {
     const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) { showToast('업로드 실패: ' + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
-    await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
+    const { error: dbErr } = await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
+    if (dbErr) { showToast('저장 실패: ' + dbErr.message); return; }
     const inner = document.getElementById('header-avatar-inner');
     if (inner) inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`;
     showToast('✅ 프로필 사진이 업데이트됐습니다');
@@ -9307,7 +9418,9 @@ function _distStr(distM, lat, lng, addrFallback) {
     const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return d < 1000 ? Math.round(d)+'m' : (d/1000).toFixed(1)+'km';
   }
-  return addrFallback || '위치 미설정';
+  if (addrFallback) return addrFallback;
+  if (lat && lng) return '지도에서 확인';
+  return '위치 미설정';
 }
 
 function formatTime(iso) {
@@ -10074,8 +10187,39 @@ async function submitCommunityComment() {
   if (error) { showToast('댓글 실패: ' + error.message); return; }
 
   // 댓글수 직접 증가 (RPC 대신)
-  const { data: cur } = await db.from('community_posts').select('comments_count').eq('id', _commCurrentPostId).single();
+  const { data: cur } = await db.from('community_posts').select('comments_count, worker_id, business_id, title, is_anonymous').eq('id', _commCurrentPostId).single();
   await db.from('community_posts').update({ comments_count: (cur?.comments_count || 0) + 1 }).eq('id', _commCurrentPostId);
+
+  // 게시글 작성자에게 댓글 알림 (본인 댓글 제외)
+  if (cur) {
+    const commenterName = anonChk?.checked ? '익명' : (currentUser?.user_metadata?.full_name || '누군가');
+    const targetWorkerUid = cur.worker_id
+      ? (await db.from('workers').select('kakao_uid').eq('id', cur.worker_id).single()).data?.kakao_uid
+      : null;
+    const targetBizUid = cur.business_id
+      ? (await db.from('businesses').select('kakao_uid').eq('id', cur.business_id).single()).data?.kakao_uid
+      : null;
+    const targetUid = targetWorkerUid || targetBizUid;
+    if (targetUid && targetUid !== currentUser.id) {
+      const { data: subs } = await db.from('push_subscriptions').select('endpoint, p256dh, auth, fcm_token').eq('user_id', targetUid).limit(3);
+      if (subs?.length) {
+        subs.forEach(sub => {
+          fetch('/api/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              fcmToken: sub.fcm_token,
+              title: '💬 새 댓글',
+              body: `${commenterName}님이 댓글을 달았어요: "${cur.title}"`,
+              url: './바로알바.html',
+              tag: 'comm-comment-' + _commCurrentPostId,
+            })
+          }).catch(() => {});
+        });
+      }
+    }
+  }
 
   input.value = '';
   if (anonChk) anonChk.checked = false;
