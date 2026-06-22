@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.GeolocationPermissions;
 import androidx.core.content.FileProvider;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -270,6 +271,25 @@ public class MainActivity extends AppCompatActivity {
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
             shareIntent.putExtra(Intent.EXTRA_TEXT, content);
             startActivity(Intent.createChooser(shareIntent, "공유하기"));
+        }
+
+        // 채팅 키보드 강제 유지 (SHOW_FORCED: hideKeyboard 전까지 절대 닫히지 않음)
+        @JavascriptInterface
+        public void showKeyboard() {
+            runOnUiThread(() -> {
+                webView.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (imm != null) imm.showSoftInput(webView, InputMethodManager.SHOW_FORCED);
+            });
+        }
+
+        // 채팅 오버레이 닫을 때 강제 상태 해제
+        @JavascriptInterface
+        public void hideKeyboard() {
+            runOnUiThread(() -> {
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if (imm != null) imm.hideSoftInputFromWindow(webView.getWindowToken(), 0);
+            });
         }
     }
 

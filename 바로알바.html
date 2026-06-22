@@ -4936,6 +4936,10 @@ function closeWChat(navigate = true) {
   wo.style.display = 'none';
   wo.style.paddingBottom = '';
   if (window._clearChatKbOffset) window._clearChatKbOffset();
+  // SHOW_FORCED 해제 — 채팅창 닫을 때 키보드도 같이 내림
+  if (window.AndroidBridge && window.AndroidBridge.hideKeyboard) {
+    window.AndroidBridge.hideKeyboard();
+  }
   if (_wchatSub) { try { _wchatSub.unsubscribe(); } catch(e) {} _wchatSub = null; }
   _wchatAppId = null;
   if (navigate) {
@@ -5716,12 +5720,16 @@ function subscribeWChatMessages() {
       const sc = document.getElementById('wchat-scroll');
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
-      // 스크롤 후 포커스 복원 (requestAnimationFrame으로 레이아웃 완료 후)
       if (isMine) {
-        requestAnimationFrame(() => {
-          const inp = document.getElementById('wchat-input');
-          if (inp && document.activeElement !== inp) inp.focus();
-        });
+        // Android: 네이티브 IME 강제 재표시 (DOM 변경으로 닫혔을 경우 복구)
+        if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
+          window.AndroidBridge.showKeyboard();
+        } else {
+          requestAnimationFrame(() => {
+            const inp = document.getElementById('wchat-input');
+            if (inp) inp.focus();
+          });
+        }
       }
     }).subscribe();
 }
@@ -5841,8 +5849,12 @@ async function sendWChatMessage() {
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
   input.value = '';
-  input.focus(); // 동기 즉시 포커스 — await 전에 확보
-  _doSendWChat(content).catch(() => {}); // fire-and-forget, await하지 않음
+  input.focus();
+  // Android: SHOW_FORCED로 키보드 강제 유지 (DOM 변경이 있어도 닫히지 않음)
+  if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
+    window.AndroidBridge.showKeyboard();
+  }
+  _doSendWChat(content).catch(() => {});
 }
 
 
