@@ -5712,10 +5712,12 @@ function subscribeWChatMessages() {
       const sc = document.getElementById('wchat-scroll');
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
-      // DOM 조작 후 포커스 복원 (Android WebView 키보드 유지)
+      // 스크롤 후 포커스 복원 (requestAnimationFrame으로 레이아웃 완료 후)
       if (isMine) {
-        const inp = document.getElementById('wchat-input');
-        if (inp) inp.focus();
+        requestAnimationFrame(() => {
+          const inp = document.getElementById('wchat-input');
+          if (inp && document.activeElement !== inp) inp.focus();
+        });
       }
     }).subscribe();
 }
@@ -5835,9 +5837,8 @@ async function sendWChatMessage() {
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
   input.value = '';
-  await _doSendWChat(content);
-  // DB insert + 구독 콜백 완료 후 재포커스 보장
-  requestAnimationFrame(() => { input.focus(); });
+  input.focus(); // 동기 즉시 포커스 — await 전에 확보
+  _doSendWChat(content).catch(() => {}); // fire-and-forget, await하지 않음
 }
 
 
@@ -8758,12 +8759,12 @@ function formatTime(iso) {
 }
 
 let toastTimer;
-function showToast(msg) {
+function showToast(msg, duration) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.remove('hidden');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), duration || 2800);
 }
 
 // ── 목업 데이터 (Supabase 미연결 시 폴백) ─────────────────
@@ -11298,6 +11299,7 @@ function openPostingForm() {
   document.getElementById('submit-btn').textContent = t('form_submit_post');
   document.getElementById('f-title').value = '';
   setJobType('alba');  // 유형 탭 초기화
+  setWorkType('spot'); // 근무형태 스팟으로 강제 초기화
   document.getElementById('f-wage').value = '';
   document.getElementById('f-needed').value = 1;
   document.getElementById('f-desc').value = '';
@@ -11370,12 +11372,12 @@ function setWorkType(type) {
 }
 
 function toggleDay(btn) {
-  const active = btn.style.background === 'rgb(255, 75, 75)';
+  const active = btn.style.background === 'rgb(200, 16, 46)';
   btn.style.background = active ? '#fff' : '#C8102E';
   btn.style.color = active ? '#888' : '#fff';
   btn.style.borderColor = active ? '#eee' : '#C8102E';
   const days = Array.from(document.querySelectorAll('#f-days-wrap button'))
-    .filter(b => b.style.background === 'rgb(255, 75, 75)').map(b => b.dataset.day);
+    .filter(b => b.style.background === 'rgb(200, 16, 46)').map(b => b.dataset.day);
   document.getElementById('f-work-days').value = days.join(',');
 }
 
@@ -11868,6 +11870,7 @@ async function submitPosting() {
     duration_hours: duration,
     needed_count: needed || 1,
     start_time: startTime.toISOString(),
+    end_time: endTime ? endTime.toISOString() : null,
     status: surgeEnabled ? 'urgent' : 'open',
     surge_enabled:      surgeEnabled,
     surge_max_wage:     surgeEnabled ? (surgeMax || wage + surgeAmount * 3) : null,
@@ -11946,7 +11949,9 @@ async function submitPosting() {
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
       console.error('save failed', res.status, errBody);
-      showToast('저장 실패 (' + res.status + ')');
+      let errMsg = '저장 실패 (' + res.status + ')';
+      try { const j = JSON.parse(errBody); if (j.message) errMsg += ': ' + j.message.slice(0, 60); } catch(e) {}
+      showToast(errMsg, 6000);
       return;
     }
 
