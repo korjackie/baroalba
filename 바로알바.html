@@ -5876,12 +5876,9 @@ function subscribeWChatMessages() {
       if (sc) sc.scrollTop = sc.scrollHeight;
       if (!isMine) markWMessagesRead(_wchatAppId);
       if (isMine) {
-        if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
-          // 타이밍 불확실 — 100/300/600ms 3단계 반복으로 DOM+scroll 완료 후 캐치
-          setTimeout(() => window.AndroidBridge.showKeyboard(), 100);
-          setTimeout(() => window.AndroidBridge.showKeyboard(), 300);
-          setTimeout(() => window.AndroidBridge.showKeyboard(), 600);
-        } else {
+        // guard 해제 (스크롤 완료됐으므로)
+        if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
+        if (!window.AndroidBridge) {
           setTimeout(() => { const inp = document.getElementById('wchat-input'); if (inp) inp.focus(); }, 100);
         }
       }
@@ -6004,11 +6001,8 @@ async function sendWChatMessage() {
   if (!content || !_wchatAppId) return;
   input.value = '';
   input.focus();
-  if (window.AndroidBridge && window.AndroidBridge.showKeyboard) {
-    window.AndroidBridge.showKeyboard();
-    setTimeout(() => window.AndroidBridge.showKeyboard(), 300);
-    setTimeout(() => window.AndroidBridge.showKeyboard(), 700);
-  }
+  // guard ON: scrollTop = scrollHeight 시 키보드 닫힘을 onScrollChanged에서 즉시 복구
+  if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(true);
   _doSendWChat(content).catch(() => {});
 }
 

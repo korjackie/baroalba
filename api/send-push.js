@@ -1,14 +1,7 @@
-const webpush = require('web-push');
 const { GoogleAuth } = require('google-auth-library');
 
 const SUPABASE_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
 const FIREBASE_PROJECT_ID = 'baroalba-32850';
-
-webpush.setVapidDetails(
-  'mailto:nicepkw@gmail.com',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
 
 async function getFCMAccessToken() {
   const credentials = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -65,41 +58,20 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    // 1. FCM 토큰 조회 → FCM으로 발송 (앱 종료 시에도 수신)
-    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      const fcmRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/fcm_tokens?user_id=eq.${user_id}&select=token&limit=1`,
-        { headers: adminHeaders }
-      );
-      const fcmData = await fcmRes.json();
-      if (fcmData?.length && fcmData[0]?.token) {
-        const ok = await sendFCM(fcmData[0].token, title, body, url);
-        if (ok) return res.json({ ok: true, via: 'fcm' });
-      }
-    }
-
-    // 2. FCM 실패 시 Web Push 폴백
-    const subRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${user_id}&select=subscription&limit=1`,
+    // FCM 토큰 조회 → FCM으로 발송
+    const fcmRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/fcm_tokens?user_id=eq.${user_id}&select=token&limit=1`,
       { headers: adminHeaders }
     );
-    const subData = await subRes.json();
-    if (!subData?.length || !subData[0]?.subscription) {
-      return res.status(404).json({ error: 'No push endpoint found' });
+    const fcmData = await fcmRes.json();
+    if (!fcmData?.length || !fcmData[0]?.token) {
+      return res.status(404).json({ error: 'No FCM token found' });
     }
-
-    const subscription = subData[0].subscription;
-    await webpush.sendNotification(subscription, JSON.stringify({ title, body, url: url || '/' }));
-    return res.json({ ok: true, via: 'webpush' });
+    const ok = await sendFCM(fcmData[0].token, title, body, url);
+    if (ok) return res.json({ ok: true, via: 'fcm' });
+    return res.status(500).json({ error: 'FCM send failed' });
 
   } catch (e) {
-    if (e.statusCode === 410) {
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/push_subscriptions?user_id=eq.${user_id}`,
-        { method: 'DELETE', headers: adminHeaders }
-      );
-      return res.status(410).json({ error: 'Subscription expired, removed' });
-    }
     return res.status(500).json({ error: e.message });
   }
 }

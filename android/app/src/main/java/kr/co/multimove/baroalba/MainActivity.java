@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQ_PERM   = 2;
     private static final int REQ_CAMERA = 3;
 
-    private WebView webView;
+    private BaroAlbaWebView webView;
     private ValueCallback<Uri[]> fileCb;
     private boolean captureMode = false;
     private Uri pendingPhotoUri = null;
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_main);
 
-        webView = findViewById(R.id.webview);
+        webView = (BaroAlbaWebView) findViewById(R.id.webview);
 
         // 시스템바 + IME(키보드) 높이를 읽어 CSS 변수로 주입
         ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
@@ -287,9 +287,21 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void hideKeyboard() {
             runOnUiThread(() -> {
+                webView.scrollKbGuard = false;
                 InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                 if (imm != null) imm.hideSoftInputFromWindow(webView.getWindowToken(), 0);
             });
+        }
+
+        // 메시지 전송 직후 guard ON → 스크롤로 인한 IME 닫힘 즉시 복구
+        // JS에서 전송 시 true, Realtime 콜백 수신 후 false
+        @JavascriptInterface
+        public void setScrollKbGuard(boolean on) {
+            webView.scrollKbGuard = on;
+            if (on) {
+                // 1.5초 안전장치: JS가 false를 안 보내도 자동 해제
+                webView.postDelayed(() -> webView.scrollKbGuard = false, 1500);
+            }
         }
     }
 
