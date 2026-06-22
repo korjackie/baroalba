@@ -5821,10 +5821,9 @@ async function _doSendWChat(content) {
         }
       });
       const senderName = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '알바생';
-      const pushTitle = `💬 ${senderName}`;
       const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
       fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ user_id:ownerUid, title:pushTitle, body:pushBody, url:'/바로알바.html' })
+        body: JSON.stringify({ user_id:ownerUid, title:`${senderName}님으로부터 메시지`, body:pushBody, url:'/바로알바.html' })
       }).catch(()=>{});
     }
   } catch(e) {}
@@ -13014,10 +13013,9 @@ async function _doSendChat(content) {
       });
     } catch(e) {}
     const ownerBiz = (typeof bizRecord !== 'undefined' && bizRecord?.name) || currentUser?.user_metadata?.full_name || '업주';
-    const pushTitle = `💬 ${ownerBiz}`;
     const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
     fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ user_id:_chatWorkerUserId, title:pushTitle, body:pushBody, url:'/바로알바.html' })
+      body: JSON.stringify({ user_id:_chatWorkerUserId, title:`${ownerBiz}님으로부터 메시지`, body:pushBody, url:'/바로알바.html' })
     }).catch(()=>{});
   }
 }

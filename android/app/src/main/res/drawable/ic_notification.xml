@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  바로알바 알림 아이콘 — 최종로고 과녁+화살 모양 (흰색 단색)
-  Android 상태표시줄용 Vector Drawable (24×24dp, 흰색, 투명 배경)
+  바로알바 알림 아이콘 — 로고 컬러 버전 (빨간 과녁 + 파란 화살)
+  Samsung One UI: 컬러 표시 / 순정 Android: 흰색 단색 (기능 동일)
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
@@ -9,36 +9,36 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- 바깥 링 (stroke 원) -->
+    <!-- 바깥 링 (빨간색) -->
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#C8102E"
         android:strokeWidth="1.7"
         android:pathData="M 1.5,12 A 10.5,10.5 0 1 0 22.5,12 A 10.5,10.5 0 1 0 1.5,12 Z"/>
 
-    <!-- 중간 링 (stroke 원) -->
+    <!-- 중간 링 (빨간색) -->
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#C8102E"
         android:strokeWidth="1.7"
         android:pathData="M 5.3,12 A 6.7,6.7 0 1 0 18.7,12 A 6.7,6.7 0 1 0 5.3,12 Z"/>
 
-    <!-- 중심 원 (채움) -->
+    <!-- 중심 원 (빨간색 채움) -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#C8102E"
         android:pathData="M 9.8,12 A 2.2,2.2 0 1 0 14.2,12 A 2.2,2.2 0 1 0 9.8,12 Z"/>
 
-    <!-- 화살대 (우상단 → 중심) -->
+    <!-- 화살대 (파란색) -->
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#1A56DB"
         android:strokeWidth="1.7"
         android:strokeLineCap="round"
         android:pathData="M 18.7,5.3 L 12.5,11.5"/>
 
-    <!-- 화살촉 (우상단 직각삼각형) -->
+    <!-- 화살촉 (파란색) -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#1A56DB"
         android:pathData="M 20.4,2.4 L 20.4,7.9 L 14.9,7.9 Z"/>
 
 </vector>
