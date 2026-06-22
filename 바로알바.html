@@ -5178,7 +5178,10 @@ function scrollChatToBottom(scrollId) {
 
 // ── FCM 토큰 수신 → Supabase 저장 ──
 async function _saveFCMToken(token) {
-  if (!token || !window.currentUser || !window.db) return;
+  if (!token || !window.currentUser || !window.db) {
+    console.warn('[FCM] 저장 불가 token:', !!token, 'user:', !!window.currentUser, 'db:', !!window.db);
+    return;
+  }
   const payload = [
     { user_id: currentUser.id, token, updated_at: new Date().toISOString() }
   ];
@@ -5187,10 +5190,13 @@ async function _saveFCMToken(token) {
   if (kakaoUid && kakaoUid !== currentUser.id) {
     payload.push({ user_id: kakaoUid, token, updated_at: new Date().toISOString() });
   }
-  await db.from('fcm_tokens').upsert(payload, { onConflict: 'user_id' });
+  const { error } = await db.from('fcm_tokens').upsert(payload, { onConflict: 'user_id' });
+  if (error) console.error('[FCM] 저장 실패:', JSON.stringify(error));
+  else console.log('[FCM] 저장 성공 user:', currentUser.id);
 }
 window._onFCMToken = async function(token) {
   window._pendingFCMToken = token; // currentUser 없어도 항상 저장
+  console.log('[FCM] 토큰 수신:', token?.slice(0, 20));
   await _saveFCMToken(token);
 };
 
