@@ -4994,11 +4994,12 @@ function setupMessageNotifications() {
     }
   }
 
-  _workerGlobalChatSub = db.channel('worker-' + currentUser.id + '-notify')
+  const _myKakaoId = currentUser.user_metadata?.kakao_uid || currentUser.user_metadata?.provider_id || currentUser.id;
+  _workerGlobalChatSub = db.channel('worker-' + _myKakaoId + '-notify')
     .on('broadcast', { event: 'new_msg' }, function(e) { _handleNewMsg(e.payload); })
     .subscribe();
 
-  _ownerGlobalChatSub = db.channel('owner-' + currentUser.id + '-notify')
+  _ownerGlobalChatSub = db.channel('owner-' + _myKakaoId + '-notify')
     .on('broadcast', { event: 'new_msg' }, function(e) { _handleNewMsg(e.payload); })
     .subscribe();
 }
@@ -13658,7 +13659,8 @@ function subscribeOwnerGlobalChat() {
   if (!currentUser) return;
   if (_ownerGlobalChatSub) { try { _ownerGlobalChatSub.unsubscribe(); } catch(e) {} _ownerGlobalChatSub = null; }
 
-  _ownerGlobalChatSub = db.channel(`owner-${currentUser.id}-notify`)
+  const _ownerKakaoId = currentUser.user_metadata?.kakao_uid || currentUser.user_metadata?.provider_id || currentUser.id;
+  _ownerGlobalChatSub = db.channel(`owner-${_ownerKakaoId}-notify`)
     .on('broadcast', { event: 'new_msg' }, ({ payload }) => {
       if (!payload || payload.sender_id === currentUser.id) return;
       const chatOpen = document.getElementById('chat-overlay')?.style.display === 'flex';
