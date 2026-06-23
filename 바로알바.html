@@ -8673,6 +8673,7 @@ function openCropModal(file, callback, aspectRatio = 1) {
   if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다'); return; }
   const reader = new FileReader();
   reader.onload = e => {
+    window._cropSourceUrl = e.target.result; // 원본 dataURL 저장 (applyCrop 직접 그리기용)
     const img = document.getElementById('crop-source');
     img.src = e.target.result;
     document.getElementById('crop-modal').style.display = 'flex';
@@ -8706,17 +8707,29 @@ function applyCrop() {
   if (!_cropper || !_cropCallback) return;
   const cb = _cropCallback;
   try {
-    // canvas 먼저 추출 (closeCropModal이 _cropper.destroy() 하기 전에)
-    const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });
+    // getCroppedCanvas()는 일부 Android WebView에서 null 반환 → 사용 안 함
+    // getData()로 좌표만 가져온 뒤 원본 dataURL로 직접 그리기
+    const d = _cropper.getData(true);
     closeCropModal();
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-    const byteStr = atob(dataUrl.split(',')[1]);
-    const ab = new ArrayBuffer(byteStr.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
-    cb(new Blob([ab], { type: 'image/jpeg' }));
+    const src = window._cropSourceUrl;
+    if (!src) { showToast('❌ 원본 이미지 없음'); return; }
+    const img2 = new Image();
+    img2.onerror = () => showToast('❌ 이미지 처리 실패');
+    img2.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = 400; c.height = 400;
+      c.getContext('2d').drawImage(img2, d.x, d.y, d.width, d.height, 0, 0, 400, 400);
+      const dataUrl = c.toDataURL('image/jpeg', 0.88);
+      const byteStr = atob(dataUrl.split(',')[1]);
+      const ab = new ArrayBuffer(byteStr.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+      cb(new Blob([ab], { type: 'image/jpeg' }));
+    };
+    img2.src = src;
   } catch(e) {
-    showToast('❌ 이미지 처리 실패: ' + e.message);
+    showToast('❌ 처리 실패: ' + e.message);
+    console.error('[applyCrop]', e);
   }
 }
 
