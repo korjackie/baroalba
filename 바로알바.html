@@ -10218,6 +10218,8 @@ async function openNotifications() {
   // 읽음 시각 업데이트
   localStorage.setItem(_notiKey(), Date.now().toString());
   document.getElementById('noti-badge').style.display = 'none';
+  // 앱 아이콘 배지도 즉시 0으로
+  if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
 
   const existing = document.getElementById('noti-overlay');
   if (existing) { existing.remove(); return; }
