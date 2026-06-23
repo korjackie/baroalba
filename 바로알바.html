@@ -8705,11 +8705,10 @@ function closeCropModal() {
 function applyCrop() {
   if (!_cropper || !_cropCallback) return;
   const cb = _cropCallback;
-  closeCropModal();
   try {
+    // canvas 먼저 추출 (closeCropModal이 _cropper.destroy() 하기 전에)
     const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });
-    // canvas.toBlob은 일부 Android WebView에서 콜백 미호출 버그 있음
-    // → toDataURL 동기 변환으로 대체
+    closeCropModal();
     const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
     const byteStr = atob(dataUrl.split(',')[1]);
     const ab = new ArrayBuffer(byteStr.length);
