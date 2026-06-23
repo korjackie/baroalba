@@ -23,9 +23,14 @@
     if (/KAKAOTALK/i.test(ua)) {
       var href = location.href;
       if (/Android/i.test(ua)) {
-        // 현재 URL(job 파라미터 포함) 그대로 Chrome으로 열기
+        // 앱(TWA) 설치 시 앱으로 열기, 미설치 시 Chrome 폴백
         var path = href.replace(/^https?:\/\//, '');
-        location.replace('intent://' + path + '#Intent;scheme=https;package=com.android.chrome;end');
+        location.replace(
+          'intent://' + path +
+          '#Intent;scheme=https;package=kr.co.multimove.baroalba;' +
+          'S.browser_fallback_url=' + encodeURIComponent('https://play.google.com/store/apps/details?id=kr.co.multimove.baroalba') +
+          ';end'
+        );
       }
       // iOS KakaoTalk은 Safari 엔진 사용으로 대부분 정상 동작, 별도 처리 불필요
     }
