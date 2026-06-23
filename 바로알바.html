@@ -16,6 +16,22 @@
   <meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share.png">
   <meta property="og:type" content="website">
 
+  <!-- 카카오톡 인앱브라우저 → Chrome 자동 탈출 (딥링크 파라미터 보존) -->
+  <script>
+  (function() {
+    var ua = navigator.userAgent;
+    if (/KAKAOTALK/i.test(ua)) {
+      var href = location.href;
+      if (/Android/i.test(ua)) {
+        // 현재 URL(job 파라미터 포함) 그대로 Chrome으로 열기
+        var path = href.replace(/^https?:\/\//, '');
+        location.replace('intent://' + path + '#Intent;scheme=https;package=com.android.chrome;end');
+      }
+      // iOS KakaoTalk은 Safari 엔진 사용으로 대부분 정상 동작, 별도 처리 불필요
+    }
+  })();
+  </script>
+
   <script src="./config.js"></script>
   <script src="./shared-lang.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12484,7 +12500,7 @@ function openPostingForm() {
   const ps = document.getElementById('f-period-start'); if (ps) ps.min = todayStr;
   const pe = document.getElementById('f-period-end');   if (pe) pe.min = todayStr;
   setTimeSelects('start', now);
-  const end = new Date(now.getTime() + 4 * 3600000);
+  const end = new Date(now.getTime() + 1 * 3600000);
   setTimeSelects('end', end);
 
   document.getElementById('naver-url-status').style.display = 'none';
