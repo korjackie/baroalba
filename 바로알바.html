@@ -8705,11 +8705,20 @@ function closeCropModal() {
 function applyCrop() {
   if (!_cropper || !_cropCallback) return;
   const cb = _cropCallback;
-  const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });
-  canvas.toBlob(blob => {
-    closeCropModal();
-    cb(blob);
-  }, 'image/jpeg', 0.88);
+  closeCropModal();
+  try {
+    const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });
+    // canvas.toBlob은 일부 Android WebView에서 콜백 미호출 버그 있음
+    // → toDataURL 동기 변환으로 대체
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    const byteStr = atob(dataUrl.split(',')[1]);
+    const ab = new ArrayBuffer(byteStr.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+    cb(new Blob([ab], { type: 'image/jpeg' }));
+  } catch(e) {
+    showToast('❌ 이미지 처리 실패: ' + e.message);
+  }
 }
 
 // ── Storage 업로드 ────────────────────────────────────
