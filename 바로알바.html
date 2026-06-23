@@ -9490,18 +9490,6 @@ async function saveWorkerProfile() {
   payload.notify_enabled = notifyOn;
   payload.notify_categories = notifyOn ? _notifyCategories : [];
   payload.notify_min_wage = notifyOn ? (parseInt(document.getElementById('notify-min-wage')?.value) || 0) : 0;
-  // 대기 중인 프로필 사진 업로드
-  if (_pendingAvatarBlob) {
-    try {
-      const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
-      const { error: upErr } = await db.storage.from('biz-photos').upload(path, _pendingAvatarBlob, { contentType: 'image/jpeg' });
-      if (!upErr) {
-        payload.photo_url = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
-        if (bizRecord) await db.from('businesses').update({ photo_url: payload.photo_url }).eq('kakao_uid', currentUser.id);
-      }
-      _pendingAvatarBlob = null;
-    } catch(e) { console.warn('[avatar upload]', e); }
-  }
   let { error } = await db.from('workers').upsert(payload, { onConflict: 'kakao_uid' });
   if (error?.message?.includes('languages')) {
     // languages 컬럼 미존재 → 없이 재저장 (DDL 실행 전 임시 처리)
@@ -9558,18 +9546,30 @@ async function saveAllProfileSettings() {
 async function _doSaveAllProfileSettings() {
   currentLang = _pendingLang;
   localStorage.setItem('baroalba_lang', currentLang);
-  const workerOk = await saveWorkerProfile();
-  await saveOwnerProfile();
-  // 대기 중인 포트폴리오 사진 일괄 업로드
-  const pending = _wPhotos.filter(p => p.blob);
-  for (const p of pending) {
-    try {
-      const path = `${currentUser.id}/portfolio_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
-      await db.storage.from('biz-photos').upload(path, p.blob, { contentType: 'image/jpeg' });
-      URL.revokeObjectURL(p.photo_url);
-    } catch(e) { console.warn('[portfolio upload]', e); }
+
+  // 사진 업로드 (프로필/포트폴리오) — 프로필 저장과 독립적으로 먼저 처리
+  if (_pendingAvatarBlob) {
+    const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
+    const { error: upErr } = await db.storage.from('biz-photos').upload(path, _pendingAvatarBlob, { contentType: 'image/jpeg' });
+    if (!upErr) {
+      const publicUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
+      await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
+      if (bizRecord) await db.from('businesses').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
+    } else {
+      showToast('사진 업로드 실패: ' + upErr.message);
+    }
+    _pendingAvatarBlob = null;
   }
-  if (workerOk) location.reload();
+  for (const p of _wPhotos.filter(p => p.blob)) {
+    const path = `${currentUser.id}/portfolio_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
+    const { error: upErr } = await db.storage.from('biz-photos').upload(path, p.blob, { contentType: 'image/jpeg' });
+    if (!upErr) URL.revokeObjectURL(p.photo_url);
+    else showToast('포트폴리오 업로드 실패: ' + upErr.message);
+  }
+
+  await saveWorkerProfile();
+  await saveOwnerProfile();
+  location.reload();
 }
 
 function closeProfileIfBg(e) {
