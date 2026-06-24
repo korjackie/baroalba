@@ -1240,6 +1240,7 @@
       <button class="filter-drop-btn" id="flt-cat-btn" onclick="toggleFilterSheet('cat')" style="flex-shrink:0" data-i18n-btn="filter_cat">카테고리 ▾</button>
       <button class="filter-drop-btn" id="flt-type-btn" onclick="toggleFilterSheet('type')" style="flex-shrink:0" data-i18n-btn="filter_work_type">근무타입 ▾</button>
       <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)" style="flex-shrink:0">급구</div>
+      <button class="filter-drop-btn" id="flt-lang-btn" onclick="toggleLangFilter()" style="flex-shrink:0;display:none">&#127760; 내 언어</button>
       <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0" data-i18n-btn="filter_lesson">레슨/과외 ▾</button>
       <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0" data-i18n-btn="filter_technical">전문기술 ▾</button>
     </div>
@@ -3816,6 +3817,20 @@
       </div>
       <input type="hidden" id="f-age-limit" value="false">
 
+      <!-- 언어 우대 -->
+      <div style="margin-top:8px;padding:12px 14px;background:#f0f9ff;border:1.5px solid #BAE6FD;border-radius:12px">
+        <div style="font-size:13px;font-weight:800;color:#0369A1;margin-bottom:8px">&#127760; 언어 우대 <span style="font-size:11px;font-weight:400;color:#64748B">해당 언어 구사 알바생 우대</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="f-lang-chips">
+          <button type="button" data-l="ko" onclick="toggleJobLang(this)" class="l-chip">&#127472;&#127479; 한국어</button>
+          <button type="button" data-l="en" onclick="toggleJobLang(this)" class="l-chip">&#127482;&#127480; 영어</button>
+          <button type="button" data-l="zh" onclick="toggleJobLang(this)" class="l-chip">&#127464;&#127475; 중국어</button>
+          <button type="button" data-l="ja" onclick="toggleJobLang(this)" class="l-chip">&#127471;&#127477; 일본어</button>
+          <button type="button" data-l="vi" onclick="toggleJobLang(this)" class="l-chip">&#127483;&#127475; 베트남어</button>
+          <button type="button" data-l="ru" onclick="toggleJobLang(this)" class="l-chip">&#127479;&#127482; 러시아어</button>
+        </div>
+      </div>
+      <input type="hidden" id="f-pref-langs" value="[]">
+
       <button class="submit-btn" id="submit-btn" onclick="submitPosting()" data-i18n="form_submit_post">공고 등록하기</button>
     </div>
   </div>
@@ -3859,6 +3874,8 @@ let sortByWage = false;
 let sortMode = 'dist'; // dist|wage_desc|wage_asc|date_asc|date_desc
 let jobs = [];
 let _myAge = null;
+let _langFilterActive = false;
+let _myLangs = [];
 let markers = [];
 let overlays = [];
 let selectedJobId = null;
@@ -3932,9 +3949,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (session) {
     currentUser = session.user;
     if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
-    // 나이 미리 로드 (나이제한 공고 체크용)
-    db.from('workers').select('age, birth_date').eq('kakao_uid', session.user.id).maybeSingle()
-      .then(({ data: w }) => { if (w) _myAge = w.age || (w.birth_date ? calcAgeFromBirth(w.birth_date) : null); });
+    // 나이·언어 미리 로드
+    db.from('workers').select('age, birth_date, languages').eq('kakao_uid', session.user.id).maybeSingle()
+      .then(({ data: w }) => {
+        if (!w) return;
+        _myAge = w.age || (w.birth_date ? calcAgeFromBirth(w.birth_date) : null);
+        _myLangs = Array.isArray(w.languages) ? w.languages : [];
+        _updateLangFilterBtn();
+      });
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     setTimeout(checkPushPermission, 3000); // 알림 배너 표시
@@ -4171,6 +4193,16 @@ async function loadJobs() {
     const todayStr = new Date().toISOString().slice(0, 10);
     result = result.filter(j => !j.work_end_date || j.work_end_date >= todayStr);
 
+    // preferred_languages 배치 fetch (RPC 미포함 대비)
+    if (result.length && result[0].preferred_languages === undefined) {
+      const ids = result.map(j => j.id);
+      const { data: langData } = await db.from('job_postings').select('id, preferred_languages').in('id', ids);
+      if (langData) {
+        const langMap = new Map(langData.map(d => [d.id, d.preferred_languages || []]));
+        result = result.map(j => ({ ...j, preferred_languages: langMap.get(j.id) || [] }));
+      }
+    }
+
     // 복수 카테고리 클라이언트 필터 (2개 이상 선택 시)
     if (selectedCategories.size > 1) result = result.filter(j => selectedCategories.has(j.category));
     // 전문기술 mid 필터
@@ -4190,6 +4222,7 @@ async function loadJobs() {
       });
     }
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
+    if (_langFilterActive && _myLangs.length) result = result.filter(j => (j.preferred_languages || []).some(l => _myLangs.includes(l)));
     if      (sortMode === 'wage_desc') result.sort((a,b) => b.current_wage - a.current_wage);
     else if (sortMode === 'wage_asc')  result.sort((a,b) => a.current_wage - b.current_wage);
     else if (sortMode === 'date_asc')  result.sort((a,b) => (a.start_time||'').localeCompare(b.start_time||''));
@@ -4499,7 +4532,13 @@ function renderList() {
       : '';
     // ③ 재방문 인센티브 배지
     const returnBadge = (job.return_bonus > 0)
-      ? `<span class="tag" style="background:#FFF8E1;color:#F59E0B;border:1px solid #FDE68A;font-weight:800">⭐ 재방문 +${job.return_bonus.toLocaleString()}원</span>`
+      ? `<span class="tag" style="background:#FFF8E1;color:#F59E0B;border:1px solid #FDE68A;font-weight:800">&#11088; 재방문 +${job.return_bonus.toLocaleString()}원</span>`
+      : '';
+    // ⑤ 언어 우대 배지
+    const _LANG_FLAG = {ko:'&#127472;&#127479;',en:'&#127482;&#127480;',zh:'&#127464;&#127475;',ja:'&#127471;&#127477;',vi:'&#127483;&#127475;',ru:'&#127479;&#127482;'};
+    const _LANG_NAME = {ko:'한국어',en:'영어',zh:'중국어',ja:'일본어',vi:'베트남어',ru:'러시아어'};
+    const langBadge = (job.preferred_languages && job.preferred_languages.length)
+      ? job.preferred_languages.map(l => `<span class="tag" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-weight:700">${_LANG_FLAG[l]||''} ${_LANG_NAME[l]||l} 우대</span>`).join('')
       : '';
     // ④ 지하철역 span (loadSubwayInfo가 비동기로 채워줌)
     const subwaySpan = (job.lat && job.lng)
@@ -4529,6 +4568,7 @@ function renderList() {
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">번개</span>' : ''}
         ${job.same_day_payment ? '<span class="tag payday-tag">💰 당일정산</span>' : ''}
         ${returnBadge}
+        ${langBadge}
         ${job.category ? `<span class="tag ${catClass}">${job.category}</span>` : ''}
         <span class="tag">${isErrand ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
         ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
@@ -12715,6 +12755,7 @@ function openEditForm(jobId) {
   }
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
+  setJobLangs(p.preferred_languages || []);
   const dep = p.noshow_deposit || 0;
   setDeposit(dep > 0);
   if (dep > 0) setDepositAmount(dep);
@@ -13171,6 +13212,7 @@ async function submitPosting() {
     work_end_date:      workType === 'short' ? periodEnd : null,
     holiday_pay:        workType === 'regular' ? holidayPay : false,
     age_limit:          document.getElementById('f-age-limit').value === 'true',
+    preferred_languages: JSON.parse(document.getElementById('f-pref-langs')?.value || '[]'),
   };
 
   const btn = document.getElementById('submit-btn');
@@ -13405,6 +13447,7 @@ function copyPosting(jobId) {
   document.getElementById('surge-preview').textContent = '';
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
+  setJobLangs(p.preferred_languages || []);
   const _rb2 = p.return_bonus || 0;
   setReturnBonusOn(_rb2 > 0);
   if (_rb2 > 0) setReturnBonus(_rb2);
@@ -15355,6 +15398,35 @@ function setAgeLimit(val) {
   el.dataset.on = String(val);
   el.style.background = val ? '#EA580C' : '#e5e7eb';
   el.querySelector('div').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
+}
+
+function toggleJobLang(btn) {
+  btn.classList.toggle('l-chip-on');
+  const selected = [...document.querySelectorAll('#f-lang-chips [data-l].l-chip-on')].map(b => b.dataset.l);
+  document.getElementById('f-pref-langs').value = JSON.stringify(selected);
+}
+
+function setJobLangs(langs) {
+  document.querySelectorAll('#f-lang-chips [data-l]').forEach(b => b.classList.remove('l-chip-on'));
+  const arr = Array.isArray(langs) ? langs : [];
+  arr.forEach(l => {
+    const b = document.querySelector(`#f-lang-chips [data-l="${l}"]`);
+    if (b) b.classList.add('l-chip-on');
+  });
+  document.getElementById('f-pref-langs').value = JSON.stringify(arr);
+}
+
+function _updateLangFilterBtn() {
+  const btn = document.getElementById('flt-lang-btn');
+  if (!btn) return;
+  btn.style.display = _myLangs.length ? '' : 'none';
+}
+
+function toggleLangFilter() {
+  _langFilterActive = !_langFilterActive;
+  const btn = document.getElementById('flt-lang-btn');
+  if (btn) btn.classList.toggle('active', _langFilterActive);
+  loadJobs();
 }
 
 async function selectPlan(plan) {
