@@ -8739,31 +8739,27 @@ function closeCropModal() {
 function applyCrop() {
   if (!_cropper || !_cropCallback) return;
   const cb = _cropCallback;
-  try {
-    // getCroppedCanvas()는 일부 Android WebView에서 null 반환 → 사용 안 함
-    // getData()로 좌표만 가져온 뒤 원본 dataURL로 직접 그리기
-    const d = _cropper.getData(true);
-    closeCropModal();
-    const src = window._cropSourceUrl;
-    if (!src) { showToast('❌ 원본 이미지 없음'); return; }
-    const img2 = new Image();
-    img2.onerror = () => showToast('❌ 이미지 처리 실패');
-    img2.onload = () => {
+  const d = _cropper.getData(true);
+  closeCropModal();
+  const src = window._cropSourceUrl;
+  if (!src) { showToast('❌ 원본 이미지 없음'); return; }
+  const img2 = new Image();
+  img2.onerror = () => showToast('❌ 이미지 로드 실패');
+  img2.onload = () => {
+    try {
       const c = document.createElement('canvas');
       c.width = 400; c.height = 400;
       c.getContext('2d').drawImage(img2, d.x, d.y, d.width, d.height, 0, 0, 400, 400);
-      const dataUrl = c.toDataURL('image/jpeg', 0.88);
-      const byteStr = atob(dataUrl.split(',')[1]);
-      const ab = new ArrayBuffer(byteStr.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
-      cb(new Blob([ab], { type: 'image/jpeg' }));
-    };
-    img2.src = src;
-  } catch(e) {
-    showToast('❌ 처리 실패: ' + e.message);
-    console.error('[applyCrop]', e);
-  }
+      c.toBlob(blob => {
+        if (!blob) { showToast('❌ 이미지 변환 실패'); return; }
+        cb(blob);
+      }, 'image/jpeg', 0.88);
+    } catch(e) {
+      showToast('❌ 크롭 처리 실패: ' + e.message);
+      console.error('[applyCrop onload]', e);
+    }
+  };
+  img2.src = src;
 }
 
 // ── Storage 업로드 ────────────────────────────────────
@@ -8779,7 +8775,7 @@ async function uploadAvatar(input) {
       const url = URL.createObjectURL(blob);
       inner.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${fc}',58)">`;
     }
-    showToast('저장하기를 눌러 사진을 확정하세요');
+    showToast('✅ 사진 준비됨 — 저장하기를 눌러주세요');
   });
 }
 
@@ -9496,7 +9492,7 @@ function calcAgeFromBirth(yymmdd) {
   return age > 0 && age < 120 ? age : null;
 }
 
-async function saveWorkerProfile() {
+async function saveWorkerProfile(newPhotoUrl = null) {
   if (!currentUser) return;
   const birthVal = document.getElementById('worker-birth').value.trim();
   if (birthVal && !calcAgeFromBirth(birthVal)) {
@@ -9514,6 +9510,7 @@ async function saveWorkerProfile() {
   const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng, pref_categories: _prefCats, avail_days: _availDays, avail_times: _availTimes };
   if (_workerGender) payload.gender = _workerGender;
   if (_workerEdu) payload.education = _workerEdu;
+  if (newPhotoUrl) payload.photo_url = newPhotoUrl;
   const notifyOn = document.getElementById('notify-enabled-toggle')?.checked || false;
   payload.notify_enabled = notifyOn;
   payload.notify_categories = notifyOn ? _notifyCategories : [];
@@ -9579,14 +9576,14 @@ async function _doSaveAllProfileSettings() {
     const pendingPortfolio = _wPhotos.filter(p => p.blob);
     showToast('저장 시작 | 프로필사진:' + (!!_pendingAvatarBlob) + ' 포트폴리오:' + pendingPortfolio.length);
 
+    let newAvatarUrl = null;
     if (_pendingAvatarBlob) {
       const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
       const { error: upErr } = await db.storage.from('biz-photos').upload(path, _pendingAvatarBlob, { contentType: 'image/jpeg' });
       if (!upErr) {
-        const publicUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
-        await db.from('workers').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
-        if (bizRecord) await db.from('businesses').update({ photo_url: publicUrl }).eq('kakao_uid', currentUser.id);
-        showToast('✅ 프로필 사진 저장됨');
+        newAvatarUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
+        if (bizRecord) await db.from('businesses').update({ photo_url: newAvatarUrl }).eq('kakao_uid', currentUser.id);
+        showToast('✅ 사진 업로드 완료');
       } else {
         showToast('❌ 프로필 사진 실패: ' + upErr.message);
       }
@@ -9599,7 +9596,8 @@ async function _doSaveAllProfileSettings() {
       else showToast('❌ 포트폴리오 실패: ' + upErr.message);
     }
 
-    await saveWorkerProfile();
+    // photo_url을 upsert payload에 포함시켜 한 번에 저장 (단독 UPDATE는 RLS에서 조용히 무시될 수 있음)
+    await saveWorkerProfile(newAvatarUrl);
     await saveOwnerProfile();
     location.reload();
   } catch(e) {
