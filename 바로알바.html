@@ -3932,6 +3932,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (session) {
     currentUser = session.user;
     if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
+    // 나이 미리 로드 (나이제한 공고 체크용)
+    db.from('workers').select('age, birth_date').eq('kakao_uid', session.user.id).maybeSingle()
+      .then(({ data: w }) => { if (w) _myAge = w.age || (w.birth_date ? calcAgeFromBirth(w.birth_date) : null); });
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     setTimeout(checkPushPermission, 3000); // 알림 배너 표시
@@ -5035,15 +5038,40 @@ function applyJob() {
   document.getElementById('apply-msg-text').value = '';
   document.getElementById('apply-msg-count').textContent = '0';
   document.getElementById('apply-msg-modal').style.display = 'flex';
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', _applyMsgKbResize);
+  setTimeout(() => document.getElementById('apply-msg-text')?.focus(), 350);
+}
+
+function _applyMsgKbResize() {
+  const inner = document.getElementById('apply-msg-modal')?.firstElementChild;
+  if (!inner) return;
+  const kb = Math.max(0, window.innerHeight - (window.visualViewport?.height ?? window.innerHeight));
+  inner.style.transform = kb > 0 ? `translateY(-${kb}px)` : '';
 }
 
 function closeApplyMsg() {
+  if (window.visualViewport) window.visualViewport.removeEventListener('resize', _applyMsgKbResize);
+  const inner = document.getElementById('apply-msg-modal')?.firstElementChild;
+  if (inner) inner.style.transform = '';
   document.getElementById('apply-msg-modal').style.display = 'none';
 }
 
 async function submitApplyWithMsg(skipMsg) {
   const msg = skipMsg ? '' : (document.getElementById('apply-msg-text').value.trim());
   closeApplyMsg();
+
+  // 나이제한 체크 (프로필 미오픈 시에도 안전하게)
+  const curJob = jobs.find(j => j.id === selectedJobId);
+  if (curJob?.age_limit) {
+    if (_myAge === null) {
+      const { data: w } = await db.from('workers').select('age, birth_date').eq('kakao_uid', currentUser.id).maybeSingle();
+      _myAge = w?.age || (w?.birth_date ? calcAgeFromBirth(w.birth_date) : null);
+    }
+    if (_myAge !== null && _myAge < 18) {
+      showToast('\u{1F51E} 만 18세 이상만 지원 가능한 공고입니다');
+      return;
+    }
+  }
 
   const btn = document.getElementById('d-apply-btn');
   btn.textContent = '지원 중...';
