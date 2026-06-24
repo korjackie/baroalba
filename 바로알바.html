@@ -9492,7 +9492,7 @@ function calcAgeFromBirth(yymmdd) {
   return age > 0 && age < 120 ? age : null;
 }
 
-async function saveWorkerProfile(newPhotoUrl = null) {
+async function saveWorkerProfile() {
   if (!currentUser) return;
   const birthVal = document.getElementById('worker-birth').value.trim();
   if (birthVal && !calcAgeFromBirth(birthVal)) {
@@ -9510,7 +9510,6 @@ async function saveWorkerProfile(newPhotoUrl = null) {
   const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng, pref_categories: _prefCats, avail_days: _availDays, avail_times: _availTimes };
   if (_workerGender) payload.gender = _workerGender;
   if (_workerEdu) payload.education = _workerEdu;
-  if (newPhotoUrl) payload.photo_url = newPhotoUrl;
   const notifyOn = document.getElementById('notify-enabled-toggle')?.checked || false;
   payload.notify_enabled = notifyOn;
   payload.notify_categories = notifyOn ? _notifyCategories : [];
@@ -9574,30 +9573,32 @@ async function _doSaveAllProfileSettings() {
     localStorage.setItem('baroalba_lang', currentLang);
 
     const pendingPortfolio = _wPhotos.filter(p => p.blob);
-    showToast('저장 시작 | 프로필사진:' + (!!_pendingAvatarBlob) + ' 포트폴리오:' + pendingPortfolio.length);
 
-    let newAvatarUrl = null;
     if (_pendingAvatarBlob) {
       const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
       const { error: upErr } = await db.storage.from('biz-photos').upload(path, _pendingAvatarBlob, { contentType: 'image/jpeg' });
       if (!upErr) {
-        newAvatarUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
-        if (bizRecord) await db.from('businesses').update({ photo_url: newAvatarUrl }).eq('kakao_uid', currentUser.id);
-        showToast('✅ 사진 업로드 완료');
+        const newUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
+        // 프로필 유효성 검사와 무관하게 사진만 독립 저장
+        const { error: dbErr } = await db.from('workers').upsert(
+          { kakao_uid: currentUser.id, photo_url: newUrl },
+          { onConflict: 'kakao_uid' }
+        );
+        if (dbErr) showToast('사진 저장 실패: ' + dbErr.message);
+        if (bizRecord) await db.from('businesses').update({ photo_url: newUrl }).eq('kakao_uid', currentUser.id);
       } else {
-        showToast('❌ 프로필 사진 실패: ' + upErr.message);
+        showToast('사진 업로드 실패: ' + upErr.message);
       }
       _pendingAvatarBlob = null;
     }
     for (const p of pendingPortfolio) {
       const path = `${currentUser.id}/portfolio_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
       const { error: upErr } = await db.storage.from('biz-photos').upload(path, p.blob, { contentType: 'image/jpeg' });
-      if (!upErr) { URL.revokeObjectURL(p.photo_url); showToast('✅ 포트폴리오 저장됨'); }
-      else showToast('❌ 포트폴리오 실패: ' + upErr.message);
+      if (!upErr) URL.revokeObjectURL(p.photo_url);
+      else showToast('포트폴리오 업로드 실패: ' + upErr.message);
     }
 
-    // photo_url을 upsert payload에 포함시켜 한 번에 저장 (단독 UPDATE는 RLS에서 조용히 무시될 수 있음)
-    await saveWorkerProfile(newAvatarUrl);
+    await saveWorkerProfile();
     await saveOwnerProfile();
     location.reload();
   } catch(e) {
