@@ -5043,17 +5043,18 @@ function applyJob() {
 }
 
 function _applyMsgKbResize() {
-  const inner = document.getElementById('apply-msg-modal')?.firstElementChild;
-  if (!inner) return;
-  const kb = Math.max(0, window.innerHeight - (window.visualViewport?.height ?? window.innerHeight));
-  inner.style.transform = kb > 0 ? `translateY(-${kb}px)` : '';
+  const modal = document.getElementById('apply-msg-modal');
+  if (!modal || modal.style.display === 'none') return;
+  const vp = window.visualViewport;
+  if (!vp) return;
+  modal.style.top    = vp.offsetTop + 'px';
+  modal.style.height = vp.height + 'px';
 }
 
 function closeApplyMsg() {
   if (window.visualViewport) window.visualViewport.removeEventListener('resize', _applyMsgKbResize);
-  const inner = document.getElementById('apply-msg-modal')?.firstElementChild;
-  if (inner) inner.style.transform = '';
-  document.getElementById('apply-msg-modal').style.display = 'none';
+  const modal = document.getElementById('apply-msg-modal');
+  if (modal) { modal.style.top = ''; modal.style.height = ''; modal.style.display = 'none'; }
 }
 
 async function submitApplyWithMsg(skipMsg) {
@@ -5997,11 +5998,18 @@ async function toggleBookmark(jobId) {
   if (isGuest || !currentUser) { showToast('로그인 후 북마크할 수 있어요'); return; }
   if (!jobId || !isRealJobId(jobId)) { showToast('\u{1F9EA} 테스트 공고는 북마크할 수 없어요'); return; }
 
-  const wid = await _getWorkerId();
-  if (!wid) { showToast('프로필이 없어요. 먼저 공고에 지원해주세요'); return; }
+  let wid = await _getWorkerId();
+  if (!wid) {
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
+    const { data: created } = await db.from('workers').insert({ kakao_uid: currentUser.id, name }).select('id').single();
+    if (!created) { showToast('프로필 생성 실패'); return; }
+    window._myWorkerId = created.id;
+    wid = created.id;
+  }
 
   const { data: existing } = await db.from('bookmarks')
-    .select('id').eq('worker_id', wid).eq('job_posting_id', jobId).single();
+    .select('id').eq('worker_id', wid).eq('job_posting_id', jobId).maybeSingle();
 
   if (existing) {
     await db.from('bookmarks').delete().eq('id', existing.id);
@@ -6021,7 +6029,7 @@ async function checkBookmarkState(jobId) {
     const wid = await _getWorkerId();
     if (!wid) return;
     const { data: bm } = await db.from('bookmarks')
-      .select('id').eq('worker_id', wid).eq('job_posting_id', jobId).single();
+      .select('id').eq('worker_id', wid).eq('job_posting_id', jobId).maybeSingle();
     document.getElementById('d-bookmark-btn').textContent = bm ? '\u{1F516}✅' : '\u{1F516}';
   } catch(e) {}
 }
@@ -10803,6 +10811,7 @@ async function initOwnerFeatures() {
   checkSurgeSchedules();
   checkSurgeIntervals();
   setInterval(() => { checkSurgeSchedules(); checkSurgeIntervals(); }, 60000);
+  _loadFavWorkers();
   loadMyPlaces();
   loadFavWorkers();
   loadPostings();
