@@ -5039,22 +5039,26 @@ function applyJob() {
   document.getElementById('apply-msg-count').textContent = '0';
   document.getElementById('apply-msg-modal').style.display = 'flex';
   if (window.visualViewport) window.visualViewport.addEventListener('resize', _applyMsgKbResize);
-  setTimeout(() => document.getElementById('apply-msg-text')?.focus(), 350);
+  window.addEventListener('resize', _applyMsgKbResize);
+  setTimeout(() => { document.getElementById('apply-msg-text')?.focus(); _applyMsgKbResize(); }, 400);
 }
 
 function _applyMsgKbResize() {
   const modal = document.getElementById('apply-msg-modal');
   if (!modal || modal.style.display === 'none') return;
   const vp = window.visualViewport;
-  if (!vp) return;
-  modal.style.top    = vp.offsetTop + 'px';
-  modal.style.height = vp.height + 'px';
+  const h = vp ? vp.height : window.innerHeight;
+  const t = vp ? vp.offsetTop : 0;
+  modal.style.top    = t + 'px';
+  modal.style.height = h + 'px';
+  modal.style.bottom = 'auto';
 }
 
 function closeApplyMsg() {
   if (window.visualViewport) window.visualViewport.removeEventListener('resize', _applyMsgKbResize);
+  window.removeEventListener('resize', _applyMsgKbResize);
   const modal = document.getElementById('apply-msg-modal');
-  if (modal) { modal.style.top = ''; modal.style.height = ''; modal.style.display = 'none'; }
+  if (modal) { modal.style.top = ''; modal.style.height = ''; modal.style.bottom = ''; modal.style.display = 'none'; }
 }
 
 async function submitApplyWithMsg(skipMsg) {
