@@ -7730,7 +7730,7 @@ function aiRecordSignal(category, wage, score) {
     if (prefs.totalSignals >= 3) renderAiRecommendations();
     // Supabase 비동기 저장 (기기 간 동기화)
     if (currentUser && !isGuest) {
-      db.from('workers').update({ ai_prefs: prefs }).eq('kakao_uid', currentUser.id).catch(() => {});
+      db.from('workers').update({ ai_prefs: prefs }).eq('kakao_uid', currentUser.id).then(null, () => {});
     }
   } catch(e) {}
 }
@@ -8323,8 +8323,12 @@ async function loadWorkerProfileForm() {
   const { data: w } = await db.from('workers').select('name, phone, age, birth_date, bio, experience, gender, education, region, skills, vehicles, strengths, languages, photo_url, activity_area, activity_lat, activity_lng, notify_enabled, notify_categories, notify_min_wage, ai_prefs')
     .eq('kakao_uid', currentUser.id).single();
   // pref_categories, avail_days, avail_times는 DDL 추가 후 위 SELECT에 포함할 것
-  const { data: wExtra } = await db.from('workers').select('pref_categories, avail_days, avail_times')
-    .eq('kakao_uid', currentUser.id).single().catch(() => ({ data: null }));
+  let wExtra = null;
+  try {
+    const { data: _we } = await db.from('workers').select('pref_categories, avail_days, avail_times')
+      .eq('kakao_uid', currentUser.id).maybeSingle();
+    wExtra = _we;
+  } catch(e) { /* 컬럼 미존재 시 무시 */ }
   if (!w) return;
   // 아바타: photo_url → 소셜 → 이니셜 우선순위
   {
