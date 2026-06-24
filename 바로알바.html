@@ -8747,16 +8747,18 @@ function applyCrop() {
   img2.onerror = () => showToast('❌ 이미지 로드 실패');
   img2.onload = () => {
     try {
+      console.log('[crop] 이미지 로드됨, 크기:', img2.naturalWidth, 'x', img2.naturalHeight, '크롭:', d);
       const c = document.createElement('canvas');
       c.width = 400; c.height = 400;
       c.getContext('2d').drawImage(img2, d.x, d.y, d.width, d.height, 0, 0, 400, 400);
       c.toBlob(blob => {
-        if (!blob) { showToast('❌ 이미지 변환 실패'); return; }
+        if (!blob) { console.error('[crop] toBlob 결과 null'); showToast('이미지 변환 실패', 5000); return; }
+        console.log('[crop] blob 생성 성공, 크기:', blob.size);
         cb(blob);
       }, 'image/jpeg', 0.88);
     } catch(e) {
-      showToast('❌ 크롭 처리 실패: ' + e.message);
-      console.error('[applyCrop onload]', e);
+      console.error('[crop] onload 오류:', e);
+      showToast('크롭 처리 실패: ' + e.message, 5000);
     }
   };
   img2.src = src;
@@ -9574,20 +9576,30 @@ async function _doSaveAllProfileSettings() {
 
     const pendingPortfolio = _wPhotos.filter(p => p.blob);
 
+    console.log('[photo] blob 존재:', !!_pendingAvatarBlob, '| 포트폴리오:', pendingPortfolio.length);
+
     if (_pendingAvatarBlob) {
       const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
+      console.log('[photo] Storage 업로드 시작:', path);
       const { error: upErr } = await db.storage.from('biz-photos').upload(path, _pendingAvatarBlob, { contentType: 'image/jpeg' });
       if (!upErr) {
         const newUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
-        // 프로필 유효성 검사와 무관하게 사진만 독립 저장
+        console.log('[photo] Storage 업로드 성공, URL:', newUrl);
         const { error: dbErr } = await db.from('workers').upsert(
           { kakao_uid: currentUser.id, photo_url: newUrl },
           { onConflict: 'kakao_uid' }
         );
-        if (dbErr) showToast('사진 저장 실패: ' + dbErr.message);
+        if (dbErr) {
+          console.error('[photo] DB 저장 실패:', dbErr);
+          showToast('사진 저장 실패: ' + dbErr.message, 6000);
+        } else {
+          console.log('[photo] DB 저장 성공');
+          showToast('사진 저장 완료', 4000);
+        }
         if (bizRecord) await db.from('businesses').update({ photo_url: newUrl }).eq('kakao_uid', currentUser.id);
       } else {
-        showToast('사진 업로드 실패: ' + upErr.message);
+        console.error('[photo] Storage 업로드 실패:', upErr);
+        showToast('사진 업로드 실패: ' + upErr.message, 6000);
       }
       _pendingAvatarBlob = null;
     }
@@ -9595,7 +9607,7 @@ async function _doSaveAllProfileSettings() {
       const path = `${currentUser.id}/portfolio_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
       const { error: upErr } = await db.storage.from('biz-photos').upload(path, p.blob, { contentType: 'image/jpeg' });
       if (!upErr) URL.revokeObjectURL(p.photo_url);
-      else showToast('포트폴리오 업로드 실패: ' + upErr.message);
+      else { console.error('[photo] 포트폴리오 실패:', upErr); showToast('포트폴리오 업로드 실패: ' + upErr.message, 6000); }
     }
 
     await saveWorkerProfile();
