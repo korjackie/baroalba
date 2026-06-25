@@ -5087,15 +5087,12 @@ function _applyMsgKbResize() {
   const modal = document.getElementById('apply-msg-modal');
   if (!modal || modal.style.display === 'none') return;
   const vp = window.visualViewport;
-  const visH = vp ? vp.height : window.innerHeight;
+  if (!vp) return;
+  const kbH = Math.max(0, window.innerHeight - vp.height - vp.offsetTop);
   const inner = document.getElementById('apply-msg-inner');
-  if (inner) {
-    inner.style.maxHeight = (visH - 16) + 'px';
-    setTimeout(() => {
-      const btn = document.getElementById('apply-msg-submit-btn');
-      if (btn) btn.scrollIntoView({ block: 'end', behavior: 'smooth' });
-    }, 50);
-  }
+  if (!inner) return;
+  inner.style.maxHeight = (vp.height - 20) + 'px';
+  inner.style.transform = kbH > 0 ? `translateY(-${kbH}px)` : '';
 }
 
 function closeApplyMsg() {
@@ -5103,7 +5100,7 @@ function closeApplyMsg() {
   window.removeEventListener('resize', _applyMsgKbResize);
   const modal = document.getElementById('apply-msg-modal');
   const inner = document.getElementById('apply-msg-inner');
-  if (inner) inner.style.maxHeight = '';
+  if (inner) { inner.style.maxHeight = ''; inner.style.transform = ''; }
   if (modal) { modal.style.display = 'none'; }
 }
 
@@ -8897,13 +8894,21 @@ function wPhotoDrop(e, photoId, el) {
 }
 
 function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
+  document.querySelectorAll('.dnd-ghost').forEach(g => g.remove());
   let srcEl = null, ghostEl = null;
   const sel = '[' + attr + ']';
+  const cleanup = () => {
+    if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+    if (srcEl) { srcEl.style.opacity = ''; srcEl = null; }
+    grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+  };
   grid.querySelectorAll('[draggable]').forEach(el => {
     el.addEventListener('touchstart', e => {
+      cleanup();
       srcEl = el;
       const r = el.getBoundingClientRect();
       ghostEl = el.cloneNode(true);
+      ghostEl.classList.add('dnd-ghost');
       Object.assign(ghostEl.style, {
         position:'fixed', zIndex:'9999', pointerEvents:'none', opacity:'0.75',
         width: r.width+'px', height: r.height+'px', top: r.top+'px', left: r.left+'px',
@@ -8926,16 +8931,14 @@ function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
       if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
-      if (!ghostEl) return;
-      ghostEl.remove(); ghostEl = null;
-      if (srcEl) srcEl.style.opacity = '';
-      grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+      const savedSrc = srcEl;
+      cleanup();
       const t = e.changedTouches[0];
       const under = document.elementFromPoint(t.clientX, t.clientY);
       const tgt = under?.closest(sel);
-      if (tgt && tgt !== srcEl) swapFn(srcEl.getAttribute(attr), tgt.getAttribute(attr));
-      srcEl = null;
+      if (tgt && savedSrc && tgt !== savedSrc) swapFn(savedSrc.getAttribute(attr), tgt.getAttribute(attr));
     }, { passive: true });
+    el.addEventListener('touchcancel', cleanup, { passive: true });
   });
 }
 
@@ -15975,13 +15978,21 @@ async function bizPhotoDrop(e, photoId, el) {
 }
 
 function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
+  document.querySelectorAll('.dnd-ghost').forEach(g => g.remove());
   let srcEl = null, ghostEl = null;
   const sel = '[' + attr + ']';
+  const cleanup = () => {
+    if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+    if (srcEl) { srcEl.style.opacity = ''; srcEl = null; }
+    grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+  };
   grid.querySelectorAll('[draggable]').forEach(el => {
     el.addEventListener('touchstart', e => {
+      cleanup();
       srcEl = el;
       const r = el.getBoundingClientRect();
       ghostEl = el.cloneNode(true);
+      ghostEl.classList.add('dnd-ghost');
       Object.assign(ghostEl.style, {
         position:'fixed', zIndex:'9999', pointerEvents:'none', opacity:'0.75',
         width: r.width+'px', height: r.height+'px', top: r.top+'px', left: r.left+'px',
@@ -16004,16 +16015,14 @@ function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
       if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
-      if (!ghostEl) return;
-      ghostEl.remove(); ghostEl = null;
-      if (srcEl) srcEl.style.opacity = '';
-      grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
+      const savedSrc = srcEl;
+      cleanup();
       const t = e.changedTouches[0];
       const under = document.elementFromPoint(t.clientX, t.clientY);
       const tgt = under?.closest(sel);
-      if (tgt && tgt !== srcEl) swapFn(srcEl.getAttribute(attr), tgt.getAttribute(attr));
-      srcEl = null;
+      if (tgt && savedSrc && tgt !== savedSrc) swapFn(savedSrc.getAttribute(attr), tgt.getAttribute(attr));
     }, { passive: true });
+    el.addEventListener('touchcancel', cleanup, { passive: true });
   });
 }
 
