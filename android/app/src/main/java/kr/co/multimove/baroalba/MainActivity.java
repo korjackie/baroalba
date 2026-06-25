@@ -209,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
                 intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("image/*");
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             }
             startActivityForResult(intent, REQ_FILE);
             return true;
