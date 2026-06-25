@@ -5554,6 +5554,13 @@ window._onFCMToken = function(token) {
         });
       }
     }
+    // 지원 메시지 모달 키보드 처리 (네이티브 IME 높이 기반, dp = CSS px)
+    var am = document.getElementById('apply-msg-modal');
+    var ai = document.getElementById('apply-msg-inner');
+    if (am && am.style.display === 'flex' && ai) {
+      ai.style.transform = dp > 80 ? 'translateY(-' + dp + 'px)' : '';
+      ai.style.maxHeight = dp > 80 ? (window.innerHeight - dp - 60) + 'px' : '';
+    }
   };
 
   // 브라우저 환경 폴백 (WebView 외에서 접속 시)
