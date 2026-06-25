@@ -4621,7 +4621,16 @@ function renderTodayPick() {}
 // ── 공고 상세 ─────────────────────────────────────────────
 function openDetail(jobId) {
   const job = jobs.find(j => j.id === jobId);
-  if (!job) return;
+  if (!job) {
+    db.from('job_postings').select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
+      start_time, duration_hours, needed_count, filled_count, description, biz_name,
+      surge_enabled, surge_amount, surge_interval_min, surge_max_wage, wage_delta,
+      work_type, same_day_payment, noshow_deposit, age_limit, return_bonus,
+      businesses(name, rating, kindness_rating, review_count)`)
+      .eq('id', jobId).maybeSingle()
+      .then(({ data }) => { if (data) { jobs.push(data); openDetail(jobId); } });
+    return;
+  }
   selectedJobId = jobId;
   if (job.category) aiRecordSignal(job.category, job.current_wage, 0.5);
 
@@ -7826,7 +7835,7 @@ function renderAiRecommendations() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
-    if (!scored.length) return;
+    if (!scored.length) { el.style.display = 'none'; return; }
 
     el.style.display = 'block';
     el.innerHTML = `
