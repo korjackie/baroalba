@@ -2274,9 +2274,9 @@
                 <span id="worker-photos-count" style="font-size:11px;color:#aaa;font-weight:600">0/5</span>
               </div>
               <div id="worker-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
-              <label id="worker-photos-add-btn" style="display:flex;align-items:center;justify-content:center;height:72px;background:#fff;border:2px dashed #ddd;border-radius:10px;cursor:pointer;margin-top:6px">
+              <label id="worker-photos-add-btn" onclick="showPhotoTip(event)" style="display:flex;align-items:center;justify-content:center;height:72px;background:#fff;border:2px dashed #ddd;border-radius:10px;cursor:pointer;margin-top:6px">
                 <span style="font-size:28px;color:#ccc;line-height:1">+</span>
-                <input type="file" accept="image/*" multiple style="display:none" onchange="uploadWorkerPhoto(this)">
+                <input id="worker-photos-input" type="file" accept="image/*" multiple style="display:none" onchange="uploadWorkerPhoto(this)">
               </label>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
@@ -9612,6 +9612,10 @@ function calcAgeFromBirth(yymmdd) {
 
 async function saveWorkerProfile() {
   if (!currentUser) return;
+  if (!localStorage.getItem('baro_banned_agreed')) {
+    checkBannedAgree(() => saveWorkerProfile());
+    return;
+  }
   const birthVal = document.getElementById('worker-birth').value.trim();
   if (birthVal && !calcAgeFromBirth(birthVal)) {
     showToast('생년월일을 올바르게 입력해주세요 (예: 990115)');
@@ -16181,5 +16185,93 @@ async function deleteBizPhoto(photoId) {
     <button id="payment-confirm-btn" onclick="requestTossPayment()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">결제하기</button>
   </div>
 </div>
+
+<!-- ── 금지행위 동의 바텀시트 ── -->
+<div id="banned-agree-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:7100;align-items:flex-end">
+  <div style="background:#fff;border-radius:28px 28px 0 0;width:100%;padding:28px 24px 40px;animation:slideUp 0.3s ease;max-height:85dvh;overflow-y:auto">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
+    <div style="font-size:20px;font-weight:800;color:#222;text-align:center;margin-bottom:6px">알바생 활동 전 필수 동의</div>
+    <div style="font-size:13px;color:#888;text-align:center;margin-bottom:20px">아래 금지 행위를 확인하고 동의해주세요</div>
+    <div style="background:#FFF5F5;border:1.5px solid #FECACA;border-radius:14px;padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#C8102E;margin-bottom:10px">🚫 다음 심부름은 절대 금지입니다</div>
+      <div style="font-size:13px;color:#333;line-height:2.2">
+        • 주류(술) 구매·배달<br>
+        • 담배·전자담배 구매·배달<br>
+        • 의약품·마약류 취급<br>
+        • 성인용품 관련 심부름<br>
+        • 불법 도박·음란물 관련 행위<br>
+        • 기타 법령에 위반되는 모든 행위
+      </div>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:20px;line-height:1.7;background:#f8f8f8;border-radius:10px;padding:12px">위 금지 행위 수행 시 즉시 계정이 정지되며, 관련 법령에 따라 처벌받을 수 있습니다.</div>
+    <button onclick="confirmBannedAgree()" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">확인했습니다. 동의합니다</button>
+    <button onclick="closeBannedAgreeSheet()" style="width:100%;padding:12px;background:#f5f5f5;color:#666;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer">취소</button>
+  </div>
+</div>
+
+<!-- ── 프로필 사진 TIP 바텀시트 ── -->
+<div id="photo-tip-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:7100;align-items:flex-end">
+  <div style="background:#fff;border-radius:28px 28px 0 0;width:100%;padding:28px 24px 40px;animation:slideUp 0.3s ease">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
+    <div style="font-size:20px;font-weight:800;color:#222;text-align:center;margin-bottom:6px">사진 등록 TIP</div>
+    <div style="font-size:13px;color:#888;text-align:center;margin-bottom:20px">좋은 사진 한 장이 채용 확률을 높여줘요!</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:12px;background:#f8faff;border-radius:12px;padding:12px 14px">
+        <span style="font-size:24px">😊</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:2px">밝고 선명한 정면 사진</div>
+          <div style="font-size:12px;color:#888">얼굴이 잘 보이는 자연광 사진을 추천해요</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:#f8faff;border-radius:12px;padding:12px 14px">
+        <span style="font-size:24px">👕</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:2px">깔끔한 복장</div>
+          <div style="font-size:12px;color:#888">단정한 옷차림이 신뢰감을 줘요</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:#FFF5F5;border-radius:12px;padding:12px 14px">
+        <span style="font-size:24px">🚫</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#C8102E;margin-bottom:2px">부적절한 사진 금지</div>
+          <div style="font-size:12px;color:#888">선정적·폭력적 이미지는 계정 제재 대상이에요</div>
+        </div>
+      </div>
+    </div>
+    <button onclick="openPhotoPickerAndCloseTip()" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">사진 선택하기</button>
+    <button onclick="document.getElementById('photo-tip-overlay').style.display='none'" style="width:100%;padding:12px;background:#f5f5f5;color:#666;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer">나중에</button>
+  </div>
+</div>
+
+<script>
+// ── 금지행위 동의 바텀시트 ──────────────────────────────
+let _bannedAgreeCallback = null;
+function checkBannedAgree(callback) {
+  if (localStorage.getItem('baro_banned_agreed')) { callback(); return; }
+  _bannedAgreeCallback = callback;
+  document.getElementById('banned-agree-overlay').style.display = 'flex';
+}
+function confirmBannedAgree() {
+  localStorage.setItem('baro_banned_agreed', '1');
+  document.getElementById('banned-agree-overlay').style.display = 'none';
+  if (_bannedAgreeCallback) { _bannedAgreeCallback(); _bannedAgreeCallback = null; }
+}
+function closeBannedAgreeSheet() {
+  document.getElementById('banned-agree-overlay').style.display = 'none';
+  _bannedAgreeCallback = null;
+}
+
+// ── 프로필 사진 TIP 바텀시트 ─────────────────────────────
+function showPhotoTip(e) {
+  if (localStorage.getItem('baro_photo_tip_seen')) return;
+  e.preventDefault();
+  document.getElementById('photo-tip-overlay').style.display = 'flex';
+}
+function openPhotoPickerAndCloseTip() {
+  localStorage.setItem('baro_photo_tip_seen', '1');
+  document.getElementById('photo-tip-overlay').style.display = 'none';
+  document.getElementById('worker-photos-input').click();
+}
+</script>
 </body>
 </html>
