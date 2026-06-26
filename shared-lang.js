@@ -158,6 +158,7 @@ const TRANSLATIONS = {
     today_urgent:'오늘의 급구', ai_rec_title:'맞춤 추천', ai_rec_subtitle:'조회·스와이프 기반',
     status_ongoing:'진행중', status_not_started:'시작 전', cycle_spot:'하루만',
     nearby_no_jobs:'주변에 공고가 없어요', expand_radius:'반경 {n}km로 늘리기',
+    lesson_nearby:'내 주변 레슨/과외', lesson_tab_lesson:'🎾 레슨', lesson_tab_tutoring:'📚 과외', lesson_tab_technical:'🔧 전문기술', lesson_reg_title:'레슨/과외 등록', lesson_my_title:'내 레슨/과외 프로필', lesson_my_empty:'등록된 레슨/과외가 없어요', lesson_my_noworker:'알바생 프로필을 먼저 만들어주세요',
   },
   en: {
     nav_map:'Map', nav_swipe:'Swipe', nav_applications:'Applied', nav_chats:'Chat', nav_profile:'My Page',
@@ -233,6 +234,7 @@ const TRANSLATIONS = {
     today_urgent:"Today's Urgent", ai_rec_title:'For You', ai_rec_subtitle:'Based on views & swipes',
     status_ongoing:'Ongoing', status_not_started:'Not started', cycle_spot:'One day',
     nearby_no_jobs:'No jobs nearby', expand_radius:'Expand to {n}km',
+    lesson_nearby:'Nearby Lessons', lesson_tab_lesson:'🎾 Lesson', lesson_tab_tutoring:'📚 Tutoring', lesson_tab_technical:'🔧 Skills', lesson_reg_title:'Add Lesson', lesson_my_title:'My Lessons', lesson_my_empty:'No lessons registered', lesson_my_noworker:'Please create a worker profile first',
   },
   zh: {
     nav_map:'地图', nav_swipe:'滑动', nav_applications:'我的申请', nav_chats:'聊天', nav_profile:'我的',
@@ -308,6 +310,7 @@ const TRANSLATIONS = {
     today_urgent:'今日急聘', ai_rec_title:'为你推荐', ai_rec_subtitle:'基于浏览和滑动',
     status_ongoing:'进行中', status_not_started:'未开始', cycle_spot:'仅一天',
     nearby_no_jobs:'附近没有工作', expand_radius:'扩大到{n}公里',
+    lesson_nearby:'附近课程', lesson_tab_lesson:'🎾 课程', lesson_tab_tutoring:'📚 辅导', lesson_tab_technical:'🔧 专业技能', lesson_reg_title:'添加课程', lesson_my_title:'我的课程', lesson_my_empty:'暂无课程', lesson_my_noworker:'请先创建打工者资料',
   },
   ja: {
     nav_map:'地図', nav_swipe:'スワイプ', nav_applications:'応募履歴', nav_chats:'チャット', nav_profile:'マイページ',
@@ -383,6 +386,7 @@ const TRANSLATIONS = {
     today_urgent:'今日の急募', ai_rec_title:'おすすめ', ai_rec_subtitle:'閲覧·スワイプ基準',
     status_ongoing:'進行中', status_not_started:'開始前', cycle_spot:'1日のみ',
     nearby_no_jobs:'近くに求人なし', expand_radius:'半径{n}kmに拡大',
+    lesson_nearby:'近くのレッスン', lesson_tab_lesson:'🎾 レッスン', lesson_tab_tutoring:'📚 家庭教師', lesson_tab_technical:'🔧 専門技術', lesson_reg_title:'レッスン登録', lesson_my_title:'マイレッスン', lesson_my_empty:'登録されたレッスンなし', lesson_my_noworker:'先にアルバイト用プロフィールを作成してください',
   },
   vi: {
     nav_map:'Bản đồ', nav_swipe:'Vuốt', nav_applications:'Đã ứng tuyển', nav_chats:'Chat', nav_profile:'Trang của tôi',
@@ -458,6 +462,7 @@ const TRANSLATIONS = {
     today_urgent:'Việc gấp hôm nay', ai_rec_title:'Gợi ý cho bạn', ai_rec_subtitle:'Dựa trên lượt xem',
     status_ongoing:'Đang diễn ra', status_not_started:'Chưa bắt đầu', cycle_spot:'Một ngày',
     nearby_no_jobs:'Không có việc gần đây', expand_radius:'Mở rộng {n}km',
+    lesson_nearby:'Lớp học gần đây', lesson_tab_lesson:'🎾 Bài học', lesson_tab_tutoring:'📚 Gia sư', lesson_tab_technical:'🔧 Kỹ năng', lesson_reg_title:'Thêm lớp học', lesson_my_title:'Lớp học của tôi', lesson_my_empty:'Chưa có lớp học nào', lesson_my_noworker:'Vui lòng tạo hồ sơ ứng viên trước',
   },
   ru: {
     nav_map:'Карта', nav_swipe:'Свайп', nav_applications:'Заявки', nav_chats:'Чат', nav_profile:'Профиль',
@@ -533,6 +538,7 @@ const TRANSLATIONS = {
     today_urgent:'Срочно сегодня', ai_rec_title:'Для вас', ai_rec_subtitle:'По просмотрам',
     status_ongoing:'В процессе', status_not_started:'Не начато', cycle_spot:'Один день',
     nearby_no_jobs:'Нет вакансий рядом', expand_radius:'Расш. до {n}км',
+    lesson_nearby:'Занятия рядом', lesson_tab_lesson:'🎾 Урок', lesson_tab_tutoring:'📚 Репетитор', lesson_tab_technical:'🔧 Спецнавык', lesson_reg_title:'Добавить урок', lesson_my_title:'Мои занятия', lesson_my_empty:'Нет занятий', lesson_my_noworker:'Сначала создайте профиль работника',
   },
 };
 

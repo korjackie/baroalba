@@ -2709,19 +2709,19 @@
 <div class="full-panel" id="panel-lesson" style="z-index:360">
   <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button onclick="closeLessonPanel()" style="background:none;border:none;cursor:pointer;padding:0;color:#333;display:flex;align-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-    <div style="font-size:17px;font-weight:900;color:#222">내 주변 레슨/과외</div>
+    <div style="font-size:17px;font-weight:900;color:#222" data-i18n="lesson_nearby">내 주변 레슨/과외</div>
     <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
   </div>
   <!-- 메인 카테고리 탭 -->
   <div style="display:flex;gap:0;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button id="lp-tab-all" onclick="filterLessonMain(this,'')"
-      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #C8102E;color:#C8102E;background:#fff;cursor:pointer">전체</button>
+      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #C8102E;color:#C8102E;background:#fff;cursor:pointer" data-i18n="cat_all">전체</button>
     <button id="lp-tab-lesson" onclick="filterLessonMain(this,'레슨')"
-      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">🎾 레슨</button>
+      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer" data-i18n="lesson_tab_lesson">🎾 레슨</button>
     <button id="lp-tab-tutoring" onclick="filterLessonMain(this,'과외')"
-      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">📚 과외</button>
+      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer" data-i18n="lesson_tab_tutoring">📚 과외</button>
     <button id="lp-tab-technical" onclick="filterLessonMain(this,'전문기술')"
-      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">🔧 전문기술</button>
+      style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer" data-i18n="lesson_tab_technical">🔧 전문기술</button>
   </div>
   <!-- 서브 카테고리 칩 -->
   <div id="lesson-subcat-row" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:10px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
@@ -2736,7 +2736,7 @@
 <div class="modal-overlay" id="lesson-register-modal">
   <div class="modal" style="max-height:90dvh;overflow-y:auto">
     <div class="modal-handle"></div>
-    <div class="modal-title">레슨/과외 등록</div>
+    <div class="modal-title" data-i18n="lesson_reg_title">레슨/과외 등록</div>
     <div class="modal-sub">내 서비스를 등록해서 수강생을 모집하세요 (여러 개 등록 가능)</div>
 
     <!-- 메인 카테고리 -->
@@ -2886,7 +2886,7 @@
 <div class="full-panel" id="panel-lesson-manage" style="z-index:370">
   <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button onclick="closeLessonManagePanel()" style="background:none;border:none;cursor:pointer;padding:0;color:#333;display:flex;align-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-    <div style="font-size:17px;font-weight:900;color:#222">내 레슨/과외 프로필</div>
+    <div style="font-size:17px;font-weight:900;color:#222" data-i18n="lesson_my_title">내 레슨/과외 프로필</div>
     <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
   </div>
   <div id="my-lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
@@ -6060,30 +6060,31 @@ async function loadBookmarks() {
 async function toggleBookmark(jobId) {
   if (isGuest || !currentUser) { showToast('로그인 후 북마크할 수 있어요'); return; }
   if (!jobId || !isRealJobId(jobId)) { showToast('\u{1F9EA} 테스트 공고는 북마크할 수 없어요'); return; }
+  try {
+    let wid = await _getWorkerId();
+    if (!wid) {
+      const meta = currentUser.user_metadata || {};
+      const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
+      const { data: created, error: cerr } = await db.from('workers').insert({ kakao_uid: currentUser.id, name }).select('id').maybeSingle();
+      if (cerr || !created) { showToast('프로필 생성 실패'); return; }
+      window._myWorkerId = created.id;
+      wid = created.id;
+    }
 
-  let wid = await _getWorkerId();
-  if (!wid) {
-    const meta = currentUser.user_metadata || {};
-    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
-    const { data: created } = await db.from('workers').insert({ kakao_uid: currentUser.id, name }).select('id').single();
-    if (!created) { showToast('프로필 생성 실패'); return; }
-    window._myWorkerId = created.id;
-    wid = created.id;
-  }
+    const { data: existing } = await db.from('bookmarks')
+      .select('id').eq('worker_id', wid).eq('job_posting_id', jobId).maybeSingle();
 
-  const { data: existing } = await db.from('bookmarks')
-    .select('id').eq('worker_id', wid).eq('job_posting_id', jobId).maybeSingle();
-
-  if (existing) {
-    await db.from('bookmarks').delete().eq('id', existing.id);
-    showToast('북마크가 해제됐어요');
-    document.getElementById('d-bookmark-btn').textContent = '\u{1F516}';
-  } else {
-    const { error } = await db.from('bookmarks').insert({ worker_id: wid, job_posting_id: jobId });
-    if (error) { showToast('북마크 실패: ' + error.message); return; }
-    showToast('\u{1F516} 북마크에 추가됐어요');
-    document.getElementById('d-bookmark-btn').textContent = '\u{1F516}✅';
-  }
+    if (existing) {
+      await db.from('bookmarks').delete().eq('id', existing.id);
+      showToast('북마크가 해제됐어요');
+      document.getElementById('d-bookmark-btn').textContent = '\u{1F516}';
+    } else {
+      const { error } = await db.from('bookmarks').insert({ worker_id: wid, job_posting_id: jobId });
+      if (error) { showToast('북마크 실패: ' + error.message); return; }
+      showToast('\u{1F516} 북마크에 추가됐어요');
+      document.getElementById('d-bookmark-btn').textContent = '\u{1F516}✅';
+    }
+  } catch(e) { showToast('북마크 오류: ' + e.message); }
 }
 
 async function checkBookmarkState(jobId) {
@@ -7980,6 +7981,13 @@ function makeSwipeCard(job, isTop) {
   const isUrgent = job.status === 'urgent';
   const hasSurge = job.wage_delta > 0;
   const neededLeft = (job.needed_count||1) - (job.filled_count||0);
+  const _swLangFlag = {ko:'&#127472;&#127479;',en:'&#127482;&#127480;',zh:'&#127464;&#127475;',ja:'&#127471;&#127477;',vi:'&#127483;&#127475;',ru:'&#127479;&#127482;'};
+  const _swLangName = {ko:'한국어',en:'영어',zh:'중국어',ja:'일본어',vi:'베트남어',ru:'러시아어'};
+  const swLangBadge = (job.preferred_languages && job.preferred_languages.length)
+    ? '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">' +
+      job.preferred_languages.map(l => `<span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-weight:700;padding:2px 7px;border-radius:8px;font-size:11px">${_swLangFlag[l]||''} ${_swLangName[l]||l} 우대</span>`).join('') +
+      '</div>'
+    : '';
 
   card.style.cssText = `position:absolute;inset:0;border-radius:24px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.12);overflow:hidden;cursor:grab;touch-action:none;user-select:none;display:flex;flex-direction:column;`;
 
@@ -8069,6 +8077,7 @@ function makeSwipeCard(job, isTop) {
       <div onclick="event.stopPropagation();openDetail('${job.id}')" style="font-size:13px;color:#666;line-height:1.6;background:#f8f8f8;border-radius:12px;padding:10px 12px;cursor:pointer">
         ${(job.description||'업무 내용을 확인하려면 탭해보세요.').slice(0,70)}${(job.description||'').length>70?'…':''}
       </div>
+      ${swLangBadge}
     </div>
 
     <!-- 스와이프 힌트 -->
@@ -10909,6 +10918,7 @@ async function initOwnerFeatures() {
   _loadFavWorkers();
   loadMyPlaces();
   loadFavWorkers();
+  loadFavWorkersFromSupabase();
   loadPostings();
   loadApplicants();
   setTimeout(updateOwnerNotiBadge, 1500);
@@ -11885,10 +11895,10 @@ async function loadMyLessons() {
   if (!currentUser || isGuest) return;
   const el = document.getElementById('my-lesson-list');
   const wid = await _getWorkerId();
-  if (!wid) { el.innerHTML = '<div class="empty"><div class="empty-txt">알바생 프로필을 먼저 만들어주세요</div></div>'; return; }
+  if (!wid) { el.innerHTML = '<div class="empty"><div class="empty-txt">' + t('lesson_my_noworker') + '</div></div>'; return; }
   const { data } = await db.from('lesson_profiles').select('*').eq('worker_id', wid).order('created_at', { ascending: false });
   if (!data?.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">\u{1F9D1}‍\u{1F3EB}</div><div class="empty-txt">' + t('lesson_my_empty') + '<br><span style="font-size:12px;color:#bbb">+ 등록</span></div></div>';
     return;
   }
   const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터방문', 비대면:'💻 비대면'};
@@ -13921,7 +13931,7 @@ function setOwnerMapMode(mode) {
     if (jobsUI)  jobsUI.style.display  = 'none';
     if (radiusBadge) radiusBadge.style.display = 'none';
     if (radiusPopup) radiusPopup.style.display = 'none';
-    if (sheetCount) sheetCount.innerHTML = '주변 알바생 <span>0</span>명';
+    if (sheetCount) sheetCount.innerHTML = '바로출근 가능 <span>0</span>명';
     if (sheetList) sheetList.innerHTML = '';
     (_ownerOverlays || []).forEach(o => o.setMap(null));
     _ownerOverlays = [];
@@ -13951,9 +13961,10 @@ async function loadBarotouipList() {
   (_ownerWorkerOverlays || []).forEach(o => o.setMap(null));
   _ownerWorkerOverlays = [];
 
-  // query workers with location data
+  // query workers available now with location data
   const { data: workers, error } = await db.from('workers')
     .select('id, kakao_uid, name, photo_url, rating, review_count, phone, skills, languages, region, activity_lat, activity_lng, activity_area')
+    .eq('is_available_now', true)
     .not('activity_lat', 'is', null)
     .not('activity_lng', 'is', null)
     .not('name', 'is', null)
@@ -13961,13 +13972,13 @@ async function loadBarotouipList() {
 
   const list = error ? [] : (workers || []).filter(w => w.activity_lat && w.activity_lng);
 
-  if (countEl) countEl.textContent = list.length + '명';
+  if (countEl) countEl.textContent = '바로출근 ' + list.length + '명';
 
   if (btPanel) btPanel.style.display = 'none';
 
   if (!list.length) {
     const sheetList = document.getElementById('owner-sheet-list');
-    if (sheetList) sheetList.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:13px;margin-bottom:6px">아직 활동 지역을 설정한 알바생이 없습니다</div><div style="font-size:11px;color:#bbb">알바생이 마이페이지에서 주요 활동 지역을<br>설정하면 이 화면에 마커로 표시됩니다</div></div>';
+    if (sheetList) sheetList.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:13px;margin-bottom:6px">현재 바로출근 가능한 알바생이 없습니다</div><div style="font-size:11px;color:#bbb">알바생이 마이페이지에서 바로출근 버튼을 켜면<br>이 화면에 마커로 표시됩니다</div></div>';
     return;
   }
 
