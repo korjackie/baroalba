@@ -64,6 +64,11 @@
             </intent-filter>
         </service>
 
+        <!-- 채팅 인라인 답장 수신기 -->
+        <receiver
+            android:name=".ChatReplyReceiver"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="kr.co.multimove.baroalba.fileprovider"

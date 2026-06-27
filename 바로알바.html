@@ -3949,6 +3949,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (session) {
     currentUser = session.user;
     if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
+    if (window.AndroidBridge?.saveAuthToken) window.AndroidBridge.saveAuthToken(session.access_token);
     // 나이·언어 미리 로드
     db.from('workers').select('age, birth_date, languages').eq('kakao_uid', session.user.id).maybeSingle()
       .then(({ data: w }) => {
@@ -4000,11 +4001,23 @@ window.addEventListener('DOMContentLoaded', async () => {
   loadCategoriesWorker();
   const deepJobId = new URLSearchParams(location.search).get('job') || sessionStorage.getItem('pending_deep_job');
   if (deepJobId) sessionStorage.removeItem('pending_deep_job');
+  const deepChatId = new URLSearchParams(location.search).get('chat') || sessionStorage.getItem('pending_deep_chat');
+  if (deepChatId) sessionStorage.removeItem('pending_deep_chat');
   await loadJobs();
   if (deepJobId) openDeepLink(deepJobId);
+  if (deepChatId && currentUser) setTimeout(() => openChat(deepChatId, '채팅'), 500);
   setupRealtime();
   setupMessageNotifications();
   if (currentUser) initOwnerFeatures().catch(console.error);
+
+  // 서비스워커 메시지: 알림 탭 → 이미 열린 앱 창에 채팅 바로 열기
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data?.type === 'OPEN_CHAT' && e.data.appId) {
+        openChat(e.data.appId, '채팅');
+      }
+    });
+  }
 
   // owner.html에서 돌아올 때 탭 복원
   const tabParam = new URLSearchParams(location.search).get('tab');
@@ -6868,7 +6881,7 @@ async function _doSendWChat(content) {
       const senderName = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '알바생';
       const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
       fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ user_id:ownerUid, title:`${senderName}님으로부터 메시지`, body:pushBody, url:'/바로알바.html' })
+        body: JSON.stringify({ user_id:ownerUid, title:`${senderName}님으로부터 메시지`, body:pushBody, url:'/바로알바.html?chat='+_wchatAppId, app_id:_wchatAppId, type:'chat' })
       }).catch(()=>{});
     }
   } catch(e) {}
@@ -14481,7 +14494,7 @@ async function _doSendChat(content) {
     const ownerBiz = (typeof bizRecord !== 'undefined' && bizRecord?.name) || currentUser?.user_metadata?.full_name || '업주';
     const pushBody = content.startsWith('[img]') ? '📷 이미지를 보냈습니다' : (content.length > 40 ? content.slice(0,40)+'…' : content);
     fetch('/api/send-push', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ user_id:_chatWorkerUserId, title:`${ownerBiz}님으로부터 메시지`, body:pushBody, url:'/바로알바.html' })
+      body: JSON.stringify({ user_id:_chatWorkerUserId, title:`${ownerBiz}님으로부터 메시지`, body:pushBody, url:'/바로알바.html?chat='+_chatAppId, app_id:_chatAppId, type:'chat' })
     }).catch(()=>{});
   }
 }

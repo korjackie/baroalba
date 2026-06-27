@@ -304,6 +304,14 @@ public class MainActivity extends AppCompatActivity {
                 webView.postDelayed(() -> webView.scrollKbGuard = false, 1500);
             }
         }
+
+        // Supabase 인증 토큰 저장 → 인라인 알림 답장 시 사용
+        @JavascriptInterface
+        public void saveAuthToken(String token) {
+            if (token == null || token.isEmpty()) return;
+            getSharedPreferences("baroalba", MODE_PRIVATE)
+                .edit().putString("supabase_token", token).apply();
+        }
     }
 
     @Override

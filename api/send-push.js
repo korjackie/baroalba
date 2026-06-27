@@ -14,8 +14,12 @@ async function getFCMAccessToken() {
   return token.token;
 }
 
-async function sendFCM(fcmToken, title, body, url) {
+async function sendFCM(fcmToken, title, body, url, appId, type) {
   const accessToken = await getFCMAccessToken();
+  const fcmData = { url: url || '/바로알바.html' };
+  if (appId) fcmData.app_id = String(appId);
+  if (type) fcmData.type = type;
+
   const res = await fetch(
     `https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`,
     {
@@ -28,7 +32,7 @@ async function sendFCM(fcmToken, title, body, url) {
         message: {
           token: fcmToken,
           notification: { title, body },
-          data: { url: url || '/바로알바.html' },
+          data: fcmData,
           android: {
             priority: 'high',
             notification: { sound: 'default', channel_id: 'baroalba_channel' }
@@ -47,7 +51,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { user_id, title, body, url } = req.body || {};
+  const { user_id, title, body, url, app_id, type } = req.body || {};
   if (!user_id) return res.status(400).json({ error: 'user_id required' });
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -67,7 +71,7 @@ module.exports = async function handler(req, res) {
     if (!fcmData?.length || !fcmData[0]?.token) {
       return res.status(404).json({ error: 'No FCM token found' });
     }
-    const ok = await sendFCM(fcmData[0].token, title, body, url);
+    const ok = await sendFCM(fcmData[0].token, title, body, url, app_id, type);
     if (ok) return res.json({ ok: true, via: 'fcm' });
     return res.status(500).json({ error: 'FCM send failed' });
 

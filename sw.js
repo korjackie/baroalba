@@ -1,4 +1,4 @@
-﻿const CACHE = 'baroalba-v268';
+﻿const CACHE = 'baroalba-v269';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
@@ -64,12 +64,34 @@ self.addEventListener('push', e => {
       vibrate: [200, 100, 200],
       tag: data.tag || ('msg-' + Date.now()),
       renotify: true,
-      data: data.url || './바로알바.html',
+      data: {
+        url: data.url || './바로알바.html',
+        appId: data.app_id || null,
+        type: data.type || null,
+      },
     })
   );
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow(e.notification.data));
+  const { url, appId, type } = e.notification.data || {};
+  const targetUrl = url || './바로알바.html';
+
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(wins => {
+      const appWin = wins.find(w =>
+        w.url.includes('바로알바.html') ||
+        w.url.includes('baroalba.multimove.co.kr')
+      );
+      if (appWin) {
+        appWin.focus();
+        if (appId && type === 'chat') {
+          appWin.postMessage({ type: 'OPEN_CHAT', appId });
+        }
+        return;
+      }
+      return clients.openWindow(targetUrl);
+    })
+  );
 });
