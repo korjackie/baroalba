@@ -228,7 +228,7 @@
     }
     .v-chip.active { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; font-weight: 700; }
     .s-chip.active { background: #fff0f0; border-color: #FFAAAA; color: var(--red); font-weight: 700; }
-    .l-chip.active { background: #F0FDF4; border-color: #16a34a; color: #16a34a; font-weight: 700; }
+    .l-chip.active, .l-chip.l-chip-on { background: #F0FDF4; border-color: #16a34a; color: #16a34a; font-weight: 700; }
     .lang-level-btn { padding:5px 10px; border-radius:6px; border:1.5px solid #e5e7eb; background:#f8f8f8; color:#666; font-size:12px; font-weight:600; cursor:pointer; }
     .lang-level-btn.active { background:#F0FDF4; border-color:#16a34a; color:#16a34a; font-weight:700; }
 
@@ -12520,8 +12520,16 @@ async function quickTogglePosting(jobId, currentStatus) {
 function relistPosting(jobId) {
   const p = postings.find(x => x.id === jobId);
   if (!p) return;
-  showConfirm('모집 상태가 오픈으로 변경됩니다.', async () => {
-    const { error } = await db.from('job_postings').update({ status: 'open', current_wage: p.base_wage }).eq('id', jobId);
+  showConfirm('기존 지원자 데이터가 초기화되고\n새로 모집을 시작합니다.', async () => {
+    // 기존 지원자 삭제 (재공고 시 새 라운드)
+    await db.from('applications').delete().eq('job_posting_id', jobId);
+    // 공고 초기화: 상태·임금 복원, 충원수 리셋, 마감일 제거
+    const { error } = await db.from('job_postings').update({
+      status: 'open',
+      current_wage: p.base_wage,
+      filled_count: 0,
+      work_end_date: null
+    }).eq('id', jobId);
     if (error) { showToast('재등록 실패: ' + error.message); return; }
     showToast('✅ 공고가 재등록됐습니다');
     closePostingDetail(); loadPostings();
