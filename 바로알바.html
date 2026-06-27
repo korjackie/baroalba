@@ -1060,6 +1060,9 @@
     .deposit-wrap { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#FFF1F2; border:1.5px solid #FECDD3; border-radius:14px; cursor:pointer; }
     .deposit-track { width:44px; height:24px; background:#ddd; border-radius:12px; position:relative; transition:background 0.2s; flex-shrink:0; }
     .deposit-knob  { position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:left 0.2s; }
+    .remote-wrap  { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:14px; cursor:pointer; }
+    .remote-track { width:44px; height:24px; background:#ddd; border-radius:12px; position:relative; transition:background 0.2s; flex-shrink:0; }
+    .remote-knob  { position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:left 0.2s; }
     .deposit-amt-btn { padding:7px 14px; background:#fff; border:1.5px solid #ddd; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; color:#555; transition:all 0.15s; }
     .deposit-amt-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
     /* ── 채팅 스와이프 나가기 ── */
@@ -1243,6 +1246,7 @@
       <button class="filter-drop-btn" id="flt-lang-btn" onclick="toggleLangFilter()" style="flex-shrink:0;display:none">&#127760; 내 언어</button>
       <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0" data-i18n-btn="filter_lesson">레슨/과외 ▾</button>
       <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0" data-i18n-btn="filter_technical">전문기술 ▾</button>
+      <div class="chip" id="chip-remote" onclick="toggleRemoteFilter(this)" style="flex-shrink:0">🖥️ 비대면</div>
     </div>
     <div class="filter-bar-actions">
       <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px">필터</div>
@@ -1690,6 +1694,11 @@
     </div>
 
     <div class="detail-desc" id="d-desc"></div>
+
+    <!-- 비대면 배지 -->
+    <div id="d-remote-badge" style="display:none;margin:0 20px 12px">
+      <span style="display:inline-flex;align-items:center;gap:8px;background:#F0F9FF;color:#0369A1;font-size:14px;font-weight:900;padding:11px 18px;border-radius:14px;border:2px solid #BAE6FD;width:100%;box-sizing:border-box">🖥️ 비대면 근무 — 재택·PC 작업, 전국 어디서나 지원 가능</span>
+    </div>
 
     <!-- 위치 섹션 -->
     <div id="d-location-section" style="display:none;margin:0 20px 16px">
@@ -3651,7 +3660,21 @@
         </div>
       </div>
 
+      <!-- 비대면 근무 토글 -->
       <div class="form-group">
+        <div class="remote-wrap" onclick="toggleRemoteMode(document.getElementById('f-is-remote').value !== 'true')">
+          <div>
+            <div style="font-size:14px;font-weight:800;color:#0369A1">🖥️ 비대면 근무</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">재택·PC작업 등 현장 방문 불필요 — 전국 알바생 지원 가능</div>
+          </div>
+          <div class="remote-track" id="remote-track">
+            <div class="remote-knob" id="remote-knob"></div>
+          </div>
+        </div>
+        <input type="hidden" id="f-is-remote" value="false">
+      </div>
+
+      <div class="form-group" id="location-form-group">
         <label class="form-label" data-i18n="location_label">위치</label>
 
         <!-- 등록된 내 장소에서 선택 -->
@@ -3871,6 +3894,7 @@ let selectedDistrict = null;    // 구 필터
 const _subwayCache = {};        // 지하철역 검색 캐시
 let selectedCategories = new Set();  // 업종 복수 선택
 let selectedWorkTypes  = new Set();  // 형태 복수 선택 (regular/short/spot/errand)
+let filterRemote = false;
 let includeLesson = false;           // 레슨/과외 마커 포함
 let urgentOnly = false;
 let sortByWage = false;
@@ -4130,7 +4154,7 @@ async function openDeepLink(jobId) {
       .select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
                start_time, duration_hours, needed_count, filled_count,
                description, surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
-               work_type, same_day_payment, noshow_deposit,
+               work_type, same_day_payment, noshow_deposit, is_remote,
                businesses(name, rating, kindness_rating, review_count)`)
       .eq('id', jobId).single();
     if (!data) { showToast('해당 공고를 찾을 수 없어요' + (dlErr ? ': ' + dlErr.message : '')); return; }
@@ -4143,10 +4167,12 @@ async function openDeepLink(jobId) {
       distance_m: null,
     };
     jobs = [job, ...jobs];
-    // 지도 해당 위치로 이동
-    saveMapCenter(job.lat, job.lng);
-    kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
-    renderMarkers();
+    // 지도 해당 위치로 이동 (비대면 공고는 lat/lng 없음)
+    if (job.lat && job.lng) {
+      saveMapCenter(job.lat, job.lng);
+      kakaoMap.setCenter(new kakao.maps.LatLng(job.lat, job.lng));
+      renderMarkers();
+    }
   }
   openDetail(job.id);
 }
@@ -4196,6 +4222,44 @@ async function loadJobs() {
 
     let result = data || [];
 
+    // is_remote 패치 (nearby_jobs RPC가 미포함 시 보정)
+    if (result.length && result[0].is_remote === undefined) {
+      const _remIds = result.map(j => j.id);
+      const { data: _remFix } = await db.from('job_postings').select('id, is_remote').in('id', _remIds);
+      if (_remFix) {
+        const _remMap = new Map(_remFix.map(d => [d.id, d.is_remote || false]));
+        result = result.map(j => ({ ...j, is_remote: _remMap.get(j.id) ?? false }));
+      }
+    }
+
+    // 비대면 공고 별도 로드 (lat/lng=null → nearby_jobs 미포함)
+    const { data: _remotePosts } = await db.from('job_postings')
+      .select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
+               start_time, duration_hours, needed_count, filled_count, description,
+               surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
+               work_type, same_day_payment, noshow_deposit, age_limit, return_bonus,
+               preferred_languages, is_remote, work_end_date, work_days,
+               businesses(name, rating, kindness_rating, review_count)`)
+      .eq('is_remote', true)
+      .in('status', ['open', 'urgent'])
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if (_remotePosts) {
+      const _existIds = new Set(result.map(j => j.id));
+      for (const rj of _remotePosts) {
+        if (!_existIds.has(rj.id)) {
+          const _rb = rj.businesses || {};
+          result.push({
+            ...rj,
+            wage_delta: (rj.current_wage || 0) - (rj.base_wage || 0),
+            biz_name: _rb.name || '', biz_rating: _rb.rating,
+            biz_kindness: _rb.kindness_rating,
+            distance_m: null,
+          });
+        }
+      }
+    }
+
     // 이미 지원한 공고 → 제외하지 않고 applied_status 마킹 (그레이 표시용)
     if (currentUser && !isGuest) {
       const wid = await _getWorkerId() || '';
@@ -4244,6 +4308,7 @@ async function loadJobs() {
       });
     }
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
+    if (filterRemote) result = result.filter(j => j.is_remote);
     if (_langFilterActive && _myLangs.length) result = result.filter(j => (j.preferred_languages || []).some(l => _myLangs.includes(l)));
     if      (sortMode === 'wage_desc') result.sort((a,b) => b.current_wage - a.current_wage);
     else if (sortMode === 'wage_asc')  result.sort((a,b) => a.current_wage - b.current_wage);
@@ -4539,7 +4604,7 @@ function renderList() {
     const isErrand = job.work_type === 'errand';
     const _ap0 = (job.address||'').split('\n');
     const _da0 = _ap0[0] ? (_ap0[1] ? _ap0[0] + ' · ' + _ap0[1].split(' ').slice(0,3).join(' ') : _ap0[0]) : null;
-    const dist = _distStr(job.distance_m, job.lat, job.lng, _da0);
+    const dist = job.is_remote ? '<span style="color:#0369A1;font-weight:700;font-size:11px">🖥️ 비대면</span>' : _distStr(job.distance_m, job.lat, job.lng, _da0);
     const startStr = job.start_time ? formatTime(job.start_time) : '미정';
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
     const appSt = job.applied_status;
@@ -4583,6 +4648,7 @@ function renderList() {
       </div>
       ${surgeTimer}
       <div class="card-tags">
+        ${job.is_remote ? '<span class="tag" style="background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD;font-weight:700">🖥️ 비대면</span>' : ''}
         ${isErrand ? '<span class="tag" style="background:#F3E8FF;color:#7C3AED;font-weight:700">심부름</span>' : ''}
         ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:700">단기</span>' : ''}
         ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:700">정기</span>' : ''}
@@ -4647,7 +4713,7 @@ function openDetail(jobId) {
     db.from('job_postings').select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
       start_time, duration_hours, needed_count, filled_count, description, biz_name,
       surge_enabled, surge_amount, surge_interval_min, surge_max_wage, wage_delta,
-      work_type, same_day_payment, noshow_deposit, age_limit, return_bonus,
+      work_type, same_day_payment, noshow_deposit, age_limit, return_bonus, is_remote,
       businesses(name, rating, kindness_rating, review_count)`)
       .eq('id', jobId).maybeSingle()
       .then(({ data }) => { if (data) { jobs.push(data); openDetail(jobId); } });
@@ -4660,7 +4726,7 @@ function openDetail(jobId) {
   const hasSurge = job.wage_delta > 0;
   const _ap2 = (job.address||'').split('\n');
   const _da2 = _ap2[0] ? (_ap2[1] ? _ap2[0] + ' · ' + _ap2[1].split(' ').slice(0,3).join(' ') : _ap2[0]) : null;
-  const dist = _distStr(job.distance_m, job.lat, job.lng, _da2);
+  const dist = job.is_remote ? '🖥️ 비대면' : _distStr(job.distance_m, job.lat, job.lng, _da2);
 
   document.getElementById('d-status').textContent = isUrgent ? '\u{1F525} 급구' : '모집중';
   document.getElementById('d-status').className = `detail-status ${isUrgent ? 'status-urgent' : 'status-open'}`;
@@ -4753,6 +4819,9 @@ function openDetail(jobId) {
     document.getElementById('d-surge').style.display = 'none';
     document.getElementById('d-base-wage').textContent = '';
   }
+
+  // 비대면 배지
+  document.getElementById('d-remote-badge').style.display = job.is_remote ? 'block' : 'none';
 
   // 당일정산 배지
   document.getElementById('d-same-day').style.display = job.same_day_payment ? 'block' : 'none';
@@ -12716,10 +12785,11 @@ function openPostingForm() {
   document.getElementById('surge-knob').style.left = '2px';
   document.getElementById('surge-settings').style.display = 'none';
   document.getElementById('surge-preview').textContent = '';
-  // 당일정산 + 노쇼보증금 + 재방문인센티브 초기화
+  // 당일정산 + 노쇼보증금 + 재방문인센티브 + 비대면 초기화
   setSameDay(false);
   setDeposit(false);
   setReturnBonusOn(false);
+  toggleRemoteMode(false);
   renderMyPlacesQuick();
   // 기본 장소가 있으면 자동 적용
   const defaultPlace = _bizPlaces.find(p => p.is_default);
@@ -12849,6 +12919,7 @@ function openEditForm(jobId) {
   const rb = p.return_bonus || 0;
   setReturnBonusOn(rb > 0);
   if (rb > 0) setReturnBonus(rb);
+  toggleRemoteMode(p.is_remote || false);
   renderMyPlacesQuick();
   document.getElementById('form-overlay').classList.add('open');
   const _fab = document.getElementById('posting-fab');
@@ -13233,10 +13304,11 @@ async function submitPosting() {
   }
   if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
   if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
-  // 위치는 반드시 탭에서 명시적으로 설정해야 함 (제출 시 자동 지오코딩 없음)
-  const finalLat = parseFloat(document.getElementById('f-lat').value);
-  const finalLng = parseFloat(document.getElementById('f-lng').value);
-  if (isNaN(finalLat) || isNaN(finalLng) || !finalLat || !finalLng) {
+  // 비대면 공고는 위치 불필요
+  const _isRemote = document.getElementById('f-is-remote').value === 'true';
+  const finalLat = _isRemote ? null : parseFloat(document.getElementById('f-lat').value);
+  const finalLng = _isRemote ? null : parseFloat(document.getElementById('f-lng').value);
+  if (!_isRemote && (isNaN(finalLat) || isNaN(finalLng) || !finalLat || !finalLng)) {
     const locEl = document.getElementById('location-result');
     locEl.style.display = 'block';
     locEl.style.color = 'var(--red)';
@@ -13300,6 +13372,7 @@ async function submitPosting() {
     holiday_pay:        workType === 'regular' ? holidayPay : false,
     age_limit:          document.getElementById('f-age-limit').value === 'true',
     preferred_languages: JSON.parse(document.getElementById('f-pref-langs')?.value || '[]'),
+    is_remote:          document.getElementById('f-is-remote').value === 'true',
   };
 
   const btn = document.getElementById('submit-btn');
@@ -13455,6 +13528,21 @@ function toggleSurge() {
   knob.style.left          = surgeOn ? '22px' : '2px';
   settings.style.display   = surgeOn ? 'block' : 'none';
   updateSurgePreview();
+}
+
+// ── 비대면 근무 토글 ─────────────────────────────────────
+function toggleRemoteMode(val) {
+  document.getElementById('f-is-remote').value = val ? 'true' : 'false';
+  document.getElementById('remote-track').style.background = val ? '#0369A1' : '#ddd';
+  document.getElementById('remote-knob').style.left = val ? '22px' : '2px';
+  document.getElementById('location-form-group').style.display = val ? 'none' : 'block';
+}
+
+// ── 비대면 필터 토글 ─────────────────────────────────────
+function toggleRemoteFilter(el) {
+  filterRemote = !filterRemote;
+  el.classList.toggle('active', filterRemote);
+  loadJobs();
 }
 
 // ── 당일 정산 토글 ────────────────────────────────────────
