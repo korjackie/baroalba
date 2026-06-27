@@ -1687,8 +1687,8 @@
         <div class="info-label">필요 인원</div>
         <div class="info-val" id="d-needed"></div>
       </div>
-      <div class="info-item">
-        <div class="info-label">거리</div>
+      <div class="info-item" id="d-dist-item">
+        <div class="info-label" id="d-dist-label">거리</div>
         <div class="info-val" id="d-dist"></div>
       </div>
     </div>
@@ -1985,7 +1985,7 @@
 <!-- 하단 내비게이션 -->
 <div class="bottom-nav">
   <button class="nav-item active" onclick="setNav(this, 'map')">
-    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
     <div class="nav-label">지도</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'swipe')">
@@ -3423,7 +3423,9 @@
         <div onclick="openOwnerAccountInfoModal()" style="flex:1;display:flex;align-items:center;justify-content:center;padding:15px 16px;cursor:pointer;border-right:1px solid #f0f0f0;-webkit-tap-highlight-color:transparent">
           <div style="font-size:15px;font-weight:700;color:#222;text-align:center">회원정보 변경</div>
         </div>
-        <div onclick="if(confirm('로그아웃 하시겠어요?'))doLogout()" style="flex:1;display:flex;align-items:center;justify-content:center;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;font-size:15px;font-weight:700;color:#C8102E">로그아웃</div>
+        <div onclick="showConfirm('언제든 다시 로그인할 수 있어요.',doLogout,{icon:'🚪',title:'로그아웃',okLabel:'로그아웃',okBg:'#374151'})" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;font-size:15px;font-weight:700;color:#666">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          로그아웃</div>
       </div>
     </div>
 
@@ -4403,6 +4405,7 @@ function renderMarkers() {
   };
 
   jobs.forEach(job => {
+    if (!job.lat || !job.lng) return;
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
     const wageStr = (job.current_wage / 10000).toFixed(1) + '만';
@@ -4779,6 +4782,10 @@ function openDetail(jobId) {
   document.getElementById('d-duration').textContent = job.duration_hours + '시간';
   document.getElementById('d-needed').textContent = `${job.needed_count - job.filled_count}/${job.needed_count}명`;
   document.getElementById('d-dist').textContent = dist;
+  const _distLabel = document.getElementById('d-dist-label');
+  const _distItem  = document.getElementById('d-dist-item');
+  if (_distLabel) _distLabel.textContent = job.is_remote ? '근무 방식' : '거리';
+  if (_distItem)  _distItem.style.background = job.is_remote ? '#F0F9FF' : '';
   // GPS가 없으면 역지오코딩으로 거리 셀 주소 표시
   if (job.lat && job.lng && !window._myLat && typeof kakao !== 'undefined' && kakao.maps?.services) {
     const _gc = new kakao.maps.services.Geocoder();
@@ -5165,22 +5172,24 @@ function applyJob() {
     return;
   }
 
+  const _openApplyModal = () => {
+    const job = jobs.find(j => j.id === selectedJobId);
+    document.getElementById('apply-msg-job-title').textContent = job ? job.title + ' · ' + (job.biz_name || '') : '';
+    document.getElementById('apply-msg-text').value = '';
+    document.getElementById('apply-msg-count').textContent = '0';
+    document.getElementById('apply-msg-modal').style.display = 'flex';
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', _applyMsgKbResize);
+    window.addEventListener('resize', _applyMsgKbResize);
+    setTimeout(() => { document.getElementById('apply-msg-text')?.focus(); _applyMsgKbResize(); }, 400);
+  };
   // 노쇼 보증금 동의 확인
   const depositEl = document.getElementById('d-deposit');
   if (depositEl && depositEl.style.display !== 'none') {
     const depositTxt = document.getElementById('d-deposit-badge')?.textContent || '노쇼 보증금';
-    if (!confirm(depositTxt + '\n\n이 공고는 노쇼 보증금이 설정되어 있습니다.\n지원 시 동의한 것으로 간주됩니다.\n\n계속 지원하시겠어요?')) return;
+    showConfirm('지원 시 보증금에 동의한 것으로 간주됩니다.', _openApplyModal, {icon:'🛡️', title:depositTxt, okLabel:'동의하고 지원'});
+    return;
   }
-
-  // 지원 메시지 모달 열기
-  const job = jobs.find(j => j.id === selectedJobId);
-  document.getElementById('apply-msg-job-title').textContent = job ? job.title + ' · ' + (job.biz_name || '') : '';
-  document.getElementById('apply-msg-text').value = '';
-  document.getElementById('apply-msg-count').textContent = '0';
-  document.getElementById('apply-msg-modal').style.display = 'flex';
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', _applyMsgKbResize);
-  window.addEventListener('resize', _applyMsgKbResize);
-  setTimeout(() => { document.getElementById('apply-msg-text')?.focus(); _applyMsgKbResize(); }, 400);
+  _openApplyModal();
 }
 
 function _applyMsgKbResize() {
@@ -7929,27 +7938,43 @@ function renderAiRecommendations() {
 
     if (!scored.length) { el.style.display = 'none'; return; }
 
+    // 카테고리별 그라디언트 배경
+    const _CAT_BG = {
+      'F&B':'linear-gradient(135deg,#FFF7ED,#FEE2E2)',
+      '물류':'linear-gradient(135deg,#F5F3FF,#EDE9FE)',
+      '판매':'linear-gradient(135deg,#F0FDF4,#DCFCE7)',
+      '청소':'linear-gradient(135deg,#F0F9FF,#DBEAFE)',
+      '이벤트':'linear-gradient(135deg,#FDF4FF,#FAE8FF)',
+      '심부름':'linear-gradient(135deg,#F5F3FF,#EDE9FE)',
+    };
+    const _getBg = cat => _CAT_BG[cat] || 'linear-gradient(135deg,#F8FAFC,#F1F5F9)';
+
     el.style.display = 'block';
     el.innerHTML = `
-      <div style="padding:12px 0 4px;display:flex;align-items:center;gap:6px">
-        <span id="ai-rec-title" style="font-size:13px;font-weight:900;color:#222">✨ ${t('ai_rec_title')}</span>
-        <span id="ai-rec-subtitle" style="font-size:11px;color:#bbb;font-weight:600">${t('ai_rec_subtitle')}</span>
+      <div style="padding:12px 0 8px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:7px">
+          <div style="width:22px;height:22px;background:linear-gradient(135deg,#FF6B6B,#C8102E);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:900;flex-shrink:0">✦</div>
+          <span style="font-size:13px;font-weight:900;color:#222">${t('ai_rec_title')}</span>
+        </div>
+        <span style="font-size:11px;color:#ccc;font-weight:600">${t('ai_rec_subtitle')}</span>
       </div>
-      <div style="display:flex;gap:10px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      <div style="display:flex;gap:10px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
         ${scored.map(({ job: j }) => {
           const wage = (j.current_wage || 0).toLocaleString();
           const cat = j.category || '';
           const emoji = CAT_EMOJI[cat] || '💼';
           const urgent = j.status === 'urgent';
+          const startStr = j.start_time ? formatTime(j.start_time) : '';
           return `
-          <div onclick="openDetail('${j.id}')" style="flex-shrink:0;width:150px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);cursor:pointer;border:${urgent ? '2px solid #FF9500' : '1px solid #f0f0f0'}">
-            <div style="padding:10px 12px 8px;background:#f8f9fa">
-              <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
-              <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.biz_name || j.title}</div>
+          <div onclick="openDetail('${j.id}')" style="flex-shrink:0;width:140px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);cursor:pointer;border:${urgent ? '2px solid #FF9500' : '1px solid #f0f0f0'}">
+            <div style="height:70px;background:${_getBg(cat)};display:flex;align-items:center;justify-content:center;position:relative">
+              <span style="font-size:30px;line-height:1">${emoji}</span>
+              ${urgent ? '<span style="position:absolute;top:6px;right:6px;font-size:9px;font-weight:900;background:#FF9500;color:#fff;padding:2px 6px;border-radius:8px">ASAP</span>' : ''}
             </div>
-            <div style="padding:8px 10px">
-              <div style="font-size:14px;font-weight:900;color:var(--red)">${wage}원</div>
-              <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">${cat}${urgent ? ' · 🔥급구' : ''}</div>
+            <div style="padding:9px 11px 11px">
+              <div style="font-size:11px;font-weight:800;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${j.biz_name || j.title}</div>
+              <div style="font-size:15px;font-weight:900;color:var(--red)">${wage}원</div>
+              <div style="font-size:10px;color:#aaa;font-weight:700;margin-top:2px">${cat}${startStr ? ' · ' + startStr : ''}</div>
             </div>
           </div>`;
         }).join('')}
@@ -9252,15 +9277,16 @@ async function reuploadOtherCert(filename, input) {
   showToast('✅ 파일이 변경됐습니다');
 }
 
-async function deleteOtherCert(filename) {
-  if (!confirm('이 서류를 삭제하시겠습니까?')) return;
-  await db.storage.from('health-certs').remove([`${currentUser.id}/${filename}`]);
-  const meta = await getDocMeta();
-  delete meta[filename];
-  await setDocMeta(meta);
-  const el = document.querySelector(`[data-path="${filename}"]`);
-  if (el) el.remove();
-  showToast('삭제됐습니다');
+function deleteOtherCert(filename) {
+  showConfirm('삭제 후 복구할 수 없습니다.', async () => {
+    await db.storage.from('health-certs').remove([`${currentUser.id}/${filename}`]);
+    const meta = await getDocMeta();
+    delete meta[filename];
+    await setDocMeta(meta);
+    const el = document.querySelector(`[data-path="${filename}"]`);
+    if (el) el.remove();
+    showToast('삭제됐습니다');
+  }, {icon:'🗑️', title:'서류 삭제', okLabel:'삭제', danger:true});
 }
 
 async function uploadDoc(certType, input) {
@@ -9930,21 +9956,21 @@ async function changePassword() {
   msg.style.display = 'block';
 }
 
-async function deleteUserAccount() {
-  if (!confirm('정말 탈퇴하시겠어요? 공고, 지원 이력 등 모든 데이터가 삭제됩니다.')) return;
-  const uid = currentUser?.id;
-  if (!uid) return;
-  // 업체 ID 먼저 조회 (공고 삭제에 필요)
-  const { data: biz } = await db.from('businesses').select('id').eq('kakao_uid', uid).single();
-  if (biz?.id) {
-    await db.from('job_postings').delete().eq('business_id', biz.id);
-    await db.from('businesses').delete().eq('id', biz.id);
-  }
-  const { error } = await db.rpc('delete_user_account', { uid });
-  if (error) { showToast('탈퇴 실패: ' + error.message); return; }
-  await db.auth.signOut();
-  localStorage.removeItem('baroalba_guest');
-  location.href = '/login.html';
+function deleteUserAccount() {
+  showConfirm('공고, 지원 이력 등 모든 데이터가 삭제됩니다.', async () => {
+    const uid = currentUser?.id;
+    if (!uid) return;
+    const { data: biz } = await db.from('businesses').select('id').eq('kakao_uid', uid).single();
+    if (biz?.id) {
+      await db.from('job_postings').delete().eq('business_id', biz.id);
+      await db.from('businesses').delete().eq('id', biz.id);
+    }
+    const { error } = await db.rpc('delete_user_account', { uid });
+    if (error) { showToast('탈퇴 실패: ' + error.message); return; }
+    await db.auth.signOut();
+    localStorage.removeItem('baroalba_guest');
+    location.href = '/login.html';
+  }, {icon:'🚫', title:'정말 탈퇴하시겠어요?', okLabel:'탈퇴', danger:true});
 }
 
 function goToLogin() {
@@ -10873,25 +10899,26 @@ function openEditCommPost() {
     });
 }
 
-async function deleteCommPost() {
+function deleteCommPost() {
   if (!_commCurrentPostId) return;
-  if (!confirm('게시글을 삭제할까요? 댓글도 함께 삭제됩니다.')) return;
-  const { error } = await db.from('community_posts').delete().eq('id', _commCurrentPostId);
-  if (error) { showToast('삭제 실패'); return; }
-  showToast('🗑 게시글이 삭제됐습니다');
-  closeCommunityPost();
-  loadCommunityPosts(_commCurrentCat);
+  showConfirm('댓글도 함께 삭제됩니다.', async () => {
+    const { error } = await db.from('community_posts').delete().eq('id', _commCurrentPostId);
+    if (error) { showToast('삭제 실패'); return; }
+    showToast('🗑 게시글이 삭제됐습니다');
+    closeCommunityPost();
+    loadCommunityPosts(_commCurrentCat);
+  }, {icon:'🗑️', title:'게시글 삭제', okLabel:'삭제', danger:true});
 }
 
-async function deleteCommComment(commentId) {
-  if (!confirm('댓글을 삭제할까요?')) return;
-  const { error } = await db.from('community_comments').delete().eq('id', commentId);
-  if (error) { showToast('삭제 실패'); return; }
-  // comments_count 직접 감소
-  const { data: p } = await db.from('community_posts').select('comments_count').eq('id', _commCurrentPostId).single();
-  if (p) await db.from('community_posts').update({ comments_count: Math.max(0, (p.comments_count || 1) - 1) }).eq('id', _commCurrentPostId);
-  showToast('댓글이 삭제됐습니다');
-  openCommunityPost(_commCurrentPostId);
+function deleteCommComment(commentId) {
+  showConfirm('', async () => {
+    const { error } = await db.from('community_comments').delete().eq('id', commentId);
+    if (error) { showToast('삭제 실패'); return; }
+    const { data: p } = await db.from('community_posts').select('comments_count').eq('id', _commCurrentPostId).single();
+    if (p) await db.from('community_posts').update({ comments_count: Math.max(0, (p.comments_count || 1) - 1) }).eq('id', _commCurrentPostId);
+    showToast('댓글이 삭제됐습니다');
+    openCommunityPost(_commCurrentPostId);
+  }, {icon:'🗑️', title:'댓글 삭제', okLabel:'삭제', danger:true});
 }
 
 async function submitCommunityComment() {
@@ -11292,47 +11319,34 @@ async function loadInlineApplicants(jobId, targetId) {
   el.innerHTML = apps.map(a => makeApplicantCardHtml(a, { stopProp: true })).join('');
 }
 
-async function deleteApplication(appId) {
-  if (!confirm('지원자를 삭제하면 복구할 수 없습니다. 삭제할까요?')) return;
-  const { error } = await db.from('applications').delete().eq('id', appId);
-  if (error) { showToast('삭제 실패: ' + error.message); return; }
-  document.getElementById('app-card-' + appId)?.remove();
-  showToast('✅ 지원자가 삭제됐습니다');
-  loadPostings();
+function deleteApplication(appId) {
+  showConfirm('복구할 수 없습니다.', async () => {
+    const { error } = await db.from('applications').delete().eq('id', appId);
+    if (error) { showToast('삭제 실패: ' + error.message); return; }
+    document.getElementById('app-card-' + appId)?.remove();
+    showToast('✅ 지원자가 삭제됐습니다');
+    loadPostings();
+  }, {icon:'🗑️', title:'지원자 삭제', okLabel:'삭제', danger:true});
 }
 
-async function deletePosting(jobId) {
-  if (!confirm('이 공고를 삭제하면 지원자·채팅 데이터도 함께 삭제됩니다. 정말 삭제할까요?')) return;
-  const sess = currentSession;
-  if (!sess) { showToast('로그인 세션이 만료됐습니다. 새로고침 후 재로그인해주세요'); return; }
-
-  // DB CASCADE 설정 기반: job_postings 삭제 시 applications → messages 자동 연쇄 삭제
-  const res = await fetch(
-    APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + jobId,
-    {
-      method: 'DELETE',
-      headers: {
-        'apikey': APP_CONFIG.SUPABASE_ANON_KEY,
-        'Authorization': 'Bearer ' + sess.access_token,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'  // 삭제된 행 반환 → 0건이면 RLS 차단
-      }
+function deletePosting(jobId) {
+  showConfirm('지원자·채팅 데이터도 함께 삭제됩니다.\n삭제 후 복구가 불가능합니다.', async () => {
+    const sess = currentSession;
+    if (!sess) { showToast('로그인 세션이 만료됐습니다. 새로고침 후 재로그인해주세요'); return; }
+    const res = await fetch(
+      APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + jobId,
+      { method: 'DELETE', headers: { 'apikey': APP_CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' } }
+    );
+    if (!res.ok) {
+      let msg = '삭제 실패';
+      try { const err = await res.json(); msg += ': ' + (err.message || err.details || JSON.stringify(err)); } catch {}
+      showToast(msg); return;
     }
-  );
-  if (!res.ok) {
-    let msg = '삭제 실패';
-    try { const err = await res.json(); msg += ': ' + (err.message || err.details || JSON.stringify(err)); } catch {}
-    showToast(msg);
-    return;
-  }
-  const deleted = await res.json();
-  if (!deleted?.length) {
-    showToast('삭제 실패: 권한이 없거나 이미 삭제된 공고입니다\n(Supabase에서 DELETE 정책을 확인해주세요)');
-    return;
-  }
-  showToast('✅ 공고가 삭제됐습니다');
-  closePostingDetail();
-  loadPostings();
+    const deleted = await res.json();
+    if (!deleted?.length) { showToast('삭제 실패: 권한이 없거나 이미 삭제된 공고입니다'); return; }
+    showToast('✅ 공고가 삭제됐습니다');
+    closePostingDetail(); loadPostings();
+  }, {icon:'🗑️', title:'공고 삭제', okLabel:'삭제', danger:true});
 }
 
 // ── 지원자 카드 공통 생성 함수 ──────────────────────────────
@@ -12046,10 +12060,11 @@ async function toggleLessonOnAir(id, val) {
   loadMyLessons();
   if (document.getElementById('panel-lesson')?.classList.contains('show')) loadLessons();
 }
-async function deleteLessonProfile(id) {
-  if (!confirm('삭제할까요?')) return;
-  await db.from('lesson_profiles').delete().eq('id', id);
-  showToast('삭제됐어요'); loadMyLessons();
+function deleteLessonProfile(id) {
+  showConfirm('', async () => {
+    await db.from('lesson_profiles').delete().eq('id', id);
+    showToast('삭제됐어요'); loadMyLessons();
+  }, {icon:'🗑️', title:'레슨 프로필 삭제', okLabel:'삭제', danger:true});
 }
 
 // ── 단골 알바생 (Supabase 연동) ───────────────
@@ -12180,11 +12195,11 @@ function openSurgeScheduler(jobId, currentWage) {
   const existing = getSurgeSchedule(jobId);
   if (existing) {
     const rem = Math.max(0, Math.round((existing.triggerAt - Date.now()) / 60000));
-    if (confirm(`현재 예약: ${rem}분 후 +${existing.amount.toLocaleString()}원\n\n예약을 취소하시겠습니까?`)) {
+    showConfirm(`${rem}분 후 +${existing.amount.toLocaleString()}원 자동 인상 예약이 취소됩니다.`, () => {
       cancelSurgeSchedule(jobId);
       showToast('자동 서지 예약이 취소됐습니다');
       loadPostings();
-    }
+    }, {icon:'⏰', title:'서지 예약 취소', okLabel:'예약 취소', okBg:'#EA580C'});
     return;
   }
   const overlay = document.createElement('div');
@@ -12377,23 +12392,22 @@ async function submitRating(appId, workerId) {
   if (window._pdJobId) loadPostingDetailApplicants(window._pdJobId);
 }
 
-async function markNoshow(appId, workerId) {
-  if (!confirm('노쇼 처리하시겠습니까?\n해당 알바생의 번개등급이 박탈됩니다.')) return;
-
+function markNoshow(appId, workerId) {
+  showConfirm('해당 알바생의 번개등급이 박탈됩니다.\n신중하게 처리해주세요.', async () => {
   const { error } = await db.from('applications').update({
     status: 'noshow', noshow: true
   }).eq('id', appId);
   if (error) { showToast('처리 실패: ' + error.message); return; }
 
   // 워커 노쇼 카운트 증가
-  if (workerId) {
-    const { data: w } = await db.from('workers').select('noshow_count').eq('id', workerId).single();
-    await db.from('workers').update({ noshow_count: (w?.noshow_count || 0) + 1 }).eq('id', workerId);
-  }
-
-  showToast('\u{1F613} 노쇼 처리됐습니다');
-  loadApplicants(); loadPostings();
-  if (window._pdJobId) loadPostingDetailApplicants(window._pdJobId);
+    if (workerId) {
+      const { data: w } = await db.from('workers').select('noshow_count').eq('id', workerId).single();
+      await db.from('workers').update({ noshow_count: (w?.noshow_count || 0) + 1 }).eq('id', workerId);
+    }
+    showToast('\u{1F613} 노쇼 처리됐습니다');
+    loadApplicants(); loadPostings();
+    if (window._pdJobId) loadPostingDetailApplicants(window._pdJobId);
+  }, {icon:'⚠️', title:'노쇼 처리', okLabel:'처리', danger:true});
 }
 
 // ── 지원자 필터 (대시보드 클릭) ──────────────────────────
@@ -12432,9 +12446,14 @@ function toggleBlockWorker(workerId, name) {
     _blockedWorkers.delete(workerId);
     showToast('차단이 해제됐습니다');
   } else {
-    if (!confirm(`${name}님을 차단하면 내 공고 검색 결과에서 제외됩니다. 차단할까요?`)) return;
-    _blockedWorkers.add(workerId);
-    showToast('🚫 차단됐습니다');
+    showConfirm('내 공고 검색 결과에서 제외됩니다.', () => {
+      _blockedWorkers.add(workerId);
+      showToast('🚫 차단됐습니다');
+      localStorage.setItem('baro_blk_' + bizRecord.id, JSON.stringify([..._blockedWorkers]));
+      updateWorkerShortcutCounts();
+      renderApplicants(_allApplicants);
+    }, {icon:'🚫', title:`${name}님 차단`, okLabel:'차단', danger:true});
+    return;
   }
   localStorage.setItem('baro_blk_' + bizRecord.id, JSON.stringify([..._blockedWorkers]));
   updateWorkerShortcutCounts();
@@ -12483,15 +12502,15 @@ async function quickTogglePosting(jobId, currentStatus) {
   loadPostings();
 }
 
-async function relistPosting(jobId) {
+function relistPosting(jobId) {
   const p = postings.find(x => x.id === jobId);
   if (!p) return;
-  if (!confirm(`"${p.title}" 공고를 재등록하시겠습니까?\n모집 상태가 오픈으로 변경됩니다.`)) return;
-  const { error } = await db.from('job_postings').update({ status: 'open', current_wage: p.base_wage }).eq('id', jobId);
-  if (error) { showToast('재등록 실패: ' + error.message); return; }
-  showToast('✅ 공고가 재등록됐습니다');
-  closePostingDetail();
-  loadPostings();
+  showConfirm('모집 상태가 오픈으로 변경됩니다.', async () => {
+    const { error } = await db.from('job_postings').update({ status: 'open', current_wage: p.base_wage }).eq('id', jobId);
+    if (error) { showToast('재등록 실패: ' + error.message); return; }
+    showToast('✅ 공고가 재등록됐습니다');
+    closePostingDetail(); loadPostings();
+  }, {icon:'🔄', title:`"${p.title}" 재등록`, okLabel:'재등록'});
 }
 function toggleCompare(appId) {
   if (_compareSet.has(appId)) { _compareSet.delete(appId); }
@@ -13441,7 +13460,7 @@ async function submitPosting() {
       console.error('save failed', res.status, errBody);
       let errDetail = errBody;
       try { const j = JSON.parse(errBody); errDetail = j.message || j.hint || errBody; } catch(e) {}
-      alert('저장 실패 (' + res.status + ')\n\n' + errDetail);
+      showAlert('저장 실패 (' + res.status + ')\n' + errDetail, {icon:'❌', title:'공고 저장 실패'});
       showToast('저장 실패 (' + res.status + ')', 4000);
       return;
     }
@@ -14900,12 +14919,13 @@ async function addCategory() {
   showToast(`✅ '${name}' 추가됨`);
 }
 
-async function deleteCategory(name) {
-  if (!confirm(`'${name}' 카테고리를 삭제할까요?`)) return;
-  await db.from('job_categories').update({ active: false }).eq('name', name);
-  categories = categories.filter(c => c.name !== name);
-  renderCategorySelect();
-  renderAdminCatList();
+function deleteCategory(name) {
+  showConfirm('', async () => {
+    await db.from('job_categories').update({ active: false }).eq('name', name);
+    categories = categories.filter(c => c.name !== name);
+    renderCategorySelect();
+    renderAdminCatList();
+  }, {icon:'🗑️', title:`'${name}' 카테고리 삭제`, okLabel:'삭제', danger:true});
 }
 
 async function openOwnerSettings() {
@@ -15415,10 +15435,11 @@ async function setDefaultPlace(placeId) {
   await loadMyPlaces();
 }
 
-async function deletePlace(placeId) {
-  if (!confirm('장소를 삭제할까요?')) return;
-  await db.from('business_places').delete().eq('id', placeId);
-  await loadMyPlaces();
+function deletePlace(placeId) {
+  showConfirm('', async () => {
+    await db.from('business_places').delete().eq('id', placeId);
+    await loadMyPlaces();
+  }, {icon:'🗑️', title:'장소 삭제', okLabel:'삭제', danger:true});
 }
 
 async function saveOwnerSettingsProfile() {
@@ -15452,16 +15473,16 @@ async function submitOwnerPw() {
   document.getElementById('panel-owner-settings').classList.remove('show');
 }
 
-async function deleteOwnerAccount() {
-  if (!confirm('정말 탈퇴하시겠어요?\n등록한 공고와 지원자 데이터가 모두 삭제됩니다.')) return;
-  if (!confirm('마지막 확인입니다. 탈퇴 후 복구가 불가능합니다.')) return;
-  if (bizRecord) {
-    await db.from('businesses').delete().eq('id', bizRecord.id);
-  }
-  await db.auth.signOut();
-  localStorage.removeItem('baroalba_guest');
-  alert('탈퇴가 완료됐습니다.');
-  location.href = '/login.html';
+function deleteOwnerAccount() {
+  showConfirm('등록한 공고와 지원자 데이터가 모두 삭제됩니다.', () => {
+    showConfirm('탈퇴 후 복구가 불가능합니다.', async () => {
+      if (bizRecord) await db.from('businesses').delete().eq('id', bizRecord.id);
+      await db.auth.signOut();
+      localStorage.removeItem('baroalba_guest');
+      showAlert('탈퇴가 완료됐습니다.\n로그인 화면으로 이동합니다.', {icon:'👋'});
+      setTimeout(() => location.href = '/login.html', 1800);
+    }, {icon:'⚠️', title:'마지막 확인', okLabel:'탈퇴 확정', danger:true});
+  }, {icon:'🚫', title:'정말 탈퇴하시겠어요?', okLabel:'계속', danger:true});
 }
 
 // ── 플랜 & 결제 ──────────────────────────────────────────
@@ -16188,11 +16209,12 @@ async function addBizPhoto(input) {
   });
 }
 
-async function deleteBizPhoto(photoId) {
-  if (!confirm('이 사진을 삭제할까요?')) return;
-  await db.from('business_photos').delete().eq('id', photoId);
-  await loadBizPhotos();
-  showToast('사진이 삭제됐습니다');
+function deleteBizPhoto(photoId) {
+  showConfirm('', async () => {
+    await db.from('business_photos').delete().eq('id', photoId);
+    await loadBizPhotos();
+    showToast('사진이 삭제됐습니다');
+  }, {icon:'🗑️', title:'사진 삭제', okLabel:'삭제', danger:true});
 }
 
 </script>
@@ -16382,6 +16404,49 @@ function openPhotoPickerAndCloseTip() {
   document.getElementById('photo-tip-overlay').style.display = 'none';
   document.getElementById('worker-photos-input').click();
 }
+
+// ── 커스텀 confirm / alert ────────────────────────────────
+let _scCallback = null;
+function showConfirm(msg, onOk, opts = {}) {
+  const el = document.getElementById('sc-overlay');
+  if (!el) { if (onOk && (!opts || !opts.hideCancel) ? window.confirm(msg) : true) onOk?.(); return; }
+  document.getElementById('sc-icon').textContent  = opts.icon  || (opts.danger ? '⚠️' : '❓');
+  document.getElementById('sc-title').textContent = opts.title || '';
+  document.getElementById('sc-title').style.display = opts.title ? 'block' : 'none';
+  document.getElementById('sc-msg').textContent   = msg;
+  document.getElementById('sc-msg').style.display = msg ? 'block' : 'none';
+  const okBtn = document.getElementById('sc-ok');
+  okBtn.textContent   = opts.okLabel  || '확인';
+  okBtn.style.background = opts.danger ? '#C8102E' : (opts.okBg || '#374151');
+  document.getElementById('sc-cancel').style.display = opts.hideCancel ? 'none' : 'block';
+  _scCallback = onOk || null;
+  el.style.display = 'flex';
+}
+function showAlert(msg, opts = {}) {
+  showConfirm(msg, null, { ...opts, hideCancel: true, okLabel: opts.okLabel || '확인', okBg: '#374151' });
+}
+function _scOk() {
+  document.getElementById('sc-overlay').style.display = 'none';
+  const cb = _scCallback; _scCallback = null; cb?.();
+}
+function _scCancel() {
+  document.getElementById('sc-overlay').style.display = 'none';
+  _scCallback = null;
+}
 </script>
+
+<!-- ── 커스텀 confirm 오버레이 ── -->
+<div id="sc-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)_scCancel()">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;padding:0 20px 36px;box-sizing:border-box">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 20px"></div>
+    <div id="sc-icon" style="font-size:36px;text-align:center;margin-bottom:10px;line-height:1"></div>
+    <div id="sc-title" style="font-size:16px;font-weight:900;text-align:center;margin-bottom:6px;display:none"></div>
+    <div id="sc-msg" style="font-size:13px;color:#888;text-align:center;line-height:1.6;margin-bottom:22px;white-space:pre-line;display:none"></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button id="sc-ok" onclick="_scOk()" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:900;cursor:pointer;color:#fff"></button>
+      <button id="sc-cancel" onclick="_scCancel()" style="width:100%;padding:12px;border-radius:14px;border:none;background:#F5F5F5;color:#777;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
