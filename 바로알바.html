@@ -1228,6 +1228,13 @@
 
 <!-- 지도 컨테이너 -->
 <div id="map"></div>
+<div id="map-remote-banner" style="display:none;position:fixed;top:calc(var(--header-h) + var(--sat-safe));left:0;right:0;bottom:calc(var(--nav-h) + var(--sab-safe));z-index:200;align-items:center;justify-content:center;pointer-events:none">
+  <div style="background:rgba(255,255,255,0.94);backdrop-filter:blur(8px);border-radius:18px;padding:22px 32px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="font-size:34px;line-height:1">🖥️</div>
+    <div style="font-size:14px;font-weight:900;color:#0369A1">비대면 공고 모아보기</div>
+    <div style="font-size:12px;color:#888;line-height:1.6">비대면 공고는 위치 정보가 없어<br>지도에 표시되지 않아요.<br>아래 목록에서 확인하세요!</div>
+  </div>
+</div>
 
 <!-- 상단 바 -->
 <div class="top-bar">
@@ -4382,6 +4389,14 @@ function renderMarkers() {
   markers.forEach(m => m.setMap(null));
   overlays.forEach(o => o.setMap(null));
   markers = []; overlays = [];
+
+  // 비대면 필터 활성화 시 지도 마커 없음 (비대면 공고는 위치 없음)
+  const _remoteBanner = document.getElementById('map-remote-banner');
+  if (filterRemote) {
+    if (_remoteBanner) _remoteBanner.style.display = 'flex';
+    return;
+  }
+  if (_remoteBanner) _remoteBanner.style.display = 'none';
 
   // 심부름 카테고리 → 아이콘 매핑 (work_type 없는 구공고 fallback용)
   const ERRAND_ICON_MAP = {
@@ -13562,6 +13577,7 @@ function toggleRemoteFilter(el) {
   filterRemote = !filterRemote;
   el.classList.toggle('active', filterRemote);
   loadJobs();
+  if (typeof renderMarkers === 'function') renderMarkers();
 }
 
 // ── 당일 정산 토글 ────────────────────────────────────────
