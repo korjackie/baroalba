@@ -60,9 +60,10 @@ public class ChatReplyReceiver extends BroadcastReceiver {
             conn.setReadTimeout(8000);
             conn.setDoOutput(true);
 
-            // content 이스케이프 (간단 처리)
             String safeContent = content.replace("\\", "\\\\").replace("\"", "\\\"");
-            String body = "{\"application_id\":\"" + appId + "\",\"content\":\"" + safeContent + "\"}";
+            String userId = extractUserIdFromJwt(authToken);
+            String body = "{\"application_id\":\"" + appId + "\",\"content\":\"" + safeContent + "\""
+                    + (userId != null ? ",\"sender_id\":\"" + userId + "\"" : "") + "}";
 
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body.getBytes(StandardCharsets.UTF_8));
@@ -72,6 +73,28 @@ public class ChatReplyReceiver extends BroadcastReceiver {
             return code >= 200 && code < 300;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    // JWT payload(base64url) 디코딩 → sub 클레임 = Supabase user UUID
+    private String extractUserIdFromJwt(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) return null;
+            String payload = parts[1];
+            // base64url → base64 변환 후 디코딩
+            int pad = (4 - payload.length() % 4) % 4;
+            StringBuilder sb = new StringBuilder(payload.replace('-', '+').replace('_', '/'));
+            for (int i = 0; i < pad; i++) sb.append('=');
+            byte[] decoded = android.util.Base64.decode(sb.toString(), android.util.Base64.DEFAULT);
+            String json = new String(decoded, StandardCharsets.UTF_8);
+            int idx = json.indexOf("\"sub\":\"");
+            if (idx < 0) return null;
+            int start = idx + 7;
+            int end = json.indexOf('"', start);
+            return end > start ? json.substring(start, end) : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 
