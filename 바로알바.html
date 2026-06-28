@@ -2153,10 +2153,10 @@
     <button id="subtab-bookmarks" onclick="switchAppSubtab('bookmarks')" style="flex:1;padding:12px 0;font-size:13px;font-weight:700;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent">&#128278; 북마크</button>
     <button id="subtab-calendar" onclick="switchAppSubtab('calendar')" style="flex:1;padding:12px 0;font-size:13px;font-weight:700;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent">📅 달력</button>
   </div>
-  <div style="padding:16px" id="my-applications-list">
+  <div style="padding:16px;flex:1;overflow-y:auto" id="my-applications-list">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
   </div>
-  <div style="padding:16px;display:none" id="my-bookmarks-list">
+  <div style="padding:16px;display:none;flex:1;overflow-y:auto" id="my-bookmarks-list">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
   </div>
   <div style="padding:16px;display:none;overflow-y:auto;flex:1" id="my-calendar-view"></div>
@@ -6031,9 +6031,9 @@ function closeMpSub(name) {
 }
 
 function goToMyApplications() {
-  document.getElementById('panel-profile').classList.remove('show');
-  const navEl = document.querySelectorAll('.nav-item')[2]; // 내 지원 탭
-  setNav(navEl, 'applications');
+  document.getElementById('panel-profile')?.classList.remove('show');
+  window._fromProfile = true;
+  openDashPanel('applications');
 }
 
 function openJobReview(appId, jobTitle, bizName, existingRating, existingReview) {
