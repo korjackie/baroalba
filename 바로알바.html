@@ -44,9 +44,7 @@
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
   <!-- 카카오 공유 SDK (Kakao.Share) — 지도 SDK(kakao.maps)와 별도 네임스페이스 -->
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
@@ -566,22 +564,7 @@
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-    /* ── 인트로 스플래시 ── */
-    @keyframes splashUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes splashFadeOut { to { opacity:0; } }
-    @keyframes splashPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
-    #splash-intro {
-      position:fixed; inset:0; z-index:99999;
-      background:#C8102E;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      padding:40px 32px; overflow:hidden;
-    }
-    #splash-intro .s-logo  { animation: splashUp 0.65s 0.15s cubic-bezier(.22,1,.36,1) both; }
-    #splash-intro .s-line1 { animation: splashUp 0.6s 0.7s cubic-bezier(.22,1,.36,1) both; }
-    #splash-intro .s-line2 { animation: splashUp 0.6s 0.95s cubic-bezier(.22,1,.36,1) both; }
-    #splash-intro .s-sub   { animation: splashUp 0.55s 1.3s cubic-bezier(.22,1,.36,1) both; }
-
-    .detail-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 16px; }
+.detail-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 16px; }
 
     .detail-header { padding: 0 20px 16px; border-bottom: 1px solid #f0f0f0; }
     .detail-status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -1221,31 +1204,6 @@
 </head>
 <body>
 
-<!-- 인트로 스플래시 -->
-<div id="splash-intro">
-  <!-- 로고 + 앱명 -->
-  <div class="s-logo" style="display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:56px">
-    <div style="width:80px;height:80px;border-radius:20px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,0.25)">
-      <img src="./icons/바로알바 최종로고.png" style="width:80px;height:auto;object-fit:cover">
-    </div>
-    <span style="font-size:32px;font-weight:900;color:#fff;letter-spacing:-0.5px">바로알바</span>
-  </div>
-
-  <!-- 메인 슬로건 -->
-  <div style="text-align:center">
-    <div class="s-line1" style="font-family:'Black Han Sans',sans-serif;font-size:31px;color:#fff;line-height:1.35;margin-bottom:4px">
-      바로 알바가 필요하고
-    </div>
-    <div class="s-line2" style="font-family:'Black Han Sans',sans-serif;font-size:31px;color:#fff;line-height:1.35">
-      바로 돈이 필요할 때
-    </div>
-  </div>
-
-  <!-- 서브 태그라인 -->
-  <div class="s-sub" style="margin-top:28px">
-    <span style="font-size:13px;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.5px">실시간 알바매칭 서비스</span>
-  </div>
-</div>
 
 <!-- 앱 헤더 -->
 <div class="app-header">
@@ -4042,22 +4000,7 @@ window.addEventListener('popstate', () => {
 })();
 
 // ── 초기화 ────────────────────────────────────────────────
-function dismissSplash() {
-  const s = document.getElementById('splash-intro');
-  if (!s) return;
-  s.style.animation = 'splashFadeOut 0.55s ease forwards';
-  setTimeout(() => s.remove(), 560);
-}
-
 window.addEventListener('DOMContentLoaded', async () => {
-  // 딥링크 진입 시 스플래시 스킵
-  const _hasDeepLink = new URLSearchParams(location.search).get('job') || new URLSearchParams(location.search).get('chat');
-  if (_hasDeepLink) { const _sp = document.getElementById('splash-intro'); if (_sp) _sp.remove(); }
-  else {
-    // 최소 3.5초 표시 (loadJobs 완료 전이라도)
-    window._splashTimer = setTimeout(dismissSplash, 3500);
-  }
-
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js?v=266').then(reg => {
       reg.update();
@@ -4131,14 +4074,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   const deepChatView = _dParams.get('view') || sessionStorage.getItem('pending_deep_chat_view');
   if (deepChatId) { sessionStorage.removeItem('pending_deep_chat'); sessionStorage.removeItem('pending_deep_chat_view'); }
   await loadJobs();
-  // loadJobs 완료 후 스플래시가 아직 살아있으면 즉시 dismiss (타이머 교체)
-  if (document.getElementById('splash-intro')) {
-    clearTimeout(window._splashTimer);
-    const _waited = performance.now();
-    const _minMs = 3500;
-    const _rem = Math.max(0, _minMs - _waited);
-    window._splashTimer = setTimeout(dismissSplash, _rem);
-  }
   if (deepJobId) openDeepLink(deepJobId);
   if (deepChatId && currentUser) setTimeout(() => {
     if (deepChatView === 'worker') openWChat(deepChatId, '업주');

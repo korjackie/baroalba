@@ -62,7 +62,10 @@
     .splash-logo img { width:100%; height:100%; object-fit:cover; display:block; }
     .splash-name { font-size:34px; font-weight:900; color:#fff; letter-spacing:-1.5px; margin-top:18px; }
     .splash-sub { font-size:14px; color:rgba(255,255,255,0.75); margin-top:8px; }
-    .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:48px; overflow:hidden; }
+    .splash-slogan { text-align:center; margin-top:28px; }
+    .splash-slogan-line { font-size:22px; font-weight:300; color:rgba(255,255,255,0.92); line-height:1.55; letter-spacing:-0.3px; }
+    .splash-tagline { font-size:12px; color:rgba(255,255,255,0.45); margin-top:12px; font-weight:500; letter-spacing:0.5px; }
+    .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:36px; overflow:hidden; }
     .splash-bar { height:100%; width:40%; background:#fff; border-radius:2px; animation:splash-slide 1.4s ease-in-out infinite; }
     @keyframes splash-slide { 0%{transform:translateX(-150%)} 100%{transform:translateX(350%)} }
 
@@ -348,6 +351,11 @@
   <div class="splash-logo"><img src="./icons/바로알바 최종로고.png" alt="바로알바"></div>
   <div class="splash-name">바로알바</div>
   <div class="splash-sub">지금 이 순간, 내 주변 알바</div>
+  <div class="splash-slogan">
+    <div class="splash-slogan-line">바로 알바가 필요하고</div>
+    <div class="splash-slogan-line">바로 돈이 필요할 때</div>
+  </div>
+  <div class="splash-tagline">실시간 알바매칭 서비스</div>
   <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
 </div>
 
@@ -647,10 +655,14 @@ const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
   }
 });
 
-// Android 네이티브 스플래시와 이중 표시 방지 — 웹 스플래시는 즉시 사라짐
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => document.getElementById('splash')?.classList.add('hidden'), 0);
-});
+// 스플래시 최소 3.5초 유지 — 슬로건 읽을 시간 확보
+const _splashShowTime = Date.now();
+const _hideSplash = () => {
+  const elapsed = Date.now() - _splashShowTime;
+  const remain = Math.max(0, 3500 - elapsed);
+  setTimeout(() => document.getElementById('splash')?.classList.add('hidden'), remain);
+};
+document.addEventListener('DOMContentLoaded', _hideSplash);
 
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 let _inPasswordRecovery = false;
