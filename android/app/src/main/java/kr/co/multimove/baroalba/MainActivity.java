@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         webView = (BaroAlbaWebView) findViewById(R.id.webview);
+        webView.setBackgroundColor(Color.parseColor("#C8102E")); // 로딩 중 흰색 플래시 방지
 
         // 시스템바 + IME(키보드) 높이를 읽어 CSS 변수로 주입
         ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
