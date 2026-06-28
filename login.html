@@ -62,10 +62,12 @@
     .splash-logo img { width:100%; height:100%; object-fit:cover; display:block; }
     .splash-name { font-size:34px; font-weight:900; color:#fff; letter-spacing:-1.5px; margin-top:18px; }
     .splash-sub { font-size:14px; color:rgba(255,255,255,0.75); margin-top:8px; }
-    .splash-slogan { text-align:center; margin-top:28px; }
-    .splash-slogan-line { font-size:22px; font-weight:300; color:rgba(255,255,255,0.92); line-height:1.55; letter-spacing:-0.3px; }
-    .splash-tagline { font-size:12px; color:rgba(255,255,255,0.45); margin-top:12px; font-weight:500; letter-spacing:0.5px; }
-    .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:36px; overflow:hidden; }
+    .splash-tagline { font-size:11px; color:rgba(255,255,255,0.5); font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:28px; }
+    .splash-slogan { text-align:center; margin-top:24px; min-height:66px; }
+    .splash-slogan-line { font-size:22px; font-weight:300; color:rgba(255,255,255,0.92); line-height:1.6; letter-spacing:-0.3px; }
+    .type-cursor { display:inline-block; color:rgba(255,255,255,0.7); animation:blink 0.7s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:32px; overflow:hidden; }
     .splash-bar { height:100%; width:40%; background:#fff; border-radius:2px; animation:splash-slide 1.4s ease-in-out infinite; }
     @keyframes splash-slide { 0%{transform:translateX(-150%)} 100%{transform:translateX(350%)} }
 
@@ -348,14 +350,11 @@
 
 <!-- ── 스플래시 ── -->
 <div id="splash">
+  <div class="splash-tagline">실시간 알바매칭 서비스</div>
   <div class="splash-logo"><img src="./icons/바로알바 최종로고.png" alt="바로알바"></div>
   <div class="splash-name">바로알바</div>
   <div class="splash-sub">지금 이 순간, 내 주변 알바</div>
-  <div class="splash-slogan">
-    <div class="splash-slogan-line">바로 알바가 필요하고</div>
-    <div class="splash-slogan-line">바로 돈이 필요할 때</div>
-  </div>
-  <div class="splash-tagline">실시간 알바매칭 서비스</div>
+  <div id="splash-slogan" class="splash-slogan"></div>
   <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
 </div>
 
@@ -655,11 +654,46 @@ const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
   }
 });
 
-// 스플래시 최소 3.5초 유지 — 슬로건 읽을 시간 확보
+// 스플래시 타이핑 애니메이션
+function _runSplashTypewriter() {
+  const el = document.getElementById('splash-slogan');
+  if (!el) return;
+  const lines = ['바로 알바가 필요하고', '바로 돈이 필요할 때'];
+  let li = 0, ci = 0;
+  let html = '';
+  el.innerHTML = '<span class="splash-slogan-line"></span><span class="type-cursor">|</span>';
+  const lineEls = () => el.querySelectorAll('.splash-slogan-line');
+  function tick() {
+    if (li >= lines.length) {
+      setTimeout(() => { const c = el.querySelector('.type-cursor'); if (c) c.remove(); }, 600);
+      return;
+    }
+    const line = lines[li];
+    const spans = lineEls();
+    if (ci < line.length) {
+      spans[li].textContent += line[ci];
+      ci++;
+      setTimeout(tick, 75);
+    } else {
+      li++;
+      ci = 0;
+      if (li < lines.length) {
+        el.querySelector('.type-cursor').insertAdjacentHTML('beforebegin', '<br><span class="splash-slogan-line"></span>');
+        setTimeout(tick, 280);
+      } else {
+        tick();
+      }
+    }
+  }
+  setTimeout(tick, 600);
+}
+
+// 스플래시 최소 4초 유지 — 슬로건 읽을 시간 확보
 const _splashShowTime = Date.now();
 const _hideSplash = () => {
+  _runSplashTypewriter();
   const elapsed = Date.now() - _splashShowTime;
-  const remain = Math.max(0, 3500 - elapsed);
+  const remain = Math.max(0, 4000 - elapsed);
   setTimeout(() => document.getElementById('splash')?.classList.add('hidden'), remain);
 };
 document.addEventListener('DOMContentLoaded', _hideSplash);
