@@ -1681,6 +1681,15 @@
       <button onclick="openWageCalc()" style="position:absolute;top:12px;right:14px;background:#F3F4F6;border:none;border-radius:10px;padding:6px 11px;font-size:11px;font-weight:700;color:#6B7280;cursor:pointer;display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>급여 계산</button>
     </div>
 
+    <!-- 주휴수당 안내 (주 15시간 이상 정기/단기 공고 시 표시) -->
+    <div id="d-juhu-box" style="display:none;margin:0 20px 8px;background:#F0FDF4;border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:8px">
+      <div>
+        <div style="font-size:11px;color:#166534;font-weight:800">📅 주휴수당 포함 예상 주급</div>
+        <div style="font-size:10px;color:#4ade80;margin-top:1px">주 15시간 이상 · 법정 주휴수당 자동 포함</div>
+      </div>
+      <div id="d-juhu-val" style="font-size:16px;font-weight:900;color:#16a34a;white-space:nowrap"></div>
+    </div>
+
     <div class="detail-info-grid">
       <div class="info-item">
         <div class="info-label">시작 시간</div>
@@ -2105,8 +2114,9 @@
   </div>
   <!-- 서브탭 -->
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
-    <button id="subtab-status" onclick="switchAppSubtab('status')" style="flex:1;padding:12px 0;font-size:14px;font-weight:700;color:var(--red);border:none;background:none;cursor:pointer;border-bottom:2.5px solid var(--red)">지원 현황</button>
-    <button id="subtab-bookmarks" onclick="switchAppSubtab('bookmarks')" style="flex:1;padding:12px 0;font-size:14px;font-weight:700;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent">&#128278; 북마크</button>
+    <button id="subtab-status" onclick="switchAppSubtab('status')" style="flex:1;padding:12px 0;font-size:13px;font-weight:700;color:var(--red);border:none;background:none;cursor:pointer;border-bottom:2.5px solid var(--red)">지원 현황</button>
+    <button id="subtab-bookmarks" onclick="switchAppSubtab('bookmarks')" style="flex:1;padding:12px 0;font-size:13px;font-weight:700;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent">&#128278; 북마크</button>
+    <button id="subtab-calendar" onclick="switchAppSubtab('calendar')" style="flex:1;padding:12px 0;font-size:13px;font-weight:700;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent">📅 달력</button>
   </div>
   <div style="padding:16px" id="my-applications-list">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
@@ -2114,6 +2124,7 @@
   <div style="padding:16px;display:none" id="my-bookmarks-list">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
   </div>
+  <div style="padding:16px;display:none;overflow-y:auto;flex:1" id="my-calendar-view"></div>
 </div>
 
 <!-- 채팅 패널 -->
@@ -3926,6 +3937,8 @@ let timeFilter = '';
 let currentUser = null;
 let isGuest = false;
 let sheetState = 'peek'; // peek | half | full
+let _myAppsCache = null;
+let _calYear = null, _calMonth = null;
 
 // ── 뒤로가기 전역 핸들러 ──────────────────────────────────
 const _PANEL_CLOSE_MAP = {
@@ -4793,6 +4806,26 @@ function openDetail(jobId) {
   } else {
     dWageEl.textContent = (job.current_wage || 0).toLocaleString() + '원';
   }
+
+  // 주휴수당 자동 계산 (정기/단기 공고, 주 15시간 이상)
+  const _juhuBox = document.getElementById('d-juhu-box');
+  if (_juhuBox) {
+    const _DAY_IDX = { '일':0, '월':1, '화':2, '수':3, '목':4, '금':5, '토':6 };
+    const _workDays = (job.work_days || '').split(',').map(d => d.trim()).filter(d => _DAY_IDX[d] !== undefined);
+    const _weeklyHours = _workDays.length * (job.duration_hours || 0);
+    const _showJuhu = job.wage_type !== 'per-job' && job.wage_type !== 'other' &&
+                      job.work_type !== 'spot' && job.work_type !== 'errand' &&
+                      _weeklyHours >= 15 && (job.current_wage || 0) > 0;
+    if (_showJuhu) {
+      const _juhuPerWeek  = Math.round((_weeklyHours / 40) * 8 * job.current_wage);
+      const _weeklyTotal  = job.current_wage * _weeklyHours + _juhuPerWeek;
+      document.getElementById('d-juhu-val').textContent = _weeklyTotal.toLocaleString() + '원';
+      _juhuBox.style.display = 'flex';
+    } else {
+      _juhuBox.style.display = 'none';
+    }
+  }
+
   document.getElementById('d-time').textContent = job.start_time ? formatTime(job.start_time) : '미정';
   document.getElementById('d-duration').textContent = job.duration_hours + '시간';
   document.getElementById('d-needed').textContent = `${job.needed_count - job.filled_count}/${job.needed_count}명`;
@@ -5760,6 +5793,8 @@ async function loadMyApplications() {
     .eq('worker_id', wid)
     .order('applied_at', { ascending: false });
 
+  _myAppsCache = apps || [];
+
   if (!apps || !apps.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">\u{1F4CB}</div><div style="font-size:15px;font-weight:700">아직 지원한 공고가 없어요</div><div style="font-size:13px;margin-top:6px">지도에서 공고를 찾아 지원해보세요!</div></div>';
     return;
@@ -6107,28 +6142,170 @@ async function cancelApplication(appId) {
 
 // ── 내 지원 서브탭 ────────────────────────────────────────
 function switchAppSubtab(tab) {
-  const statusEl    = document.getElementById('my-applications-list');
-  const bookmarkEl  = document.getElementById('my-bookmarks-list');
-  const btnStatus   = document.getElementById('subtab-status');
-  const btnBookmark = document.getElementById('subtab-bookmarks');
+  const statusEl   = document.getElementById('my-applications-list');
+  const bookmarkEl = document.getElementById('my-bookmarks-list');
+  const calendarEl = document.getElementById('my-calendar-view');
+  const btns = ['subtab-status','subtab-bookmarks','subtab-calendar'].map(id => document.getElementById(id));
+
+  [statusEl, bookmarkEl, calendarEl].forEach(el => { if (el) el.style.display = 'none'; });
+  btns.forEach(btn => { if (btn) { btn.style.color = '#bbb'; btn.style.borderBottom = '2.5px solid transparent'; } });
+
+  const activate = (el, btnIdx) => {
+    if (el) el.style.display = 'block';
+    if (btns[btnIdx]) { btns[btnIdx].style.color = 'var(--red)'; btns[btnIdx].style.borderBottom = '2.5px solid var(--red)'; }
+  };
 
   if (tab === 'status') {
-    statusEl.style.display   = 'block';
-    bookmarkEl.style.display = 'none';
-    btnStatus.style.color = 'var(--red)';
-    btnStatus.style.borderBottom = '2.5px solid var(--red)';
-    btnBookmark.style.color = '#bbb';
-    btnBookmark.style.borderBottom = '2.5px solid transparent';
+    activate(statusEl, 0);
     loadMyApplications();
+  } else if (tab === 'calendar') {
+    if (calendarEl) calendarEl.style.display = 'flex';
+    if (btns[2]) { btns[2].style.color = 'var(--red)'; btns[2].style.borderBottom = '2.5px solid var(--red)'; }
+    if (_myAppsCache) {
+      renderAppCalendar();
+    } else {
+      loadMyApplications().then(() => renderAppCalendar());
+    }
   } else {
-    statusEl.style.display   = 'none';
-    bookmarkEl.style.display = 'block';
-    btnStatus.style.color = '#bbb';
-    btnStatus.style.borderBottom = '2.5px solid transparent';
-    btnBookmark.style.color = 'var(--red)';
-    btnBookmark.style.borderBottom = '2.5px solid var(--red)';
+    activate(bookmarkEl, 1);
     loadBookmarks();
   }
+}
+
+// ── 달력 뷰 ──────────────────────────────────────────────
+function renderAppCalendar() {
+  const el = document.getElementById('my-calendar-view');
+  if (!el) return;
+
+  const now = new Date();
+  if (_calYear === null) { _calYear = now.getFullYear(); _calMonth = now.getMonth(); }
+
+  const apps = _myAppsCache || [];
+  const DAY_IDX = { '일':0, '월':1, '화':2, '수':3, '목':4, '금':5, '토':6 };
+  const firstDay = new Date(_calYear, _calMonth, 1);
+  const lastDay  = new Date(_calYear, _calMonth + 1, 0);
+  const dateMap  = {};
+
+  apps.forEach(a => {
+    const job = a.job_postings || {};
+    if (!job.start_time) return;
+    const startD = new Date(job.start_time);
+    const hasWorkDays = job.work_days && job.work_type !== 'spot' && job.work_type !== 'errand';
+
+    if (!hasWorkDays) {
+      if (startD.getFullYear() === _calYear && startD.getMonth() === _calMonth) {
+        const k = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(startD.getDate()).padStart(2,'0')}`;
+        (dateMap[k] = dateMap[k] || []).push({ status: a.status, title: job.title || '공고', appId: a.job_posting_id });
+      }
+    } else {
+      const wdIdxs = (job.work_days||'').split(',').map(d => DAY_IDX[d.trim()]).filter(x => x !== undefined);
+      const rangeStart = new Date(Math.max(startD, firstDay));
+      const rangeEnd   = job.work_end_date ? new Date(Math.min(new Date(job.work_end_date), lastDay)) : lastDay;
+      for (let cur = new Date(rangeStart); cur <= rangeEnd; cur.setDate(cur.getDate()+1)) {
+        if (wdIdxs.includes(cur.getDay())) {
+          const k = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+          (dateMap[k] = dateMap[k] || []).push({ status: a.status, title: job.title || '공고', appId: a.job_posting_id });
+        }
+      }
+    }
+  });
+
+  // 이달 완료 수입 합산
+  let monthEarnings = 0;
+  apps.forEach(a => {
+    if (a.status !== 'completed') return;
+    const job = a.job_postings || {};
+    if (job.current_wage && job.duration_hours) monthEarnings += job.current_wage * job.duration_hours;
+  });
+
+  const WEEKDAYS = ['일','월','화','수','목','금','토'];
+  const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const firstDow = firstDay.getDay();
+  const totalDays = lastDay.getDate();
+  const STATUS_COLOR = { pending:'#C8102E', reviewing:'#F59E0B', accepted:'#16a34a', completed:'#3B82F6', rejected:'#d1d5db', cancelled:'#d1d5db', noshow:'#D97706' };
+
+  let cells = '';
+  for (let i = 0; i < firstDow; i++) cells += '<div></div>';
+  for (let d = 1; d <= totalDays; d++) {
+    const k = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const da = dateMap[k] || [];
+    const isToday = now.getFullYear() === _calYear && now.getMonth() === _calMonth && now.getDate() === d;
+    const dow = (firstDow + d - 1) % 7;
+    const dots = da.slice(0,3).map(a => `<div style="width:5px;height:5px;border-radius:50%;background:${STATUS_COLOR[a.status]||'#aaa'};flex-shrink:0"></div>`).join('');
+    cells += `<div onclick="showCalendarDay('${k}')" style="cursor:${da.length?'pointer':'default'};padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:8px;${isToday?'background:#FFF1F2':''}">
+      <div style="font-size:14px;font-weight:${isToday?'900':(da.length?'700':'400')};width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;${isToday?'background:#C8102E;color:#fff':'color:'+(dow===0?'#ef4444':dow===6?'#3B82F6':'#222')}">${d}</div>
+      <div style="display:flex;gap:2px;min-height:6px">${dots}</div>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div style="width:100%">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <button onclick="calNavMonth(-1)" style="background:none;border:none;font-size:22px;color:#666;cursor:pointer;padding:4px 10px;line-height:1">‹</button>
+        <div style="font-size:17px;font-weight:900;color:#222">${_calYear}년 ${MONTH_NAMES[_calMonth]}</div>
+        <button onclick="calNavMonth(1)" style="background:none;border:none;font-size:22px;color:#666;cursor:pointer;padding:4px 10px;line-height:1">›</button>
+      </div>
+      ${monthEarnings > 0 ? `<div style="background:#EFF6FF;border-radius:12px;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between"><div style="font-size:12px;font-weight:700;color:#1E40AF">🏁 이달 완료 수입</div><div style="font-size:15px;font-weight:900;color:#1D4ED8">${monthEarnings.toLocaleString()}원</div></div>` : ''}
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">
+        ${WEEKDAYS.map((w,i)=>`<div style="text-align:center;font-size:11px;font-weight:700;color:${i===0?'#ef4444':i===6?'#3B82F6':'#aaa'};padding:4px 0">${w}</div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">${cells}</div>
+      <div id="cal-day-detail" style="margin-top:14px"></div>
+      <div style="display:flex;gap:14px;margin-top:16px;padding:12px;background:#f9f9f9;border-radius:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:#C8102E"></div>검토중</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:#16a34a"></div>합격</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:#3B82F6"></div>완료</div>
+      </div>
+    </div>
+  `;
+}
+
+function calNavMonth(dir) {
+  _calMonth += dir;
+  if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+  if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
+  renderAppCalendar();
+}
+
+function showCalendarDay(dateKey) {
+  const detailEl = document.getElementById('cal-day-detail');
+  if (!detailEl) return;
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const targetDate = new Date(y, m-1, d);
+  const dow = targetDate.getDay();
+  const DAY_IDX = { '일':0, '월':1, '화':2, '수':3, '목':4, '금':5, '토':6 };
+  const DAY_NAME = ['일','월','화','수','목','금','토'];
+
+  const dayApps = (_myAppsCache || []).filter(a => {
+    const job = a.job_postings || {};
+    if (!job.start_time) return false;
+    const startD = new Date(job.start_time);
+    const hasWorkDays = job.work_days && job.work_type !== 'spot' && job.work_type !== 'errand';
+    if (!hasWorkDays) {
+      return startD.getFullYear()===y && startD.getMonth()===m-1 && startD.getDate()===d;
+    }
+    const wdIdxs = (job.work_days||'').split(',').map(s=>DAY_IDX[s.trim()]).filter(x=>x!==undefined);
+    if (!wdIdxs.includes(dow)) return false;
+    const sd = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate());
+    const ed = job.work_end_date ? new Date(job.work_end_date) : new Date(2099,0,1);
+    return targetDate >= sd && targetDate <= ed;
+  });
+
+  if (!dayApps.length) { detailEl.innerHTML = ''; return; }
+
+  const STATUS = { pending:{label:'검토중',color:'#C8102E'}, reviewing:{label:'검토중',color:'#F59E0B'}, accepted:{label:'✅ 합격',color:'#16a34a'}, completed:{label:'🏁 완료',color:'#3B82F6'}, rejected:{label:'❌ 탈락',color:'#dc2626'}, cancelled:{label:'취소됨',color:'#aaa'}, noshow:{label:'⚠️ 노쇼',color:'#D97706'} };
+  detailEl.innerHTML = `
+    <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:8px">${m}/${d}(${DAY_NAME[dow]}) 근무 예정</div>
+    ${dayApps.map(a=>{
+      const job = a.job_postings||{};
+      const s = STATUS[a.status]||{label:a.status,color:'#888'};
+      const wage = job.current_wage ? job.current_wage.toLocaleString()+'원/시' : '';
+      const hours = job.duration_hours ? job.duration_hours+'시간' : '';
+      return `<div onclick="openApplicationJobDetail('${a.job_posting_id}')" style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid #f0f0f0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="min-width:0"><div style="font-size:14px;font-weight:800;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${job.title||'공고'}</div><div style="font-size:12px;color:#aaa;margin-top:2px">${[wage,hours].filter(Boolean).join(' · ')}</div></div>
+        <div style="font-size:12px;font-weight:800;color:${s.color};flex-shrink:0">${s.label}</div>
+      </div>`;
+    }).join('')}`;
 }
 
 // ── 북마크 ────────────────────────────────────────────────
