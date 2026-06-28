@@ -2047,8 +2047,21 @@
     </button>
   </div>
 
+  <!-- 출근 알림 배너 (합격 공고 당일/익일) -->
+  <div id="dash-shift-alert" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#C8102E,#991B1B);border-radius:16px;padding:14px 16px;cursor:pointer" onclick="openDashPanel('applications')">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:28px;line-height:1" id="dash-shift-alert-icon">⏰</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,0.8)" id="dash-shift-alert-label">오늘 근무</div>
+        <div style="font-size:14px;font-weight:900;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="dash-shift-alert-title">공고명</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:1px" id="dash-shift-alert-time"></div>
+      </div>
+      <div style="font-size:18px;color:rgba(255,255,255,0.6)">›</div>
+    </div>
+  </div>
+
   <!-- 진행 중 요약 카드 -->
-  <div style="padding:16px 16px 0;flex-shrink:0">
+  <div style="padding:12px 16px 0;flex-shrink:0">
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="dash-summary-cards">
       <div style="background:#f8f8f8;border-radius:14px;padding:14px 8px;text-align:center">
         <div class="spinner" style="margin:0 auto 4px"></div>
@@ -2112,6 +2125,11 @@
     <button onclick="if(window._fromProfile){window._fromProfile=false;document.getElementById('panel-applications').classList.remove('show');setNav(document.querySelectorAll('.nav-item')[4],'profile')}else{document.getElementById('panel-applications').classList.remove('show')}" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px 0 0;line-height:1">‹</button>
     &#128203; 내 지원 현황
   </div>
+  <!-- 지원 이력 통계 바 -->
+  <div id="app-stats-bar" style="display:none;padding:12px 16px;background:#fafafa;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="app-stats-grid"></div>
+  </div>
+
   <!-- 서브탭 -->
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button id="subtab-status" onclick="switchAppSubtab('status')" style="flex:1;padding:12px 0;font-size:13px;font-weight:700;color:var(--red);border:none;background:none;cursor:pointer;border-bottom:2.5px solid var(--red)">지원 현황</button>
@@ -4690,7 +4708,13 @@ function renderList() {
         ${langBadge}
         ${job.category ? `<span class="tag ${catClass}">${job.category}</span>` : ''}
         <span class="tag">${isErrand ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
-        ${(job.needed_count - job.filled_count) > 0 ? `<span class="tag">${job.needed_count - job.filled_count}명 필요</span>` : ''}
+        ${(() => {
+          const rem = job.needed_count - job.filled_count;
+          if (rem <= 0) return '';
+          if (rem === 1) return `<span class="tag" style="background:#FFF0F0;color:#C8102E;border:1px solid #FCA5A5;font-weight:800">🔥 마감임박 1자리</span>`;
+          if (rem <= 2) return `<span class="tag" style="background:#FFF7ED;color:#EA580C;font-weight:800">⚡ ${rem}자리 남음</span>`;
+          return `<span class="tag">${rem}자리 남음</span>`;
+        })()}
       </div>
       <div class="card-meta">
         <span>${dist}</span>
@@ -5795,6 +5819,30 @@ async function loadMyApplications() {
 
   _myAppsCache = apps || [];
 
+  // 통계 바 렌더링
+  const _statsBar = document.getElementById('app-stats-bar');
+  const _statsGrid = document.getElementById('app-stats-grid');
+  if (_statsBar && _statsGrid && apps && apps.length) {
+    const _total = apps.length;
+    const _accepted = apps.filter(a => ['accepted','completed'].includes(a.status)).length;
+    const _rate = _total > 0 ? Math.round(_accepted / _total * 100) : 0;
+    const _nowM = new Date(); const _thisYM = `${_nowM.getFullYear()}-${String(_nowM.getMonth()+1).padStart(2,'0')}`;
+    const _monthEarnings = apps.filter(a => a.status === 'completed' && (a.completed_at||'').startsWith(_thisYM))
+      .reduce((s,a) => s + ((a.job_postings?.current_wage||0) * (a.job_postings?.duration_hours||0)), 0);
+    const _pending = apps.filter(a => ['pending','reviewing'].includes(a.status)).length;
+    const mkStat = (v, lbl, color) =>
+      `<div style="background:#fff;border-radius:10px;padding:8px 4px;text-align:center;border:1px solid #f0f0f0">
+        <div style="font-size:17px;font-weight:900;color:${color}">${v}</div>
+        <div style="font-size:9px;color:#aaa;font-weight:700;margin-top:2px;line-height:1.3">${lbl}</div>
+      </div>`;
+    _statsGrid.innerHTML =
+      mkStat(_total + '건', '총 지원', '#555') +
+      mkStat(_pending + '건', '검토중', '#F59E0B') +
+      mkStat(_rate + '%', '합격률', '#16a34a') +
+      mkStat(_monthEarnings > 0 ? Math.round(_monthEarnings/10000) + '만' : '-', '이달수입', '#3B82F6');
+    _statsBar.style.display = 'block';
+  }
+
   if (!apps || !apps.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">\u{1F4CB}</div><div style="font-size:15px;font-weight:700">아직 지원한 공고가 없어요</div><div style="font-size:13px;margin-top:6px">지도에서 공고를 찾아 지원해보세요!</div></div>';
     return;
@@ -5894,6 +5942,21 @@ async function loadMyApplications() {
       <!-- 업체 연락처 -->
       ${biz.phone ? `<div style="font-size:12px;color:#888;margin-top:2px">\u{1F4DE} ${fmtPhone(biz.phone)}</div>` : ''}
 
+      <!-- 후기 (완료 공고) -->
+      ${a.status === 'completed' ? (() => {
+        if (a.employer_rating) {
+          const _stars = '★'.repeat(a.employer_rating) + '☆'.repeat(5 - a.employer_rating);
+          return `<div onclick="event.stopPropagation()" style="margin-top:10px;background:#FFFBEB;border-radius:10px;padding:10px 12px;border:1px solid #FDE68A">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;font-weight:700;color:#92400E">내 후기</span>
+              <span style="font-size:13px;color:#F59E0B;font-weight:900">${_stars}</span>
+            </div>
+            ${a.employer_review ? `<div style="font-size:12px;color:#78350F;margin-top:4px;line-height:1.5">"${a.employer_review}"</div>` : ''}
+            <button onclick="event.stopPropagation();openJobReview('${a.id}','${(job.title||'').replace(/'/g,"\\'")}','${(biz.name||'').replace(/'/g,"\\'")}',${a.employer_rating||0},'${(a.employer_review||'').replace(/'/g,"\\'")}')" style="margin-top:6px;font-size:11px;color:#92400E;background:none;border:none;text-decoration:underline;cursor:pointer;padding:0">수정</button>
+          </div>`;
+        }
+        return `<button onclick="event.stopPropagation();openJobReview('${a.id}','${(job.title||'').replace(/'/g,"\\'")}','${(biz.name||'').replace(/'/g,"\\'")}',0,'')" style="margin-top:10px;width:100%;padding:10px;background:linear-gradient(135deg,#FFF7ED,#FEF3C7);color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">⭐ 후기 남기기</button>`;
+      })() : ''}
       <!-- 액션 버튼 -->
       ${canChat ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} 업주에게 문의하기</button>` : ''}
       ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
@@ -5905,6 +5968,83 @@ function goToMyApplications() {
   document.getElementById('panel-profile').classList.remove('show');
   const navEl = document.querySelectorAll('.nav-item')[2]; // 내 지원 탭
   setNav(navEl, 'applications');
+}
+
+function openJobReview(appId, jobTitle, bizName, existingRating, existingReview) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+  let _selectedRating = existingRating || 0;
+  const renderStars = () => {
+    const starsEl = overlay.querySelector('#review-stars');
+    if (!starsEl) return;
+    starsEl.innerHTML = [1,2,3,4,5].map(i =>
+      `<span onclick="window._reviewSetStar(${i})" style="font-size:36px;cursor:pointer;color:${i<=_selectedRating?'#F59E0B':'#d1d5db'};transition:color 0.15s;user-select:none">${i<=_selectedRating?'★':'☆'}</span>`
+    ).join('');
+  };
+  window._reviewSetStar = (n) => { _selectedRating = n; renderStars(); };
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:#222">⭐ 업체 후기 남기기</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${bizName} · ${jobTitle}</div>
+        </div>
+        <button onclick="this.closest('div[style*=fixed]').remove();delete window._reviewSetStar" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px">✕</button>
+      </div>
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:#aaa;margin-bottom:10px">근무 만족도</div>
+        <div id="review-stars" style="display:flex;justify-content:center;gap:6px"></div>
+        <div style="font-size:11px;color:#aaa;margin-top:8px" id="review-rating-label">별점을 선택해주세요</div>
+      </div>
+      <textarea id="review-content" placeholder="근무 환경, 업주 태도, 일의 난이도 등 솔직한 후기를 남겨주세요 (선택)" maxlength="200" style="width:100%;box-sizing:border-box;height:100px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;color:#333">${existingReview||''}</textarea>
+      <div style="font-size:11px;color:#bbb;text-align:right;margin-top:4px"><span id="review-char-count">${(existingReview||'').length}</span>/200자</div>
+      <button id="review-submit-btn" onclick="window._submitReview('${appId}')" style="margin-top:16px;width:100%;padding:14px;background:${existingRating?'#16a34a':'#e5e7eb'};color:${existingRating?'#fff':'#aaa'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:${existingRating?'pointer':'default'}">후기 등록하기</button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  renderStars();
+
+  // 별점 선택 시 레이블 + 버튼 색 업데이트
+  const _LABELS = ['','😢 많이 힘들었어요','😕 아쉬웠어요','😊 보통이에요','😄 좋았어요','🤩 최고였어요!'];
+  const origRender = renderStars;
+  window._reviewSetStar = (n) => {
+    _selectedRating = n;
+    const lbl = overlay.querySelector('#review-rating-label');
+    if (lbl) lbl.textContent = _LABELS[n] || '';
+    const btn = overlay.querySelector('#review-submit-btn');
+    if (btn) { btn.style.background = '#16a34a'; btn.style.color = '#fff'; btn.style.cursor = 'pointer'; }
+    origRender();
+  };
+
+  // 글자수 카운터
+  const _ta = overlay.querySelector('#review-content');
+  if (_ta) _ta.addEventListener('input', () => {
+    const cnt = overlay.querySelector('#review-char-count');
+    if (cnt) cnt.textContent = _ta.value.length;
+  });
+  if (_selectedRating) { window._reviewSetStar(_selectedRating); }
+
+  window._submitReview = async (appId) => {
+    if (!_selectedRating) { showToast('별점을 선택해주세요'); return; }
+    const content = (overlay.querySelector('#review-content')?.value || '').trim();
+    const btn = overlay.querySelector('#review-submit-btn');
+    if (btn) { btn.textContent = '저장 중...'; btn.disabled = true; }
+    const { error } = await db.from('applications').update({
+      employer_rating: _selectedRating,
+      employer_review: content || null,
+      employer_reviewed_at: new Date().toISOString()
+    }).eq('id', appId);
+    if (error) { showToast('저장 실패: ' + error.message); if (btn) { btn.textContent = '후기 등록하기'; btn.disabled = false; } return; }
+    showToast('✅ 후기가 등록됐어요!');
+    overlay.remove();
+    delete window._reviewSetStar;
+    delete window._submitReview;
+    _myAppsCache = null;
+    loadMyApplications();
+  };
 }
 
 async function showMyRatings() {
@@ -6328,6 +6468,33 @@ async function loadBookmarks() {
   if (!bookmarks || !bookmarks.length) {
     el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">\u{1F516}</div><div style="font-size:15px;font-weight:700">북마크한 공고가 없어요</div><div style="font-size:13px;margin-top:6px">공고 상세에서 북마크 버튼을 눌러보세요</div></div>';
     return;
+  }
+
+  // 재오픈 감지: localStorage 이전 상태와 비교
+  const _bmCacheKey = 'baro_bm_status_' + (currentUser?.id || '');
+  const _bmPrev = (() => { try { return JSON.parse(localStorage.getItem(_bmCacheKey) || '{}'); } catch(e) { return {}; } })();
+  const _bmCurr = {};
+  const _reopened = [];
+  bookmarks.forEach(bm => {
+    const job = bm.job_postings || {};
+    if (!job.id) return;
+    _bmCurr[job.id] = job.status;
+    const prev = _bmPrev[job.id];
+    if (prev && prev !== job.status && (job.status === 'open' || job.status === 'urgent')) {
+      _reopened.push(job.title || '공고');
+    }
+  });
+  localStorage.setItem(_bmCacheKey, JSON.stringify(_bmCurr));
+
+  // 재오픈 배너 표시
+  const _existingBanner = document.getElementById('bm-reopen-banner');
+  if (_existingBanner) _existingBanner.remove();
+  if (_reopened.length > 0) {
+    const _bn = document.createElement('div');
+    _bn.id = 'bm-reopen-banner';
+    _bn.style.cssText = 'background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px';
+    _bn.innerHTML = `<div style="font-size:20px;flex-shrink:0">🔔</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:#1E40AF">북마크 공고가 다시 열렸어요!</div><div style="font-size:12px;color:#3B82F6;margin-top:3px;line-height:1.5">${_reopened.slice(0,3).join(', ')}${_reopened.length > 3 ? ' 외 ' + (_reopened.length-3) + '개' : ''}</div></div><button onclick="this.closest('#bm-reopen-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1">✕</button>`;
+    el.before(_bn);
   }
 
   el.innerHTML = bookmarks.map(bm => {
@@ -7901,6 +8068,52 @@ async function loadDashboard() {
       postingCount = posts?.length || 0;
     }
     lessonCount = lessonRes.data?.length || 0;
+  } catch(e) {}
+
+  // 출근 알림: 오늘/내일 합격 공고 체크
+  try {
+    const _wid2 = await _getWorkerId();
+    if (_wid2) {
+      const { data: _shiftApps } = await db.from('applications')
+        .select('job_postings(title, start_time, duration_hours, current_wage, businesses(name))')
+        .eq('worker_id', _wid2)
+        .eq('status', 'accepted');
+      const _now = new Date();
+      const _today = _now.toDateString();
+      const _tomorrow = new Date(_now.getTime() + 86400000).toDateString();
+      const _upcoming = (_shiftApps || []).filter(a => {
+        if (!a.job_postings?.start_time) return false;
+        const sd = new Date(a.job_postings.start_time).toDateString();
+        return sd === _today || sd === _tomorrow;
+      }).sort((a,b) => new Date(a.job_postings.start_time) - new Date(b.job_postings.start_time));
+      const _banner = document.getElementById('dash-shift-alert');
+      if (_banner && _upcoming.length > 0) {
+        const _sh = _upcoming[0];
+        const _sd = new Date(_sh.job_postings.start_time);
+        const _isToday = _sd.toDateString() === _today;
+        const _h = _sd.getHours(), _m = String(_sd.getMinutes()).padStart(2,'0');
+        document.getElementById('dash-shift-alert-icon').textContent = _isToday ? '⏰' : '📅';
+        document.getElementById('dash-shift-alert-label').textContent = _isToday ? '오늘 근무 있어요!' : '내일 근무 있어요!';
+        document.getElementById('dash-shift-alert-title').textContent = _sh.job_postings.title || '공고';
+        document.getElementById('dash-shift-alert-time').textContent =
+          `${_sh.job_postings.businesses?.name || ''} · ${_h}:${_m} 출근${_sh.job_postings.duration_hours ? ' · ' + _sh.job_postings.duration_hours + '시간' : ''}`;
+        _banner.style.display = 'block';
+        // 브라우저 알림 예약 (오늘 출근이고 30분 이상 남았을 때)
+        if (_isToday && 'Notification' in window && Notification.permission === 'granted') {
+          const _msLeft = _sd.getTime() - Date.now() - 30 * 60 * 1000;
+          if (_msLeft > 0 && _msLeft < 3 * 3600 * 1000) {
+            setTimeout(() => {
+              new Notification('⏰ 출근 30분 전이에요!', {
+                body: `${_sh.job_postings.title} · ${_h}:${_m} 출근`,
+                icon: './icons/icon-192.png'
+              });
+            }, _msLeft);
+          }
+        }
+      } else if (_banner) {
+        _banner.style.display = 'none';
+      }
+    }
   } catch(e) {}
 
   const mkCard = (val, label, color, fn) =>
