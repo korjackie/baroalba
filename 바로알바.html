@@ -11256,7 +11256,7 @@ function openPostingDetail(jobId) {
         <span style="font-size:20px">\u{1F4CD}</span>
         <div>
           <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:2px">위치</div>
-          <div style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${p.address || ('위도 '+p.lat+' / 경도 '+p.lng)}</div>
+          <div id="pd-addr-text" style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${p.address || '위치 불러오는 중...'}</div>
         </div>
       </div>` : '<div style="background:#FFF7ED;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#F59E0B;font-weight:700">\u{1F4CD} 위치 정보 없음 — 수정 탭에서 위치를 설정해주세요</div>'}
 
@@ -11298,6 +11298,22 @@ function openPostingDetail(jobId) {
 
   // 패널 열기
   document.getElementById('panel-posting-detail').classList.add('show');
+
+  // 주소 없고 좌표만 있으면 역지오코딩으로 주소 표시
+  if (!p.address && p.lat && p.lng && typeof kakao !== 'undefined' && kakao.maps?.services) {
+    const _gc = new kakao.maps.services.Geocoder();
+    _gc.coord2Address(p.lng, p.lat, (result, status) => {
+      const el = document.getElementById('pd-addr-text');
+      if (!el) return;
+      if (status === kakao.maps.services.Status.OK && result[0]) {
+        const r = result[0];
+        el.textContent = r.road_address ? r.road_address.address_name : r.address.address_name;
+      } else {
+        el.textContent = '주소를 불러올 수 없습니다';
+        el.style.color = '#aaa';
+      }
+    });
+  }
 }
 
 function closePostingDetail() {
@@ -12971,7 +12987,7 @@ function openEditForm(jobId) {
 function closePostingForm() {
   document.getElementById('form-overlay').classList.remove('open');
   const _fab = document.getElementById('posting-fab');
-  if (_fab) _fab.style.display = editingId ? 'flex' : 'flex';
+  if (_fab) _fab.style.display = 'flex';
 }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
@@ -13679,6 +13695,8 @@ function copyPosting(jobId) {
   document.getElementById('f-naver-url-input').value = '';
   renderMyPlacesQuick();
   document.getElementById('form-overlay').classList.add('open');
+  const _fab = document.getElementById('posting-fab');
+  if (_fab) _fab.style.display = 'none';
 }
 
 function updateSurgePreview() {
