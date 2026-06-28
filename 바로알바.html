@@ -4002,7 +4002,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=266').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=270').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -4853,7 +4853,7 @@ function openDetail(jobId) {
 
   document.getElementById('d-time').textContent = job.start_time ? formatTime(job.start_time) : '미정';
   document.getElementById('d-duration').textContent = job.duration_hours + '시간';
-  document.getElementById('d-needed').textContent = `${job.needed_count - job.filled_count}/${job.needed_count}명`;
+  document.getElementById('d-needed').textContent = `${Math.max(0, job.needed_count - job.filled_count)}/${job.needed_count}명`;
   document.getElementById('d-dist').textContent = dist;
   const _distLabel = document.getElementById('d-dist-label');
   const _distItem  = document.getElementById('d-dist-item');
