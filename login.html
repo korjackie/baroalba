@@ -698,6 +698,13 @@ const _hideSplash = () => {
 };
 document.addEventListener('DOMContentLoaded', _hideSplash);
 
+// 스플래시 최소 표시 시간 이후에 fn 실행 (auth 흐름이 빨라도 4초 보장)
+function _afterSplash(fn) {
+  const elapsed = Date.now() - _splashShowTime;
+  const remain = Math.max(0, 4000 - elapsed);
+  setTimeout(fn, remain);
+}
+
 // ── Auth 상태 감지 (OAuth 리다이렉트 처리 포함) ─────────────
 let _inPasswordRecovery = false;
 let _inOtpPasswordReset = false;
@@ -768,7 +775,7 @@ db.auth.onAuthStateChange(async (event, session) => {
       ).then(null, () => {});
     }
     showLoading('앱으로 이동 중...');
-    goToApp();
+    _afterSplash(goToApp);
   }
 });
 
@@ -841,7 +848,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (localStorage.getItem('baroalba_guest')) { goToApp(); return; }
 
   // 안전 타이머: getSession 응답 없어도 2초 후 로그인 화면 표시
-  const safetyTimer = setTimeout(showLoginScreen, 2000);
+  const safetyTimer = setTimeout(showLoginScreen, 4200);
 
   try {
     const sessionPromise = db.auth.getSession();
@@ -856,10 +863,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       clearTimeout(safetyTimer);
-      // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 1.5초 후 직접 이동
+      // onAuthStateChange(INITIAL_SESSION)이 처리하지 못할 경우 대비 — 스플래시 종료 후 이동
       setTimeout(() => {
         if (document.getElementById('splash') && !document.getElementById('splash').classList.contains('hidden')) {
-          goToApp();
+          _afterSplash(goToApp);
         }
       }, 1500);
       return;
@@ -867,7 +874,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   } catch(e) { /* ignore */ }
 
   clearTimeout(safetyTimer);
-  showLoginScreen();
+  _afterSplash(showLoginScreen);
 });
 
 // ── 카카오 로그인 ──────────────────────────────────────────

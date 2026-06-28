@@ -2366,15 +2366,8 @@
       </div>
       <div style="padding:20px;text-align:center"><div style="font-size:11px;color:#ccc;font-weight:600">바로알바 v1.4.1</div></div>
 
-      <!-- ── 숨김 컨테이너: JS 호환용 ID 유지 ── -->
+      <!-- ── 숨김 컨테이너: 업주 프로필 편집 (서브패널에 없는 ID) ── -->
       <div style="display:none">
-        <div id="following-section"><div id="following-count"></div><div id="following-list"></div></div>
-        <div id="income-section">
-          <select id="income-year-sel" onchange="loadWorkerIncome()"></select>
-          <select id="income-month-sel" onchange="loadWorkerIncome()"></select>
-          <div id="income-month-label"></div><div id="income-total"></div><div id="income-count"></div>
-          <div id="income-list"></div><div id="income-chart"></div><div id="income-chart-labels"></div><div id="income-cumulative"></div>
-        </div>
         <div id="owner-profile-edit">
           <input id="owner-biz-name" type="text"><input id="owner-biz-phone" type="tel"><textarea id="owner-biz-desc"></textarea>
         </div>
@@ -2396,386 +2389,11 @@
     <div style="display:none">
       <a id="worker-terms-link" href="./terms.html"></a>
       <a id="worker-privacy-link" href="./terms.html"></a>
-      <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()">저장하기</button>
     </div>
 
     <!-- ── 알바생 프로필 폼 필드 (서브패널에서 사용) ── -->
     <div style="display:none" id="_worker-profile-fields"><!-- content moved to mpsub-* panels -->
-          <div style="display:none"><!-- placeholder -->
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <!-- 포트폴리오 사진 (최대 5장) -->
-            <div style="background:#f8f8f8;border-radius:12px;padding:12px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-                <div data-i18n="portfolio_title" style="font-size:12px;font-weight:800;color:#555">프로필 및 포트폴리오 사진</div>
-                <span id="worker-photos-count" style="font-size:11px;color:#aaa;font-weight:600">0/5</span>
-              </div>
-              <div id="worker-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
-              <label id="worker-photos-add-btn" onclick="showPhotoTip(event)" style="display:flex;align-items:center;justify-content:center;height:72px;background:#fff;border:2px dashed #ddd;border-radius:10px;cursor:pointer;margin-top:6px">
-                <span style="font-size:28px;color:#ccc;line-height:1">+</span>
-                <input id="worker-photos-input" type="file" accept="image/*" multiple style="display:none" onchange="uploadWorkerPhoto(this)">
-              </label>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label data-i18n="birth_label" style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">생년월일</label>
-              <div style="flex:1;position:relative">
-                <input id="worker-birth" type="text" inputmode="numeric" maxlength="6" placeholder="950315 (YYMMDD)"
-                  oninput="updateAgePreview(this.value)"
-                  style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
-                <span id="age-preview" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#C8102E;font-weight:700"></span>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label data-i18n="phone_label" style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">연락처</label>
-              <input id="worker-phone" type="tel" placeholder="010-0000-0000" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label data-i18n="gender_label" style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">성별</label>
-              <div style="display:flex;gap:6px">
-                <button id="gender-male-btn" data-i18n="gender_male" onclick="setGender('male')" style="padding:8px 16px;border:1.5px solid #eee;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">남성</button>
-                <button id="gender-female-btn" data-i18n="gender_female" onclick="setGender('female')" style="padding:8px 16px;border:1.5px solid #eee;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">여성</button>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label data-i18n="region_label" style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">거주지</label>
-              <input id="worker-region" type="text" placeholder="예: 서울 강남구" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
-            </div>
-            <!-- 주요 활동 지역 -->
-            <div>
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                <label style="font-size:12px;color:#888;font-weight:700">&#128205; 주요 활동 지역</label>
-                <span style="font-size:10px;color:#C8102E;font-weight:700;background:#fff0f0;padding:2px 7px;border-radius:6px">업주 지도에 표시됩니다</span>
-              </div>
-              <div style="display:flex;gap:6px">
-                <input id="activity-area-input" type="text" placeholder="동 이름 입력 (예: 성수동, 이태원동)"
-                  style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault();searchActivityArea()}">
-                <button onclick="searchActivityArea()" style="padding:10px 14px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
-              </div>
-              <div id="activity-area-results" style="display:none;margin-top:4px;border:1.5px solid #eee;border-radius:10px;overflow:hidden;background:#fff"></div>
-              <div id="activity-area-selected" style="display:none;margin-top:6px;align-items:center;gap:8px;padding:9px 14px;background:#fff0f0;border-radius:10px;border:1px solid #FFCCCC">
-                <span style="font-size:13px;font-weight:800;color:#C8102E" id="activity-area-tag"></span>
-                <button onclick="clearActivityArea()" style="margin-left:auto;background:none;border:none;color:#bbb;cursor:pointer;font-size:16px;line-height:1;padding:0">✕</button>
-              </div>
-              <div style="font-size:11px;color:#bbb;margin-top:5px">동 단위로 설정하면 해당 동 중심이 업주 지도에 핀으로 표시됩니다</div>
-            </div>
-            <div>
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-                <div data-i18n="bio_label" style="font-size:12px;color:#888;font-weight:700">자기소개</div>
-                <div id="worker-bio-counter" style="font-size:11px;color:#bbb">0 / 200</div>
-              </div>
-              <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200"
-                oninput="updateBioCounter(this)"
-                style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
-              <div id="worker-bio-hint" style="display:none;font-size:11px;color:#C8102E;margin-top:3px">최소 20자 이상 입력해주세요</div>
-            </div>
-            <div>
-              <div data-i18n="exp_label" style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">경력/특기</div>
-              <textarea id="worker-experience" placeholder="관련 경력이나 보유 스킬을 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
-            </div>
-            <div>
-              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">학력</div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="edu-chips">
-                <button type="button" data-edu=""           onclick="setEdu(this)" class="edu-chip" style="grid-column:1/-1;color:#aaa">선택 안함</button>
-                <button type="button" data-edu="중졸이하"    onclick="setEdu(this)" class="edu-chip">중졸 이하</button>
-                <button type="button" data-edu="고등학교재학" onclick="setEdu(this)" class="edu-chip">고등학교 재학</button>
-                <button type="button" data-edu="고졸"        onclick="setEdu(this)" class="edu-chip">고졸</button>
-                <button type="button" data-edu="대학교재학"  onclick="setEdu(this)" class="edu-chip">대학교 재학</button>
-                <button type="button" data-edu="대졸"        onclick="setEdu(this)" class="edu-chip">대졸</button>
-                <button type="button" data-edu="대학원이상"  onclick="setEdu(this)" class="edu-chip">대학원 이상</button>
-              </div>
-            </div>
-            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:10px">🏷️ <span data-i18n="skill_label">보유 스킬 태그</span></div>
-              <div id="skill-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:28px"></div>
-              <div style="display:flex;gap:6px">
-                <input id="skill-input" type="text" placeholder="스킬 입력 후 추가 (예: 바리스타)" maxlength="20"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault();addSkillTag()}"
-                  style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
-                <button onclick="addSkillTag()" data-i18n="skill_add" style="padding:9px 16px;background:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;white-space:nowrap;flex-shrink:0">+ 추가</button>
-              </div>
-            </div>
-            <!-- 희망직종 -->
-            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:10px">🎯 희망직종 <span style="font-size:11px;color:#aaa;font-weight:500">(복수선택)</span></div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px" id="pref-cat-chips">
-                <button type="button" data-cat="F&amp;B"    onclick="togglePrefCat(this)" class="pref-cat-chip">🍽 F&amp;B</button>
-                <button type="button" data-cat="물류"    onclick="togglePrefCat(this)" class="pref-cat-chip">📦 물류</button>
-                <button type="button" data-cat="판매"    onclick="togglePrefCat(this)" class="pref-cat-chip">🛍 판매</button>
-                <button type="button" data-cat="청소"    onclick="togglePrefCat(this)" class="pref-cat-chip">🧹 청소</button>
-                <button type="button" data-cat="이벤트"  onclick="togglePrefCat(this)" class="pref-cat-chip">🎉 이벤트</button>
-                <button type="button" data-cat="커플알바" onclick="togglePrefCat(this)" class="pref-cat-chip">💑 커플알바</button>
-                <button type="button" data-cat="컨텐츠"  onclick="togglePrefCat(this)" class="pref-cat-chip">📱 컨텐츠</button>
-                <button type="button" data-cat="챌린지"  onclick="togglePrefCat(this)" class="pref-cat-chip">🏆 챌린지</button>
-              </div>
-            </div>
-            <!-- 근무가능 요일/시간대 -->
-            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:10px">📅 근무가능 요일/시간대</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="avail-day-btns">
-                <button type="button" data-day="월" onclick="toggleAvailDay(this)" class="avail-day-btn">월</button>
-                <button type="button" data-day="화" onclick="toggleAvailDay(this)" class="avail-day-btn">화</button>
-                <button type="button" data-day="수" onclick="toggleAvailDay(this)" class="avail-day-btn">수</button>
-                <button type="button" data-day="목" onclick="toggleAvailDay(this)" class="avail-day-btn">목</button>
-                <button type="button" data-day="금" onclick="toggleAvailDay(this)" class="avail-day-btn">금</button>
-                <button type="button" data-day="토" onclick="toggleAvailDay(this)" class="avail-day-btn">토</button>
-                <button type="button" data-day="일" onclick="toggleAvailDay(this)" class="avail-day-btn">일</button>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px" id="avail-time-chips">
-                <button type="button" data-time="오전" onclick="toggleAvailTime(this)" class="pref-cat-chip">오전 (06~12)</button>
-                <button type="button" data-time="오후" onclick="toggleAvailTime(this)" class="pref-cat-chip">오후 (12~18)</button>
-                <button type="button" data-time="저녁" onclick="toggleAvailTime(this)" class="pref-cat-chip">저녁 (18~22)</button>
-                <button type="button" data-time="야간" onclick="toggleAvailTime(this)" class="pref-cat-chip">야간 (22~06)</button>
-              </div>
-            </div>
-            <!-- 이동수단 -->
-            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div onclick="toggleProfileSection('vehicles')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
-                <span style="font-size:13px;font-weight:700;color:#222" data-i18n="vehicle_section">🚗 이동수단</span>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <span id="vehicles-summary" style="font-size:11px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-                  <span id="vehicles-arrow" style="font-size:11px;color:#bbb">▼</span>
-                </div>
-              </div>
-              <div id="vehicles-body" style="display:none;margin-top:10px">
-                <div style="display:flex;flex-wrap:wrap;gap:6px" id="vehicle-chips">
-                  <button type="button" data-v="bicycle"      onclick="toggleVehicle(this)" class="v-chip">자전거</button>
-                  <button type="button" data-v="kickboard"    onclick="toggleVehicle(this)" class="v-chip">킥보드</button>
-                  <button type="button" data-v="motorcycle"   onclick="toggleVehicle(this)" class="v-chip">오토바이</button>
-                  <button type="button" data-v="car_compact"  onclick="toggleVehicle(this)" class="v-chip">차량 소형</button>
-                  <button type="button" data-v="car_midsize"  onclick="toggleVehicle(this)" class="v-chip">차량 중형</button>
-                  <button type="button" data-v="car_suv"      onclick="toggleVehicle(this)" class="v-chip">차량 SUV</button>
-                  <button type="button" data-v="car_large"    onclick="toggleVehicle(this)" class="v-chip">차량 대형</button>
-                  <button type="button" data-v="truck"        onclick="toggleVehicle(this)" class="v-chip">트럭/화물</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 나의 강점 -->
-            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div onclick="toggleProfileSection('strengths')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
-                <span style="font-size:13px;font-weight:700;color:#222" data-i18n="strength_section">⭐ 나의 강점</span>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <span id="strengths-summary" style="font-size:11px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-                  <span id="strengths-arrow" style="font-size:11px;color:#bbb">▼</span>
-                </div>
-              </div>
-              <div id="strengths-body" style="display:none;margin-top:10px">
-                <div data-i18n="strength_desc" style="font-size:11px;color:#aaa;margin-bottom:10px">선택 안해도 됩니다 · 업주에게 어필할 매력포인트를 골라보세요</div>
-                <div style="display:flex;flex-wrap:wrap;gap:6px" id="strength-chips">
-                  <button type="button" data-s="strong"      onclick="toggleStrength(this)" class="s-chip">힘이 강함</button>
-                  <button type="button" data-s="speed"       onclick="toggleStrength(this)" class="s-chip">스피드</button>
-                  <button type="button" data-s="numbers"     onclick="toggleStrength(this)" class="s-chip">숫자에 밝음</button>
-                  <button type="button" data-s="design"      onclick="toggleStrength(this)" class="s-chip">디자인 안목</button>
-                  <button type="button" data-s="experience"  onclick="toggleStrength(this)" class="s-chip">다양한 경험</button>
-                  <button type="button" data-s="always_on"   onclick="toggleStrength(this)" class="s-chip">상시출동 가능</button>
-                  <button type="button" data-s="educated"    onclick="toggleStrength(this)" class="s-chip">좋은 학벌</button>
-                  <button type="button" data-s="kind"        onclick="toggleStrength(this)" class="s-chip">친절함</button>
-                  <button type="button" data-s="driving"     onclick="toggleStrength(this)" class="s-chip">운전 능숙</button>
-                  <button type="button" data-s="language"    onclick="toggleStrength(this)" class="s-chip">외국어 가능</button>
-                  <button type="button" data-s="detail"      onclick="toggleStrength(this)" class="s-chip">꼼꼼함</button>
-                  <button type="button" data-s="stamina"     onclick="toggleStrength(this)" class="s-chip">체력 강함</button>
-                  <button type="button" data-s="night"       onclick="toggleStrength(this)" class="s-chip">야간 가능</button>
-                  <button type="button" data-s="clean"       onclick="toggleStrength(this)" class="s-chip">청결 철저</button>
-                  <button type="button" data-s="photo"       onclick="toggleStrength(this)" class="s-chip">사진/영상</button>
-                  <button type="button" data-s="cooking"     onclick="toggleStrength(this)" class="s-chip">요리 잘 함</button>
-                  <button type="button" data-s="elderly"     onclick="toggleStrength(this)" class="s-chip">어르신 친화</button>
-                  <button type="button" data-s="pet"         onclick="toggleStrength(this)" class="s-chip">반려동물 OK</button>
-                  <button type="button" data-s="handyman"    onclick="toggleStrength(this)" class="s-chip">손재주 있음</button>
-                  <button type="button" data-s="moving"      onclick="toggleStrength(this)" class="s-chip">이사/운반 경험</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 구사 가능 언어 -->
-            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
-              <div onclick="toggleProfileSection('languages')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
-                <span style="font-size:13px;font-weight:700;color:#222" data-i18n="lang_ability">🌐 구사 가능 언어</span>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <span id="languages-summary" style="font-size:11px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-                  <span id="languages-arrow" style="font-size:11px;color:#bbb">▼</span>
-                </div>
-              </div>
-              <div id="languages-body" style="display:none;margin-top:10px">
-              <div style="display:flex;flex-wrap:wrap;gap:6px" id="lang-ability-chips">
-                <button type="button" data-l="ko" onclick="toggleLangAbility(this)" class="l-chip">&#127472;&#127479; 한국어</button>
-                <button type="button" data-l="en" onclick="toggleLangAbility(this)" class="l-chip">&#127482;&#127480; 영어</button>
-                <button type="button" data-l="zh" onclick="toggleLangAbility(this)" class="l-chip">&#127464;&#127475; 중국어</button>
-                <button type="button" data-l="ja" onclick="toggleLangAbility(this)" class="l-chip">&#127471;&#127477; 일본어</button>
-                <button type="button" data-l="vi" onclick="toggleLangAbility(this)" class="l-chip">&#127483;&#127475; 베트남어</button>
-                <button type="button" data-l="ru" onclick="toggleLangAbility(this)" class="l-chip">&#127479;&#127482; 러시아어</button>
-              </div>
-              <div style="display:flex;gap:6px;margin-top:10px">
-                <input type="text" id="lang-other-input" placeholder="기타 언어 직접입력 (예: 태국어)" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;background:#fff" onkeydown="if(event.key==='Enter')addOtherLang()">
-                <button onclick="addOtherLang()" data-i18n="lang_other_add" style="padding:9px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">+ 추가</button>
-              </div>
-              <div id="lang-other-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
-              <!-- 언어 숙련도 패널 -->
-              <div id="lang-prof-panel" style="display:none;margin-top:10px;padding:14px;background:#f0fdf4;border-radius:10px;border:1.5px solid #bbf7d0">
-                <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:12px" id="lang-prof-title">한국어 숙련도 설정</div>
-                <div style="display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center">
-                  <div style="font-size:12px;color:#555;font-weight:600">말하기</div>
-                  <div style="display:flex;gap:4px" id="lang-prof-speak">
-                    <button type="button" class="lang-level-btn" data-skill="speak" data-v="상" onclick="setLangLevel(this)">상</button>
-                    <button type="button" class="lang-level-btn" data-skill="speak" data-v="중" onclick="setLangLevel(this)">중</button>
-                    <button type="button" class="lang-level-btn" data-skill="speak" data-v="하" onclick="setLangLevel(this)">하</button>
-                  </div>
-                  <div style="font-size:12px;color:#555;font-weight:600">독해</div>
-                  <div style="display:flex;gap:4px" id="lang-prof-read">
-                    <button type="button" class="lang-level-btn" data-skill="read" data-v="상" onclick="setLangLevel(this)">상</button>
-                    <button type="button" class="lang-level-btn" data-skill="read" data-v="중" onclick="setLangLevel(this)">중</button>
-                    <button type="button" class="lang-level-btn" data-skill="read" data-v="하" onclick="setLangLevel(this)">하</button>
-                  </div>
-                  <div style="font-size:12px;color:#555;font-weight:600">쓰기</div>
-                  <div style="display:flex;gap:4px" id="lang-prof-write">
-                    <button type="button" class="lang-level-btn" data-skill="write" data-v="상" onclick="setLangLevel(this)">상</button>
-                    <button type="button" class="lang-level-btn" data-skill="write" data-v="중" onclick="setLangLevel(this)">중</button>
-                    <button type="button" class="lang-level-btn" data-skill="write" data-v="하" onclick="setLangLevel(this)">하</button>
-                  </div>
-                </div>
-                <div style="display:flex;gap:6px;margin-top:12px">
-                  <button type="button" onclick="confirmLangProficiency()" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
-                  <button type="button" onclick="cancelLangProficiency()" style="padding:8px 14px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer">취소</button>
-                  <button type="button" id="lang-prof-remove-btn" onclick="removeLangProficiency()" style="padding:8px 12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:none">삭제</button>
-                </div>
-              </div>
-              </div><!-- /languages-body -->
-            </div>
-
-          </div>
-        </div>
-
-        <!-- 증빙서류 -->
-        <div id="worker-cert-section" style="display:none;margin-bottom:14px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-            <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px">자격증 및 증빙서류</div>
-            <div style="font-size:11px;color:#aaa;background:#f0f0f0;padding:2px 8px;border-radius:8px">업주에게만 공개</div>
-          </div>
-          <div style="padding:14px;background:#f8f8f8;border-radius:12px">
-            <div style="font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.8">
-              📋 서류명을 입력하고 <strong style="color:#C8102E">+ 업로드</strong>를 눌러 이미지 또는 PDF를 첨부하세요.<br>
-              등록된 서류는 <strong style="color:#666">지원한 공고의 업주에게만 공개</strong>됩니다. (최대 10MB)
-            </div>
-            <div id="other-cert-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input id="other-cert-name" type="text" placeholder="서류명 (예: 보건증, 운전면허, 자격증명)" maxlength="30"
-                style="flex:1;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
-              <label style="padding:10px 16px;background:#C8102E;color:#fff;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
-                + 업로드<input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
-              </label>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- 업체 설정 바로가기 (business 계정만) -->
-        <div id="owner-settings-shortcut" style="display:none;margin-bottom:14px">
-          <button onclick="openOwnerSettings()" style="width:100%;padding:14px 16px;background:#fff;border:1.5px solid #f0f0f0;border-radius:14px;font-size:14px;font-weight:700;color:#222;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left">
-            <span>&#127978; 업체 설정 / 장소 관리</span>
-            <span style="color:#aaa;font-size:18px">›</span>
-          </button>
-        </div>
-
-        <!-- 업주 프로필 편집 (마이페이지에서는 숨김 — 업체 설정 패널에서 관리) -->
-        <div id="owner-profile-edit" style="display:none;margin-bottom:14px">
-          <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">&#127978; 업체 정보</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;gap:8px;align-items:center">
-              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">업체명</label>
-              <input id="owner-biz-name" type="text" placeholder="업체 이름을 입력해주세요" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label style="font-size:12px;color:#888;font-weight:700;width:48px;flex-shrink:0">연락처</label>
-              <input id="owner-biz-phone" type="tel" placeholder="010-0000-0000" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
-            </div>
-            <div>
-              <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:4px">업체 소개</div>
-              <textarea id="owner-biz-desc" placeholder="업체나 사업장을 간단히 소개해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- 언어 토글 -->
-        <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div>
-              <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px">앱 언어 / App Language</div>
-              <div style="font-size:11px;color:#aaa;margin-top:2px" id="lang-desc">현재: 한국어</div>
-            </div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-            <button id="lang-ko-btn" onclick="selectLang('ko')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:var(--red);color:#fff">&#127472;&#127479; 한국어</button>
-            <button id="lang-en-btn" onclick="selectLang('en')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127482;&#127480; English</button>
-            <button id="lang-zh-btn" onclick="selectLang('zh')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127464;&#127475; 中文</button>
-            <button id="lang-ja-btn" onclick="selectLang('ja')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127471;&#127477; 日本語</button>
-            <button id="lang-vi-btn" onclick="selectLang('vi')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127483;&#127475; Tiếng Việt</button>
-            <button id="lang-ru-btn" onclick="selectLang('ru')" style="padding:7px 14px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666">&#127479;&#127482; Русский</button>
-          </div>
-        </div>
-
-        <!-- 알림 수신 설정 -->
-        <div style="margin-bottom:16px">
-          <div data-i18n="noti_section" style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">알림 설정</div>
-          <div style="background:#f8f8f8;border-radius:14px;overflow:hidden">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
-              <div>
-                <div data-i18n="noti_chat" style="font-size:14px;font-weight:700;color:#222">채팅 알림</div>
-                <div data-i18n="noti_chat_desc" style="font-size:12px;color:#aaa;margin-top:2px">새 메시지 수신 시 알림</div>
-              </div>
-              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
-                <input type="checkbox" id="noti-toggle-chat" onchange="saveNotiSetting('chat',this.checked)"
-                  style="opacity:0;width:0;height:0;position:absolute">
-                <span id="noti-track-chat" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
-                <span id="noti-thumb-chat" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
-              </label>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
-              <div>
-                <div data-i18n="noti_status" style="font-size:14px;font-weight:700;color:#222">합격/거절 알림</div>
-                <div data-i18n="noti_status_desc" style="font-size:12px;color:#aaa;margin-top:2px">지원 결과 변경 시 알림</div>
-              </div>
-              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
-                <input type="checkbox" id="noti-toggle-status" onchange="saveNotiSetting('status',this.checked)"
-                  style="opacity:0;width:0;height:0;position:absolute">
-                <span id="noti-track-status" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
-                <span id="noti-thumb-status" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
-              </label>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
-              <div>
-                <div style="font-size:14px;font-weight:700;color:#222">댓글 알림</div>
-                <div style="font-size:12px;color:#aaa;margin-top:2px">내 게시글에 댓글 달릴 때</div>
-              </div>
-              <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
-                <input type="checkbox" id="noti-toggle-comment" onchange="saveNotiSetting('comment',this.checked)"
-                  style="opacity:0;width:0;height:0;position:absolute">
-                <span id="noti-track-comment" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
-                <span id="noti-thumb-comment" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- 공고 알림 구독 -->
-        <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px;margin-top:4px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:800;color:#222">🔔 맞춤 공고 알림</div>
-            <label style="position:relative;width:44px;height:24px;cursor:pointer;display:inline-block">
-              <input type="checkbox" id="notify-enabled-toggle" onchange="onNotifyToggle(this)" style="opacity:0;width:0;height:0;position:absolute">
-              <span id="notify-track" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
-              <span id="notify-thumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
-            </label>
-          </div>
-          <div id="notify-pref-body" style="display:none">
-            <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:8px">원하는 업종 (미선택 = 전체)</div>
-            <div id="notify-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
-            <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:6px">최소 시급</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="number" id="notify-min-wage" placeholder="0" min="0" step="500"
-                style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;outline:none;box-sizing:border-box">
-              <span style="font-size:13px;color:#888;font-weight:700;white-space:nowrap">원 이상</span>
-            </div>
+    </div><!-- /_worker-profile-fields -->
   </div><!-- /overflow-y:auto -->
 </div><!-- /panel-profile -->
 
@@ -2790,7 +2408,7 @@
     <div class="mpsub-ttl">수입 현황</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
-    <div id="income-section-ui">
+    <div id="income-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:14px;font-weight:900;color:#222">💵 내 수입 현황</div>
         <div style="display:flex;gap:5px">
@@ -6403,6 +6021,15 @@ async function loadMyApplications() {
   }).join('');
 }
 
+function openMpSub(name) {
+  const el = document.getElementById('mpsub-' + name);
+  if (el) { el.classList.add('show'); if (name === 'income') loadWorkerIncome(); }
+}
+function closeMpSub(name) {
+  const el = document.getElementById('mpsub-' + name);
+  if (el) el.classList.remove('show');
+}
+
 function goToMyApplications() {
   document.getElementById('panel-profile').classList.remove('show');
   const navEl = document.querySelectorAll('.nav-item')[2]; // 내 지원 탭
@@ -7189,18 +6816,20 @@ function _updateFavWorkerBtn(workerId) {
 }
 
 async function _renderFollowingSection() {
-  const section = document.getElementById('following-section');
+  const row = document.getElementById('mp-following-row');
   const list = document.getElementById('following-list');
   const cnt = document.getElementById('following-count');
-  if (!section || !list) return;
+  if (!list) return;
   if (!window._myWorkerId || window._myFollows.size === 0) {
-    section.style.display = 'none'; return;
+    if (row) row.style.display = 'none'; return;
   }
-  section.style.display = 'block';
+  if (row) row.style.display = 'flex';
   const bizIds = [...window._myFollows];
   cnt.textContent = `${bizIds.length}개 업체`;
   const { data: bizList } = await db.from('businesses').select('id, name, photo_url, biz_type, region').in('id', bizIds);
-  if (!bizList?.length) { section.style.display = 'none'; return; }
+  if (!bizList?.length) { if (row) row.style.display = 'none'; return; }
+  const mpFollowingVal = document.getElementById('mp-following-val');
+  if (mpFollowingVal) mpFollowingVal.textContent = `${bizIds.length}개`;
   list.innerHTML = bizList.map(b => {
     const ac = avatarColor(b.name || '?');
     const avHtml = b.photo_url
@@ -9515,6 +9144,10 @@ async function loadWorkerGrade() {
     document.getElementById('stat-apply-count').textContent = total;
     document.getElementById('stat-complete-count').textContent = done;
     document.getElementById('stat-rating').textContent = w?.rating ? `★${w.rating.toFixed(1)}` : '-';
+    const mpApply = document.getElementById('mp-apply-val');
+    if (mpApply) mpApply.textContent = total > 0 ? `${total}건` : '';
+    const mpRating = document.getElementById('mp-rating-val');
+    if (mpRating) mpRating.textContent = w?.rating ? `★${w.rating.toFixed(1)}` : '';
     loadWorkerIncome();
   }
 
