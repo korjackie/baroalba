@@ -418,27 +418,27 @@
       </ul>
       <div class="plan-period">⏱ 예상 소요: 반나절</div>
     </div>
-    <div class="plan-card p1">
-      <span class="plan-badge pb-red">P1 — 즉시 처리</span>
+    <div class="plan-card p1" style="border-top-color:#16a34a;opacity:0.75">
+      <span class="plan-badge" style="background:#f0fdf4;color:#16a34a">✅ 이미 완료 (기구현)</span>
       <h3>커뮤니티 글·댓글 수정/삭제</h3>
-      <p>현재 내 글/댓글에 편집 버튼 없음. 본인 콘텐츠만 수정·삭제 가능하도록 추가.</p>
+      <p>글 수정(openEditCommPost), 글 삭제(deleteCommPost), 댓글 삭제(deleteCommComment) 모두 구현 완료. 본인 글에만 버튼 노출.</p>
       <ul class="plan-items">
-        <li><span class="pi-icon">✏️</span> 글 수정 모달 (제목/내용 편집)</li>
-        <li><span class="pi-icon">🗑️</span> 글 삭제 (is_deleted=true 소프트 삭제)</li>
-        <li><span class="pi-icon">🗑️</span> 댓글 삭제 버튼</li>
+        <li><span class="pi-icon">✅</span> 글 수정 모달 (제목/내용/카테고리 편집)</li>
+        <li><span class="pi-icon">✅</span> 글 삭제 (hard delete)</li>
+        <li><span class="pi-icon">✅</span> 댓글 삭제 버튼 (본인만 표시)</li>
       </ul>
-      <div class="plan-period">⏱ 예상 소요: 1~2시간</div>
+      <div class="plan-period">완료 확인 (2026-06-29)</div>
     </div>
     <div class="plan-card p1">
       <span class="plan-badge pb-red">P1 — 즉시 처리</span>
-      <h3>커뮤니티 글 수정 기능</h3>
-      <p>삭제는 구현됨. 글 제목/내용 편집 모달 미구현. 댓글 수정도 없음.</p>
+      <h3>공고 저장 오류 원인 추적</h3>
+      <p>간헐적으로 발생하는 공고 등록/수정 실패. 에러 핸들링은 있으나 근본 원인 미파악. DB constraint 또는 RLS 정책 확인 필요.</p>
       <ul class="plan-items">
-        <li><span class="pi-icon">✏️</span> 글 수정 모달 (제목/내용 편집)</li>
-        <li><span class="pi-icon">🗑️</span> is_deleted=true 소프트 삭제로 전환</li>
-        <li><span class="pi-icon">💬</span> 댓글 수정 버튼</li>
+        <li><span class="pi-icon">🔍</span> 콘솔 에러 메시지 캡처 후 원인 특정</li>
+        <li><span class="pi-icon">🛡️</span> RLS 정책 / NOT NULL 조건 확인</li>
+        <li><span class="pi-icon">✅</span> 공고 사진 업로드 실패 피드백 추가 (2026-06-29 수정완료)</li>
       </ul>
-      <div class="plan-period">⏱ 예상 소요: 1~2시간</div>
+      <div class="plan-period">⏱ 예상 소요: 원인 파악 후 즉시</div>
     </div>
     <div class="plan-card p2">
       <span class="plan-badge pb-orange">P2 — 단기 (1~2주)</span>
@@ -641,41 +641,35 @@
         <td>P1 긴급</td>
         <td>저장 실패 조건 재현 → DB constraint / validation 원인 추적</td>
       </tr>
-      <tr>
-        <td><strong>Android SHOW_FORCED 키보드</strong><br><small>코드 준비됨, 빌드만 필요</small></td>
-        <td><span class="status-yellow">🟡 대기</span></td>
-        <td>P1</td>
-        <td>versionCode 24 빌드 → Play Console 업로드</td>
+      <tr style="opacity:0.5">
+        <td><strong>Android SHOW_FORCED 키보드</strong><br><small>필요성 없는 것으로 결론</small></td>
+        <td><span style="color:#16a34a;font-weight:700">✅ 미적용 결정</span></td>
+        <td>—</td>
+        <td>논의 후 불필요로 결론. 현재 키보드 동작에 문제 없음.</td>
       </tr>
-      <tr>
-        <td><strong>커뮤니티 글 수정/삭제 UI</strong><br><small>본인 글 편집 버튼 없음</small></td>
-        <td><span class="status-yellow">🟡 미구현</span></td>
-        <td>P1</td>
-        <td>내 글에 편집/삭제 버튼 추가, community_posts UPDATE/is_deleted 처리</td>
+      <tr style="opacity:0.5">
+        <td><strong>커뮤니티 글 수정/삭제 UI</strong><br><small>기구현 확인 완료</small></td>
+        <td><span style="color:#16a34a;font-weight:700">✅ 이미 완료</span></td>
+        <td>—</td>
+        <td>openEditCommPost, deleteCommPost, deleteCommComment 모두 구현. 본인 글에만 버튼 표시.</td>
       </tr>
-      <tr>
-        <td><strong>커뮤니티 댓글 삭제 UI</strong><br><small>본인 댓글 삭제 버튼 없음</small></td>
-        <td><span class="status-yellow">🟡 미구현</span></td>
-        <td>P1</td>
-        <td>댓글에 × 버튼 추가, community_comments DELETE</td>
+      <tr style="opacity:0.5">
+        <td><strong>커뮤니티 댓글 익명 토글</strong><br><small>is_anonymous 필드 있음</small></td>
+        <td><span style="color:#16a34a;font-weight:700">✅ 이미 완료</span></td>
+        <td>—</td>
+        <td>글쓰기 폼에 익명 체크박스 이미 구현됨.</td>
       </tr>
-      <tr>
-        <td><strong>댓글 익명 토글</strong><br><small>is_anonymous: false 고정</small></td>
-        <td><span class="status-yellow">🟡 미구현</span></td>
-        <td>P2</td>
-        <td>글쓰기 폼에 익명 체크박스 추가</td>
+      <tr style="opacity:0.5">
+        <td><strong>알림 히스토리 화면</strong></td>
+        <td><span style="color:#16a34a;font-weight:700">✅ 완료 (2026-06-29)</span></td>
+        <td>—</td>
+        <td>마이페이지→알림설정→히스토리. 기존 테이블 재구성 방식으로 DDL 없이 구현.</td>
       </tr>
       <tr>
         <td><strong>공고 자동 마감</strong><br><small>만료 공고 계속 노출</small></td>
         <td><span class="status-yellow">🟡 미구현</span></td>
         <td>P2</td>
         <td>Supabase Edge Function 작성 → 매일 자정 is_active=false</td>
-      </tr>
-      <tr>
-        <td><strong>알림 히스토리 화면</strong><br><small>알림 놓치면 재확인 불가</small></td>
-        <td><span class="status-yellow">🟡 미구현</span></td>
-        <td>P2</td>
-        <td>notifications 테이블 DDL + 목록 패널 UI</td>
       </tr>
       <tr>
         <td><strong>리뷰 답글 기능</strong><br><small>업주가 리뷰에 답변 불가</small></td>

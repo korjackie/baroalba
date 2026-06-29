@@ -4086,7 +4086,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=271').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=272').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -13938,8 +13938,17 @@ async function submitPosting() {
           headers: { 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'image/jpeg' },
           body: img.file
         });
-        if (r.ok) _uploadedUrls.push(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/public/job-images/' + path);
-      } catch(e) {}
+        if (r.ok) {
+          _uploadedUrls.push(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/public/job-images/' + path);
+        } else {
+          const errTxt = await r.text().catch(() => r.status);
+          console.error('[job-image] 업로드 실패:', r.status, errTxt);
+          showToast('사진 업로드 실패 (' + r.status + ') — 사진 없이 저장됩니다', 5000);
+        }
+      } catch(e) {
+        console.error('[job-image] 업로드 네트워크 오류:', e);
+        showToast('사진 업로드 중 오류가 발생했습니다 — 사진 없이 저장됩니다', 5000);
+      }
     }
   }
   payload.images = _uploadedUrls;
