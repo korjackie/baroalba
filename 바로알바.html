@@ -239,6 +239,12 @@
       cursor: pointer; white-space: nowrap; flex-shrink: 0;
     }
     .home-filter-chip.active { background: #FFF0F0; border-color: #C8102E; color: #C8102E; font-weight: 800; }
+    .hfc-chip { padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; background:#f5f5f5; color:#555; cursor:pointer; border:none; }
+    .hfc-chip.active { background:#fff0f2; color:#C8102E; font-weight:800; }
+    .hfc-toggle { width:42px; height:24px; background:#e0e0e0; border-radius:12px; position:relative; transition:background .2s; flex-shrink:0; }
+    .hfc-toggle::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:left .2s; }
+    .hfc-toggle.on { background:#C8102E; }
+    .hfc-toggle.on::after { left:21px; }
     /* ── 반경 표시 ── */
     .radius-badge {
       position: fixed;
@@ -2201,46 +2207,33 @@
 <!-- ═══ 홈 패널 ═══ -->
 <div class="full-panel" id="panel-home">
   <!-- 헤더 -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;background:#fff;flex-shrink:0;border-bottom:1px solid #f0f0f0;box-shadow:0 1px 6px rgba(0,0,0,0.06)">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#fff;flex-shrink:0;border-bottom:1px solid #f0f0f0">
     <div style="display:flex;align-items:center;gap:8px">
-      <div style="width:28px;height:28px;border-radius:7px;overflow:hidden;flex-shrink:0">
-        <img src="./icons/바로알바 최종로고.png" style="width:28px;height:auto;object-fit:cover">
+      <div style="width:26px;height:26px;border-radius:7px;overflow:hidden;flex-shrink:0">
+        <img src="./icons/바로알바 최종로고.png" style="width:26px;height:auto;object-fit:cover">
       </div>
       <span style="font-size:17px;font-weight:900;color:#111">바로알바</span>
     </div>
-    <button onclick="openNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <button onclick="openNotifications()" style="background:none;border:none;cursor:pointer;padding:4px;line-height:1">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
     </button>
   </div>
 
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:16px">
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
-    <!-- 검색 바 -->
-    <div style="padding:14px 16px 0">
-      <div style="display:flex;gap:8px;align-items:center">
-        <div style="flex:1;display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:14px;padding:10px 14px;border:1.5px solid #e5e7eb">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="home-search-input" type="text" placeholder="업종, 지역, 공고명 검색" style="border:none;background:none;font-size:14px;font-weight:600;color:#222;flex:1;outline:none;min-width:0" onkeydown="if(event.key==='Enter')doHomeSearch()">
+    <!-- 검색바 -->
+    <div style="padding:8px 12px 0">
+      <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:13px;padding:8px 12px;cursor:pointer" onclick="openHomeFilter()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="home-search-input" type="text" placeholder="업종, 지역, 공고명 검색" style="border:none;background:none;font-size:13px;color:#222;flex:1;outline:none;min-width:0;pointer-events:none" onkeydown="if(event.key==='Enter')doHomeSearch()" onclick="this.style.pointerEvents='all';event.stopPropagation()">
+        <div onclick="event.stopPropagation();openHomeFilter()" style="width:30px;height:30px;background:#C8102E;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
-        <button onclick="doHomeSearch()" style="background:#C8102E;color:#fff;border:none;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">검색</button>
-      </div>
-
-      <!-- 빠른 필터 칩 -->
-      <div style="display:flex;gap:6px;margin-top:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-        <button class="home-filter-chip active" data-cat="" onclick="setHomeFilter(this,'')">전체</button>
-        <button class="home-filter-chip" data-cat="F&B" onclick="setHomeFilter(this,'F&B')">🍳 F&amp;B</button>
-        <button class="home-filter-chip" data-cat="청소" onclick="setHomeFilter(this,'청소')">🧹 청소</button>
-        <button class="home-filter-chip" data-cat="물류" onclick="setHomeFilter(this,'물류')">📦 물류</button>
-        <button class="home-filter-chip" data-cat="판매" onclick="setHomeFilter(this,'판매')">🏪 판매</button>
-        <button class="home-filter-chip" data-cat="이벤트" onclick="setHomeFilter(this,'이벤트')">🎉 이벤트</button>
-        <button class="home-filter-chip" data-cat="심부름" onclick="setHomeFilter(this,'심부름')">🛵 심부름</button>
-        <button class="home-filter-chip" data-wage="same_day" onclick="setHomeFilter(this,'','same_day')">💰 당일정산</button>
-        <button class="home-filter-chip" data-nat="foreigner" onclick="setHomeFilter(this,'','','foreigner')">🌏 외국인환영</button>
       </div>
     </div>
 
-    <!-- 검색 결과 (평소엔 숨김) -->
-    <div id="home-search-results" style="display:none;padding:12px 16px 0">
+    <!-- 검색 결과 -->
+    <div id="home-search-results" style="display:none;padding:8px 12px 0">
       <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" id="home-search-result-label">검색 결과</div>
       <div id="home-search-result-list"></div>
     </div>
@@ -2248,84 +2241,97 @@
     <!-- 기본 콘텐츠 -->
     <div id="home-default-content">
 
-      <!-- 🔥 오늘의 급구 -->
-      <div id="home-urgent-section" style="display:none;padding:16px 16px 0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:900;color:#111">🔥 오늘의 급구</span>
-          <button onclick="setNav(document.querySelectorAll('.nav-item')[2],'dashboard')" style="font-size:12px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer">전체보기 ›</button>
-        </div>
-        <div id="home-urgent-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+      <!-- Bento Grid -->
+      <div style="padding:8px 12px 0;display:grid;grid-template-columns:1fr 1fr;gap:7px">
+
+        <!-- 급구 타일 (full-width, dark, JS로 채움) -->
+        <div id="home-urgent-section" style="display:none;grid-column:1/-1;background:#111;border-radius:15px;padding:13px;cursor:pointer;flex-direction:column"></div>
+
+        <!-- AI PICKS (left col, JS로 채움) -->
+        <div id="home-ai-section" style="display:none;background:#fff;border:1.5px solid #efefef;border-radius:15px;padding:13px;flex-direction:column;cursor:pointer"></div>
+
+        <!-- 당일정산 (right col, JS로 채움) -->
+        <div id="home-sameday-section" style="background:#fffbf5;border:1.5px solid #fde8bb;border-radius:15px;padding:13px;flex-direction:column;cursor:pointer"></div>
+
+        <!-- 외국인환영 (full-width, JS로 채움) -->
+        <div id="home-foreigner-section" style="display:none;grid-column:1/-1;background:#f6fdf8;border:1.5px solid #c6efd4;border-radius:15px;padding:13px;flex-direction:column;cursor:pointer"></div>
+
       </div>
 
-      <!-- ✦ 맞춤 추천 -->
-      <div id="home-ai-section" style="display:none;padding:16px 16px 0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:7px">
-            <div style="width:22px;height:22px;background:linear-gradient(135deg,#FF6B6B,#C8102E);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:900;flex-shrink:0">✦</div>
-            <span style="font-size:15px;font-weight:900;color:#111">AI 맞춤 추천</span>
-          </div>
-          <span style="font-size:11px;color:#bbb;font-weight:600">행동 기반</span>
-        </div>
-        <div id="home-ai-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
-      </div>
-
-      <!-- 💰 당일정산 특가 -->
-      <div id="home-sameday-section" style="padding:16px 16px 0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:900;color:#111">💰 당일정산 특가</span>
-          <button onclick="setHomeFilter(document.querySelector('[data-wage=same_day]'),'','same_day')" style="font-size:12px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer">더보기 ›</button>
-        </div>
-        <div id="home-sameday-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
-      </div>
-
-      <!-- 🌏 외국인 환영 (외국인 프로필일 때만) -->
-      <div id="home-foreigner-section" style="display:none;padding:16px 16px 0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:900;color:#111">🌏 외국인 환영 공고</span>
-          <button onclick="setHomeFilter(document.querySelector('[data-nat=foreigner]'),'','','foreigner')" style="font-size:12px;color:#16a34a;font-weight:700;background:none;border:none;cursor:pointer">더보기 ›</button>
-        </div>
-        <div id="home-foreigner-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
-      </div>
-
-      <!-- 🤝 바로모임 -->
-      <div style="padding:16px 16px 0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:28px;height:28px;background:linear-gradient(135deg,#7C3AED,#5B21B6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">🤝</div>
-            <span style="font-size:15px;font-weight:900;color:#111">바로모임</span>
-            <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:#7C3AED;padding:2px 7px;border-radius:8px">NEW</span>
-          </div>
-          <button onclick="openMoimPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer">전체보기 ›</button>
-        </div>
-        <div id="home-moim-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-          <div style="color:#bbb;font-size:13px;padding:20px 0">불러오는 중...</div>
-        </div>
-        <button onclick="openMoimPanel(true)" style="width:100%;margin-top:10px;padding:11px;border-radius:14px;border:1.5px dashed #7C3AED;background:#F5F3FF;color:#7C3AED;font-size:13px;font-weight:800;cursor:pointer">+ 모임 만들기</button>
-      </div>
-
-      <!-- 🏆 모범 업주 / 알바생 -->
-      <div style="padding:16px 16px 0">
-        <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:10px">🏆 이달의 우수 파트너</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <!-- 모범 업주 -->
-          <div style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border-radius:16px;padding:14px;border:1.5px solid #FDE68A">
-            <div style="font-size:11px;font-weight:800;color:#D97706;margin-bottom:8px">⭐ 모범 업주</div>
-            <div id="home-top-employer" style="display:flex;flex-direction:column;gap:8px">
-              <div style="text-align:center;padding:8px 0;color:#bbb;font-size:12px">불러오는 중...</div>
+      <!-- 바로모임 섹션 -->
+      <div style="padding:7px 12px 0">
+        <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:15px;overflow:hidden">
+          <div style="padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #f5f3ff">
+            <div style="width:30px;height:30px;background:#7C3AED;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-          </div>
-          <!-- 모범 알바생 -->
-          <div style="background:linear-gradient(135deg,#F0FFF4,#DCFCE7);border-radius:16px;padding:14px;border:1.5px solid #86EFAC">
-            <div style="font-size:11px;font-weight:800;color:#16a34a;margin-bottom:8px">🌟 모범 알바생</div>
-            <div id="home-top-worker" style="display:flex;flex-direction:column;gap:8px">
-              <div style="text-align:center;padding:8px 0;color:#bbb;font-size:12px">불러오는 중...</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:900;color:#5B21B6">바로모임</div>
+              <div style="font-size:10px;color:#a78bfa;margin-top:1px">취미 · 스포츠 · 소셜 모임</div>
             </div>
+            <span style="font-size:9px;font-weight:900;background:#7C3AED;color:#fff;padding:2px 8px;border-radius:10px">NEW</span>
+            <button onclick="openMoimPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer;margin-left:4px">전체 ›</button>
           </div>
+          <div id="home-moim-list" style="display:flex;gap:8px;overflow-x:auto;padding:9px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+            <div style="color:#bbb;font-size:12px;padding:10px 0">불러오는 중...</div>
+          </div>
+          <div style="padding:0 14px 10px">
+            <button onclick="openMoimPanel(true)" style="width:100%;padding:9px;border-radius:11px;border:1.5px dashed #c4b5fd;background:#faf5ff;color:#7C3AED;font-size:12px;font-weight:800;cursor:pointer">+ 모임 만들기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우수 파트너 -->
+      <div style="padding:7px 12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;padding:12px">
+          <div style="font-size:9px;font-weight:900;color:#b45309;margin-bottom:8px;letter-spacing:.5px">TOP EMPLOYER</div>
+          <div id="home-top-employer"><div style="text-align:center;padding:6px 0;color:#ddd;font-size:12px">-</div></div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;padding:12px">
+          <div style="font-size:9px;font-weight:900;color:#15803d;margin-bottom:8px;letter-spacing:.5px">TOP WORKER</div>
+          <div id="home-top-worker"><div style="text-align:center;padding:6px 0;color:#ddd;font-size:12px">-</div></div>
         </div>
       </div>
 
     </div><!-- /#home-default-content -->
   </div><!-- /scroll -->
+
+  <!-- 필터 패널 오버레이 -->
+  <div id="home-filter-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:20" onclick="if(event.target===this)closeHomeFilter()">
+    <div style="height:100%;display:flex;flex-direction:column;justify-content:flex-end">
+      <div style="background:#fff;border-radius:20px 20px 0 0;max-height:84%;overflow-y:auto">
+        <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0"></div>
+        <div style="padding:12px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f5f5f5">
+          <span style="font-size:15px;font-weight:900;color:#111">공고 필터</span>
+          <button onclick="closeHomeFilter()" style="background:none;border:none;font-size:22px;color:#bbb;cursor:pointer;line-height:1">&#215;</button>
+        </div>
+        <div style="padding:10px 18px 6px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb">업종</div>
+        <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="hfc-chip active" data-cat="" onclick="selectHomeFilterCat(this,'')">전체</button>
+          <button class="hfc-chip" data-cat="F&B" onclick="selectHomeFilterCat(this,'F&B')">F&amp;B</button>
+          <button class="hfc-chip" data-cat="청소" onclick="selectHomeFilterCat(this,'청소')">청소</button>
+          <button class="hfc-chip" data-cat="물류" onclick="selectHomeFilterCat(this,'물류')">물류</button>
+          <button class="hfc-chip" data-cat="판매" onclick="selectHomeFilterCat(this,'판매')">판매</button>
+          <button class="hfc-chip" data-cat="이벤트" onclick="selectHomeFilterCat(this,'이벤트')">이벤트</button>
+          <button class="hfc-chip" data-cat="심부름" onclick="selectHomeFilterCat(this,'심부름')">심부름</button>
+        </div>
+        <div style="padding:6px 18px 4px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">조건</div>
+        <div onclick="toggleHFCond('same_day')" style="display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
+          <span style="font-size:14px;font-weight:700;color:#111;flex:1">당일정산</span>
+          <div id="hfc-toggle-sd" class="hfc-toggle"></div>
+        </div>
+        <div onclick="toggleHFCond('foreigner')" style="display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
+          <span style="font-size:14px;font-weight:700;color:#111;flex:1">외국인 환영</span>
+          <div id="hfc-toggle-nat" class="hfc-toggle"></div>
+        </div>
+        <div style="padding:12px 16px 20px;display:flex;gap:10px">
+          <button onclick="resetHomeFilter()" style="flex:1;padding:13px;border:1.5px solid #e5e5e5;border-radius:13px;font-size:14px;font-weight:800;color:#555;background:#fff;cursor:pointer">초기화</button>
+          <button id="home-filter-apply-btn" onclick="applyHomeFilter()" style="flex:2.5;padding:13px;background:#C8102E;border:none;border-radius:13px;font-size:14px;font-weight:900;color:#fff;cursor:pointer">공고보기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /#panel-home -->
 
 <div class="full-panel" id="panel-dashboard">
@@ -4792,7 +4798,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=285').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=286').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -5656,17 +5662,19 @@ async function loadMoimList(cat = '') {
 }
 
 function _moimHomeCard(m) {
-  const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
-  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' }) : '날짜 미정';
-  const rem = (m.max_count || 10) - (m.current_count || 0);
-  return `<div onclick="openMoimDetail('${m.id}')" style="flex-shrink:0;width:160px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);cursor:pointer;border:1.5px solid #EDE9FE">
-    <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:14px 12px 10px;position:relative">
-      <div style="font-size:28px;margin-bottom:4px">${emoji}</div>
-      <div style="font-size:11px;font-weight:900;color:#5B21B6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.category || '기타'}</div>
+  const catColor = { 스포츠:'#2563eb',취미:'#7c3aed',소셜:'#0891b2',파티:'#db2777',카풀:'#16a34a',기타:'#6b7280' };
+  const cat = m.category || '기타';
+  const color = catColor[cat] || '#7c3aed';
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '날짜 미정';
+  const rem = (m.max_count||10) - (m.current_count||0);
+  return `<div onclick="openMoimDetail('${m.id}')" style="flex-shrink:0;width:148px;background:#fff;border-radius:13px;overflow:hidden;cursor:pointer;border:1.5px solid #ede9fe">
+    <div style="padding:10px 12px 8px;border-bottom:1px solid #f5f3ff">
+      <div style="font-size:9px;font-weight:900;color:${color};letter-spacing:.5px;margin-bottom:3px">${cat.toUpperCase()}</div>
+      <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3">${m.title}</div>
     </div>
-    <div style="padding:10px 12px">
-      <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.title}</div>
-      <div style="font-size:11px;color:#888">📅 ${dateStr}</div>
+    <div style="padding:8px 12px">
+      <div style="font-size:10px;color:#aaa">${dateStr}</div>
+      <div style="font-size:11px;font-weight:700;color:${color};margin-top:3px">${rem>0?rem+'자리 남음':'마감'}</div>
       <div style="font-size:11px;color:${rem<=2?'#C8102E':'#7C3AED'};font-weight:700;margin-top:2px">${rem > 0 ? rem+'자리 남음' : '마감'}</div>
       ${m.entry_fee > 0 ? `<div style="font-size:11px;color:#D97706;font-weight:700">💰 ${m.entry_fee.toLocaleString()}원</div>` : '<div style="font-size:11px;color:#16a34a;font-weight:700">무료</div>'}
     </div>
@@ -6210,6 +6218,9 @@ async function _renderMoimMarkers() {
 let _homeFilterCat = '';
 let _homeFilterWage = '';
 let _homeFilterNat = '';
+let _hfPendingCat = '';
+let _hfPendingWage = '';
+let _hfPendingNat = '';
 
 function loadHomePanel() {
   // 외국인 프로필이면 외국인환영 섹션 표시
@@ -6232,20 +6243,17 @@ function loadHomePanel() {
 }
 
 function _homeJobCard(job) {
-  const emoji = getCatEmoji ? getCatEmoji(job.category) : '💼';
-  const bg = (typeof CAT_BG !== 'undefined' && CAT_BG[job.category]) || '#f5f5f5';
   const wage = job.current_wage || 0;
-  const unit = job.wage_type === 'daily' ? '/일' : job.wage_type === 'per_unit' ? '/건' : '/시간';
-  return `<div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:148px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);cursor:pointer;border:1.5px solid #f0f0f0">
-    <div style="background:${bg};padding:10px 12px 8px;position:relative">
-      <div style="font-size:26px;line-height:1;margin-bottom:4px">${emoji}</div>
-      <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.biz_name || job.title}</div>
-      ${job.status === 'urgent' ? '<span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥급구</span>' : ''}
+  const unit = job.wage_type === 'daily' ? '/일' : job.wage_type === 'per_unit' ? '/건' : '/시';
+  return `<div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:144px;background:#fff;border-radius:13px;overflow:hidden;cursor:pointer;border:1.5px solid #f0f0f0">
+    <div style="padding:10px 11px 8px">
+      <div style="font-size:9px;font-weight:900;letter-spacing:.5px;color:#999;margin-bottom:3px">${job.category||''}</div>
+      <div style="font-size:12px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.biz_name || job.title}</div>
+      ${job.status === 'urgent' ? '<span style="font-size:9px;font-weight:800;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px;margin-top:4px;display:inline-block">URGENT</span>' : ''}
     </div>
-    <div style="padding:8px 10px">
-      <div style="font-size:13px;font-weight:900;color:#C8102E">${wage > 0 ? wage.toLocaleString()+'원'+unit : '협의'}</div>
-      <div style="font-size:10px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title}</div>
-      ${job.same_day_payment ? '<span style="font-size:9px;font-weight:800;color:#16a34a;background:#F0FFF4;padding:2px 6px;border-radius:6px;margin-top:3px;display:inline-block">💰 당일정산</span>' : ''}
+    <div style="padding:0 11px 10px">
+      <div style="font-size:14px;font-weight:900;color:#C8102E">${wage > 0 ? wage.toLocaleString()+'원'+unit : '협의'}</div>
+      ${job.same_day_payment ? '<div style="font-size:9px;font-weight:800;color:#15803d;margin-top:2px">당일정산</div>' : ''}
     </div>
   </div>`;
 }
@@ -6253,45 +6261,83 @@ function _homeJobCard(job) {
 function _renderHomeUrgent() {
   const urgentJobs = jobs.filter(j => j.status === 'urgent').slice(0, 8);
   const section = document.getElementById('home-urgent-section');
-  const list = document.getElementById('home-urgent-list');
-  if (!section || !list) return;
+  if (!section) return;
   if (!urgentJobs.length) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  list.innerHTML = urgentJobs.map(_homeJobCard).join('');
+  section.style.display = 'flex';
+  const _u = j => j.wage_type==='daily'?'/일':j.wage_type==='per_unit'?'/건':'/시';
+  const samples = urgentJobs.slice(0, 2);
+  section.innerHTML = `
+    <div style="font-size:9px;font-weight:900;letter-spacing:1.5px;color:rgba(210,120,130,.9);margin-bottom:5px">URGENT NOW</div>
+    <div style="font-size:15px;font-weight:900;color:#fff;line-height:1.3">급구 <span style="color:#ff6677">${urgentJobs.length}건</span></div>
+    <div style="display:flex;gap:6px;margin-top:9px">
+      ${samples.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="flex:1;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 9px;cursor:pointer;border:1px solid rgba(255,255,255,.05)">
+        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.title||j.category}</div>
+        <div style="font-size:13px;font-weight:900;color:#fff">${j.current_wage>0?j.current_wage.toLocaleString()+'원'+_u(j):'협의'}</div>
+      </div>`).join('')}
+    </div>
+    <div onclick="event.stopPropagation();setNav(document.querySelectorAll('.nav-item')[2],'dashboard')" style="display:inline-flex;align-items:center;gap:3px;background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;margin-top:9px;cursor:pointer;width:fit-content">전체보기 →</div>
+  `;
+  section.onclick = () => setNav(document.querySelectorAll('.nav-item')[2], 'dashboard');
 }
 
 function _renderHomeAI() {
+  const sdSection = document.getElementById('home-sameday-section');
   try {
     const raw = localStorage.getItem(_aiKey());
     const section = document.getElementById('home-ai-section');
-    const list = document.getElementById('home-ai-list');
-    if (!section || !list || !raw) return;
+    if (!section || !raw) { if (sdSection) sdSection.style.gridColumn='1/-1'; return; }
     const prefs = JSON.parse(raw);
-    if ((prefs.totalSignals || 0) < 3) { section.style.display = 'none'; return; }
-    const scored = (jobs || [])
-      .filter(j => j.status === 'open' || j.status === 'urgent')
-      .map(j => ({ job: j, score: _aiScoreJob(j, prefs) }))
-      .filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
-    if (!scored.length) { section.style.display = 'none'; return; }
-    section.style.display = 'block';
-    list.innerHTML = scored.map(x => _homeJobCard(x.job)).join('');
-  } catch(e) {}
+    if ((prefs.totalSignals || 0) < 3) { section.style.display='none'; if (sdSection) sdSection.style.gridColumn='1/-1'; return; }
+    const scored = (jobs||[]).filter(j=>j.status==='open'||j.status==='urgent')
+      .map(j=>({job:j,score:_aiScoreJob(j,prefs)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+    if (!scored.length) { section.style.display='none'; if (sdSection) sdSection.style.gridColumn='1/-1'; return; }
+    section.style.display = 'flex';
+    if (sdSection) sdSection.style.gridColumn = '';
+    const top = scored[0].job;
+    const unit = top.wage_type==='daily'?'/일':top.wage_type==='per_unit'?'/건':'/시';
+    section.innerHTML = `
+      <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">AI PICKS</div>
+      <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
+      <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
+      <div style="font-size:15px;font-weight:900;color:#C8102E;margin-top:auto;padding-top:6px">${top.current_wage>0?top.current_wage.toLocaleString()+'원'+unit:'협의'}</div>
+    `;
+    section.onclick = () => openDetail(top.id);
+  } catch(e) { if (sdSection) sdSection.style.gridColumn='1/-1'; }
 }
 
 function _renderHomeSameDay() {
-  const sdJobs = jobs.filter(j => j.same_day_payment && (j.status === 'open' || j.status === 'urgent')).slice(0, 8);
-  const list = document.getElementById('home-sameday-list');
-  if (!list) return;
-  list.innerHTML = sdJobs.length ? sdJobs.map(_homeJobCard).join('') :
-    '<div style="color:#bbb;font-size:13px;padding:16px 0">당일정산 공고가 없어요</div>';
+  const sdJobs = jobs.filter(j => j.same_day_payment && (j.status==='open'||j.status==='urgent'));
+  const section = document.getElementById('home-sameday-section');
+  if (!section) return;
+  const _u = j => j.wage_type==='daily'?'/일':j.wage_type==='per_unit'?'/건':'/시';
+  if (!sdJobs.length) {
+    section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#b45309;margin-bottom:5px">SAME DAY</div><div style="font-size:12px;color:#ddd;margin-top:auto">공고 없음</div>`;
+    return;
+  }
+  const top = sdJobs[0];
+  section.innerHTML = `
+    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#b45309;margin-bottom:5px">SAME DAY</div>
+    <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
+    <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
+    <div style="font-size:15px;font-weight:900;color:#b45309;margin-top:auto;padding-top:6px">${top.current_wage>0?top.current_wage.toLocaleString()+'원'+_u(top):'협의'}</div>
+  `;
+  section.onclick = () => setHomeFilter(null, '', 'same_day');
 }
 
 function _renderHomeForeigner() {
-  const fjobs = jobs.filter(j => j.nationality_requirement === 'foreigner_welcome' && (j.status === 'open' || j.status === 'urgent')).slice(0, 6);
-  const list = document.getElementById('home-foreigner-list');
-  if (!list) return;
-  list.innerHTML = fjobs.length ? fjobs.map(_homeJobCard).join('') :
-    '<div style="color:#bbb;font-size:13px;padding:16px 0">외국인 환영 공고가 없어요</div>';
+  const fjobs = jobs.filter(j => j.nationality_requirement==='foreigner_welcome'&&(j.status==='open'||j.status==='urgent')).slice(0,4);
+  const section = document.getElementById('home-foreigner-section');
+  if (!section) return;
+  if (!fjobs.length) { section.style.display='none'; return; }
+  section.style.display = 'flex';
+  section.innerHTML = `
+    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#15803d;margin-bottom:5px">WELCOME ALL</div>
+    <div style="font-size:13px;font-weight:900;color:#111;margin-bottom:7px">외국인 환영 공고 ${fjobs.length}건</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      ${fjobs.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="background:#15803d;color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer">${j.biz_name||j.title}</div>`).join('')}
+    </div>
+  `;
+  section.onclick = () => setHomeFilter(null, '', '', 'foreigner');
 }
 
 async function _loadHomeTopPartners() {
@@ -6303,12 +6349,12 @@ async function _loadHomeTopPartners() {
       .order('review_avg', { ascending: false }).limit(3);
     const empEl = document.getElementById('home-top-employer');
     if (empEl && emp && emp.length) {
-      empEl.innerHTML = emp.map(e => `
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:32px;height:32px;border-radius:10px;background:#FEF3C7;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${getCatEmoji ? getCatEmoji(e.category) : '🏢'}</div>
+      empEl.innerHTML = emp.slice(0,2).map(e => `
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+          <div style="width:26px;height:26px;border-radius:7px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;color:#666">${(e.biz_name||'?')[0]}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.biz_name || '업체'}</div>
-            <div style="font-size:11px;color:#D97706;font-weight:700">⭐ ${(e.review_avg||0).toFixed(1)} (${e.review_count}건)</div>
+            <div style="font-size:11px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.biz_name||'업체'}</div>
+            <div style="font-size:10px;color:#b45309;font-weight:700">★ ${(e.review_avg||0).toFixed(1)}</div>
           </div>
         </div>`).join('');
     }
@@ -6323,16 +6369,62 @@ async function _loadHomeTopPartners() {
     const wkEl = document.getElementById('home-top-worker');
     const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿', KZ:'🇰🇿' };
     if (wkEl && wk && wk.length) {
-      wkEl.innerHTML = wk.map(w => `
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:32px;height:32px;border-radius:50%;background:#DCFCE7;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${_NAT_FLAG[w.nationality] || '👤'}</div>
+      wkEl.innerHTML = wk.slice(0,2).map(w => `
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+          <div style="width:26px;height:26px;border-radius:50%;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${_NAT_FLAG[w.nationality]||'👤'}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:800;color:#111">${w.name ? w.name[0]+'*'.repeat(w.name.length-1) : '익명'}</div>
-            <div style="font-size:11px;color:#16a34a;font-weight:700">🌟 ${(w.rating||0).toFixed(1)} (${w.review_count}건)</div>
+            <div style="font-size:11px;font-weight:800;color:#111">${w.name?w.name[0]+'*'.repeat(Math.max(0,w.name.length-1)):'익명'}</div>
+            <div style="font-size:10px;color:#15803d;font-weight:700">★ ${(w.rating||0).toFixed(1)}</div>
           </div>
         </div>`).join('');
     }
   } catch(e) {}
+}
+
+function openHomeFilter() {
+  _hfPendingCat = _homeFilterCat; _hfPendingWage = _homeFilterWage; _hfPendingNat = _homeFilterNat;
+  document.querySelectorAll('.hfc-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === _hfPendingCat));
+  const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.toggle('on', _hfPendingWage==='same_day');
+  const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.toggle('on', _hfPendingNat==='foreigner');
+  _updateHomeFilterCount();
+  document.getElementById('home-filter-overlay').style.display = 'block';
+}
+function closeHomeFilter() { document.getElementById('home-filter-overlay').style.display = 'none'; }
+function resetHomeFilter() {
+  _hfPendingCat = ''; _hfPendingWage = ''; _hfPendingNat = '';
+  document.querySelectorAll('.hfc-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === ''));
+  const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.remove('on');
+  const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.remove('on');
+  _updateHomeFilterCount();
+}
+function selectHomeFilterCat(btn, cat) {
+  _hfPendingCat = cat;
+  document.querySelectorAll('.hfc-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _updateHomeFilterCount();
+}
+function toggleHFCond(cond) {
+  if (cond === 'same_day') {
+    _hfPendingWage = _hfPendingWage === 'same_day' ? '' : 'same_day';
+    const el = document.getElementById('hfc-toggle-sd'); if (el) el.classList.toggle('on', _hfPendingWage==='same_day');
+  } else if (cond === 'foreigner') {
+    _hfPendingNat = _hfPendingNat === 'foreigner' ? '' : 'foreigner';
+    const el = document.getElementById('hfc-toggle-nat'); if (el) el.classList.toggle('on', _hfPendingNat==='foreigner');
+  }
+  _updateHomeFilterCount();
+}
+function _updateHomeFilterCount() {
+  let f = jobs.filter(j => j.status==='open'||j.status==='urgent');
+  if (_hfPendingCat) f = f.filter(j => j.category===_hfPendingCat);
+  if (_hfPendingWage==='same_day') f = f.filter(j => j.same_day_payment);
+  if (_hfPendingNat==='foreigner') f = f.filter(j => j.nationality_requirement==='foreigner_welcome');
+  const btn = document.getElementById('home-filter-apply-btn');
+  if (btn) btn.textContent = `공고보기 ${f.length}개`;
+}
+function applyHomeFilter() {
+  _homeFilterCat = _hfPendingCat; _homeFilterWage = _hfPendingWage; _homeFilterNat = _hfPendingNat;
+  closeHomeFilter();
+  setHomeFilter(null, _homeFilterCat, _homeFilterWage, _homeFilterNat);
 }
 
 function setHomeFilter(btn, cat, wage, nat) {
