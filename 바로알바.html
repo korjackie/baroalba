@@ -576,6 +576,17 @@
     .mp-row-icon { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
     .mp-row-right { display:flex; align-items:center; gap:5px; }
     .mp-row-arrow { font-size:18px; color:#ccc; line-height:1; }
+    /* ── 전자계약서 모달 ── */
+    #contract-modal { align-items:center; justify-content:center; }
+    .contract-wrap { background:#fff; border-radius:20px; width:92%; max-width:500px; max-height:88vh; overflow-y:auto; padding:28px 24px; box-shadow:0 12px 40px rgba(0,0,0,0.18); }
+    /* ── 신뢰점수 뱃지 ── */
+    .trust-badge { display:inline-flex; align-items:center; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; margin-left:5px; }
+    .trust-high { color:#16a34a; background:#f0fdf4; }
+    .trust-mid  { color:#d97706; background:#fff7ed; }
+    .trust-low  { color:#ef4444; background:#fef2f2; }
+    /* ── 위치공유 버튼 ── */
+    .loc-share-btn { display:flex; align-items:center; gap:6px; width:100%; margin-top:8px; padding:10px 14px; border-radius:10px; border:1.5px solid #e0e7ff; background:#f0f4ff; color:#3b82f6; font-size:13px; font-weight:700; cursor:pointer; }
+    .loc-share-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
     .mpsub-panel { position:fixed; inset:0; background:#f5f5f5; z-index:360; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
     .mpsub-panel.show { transform:translateX(0); }
     .mpsub-hdr { display:flex; align-items:center; gap:8px; padding:calc(var(--sat,0px) + 14px) 16px 14px; background:#fff; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
@@ -2758,6 +2769,23 @@
         </div>
       </div>
     </div>
+    <!-- 알림 히스토리 버튼 -->
+    <button onclick="openNotiHistory()" style="width:100%;padding:14px;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;font-weight:700;color:#374151;cursor:pointer;display:flex;align-items:center;gap:8px">
+      <span style="font-size:18px">📋</span> 알림 히스토리 보기
+      <span style="margin-left:auto;color:#bbb">›</span>
+    </button>
+  </div>
+</div>
+
+<!-- 알림 히스토리 패널 -->
+<div class="mpsub-panel" id="mpsub-noti-history" style="z-index:365">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('noti-history')">‹</button>
+    <div class="mpsub-ttl">알림 히스토리</div>
+    <button onclick="loadNotiHistory()" style="background:none;border:none;font-size:13px;color:#C8102E;font-weight:700;cursor:pointer;padding:4px 8px">새로고침</button>
+  </div>
+  <div id="noti-history-list" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px">
+    <div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">로딩 중...</div>
   </div>
 </div>
 
@@ -4058,7 +4086,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=270').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=271').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -6016,6 +6044,7 @@ async function loadMyApplications() {
       })() : ''}
       <!-- 액션 버튼 -->
       ${canChat ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} 업주에게 문의하기</button>` : ''}
+      ${isAccepted ? `<button id="loc-btn-${a.id}" class="loc-share-btn" onclick="event.stopPropagation();toggleLocationShare('${a.id}',this)">📍 위치 공유 시작</button>` : ''}
       ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
     </div>`;
   }).join('');
@@ -11866,12 +11895,7 @@ function makeApplicantCardHtml(a, opts = {}) {
   const attendanceHtml = total > 0
     ? ` · <span style="color:${noshow > 0 ? '#dc2626' : '#16a34a'};font-weight:700">출근율 ${Math.round(reviews/total*100)}%</span>${noshow > 0 ? ` <span style="color:#dc2626">⚠️노쇼${noshow}</span>` : ''}`
     : '';
-  const trustBadge = (() => {
-    if (total < 3) return '';
-    if (noshow === 0 && reviews / total >= 0.95) return '<span style="font-size:10px;font-weight:900;background:#dcfce7;color:#16a34a;padding:2px 6px;border-radius:6px;margin-left:4px">✓우수</span>';
-    if (noshow > 0) return '<span style="font-size:10px;font-weight:900;background:#fff1f2;color:#be123c;padding:2px 6px;border-radius:6px;margin-left:4px">⚠노쇼</span>';
-    return '';
-  })();
+  const trustBadge = total >= 2 ? trustBadgeHtml(w) : '';
   const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
   const b = _STATUS_BADGE[a.status] || _STATUS_BADGE.pending;
   const badge = `<span style="background:${b.bg};color:${b.color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap">${b.label}</span>`;
@@ -13193,6 +13217,7 @@ async function updateApplication(appId, status) {
     await sendAcceptMessage(appId);
     sendAppStatusPush(appId, 'accepted');
     showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+    setTimeout(() => showContractModal(appId), 500);
   } else if (status === 'rejected') {
     sendAppStatusPush(appId, 'rejected');
     showToast('탈락 처리됐습니다');
@@ -13972,9 +13997,10 @@ async function submitPosting() {
       const { data: fresh } = await db.from('job_postings')
         .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
       openShareModal(fresh?.id, true);
-      // 비동기로 매칭 알림 발송 + 팔로워 알림 (UI 차단 없음)
+      // 비동기로 매칭 알림 발송 + 팔로워 알림 + 단골 우선 알림 (UI 차단 없음)
       notifyMatchingWorkers(category, wage, addrText).catch(() => {});
       _notifyFollowers(fresh?.id, title, wage).catch(() => {});
+      _notifyFavWorkers(fresh?.id, title, wage).catch(() => {});
     } else {
       showToast('✅ 공고가 수정됐습니다');
     }
@@ -16937,7 +16963,258 @@ function _scCancel() {
   document.getElementById('sc-overlay').style.display = 'none';
   _scCallback = null;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// ── 신용점수 고도화 ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+function calcBakalbaScore(w) {
+  const rating  = parseFloat(w?.rating) || 3.0;
+  const noshow  = Math.min(parseInt(w?.noshow_count) || 0, 10);
+  const reviews = Math.min(parseInt(w?.review_count) || 0, 20);
+  const score = Math.round(
+    60 +
+    (rating / 5) * 25 +
+    Math.min(reviews, 10) * 0.5 -
+    noshow * 7
+  );
+  return Math.max(0, Math.min(99, score));
+}
+function trustBadgeHtml(w) {
+  const s = calcBakalbaScore(w);
+  const cls = s >= 80 ? 'trust-high' : s >= 60 ? 'trust-mid' : 'trust-low';
+  return `<span class="trust-badge ${cls}">신뢰 ${s}점</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ── 단골 알바생 우선 알림 ──────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+async function _notifyFavWorkers(jobId, title, wage) {
+  if (!bizRecord?.id) return;
+  const { data: favs } = await db.from('fav_workers')
+    .select('worker_id, workers(kakao_uid)').eq('business_id', bizRecord.id);
+  if (!favs?.length) return;
+  const wageStr = wage ? ` · ${wage.toLocaleString()}원` : '';
+  const body = `[단골 업체] ${title}${wageStr} 새 공고가 올라왔어요`;
+  for (const fav of favs) {
+    const uid = fav.workers?.kakao_uid;
+    if (!uid) continue;
+    fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: uid,
+        title: `⭐ ${bizRecord.biz_name || bizRecord.name}`,
+        body,
+        url: jobId ? `/바로알바.html?job=${jobId}` : '/바로알바.html'
+      })
+    }).catch(() => {});
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ── 전자계약서 자동 생성 ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+async function showContractModal(appId) {
+  const { data: app } = await db.from('applications')
+    .select('*, workers(name, phone), job_postings(title, start_time, hourly_wage, work_type, address, businesses(biz_name, name, phone))')
+    .eq('id', appId).single();
+  if (!app) return;
+  const w = app.workers;
+  const j = app.job_postings;
+  const b = j?.businesses;
+  const dateStr = new Date().toLocaleDateString('ko-KR');
+  const workDate = j?.start_time
+    ? new Date(j.start_time).toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' })
+    : '별도 협의';
+  const wage = j?.hourly_wage ? j.hourly_wage.toLocaleString() + '원/시간' : '협의';
+  document.getElementById('contract-content').innerHTML = `
+    <p style="margin-bottom:14px"><strong>${b?.biz_name || b?.name || '업체명'}</strong>(이하 "사용자")와 <strong>${w?.name || '근로자'}</strong>(이하 "근로자")는 다음과 같이 근로계약을 체결합니다.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
+      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700;width:32%">직무</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${j?.title || '-'}</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700">근무일시</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${workDate}</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700">근무지</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${j?.address || '별도 안내'}</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700">임금</td><td style="padding:9px 10px;border:1px solid #e5e7eb"><strong style="color:#C8102E">${wage}</strong></td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700">사용자</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${b?.biz_name || '-'} (${b?.phone || '-'})</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700">근로자</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${w?.name || '-'} (${w?.phone || '-'})</td></tr>
+    </table>
+    <p style="font-size:12px;color:#666;line-height:1.75">① 임금은 근무 종료 후 당일 또는 익일 지급을 원칙으로 한다.<br>② 근로자는 부득이한 사유 없이 계약된 근무를 이행하지 않을 경우 신뢰점수가 차감될 수 있다.<br>③ 사용자는 최저임금법 및 근로기준법을 준수한다.</p>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:12px;color:#aaa">
+      <span>계약일: ${dateStr}</span>
+      <span>바로알바 플랫폼 자동 생성</span>
+    </div>`;
+  document.getElementById('contract-modal').style.display = 'flex';
+}
+function printContract() {
+  const content = document.getElementById('contract-content').innerHTML;
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>근로계약서</title>
+    <style>body{font-family:'Apple SD Gothic Neo',sans-serif;padding:48px;max-width:580px;margin:0 auto;color:#222}
+    table{width:100%;border-collapse:collapse}td{padding:9px 10px;border:1px solid #ddd}
+    @media print{button{display:none}}</style></head>
+    <body><h2 style="text-align:center;letter-spacing:4px;margin-bottom:28px">근 로 계 약 서</h2>
+    ${content}<br><br>
+    <button onclick="window.print()" style="padding:12px 28px;background:#C8102E;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer">🖨️ 출력</button>
+    </body></html>`);
+  w.document.close();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ── 실시간 위치 공유 (Supabase Realtime Broadcast) ─────────────────
+// ═══════════════════════════════════════════════════════════════════
+let _locationWatchId = null;
+let _locationChannel = null;
+let _locationAppId   = null;
+
+async function toggleLocationShare(appId, btnEl) {
+  if (_locationWatchId !== null) {
+    navigator.geolocation.clearWatch(_locationWatchId);
+    _locationWatchId = null;
+    _locationChannel?.unsubscribe();
+    _locationChannel = null;
+    _locationAppId   = null;
+    btnEl.classList.remove('active');
+    btnEl.innerHTML = '📍 위치 공유 시작';
+    showToast('위치 공유를 종료했어요');
+    return;
+  }
+  if (!navigator.geolocation) { showToast('이 기기에서 위치 공유를 지원하지 않아요'); return; }
+  _locationAppId = appId;
+  _locationChannel = db.channel(`location:${appId}`);
+  await _locationChannel.subscribe();
+  _locationWatchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      _locationChannel.send({
+        type: 'broadcast', event: 'loc',
+        payload: { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() }
+      }).catch(() => {});
+    },
+    () => showToast('위치 정보를 가져올 수 없어요'),
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+  );
+  btnEl.classList.add('active');
+  btnEl.innerHTML = '📍 위치 공유 중 (탭하여 종료)';
+  showToast('📍 위치 공유를 시작했어요. 업주가 실시간으로 확인할 수 있어요.');
+}
+
+function subscribeWorkerLocation(appId, onUpdate) {
+  const ch = db.channel(`location:${appId}`);
+  ch.on('broadcast', { event: 'loc' }, ({ payload }) => onUpdate(payload)).subscribe();
+  return ch;
+}
+// ═══════════════════════════════════════════════════════════════════
+// ── 알림 히스토리 (기존 테이블에서 재구성) ────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+function openNotiHistory() {
+  document.getElementById('mpsub-noti-history').classList.add('show');
+  loadNotiHistory();
+}
+async function loadNotiHistory() {
+  const el = document.getElementById('noti-history-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">로딩 중...</div>';
+  const items = [];
+  try {
+    if (workerRecord?.id) {
+      // 1. 합격/거절 결과 알림
+      const { data: apps } = await db.from('applications')
+        .select('id, status, updated_at, job_postings(title, businesses(name))')
+        .eq('worker_id', workerRecord.id)
+        .in('status', ['accepted', 'rejected'])
+        .order('updated_at', { ascending: false }).limit(20);
+      apps?.forEach(a => {
+        const accepted = a.status === 'accepted';
+        items.push({
+          icon: accepted ? '✅' : '❌',
+          title: (a.job_postings?.businesses?.name || '업체') + ' · ' + (a.job_postings?.title || '공고'),
+          sub: accepted ? '합격을 축하드려요! 계약서를 확인하세요.' : '이번엔 아쉽게도 거절됐어요',
+          badge: accepted ? '합격' : '거절',
+          badgeColor: accepted ? '#16a34a' : '#ef4444',
+          badgeBg: accepted ? '#f0fdf4' : '#fef2f2',
+          ts: a.updated_at
+        });
+      });
+      // 2. 팔로우한 업체 새 공고 (최근 7일)
+      const { data: follows } = await db.from('follows')
+        .select('businesses(id, name)').eq('worker_id', workerRecord.id);
+      if (follows?.length) {
+        const bizIds = follows.map(f => f.businesses?.id).filter(Boolean);
+        const cutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { data: newJobs } = await db.from('job_postings')
+          .select('id, title, created_at, businesses(name)')
+          .in('business_id', bizIds).gte('created_at', cutoff)
+          .order('created_at', { ascending: false }).limit(15);
+        newJobs?.forEach(j => items.push({
+          icon: '🔔',
+          title: (j.businesses?.name || '업체') + ' · ' + j.title,
+          sub: '팔로우한 업체에 새 공고가 올라왔어요',
+          badge: '새 공고',
+          badgeColor: '#3b82f6', badgeBg: '#eff6ff',
+          ts: j.created_at
+        }));
+      }
+    } else if (bizRecord?.id) {
+      // 업주: 최근 지원자 알림
+      const { data: apps } = await db.from('applications')
+        .select('id, status, created_at, workers(name), job_postings(title)')
+        .eq('job_postings.business_id', bizRecord.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false }).limit(20);
+      apps?.forEach(a => items.push({
+        icon: '👤',
+        title: (a.workers?.name || '지원자') + ' · ' + (a.job_postings?.title || '공고'),
+        sub: '새로운 지원서가 도착했어요',
+        badge: '새 지원',
+        badgeColor: '#7c3aed', badgeBg: '#f3e8ff',
+        ts: a.created_at
+      }));
+    }
+    items.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    if (!items.length) {
+      el.innerHTML = '<div style="text-align:center;color:#bbb;padding:60px 20px;font-size:14px">최근 7일간 알림이 없어요</div>';
+      return;
+    }
+    el.innerHTML = items.map(item => `
+      <div style="background:#fff;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+        <span style="font-size:20px;margin-top:2px;flex-shrink:0">${item.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.title}</div>
+          <div style="font-size:12px;color:#888;margin-bottom:4px">${item.sub}</div>
+          <div style="font-size:11px;color:#bbb">${formatRelativeDate(item.ts)}</div>
+        </div>
+        <span style="font-size:11px;font-weight:800;color:${item.badgeColor};background:${item.badgeBg};padding:3px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0">${item.badge}</span>
+      </div>`).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">불러오기 실패</div>';
+  }
+}
+
+function renderWorkerLocMap(containerId, lat, lng) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = `<div style="background:#f0f4ff;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#3b82f6;font-weight:700">
+    📍 근로자 현재 위치<br>
+    <a href="https://map.kakao.com/link/map/위치,${lat},${lng}" target="_blank"
+       style="color:#C8102E;text-decoration:underline;font-size:12px">지도에서 보기 →</a>
+    <br><span style="font-size:11px;color:#888;font-weight:400">위도 ${lat.toFixed(4)} / 경도 ${lng.toFixed(4)}</span>
+  </div>`;
+}
 </script>
+
+<!-- ── 전자계약서 모달 ── -->
+<div class="modal-overlay" id="contract-modal" style="display:none;z-index:800" onclick="if(event.target===this)document.getElementById('contract-modal').style.display='none'">
+  <div class="contract-wrap">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+      <span style="font-size:22px">📄</span>
+      <span style="font-size:18px;font-weight:900;color:#111">근로계약서</span>
+      <span style="margin-left:auto;font-size:11px;color:#aaa">바로알바 플랫폼 체결</span>
+    </div>
+    <div id="contract-content" style="font-size:13.5px;line-height:1.85;color:#333"></div>
+    <div style="display:flex;gap:10px;margin-top:22px">
+      <button onclick="printContract()" style="flex:1;padding:13px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">🖨️ 출력/저장</button>
+      <button onclick="document.getElementById('contract-modal').style.display='none'" style="padding:13px 20px;background:#f5f5f5;color:#666;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── 커스텀 confirm 오버레이 ── -->
 <div id="sc-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)_scCancel()">
