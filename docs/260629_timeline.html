@@ -430,15 +430,15 @@
       <div class="plan-period">⏱ 예상 소요: 1~2시간</div>
     </div>
     <div class="plan-card p1">
-      <span class="plan-badge pb-red">P1 — Android 빌드</span>
-      <h3>Android versionCode 24 빌드</h3>
-      <p>SHOW_FORCED 키보드 정식 반영. 현재 코드 준비 완료, 빌드만 남은 상태.</p>
+      <span class="plan-badge pb-red">P1 — 즉시 처리</span>
+      <h3>커뮤니티 글 수정 기능</h3>
+      <p>삭제는 구현됨. 글 제목/내용 편집 모달 미구현. 댓글 수정도 없음.</p>
       <ul class="plan-items">
-        <li><span class="pi-icon">📝</span> build.gradle versionCode 24 / 1.5.0</li>
-        <li><span class="pi-icon">🔨</span> GitHub Actions 빌드</li>
-        <li><span class="pi-icon">📤</span> Play Console 업로드</li>
+        <li><span class="pi-icon">✏️</span> 글 수정 모달 (제목/내용 편집)</li>
+        <li><span class="pi-icon">🗑️</span> is_deleted=true 소프트 삭제로 전환</li>
+        <li><span class="pi-icon">💬</span> 댓글 수정 버튼</li>
       </ul>
-      <div class="plan-period">⏱ 예상 소요: 1시간</div>
+      <div class="plan-period">⏱ 예상 소요: 1~2시간</div>
     </div>
     <div class="plan-card p2">
       <span class="plan-badge pb-orange">P2 — 단기 (1~2주)</span>
@@ -463,16 +463,16 @@
       </ul>
       <div class="plan-period">⏱ 예상 소요: 반나절</div>
     </div>
-    <div class="plan-card p2">
-      <span class="plan-badge pb-orange">P2 — 단기 (1~2주)</span>
+    <div class="plan-card p2" style="border-top-color:#16a34a;opacity:0.75">
+      <span class="plan-badge" style="background:#f0fdf4;color:#16a34a">✅ 완료 — 2026-06-29</span>
       <h3>알림 히스토리 화면</h3>
-      <p>받은 알림 목록을 앱 내에서 조회 가능하도록. 알림 놓쳤을 때 확인 경로 제공.</p>
+      <p>마이페이지 → 알림 설정에서 히스토리 보기 진입. 기존 테이블(applications/follows/job_postings) 재구성 방식으로 DDL 없이 구현.</p>
       <ul class="plan-items">
-        <li><span class="pi-icon">🗄️</span> notifications 테이블 DDL 추가</li>
-        <li><span class="pi-icon">📋</span> 알림 목록 패널 UI</li>
-        <li><span class="pi-icon">👁️</span> 읽음 처리</li>
+        <li><span class="pi-icon">✅</span> mpsub-noti-history 패널 추가</li>
+        <li><span class="pi-icon">✅</span> 합격/거절/새공고 재구성 표시</li>
+        <li><span class="pi-icon">✅</span> 업주·알바생 모드 분기</li>
       </ul>
-      <div class="plan-period">⏱ 예상 소요: 1~2일</div>
+      <div class="plan-period">완료 (sw.js v271)</div>
     </div>
     <div class="plan-card p3">
       <span class="plan-badge pb-blue">P3 — 중기 (1개월)</span>
@@ -572,25 +572,25 @@
         <p>업주가 알바비 선입금 → 근무 확인 후 지급. 임금 체불 방지 + 알바생 신뢰.</p>
         <div class="ic-why">WHY: P2P 플랫폼 최대 리스크인 임금 미지급 문제 근본 해결</div>
       </div>
-      <div class="impv-card">
-        <div class="ic-header"><span class="ic-icon">📜</span><h4>전자계약서 자동 생성</h4></div>
-        <p>수락 시 근로계약서 자동 생성 → 알바생·업주 전자서명 → PDF 저장.</p>
-        <div class="ic-why">WHY: 단기 알바도 계약서 있으면 법적 보호 + 플랫폼 차별화</div>
+      <div class="impv-card" style="border:1.5px solid #bbf7d0;background:#f0fdf4">
+        <div class="ic-header"><span class="ic-icon">📜</span><h4>전자계약서 자동 생성 <span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:6px;margin-left:4px;font-weight:700">✅ 완료</span></h4></div>
+        <p>지원 수락 시 근로계약서 자동 팝업. 직무·시급·근무일시 자동 기입, 출력/저장 기능.</p>
+        <div class="ic-why">2026-06-29 구현 완료 (showContractModal, printContract)</div>
       </div>
-      <div class="impv-card">
-        <div class="ic-header"><span class="ic-icon">📍</span><h4>실시간 위치 공유 (프리미엄)</h4></div>
-        <p>근무 중 알바생 위치를 업주가 실시간 확인. 현장 관리형 업종 특화.</p>
-        <div class="ic-why">WHY: 배달·이벤트 스태프 등 현장 관리 필요한 업종 수요</div>
+      <div class="impv-card" style="border:1.5px solid #bbf7d0;background:#f0fdf4">
+        <div class="ic-header"><span class="ic-icon">📍</span><h4>실시간 위치 공유 <span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:6px;margin-left:4px;font-weight:700">✅ 완료</span></h4></div>
+        <p>확정된 알바생이 "위치 공유 시작" 토글 → Supabase Realtime Broadcast → 업주 실시간 확인.</p>
+        <div class="ic-why">2026-06-29 구현 완료 (toggleLocationShare, subscribeWorkerLocation)</div>
       </div>
-      <div class="impv-card">
-        <div class="ic-header"><span class="ic-icon">🏅</span><h4>알바생 신용점수 고도화</h4></div>
-        <p>노쇼·취소·완주·평점을 종합한 '바로알바 신뢰 점수'. 숫자로 표시.</p>
-        <div class="ic-why">WHY: 업주 입장에서 알바생 신뢰도를 객관적으로 판단 가능</div>
+      <div class="impv-card" style="border:1.5px solid #bbf7d0;background:#f0fdf4">
+        <div class="ic-header"><span class="ic-icon">🏅</span><h4>알바생 신뢰점수 고도화 <span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:6px;margin-left:4px;font-weight:700">✅ 완료</span></h4></div>
+        <p>평점 25점 + 리뷰수 보너스 5점 + 노쇼 패널티. 지원자 카드에 "신뢰 N점" 뱃지 표시.</p>
+        <div class="ic-why">2026-06-29 구현 완료 (calcBakalbaScore, trustBadgeHtml)</div>
       </div>
-      <div class="impv-card">
-        <div class="ic-header"><span class="ic-icon">🤝</span><h4>단골 알바생 구독 시스템</h4></div>
-        <p>업주가 자주 쓰는 알바생을 '단골'로 등록 → 공고 올리면 단골에게 먼저 알림.</p>
-        <div class="ic-why">WHY: 재고용률 높은 알바생·업주 관계를 플랫폼이 강화</div>
+      <div class="impv-card" style="border:1.5px solid #bbf7d0;background:#f0fdf4">
+        <div class="ic-header"><span class="ic-icon">🤝</span><h4>단골 알바생 우선 알림 <span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:6px;margin-left:4px;font-weight:700">✅ 완료</span></h4></div>
+        <p>신규 공고 등록 시 단골 등록된 알바생에게 "[단골 업체]" 태그 푸시 우선 발송.</p>
+        <div class="ic-why">2026-06-29 구현 완료 (_notifyFavWorkers, submitPosting 연동)</div>
       </div>
       <div class="impv-card">
         <div class="ic-header"><span class="ic-icon">🎓</span><h4>알바 교육 콘텐츠</h4></div>
