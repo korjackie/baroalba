@@ -600,6 +600,27 @@
     </div>
   </div>
 
+  <div class="impv-section">
+    <h3>⚙️ 기술 부채 해소 <span class="priority-tag pt-low">점진적</span></h3>
+    <p class="impv-sub">현재 운영에 지장은 없지만 장기적으로 개선하면 개발 효율이 올라가는 내부 과제들</p>
+    <div class="impv-grid">
+      <div class="impv-card">
+        <div class="ic-header"><span class="ic-icon">📦</span><h4>SW 버전 자동화</h4></div>
+        <p>현재 sw.js의 CACHE 버전 번호를 매 배포마다 손으로 올려야 함. 빌드 스크립트로 자동화하면 실수 방지.</p>
+        <div class="ic-why">WHY: 버전 올리는 걸 잊으면 캐시가 갱신 안 되고 사용자가 구버전을 계속 봄</div>
+      </div>
+      <div class="impv-card">
+        <div class="ic-header"><span class="ic-icon">✂️</span><h4>HTML 파일 모듈화</h4></div>
+        <p>바로알바.html 단일 파일이 현재 ~500KB. 기능별로 분리하거나 번들러(Vite/esbuild) 도입하면 편집·디버깅이 수월해짐.</p>
+        <div class="ic-why">WHY: 파일이 클수록 특정 기능 찾기 어렵고 동시 편집 시 충돌 위험</div>
+      </div>
+      <div class="impv-card">
+        <div class="ic-header"><span class="ic-icon">🧪</span><h4>핵심 함수 단위 테스트</h4></div>
+        <p>calcCancelDeadline, calcBakalbaScore, 급여 계산 같은 순수 함수를 Jest로 테스트. 수정할 때 회귀 방지.</p>
+        <div class="ic-why">WHY: 지금은 바꿀 때마다 수동으로 눌러봐야 하고, 엣지케이스 놓치기 쉬움</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- TAB: BUGS -->
