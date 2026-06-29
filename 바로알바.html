@@ -4850,7 +4850,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — 이전 버전 SW 캐시가 남아있으면 전부 삭제 후 reload
-  const _APP_V = '292';
+  const _APP_V = '293';
   const _savedV = localStorage.getItem('_baroV');
   if (_savedV && _savedV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -4863,7 +4863,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('_baroV', _APP_V);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=292').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=293').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6304,11 +6304,11 @@ let _hfPendingSearch = '';
 
 function _wageUnit(j) {
   const t = j?.wage_type;
-  if (t === 'daily')                   return '/일';
+  if (t === 'daily')                       return '/일';
   if (t === 'per_unit' || t === 'per-job') return '/건';
-  if (t === 'monthly')                 return '/월';
-  if (t === 'weekly')                  return '/주';
-  return '/시';
+  if (t === 'monthly')                     return '/월';
+  if (t === 'weekly')                      return '/주';
+  return '/시간';
 }
 
 function loadHomePanel() {
@@ -6506,8 +6506,7 @@ function openHomeFilter() {
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.toggle('on', _hfPendingNat==='foreigner');
   _updateHomeFilterCount();
   document.getElementById('home-filter-overlay').style.display = 'block';
-  // 필터 패널 열리면 검색 입력란에 포커스
-  setTimeout(() => document.getElementById('hfc-search-input')?.focus(), 150);
+  // 키보드 자동실행 금지 — 사용자가 직접 검색어 입력창을 탭할 때만 키보드 열림
 }
 function closeHomeFilter() { document.getElementById('home-filter-overlay').style.display = 'none'; }
 function resetHomeFilter() {

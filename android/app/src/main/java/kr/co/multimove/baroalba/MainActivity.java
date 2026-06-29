@@ -83,7 +83,8 @@ public class MainActivity extends AppCompatActivity {
         s.setDisplayZoomControls(false);
         s.setAllowFileAccess(true);
         s.setGeolocationEnabled(true);
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE); // 항상 네트워크에서 최신 HTML 로드
+        webView.clearCache(true); // 이전 HTTP 캐시 제거
         s.setMediaPlaybackRequiresUserGesture(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);

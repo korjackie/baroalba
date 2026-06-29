@@ -1,4 +1,4 @@
-const CACHE = 'baroalba-v292';
+const CACHE = 'baroalba-v293';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
@@ -39,8 +39,9 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // HTML 파일은 네트워크 우선
-  if (e.request.destination === 'document' || url.endsWith('.html') || url.endsWith('/')) {
+  // HTML 파일은 네트워크 우선 (쿼리스트링 포함 URL도 처리)
+  const _path = new URL(url).pathname;
+  if (e.request.destination === 'document' || _path.endsWith('.html') || _path.endsWith('/')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
     );

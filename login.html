@@ -1284,7 +1284,8 @@ function getRedirectUrl() {
   return window.location.origin + '/app.html';
 }
 function goToApp() {
-  window.location.href = '/바로알바.html';
+  // ?_t= 타임스탬프로 캐시 키를 매번 다르게 → WebView가 항상 최신 HTML을 서버에서 받음
+  window.location.href = '/바로알바.html?_t=' + Date.now();
 }
 
 function switchTab(tab) {
