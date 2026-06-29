@@ -2320,9 +2320,6 @@
           <div id="home-moim-list" style="display:flex;gap:8px;overflow-x:auto;padding:9px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-height:44px">
             <div style="color:#bbb;font-size:12px;padding:10px 0;flex-shrink:0"></div>
           </div>
-          <div style="padding:0 14px 10px">
-            <button onclick="openMoimPanel(true)" style="width:100%;padding:9px;border-radius:11px;border:1.5px dashed #c4b5fd;background:#faf5ff;color:#7C3AED;font-size:12px;font-weight:800;cursor:pointer">+ 모임 만들기</button>
-          </div>
         </div>
       </div>
 
@@ -4881,7 +4878,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — 이전 버전 SW 캐시가 남아있으면 전부 삭제 후 reload
-  const _APP_V = '295';
+  const _APP_V = '296';
   const _savedV = localStorage.getItem('_baroV');
   if (_savedV && _savedV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -4894,7 +4891,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('_baroV', _APP_V);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=295').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=296').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
