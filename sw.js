@@ -1,4 +1,4 @@
-const CACHE = 'baroalba-v293';
+const CACHE = 'baroalba-v294';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
@@ -43,7 +43,9 @@ self.addEventListener('fetch', e => {
   const _path = new URL(url).pathname;
   if (e.request.destination === 'document' || _path.endsWith('.html') || _path.endsWith('/')) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
+      fetch(e.request).catch(() =>
+        caches.match(e.request).then(r => r || Response.error())
+      )
     );
     return;
   }
