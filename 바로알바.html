@@ -2946,6 +2946,7 @@
       <button id="lang-ja-btn" onclick="selectLang('ja')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇯🇵 日本語</button>
       <button id="lang-vi-btn" onclick="selectLang('vi')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇻🇳 Tiếng Việt</button>
       <button id="lang-ru-btn" onclick="selectLang('ru')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇷🇺 Русский</button>
+      <button id="lang-mn-btn" onclick="selectLang('mn')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇲🇳 Монгол</button>
     </div>
   </div>
 </div>
@@ -4249,7 +4250,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=277').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=278').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -17601,6 +17602,7 @@ function openWorkerRightsGuide() {
     vi: { title:'Hướng dẫn quyền lợi', items:['Lương tối thiểu(2025): 10,030₩/giờ','Làm thêm giờ: lương × 1.5 lần','Tố cáo chậm trả lương: ☎ 1350','Hỗ trợ lao động nước ngoài: 1644-0644'] },
     ru: { title:'Руководство по правам', items:['Минимальная зарплата(2025): 10,030₩/час','Сверхурочные: зарплата × 1.5','Жалоба на задержку: ☎ 1350','Поддержка иностранных рабочих: 1644-0644'] },
     uz: { title:"Huquqlar bo'yicha qo'llanma", items:["Minimal ish haqi(2025): 10,030₩/soat","Qo'shimcha ish: maosh × 1.5","Ish haqi kechiktirilsa: ☎ 1350","Xorijiy ishchilarni qo'llab-quvvatlash: 1644-0644"] },
+    mn: { title:'Эрхийн заавар', items:['Доод цалин(2025): 10,030₩/цаг','Илүү цаг: цалин × 1.5 дахин','Цалин хожигдсон бол: ☎ 1350','Гадаадын ажилчдын дэмжлэгийн төв: 1644-0644'] },
     zh: { title:'权益指南', items:['最低时薪(2025): 10,030₩/小时','加班: 工资×1.5倍','欠薪投诉: ☎ 1350','外国劳动者支援中心: 1644-0644'] },
   };
   const g = guides[lang] || guides.ko;
