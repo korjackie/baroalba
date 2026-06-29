@@ -1805,6 +1805,10 @@
     <div id="d-deposit" style="display:none;margin:0 20px 12px">
       <span id="d-deposit-badge" style="display:inline-flex;align-items:center;gap:6px;background:#FFF1F2;color:#C8102E;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px">&#128737; 노쇼 보증금</span>
     </div>
+    <!-- 국적 조건 배지 -->
+    <div id="d-natreq" style="display:none;margin:0 20px 8px">
+      <span id="d-natreq-badge" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px"></span>
+    </div>
     <!-- 픽업 장소 배지 -->
     <div id="d-pickup" style="display:none;margin:0 20px 12px">
       <div style="display:flex;align-items:flex-start;gap:10px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:14px;padding:12px 14px">
@@ -4191,6 +4195,18 @@
       </div>
       <input type="hidden" id="f-pref-langs" value="[]">
 
+      <!-- 국적 조건 -->
+      <div style="margin-top:8px;padding:14px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:12px">
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🌍 지원 자격 (국적 조건)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button type="button" id="nreq-any"               onclick="setNatReq('any')"               style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">🌍 국적 무관</button>
+          <button type="button" id="nreq-korean_only"       onclick="setNatReq('korean_only')"       style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">🇰🇷 한국인만</button>
+          <button type="button" id="nreq-korean_lang"       onclick="setNatReq('korean_lang')"       style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">💬 외국인가능·한국어필수</button>
+          <button type="button" id="nreq-foreigner_welcome" onclick="setNatReq('foreigner_welcome')" style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">🌏 외국인 환영</button>
+        </div>
+      </div>
+      <input type="hidden" id="f-nat-req" value="any">
+
       <button class="submit-btn" id="submit-btn" onclick="submitPosting()" data-i18n="form_submit_post">공고 등록하기</button>
     </div>
   </div>
@@ -4300,7 +4316,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=279').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=280').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -4916,6 +4932,11 @@ function renderList() {
   if (selectedDistrict) {
     displayJobs = displayJobs.filter(j => (j.address||'').includes(selectedDistrict));
   }
+  // 외국인 워커에게 '한국인만' 공고 숨김
+  const _myNat = currentUser?.user_metadata?.nationality;
+  if (_myNat && _myNat !== 'KR') {
+    displayJobs = displayJobs.filter(j => j.nationality_requirement !== 'korean_only');
+  }
 
   const _sheetCnt = document.querySelector('.sheet-count');
   if (_sheetCnt) _sheetCnt.innerHTML = t('nearby_jobs_fmt').replace('{n}', `<span id="job-count">${displayJobs.length}</span>`);
@@ -5003,6 +5024,9 @@ function renderList() {
         ${isUrgent ? '<span class="tag urgent-tag">ASAP</span>' : ''}
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">번개</span>' : ''}
         ${job.same_day_payment ? '<span class="tag payday-tag">💰 당일정산</span>' : ''}
+        ${job.nationality_requirement === 'korean_only'       ? '<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">🇰🇷 한국인만</span>' : ''}
+        ${job.nationality_requirement === 'foreigner_welcome' ? '<span class="tag" style="background:#F0FFF4;color:#166534;border:1px solid #86EFAC;font-weight:800">🌏 외국인환영</span>' : ''}
+        ${job.nationality_requirement === 'korean_lang'       ? '<span class="tag" style="background:#FFF7ED;color:#B45309;border:1px solid #FDE68A;font-weight:800">💬 한국어필수</span>' : ''}
         ${job.beginner_ok === true ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;border:1px solid #86EFAC;font-weight:800">🌱 초보OK</span>' : (job.beginner_ok === false ? '<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">🔰 경력자</span>' : '')}
         ${job.meal_included ? '<span class="tag" style="background:#FFF7ED;color:#D97706;border:1px solid #FDE68A;font-weight:800">🍱 식사제공</span>' : ''}
         ${returnBadge}
@@ -5202,6 +5226,21 @@ function openDetail(jobId) {
 
   // 비대면 배지
   document.getElementById('d-remote-badge').style.display = job.is_remote ? 'block' : 'none';
+
+  // 국적 조건 배지
+  const _NR_INFO = {
+    korean_only:       { text:'🇰🇷 한국인만 지원 가능', bg:'#FFF1F2', color:'#9f1239', border:'1.5px solid #FECDD3' },
+    korean_lang:       { text:'💬 외국인 가능 — 한국어 구사 필수', bg:'#FFF7ED', color:'#B45309', border:'1.5px solid #FDE68A' },
+    foreigner_welcome: { text:'🌏 외국인 환영 — 언어 무관', bg:'#F0FFF4', color:'#166534', border:'1.5px solid #86EFAC' },
+  };
+  const natreqEl = document.getElementById('d-natreq');
+  const natreqBadge = document.getElementById('d-natreq-badge');
+  const _nri = _NR_INFO[job.nationality_requirement];
+  if (_nri) {
+    natreqBadge.textContent = _nri.text;
+    natreqBadge.style.background = _nri.bg; natreqBadge.style.color = _nri.color; natreqBadge.style.border = _nri.border;
+    natreqEl.style.display = 'block';
+  } else { natreqEl.style.display = 'none'; }
 
   // 픽업 장소 배지
   const pickupEl = document.getElementById('d-pickup');
@@ -5568,6 +5607,18 @@ function applyJob() {
   if (!isRealJobId(selectedJobId)) {
     showToast('\u{1F9EA} 테스트 공고입니다\n실제 등록된 공고에만 지원 가능해요');
     return;
+  }
+
+  // 국적 조건 게이트
+  const _applyJob = jobs.find(j => j.id === selectedJobId);
+  if (_applyJob && _applyJob.nationality_requirement === 'korean_only') {
+    const _wNat = currentUser?.user_metadata?.nationality || _workerProfile?.nationality;
+    if (_wNat && _wNat !== 'KR') {
+      showConfirm('이 공고는 한국 국적 지원자만 지원 가능합니다.\n지원이 어렵습니다.', null, {
+        icon:'🇰🇷', title:'한국인만 지원 가능', okLabel:'확인', hideCancel: true
+      });
+      return;
+    }
   }
 
   const _openApplyModal = () => {
@@ -8363,6 +8414,9 @@ async function searchLocation(q) {
 }
 
 function renderFilteredList(filtered) {
+  // 외국인 워커에게 '한국인만' 공고 숨김
+  const _fNat = currentUser?.user_metadata?.nationality;
+  if (_fNat && _fNat !== 'KR') filtered = filtered.filter(j => j.nationality_requirement !== 'korean_only');
   document.getElementById('job-count').textContent = filtered.length;
   const list = document.getElementById('job-cards-container');
   if (filtered.length === 0) {
@@ -13629,7 +13683,7 @@ function openPostingForm() {
   document.getElementById('surge-preview').textContent = '';
   // 당일정산 + 노쇼보증금 + 재방문인센티브 + 비대면 + 초보/식사 초기화
   setSameDay(false); setDeposit(false); setReturnBonusOn(false); toggleRemoteMode(false);
-  setBeginnerOk(false); setMealIncluded(false);
+  setBeginnerOk(false); setMealIncluded(false); setNatReq('any');
   const _pu0 = document.getElementById('f-pickup-location'); if (_pu0) _pu0.value = '';
   renderMyPlacesQuick();
   // 기본 장소가 있으면 자동 적용
@@ -13790,6 +13844,7 @@ function openEditForm(jobId) {
   setMealIncluded(p.meal_included || false);
   const _pu = document.getElementById('f-pickup-location');
   if (_pu) _pu.value = p.pickup_location || '';
+  setNatReq(p.nationality_requirement || 'any');
   setAgeLimit(p.age_limit || false);
   setJobLangs(p.preferred_languages || []);
   const dep = p.noshow_deposit || 0;
@@ -14252,9 +14307,10 @@ async function submitPosting() {
     age_limit:          document.getElementById('f-age-limit').value === 'true',
     preferred_languages: JSON.parse(document.getElementById('f-pref-langs')?.value || '[]'),
     is_remote:          document.getElementById('f-is-remote').value === 'true',
-    beginner_ok:        document.getElementById('f-beginner-ok').value === 'true',
-    meal_included:      document.getElementById('f-meal-included').value === 'true',
-    pickup_location:    document.getElementById('f-pickup-location').value.trim() || null,
+    beginner_ok:             document.getElementById('f-beginner-ok').value === 'true',
+    meal_included:           document.getElementById('f-meal-included').value === 'true',
+    pickup_location:         document.getElementById('f-pickup-location').value.trim() || null,
+    nationality_requirement: document.getElementById('f-nat-req').value || 'any',
   };
 
   const btn = document.getElementById('submit-btn');
@@ -14455,6 +14511,26 @@ function setMealIncluded(val) {
   document.getElementById('f-meal-included').value = val ? 'true' : 'false';
   document.getElementById('meal-included-track').style.background = val ? '#D97706' : '#e5e7eb';
   document.getElementById('meal-included-knob').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
+}
+
+function setNatReq(val) {
+  document.getElementById('f-nat-req').value = val;
+  const _NR_STYLE = {
+    any:               { bg:'#EFF6FF', color:'#1D4ED8', border:'#BFDBFE' },
+    korean_only:       { bg:'#FFF1F2', color:'#9f1239', border:'#FECDD3' },
+    korean_lang:       { bg:'#FFF7ED', color:'#B45309', border:'#FDE68A' },
+    foreigner_welcome: { bg:'#F0FFF4', color:'#166534', border:'#86EFAC' },
+  };
+  ['any','korean_only','korean_lang','foreigner_welcome'].forEach(k => {
+    const btn = document.getElementById('nreq-' + k);
+    if (!btn) return;
+    if (k === val) {
+      const s = _NR_STYLE[k];
+      btn.style.background = s.bg; btn.style.color = s.color; btn.style.borderColor = s.border;
+    } else {
+      btn.style.background = '#f9fafb'; btn.style.color = '#374151'; btn.style.borderColor = '#e5e7eb';
+    }
+  });
 }
 
 // ── 노쇼 보증금 토글 ─────────────────────────────────────
