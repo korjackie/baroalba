@@ -2234,7 +2234,10 @@
 
     <!-- 검색 결과 -->
     <div id="home-search-results" style="display:none;padding:8px 12px 0">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" id="home-search-result-label">검색 결과</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:800;color:#374151" id="home-search-result-label">검색 결과</div>
+        <button onclick="clearHomeFilter()" style="font-size:12px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;background:#fff0f2">× 초기화</button>
+      </div>
       <div id="home-search-result-list"></div>
     </div>
 
@@ -4835,7 +4838,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=288').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=289').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -5715,9 +5718,8 @@ function _moimHomeCard(m) {
     </div>
     <div style="padding:8px 12px">
       <div style="font-size:10px;color:#aaa">${dateStr}</div>
-      <div style="font-size:11px;font-weight:700;color:${color};margin-top:3px">${rem>0?rem+'자리 남음':'마감'}</div>
-      <div style="font-size:11px;color:${rem<=2?'#C8102E':'#7C3AED'};font-weight:700;margin-top:2px">${rem > 0 ? rem+'자리 남음' : '마감'}</div>
-      ${m.entry_fee > 0 ? `<div style="font-size:11px;color:#D97706;font-weight:700">💰 ${m.entry_fee.toLocaleString()}원</div>` : '<div style="font-size:11px;color:#16a34a;font-weight:700">무료</div>'}
+      <div style="font-size:11px;color:${rem<=2?'#C8102E':color};font-weight:700;margin-top:2px">${rem > 0 ? rem+'자리 남음' : '마감'}</div>
+      ${m.entry_fee > 0 ? `<div style="font-size:11px;color:#D97706;font-weight:700;margin-top:1px">${m.entry_fee.toLocaleString()}원</div>` : '<div style="font-size:11px;color:#16a34a;font-weight:700;margin-top:1px">무료</div>'}
     </div>
   </div>`;
 }
@@ -6328,6 +6330,9 @@ function _renderHomeUrgent() {
 }
 
 function showHomeUrgentList() {
+  // 급구만 필터 — 기존 필터 상태 초기화 후 직접 렌더
+  _homeFilterSearch = ''; _homeFilterCat = ''; _homeFilterWage = '';
+  _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
   const urgentJobs = jobs.filter(j => j.status === 'urgent');
   const srEl = document.getElementById('home-search-results');
   const defaultEl = document.getElementById('home-default-content');
@@ -6509,18 +6514,36 @@ function applyHomeFilter() {
   _homeFilterSearch = (document.getElementById('hfc-search-input')?.value || '').trim();
   _homeFilterCat = _hfPendingCat; _homeFilterWage = _hfPendingWage; _homeFilterNat = _hfPendingNat;
   _homeFilterJobType = _hfPendingJobType; _homeFilterWorkType = _hfPendingWorkType;
+  // 홈 검색바에도 검색어 반영
+  const si = document.getElementById('home-search-input');
+  if (si) si.value = _homeFilterSearch;
   closeHomeFilter();
-  setHomeFilter(null, _homeFilterCat, _homeFilterWage, _homeFilterNat);
+  _doHomeFilterRender();
 }
 
 function setHomeFilter(btn, cat, wage, nat) {
+  // 타일에서 직접 호출 시 전체 필터 상태 초기화 후 특정 필터만 설정
+  _homeFilterSearch = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
   _homeFilterCat = cat || '';
   _homeFilterWage = wage || '';
   _homeFilterNat = nat || '';
-
+  const si = document.getElementById('home-search-input');
+  if (si) si.value = '';
   document.querySelectorAll('.home-filter-chip').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  _doHomeFilterRender();
+}
 
+function clearHomeFilter() {
+  _homeFilterSearch = ''; _homeFilterCat = ''; _homeFilterWage = '';
+  _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
+  const si = document.getElementById('home-search-input');
+  if (si) si.value = '';
+  document.getElementById('home-search-results').style.display = 'none';
+  document.getElementById('home-default-content').style.display = 'block';
+}
+
+function _doHomeFilterRender() {
   let filtered = jobs.filter(j => j.status === 'open' || j.status === 'urgent');
   if (_homeFilterSearch) { const ql = _homeFilterSearch.toLowerCase(); filtered = filtered.filter(j => (j.title||'').toLowerCase().includes(ql)||(j.biz_name||'').toLowerCase().includes(ql)||(j.category||'').toLowerCase().includes(ql)||(j.address||'').includes(_homeFilterSearch)); }
   if (_homeFilterCat) filtered = filtered.filter(j => j.category === _homeFilterCat);
@@ -6529,8 +6552,7 @@ function setHomeFilter(btn, cat, wage, nat) {
   if (_homeFilterWage === 'same_day') filtered = filtered.filter(j => j.same_day_payment);
   if (_homeFilterNat === 'foreigner') filtered = filtered.filter(j => j.nationality_requirement === 'foreigner_welcome');
 
-  const hasFilter = cat || wage || nat || _homeFilterSearch || _homeFilterJobType || _homeFilterWorkType;
-  // 검색 결과 영역 표시
+  const hasFilter = _homeFilterSearch || _homeFilterCat || _homeFilterWage || _homeFilterNat || _homeFilterJobType || _homeFilterWorkType;
   const srEl = document.getElementById('home-search-results');
   const defaultEl = document.getElementById('home-default-content');
   if (!hasFilter) {
@@ -6543,38 +6565,22 @@ function setHomeFilter(btn, cat, wage, nat) {
   const label = document.getElementById('home-search-result-label');
   const parts = [];
   if (_homeFilterSearch) parts.push(`"${_homeFilterSearch}"`);
-  if (cat) parts.push(cat);
+  if (_homeFilterCat) parts.push(_homeFilterCat);
   if (_homeFilterJobType) parts.push({alba:'일반알바',errand:'심부름',technical:'전문기술',care:'돌봄'}[_homeFilterJobType]||_homeFilterJobType);
   if (_homeFilterWorkType) parts.push({spot:'스팟',short:'단기',regular:'정기',lesson:'레슨/과외'}[_homeFilterWorkType]||_homeFilterWorkType);
-  if (wage === 'same_day') parts.push('당일정산');
-  if (nat === 'foreigner') parts.push('외국인환영');
+  if (_homeFilterWage === 'same_day') parts.push('당일정산');
+  if (_homeFilterNat === 'foreigner') parts.push('외국인환영');
   if (label) label.textContent = `${parts.join(' · ')} 공고 ${filtered.length}개`;
   _renderHomeSearchList(filtered);
 }
 
 function doHomeSearch() {
   const q = (document.getElementById('home-search-input')?.value || '').trim();
-  if (!q) {
-    document.getElementById('home-search-results').style.display = 'none';
-    document.getElementById('home-default-content').style.display = 'block';
-    return;
-  }
-  const ql = q.toLowerCase();
-  const filtered = jobs.filter(j =>
-    (j.status === 'open' || j.status === 'urgent') &&
-    ((j.title||'').toLowerCase().includes(ql) ||
-     (j.biz_name||'').toLowerCase().includes(ql) ||
-     (j.category||'').toLowerCase().includes(ql) ||
-     (j.address||'').includes(q) ||
-     (j.description||'').includes(q))
-  );
-  const srEl = document.getElementById('home-search-results');
-  const defaultEl = document.getElementById('home-default-content');
-  srEl.style.display = 'block';
-  defaultEl.style.display = 'none';
-  const label = document.getElementById('home-search-result-label');
-  if (label) label.textContent = `"${q}" 검색결과 ${filtered.length}개`;
-  _renderHomeSearchList(filtered);
+  if (!q) { clearHomeFilter(); return; }
+  // 검색어만 적용, 나머지 필터 초기화
+  _homeFilterSearch = q; _homeFilterCat = ''; _homeFilterWage = '';
+  _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
+  _doHomeFilterRender();
 }
 
 function _renderHomeSearchList(filtered) {
