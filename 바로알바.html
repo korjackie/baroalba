@@ -1645,11 +1645,11 @@
 
 <!-- 주변알바 스와이프 플로팅 버튼 -->
 <div id="map-swipe-float" onclick="openNearbySwipe()"
-  style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + var(--sheet-peek) + 14px);z-index:399;display:none;
+  style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + var(--sheet-peek) + 14px);z-index:399;
          background:linear-gradient(135deg,#C8102E,#9B1C2E);color:#fff;border-radius:24px;padding:10px 20px;
          box-shadow:0 4px 18px rgba(200,16,46,0.45);cursor:pointer;white-space:nowrap;
          font-size:13px;font-weight:800;animation:swipe-float-pulse 2s ease-in-out infinite;
-         display:flex;align-items:center;gap:8px">
+         align-items:center;gap:8px;display:none">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
   <span id="map-swipe-float-txt">주변알바 스와이프로 보기</span>
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2170,11 +2170,11 @@
 
 <!-- 하단 내비게이션 -->
 <div class="bottom-nav">
-  <button class="nav-item" onclick="setNav(this, 'home')">
+  <button class="nav-item active" onclick="setNav(this, 'home')">
     <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
     <div class="nav-label">홈</div>
   </button>
-  <button class="nav-item active" onclick="setNav(this, 'map')">
+  <button class="nav-item" onclick="setNav(this, 'map')">
     <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
     <div class="nav-label">지도</div>
   </button>
@@ -2299,32 +2299,69 @@
   <!-- 필터 패널 오버레이 -->
   <div id="home-filter-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:20" onclick="if(event.target===this)closeHomeFilter()">
     <div style="height:100%;display:flex;flex-direction:column;justify-content:flex-end">
-      <div style="background:#fff;border-radius:20px 20px 0 0;max-height:84%;overflow-y:auto">
-        <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0"></div>
-        <div style="padding:12px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f5f5f5">
-          <span style="font-size:15px;font-weight:900;color:#111">공고 필터</span>
+      <div style="background:#fff;border-radius:20px 20px 0 0;max-height:90%;display:flex;flex-direction:column">
+        <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0;flex-shrink:0"></div>
+        <div style="padding:12px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f5f5f5;flex-shrink:0">
+          <span style="font-size:15px;font-weight:900;color:#111">공고 검색 · 필터</span>
           <button onclick="closeHomeFilter()" style="background:none;border:none;font-size:22px;color:#bbb;cursor:pointer;line-height:1">&#215;</button>
         </div>
-        <div style="padding:10px 18px 6px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb">업종</div>
-        <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
-          <button class="hfc-chip active" data-cat="" onclick="selectHomeFilterCat(this,'')">전체</button>
-          <button class="hfc-chip" data-cat="F&B" onclick="selectHomeFilterCat(this,'F&B')">F&amp;B</button>
-          <button class="hfc-chip" data-cat="청소" onclick="selectHomeFilterCat(this,'청소')">청소</button>
-          <button class="hfc-chip" data-cat="물류" onclick="selectHomeFilterCat(this,'물류')">물류</button>
-          <button class="hfc-chip" data-cat="판매" onclick="selectHomeFilterCat(this,'판매')">판매</button>
-          <button class="hfc-chip" data-cat="이벤트" onclick="selectHomeFilterCat(this,'이벤트')">이벤트</button>
-          <button class="hfc-chip" data-cat="심부름" onclick="selectHomeFilterCat(this,'심부름')">심부름</button>
+        <div style="overflow-y:auto;flex:1;padding-bottom:4px">
+          <!-- 검색어 -->
+          <div style="padding:12px 18px 0">
+            <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:11px;padding:9px 13px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="hfc-search-input" type="text" placeholder="업종, 지역, 공고명 입력" style="border:none;background:none;font-size:13px;color:#222;flex:1;outline:none" oninput="_updateHomeFilterCount()">
+            </div>
+          </div>
+          <!-- 업종 -->
+          <div style="padding:14px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb">업종</div>
+          <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="hfc-chip hfc-cat active" data-cat="" onclick="selectHomeFilterCat(this,'')">전체</button>
+            <button class="hfc-chip hfc-cat" data-cat="F&B" onclick="selectHomeFilterCat(this,'F&B')">F&amp;B</button>
+            <button class="hfc-chip hfc-cat" data-cat="청소" onclick="selectHomeFilterCat(this,'청소')">청소</button>
+            <button class="hfc-chip hfc-cat" data-cat="물류" onclick="selectHomeFilterCat(this,'물류')">물류·배송</button>
+            <button class="hfc-chip hfc-cat" data-cat="판매" onclick="selectHomeFilterCat(this,'판매')">판매·서비스</button>
+            <button class="hfc-chip hfc-cat" data-cat="이벤트" onclick="selectHomeFilterCat(this,'이벤트')">이벤트·행사</button>
+            <button class="hfc-chip hfc-cat" data-cat="IT" onclick="selectHomeFilterCat(this,'IT')">IT</button>
+            <button class="hfc-chip hfc-cat" data-cat="기타" onclick="selectHomeFilterCat(this,'기타')">기타</button>
+          </div>
+          <!-- 공고유형 -->
+          <div style="padding:6px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">공고유형</div>
+          <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="hfc-chip hfc-jtype active" data-jtype="" onclick="selectHomeFilterJobType(this,'')">전체</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="alba" onclick="selectHomeFilterJobType(this,'alba')">일반알바</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="errand" onclick="selectHomeFilterJobType(this,'errand')">심부름</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="technical" onclick="selectHomeFilterJobType(this,'technical')">전문기술</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="care" onclick="selectHomeFilterJobType(this,'care')">돌봄·케어</button>
+          </div>
+          <!-- 근무형태 -->
+          <div style="padding:6px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">근무형태</div>
+          <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="hfc-chip hfc-wtype active" data-wtype="" onclick="selectHomeFilterWorkType(this,'')">전체</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="spot" onclick="selectHomeFilterWorkType(this,'spot')">스팟(당일)</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="short" onclick="selectHomeFilterWorkType(this,'short')">단기</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="regular" onclick="selectHomeFilterWorkType(this,'regular')">정기</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="lesson" onclick="selectHomeFilterWorkType(this,'lesson')">레슨·과외</button>
+          </div>
+          <!-- 조건 -->
+          <div style="padding:6px 18px 4px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">조건</div>
+          <div onclick="toggleHFCond('same_day')" style="display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#111">당일정산</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px">근무 당일 급여 지급</div>
+            </div>
+            <div id="hfc-toggle-sd" class="hfc-toggle"></div>
+          </div>
+          <div onclick="toggleHFCond('foreigner')" style="display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#111">외국인 환영</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px">비자 무관 지원 가능</div>
+            </div>
+            <div id="hfc-toggle-nat" class="hfc-toggle"></div>
+          </div>
         </div>
-        <div style="padding:6px 18px 4px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">조건</div>
-        <div onclick="toggleHFCond('same_day')" style="display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
-          <span style="font-size:14px;font-weight:700;color:#111;flex:1">당일정산</span>
-          <div id="hfc-toggle-sd" class="hfc-toggle"></div>
-        </div>
-        <div onclick="toggleHFCond('foreigner')" style="display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
-          <span style="font-size:14px;font-weight:700;color:#111;flex:1">외국인 환영</span>
-          <div id="hfc-toggle-nat" class="hfc-toggle"></div>
-        </div>
-        <div style="padding:12px 16px 20px;display:flex;gap:10px">
+        <!-- 하단 버튼 -->
+        <div style="padding:12px 16px 22px;display:flex;gap:10px;flex-shrink:0;border-top:1px solid #f5f5f5">
           <button onclick="resetHomeFilter()" style="flex:1;padding:13px;border:1.5px solid #e5e5e5;border-radius:13px;font-size:14px;font-weight:800;color:#555;background:#fff;cursor:pointer">초기화</button>
           <button id="home-filter-apply-btn" onclick="applyHomeFilter()" style="flex:2.5;padding:13px;background:#C8102E;border:none;border-radius:13px;font-size:14px;font-weight:900;color:#fff;cursor:pointer">공고보기</button>
         </div>
@@ -4798,7 +4835,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=286').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=287').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6218,9 +6255,15 @@ async function _renderMoimMarkers() {
 let _homeFilterCat = '';
 let _homeFilterWage = '';
 let _homeFilterNat = '';
+let _homeFilterJobType = '';
+let _homeFilterWorkType = '';
+let _homeFilterSearch = '';
 let _hfPendingCat = '';
 let _hfPendingWage = '';
 let _hfPendingNat = '';
+let _hfPendingJobType = '';
+let _hfPendingWorkType = '';
+let _hfPendingSearch = '';
 
 function loadHomePanel() {
   // 외국인 프로필이면 외국인환영 섹션 표시
@@ -6383,7 +6426,12 @@ async function _loadHomeTopPartners() {
 
 function openHomeFilter() {
   _hfPendingCat = _homeFilterCat; _hfPendingWage = _homeFilterWage; _hfPendingNat = _homeFilterNat;
-  document.querySelectorAll('.hfc-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === _hfPendingCat));
+  _hfPendingJobType = _homeFilterJobType; _hfPendingWorkType = _homeFilterWorkType;
+  _hfPendingSearch = _homeFilterSearch;
+  document.querySelectorAll('.hfc-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === _hfPendingCat));
+  document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.toggle('active', b.dataset.jtype === _hfPendingJobType));
+  document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.toggle('active', b.dataset.wtype === _hfPendingWorkType));
+  const si = document.getElementById('hfc-search-input'); if (si) si.value = _hfPendingSearch;
   const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.toggle('on', _hfPendingWage==='same_day');
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.toggle('on', _hfPendingNat==='foreigner');
   _updateHomeFilterCount();
@@ -6392,14 +6440,30 @@ function openHomeFilter() {
 function closeHomeFilter() { document.getElementById('home-filter-overlay').style.display = 'none'; }
 function resetHomeFilter() {
   _hfPendingCat = ''; _hfPendingWage = ''; _hfPendingNat = '';
-  document.querySelectorAll('.hfc-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === ''));
+  _hfPendingJobType = ''; _hfPendingWorkType = ''; _hfPendingSearch = '';
+  document.querySelectorAll('.hfc-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === ''));
+  document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.toggle('active', b.dataset.jtype === ''));
+  document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.toggle('active', b.dataset.wtype === ''));
+  const si = document.getElementById('hfc-search-input'); if (si) si.value = '';
   const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.remove('on');
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.remove('on');
   _updateHomeFilterCount();
 }
 function selectHomeFilterCat(btn, cat) {
   _hfPendingCat = cat;
-  document.querySelectorAll('.hfc-chip').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.hfc-cat').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _updateHomeFilterCount();
+}
+function selectHomeFilterJobType(btn, jtype) {
+  _hfPendingJobType = jtype;
+  document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _updateHomeFilterCount();
+}
+function selectHomeFilterWorkType(btn, wtype) {
+  _hfPendingWorkType = wtype;
+  document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   _updateHomeFilterCount();
 }
@@ -6415,14 +6479,20 @@ function toggleHFCond(cond) {
 }
 function _updateHomeFilterCount() {
   let f = jobs.filter(j => j.status==='open'||j.status==='urgent');
+  const q = (document.getElementById('hfc-search-input')?.value || '').trim().toLowerCase();
+  if (q) f = f.filter(j => (j.title||'').toLowerCase().includes(q)||(j.biz_name||'').toLowerCase().includes(q)||(j.category||'').toLowerCase().includes(q)||(j.address||'').includes(q));
   if (_hfPendingCat) f = f.filter(j => j.category===_hfPendingCat);
+  if (_hfPendingJobType) f = f.filter(j => j.job_type===_hfPendingJobType);
+  if (_hfPendingWorkType) f = f.filter(j => _hfPendingWorkType==='lesson'?(j.work_type==='lesson'||j.job_type==='technical'):(j.work_type||'spot')===_hfPendingWorkType);
   if (_hfPendingWage==='same_day') f = f.filter(j => j.same_day_payment);
   if (_hfPendingNat==='foreigner') f = f.filter(j => j.nationality_requirement==='foreigner_welcome');
   const btn = document.getElementById('home-filter-apply-btn');
   if (btn) btn.textContent = `공고보기 ${f.length}개`;
 }
 function applyHomeFilter() {
+  _homeFilterSearch = (document.getElementById('hfc-search-input')?.value || '').trim();
   _homeFilterCat = _hfPendingCat; _homeFilterWage = _hfPendingWage; _homeFilterNat = _hfPendingNat;
+  _homeFilterJobType = _hfPendingJobType; _homeFilterWorkType = _hfPendingWorkType;
   closeHomeFilter();
   setHomeFilter(null, _homeFilterCat, _homeFilterWage, _homeFilterNat);
 }
@@ -6436,14 +6506,18 @@ function setHomeFilter(btn, cat, wage, nat) {
   if (btn) btn.classList.add('active');
 
   let filtered = jobs.filter(j => j.status === 'open' || j.status === 'urgent');
+  if (_homeFilterSearch) { const ql = _homeFilterSearch.toLowerCase(); filtered = filtered.filter(j => (j.title||'').toLowerCase().includes(ql)||(j.biz_name||'').toLowerCase().includes(ql)||(j.category||'').toLowerCase().includes(ql)||(j.address||'').includes(_homeFilterSearch)); }
   if (_homeFilterCat) filtered = filtered.filter(j => j.category === _homeFilterCat);
+  if (_homeFilterJobType) filtered = filtered.filter(j => j.job_type === _homeFilterJobType);
+  if (_homeFilterWorkType) filtered = filtered.filter(j => _homeFilterWorkType==='lesson'?(j.work_type==='lesson'||j.job_type==='technical'):(j.work_type||'spot')===_homeFilterWorkType);
   if (_homeFilterWage === 'same_day') filtered = filtered.filter(j => j.same_day_payment);
   if (_homeFilterNat === 'foreigner') filtered = filtered.filter(j => j.nationality_requirement === 'foreigner_welcome');
 
+  const hasFilter = cat || wage || nat || _homeFilterSearch || _homeFilterJobType || _homeFilterWorkType;
   // 검색 결과 영역 표시
   const srEl = document.getElementById('home-search-results');
   const defaultEl = document.getElementById('home-default-content');
-  if (!cat && !wage && !nat) {
+  if (!hasFilter) {
     srEl.style.display = 'none';
     defaultEl.style.display = 'block';
     return;
@@ -6451,10 +6525,14 @@ function setHomeFilter(btn, cat, wage, nat) {
   srEl.style.display = 'block';
   defaultEl.style.display = 'none';
   const label = document.getElementById('home-search-result-label');
-  const catStr = cat ? `${cat} ` : '';
-  const wageStr = wage === 'same_day' ? '당일정산 ' : '';
-  const natStr = nat === 'foreigner' ? '외국인환영 ' : '';
-  if (label) label.textContent = `${catStr}${wageStr}${natStr}공고 ${filtered.length}개`;
+  const parts = [];
+  if (_homeFilterSearch) parts.push(`"${_homeFilterSearch}"`);
+  if (cat) parts.push(cat);
+  if (_homeFilterJobType) parts.push({alba:'일반알바',errand:'심부름',technical:'전문기술',care:'돌봄'}[_homeFilterJobType]||_homeFilterJobType);
+  if (_homeFilterWorkType) parts.push({spot:'스팟',short:'단기',regular:'정기',lesson:'레슨/과외'}[_homeFilterWorkType]||_homeFilterWorkType);
+  if (wage === 'same_day') parts.push('당일정산');
+  if (nat === 'foreigner') parts.push('외국인환영');
+  if (label) label.textContent = `${parts.join(' · ')} 공고 ${filtered.length}개`;
   _renderHomeSearchList(filtered);
 }
 
