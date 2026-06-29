@@ -1079,6 +1079,7 @@
     .form-group { display:flex; flex-direction:column; gap:6px; }
     .form-label { font-size:12px; font-weight:700; color:#888; }
     .form-input, .form-select, .form-textarea {
+      width:100%; box-sizing:border-box;
       padding:12px 14px; border:1.5px solid #eee; border-radius:12px;
       font-size:14px; color:#222; outline:none; background:#fafafa;
       transition:border-color 0.2s; font-family:inherit;
@@ -2312,7 +2313,7 @@
             </div>
             <div style="flex:1">
               <div style="font-size:14px;font-weight:900;color:#5B21B6">바로모임</div>
-              <div style="font-size:10px;color:#a78bfa;margin-top:1px">취미 · 스포츠 · 소셜 모임</div>
+              <div style="font-size:10px;color:#a78bfa;margin-top:1px">스포츠 · 취미 · 친목 모임</div>
             </div>
             <span style="font-size:9px;font-weight:900;background:#7C3AED;color:#fff;padding:2px 8px;border-radius:10px">NEW</span>
             <button onclick="openMoimPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer;margin-left:4px">전체 ›</button>
@@ -3511,11 +3512,9 @@
   <div style="padding:10px 16px;border-bottom:1px solid #f5f5f5;flex-shrink:0">
     <div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px">
       <button class="moim-cat-chip active" data-cat="" onclick="filterMoimList(this,'')">전체</button>
-      <button class="moim-cat-chip" data-cat="스포츠" onclick="filterMoimList(this,'스포츠')">🎾 스포츠</button>
-      <button class="moim-cat-chip" data-cat="취미" onclick="filterMoimList(this,'취미')">🍷 취미생활</button>
-      <button class="moim-cat-chip" data-cat="소셜" onclick="filterMoimList(this,'소셜')">🤝 소셜</button>
-      <button class="moim-cat-chip" data-cat="파티" onclick="filterMoimList(this,'파티')">🎉 파티</button>
-      <button class="moim-cat-chip" data-cat="카풀" onclick="filterMoimList(this,'카풀')">🚗 카풀</button>
+      <button class="moim-cat-chip" data-cat="스포츠" onclick="filterMoimList(this,'스포츠')">🏃 스포츠</button>
+      <button class="moim-cat-chip" data-cat="취미" onclick="filterMoimList(this,'취미')">🎨 취미</button>
+      <button class="moim-cat-chip" data-cat="친목" onclick="filterMoimList(this,'친목')">🤝 친목</button>
       <button class="moim-cat-chip" data-cat="기타" onclick="filterMoimList(this,'기타')">💡 기타</button>
     </div>
   </div>
@@ -3560,21 +3559,13 @@
     <!-- 카테고리 -->
     <div style="margin-bottom:16px">
       <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">카테고리 *</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="moim-cat-select">
-        <button type="button" onclick="selectMoimCat(this,'스포츠')" style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🎾 스포츠</button>
-        <button type="button" onclick="selectMoimCat(this,'취미')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🍷 취미생활</button>
-        <button type="button" onclick="selectMoimCat(this,'소셜')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🤝 소셜</button>
-        <button type="button" onclick="selectMoimCat(this,'파티')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🎉 파티</button>
-        <button type="button" onclick="selectMoimCat(this,'카풀')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🚗 카풀</button>
-        <button type="button" onclick="selectMoimCat(this,'기타')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">💡 기타</button>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="moim-cat-select">
+        <button type="button" onclick="selectMoimCat(this,'스포츠')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🏃 스포츠</button>
+        <button type="button" onclick="selectMoimCat(this,'취미')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🎨 취미</button>
+        <button type="button" onclick="selectMoimCat(this,'친목')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🤝 친목</button>
+        <button type="button" onclick="selectMoimCat(this,'기타')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💡 기타</button>
       </div>
       <input type="hidden" id="f-moim-cat" value="">
-    </div>
-
-    <!-- 세부 카테고리 -->
-    <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">세부 종류</div>
-      <input id="f-moim-subcat" class="form-input" placeholder="예) 테니스, 와인, 독서, 러닝 등">
     </div>
 
     <!-- 제목 -->
@@ -4878,7 +4869,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — 이전 버전 SW 캐시가 남아있으면 전부 삭제 후 reload
-  const _APP_V = '296';
+  const _APP_V = '297';
   const _savedV = localStorage.getItem('_baroV');
   if (_savedV && _savedV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -4891,7 +4882,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('_baroV', _APP_V);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=296').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=297').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -5699,7 +5690,7 @@ function renderTodayPick() {}
 // ── 바로모임 (Baro Moim) ────────────────────────────────────
 // ══════════════════════════════════════════════════════════
 
-const MOIM_CAT_EMOJI = { 스포츠:'🎾', 취미:'🍷', 소셜:'🤝', 파티:'🎉', 카풀:'🚗', 기타:'💡' };
+const MOIM_CAT_EMOJI = { 스포츠:'🏃', 취미:'🎨', 친목:'🤝', 기타:'💡' };
 const MOIM_PLAN_LIMITS = { free: 1, standard: 10, pro: Infinity };
 
 let _currentMoimId = null;   // 상세 보고 있는 모임 id
@@ -5764,7 +5755,7 @@ async function loadMoimList(cat = '') {
 }
 
 function _moimHomeCard(m) {
-  const catColor = { 스포츠:'#2563eb',취미:'#7c3aed',소셜:'#0891b2',파티:'#db2777',카풀:'#16a34a',기타:'#6b7280' };
+  const catColor = { 스포츠:'#2563eb',취미:'#7c3aed',친목:'#0891b2',기타:'#6b7280' };
   const cat = m.category || '기타';
   const color = catColor[cat] || '#7c3aed';
   const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '날짜 미정';
