@@ -4249,7 +4249,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=276').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=277').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -10435,6 +10435,9 @@ async function saveWorkerProfile() {
   const payload = { kakao_uid: currentUser.id, name, age, birth_date: birthVal || null, phone, bio, experience, region, skills: _workerSkills, vehicles: _workerVehicles, strengths: _workerStrengths, languages: _workerLanguages, activity_area: _activityAreaName || null, activity_lat: _activityLat, activity_lng: _activityLng, pref_categories: _prefCats, avail_days: _availDays, avail_times: _availTimes };
   if (_workerGender) payload.gender = _workerGender;
   if (_workerEdu) payload.education = _workerEdu;
+  // 가입 시 저장된 국적·비자 정보 반영 (workers 테이블에 nationality, visa_type 미기입 상태일 때만)
+  if (meta.nationality) payload.nationality = meta.nationality;
+  if (meta.visa_type)   payload.visa_type   = meta.visa_type;
   const notifyOn = document.getElementById('notify-enabled-toggle')?.checked || false;
   payload.notify_enabled = notifyOn;
   payload.notify_categories = notifyOn ? _notifyCategories : [];
@@ -17494,22 +17497,31 @@ function onVisaDocSelect(event) {
 
 async function loadVisaProfile() {
   const wid = await _getWorkerId();
-  if (!wid) return;
-  const { data } = await db.from('workers').select('visa_type,visa_doc_url,pref_job_types,nationality').eq('id', wid).single();
-  if (!data) return;
-  if (data.visa_type)  document.getElementById('visa-type').value   = data.visa_type;
-  if (data.nationality) {
+  // workers DB 미등록인 경우 user_metadata에서 fallback
+  const meta = (typeof currentUser !== 'undefined' && currentUser?.user_metadata) || {};
+  let natVal = meta.nationality || '';
+  let visaVal = meta.visa_type || '';
+
+  if (wid) {
+    const { data } = await db.from('workers').select('visa_type,visa_doc_url,pref_job_types,nationality').eq('id', wid).single();
+    if (data) {
+      natVal  = data.nationality  || natVal;
+      visaVal = data.visa_type    || visaVal;
+      if (data.pref_job_types) {
+        _selectedPrefJobs = new Set(Array.isArray(data.pref_job_types) ? data.pref_job_types : []);
+      }
+      if (data.visa_doc_url) {
+        document.getElementById('visa-doc-preview').innerHTML = `<div style="font-size:12px;color:#16a34a;font-weight:700">✅ 비자 사본 등록됨</div>
+          <a href="${data.visa_doc_url}" target="_blank" style="font-size:11px;color:#3b82f6">파일 보기</a>`;
+      }
+    }
+  }
+  if (natVal) {
     const sel = document.getElementById('visa-country');
-    for (const opt of sel.options) { if (opt.value === data.nationality) { sel.value = data.nationality; break; } }
+    for (const opt of sel.options) { if (opt.value === natVal) { sel.value = natVal; break; } }
   }
-  if (data.pref_job_types) {
-    _selectedPrefJobs = new Set(Array.isArray(data.pref_job_types) ? data.pref_job_types : []);
-  }
-  if (data.visa_doc_url) {
-    document.getElementById('visa-doc-preview').innerHTML = `<div style="font-size:12px;color:#16a34a;font-weight:700">✅ 비자 사본 등록됨</div>
-      <a href="${data.visa_doc_url}" target="_blank" style="font-size:11px;color:#3b82f6">파일 보기</a>`;
-  }
-  document.getElementById('mp-visa-val').textContent = data.visa_type || '';
+  if (visaVal) document.getElementById('visa-type').value = visaVal;
+  document.getElementById('mp-visa-val').textContent = visaVal || (natVal === 'KR' ? '한국 국적' : '');
   onVisaCountryChange();
   onVisaTypeChange();
 }
