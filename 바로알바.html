@@ -4849,8 +4849,21 @@ window.addEventListener('popstate', () => {
 
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  // 앱 버전 캐시 강제 초기화 — 이전 버전 SW 캐시가 남아있으면 전부 삭제 후 reload
+  const _APP_V = '292';
+  const _savedV = localStorage.getItem('_baroV');
+  if (_savedV && _savedV !== _APP_V) {
+    localStorage.setItem('_baroV', _APP_V);
+    if ('caches' in window) {
+      await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+    }
+    location.reload(true);
+    return;
+  }
+  localStorage.setItem('_baroV', _APP_V);
+
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=291').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=292').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -5695,8 +5708,10 @@ function closeMoimChat() {
 // ── 모임 목록 로드 ────────────────────────────────────────
 async function loadMoimList(cat = '') {
   const container = document.getElementById('moim-list-container');
-  if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">불러오는 중...</div></div>';
+  const homeList  = document.getElementById('home-moim-list');
+  if (!container && !homeList) return; // 둘 다 없으면 패스
+
+  if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">불러오는 중...</div></div>';
 
   let q = db.from('gatherings')
     .select('*')
@@ -5707,12 +5722,16 @@ async function loadMoimList(cat = '') {
 
   const { data, error } = await q.limit(50);
   _moimList = data || [];
-  _renderMoimCards(container, _moimList);
 
-  // 홈 패널 미리보기도 갱신
-  const homeList = document.getElementById('home-moim-list');
-  if (homeList && _moimList.length) {
-    homeList.innerHTML = _moimList.slice(0, 6).map(_moimHomeCard).join('');
+  if (container) _renderMoimCards(container, _moimList);
+
+  // 홈 패널 미리보기 갱신 (모임 패널 컨테이너 존재 여부와 무관)
+  if (homeList) {
+    if (_moimList.length) {
+      homeList.innerHTML = _moimList.slice(0, 6).map(_moimHomeCard).join('');
+    } else {
+      homeList.innerHTML = '<div style="color:#bbb;font-size:12px;padding:10px 0">등록된 모임이 없습니다</div>';
+    }
   }
 }
 
@@ -6464,7 +6483,10 @@ async function _loadHomeTopPartners() {
 }
 
 function _onHomeSearchFocus() {
-  // 검색바에 포커스할 때 — 그냥 타이핑 허용 (필터 패널 자동 열지 않음)
+  // 검색바 탭 → 필터 패널 열기 (직접 타이핑은 필터 안에서)
+  const input = document.getElementById('home-search-input');
+  if (input) input.blur(); // 키보드가 두 번 뜨는 것 방지
+  openHomeFilterFromBar();
 }
 function openHomeFilterFromBar() {
   // 빨간 필터 아이콘 클릭: 현재 검색바 텍스트를 필터 패널에 반영하고 열기
