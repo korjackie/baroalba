@@ -4249,7 +4249,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=275').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=276').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -13501,8 +13501,18 @@ function openPostingForm() {
   document.getElementById('form-title').textContent = t('form_post_new');
   document.getElementById('submit-btn').textContent = t('form_submit_post');
   document.getElementById('f-title').value = '';
-  setJobType('alba');  // 유형 탭 초기화
-  setWorkType('spot'); // 근무형태 스팟으로 강제 초기화
+  setJobType('alba');     // 유형 탭 초기화
+  setWorkType('spot');    // 근무형태 스팟으로 강제 초기화
+  setWageType('hourly');  // 급여 유형 시급으로 초기화
+  // 요일 버튼 전체 초기화
+  document.querySelectorAll('#f-days-wrap button').forEach(btn => {
+    btn.style.background  = '#fff';
+    btn.style.color       = btn.dataset.day === '토' ? '#3B82F6' : btn.dataset.day === '일' ? '#C8102E' : '#888';
+    btn.style.borderColor = '#eee';
+  });
+  document.getElementById('f-work-days').value = '';
+  const _ps0 = document.getElementById('f-period-start'); if (_ps0) _ps0.value = '';
+  const _pe0 = document.getElementById('f-period-end');   if (_pe0) _pe0.value = '';
   document.getElementById('f-wage').value = '';
   document.getElementById('f-needed').value = 1;
   document.getElementById('f-desc').value = '';
@@ -13608,6 +13618,8 @@ function openEditForm(jobId) {
   document.getElementById('form-title').textContent = t('form_post_edit');
   document.getElementById('submit-btn').textContent = t('form_submit_edit');
   document.getElementById('f-title').value = p.title;
+  // 급여 유형 (시급/일급/건당/월급/기타) 복원
+  setWageType(p.wage_type || 'hourly');
   document.getElementById('f-category').value = p.category;
   document.getElementById('f-wage').value = p.base_wage;
   document.getElementById('f-wage-preview').textContent = p.base_wage ? parseInt(p.base_wage).toLocaleString() + '원' : '—';
@@ -13615,6 +13627,37 @@ function openEditForm(jobId) {
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat || '';
   document.getElementById('f-lng').value = p.lng || '';
+  // 공고 유형 + 근무형태(스팟/단기/정기) 복원
+  const _editJobType = p.work_type === 'errand' ? 'errand' : 'alba';
+  setJobType(_editJobType);
+  if (p.work_type && p.work_type !== 'errand') setWorkType(p.work_type);
+  // 근무 요일 버튼 복원
+  if (p.work_days) {
+    const _activeDays = new Set(p.work_days.split(',').map(d => d.trim()));
+    document.querySelectorAll('#f-days-wrap button').forEach(btn => {
+      const on = _activeDays.has(btn.dataset.day);
+      btn.style.background   = on ? '#C8102E' : '#fff';
+      btn.style.color        = on ? '#fff' : (btn.dataset.day === '토' ? '#3B82F6' : btn.dataset.day === '일' ? '#C8102E' : '#888');
+      btn.style.borderColor  = on ? '#C8102E' : '#eee';
+    });
+    document.getElementById('f-work-days').value = p.work_days;
+  } else {
+    // 요일 버튼 전체 초기화
+    document.querySelectorAll('#f-days-wrap button').forEach(btn => {
+      btn.style.background  = '#fff';
+      btn.style.color       = btn.dataset.day === '토' ? '#3B82F6' : btn.dataset.day === '일' ? '#C8102E' : '#888';
+      btn.style.borderColor = '#eee';
+    });
+    document.getElementById('f-work-days').value = '';
+  }
+  // 기간(시작일/종료일) 복원
+  if (p.work_type === 'short' || p.work_type === 'regular') {
+    const _startDate = p.period_start || (p.start_time ? p.start_time.slice(0, 10) : '');
+    const _ps = document.getElementById('f-period-start');
+    if (_ps && _startDate) _ps.value = _startDate;
+    const _pe = document.getElementById('f-period-end');
+    if (_pe && p.work_end_date) _pe.value = p.work_end_date;
+  }
   // 기존 사진 로드 (main_image_idx가 가리키는 사진을 첫 번째로)
   const _rawImgs = p.images || [];
   const _mi = p.main_image_idx || 0;
