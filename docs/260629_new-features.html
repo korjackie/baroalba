@@ -588,6 +588,143 @@
   </div>
 </section>
 
+<!-- FEATURE 06 -->
+<section class="feat-section">
+  <div class="feat-grid">
+    <div class="feat-visual">
+      <svg viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="240" height="180" fill="#f0fdf4" rx="16"/>
+        <rect x="20" y="30" width="200" height="50" rx="10" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="36" y="58" font-size="13" fill="#aaa" font-family="monospace">350000</text>
+        <text x="160" y="62" font-size="22" font-weight="900" fill="#C8102E" font-family="sans-serif">350,000원</text>
+        <rect x="20" y="100" width="200" height="50" rx="10" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="36" y="128" font-size="13" fill="#aaa" font-family="monospace">350002</text>
+        <text x="155" y="132" font-size="22" font-weight="900" fill="#C8102E" font-family="sans-serif">350,002원</text>
+        <line x1="148" y1="98" x2="148" y2="102" stroke="#ef4444" stroke-width="2"/>
+        <text x="170" y="159" font-size="10" fill="#ef4444" font-weight="700">⚠ 오입력 즉시 감지</text>
+      </svg>
+    </div>
+    <div class="feat-body">
+      <p class="section-label" style="color:var(--green)">Feature 06</p>
+      <h2 class="section-title">시급 실시간 미리보기</h2>
+      <p class="section-desc">공고 등록 시 시급 입력 필드 오른쪽에 콤마 포맷 실시간 미리보기를 추가했습니다. "350000원"과 "350002원"의 차이를 한눈에 확인할 수 있어 오입력을 원천 차단합니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--green-light);color:var(--green)">1</div>
+          <div class="step-body">
+            <div class="step-title">입력과 동시에 "350,000원" 표시</div>
+            <div class="step-desc">숫자만 입력해도 오른쪽에 콤마가 자동으로 붙어 실제 금액 확인 가능.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--green-light);color:var(--green)">2</div>
+          <div class="step-body">
+            <div class="step-title">수정 폼에서도 동일하게 적용</div>
+            <div class="step-desc">공고 수정 시 기존 금액도 미리보기로 표시됩니다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 07 -->
+<section class="feat-section" style="background:var(--gray-100)">
+  <div class="feat-grid">
+    <div class="feat-visual">
+      <svg viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="240" height="180" fill="#fef2f2" rx="16"/>
+        <rect x="20" y="20" width="200" height="60" rx="12" fill="#fff" stroke="#fecaca" stroke-width="2"/>
+        <text x="36" y="45" font-size="13" font-weight="800" fill="#111">📋 2월 알바 구인</text>
+        <rect x="160" y="28" width="50" height="22" rx="8" fill="#fef2f2"/>
+        <text x="168" y="43" font-size="10" font-weight="800" fill="#ef4444">기간만료</text>
+        <text x="36" y="68" font-size="11" fill="#aaa">~2025/12/31 · 자동 마감됨</text>
+        <path d="M 70 110 L 120 85 L 170 110" stroke="#C8102E" stroke-width="2" fill="none"/>
+        <text x="92" y="133" font-size="11" fill="#C8102E" font-weight="700">자동 마감</text>
+        <text x="82" y="150" font-size="10" fill="#aaa">만료일 다음날 자동 처리</text>
+      </svg>
+    </div>
+    <div class="feat-body">
+      <p class="section-label" style="color:var(--red)">Feature 07</p>
+      <h2 class="section-title">공고 자동 마감</h2>
+      <p class="section-desc">work_end_date(근무 종료일)가 지난 공고는 업주 패널 접속 시 자동으로 "마감" 처리됩니다. 기간 만료 배지도 함께 표시되어 한눈에 확인 가능합니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">1</div>
+          <div class="step-body">
+            <div class="step-title">업주 패널 접속 시 자동 처리</div>
+            <div class="step-desc">만료 공고가 있으면 일괄 closed 처리 후 목록 렌더링.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">2</div>
+          <div class="step-body">
+            <div class="step-title">"기간만료" 배지 표시</div>
+            <div class="step-desc">work_end_date가 지난 공고는 카드 상단에 붉은 배지 노출.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">3</div>
+          <div class="step-body">
+            <div class="step-title">구직자 피드에서도 자동 제외</div>
+            <div class="step-desc">work_end_date 필터는 이전부터 피드에 적용 중.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 08 -->
+<section class="feat-section">
+  <div class="feat-grid">
+    <div class="feat-visual">
+      <svg viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="240" height="180" fill="#eff6ff" rx="16"/>
+        <rect x="20" y="18" width="200" height="55" rx="10" fill="#fff7ed" stroke="#fde68a" stroke-width="1.5"/>
+        <text x="30" y="38" font-size="10" font-weight="800" fill="#92400E">⭐ 후기</text>
+        <text x="30" y="56" font-size="12" fill="#78350F">"근무 환경이 좋았어요 ★★★★"</text>
+        <rect x="20" y="88" width="200" height="55" rx="10" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+        <text x="30" y="108" font-size="10" font-weight="800" fill="#1e40af">💬 업체 답글</text>
+        <text x="30" y="128" font-size="12" fill="#1e3a8a">"감사합니다! 또 함께해요 😊"</text>
+        <line x1="120" y1="73" x2="120" y2="88" stroke="#bfdbfe" stroke-width="2" stroke-dasharray="3,2"/>
+      </svg>
+    </div>
+    <div class="feat-body">
+      <p class="section-label" style="color:var(--blue)">Feature 08</p>
+      <h2 class="section-title">리뷰 답글 기능</h2>
+      <p class="section-desc">알바생이 남긴 업체 후기에 업주가 답글을 달 수 있습니다. 알바생의 "내 평점" 화면에서 업체 답글도 함께 노출됩니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--blue-light);color:var(--blue)">1</div>
+          <div class="step-body">
+            <div class="step-title">완료 지원자 카드에서 후기 확인</div>
+            <div class="step-desc">completed 상태 지원자 카드 하단에 알바생 후기 텍스트가 표시됩니다.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--blue-light);color:var(--blue)">2</div>
+          <div class="step-body">
+            <div class="step-title">"답글 달기" 버튼 → 모달 작성</div>
+            <div class="step-desc">최대 200자 답글 작성. 이미 달았다면 "💬 답글" 버튼으로 수정 가능.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--blue-light);color:var(--blue)">3</div>
+          <div class="step-body">
+            <div class="step-title">알바생 "내 평점" 화면에서 답글 노출</div>
+            <div class="step-desc">업체가 답글을 달면 파란색 박스로 답글이 즉시 표시됩니다.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note" style="background:#FFF0F0;border-color:#fecaca">
+        <span>⚙️</span>
+        <span>DB 준비 필요: Supabase에서 <code>ALTER TABLE applications ADD COLUMN review_reply TEXT; ADD COLUMN review_replied_at TIMESTAMPTZ;</code> 실행 후 정상 동작합니다.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- DEPLOYMENT INFO -->
 <section class="feat-section" style="background:linear-gradient(135deg,#0f0f0f,#1a0008)">
   <div style="text-align:center;max-width:640px;margin:0 auto">
@@ -597,8 +734,8 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;text-align:left">
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">SW 버전</div>
-        <div style="font-size:22px;font-weight:900;color:#fff">v271</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">baroalba-v271</div>
+        <div style="font-size:22px;font-weight:900;color:#fff">v273</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">baroalba-v273</div>
       </div>
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">배포일</div>
@@ -612,8 +749,8 @@
       </div>
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">신규 기능</div>
-        <div style="font-size:22px;font-weight:900;color:#16a34a">5개</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">DDL 추가 없음</div>
+        <div style="font-size:22px;font-weight:900;color:#16a34a">8개</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">리뷰답글은 DDL 1개 필요</div>
       </div>
     </div>
   </div>

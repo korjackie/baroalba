@@ -3649,7 +3649,10 @@
         </div>
         <input type="hidden" id="f-wage-type" value="hourly">
         <label class="form-label" id="f-wage-label">금액 (원) *</label>
-        <input class="form-input" id="f-wage" type="number" min="0" placeholder="10030" oninput="checkMinWage(this.value)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <input class="form-input" id="f-wage" type="number" min="0" placeholder="10030" style="flex:1" oninput="checkMinWage(this.value);document.getElementById('f-wage-preview').textContent=this.value?parseInt(this.value).toLocaleString()+'원':'—'">
+          <div id="f-wage-preview" style="font-size:20px;font-weight:900;color:#C8102E;min-width:90px;text-align:right;white-space:nowrap">—</div>
+        </div>
         <!-- 기타 직접 입력 -->
         <input class="form-input" id="f-wage-other" type="text" placeholder="예) 협의 후 결정, 건당 50,000원" style="display:none;margin-top:8px">
         <div id="wage-warn" style="display:none;font-size:11px;color:#EF4444;font-weight:700;margin-top:4px">⚠️ 2025년 최저시급(10,030원) 미만입니다</div>
@@ -4086,7 +4089,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=272').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=273').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -6145,7 +6148,7 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
 async function showMyRatings() {
   if (!currentUser) return;
   const { data: apps } = await db.from('applications')
-    .select('worker_review, worker_rating, job_postings(title, businesses(name))')
+    .select('worker_review, worker_rating, review_reply, job_postings(title, businesses(name))')
     .eq('worker_id', (await _getWorkerId()) || '')
     .not('worker_rating', 'is', null)
     .order('completed_at', { ascending: false });
@@ -6169,6 +6172,7 @@ async function showMyRatings() {
               <div style="font-size:14px;font-weight:900;color:#F59E0B">${'★'.repeat(Math.round(a.worker_rating))} ${a.worker_rating?.toFixed(1)}</div>
             </div>
             ${a.worker_review ? `<div style="font-size:13px;color:#555;line-height:1.6">"${a.worker_review}"</div>` : ''}
+            ${a.review_reply ? `<div style="margin-top:8px;padding:8px 10px;background:#EFF6FF;border-radius:8px;border-left:2px solid #3b82f6;font-size:12px;color:#1e3a8a;line-height:1.5"><span style="font-weight:800">업체 답글:</span> ${a.review_reply}</div>` : ''}
           </div>`).join('')}
     </div>`;
   document.body.appendChild(overlay);
@@ -11570,6 +11574,18 @@ async function loadPostings() {
 
   if (error) { showToast('공고 불러오기 실패'); return; }
   postings = data || [];
+
+  // 기간 만료된 open/urgent 공고 자동 마감
+  const today = new Date().toISOString().slice(0, 10);
+  const toClose = postings.filter(p =>
+    (p.status === 'open' || p.status === 'urgent') && p.work_end_date && p.work_end_date < today
+  );
+  if (toClose.length) {
+    await db.from('job_postings').update({ status: 'closed' })
+      .in('id', toClose.map(p => p.id));
+    toClose.forEach(p => { p.status = 'closed'; });
+  }
+
   renderPostings();
   updateStats();
   subscribeOwnerGlobalChat();
@@ -11919,6 +11935,9 @@ function makeApplicantCardHtml(a, opts = {}) {
   } else if (a.status === 'completed') {
     const stars = a.worker_rating ? '⭐'.repeat(a.worker_rating) : '';
     if (stars) actions += `<span style="font-size:13px;letter-spacing:1px">${stars}</span>`;
+    if (a.worker_review) {
+      actions += `<button onclick="${sp}openReviewReplyModal('${a.id}','${name.replace(/'/g,"\\'")}','${a.worker_review.replace(/'/g,"\\'").replace(/\n/g,' ')}','${(a.review_reply||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')" class="ac-btn ac-sub" style="font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.review_reply ? '💬 답글' : '📝 답글달기'}</button>`;
+    }
   }
   if (showExtras && wid) {
     const isRec = _recommendedWorkers.has(wid);
@@ -11943,6 +11962,12 @@ function makeApplicantCardHtml(a, opts = {}) {
       ${badge}
     </div>
     ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:10px;border-left:3px solid #C8102E;font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${a.status === 'completed' && a.worker_review ? `
+    <div style="margin:0 14px 10px;padding:10px 12px;background:#FFF7ED;border-radius:10px;border-left:3px solid #F59E0B">
+      <div style="font-size:10px;font-weight:700;color:#92400E;margin-bottom:3px">⭐ ${name}님의 후기</div>
+      <div style="font-size:12px;color:#78350F;line-height:1.5">"${a.worker_review.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
+      ${a.review_reply ? `<div style="margin-top:6px;padding:6px 8px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E"><span style="font-weight:800">업체 답글:</span> ${a.review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    </div>` : ''}
     <div class="ac-actions" onclick="${sp}">${actions}</div>
   </div>`;
 }
@@ -13404,6 +13429,7 @@ function openEditForm(jobId) {
   document.getElementById('f-title').value = p.title;
   document.getElementById('f-category').value = p.category;
   document.getElementById('f-wage').value = p.base_wage;
+  document.getElementById('f-wage-preview').textContent = p.base_wage ? parseInt(p.base_wage).toLocaleString() + '원' : '—';
   document.getElementById('f-needed').value = p.needed_count;
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat || '';
@@ -17023,6 +17049,57 @@ async function _notifyFavWorkers(jobId, title, wage) {
 // ═══════════════════════════════════════════════════════════════════
 // ── 전자계약서 자동 생성 ───────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════
+function openReviewReplyModal(appId, workerName, review, existingReply) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:#222">💬 후기 답글 달기</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${workerName}님의 후기</div>
+        </div>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+      </div>
+      <div style="background:#FFF7ED;border-radius:12px;padding:12px;margin-bottom:16px;font-size:13px;color:#78350F;line-height:1.5;border-left:3px solid #F59E0B">
+        ⭐ "${review}"
+      </div>
+      <textarea id="reply-content" placeholder="후기에 대한 답글을 남겨주세요 (최대 200자)" maxlength="200"
+        style="width:100%;box-sizing:border-box;height:90px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;outline:none">${existingReply||''}</textarea>
+      <div style="font-size:11px;color:#bbb;text-align:right;margin-top:4px" id="reply-char-count">${(existingReply||'').length}/200자</div>
+      <button id="reply-submit-btn" onclick="window._submitReviewReply('${appId}')"
+        style="margin-top:16px;width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">
+        ${existingReply ? '수정하기' : '답글 등록하기'}
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+  const ta = overlay.querySelector('#reply-content');
+  if (ta) ta.addEventListener('input', () => {
+    const cnt = overlay.querySelector('#reply-char-count');
+    if (cnt) cnt.textContent = ta.value.length + '/200자';
+  });
+  window._submitReviewReply = async (appId) => {
+    const content = (overlay.querySelector('#reply-content')?.value || '').trim();
+    if (!content) { showToast('답글 내용을 입력해주세요'); return; }
+    const btn = overlay.querySelector('#reply-submit-btn');
+    if (btn) { btn.textContent = '저장 중...'; btn.disabled = true; }
+    const { error } = await db.from('applications').update({
+      review_reply: content,
+      review_replied_at: new Date().toISOString()
+    }).eq('id', appId);
+    if (error) {
+      showToast('저장 실패: ' + error.message);
+      if (btn) { btn.textContent = '답글 등록하기'; btn.disabled = false; }
+      return;
+    }
+    showToast('✅ 답글이 등록됐어요!');
+    overlay.remove();
+    delete window._submitReviewReply;
+    loadApplicants();
+  };
+}
+
 async function showContractModal(appId) {
   const { data: app } = await db.from('applications')
     .select('*, workers(name, phone), job_postings(title, start_time, hourly_wage, work_type, address, businesses(biz_name, name, phone))')
