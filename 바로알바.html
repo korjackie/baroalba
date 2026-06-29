@@ -245,6 +245,8 @@
     .hfc-toggle::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:left .2s; }
     .hfc-toggle.on { background:#C8102E; }
     .hfc-toggle.on::after { left:21px; }
+    .home-sort-btn { padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700; border:1.5px solid #e5e5e5; background:#fff; color:#777; cursor:pointer; white-space:nowrap; }
+    .home-sort-btn.active { border-color:#C8102E; background:#fff0f2; color:#C8102E; font-weight:800; }
     /* ── 반경 표시 ── */
     .radius-badge {
       position: fixed;
@@ -2223,10 +2225,13 @@
 
     <!-- 검색바 -->
     <div style="padding:8px 12px 0">
-      <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:13px;padding:8px 12px;cursor:pointer" onclick="openHomeFilter()">
+      <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:13px;padding:8px 12px">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="home-search-input" type="text" placeholder="업종, 지역, 공고명 검색" style="border:none;background:none;font-size:13px;color:#222;flex:1;outline:none;min-width:0;pointer-events:none" onkeydown="if(event.key==='Enter')doHomeSearch()" onclick="this.style.pointerEvents='all';event.stopPropagation()">
-        <div onclick="event.stopPropagation();openHomeFilter()" style="width:30px;height:30px;background:#C8102E;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
+        <input id="home-search-input" type="text" placeholder="업종, 지역, 공고명 검색" style="border:none;background:none;font-size:13px;color:#222;flex:1;outline:none;min-width:0"
+          oninput="doHomeSearch()"
+          onkeydown="if(event.key==='Escape'){this.value='';clearHomeFilter();this.blur()}"
+          onfocus="_onHomeSearchFocus()">
+        <div onclick="openHomeFilterFromBar()" style="width:30px;height:30px;background:#C8102E;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;flex-shrink:0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
       </div>
@@ -2234,9 +2239,15 @@
 
     <!-- 검색 결과 -->
     <div id="home-search-results" style="display:none;padding:8px 12px 0">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
         <div style="font-size:13px;font-weight:800;color:#374151" id="home-search-result-label">검색 결과</div>
-        <button onclick="clearHomeFilter()" style="font-size:12px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;background:#fff0f2">× 초기화</button>
+        <button onclick="clearHomeFilter()" style="font-size:12px;color:#C8102E;font-weight:700;background:#fff0f2;border:none;cursor:pointer;padding:4px 8px;border-radius:8px">× 초기화</button>
+      </div>
+      <!-- 정렬 바 -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+        <button id="home-sort-latest" class="home-sort-btn active" onclick="selectHomeSort('latest')">최신순</button>
+        <button id="home-sort-wage" class="home-sort-btn" onclick="selectHomeSort('wage')">급여순</button>
+        <button id="home-sort-distance" class="home-sort-btn" onclick="selectHomeSort('distance')">거리순</button>
       </div>
       <div id="home-search-result-list"></div>
     </div>
@@ -2313,7 +2324,8 @@
           <div style="padding:12px 18px 0">
             <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:11px;padding:9px 13px">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="hfc-search-input" type="text" placeholder="업종, 지역, 공고명 입력" style="border:none;background:none;font-size:13px;color:#222;flex:1;outline:none" oninput="_updateHomeFilterCount()">
+              <input id="hfc-search-input" type="text" placeholder="업종, 지역, 공고명 입력" style="border:none;background:none;font-size:13px;color:#222;flex:1;outline:none"
+                oninput="_updateHomeFilterCount();const si=document.getElementById('home-search-input');if(si)si.value=this.value;">
             </div>
           </div>
           <!-- 업종 -->
@@ -4838,7 +4850,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=289').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=290').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6264,6 +6276,7 @@ let _homeFilterNat = '';
 let _homeFilterJobType = '';
 let _homeFilterWorkType = '';
 let _homeFilterSearch = '';
+let _homeSort = 'latest';
 let _hfPendingCat = '';
 let _hfPendingWage = '';
 let _hfPendingNat = '';
@@ -6445,6 +6458,15 @@ async function _loadHomeTopPartners() {
   } catch(e) {}
 }
 
+function _onHomeSearchFocus() {
+  // 검색바에 포커스할 때 — 그냥 타이핑 허용 (필터 패널 자동 열지 않음)
+}
+function openHomeFilterFromBar() {
+  // 빨간 필터 아이콘 클릭: 현재 검색바 텍스트를 필터 패널에 반영하고 열기
+  const barText = (document.getElementById('home-search-input')?.value || '').trim();
+  if (barText) _homeFilterSearch = barText; // 검색바 텍스트를 필터 검색어로 동기화
+  openHomeFilter();
+}
 function openHomeFilter() {
   _hfPendingCat = _homeFilterCat; _hfPendingWage = _homeFilterWage; _hfPendingNat = _homeFilterNat;
   _hfPendingJobType = _homeFilterJobType; _hfPendingWorkType = _homeFilterWorkType;
@@ -6452,11 +6474,13 @@ function openHomeFilter() {
   document.querySelectorAll('.hfc-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === _hfPendingCat));
   document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.toggle('active', b.dataset.jtype === _hfPendingJobType));
   document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.toggle('active', b.dataset.wtype === _hfPendingWorkType));
-  const si = document.getElementById('hfc-search-input'); if (si) si.value = _hfPendingSearch;
+  const si = document.getElementById('hfc-search-input'); if (si) { si.value = _hfPendingSearch; }
   const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.toggle('on', _hfPendingWage==='same_day');
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.toggle('on', _hfPendingNat==='foreigner');
   _updateHomeFilterCount();
   document.getElementById('home-filter-overlay').style.display = 'block';
+  // 필터 패널 열리면 검색 입력란에 포커스
+  setTimeout(() => document.getElementById('hfc-search-input')?.focus(), 150);
 }
 function closeHomeFilter() { document.getElementById('home-filter-overlay').style.display = 'none'; }
 function resetHomeFilter() {
@@ -6537,8 +6561,8 @@ function setHomeFilter(btn, cat, wage, nat) {
 function clearHomeFilter() {
   _homeFilterSearch = ''; _homeFilterCat = ''; _homeFilterWage = '';
   _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
-  const si = document.getElementById('home-search-input');
-  if (si) si.value = '';
+  _homeSort = 'latest';
+  const si = document.getElementById('home-search-input'); if (si) si.value = '';
   document.getElementById('home-search-results').style.display = 'none';
   document.getElementById('home-default-content').style.display = 'block';
 }
@@ -6574,18 +6598,58 @@ function _doHomeFilterRender() {
   _renderHomeSearchList(filtered);
 }
 
+let _homeSearchDebounce = null;
 function doHomeSearch() {
   const q = (document.getElementById('home-search-input')?.value || '').trim();
   if (!q) { clearHomeFilter(); return; }
-  // 검색어만 적용, 나머지 필터 초기화
-  _homeFilterSearch = q; _homeFilterCat = ''; _homeFilterWage = '';
-  _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
+  clearTimeout(_homeSearchDebounce);
+  _homeSearchDebounce = setTimeout(() => {
+    // 검색어만 적용, 나머지 필터 초기화
+    _homeFilterSearch = q; _homeFilterCat = ''; _homeFilterWage = '';
+    _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
+    _doHomeFilterRender();
+  }, 200);
+}
+
+function selectHomeSort(sort) {
+  _homeSort = sort;
+  document.querySelectorAll('.home-sort-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('home-sort-' + sort);
+  if (btn) btn.classList.add('active');
   _doHomeFilterRender();
+}
+
+function _sortHomeJobs(list) {
+  if (_homeSort === 'wage') {
+    return [...list].sort((a, b) => {
+      const _hw = j => { const w = j.current_wage||0; return j.wage_type==='daily'?w/8:w; };
+      return _hw(b) - _hw(a);
+    });
+  }
+  if (_homeSort === 'distance') {
+    const lat = (typeof mapCenter !== 'undefined' && mapCenter?.lat) || null;
+    const lng = (typeof mapCenter !== 'undefined' && mapCenter?.lng) || null;
+    if (!lat) return list; // 위치 없으면 그대로
+    const _dist = j => {
+      if (!j.lat || !j.lng) return 999999;
+      const dlat = (j.lat - lat) * 111000;
+      const dlng = (j.lng - lng) * 111000 * Math.cos(lat * Math.PI / 180);
+      return Math.sqrt(dlat*dlat + dlng*dlng);
+    };
+    return [...list].sort((a, b) => _dist(a) - _dist(b));
+  }
+  // 최신순 (default)
+  return [...list].sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0));
 }
 
 function _renderHomeSearchList(filtered) {
   const list = document.getElementById('home-search-result-list');
   if (!list) return;
+  // 정렬 버튼 상태 동기화
+  document.querySelectorAll('.home-sort-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('home-sort-' + _homeSort)?.classList.add('active');
+  // 정렬 적용
+  filtered = _sortHomeJobs(filtered);
   if (!filtered.length) {
     list.innerHTML = '<div style="text-align:center;padding:32px 0;color:#bbb"><div style="font-size:28px;margin-bottom:8px">🔍</div><div style="font-size:13px;font-weight:600">검색 결과가 없어요</div></div>';
     return;
