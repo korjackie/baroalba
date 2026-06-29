@@ -1840,6 +1840,17 @@
     <div id="d-deposit" style="display:none;margin:0 20px 12px">
       <span id="d-deposit-badge" style="display:inline-flex;align-items:center;gap:6px;background:#FFF1F2;color:#C8102E;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px">&#128737; 노쇼 보증금</span>
     </div>
+    <!-- 팀 모집 현황 -->
+    <div id="d-team-job" style="display:none;margin:0 20px 12px;background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:16px;padding:14px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:14px;font-weight:900;color:#7C3AED">👥 팀 모집 현황</span>
+        <span id="d-team-remain" style="font-size:13px;font-weight:800;color:#C8102E"></span>
+      </div>
+      <div style="height:8px;background:#EDE9FE;border-radius:4px;overflow:hidden;margin-bottom:8px">
+        <div id="d-team-bar" style="height:100%;width:0%;background:#7C3AED;border-radius:4px;transition:width 0.5s"></div>
+      </div>
+      <div id="d-team-desc" style="font-size:12px;color:#6D28D9;line-height:1.6;display:none"></div>
+    </div>
     <!-- 국적 조건 배지 -->
     <div id="d-natreq" style="display:none;margin:0 20px 8px">
       <span id="d-natreq-badge" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px"></span>
@@ -3966,6 +3977,26 @@
         </div>
       </div>
 
+      <!-- 팀 모집 토글 -->
+      <div style="margin-bottom:12px;padding:14px;background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div>
+            <div style="font-size:13px;font-weight:800;color:#7C3AED">👥 팀 모집</div>
+            <div style="font-size:11px;color:#8B5CF6;margin-top:2px">여러 명이 함께 팀으로 근무하는 공고</div>
+          </div>
+          <div id="team-job-track" onclick="toggleTeamJob()"
+            style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
+            <div id="team-job-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.2s"></div>
+          </div>
+        </div>
+        <input type="hidden" id="f-team-job" value="false">
+        <!-- 팀 구성 설명 (팀 모집 ON일 때 표시) -->
+        <div id="team-job-detail" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #EDE9FE">
+          <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px">팀 구성 설명 <span style="font-weight:400;color:#9CA3AF">(예: 오전 4명, 오후 3명 등)</span></div>
+          <textarea id="f-team-desc" placeholder="예) 총 4명 팀으로 입주청소&#10;오전 33평 화성 / 오후 32평 화성" style="width:100%;box-sizing:border-box;border:1.5px solid #DDD6FE;border-radius:10px;padding:10px;font-size:13px;min-height:70px;resize:none;outline:none;font-family:inherit;background:#fff"></textarea>
+        </div>
+      </div>
+
       <!-- 급여 유형 선택 -->
       <div class="form-group">
         <label class="form-label">급여 유형 *</label>
@@ -4465,7 +4496,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=281').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=282').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -4937,9 +4968,11 @@ function renderMarkers() {
     const mkTypeChr = _TYPE_CHR[job.work_type] || '스';
     const catShort  = catName.length > 5 ? catName.slice(0,5) : catName;
 
+    const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:#7C3AED;color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:8px;white-space:nowrap">👥${_r}자리</div>` : ''; })();
     const content = `
-      <div class="marker-wrap" onclick="openDetail('${job.id}')">
+      <div class="marker-wrap" onclick="openDetail('${job.id}')" style="position:relative">
         ${surgeHtml}
+        ${_teamBadge}
         <div class="marker-bubble ${bubbleCls}">
           <div class="mk-row1">
             <span class="mk-type ${mkTypeCls}">${mkTypeChr}</span>
@@ -5172,6 +5205,7 @@ function renderList() {
         ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:700">정기</span>' : ''}
         ${isUrgent ? '<span class="tag urgent-tag">ASAP</span>' : ''}
         ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">번개</span>' : ''}
+        ${job.is_team_job ? '<span class="tag" style="background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE;font-weight:800">👥 팀모집</span>' : ''}
         ${job.same_day_payment ? '<span class="tag payday-tag">💰 당일정산</span>' : ''}
         ${job.nationality_requirement === 'korean_only'       ? '<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">🇰🇷 한국인만</span>' : ''}
         ${job.nationality_requirement === 'foreigner_welcome' ? '<span class="tag" style="background:#F0FFF4;color:#166534;border:1px solid #86EFAC;font-weight:800">🌏 외국인환영</span>' : ''}
@@ -5190,6 +5224,21 @@ function renderList() {
           return `<span class="tag">${rem}자리 남음</span>`;
         })()}
       </div>
+      ${job.is_team_job && job.needed_count > 0 ? (() => {
+        const filled = job.filled_count || 0;
+        const needed = job.needed_count || 1;
+        const pct = Math.min(100, Math.round(filled / needed * 100));
+        const rem = needed - filled;
+        return `<div style="padding:0 14px 10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:10px;font-weight:700;color:#7C3AED">👥 ${needed}명 팀 모집</span>
+            <span style="font-size:10px;font-weight:800;color:${rem<=1?'#C8102E':rem<=2?'#EA580C':'#7C3AED'}">${rem > 0 ? rem+'자리 남음' : '모집완료'}</span>
+          </div>
+          <div style="height:5px;background:#EDE9FE;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${pct>=80?'#C8102E':'#7C3AED'};border-radius:3px;transition:width 0.4s"></div>
+          </div>
+        </div>`;
+      })() : ''}
       <div class="card-meta">
         <span>${dist}</span>
         <span>${startStr}</span>
@@ -5600,6 +5649,26 @@ function openDetail(jobId) {
 
   // 비대면 배지
   document.getElementById('d-remote-badge').style.display = job.is_remote ? 'block' : 'none';
+
+  // 팀 모집 현황
+  const teamEl = document.getElementById('d-team-job');
+  if (teamEl) {
+    if (job.is_team_job && job.needed_count > 0) {
+      const _filled = job.filled_count || 0;
+      const _needed = job.needed_count;
+      const _rem = _needed - _filled;
+      const _pct = Math.min(100, Math.round(_filled / _needed * 100));
+      teamEl.style.display = 'block';
+      document.getElementById('d-team-bar').style.width = _pct + '%';
+      document.getElementById('d-team-bar').style.background = _pct >= 80 ? '#C8102E' : '#7C3AED';
+      const remainEl = document.getElementById('d-team-remain');
+      remainEl.textContent = _rem > 0 ? `${_needed}명 중 ${_rem}자리 남음` : '모집 완료';
+      remainEl.style.color = _rem <= 1 ? '#C8102E' : '#7C3AED';
+      const descEl = document.getElementById('d-team-desc');
+      if (job.team_desc) { descEl.textContent = job.team_desc; descEl.style.display = 'block'; }
+      else { descEl.style.display = 'none'; }
+    } else { teamEl.style.display = 'none'; }
+  }
 
   // 국적 조건 배지
   const _NR_INFO = {
@@ -14079,8 +14148,9 @@ function openPostingForm() {
   document.getElementById('surge-preview').textContent = '';
   // 당일정산 + 노쇼보증금 + 재방문인센티브 + 비대면 + 초보/식사 초기화
   setSameDay(false); setDeposit(false); setReturnBonusOn(false); toggleRemoteMode(false);
-  setBeginnerOk(false); setMealIncluded(false); setNatReq('any');
+  setBeginnerOk(false); setMealIncluded(false); setNatReq('any'); setTeamJob(false);
   const _pu0 = document.getElementById('f-pickup-location'); if (_pu0) _pu0.value = '';
+  const _td0 = document.getElementById('f-team-desc'); if (_td0) _td0.value = '';
   renderMyPlacesQuick();
   // 기본 장소가 있으면 자동 적용
   const defaultPlace = _bizPlaces.find(p => p.is_default);
@@ -14241,6 +14311,8 @@ function openEditForm(jobId) {
   const _pu = document.getElementById('f-pickup-location');
   if (_pu) _pu.value = p.pickup_location || '';
   setNatReq(p.nationality_requirement || 'any');
+  setTeamJob(p.is_team_job || false);
+  const _td = document.getElementById('f-team-desc'); if (_td) _td.value = p.team_desc || '';
   setAgeLimit(p.age_limit || false);
   setJobLangs(p.preferred_languages || []);
   const dep = p.noshow_deposit || 0;
@@ -14707,6 +14779,8 @@ async function submitPosting() {
     meal_included:           document.getElementById('f-meal-included').value === 'true',
     pickup_location:         document.getElementById('f-pickup-location').value.trim() || null,
     nationality_requirement: document.getElementById('f-nat-req').value || 'any',
+    is_team_job:             document.getElementById('f-team-job').value === 'true',
+    team_desc:               document.getElementById('f-team-desc')?.value.trim() || null,
   };
 
   const btn = document.getElementById('submit-btn');
@@ -14895,6 +14969,17 @@ function setSameDay(val) {
   document.getElementById('f-same-day-on').value = val ? 'true' : 'false';
   document.getElementById('same-day-track').style.background = val ? '#16a34a' : '#ddd';
   document.getElementById('same-day-knob').style.left = val ? '22px' : '2px';
+}
+
+function toggleTeamJob() {
+  const cur = document.getElementById('f-team-job').value === 'true';
+  setTeamJob(!cur);
+}
+function setTeamJob(val) {
+  document.getElementById('f-team-job').value = val ? 'true' : 'false';
+  document.getElementById('team-job-track').style.background = val ? '#7C3AED' : '#e5e7eb';
+  document.getElementById('team-job-knob').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
+  document.getElementById('team-job-detail').style.display = val ? 'block' : 'none';
 }
 
 function setBeginnerOk(val) {
