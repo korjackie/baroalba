@@ -4835,7 +4835,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=287').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=288').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -4950,6 +4950,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   } else if (tabParam === 'swipe') {
     const btn = document.querySelectorAll('.nav-item')[1];
     if (btn) setNav(btn, 'swipe');
+  } else {
+    // 기본 진입: 홈 탭 활성화 (패널 show + float 버튼 숨김 보장)
+    const homeBtn = document.querySelectorAll('.nav-item')[0];
+    if (homeBtn) setNav(homeBtn, 'home');
   }
 });
 
@@ -6318,9 +6322,21 @@ function _renderHomeUrgent() {
         <div style="font-size:13px;font-weight:900;color:#fff">${j.current_wage>0?j.current_wage.toLocaleString()+'원'+_u(j):'협의'}</div>
       </div>`).join('')}
     </div>
-    <div onclick="event.stopPropagation();setNav(document.querySelectorAll('.nav-item')[2],'dashboard')" style="display:inline-flex;align-items:center;gap:3px;background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;margin-top:9px;cursor:pointer;width:fit-content">전체보기 →</div>
+    <div onclick="event.stopPropagation();showHomeUrgentList()" style="display:inline-flex;align-items:center;gap:3px;background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;margin-top:9px;cursor:pointer;width:fit-content">전체보기 →</div>
   `;
-  section.onclick = () => setNav(document.querySelectorAll('.nav-item')[2], 'dashboard');
+  section.onclick = () => showHomeUrgentList();
+}
+
+function showHomeUrgentList() {
+  const urgentJobs = jobs.filter(j => j.status === 'urgent');
+  const srEl = document.getElementById('home-search-results');
+  const defaultEl = document.getElementById('home-default-content');
+  if (!srEl || !defaultEl) return;
+  srEl.style.display = 'block';
+  defaultEl.style.display = 'none';
+  const label = document.getElementById('home-search-result-label');
+  if (label) label.textContent = `급구 공고 ${urgentJobs.length}개`;
+  _renderHomeSearchList(urgentJobs);
 }
 
 function _renderHomeAI() {
@@ -10193,6 +10209,8 @@ function setNav(el, tab) {
     bottomSheet.style.display = 'none';
     radiusBadge.style.display = 'none';
     if (mapLocBtn) mapLocBtn.style.display = 'none';
+    const _homeFloat = document.getElementById('map-swipe-float');
+    if (_homeFloat) _homeFloat.style.display = 'none';
     panelHome?.classList.add('show');
     loadHomePanel();
   } else if (tab === 'swipe') {
