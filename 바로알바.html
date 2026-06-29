@@ -3172,17 +3172,20 @@
     <button class="mpsub-back" onclick="closeMpSub('lang')">‹</button>
     <div class="mpsub-ttl">앱 언어</div>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:16px">
-    <div style="font-size:12px;color:#aaa;margin-bottom:12px" id="lang-desc">현재: 한국어</div>
+  <div style="flex:1;overflow-y:auto;padding:20px 16px 0">
+    <div style="font-size:12px;color:#aaa;margin-bottom:16px" id="lang-desc">현재: 한국어</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button id="lang-ko-btn" onclick="selectLang('ko')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--red);color:#fff;text-align:left">🇰🇷 한국어</button>
-      <button id="lang-en-btn" onclick="selectLang('en')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇺🇸 English</button>
-      <button id="lang-zh-btn" onclick="selectLang('zh')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇨🇳 中文</button>
-      <button id="lang-ja-btn" onclick="selectLang('ja')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇯🇵 日本語</button>
-      <button id="lang-vi-btn" onclick="selectLang('vi')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇻🇳 Tiếng Việt</button>
-      <button id="lang-ru-btn" onclick="selectLang('ru')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇷🇺 Русский</button>
-      <button id="lang-mn-btn" onclick="selectLang('mn')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left">🇲🇳 Монгол</button>
+      <button id="lang-ko-btn" onclick="selectLang('ko')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--red);color:#fff;text-align:left;transition:all 0.15s">🇰🇷 한국어</button>
+      <button id="lang-en-btn" onclick="selectLang('en')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇺🇸 English</button>
+      <button id="lang-zh-btn" onclick="selectLang('zh')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇨🇳 中文</button>
+      <button id="lang-ja-btn" onclick="selectLang('ja')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇯🇵 日本語</button>
+      <button id="lang-vi-btn" onclick="selectLang('vi')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇻🇳 Tiếng Việt</button>
+      <button id="lang-ru-btn" onclick="selectLang('ru')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇷🇺 Русский</button>
+      <button id="lang-mn-btn" onclick="selectLang('mn')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇲🇳 Монгол</button>
     </div>
+  </div>
+  <div style="padding:16px;flex-shrink:0">
+    <button id="lang-save-btn" onclick="saveLang();closeMpSub('lang')" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer;letter-spacing:-0.3px">언어 저장하기</button>
   </div>
 </div>
 
@@ -3514,13 +3517,28 @@
 
     <!-- 장소 -->
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">장소명</div>
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">장소 검색</div>
+      <div style="display:flex;gap:8px">
+        <input id="f-moim-place-search" class="form-input" placeholder="장소명으로 검색 (예: 잠실 테니스장)" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();searchMoimPlace()}">
+        <button type="button" onclick="searchMoimPlace()" style="padding:10px 14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">검색</button>
+      </div>
+      <div id="moim-place-results" style="display:none;border:1.5px solid #EDE9FE;border-radius:10px;overflow:hidden;margin-top:6px;background:#fff;box-shadow:0 4px 12px rgba(124,58,237,0.1)"></div>
+      <div id="moim-place-selected" style="display:none;margin-top:8px;background:#F5F3FF;border-radius:10px;padding:10px 12px;border:1.5px solid #DDD6FE">
+        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:2px">선택된 장소</div>
+        <div style="font-size:14px;font-weight:800;color:#111" id="moim-place-sel-name"></div>
+        <div style="font-size:12px;color:#888;margin-top:2px" id="moim-place-sel-addr"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">장소명 <span style="font-size:11px;font-weight:400;color:#9CA3AF">(직접 입력 또는 검색 자동완성)</span></div>
       <input id="f-moim-location" class="form-input" placeholder="예) 잠실 실내 테니스장, 강남 와인바 등">
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">상세 주소</div>
-      <input id="f-moim-address" class="form-input" placeholder="도로명 주소">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">주소</div>
+      <input id="f-moim-address" class="form-input" placeholder="도로명 주소 (검색 시 자동 입력)">
     </div>
+    <input type="hidden" id="f-moim-lat">
+    <input type="hidden" id="f-moim-lng">
 
     <!-- 인원/참가비 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
@@ -4774,10 +4792,20 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=284').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=285').then(reg => {
       reg.update();
+      // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            nw.postMessage({ type: 'SKIP_WAITING' });
+            navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+          }
+        });
+      });
     }).catch(()=>{});
-    // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
   }
 
   // 카카오 공유 SDK 초기화 (지도 SDK kakao.maps와 별개)
@@ -5835,6 +5863,44 @@ async function decideMoimApp(appId, decision, gatheringId) {
 }
 
 // ── 모임 개설/수정 폼 ─────────────────────────────────────
+async function searchMoimPlace() {
+  const query = document.getElementById('f-moim-place-search').value.trim();
+  if (!query) { showToast('장소명을 입력해주세요'); return; }
+  const btn = event?.target;
+  if (btn) { btn.textContent = '검색 중...'; btn.disabled = true; }
+  const results = await new Promise(resolve => {
+    try {
+      new kakao.maps.services.Places().keywordSearch(query, (r, s) => {
+        resolve(s === kakao.maps.services.Status.OK ? r : []);
+      });
+    } catch { resolve([]); }
+  });
+  if (btn) { btn.textContent = '검색'; btn.disabled = false; }
+  const box = document.getElementById('moim-place-results');
+  if (!results.length) { box.style.display = 'none'; showToast('검색 결과가 없어요'); return; }
+  box.style.display = 'block';
+  box.innerHTML = results.slice(0, 5).map(r => `
+    <div onclick="selectMoimPlace('${r.place_name.replace(/'/g,"\\'")}','${(r.road_address_name||r.address_name).replace(/'/g,"\\'")}',${r.y},${r.x})"
+      style="padding:11px 14px;border-bottom:1px solid #EDE9FE;cursor:pointer;display:flex;flex-direction:column;gap:2px;-webkit-tap-highlight-color:transparent"
+      onmousedown="this.style.background='#F5F3FF'" onmouseup="this.style.background=''" ontouchstart="this.style.background='#F5F3FF'" ontouchend="this.style.background=''">
+      <div style="font-size:13px;font-weight:800;color:#111">${r.place_name}</div>
+      <div style="font-size:11px;color:#888">${r.road_address_name || r.address_name}</div>
+      ${r.category_name ? `<div style="font-size:10px;color:#7C3AED;font-weight:600">${r.category_name}</div>` : ''}
+    </div>`).join('');
+}
+
+function selectMoimPlace(name, addr, lat, lng) {
+  document.getElementById('f-moim-location').value = name;
+  document.getElementById('f-moim-address').value = addr;
+  document.getElementById('f-moim-lat').value = lat;
+  document.getElementById('f-moim-lng').value = lng;
+  document.getElementById('f-moim-place-results').style.display = 'none';
+  document.getElementById('f-moim-place-selected').style.display = 'block';
+  document.getElementById('moim-place-sel-name').textContent = name;
+  document.getElementById('moim-place-sel-addr').textContent = addr;
+  document.getElementById('f-moim-place-search').value = name;
+}
+
 function _resetMoimForm() {
   document.getElementById('f-moim-id').value = '';
   document.getElementById('f-moim-cat').value = '';
@@ -5845,6 +5911,11 @@ function _resetMoimForm() {
   document.getElementById('f-moim-time').value = '14:00';
   document.getElementById('f-moim-location').value = '';
   document.getElementById('f-moim-address').value = '';
+  document.getElementById('f-moim-lat').value = '';
+  document.getElementById('f-moim-lng').value = '';
+  document.getElementById('f-moim-place-search').value = '';
+  document.getElementById('f-moim-place-results').style.display = 'none';
+  document.getElementById('f-moim-place-selected').style.display = 'none';
   document.getElementById('f-moim-maxcount').value = '10';
   document.getElementById('f-moim-fee').value = '0';
   document.getElementById('f-moim-skill').value = '무관';
@@ -5943,6 +6014,8 @@ async function submitMoimForm() {
     gathering_date:   dateTime?.toISOString() || null,
     location_name:    document.getElementById('f-moim-location').value.trim() || null,
     location_address: document.getElementById('f-moim-address').value.trim() || null,
+    lat: parseFloat(document.getElementById('f-moim-lat')?.value) || null,
+    lng: parseFloat(document.getElementById('f-moim-lng')?.value) || null,
     max_count:        parseInt(document.getElementById('f-moim-maxcount').value) || 10,
     entry_fee:        parseInt(document.getElementById('f-moim-fee').value) || 0,
     skill_level:      document.getElementById('f-moim-skill').value || '무관',
@@ -9994,7 +10067,7 @@ function setNav(el, tab) {
       // 지도 모드 토글 표시 (알바|모임)
       const _modeToggle = document.getElementById('map-mode-toggle');
       if (_modeToggle) _modeToggle.style.display = 'flex';
-      setMapMode('job'); // 항상 알바 모드로 시작
+      if (typeof setMapMode === 'function' && kakaoMap) setMapMode('job'); // 알바 모드로 시작
       // 주변알바 스와이프 버튼 표시 (공고 있을 때)
       const _floatBtn = document.getElementById('map-swipe-float');
       if (_floatBtn) {

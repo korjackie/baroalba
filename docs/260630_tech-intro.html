@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 기술 소개 2026.06.30</title>
+<style>
+  :root {
+    --red: #C8102E;
+    --red-dark: #9e0c23;
+    --red-light: #fff0f2;
+    --gray-900: #111;
+    --gray-800: #1e1e2e;
+    --gray-700: #444;
+    --gray-500: #888;
+    --gray-200: #eee;
+    --gray-100: #f8f8f8;
+    --white: #fff;
+    --blue: #3b82f6;
+    --green: #10b981;
+    --purple: #7C3AED;
+    --purple-light: #f5f3ff;
+    --orange: #f59e0b;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    --mono: 'JetBrains Mono','Fira Code','Consolas',monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; color:var(--gray-900); background:var(--white); line-height:1.6; }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(255,255,255,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--gray-200); display:flex; align-items:center; justify-content:space-between; padding:0 5%; height:60px; }
+  .nav-logo { font-size:18px; font-weight:900; color:var(--red); }
+  .nav-links { display:flex; gap:24px; font-size:14px; font-weight:600; color:var(--gray-700); }
+  .nav-links a { text-decoration:none; color:inherit; }
+  .nav-links a:hover { color:var(--red); }
+
+  /* HERO */
+  .hero { background:var(--gray-800); padding:120px 5% 80px; }
+  .hero-inner { max-width:900px; margin:0 auto; }
+  .hero-badge { display:inline-block; background:rgba(200,16,46,0.2); color:var(--red); font-size:12px; font-weight:700; letter-spacing:1px; padding:6px 16px; border-radius:100px; border:1px solid rgba(200,16,46,0.3); margin-bottom:24px; }
+  .hero h1 { font-size:clamp(32px,5vw,60px); font-weight:900; color:#fff; line-height:1.15; margin-bottom:20px; }
+  .hero h1 span { color:var(--red); }
+  .hero-sub { font-size:18px; color:rgba(255,255,255,0.6); max-width:580px; }
+  .hero-pills { display:flex; flex-wrap:wrap; gap:10px; margin-top:32px; }
+  .pill { font-size:13px; font-weight:600; padding:6px 14px; border-radius:100px; }
+  .pill-red { background:rgba(200,16,46,0.15); color:var(--red); border:1px solid rgba(200,16,46,0.2); }
+  .pill-blue { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.2); }
+  .pill-green { background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.2); }
+  .pill-purple { background:rgba(124,58,237,0.15); color:#a78bfa; border:1px solid rgba(124,58,237,0.2); }
+  .pill-orange { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.2); }
+
+  section { padding:80px 5%; }
+  .section-label { font-size:12px; font-weight:800; color:var(--red); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; }
+  .section-label-purple { font-size:12px; font-weight:800; color:var(--purple); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; }
+  .section-title { font-size:clamp(24px,4vw,36px); font-weight:900; margin-bottom:16px; }
+  .section-desc { font-size:16px; color:var(--gray-500); max-width:560px; line-height:1.7; }
+  .center { text-align:center; }
+  .center .section-desc { margin:0 auto; }
+
+  /* STACK GRID */
+  .stack-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; margin-top:48px; }
+  .stack-card { border-radius:var(--radius); padding:28px; border:1.5px solid var(--gray-200); }
+  .stack-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .stack-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .stack-name { font-size:16px; font-weight:800; }
+  .stack-role { font-size:13px; color:var(--gray-500); }
+  .stack-items { list-style:none; }
+  .stack-items li { font-size:14px; color:var(--gray-700); padding:5px 0; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; gap:8px; }
+  .stack-items li:last-child { border-bottom:none; }
+  .stack-items li::before { content:'→'; color:var(--red); font-size:12px; }
+
+  /* NEW badge */
+  .badge-new { background:var(--purple); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:100px; margin-left:6px; }
+
+  /* ARCHITECTURE */
+  .arch-section { background:var(--gray-800); }
+  .arch-section .section-label { color:#a78bfa; }
+  .arch-section .section-title { color:#fff; }
+  .arch-section .section-desc { color:rgba(255,255,255,0.5); }
+
+  /* CSS Architecture Diagram */
+  .arch-visual { margin-top:40px; }
+  .arch-layer { margin-bottom:0; }
+  .arch-layer-label { font-size:11px; font-weight:700; color:rgba(255,255,255,0.35); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; }
+  .arch-boxes { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .arch-box { border-radius:10px; padding:14px 20px; font-size:13px; font-weight:700; line-height:1.4; }
+  .arch-box-sub { font-size:11px; font-weight:400; opacity:0.75; margin-top:2px; }
+  .arch-box-red { background:rgba(200,16,46,0.2); border:1.5px solid rgba(200,16,46,0.4); color:#fca5a5; }
+  .arch-box-blue { background:rgba(59,130,246,0.15); border:1.5px solid rgba(59,130,246,0.3); color:#93c5fd; }
+  .arch-box-green { background:rgba(16,185,129,0.15); border:1.5px solid rgba(16,185,129,0.3); color:#6ee7b7; }
+  .arch-box-purple { background:rgba(124,58,237,0.15); border:1.5px solid rgba(124,58,237,0.35); color:#c4b5fd; }
+  .arch-box-orange { background:rgba(245,158,11,0.12); border:1.5px solid rgba(245,158,11,0.3); color:#fcd34d; }
+  .arch-box-gray { background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12); color:rgba(255,255,255,0.6); }
+  .arch-arrow { color:rgba(255,255,255,0.3); font-size:22px; display:flex; align-items:center; align-self:center; }
+  .arch-divider { display:flex; align-items:center; justify-content:center; padding:10px 0; color:rgba(255,255,255,0.2); font-size:20px; }
+
+  /* REALTIME CHANNELS TABLE */
+  .rt-table { width:100%; border-collapse:collapse; margin-top:32px; font-size:14px; }
+  .rt-table th { background:var(--gray-800); color:#fff; padding:10px 16px; text-align:left; font-weight:700; font-size:13px; }
+  .rt-table td { padding:10px 16px; border-bottom:1px solid var(--gray-200); color:var(--gray-700); font-family:var(--mono); font-size:13px; }
+  .rt-table tr:last-child td { border-bottom:none; }
+  .rt-table td.td-desc { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:13px; }
+  .rt-table td.td-purple { color:var(--purple); font-weight:700; }
+  .rt-badge { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:100px; }
+  .rt-badge-green { background:#d1fae5; color:#065f46; }
+  .rt-badge-purple { background:#ede9fe; color:#5b21b6; }
+  .rt-badge-blue { background:#dbeafe; color:#1e40af; }
+
+  /* SERVICE WORKER */
+  .sw-section { background:var(--gray-100); }
+  .sw-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; margin-top:40px; }
+  .sw-card { background:var(--white); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); border-top:4px solid var(--gray-200); }
+  .sw-card.sw-red { border-top-color:var(--red); }
+  .sw-card.sw-blue { border-top-color:var(--blue); }
+  .sw-card.sw-green { border-top-color:var(--green); }
+  .sw-card.sw-purple { border-top-color:var(--purple); }
+  .sw-card h3 { font-size:15px; font-weight:800; margin-bottom:8px; }
+  .sw-card p { font-size:13px; color:var(--gray-500); line-height:1.6; }
+  .sw-card code { display:block; font-family:var(--mono); font-size:12px; background:var(--gray-100); border-radius:6px; padding:10px 12px; color:var(--gray-700); margin-top:10px; line-height:1.6; }
+
+  /* ANDROID */
+  .android-section { background:var(--white); }
+  .android-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:40px; }
+  .android-card { background:var(--white); border-radius:var(--radius); padding:28px; box-shadow:var(--shadow); border:1.5px solid var(--gray-200); }
+  .android-card h3 { font-size:16px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .android-card code { display:block; font-family:var(--mono); font-size:13px; background:var(--gray-100); border-radius:8px; padding:16px; color:var(--gray-900); line-height:1.7; overflow-x:auto; white-space:pre; }
+  .code-comment { color:#888; }
+  .code-keyword { color:var(--red); }
+  .code-string { color:var(--green); }
+  .code-type { color:var(--blue); }
+
+  /* DB */
+  .db-section { background:var(--gray-100); }
+  .db-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; margin-top:40px; }
+  .db-card { background:var(--white); border:1.5px solid var(--gray-200); border-radius:var(--radius); padding:24px; }
+  .db-card.db-purple { border-left:4px solid var(--purple); }
+  .db-card h3 { font-size:15px; font-weight:800; color:var(--red); margin-bottom:12px; font-family:var(--mono); }
+  .db-card.db-purple h3 { color:var(--purple); }
+  .db-fields { list-style:none; }
+  .db-fields li { font-size:13px; font-family:var(--mono); padding:4px 0; border-bottom:1px dashed var(--gray-200); color:var(--gray-700); }
+  .db-fields li:last-child { border-bottom:none; }
+  .db-fields li .f-type { color:var(--blue); margin-left:6px; }
+  .db-fields li .f-pk { background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:4px; }
+  .db-fields li .f-fk { background:var(--blue); color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:4px; }
+  .db-fields li .f-new { background:var(--purple); color:#fff; font-size:10px; font-weight:700; padding:1px 5px; border-radius:4px; margin-left:4px; }
+
+  /* MOIM SECTION */
+  .moim-section { background:var(--white); }
+  .moim-section .section-label-purple { color:var(--purple); }
+  .moim-flow { display:flex; flex-direction:column; gap:16px; margin-top:40px; }
+  .moim-step { display:flex; gap:20px; background:var(--purple-light); border-radius:var(--radius); padding:22px; border:1.5px solid rgba(124,58,237,0.15); }
+  .moim-num { font-size:26px; font-weight:900; color:var(--purple); opacity:0.35; min-width:44px; }
+  .moim-body h3 { font-size:15px; font-weight:800; margin-bottom:6px; color:var(--gray-900); }
+  .moim-body p { font-size:13px; color:var(--gray-500); line-height:1.6; }
+  .moim-tag { display:inline-block; font-size:12px; font-weight:700; background:rgba(124,58,237,0.12); color:var(--purple); padding:3px 10px; border-radius:100px; margin-top:8px; border:1px solid rgba(124,58,237,0.2); }
+  .plan-table { width:100%; border-collapse:collapse; margin-top:32px; font-size:14px; }
+  .plan-table th { background:var(--purple); color:#fff; padding:10px 16px; text-align:left; font-weight:700; font-size:13px; }
+  .plan-table td { padding:10px 16px; border-bottom:1px solid var(--gray-200); color:var(--gray-700); }
+  .plan-table tr:last-child td { border-bottom:none; }
+
+  /* FEATURES TECH */
+  .tech-feat-list { display:flex; flex-direction:column; gap:20px; margin-top:40px; }
+  .tech-feat { display:flex; gap:20px; background:var(--white); border-radius:var(--radius); padding:24px; border:1.5px solid var(--gray-200); }
+  .tf-num { font-size:28px; font-weight:900; color:var(--red); opacity:0.3; min-width:44px; }
+  .tf-body h3 { font-size:16px; font-weight:800; margin-bottom:6px; }
+  .tf-body p { font-size:14px; color:var(--gray-500); line-height:1.6; }
+  .tf-tag { display:inline-block; font-size:12px; font-weight:600; background:var(--red-light); color:var(--red); padding:3px 10px; border-radius:100px; margin-top:8px; }
+  .tf-tag-purple { display:inline-block; font-size:12px; font-weight:600; background:rgba(124,58,237,0.1); color:var(--purple); padding:3px 10px; border-radius:100px; margin-top:8px; border:1px solid rgba(124,58,237,0.2); }
+
+  /* VERSION */
+  .ver-table { width:100%; border-collapse:collapse; margin-top:32px; font-size:14px; }
+  .ver-table th { background:var(--gray-800); color:#fff; padding:10px 16px; text-align:left; font-weight:700; font-size:13px; }
+  .ver-table td { padding:10px 16px; border-bottom:1px solid var(--gray-200); color:var(--gray-700); }
+  .ver-table tr:last-child td { border-bottom:none; }
+  .badge-done { background:var(--green); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:100px; }
+  .badge-play { background:var(--blue); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:100px; }
+  .badge-wip { background:var(--orange); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:100px; }
+
+  footer { background:var(--gray-800); padding:48px 5%; text-align:center; }
+  footer .footer-logo { font-size:22px; font-weight:900; color:var(--red); margin-bottom:6px; }
+  footer .footer-sub { font-size:13px; color:rgba(255,255,255,0.4); margin-top:4px; }
+  footer .footer-url { font-size:13px; color:rgba(255,255,255,0.55); margin-top:4px; }
+
+  @media(max-width:768px) {
+    .android-grid { grid-template-columns:1fr; }
+    .nav-links { display:none; }
+    .arch-boxes { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-links">
+    <a href="#stack">기술 스택</a>
+    <a href="#architecture">아키텍처</a>
+    <a href="#realtime">Realtime</a>
+    <a href="#sw">Service Worker</a>
+    <a href="#moim">바로모임</a>
+    <a href="#database">DB 스키마</a>
+    <a href="#android">Android</a>
+    <a href="#highlights">기술 포인트</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">TECH OVERVIEW · 2026.06.30</div>
+    <h1>기술로 만드는<br><span>실시간 매칭</span> 플랫폼</h1>
+    <p class="hero-sub">프레임워크 없이, 순수 HTML/CSS/JS + Supabase로 구현한 풀스택 PWA + Android 하이브리드 앱. 2026.06.30 기준 바로모임(gatherings) 신규 아키텍처 추가.</p>
+    <div class="hero-pills">
+      <span class="pill pill-red">Vanilla JS</span>
+      <span class="pill pill-blue">Supabase</span>
+      <span class="pill pill-green">Vercel</span>
+      <span class="pill pill-purple">Android WebView</span>
+      <span class="pill pill-orange">FCM + VAPID</span>
+      <span class="pill pill-blue">카카오맵 SDK</span>
+      <span class="pill pill-green">PWA · sw.js v284</span>
+      <span class="pill pill-red">GitHub Actions</span>
+      <span class="pill pill-purple">바로모임 NEW</span>
+    </div>
+  </div>
+</div>
+
+<!-- STACK -->
+<section id="stack">
+  <div class="section-label">Tech Stack</div>
+  <div class="section-title">기술 스택</div>
+  <p class="section-desc">빠른 개발과 낮은 운영비용을 위해 최소한의 인프라로 최대 기능 구현</p>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#fff0f2">🌐</div>
+        <div>
+          <div class="stack-name">Frontend</div>
+          <div class="stack-role">단일 HTML 파일 (~18,000 라인)</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>Vanilla HTML / CSS / JavaScript</li>
+        <li>번들러 없음 — 즉시 배포</li>
+        <li>Cropper.js (이미지 크롭)</li>
+        <li>카카오맵 SDK v3 (CustomOverlay, 클러스터링)</li>
+        <li>Supabase JS v2 (DB 클라이언트)</li>
+        <li>토스페이먼츠 SDK v1 (결제)</li>
+      </ul>
+    </div>
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#f0fdf4">🗄️</div>
+        <div>
+          <div class="stack-name">Backend</div>
+          <div class="stack-role">Supabase (BaaS)</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>PostgreSQL — 메인 데이터베이스</li>
+        <li>REST API — 모든 DML 직접 처리</li>
+        <li>Row Level Security (RLS) — 접근 제어</li>
+        <li>Storage — avatars, biz-photos</li>
+        <li>Auth — OAuth + 이메일/OTP</li>
+        <li>Realtime — 채팅·위치공유 구독</li>
+      </ul>
+    </div>
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#eff6ff">☁️</div>
+        <div>
+          <div class="stack-name">Hosting</div>
+          <div class="stack-role">Vercel</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>정적 파일 글로벌 CDN 서빙</li>
+        <li>git push → 자동 배포 (약 30초)</li>
+        <li>서버리스 함수: api/send-push.js</li>
+        <li>커스텀 도메인: baroalba.multimove.co.kr</li>
+        <li>SMTP: Resend (noreply@multimove.co.kr)</li>
+      </ul>
+    </div>
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#fdf4ff">📱</div>
+        <div>
+          <div class="stack-name">Android</div>
+          <div class="stack-role">WebView TWA 하이브리드</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>Java WebView 래퍼 (BaroAlbaWebView)</li>
+        <li>AndroidBridge (JS ↔ Native 통신)</li>
+        <li>Firebase FCM HTTP v1 (푸시알림)</li>
+        <li>core-splashscreen 1.0.1 (Android 12+)</li>
+        <li>GitHub Actions bundleRelease → AAB</li>
+      </ul>
+    </div>
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#fff7ed">🔔</div>
+        <div>
+          <div class="stack-name">Push 알림</div>
+          <div class="stack-role">이중 Push 시스템</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>Web Push API (VAPID) — 브라우저/PWA</li>
+        <li>FCM HTTP v1 — Android 네이티브</li>
+        <li>Vercel 서버리스로 Push 발송</li>
+        <li>push_subscriptions + fcm_tokens 테이블 비정규화</li>
+        <li>pending token 패턴 (타이밍 이중화)</li>
+      </ul>
+    </div>
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#f0fdf4">🔐</div>
+        <div>
+          <div class="stack-name">인증</div>
+          <div class="stack-role">OAuth + 이메일</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>카카오 OAuth</li>
+        <li>네이버 OAuth</li>
+        <li>이메일/비밀번호 (OTP 8자리)</li>
+        <li>JWT 기반 세션 (Supabase Auth)</li>
+      </ul>
+    </div>
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#ede9fe">🗺️</div>
+        <div>
+          <div class="stack-name">지도</div>
+          <div class="stack-role">카카오맵 SDK</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>kakao.maps.CustomOverlay — 커스텀 마커</li>
+        <li>kakao.maps.LatLng — 좌표 처리</li>
+        <li>마커 클러스터링</li>
+        <li>위치공유: Supabase Realtime location:{appId}</li>
+      </ul>
+    </div>
+    <div class="stack-card">
+      <div class="stack-header">
+        <div class="stack-icon" style="background:#fff7ed">💳</div>
+        <div>
+          <div class="stack-name">결제</div>
+          <div class="stack-role">토스페이먼츠</div>
+        </div>
+      </div>
+      <ul class="stack-items">
+        <li>토스페이먼츠 SDK v1</li>
+        <li>프리미엄 공고 업그레이드</li>
+        <li>바로모임 플랜 결제</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="arch-section" id="architecture">
+  <div class="section-label-purple" style="color:#a78bfa;letter-spacing:1.5px;font-size:12px;font-weight:800;text-transform:uppercase;margin-bottom:12px;">Architecture</div>
+  <div class="section-title">시스템 아키텍처</div>
+  <p class="section-desc">단순하지만 확장 가능한 구조. 모든 계층이 독립적으로 교체 가능. DML은 Supabase REST API 직접 처리.</p>
+
+  <div class="arch-visual">
+    <!-- Layer: Client -->
+    <div class="arch-layer">
+      <div class="arch-layer-label">CLIENT LAYER</div>
+      <div class="arch-boxes">
+        <div class="arch-box arch-box-red">
+          Android App<br>
+          <div class="arch-box-sub">WebView TWA · Java<br>AndroidBridge JavascriptInterface</div>
+        </div>
+        <div class="arch-box arch-box-gray">
+          브라우저 / PWA<br>
+          <div class="arch-box-sub">바로알바.html (~18,000 lines)<br>sw.js v284 · Service Worker</div>
+        </div>
+        <div class="arch-box arch-box-gray">
+          login.html<br>
+          <div class="arch-box-sub">진입점 · OAuth 리디렉션<br>shared-lang.js (i18n 공유)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-divider">↓ HTTPS</div>
+
+    <!-- Layer: CDN -->
+    <div class="arch-layer">
+      <div class="arch-layer-label">CDN / SERVERLESS LAYER</div>
+      <div class="arch-boxes">
+        <div class="arch-box arch-box-blue">
+          Vercel CDN<br>
+          <div class="arch-box-sub">글로벌 정적 파일 서빙<br>git push → 30초 자동 배포</div>
+        </div>
+        <div class="arch-box arch-box-blue">
+          api/send-push.js<br>
+          <div class="arch-box-sub">Web Push 발송 서버리스<br>VAPID 서명 · FCM HTTP v1</div>
+        </div>
+        <div class="arch-box arch-box-orange">
+          Resend SMTP<br>
+          <div class="arch-box-sub">noreply@multimove.co.kr<br>OTP · 알림 이메일</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-divider">↓ REST API · WebSocket</div>
+
+    <!-- Layer: Backend -->
+    <div class="arch-layer">
+      <div class="arch-layer-label">BACKEND / DATA LAYER</div>
+      <div class="arch-boxes">
+        <div class="arch-box arch-box-green">
+          Supabase PostgreSQL<br>
+          <div class="arch-box-sub">DML: REST API 직접 처리<br>RLS 접근 제어</div>
+        </div>
+        <div class="arch-box arch-box-green">
+          Supabase Auth<br>
+          <div class="arch-box-sub">카카오 / 네이버 OAuth<br>이메일 OTP · JWT 세션</div>
+        </div>
+        <div class="arch-box arch-box-green">
+          Supabase Realtime<br>
+          <div class="arch-box-sub">채팅 · 모임채팅 · 위치공유<br>WebSocket 구독</div>
+        </div>
+        <div class="arch-box arch-box-gray">
+          카카오맵 SDK<br>
+          <div class="arch-box-sub">CustomOverlay<br>LatLng · Clustering</div>
+        </div>
+        <div class="arch-box arch-box-orange">
+          Firebase FCM<br>
+          <div class="arch-box-sub">Android 네이티브 푸시<br>HTTP v1 API</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-divider">↓ GitHub Actions</div>
+
+    <!-- Layer: CI/CD -->
+    <div class="arch-layer">
+      <div class="arch-layer-label">CI/CD LAYER</div>
+      <div class="arch-boxes">
+        <div class="arch-box arch-box-red">
+          GitHub Actions<br>
+          <div class="arch-box-sub">bundleRelease → AAB 서명<br>Play Console 업로드</div>
+        </div>
+        <div class="arch-box arch-box-blue">
+          Vercel Auto Deploy<br>
+          <div class="arch-box-sub">main branch push → 배포<br>프리뷰 브랜치 지원</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REALTIME CHANNELS -->
+<section id="realtime">
+  <div class="section-label">Realtime</div>
+  <div class="section-title">Supabase Realtime 채널 구조</div>
+  <p class="section-desc">Supabase Realtime WebSocket으로 채팅·모임채팅·위치공유를 실시간 구독. 채널 네이밍 규칙과 구독 테이블을 정리.</p>
+
+  <table class="rt-table">
+    <thead>
+      <tr>
+        <th>채널 패턴</th>
+        <th>구독 테이블</th>
+        <th>이벤트</th>
+        <th>용도</th>
+        <th>비고</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>app_chat:{appId}</td>
+        <td>messages</td>
+        <td class="td-desc">INSERT</td>
+        <td class="td-desc">1:1 채팅 (구직자 ↔ 업주)</td>
+        <td><span class="rt-badge rt-badge-green">기존</span></td>
+      </tr>
+      <tr>
+        <td>location:{appId}</td>
+        <td>worker_locations</td>
+        <td class="td-desc">INSERT / UPDATE</td>
+        <td class="td-desc">실시간 위치공유 (지도 오버레이)</td>
+        <td><span class="rt-badge rt-badge-green">기존</span></td>
+      </tr>
+      <tr>
+        <td class="td-purple">moim-chat-{gatheringId}</td>
+        <td class="td-purple">gathering_chats</td>
+        <td class="td-desc">INSERT</td>
+        <td class="td-desc">바로모임 그룹 채팅</td>
+        <td><span class="rt-badge rt-badge-purple">신규 2026-06-30</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:28px; background:var(--gray-100); border-radius:var(--radius); padding:24px;">
+    <div style="font-size:13px;font-weight:800;margin-bottom:12px;">Realtime 구독 패턴 (공통)</div>
+    <code style="display:block;font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--gray-700)"><span style="color:#888;">// 채널 생성 + 구독</span>
+const channel = supabase
+  .channel('moim-chat-' + gatheringId)
+  .on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'gathering_chats',
+    filter: `gathering_id=eq.${gatheringId}`
+  }, payload => handleNewMessage(payload.new))
+  .subscribe();
+
+<span style="color:#888;">// 컴포넌트 언마운트 시 구독 해제</span>
+supabase.removeChannel(channel);</code>
+  </div>
+</section>
+
+<!-- SERVICE WORKER -->
+<section class="sw-section" id="sw">
+  <div class="section-label">Service Worker</div>
+  <div class="section-title">Service Worker v284 — 캐시 전략</div>
+  <p class="section-desc">sw.js v284는 리소스 유형별로 다른 캐시 전략을 적용해 오프라인 지원과 최신 코드 보장을 동시에 달성.</p>
+
+  <div class="sw-grid">
+    <div class="sw-card sw-red">
+      <h3>Cache-First (자산)</h3>
+      <p>JS 라이브러리, 이미지, 폰트 등 변경 빈도가 낮은 정적 자산. 캐시 히트 시 즉시 반환, 캐시 미스 시 네트워크 후 캐시 저장.</p>
+      <code>카카오맵 SDK
+Supabase JS
+Cropper.js
+토스페이먼츠 SDK</code>
+    </div>
+    <div class="sw-card sw-blue">
+      <h3>Network-First (HTML/API)</h3>
+      <p>바로알바.html과 Supabase API 요청은 항상 네트워크 우선. 네트워크 실패 시에만 캐시 폴백으로 오프라인 표시.</p>
+      <code>바로알바.html
+login.html
+api/send-push.js
+supabase REST 요청</code>
+    </div>
+    <div class="sw-card sw-green">
+      <h3>Stale-While-Revalidate</h3>
+      <p>캐시된 응답을 즉시 반환하면서 백그라운드에서 최신 버전을 가져와 다음 요청에 반영. 체감 속도와 최신성을 동시에.</p>
+      <code>공고 목록 이미지
+프로필 사진 (avatars)
+biz-photos</code>
+    </div>
+    <div class="sw-card sw-purple">
+      <h3>버전 관리</h3>
+      <p>sw.js 버전(v284)은 바로알바.html의 SW_VERSION 상수와 항상 동기화. 버전 불일치 시 강제 업데이트 트리거.</p>
+      <code>const CACHE_NAME = 'baroalba-v284';
+<span style="color:#888;">// HTML 내 SW_VERSION과 동기화 필수</span>
+self.addEventListener('activate',
+  e => e.waitUntil(clearOldCaches()));</code>
+    </div>
+  </div>
+</section>
+
+<!-- 바로모임 ARCHITECTURE -->
+<section class="moim-section" id="moim">
+  <div class="section-label-purple">바로모임 · NEW 2026.06.30</div>
+  <div class="section-title">바로모임 아키텍처</div>
+  <p class="section-desc">모임 생성·초대·그룹채팅을 지원하는 신규 기능. gatherings 테이블 + Realtime 채팅 + 플랜 제한 구조로 구성.</p>
+
+  <div class="moim-flow">
+    <div class="moim-step">
+      <div class="moim-num">01</div>
+      <div class="moim-body">
+        <h3>모임 생성 — gatherings 테이블</h3>
+        <p>모임 생성 시 is_public 플래그로 공개/비공개 분기. 비공개 모임은 UUID 기반 invite_code를 자동 생성. 생성 시점에 MOIM_PLAN_LIMITS를 확인해 플랜 한도를 초과하면 생성 차단.</p>
+        <span class="moim-tag">gatherings.is_public + invite_code</span>
+      </div>
+    </div>
+    <div class="moim-step">
+      <div class="moim-num">02</div>
+      <div class="moim-body">
+        <h3>딥링크 초대 패턴</h3>
+        <p>초대 링크는 ?moim={id 또는 invite_code} 쿼리스트링으로 전달. 앱 진입 시 URL을 파싱해 공개 모임은 id, 비공개 모임은 invite_code로 구분하여 참여 처리. 카카오톡 공유 + 클립보드 복사 지원.</p>
+        <span class="moim-tag">Deeplink: ?moim={id | invite_code}</span>
+      </div>
+    </div>
+    <div class="moim-step">
+      <div class="moim-num">03</div>
+      <div class="moim-body">
+        <h3>모임 채팅 — Supabase Realtime</h3>
+        <p>모임에 참여한 멤버(gathering_applications)는 gathering_chats 테이블을 Realtime으로 구독. 채널명은 moim-chat-{gatheringId}. 메시지 INSERT 이벤트를 수신해 UI에 즉시 반영. 채팅방 이탈 시 채널 removeChannel 처리.</p>
+        <span class="moim-tag">channel: moim-chat-{gatheringId}</span>
+      </div>
+    </div>
+    <div class="moim-step">
+      <div class="moim-num">04</div>
+      <div class="moim-body">
+        <h3>플랜 한도 강제 (create-time enforcement)</h3>
+        <p>모임 생성 요청 시 현재 유저의 플랜을 확인하고 MOIM_PLAN_LIMITS 객체와 대조. 한도 초과 시 업그레이드 유도 모달을 표시하고 INSERT를 차단. 서버가 없으므로 RLS 정책과 클라이언트 양쪽에서 이중 검증.</p>
+        <span class="moim-tag">MOIM_PLAN_LIMITS enforcement</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:40px">
+    <div style="font-size:17px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      플랜별 모임 한도
+      <span style="background:rgba(124,58,237,0.12);color:var(--purple);font-size:12px;font-weight:700;padding:3px 10px;border-radius:100px;border:1px solid rgba(124,58,237,0.2);">MOIM_PLAN_LIMITS</span>
+    </div>
+    <table class="plan-table">
+      <thead>
+        <tr>
+          <th>플랜</th>
+          <th>최대 모임 수</th>
+          <th>초대 방식</th>
+          <th>모임 채팅</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>free</strong></td>
+          <td>1개</td>
+          <td>공개 모임만</td>
+          <td>포함</td>
+        </tr>
+        <tr>
+          <td><strong>basic</strong></td>
+          <td>10개</td>
+          <td>공개 + 비공개 (invite_code)</td>
+          <td>포함</td>
+        </tr>
+        <tr>
+          <td><strong>pro</strong></td>
+          <td>무제한 (Infinity)</td>
+          <td>공개 + 비공개 + 딥링크 커스텀</td>
+          <td>포함 + 고급 기능</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- DATABASE SCHEMA -->
+<section class="db-section" id="database">
+  <div class="section-label">Database</div>
+  <div class="section-title">DB 스키마 개요</div>
+  <p class="section-desc">Supabase PostgreSQL + RLS. 모든 DML은 REST API 직접 처리 (클라이언트 SQL 실행 금지). DDL만 Supabase 콘솔에서 수행.</p>
+  <div class="db-grid">
+    <div class="db-card">
+      <h3>workers</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>kakao_uid <span class="f-type">UUID UNIQUE</span></li>
+        <li>name, phone, age, gender <span class="f-type">TEXT/INT</span></li>
+        <li>bio, experience, region <span class="f-type">TEXT</span></li>
+        <li>skills, vehicles, strengths, languages <span class="f-type">TEXT[]</span></li>
+        <li>rating, review_count <span class="f-type">DECIMAL/INT</span></li>
+        <li>photo_url <span class="f-type">TEXT</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>employers (businesses)</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>kakao_uid <span class="f-type">UUID UNIQUE</span></li>
+        <li>biz_name, name, phone <span class="f-type">TEXT</span></li>
+        <li>description, address <span class="f-type">TEXT</span></li>
+        <li>lat, lng <span class="f-type">FLOAT</span></li>
+        <li>rating, kindness_rating <span class="f-type">DECIMAL</span></li>
+        <li>photo_url <span class="f-type">TEXT</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>job_postings</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>business_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>title, work_type <span class="f-type">TEXT</span></li>
+        <li>work_days <span class="f-type">TEXT[]</span></li>
+        <li>start_time, end_time <span class="f-type">TEXT</span></li>
+        <li>hourly_wage <span class="f-type">INT</span></li>
+        <li>lat, lng <span class="f-type">FLOAT</span></li>
+        <li>is_active, is_premium, is_remote <span class="f-type">BOOL</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>applications</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>job_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>worker_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>status <span class="f-type">TEXT</span> (pending/accepted/rejected/cancelled)</li>
+        <li>cancel_deadline <span class="f-type">TIMESTAMPTZ</span></li>
+        <li>message <span class="f-type">TEXT</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>chats / messages</h3>
+      <ul class="db-fields">
+        <li>chats.id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>job_id, worker_id, business_id <span class="f-type">UUID FK</span></li>
+        <li>unread_worker, unread_business <span class="f-type">INT</span></li>
+        <li>messages.chat_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>sender_role <span class="f-type">TEXT</span> (worker/business)</li>
+        <li>content, image_url <span class="f-type">TEXT</span></li>
+        <li>reply_to_id <span class="f-type">UUID NULL</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>community_posts / comments</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>worker_id <span class="f-type">UUID NULL</span><span class="f-fk">FK</span></li>
+        <li>business_id <span class="f-type">UUID NULL</span><span class="f-fk">FK</span></li>
+        <li>category <span class="f-type">TEXT</span></li>
+        <li>likes, comments_count <span class="f-type">INT</span></li>
+        <li>is_anonymous, is_deleted <span class="f-type">BOOL</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>push_subscriptions / notifications</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>user_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>endpoint, keys <span class="f-type">TEXT/JSONB</span></li>
+        <li>fcm_token <span class="f-type">TEXT</span></li>
+        <li>notifications.type <span class="f-type">TEXT</span></li>
+        <li>is_read <span class="f-type">BOOL</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>worker_reviews / employer_reviews</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>reviewer_id, reviewee_id <span class="f-type">UUID FK</span></li>
+        <li>application_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>rating <span class="f-type">DECIMAL</span></li>
+        <li>content <span class="f-type">TEXT</span></li>
+        <li>reply <span class="f-type">TEXT NULL</span></li>
+        <li>reply_created_at <span class="f-type">TIMESTAMPTZ NULL</span></li>
+      </ul>
+    </div>
+    <div class="db-card">
+      <h3>fav_workers</h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>business_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>worker_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>created_at <span class="f-type">TIMESTAMPTZ</span></li>
+      </ul>
+    </div>
+    <!-- 신규 바로모임 테이블 -->
+    <div class="db-card db-purple">
+      <h3>gatherings <span class="badge-new">NEW</span></h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>creator_id <span class="f-type">UUID</span><span class="f-fk">FK</span><span class="f-new">NEW</span></li>
+        <li>title, description <span class="f-type">TEXT</span></li>
+        <li>is_public <span class="f-type">BOOL</span></li>
+        <li>invite_code <span class="f-type">UUID UNIQUE</span><span class="f-new">NEW</span></li>
+        <li>max_members <span class="f-type">INT</span></li>
+        <li>status <span class="f-type">TEXT</span> (open/closed)</li>
+        <li>created_at <span class="f-type">TIMESTAMPTZ</span></li>
+      </ul>
+    </div>
+    <div class="db-card db-purple">
+      <h3>gathering_applications <span class="badge-new">NEW</span></h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>gathering_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>applicant_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>status <span class="f-type">TEXT</span> (pending/accepted/rejected)</li>
+        <li>joined_at <span class="f-type">TIMESTAMPTZ</span></li>
+      </ul>
+    </div>
+    <div class="db-card db-purple">
+      <h3>gathering_chats <span class="badge-new">NEW</span></h3>
+      <ul class="db-fields">
+        <li>id <span class="f-type">UUID</span><span class="f-pk">PK</span></li>
+        <li>gathering_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>sender_id <span class="f-type">UUID</span><span class="f-fk">FK</span></li>
+        <li>content <span class="f-type">TEXT</span></li>
+        <li>image_url <span class="f-type">TEXT NULL</span></li>
+        <li>created_at <span class="f-type">TIMESTAMPTZ</span></li>
+        <li><em style="color:#a78bfa;font-style:normal;">Realtime: moim-chat-{id}</em></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ANDROID -->
+<section class="android-section" id="android">
+  <div class="section-label">Android App</div>
+  <div class="section-title">Android 하이브리드 구조</div>
+  <p class="section-desc">WebView 기반으로 웹 코드를 100% 재사용하면서 네이티브 기능을 추가 연동</p>
+  <div class="android-grid">
+    <div class="android-card">
+      <h3>📡 AndroidBridge (JS ↔ Native)</h3>
+      <code><span class="code-comment">// JS에서 호출</span>
+AndroidBridge.share(title, text, url);
+AndroidBridge.showKeyboard();   <span class="code-comment">// SHOW_FORCED</span>
+AndroidBridge.hideKeyboard();
+AndroidBridge.setScrollKbGuard(<span class="code-keyword">true</span>);
+AndroidBridge.saveAuthToken(jwt);
+
+<span class="code-comment">// Native → JS 콜백</span>
+window._onFCMToken(token);
+window._onNativeKbChange(heightDp);
+
+<span class="code-comment">// CSS 변수 주입 (safeArea)</span>
+--sat : status bar height (dp)
+--sab : navigation bar height (dp)</code>
+    </div>
+    <div class="android-card">
+      <h3>🎨 스플래시 해결 구조 (v23)</h3>
+      <code><span class="code-comment">// 1. 투명 아이콘 (OS 강제 렌더링 제거)</span>
+ic_splash_icon.xml → 빈 벡터
+
+<span class="code-comment">// 2. SplashScreen 즉시 dismiss</span>
+SplashScreen.installSplashScreen(this)
+  .setKeepOnScreenCondition(() -> <span class="code-keyword">false</span>);
+
+<span class="code-comment">// 3. WebView 배경색 (흰색 플래시 방지)</span>
+webView.setBackgroundColor(
+  Color.parseColor(<span class="code-string">"#C8102E"</span>));
+
+<span class="code-comment">// 4. login.html 웹 스플래시 (4초 최소)</span>
+_afterSplash(fn) → 경과시간 계산 후 전환</code>
+    </div>
+    <div class="android-card">
+      <h3>⌨️ 키보드 처리 구조</h3>
+      <code><span class="code-comment">// 네이티브 IME 높이 측정 → JS 전달</span>
+ViewCompat.setOnApplyWindowInsetsListener(
+  webView, (v, insets) -> {
+    <span class="code-type">int</span> imeHeight = imeVisible
+      ? imeInsets.bottom - bars.bottom : 0;
+    applyKbHeight(imeHeight); <span class="code-comment">// JS 콜백</span>
+    <span class="code-keyword">return</span> CONSUMED;
+  }
+);
+
+<span class="code-comment">// 채팅 키보드 강제 유지 (SHOW_FORCED)</span>
+imm.showSoftInput(webView,
+  InputMethodManager.SHOW_FORCED);</code>
+    </div>
+    <div class="android-card">
+      <h3>🔗 딥링크 + URL 분기</h3>
+      <code><span class="code-comment">// 내부 도메인만 WebView에서 처리</span>
+<span class="code-keyword">if</span> (url.startsWith(
+  <span class="code-string">"https://baroalba.multimove.co.kr"</span>))
+  <span class="code-keyword">return false</span>;  <span class="code-comment">// WebView 로드</span>
+
+<span class="code-comment">// 바로모임 딥링크 처리</span>
+<span class="code-keyword">if</span> (url.contains(<span class="code-string">"?moim="</span>))
+  handleMoimDeeplink(url); <span class="code-comment">// 모임 진입</span>
+
+<span class="code-comment">// 외부 URL → 기본 브라우저 열기</span>
+startActivity(<span class="code-keyword">new</span> Intent(ACTION_VIEW, uri));</code>
+    </div>
+    <div class="android-card">
+      <h3>🔔 FCM 토큰 타이밍 구조</h3>
+      <code><span class="code-comment">// 토큰이 페이지 로드 전 수신될 수 있음</span>
+<span class="code-type">String</span> latestFCMToken = <span class="code-keyword">null</span>;
+
+<span class="code-comment">// FCM 서비스에서 토큰 수신</span>
+<span class="code-keyword">void</span> onNewToken(<span class="code-type">String</span> token) {
+  latestFCMToken = token;
+  sendTokenToWebIfReady(token);
+}
+
+<span class="code-comment">// 페이지 로드 완료 후 재전달</span>
+onPageFinished(...) {
+  <span class="code-keyword">if</span> (latestFCMToken != <span class="code-keyword">null</span>)
+    callJs("window._onFCMToken('"
+      + latestFCMToken + "')");
+}</code>
+    </div>
+    <div class="android-card">
+      <h3>⚙️ GitHub Actions 빌드 흐름</h3>
+      <code><span class="code-comment"># .github/workflows/android.yml</span>
+<span class="code-keyword">on</span>: push (tags: v*)
+
+<span class="code-comment"># 주요 스텝</span>
+1. actions/setup-java (JDK 17)
+2. gradle bundleRelease
+3. apksigner (keystore 서명)
+4. Google Play API 업로드
+   → AAB → Play Console 검토
+   → 내부 테스트 → 프로덕션
+
+<span class="code-comment"># 비밀값 (GitHub Secrets)</span>
+KEYSTORE_B64, KEY_ALIAS
+KEY_PASSWORD, STORE_PASSWORD
+GOOGLE_PLAY_JSON</code>
+    </div>
+  </div>
+
+  <div style="margin-top:32px">
+    <h3 style="font-size:17px;font-weight:800;margin-bottom:16px">Android 빌드 이력</h3>
+    <table class="ver-table">
+      <thead>
+        <tr><th>versionCode</th><th>versionName</th><th>주요 변경</th><th>상태</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>19</td><td>1.3.3</td><td>다중 파일 선택 (EXTRA_ALLOW_MULTIPLE)</td><td><span class="badge-done">배포완료</span></td></tr>
+        <tr><td>20</td><td>1.3.4</td><td>versionCode 19 중복 → 재발행</td><td><span class="badge-done">배포완료</span></td></tr>
+        <tr><td>21</td><td>1.4.0</td><td>채팅 인라인 답장, 딥링크 개선</td><td><span class="badge-done">배포완료</span></td></tr>
+        <tr><td>22</td><td>1.4.1</td><td>SplashScreen API 1차 (불완전)</td><td><span class="badge-done">배포완료</span></td></tr>
+        <tr><td>23</td><td>1.4.2</td><td>투명 아이콘 + WebView 배경 — 스플래시 완전 해결</td><td><span class="badge-play">Play 업로드</span></td></tr>
+        <tr><td style="font-weight:800;color:var(--purple)">24</td><td style="font-weight:800">1.5.0</td><td style="font-weight:800">바로모임 딥링크 (?moim=) 처리 추가</td><td><span class="badge-wip">준비중</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- TECH HIGHLIGHTS -->
+<section style="background:var(--gray-100)" id="highlights">
+  <div class="section-label">Technical Highlights</div>
+  <div class="section-title">기술적 도전과 해결</div>
+  <div class="tech-feat-list">
+    <div class="tech-feat">
+      <div class="tf-num">01</div>
+      <div class="tf-body">
+        <h3>프레임워크 없이 단일 HTML 파일로 전체 앱 구현</h3>
+        <p>React/Vue 없이 순수 Vanilla JS로 지도·스와이프·채팅·마이페이지·바로모임 등 전체 기능을 바로알바.html 단일 파일(~18,000 라인)에 구현. 배포가 간단하고 CDN 캐싱 효율이 높음. 모든 패널은 position:fixed + transform으로 SPA 수준의 전환 구현.</p>
+        <span class="tf-tag">Single File Architecture</span>
+      </div>
+    </div>
+    <div class="tech-feat">
+      <div class="tf-num">02</div>
+      <div class="tf-body">
+        <h3>Supabase REST API 직접 DML — 서버 코드 없는 보안 접근</h3>
+        <p>모든 INSERT/UPDATE/DELETE는 Supabase REST API를 클라이언트에서 직접 호출. SQL 실행은 사용자에게 위임하지 않고 DDL만 Supabase 콘솔에서 수행. RLS 정책(workers.kakao_uid = auth.uid())이 서버리스 함수 없이 완전한 접근 제어를 담당.</p>
+        <span class="tf-tag">REST API Direct DML</span>
+      </div>
+    </div>
+    <div class="tech-feat">
+      <div class="tf-num">03</div>
+      <div class="tf-body">
+        <h3>Android WebView 키보드 3중 방어 시스템</h3>
+        <p>Android IME 높이를 ViewCompat.setOnApplyWindowInsetsListener로 측정 → JS _onNativeKbChange 콜백으로 전달 → CSS translateY 조정. 채팅 전송 시 SHOW_FORCED로 키보드 강제 유지 + scrollKbGuard로 스크롤 닫힘 방지 + 1.5초 안전장치 자동 해제.</p>
+        <span class="tf-tag">Triple Keyboard Defense</span>
+      </div>
+    </div>
+    <div class="tech-feat">
+      <div class="tf-num">04</div>
+      <div class="tf-body">
+        <h3>이중 Push 알림 시스템 (VAPID + FCM HTTP v1)</h3>
+        <p>브라우저/PWA는 VAPID 기반 Web Push(Vercel 서버리스), Android는 FCM HTTP v1 네이티브 토큰. FCM 토큰은 페이지 로드 전 수신될 수 있어 latestFCMToken에 보관 후 onPageFinished에서 재전달하는 pending token 패턴. push_subscriptions + fcm_tokens 테이블에 비정규화 저장.</p>
+        <span class="tf-tag">Dual Push Architecture</span>
+      </div>
+    </div>
+    <div class="tech-feat">
+      <div class="tf-num">05</div>
+      <div class="tf-body">
+        <h3>바로모임 — UUID invite_code 기반 비공개 초대</h3>
+        <p>비공개 모임은 생성 시 UUID invite_code를 자동 발급. 딥링크 ?moim={invite_code}로 초대받은 사람만 참여 가능. MOIM_PLAN_LIMITS 객체를 create-time에 검증해 플랜 초과 시 서버 요청 없이 클라이언트에서 선제 차단. RLS가 이중으로 서버측 보장.</p>
+        <span class="tf-tag-purple">바로모임 신규 2026.06.30</span>
+      </div>
+    </div>
+    <div class="tech-feat">
+      <div class="tf-num">06</div>
+      <div class="tf-body">
+        <h3>Service Worker v284 — 유형별 캐시 전략 분기</h3>
+        <p>자산(카카오맵 SDK·Supabase JS·이미지)은 Cache-First, HTML·API는 Network-First, 프로필 사진은 Stale-While-Revalidate. sw.js 버전은 바로알바.html의 SW_VERSION 상수와 항상 동기화 — 불일치 시 강제 업데이트. 오프라인에서도 마지막 공고 목록 캐시 표시.</p>
+        <span class="tf-tag">Tiered Cache Strategy</span>
+      </div>
+    </div>
+    <div class="tech-feat">
+      <div class="tf-num">07</div>
+      <div class="tf-body">
+        <h3>6개국어 번역 엔진 — shared-lang.js</h3>
+        <p>TRANSLATIONS 객체 + data-i18n HTML 속성으로 applyLang() 한 번 호출로 전체 UI 자동 번역. 이동수단/강점/근무형태는 별도 레이블 객체로 칩 UI 자동 처리. 바로알바.html + owner.html이 동일 파일 공유. 바로모임 UI도 동일 엔진 적용.</p>
+        <span class="tf-tag">Shared i18n Engine</span>
+      </div>
+    </div>
+    <div class="tech-feat">
+      <div class="tf-num">08</div>
+      <div class="tf-body">
+        <h3>양방향 리뷰 시스템 + 답글</h3>
+        <p>worker_reviews + employer_reviews 테이블로 구직자→업주, 업주→구직자 양방향 평가 구현. 각 리뷰에 reply 컬럼을 추가해 피평가자가 답글 작성 가능. review_reply / worker_review_reply DDL은 별도 실행 예정. RLS로 본인 리뷰만 수정·삭제 가능.</p>
+        <span class="tf-tag">Bidirectional Review</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">바로알바</div>
+  <div class="footer-sub">MultiMOVE 주식회사</div>
+  <div class="footer-url">baroalba.multimove.co.kr</div>
+  <div class="footer-sub" style="margin-top:12px;">Tech Intro 2026.06.30 · sw.js v284 · Android versionCode 23 (1.4.2)</div>
+</footer>
+
+</body>
+</html>

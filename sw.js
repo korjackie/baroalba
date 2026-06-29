@@ -1,4 +1,4 @@
-﻿const CACHE = 'baroalba-v284';
+const CACHE = 'baroalba-v285';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
@@ -20,6 +20,11 @@ self.addEventListener('activate', e => {
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
+});
+
+// 페이지에서 SKIP_WAITING 메시지 수신 시 즉시 활성화
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', e => {

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 개발 타임라인 & 로드맵 (2026-06-30)</title>
+<style>
+  :root {
+    --red: #C8102E;
+    --red-dark: #9e0c23;
+    --red-light: #fff0f2;
+    --gray-900: #111;
+    --gray-700: #444;
+    --gray-500: #888;
+    --gray-300: #ccc;
+    --gray-200: #eee;
+    --gray-100: #f8f8f8;
+    --white: #fff;
+    --green: #10b981;
+    --blue: #3b82f6;
+    --orange: #f59e0b;
+    --purple: #8b5cf6;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; color:var(--gray-900); background:var(--gray-100); line-height:1.6; }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(255,255,255,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--gray-200); display:flex; align-items:center; justify-content:space-between; padding:0 5%; height:60px; }
+  .nav-logo { font-size:18px; font-weight:900; color:var(--red); }
+  .nav-links { display:flex; gap:24px; font-size:14px; font-weight:600; color:var(--gray-700); }
+  .nav-links a:hover { color:var(--red); }
+
+  /* HERO */
+  .hero { background:linear-gradient(135deg,#111 0%,#1e1e2e 100%); padding:120px 5% 60px; text-align:center; }
+  .hero-badge { display:inline-block; background:rgba(200,16,46,0.2); color:var(--red); font-size:12px; font-weight:700; letter-spacing:1px; padding:6px 16px; border-radius:100px; border:1px solid rgba(200,16,46,0.3); margin-bottom:24px; }
+  .hero h1 { font-size:clamp(28px,5vw,52px); font-weight:900; color:#fff; margin-bottom:16px; }
+  .hero-sub { font-size:17px; color:rgba(255,255,255,0.55); max-width:480px; margin:0 auto 40px; }
+  .hero-summary { display:flex; gap:32px; justify-content:center; flex-wrap:wrap; margin-top:24px; }
+  .hs-item { text-align:center; }
+  .hs-num { font-size:36px; font-weight:900; color:var(--red); }
+  .hs-label { font-size:13px; color:rgba(255,255,255,0.5); }
+
+  /* TAB */
+  .tab-nav { background:var(--white); border-bottom:1px solid var(--gray-200); display:flex; padding:0 5%; gap:0; position:sticky; top:60px; z-index:50; overflow-x:auto; }
+  .tab-btn { padding:16px 20px; font-size:14px; font-weight:700; color:var(--gray-500); cursor:pointer; border:none; background:none; border-bottom:3px solid transparent; white-space:nowrap; transition:color .2s, border-color .2s; }
+  .tab-btn.active { color:var(--red); border-bottom-color:var(--red); }
+  .tab-content { display:none; padding:48px 5%; }
+  .tab-content.active { display:block; }
+
+  /* SECTION HEADER */
+  .sh { margin-bottom:40px; }
+  .sh .label { font-size:12px; font-weight:800; color:var(--red); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+  .sh h2 { font-size:clamp(24px,4vw,36px); font-weight:900; margin-bottom:10px; }
+  .sh p { font-size:16px; color:var(--gray-500); max-width:560px; }
+
+  /* TIMELINE */
+  .tl-year { display:flex; flex-direction:column; gap:0; max-width:900px; margin:0 auto; }
+  .tl-item { display:flex; gap:0; }
+  .tl-left { display:flex; flex-direction:column; align-items:center; width:160px; flex-shrink:0; padding-right:24px; padding-top:4px; }
+  .tl-date { font-size:13px; font-weight:800; color:var(--gray-500); text-align:right; width:100%; line-height:1.3; }
+  .tl-center { display:flex; flex-direction:column; align-items:center; width:24px; flex-shrink:0; }
+  .tl-dot { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
+  .tl-dot.done { background:var(--red); box-shadow:0 0 0 4px rgba(200,16,46,0.15); }
+  .tl-dot.major { background:var(--red); box-shadow:0 0 0 6px rgba(200,16,46,0.2); width:20px; height:20px; }
+  .tl-dot.today { background:var(--green); box-shadow:0 0 0 6px rgba(16,185,129,0.25); width:22px; height:22px; }
+  .tl-dot.pending { background:var(--white); border:3px solid var(--red); }
+  .tl-dot.future { background:var(--gray-300); }
+  .tl-line { width:2px; background:var(--gray-200); flex:1; min-height:20px; margin:4px 0; }
+  .tl-right { flex:1; padding:0 0 32px 20px; }
+  .tl-right h3 { font-size:18px; font-weight:900; margin-bottom:6px; }
+  .tl-right.major h3 { font-size:20px; color:var(--red); }
+  .tl-right.today-block h3 { font-size:22px; color:var(--green); }
+  .tl-right p { font-size:14px; color:var(--gray-500); line-height:1.6; margin-bottom:10px; }
+  .tl-tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tl-tag { font-size:12px; font-weight:600; padding:3px 10px; border-radius:100px; }
+  .tt-red { background:var(--red-light); color:var(--red); }
+  .tt-gray { background:var(--gray-200); color:var(--gray-700); }
+  .tt-blue { background:#eff6ff; color:var(--blue); }
+  .tt-green { background:#f0fdf4; color:var(--green); }
+  .tt-orange { background:#fff7ed; color:var(--orange); }
+  .tt-purple { background:#f5f3ff; color:var(--purple); }
+  .commit-count { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--gray-500); background:var(--gray-200); padding:2px 8px; border-radius:100px; margin-bottom:8px; }
+
+  /* TODAY highlight block */
+  .today-highlight {
+    background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);
+    border:2px solid var(--green);
+    border-radius:var(--radius);
+    padding:28px 28px 20px;
+    margin:0 0 32px 20px;
+    position:relative;
+  }
+  .today-highlight::before {
+    content:'TODAY';
+    position:absolute;
+    top:-12px;
+    left:20px;
+    background:var(--green);
+    color:#fff;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:1.5px;
+    padding:3px 12px;
+    border-radius:100px;
+  }
+  .today-highlight h3 { font-size:22px; font-weight:900; color:#065f46; margin-bottom:8px; }
+  .today-highlight .th-sub { font-size:14px; color:#059669; margin-bottom:16px; font-weight:600; }
+  .today-feat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+  .today-feat { background:#fff; border-radius:10px; padding:14px 16px; border:1px solid #a7f3d0; }
+  .today-feat .tf-label { font-size:11px; font-weight:800; color:var(--green); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+  .today-feat h4 { font-size:14px; font-weight:800; color:var(--gray-900); margin-bottom:4px; }
+  .today-feat p { font-size:13px; color:var(--gray-500); line-height:1.5; }
+
+  /* WORK PLAN */
+  .plan-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; margin-top:0; }
+  .plan-card { background:var(--white); border-radius:var(--radius); padding:28px; box-shadow:var(--shadow); border-top:4px solid transparent; }
+  .plan-card.p1 { border-top-color:var(--red); }
+  .plan-card.p2 { border-top-color:var(--orange); }
+  .plan-card.p3 { border-top-color:var(--blue); }
+  .plan-card.p4 { border-top-color:var(--purple); }
+  .plan-badge { display:inline-block; font-size:11px; font-weight:800; padding:3px 10px; border-radius:100px; margin-bottom:12px; }
+  .pb-red { background:var(--red-light); color:var(--red); }
+  .pb-orange { background:#fff7ed; color:var(--orange); }
+  .pb-blue { background:#eff6ff; color:var(--blue); }
+  .pb-purple { background:#f5f3ff; color:var(--purple); }
+  .plan-card h3 { font-size:16px; font-weight:800; margin-bottom:8px; }
+  .plan-card p { font-size:14px; color:var(--gray-500); line-height:1.6; margin-bottom:12px; }
+  .plan-items { list-style:none; }
+  .plan-items li { font-size:14px; color:var(--gray-700); padding:6px 0; border-bottom:1px solid var(--gray-100); display:flex; gap:8px; align-items:flex-start; }
+  .plan-items li:last-child { border-bottom:none; }
+  .plan-items li .pi-icon { flex-shrink:0; font-size:14px; }
+  .plan-period { font-size:12px; color:var(--gray-500); font-weight:700; margin-top:12px; }
+
+  /* FUTURE */
+  .future-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
+  .future-card { background:var(--white); border-radius:var(--radius); padding:28px; box-shadow:var(--shadow); border-left:4px solid var(--purple); }
+  .future-card .fc-icon { font-size:28px; margin-bottom:12px; }
+  .future-card h3 { font-size:16px; font-weight:800; margin-bottom:8px; }
+  .future-card p { font-size:14px; color:var(--gray-500); line-height:1.6; }
+  .future-card .fc-tag { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:100px; background:#f5f3ff; color:var(--purple); margin-top:12px; }
+
+  footer { background:var(--gray-900); padding:40px 5%; text-align:center; }
+  footer .footer-logo { font-size:20px; font-weight:900; color:var(--red); margin-bottom:8px; }
+  footer p { font-size:13px; color:rgba(255,255,255,0.4); }
+
+  @media(max-width:768px) {
+    .tl-left { width:80px; }
+    .tl-date { font-size:11px; }
+    .nav-links { display:none; }
+    .today-feat-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-links">
+    <a href="#" onclick="switchTab('completed')">완료 이력</a>
+    <a href="#" onclick="switchTab('roadmap')">진행중 / 다음</a>
+    <a href="#" onclick="switchTab('future')">미래 계획</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">DEVELOPMENT TIMELINE — 2026-06-30</div>
+  <h1>개발 타임라인 & 로드맵</h1>
+  <p class="hero-sub">바로모임 출시 · 홈탭 신설 · 구독 플랜 통합 — 2026-06-30 기준 전체 개발 현황</p>
+  <div class="hero-summary">
+    <div class="hs-item"><div class="hs-num">30+</div><div class="hs-label">완료 기능</div></div>
+    <div class="hs-item"><div class="hs-num">v284</div><div class="hs-label">SW 현재 버전</div></div>
+    <div class="hs-item"><div class="hs-num">15+</div><div class="hs-label">DB 테이블</div></div>
+    <div class="hs-item"><div class="hs-num">30일</div><div class="hs-label">개발 기간</div></div>
+  </div>
+</div>
+
+<!-- TAB NAV -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('completed')">✅ 완료 이력</button>
+  <button class="tab-btn" onclick="switchTab('roadmap')">🔄 진행중 / 다음</button>
+  <button class="tab-btn" onclick="switchTab('future')">🔮 미래 계획</button>
+</div>
+
+<!-- TAB: COMPLETED -->
+<div class="tab-content active" id="tab-completed">
+  <div class="sh">
+    <div class="label">Completed Milestones</div>
+    <h2>완료된 개발 이력</h2>
+    <p>2026-05-31 프로젝트 시작 ~ 2026-06-30 오늘까지</p>
+  </div>
+  <div class="tl-year">
+
+    <!-- 2026-05-31 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-05-31</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <h3>프로젝트 초기화</h3>
+        <p>Vercel 프로젝트 생성, GitHub 저장소, 도메인 연결, OG 메타태그, 푸터</p>
+        <div class="tl-tags"><span class="tl-tag tt-gray">초기 설정</span></div>
+      </div>
+    </div>
+
+    <!-- 2026-06-01 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-01</div></div>
+      <div class="tl-center"><div class="tl-dot major"></div><div class="tl-line"></div></div>
+      <div class="tl-right major">
+        <span class="commit-count">🔥 53커밋 — 최대 작업일</span>
+        <h3>Phase 1~12 — MVP 완성</h3>
+        <p>하루 만에 풀스택 MVP 완성. 인증·지도·공고·지원·채팅·프로필·평점·PWA 전체 구축.</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-red">카카오맵 연동</span>
+          <span class="tl-tag tt-red">OAuth 인증 4종</span>
+          <span class="tl-tag tt-red">공고 CRUD</span>
+          <span class="tl-tag tt-red">실시간 채팅</span>
+          <span class="tl-tag tt-red">PWA 설치</span>
+          <span class="tl-tag tt-red">스와이프 탐색</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-02~03 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-02~03</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <h3>Phase 13~15 — 기능 확장</h3>
+        <p>공고 조회수·북마크·급구 필터, 신고 시스템, 관리자 화이트리스트 구축</p>
+        <div class="tl-tags"><span class="tl-tag tt-gray">북마크</span><span class="tl-tag tt-gray">신고</span><span class="tl-tag tt-gray">필터</span></div>
+      </div>
+    </div>
+
+    <!-- 2026-06-04 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-04</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <span class="commit-count">50커밋</span>
+        <h3>바로심부름 + Web Push + 카카오 공유</h3>
+        <p>심부름 근무형태 추가, 위치 입력 3탭 구조, Web Push 알림(서버리스), 카카오 공유 SDK 연동</p>
+        <div class="tl-tags"><span class="tl-tag tt-red">바로심부름</span><span class="tl-tag tt-orange">Web Push</span><span class="tl-tag tt-gray">카카오 공유</span></div>
+      </div>
+    </div>
+
+    <!-- 2026-06-08~10 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-08~10</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <span class="commit-count">50+29+18 커밋</span>
+        <h3>Phase 17~19 — 플랫폼 안정화</h3>
+        <p>미성년자 보호(age_limit), 인증 뱃지, 카카오 공유 완성, 딥링크 개선, 다수 버그 수정</p>
+        <div class="tl-tags"><span class="tl-tag tt-gray">연령제한</span><span class="tl-tag tt-gray">인증뱃지</span><span class="tl-tag tt-gray">버그수정</span></div>
+      </div>
+    </div>
+
+    <!-- 2026-06-11 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-11</div></div>
+      <div class="tl-center"><div class="tl-dot major"></div><div class="tl-line"></div></div>
+      <div class="tl-right major">
+        <h3>Phase 22~25 — 다국어 + 커뮤니티</h3>
+        <p>shared-lang.js 6개국어 번역 엔진, 프로필 사진 Crop, 커뮤니티 게시판, 지원취소 마감일 시스템</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-red">6개국어</span>
+          <span class="tl-tag tt-red">커뮤니티</span>
+          <span class="tl-tag tt-red">사진 Crop</span>
+          <span class="tl-tag tt-red">취소 마감일</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-12 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-12</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <span class="commit-count">33커밋</span>
+        <h3>지도 마커 리디자인 + 업주 UX 개선</h3>
+        <p>마커 공고유형 뱃지 + D-day 표시, 업주 드래그어블 바텀시트, 글자수 카운터</p>
+        <div class="tl-tags"><span class="tl-tag tt-gray">마커 리디자인</span><span class="tl-tag tt-gray">D-day</span></div>
+      </div>
+    </div>
+
+    <!-- 2026-06-15~19 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-15~19</div></div>
+      <div class="tl-center"><div class="tl-dot major"></div><div class="tl-line"></div></div>
+      <div class="tl-right major">
+        <span class="commit-count">🔥 89커밋 — 역대 최다 (06-18)</span>
+        <h3>Phase 25~30 — Supabase 전환 완성</h3>
+        <p>자격서류 Storage 업로드, on-air 토글, 즐겨찾기 동기화, OTP 수정, 구글 OAuth Samsung 브라우저 버그 해결</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-blue">자격서류 업로드</span>
+          <span class="tl-tag tt-blue">on-air 토글</span>
+          <span class="tl-tag tt-blue">즐겨찾기 sync</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-20 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-20</div></div>
+      <div class="tl-center"><div class="tl-dot major"></div><div class="tl-line"></div></div>
+      <div class="tl-right major">
+        <span class="commit-count">25커밋</span>
+        <h3>신뢰점수 · 단골 알림 · 실시간 위치공유 · 알림 히스토리</h3>
+        <p>AI 맞춤 추천, 공고 사진 3장+Crop, 상세 미니맵, 급여계산기(주휴수당), 이미지 뷰어, 지원 메시지. 신뢰점수 시스템(calcBakalbaScore), 단골 알바생 우선 알림(_notifyFavWorkers), 실시간 위치공유(Supabase Realtime Broadcast), 알림 히스토리 패널</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-red">AI 추천</span>
+          <span class="tl-tag tt-red">신뢰점수 시스템</span>
+          <span class="tl-tag tt-red">단골 알림</span>
+          <span class="tl-tag tt-red">실시간 위치공유</span>
+          <span class="tl-tag tt-red">알림 히스토리</span>
+          <span class="tl-tag tt-red">급여계산기</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-21 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-21</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <span class="commit-count">22커밋</span>
+        <h3>채팅 전체화면 + 업주 FCM Push</h3>
+        <p>채팅 전체화면 전환, viewport interactive-widget, 새 지원자 Push 알림, 맞춤 공고 알림 구독</p>
+        <div class="tl-tags"><span class="tl-tag tt-orange">FCM Push</span><span class="tl-tag tt-gray">채팅 전체화면</span></div>
+      </div>
+    </div>
+
+    <!-- 2026-06-22 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-22</div></div>
+      <div class="tl-center"><div class="tl-dot major"></div><div class="tl-line"></div></div>
+      <div class="tl-right major">
+        <span class="commit-count">64커밋</span>
+        <h3>Phase 34~36 — 채팅 고도화 + 소셜 기능</h3>
+        <p>FCM 완성, 채팅 이미지 전송, 스냅챗 스타일 채팅 UI, 팔로우, 스카우트, 수입 달력, 비속어 필터</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-red">채팅 이미지</span>
+          <span class="tl-tag tt-red">팔로우</span>
+          <span class="tl-tag tt-red">스카우트</span>
+          <span class="tl-tag tt-red">수입 달력</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-25 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-23~25</div></div>
+      <div class="tl-center"><div class="tl-dot major"></div><div class="tl-line"></div></div>
+      <div class="tl-right major">
+        <span class="commit-count">36+8+8 커밋</span>
+        <h3>양방향 리뷰+답글 · 커뮤니티 · 레슨/과외 매칭</h3>
+        <p>양방향 평가 및 답글 시스템 완성, 커뮤니티 수정/삭제 완성, 언어 우대 배지, 레슨/과외/전문기술 매칭 패널 i18n, 키보드 네이티브 IME 완전 개선</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-red">양방향 리뷰+답글</span>
+          <span class="tl-tag tt-red">커뮤니티 완성</span>
+          <span class="tl-tag tt-blue">레슨/과외 매칭</span>
+          <span class="tl-tag tt-gray">키보드 완성</span>
+          <span class="tl-tag tt-gray">Android v19/v20</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-26~27 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-26~27</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <span class="commit-count">8+8 커밋</span>
+        <h3>Phase 41~44 — 비대면 + 딥링크 + 벤치마킹</h3>
+        <p>비대면 알바 기능, 채팅 딥링크·인라인 답장, 해주세요 앱 5개 항목 벤치마킹 구현</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-red">비대면 알바</span>
+          <span class="tl-tag tt-red">채팅 딥링크</span>
+          <span class="tl-tag tt-red">인라인 답장</span>
+          <span class="tl-tag tt-gray">Android v21</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-28 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-28</div></div>
+      <div class="tl-center"><div class="tl-dot major"></div><div class="tl-line"></div></div>
+      <div class="tl-right major">
+        <span class="commit-count">14커밋</span>
+        <h3>Phase 45~50 — 마이페이지 전면 개편 + Android 완성</h3>
+        <p>iOS Settings 스타일 row 네비게이션, 8개 서브패널, 스플래시 통합, Android 스플래시 완전 해결(v23)</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-red">마이페이지 전면 개편</span>
+          <span class="tl-tag tt-red">스플래시 완전 해결</span>
+          <span class="tl-tag tt-red">Android v23</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026-06-29 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date">2026-06-29</div></div>
+      <div class="tl-center"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <span class="commit-count">sw.js v284 이전</span>
+        <h3>외국인 특화 기능 · 국적조건 필터</h3>
+        <p>픽업장소 지정, 초보환영 배지, 식사포함 옵션, 비자서류 안내 등 외국인 근로자 특화 공고 속성 추가. 공고 검색 시 국적 조건 필터 지원.</p>
+        <div class="tl-tags">
+          <span class="tl-tag tt-blue">픽업장소</span>
+          <span class="tl-tag tt-blue">초보환영</span>
+          <span class="tl-tag tt-blue">식사포함</span>
+          <span class="tl-tag tt-blue">비자서류</span>
+          <span class="tl-tag tt-blue">국적조건 필터</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODAY: 2026-06-30 -->
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-date" style="color:var(--green);font-weight:900">2026-06-30<br>(오늘)</div></div>
+      <div class="tl-center"><div class="tl-dot today"></div><div class="tl-line"></div></div>
+      <div class="today-highlight">
+        <h3>바로모임 출시 · 홈탭 신설 · 구독 플랜 통합</h3>
+        <div class="th-sub">SW v284 · 오늘의 주요 릴리스</div>
+        <div class="today-feat-grid">
+          <div class="today-feat">
+            <div class="tf-label">UI</div>
+            <h4>홈탭 신설 + 바로알바 FAB</h4>
+            <p>앱 진입점 홈탭 신설. 플로팅 액션 버튼으로 바로알바 핵심 기능 빠른 접근.</p>
+          </div>
+          <div class="today-feat">
+            <div class="tf-label">UX</div>
+            <h4>지도 스와이프 플로팅 버튼</h4>
+            <p>지도 탭에서 스와이프 전환 플로팅 버튼 추가. 손가락 동선 최소화.</p>
+          </div>
+          <div class="today-feat">
+            <div class="tf-label">공고</div>
+            <h4>팀모집 공고 (진행률 바)</h4>
+            <p>다수 인원 모집 공고에 진행률 바 표시. 남은 자리 시각적으로 확인 가능.</p>
+          </div>
+          <div class="today-feat">
+            <div class="tf-label">신규 서비스</div>
+            <h4>바로모임 Phase 1+2</h4>
+            <p>모임 개설/참가/단체채팅/딥링크/지도 토글 완성. 커뮤니티 기반 소셜 모임 플랫폼.</p>
+          </div>
+          <div class="today-feat">
+            <div class="tf-label">수익화</div>
+            <h4>구독 플랜 통합</h4>
+            <p>업주 플랜 + 바로모임 플랜을 단일 구독으로 통합. 혜택 one plan으로 단순화.</p>
+          </div>
+          <div class="today-feat">
+            <div class="tf-label">버전</div>
+            <h4>SW v284</h4>
+            <p>서비스 워커 v284 배포. 전체 캐시 갱신 및 신규 기능 반영.</p>
+          </div>
+        </div>
+        <div class="tl-tags">
+          <span class="tl-tag tt-green">바로모임 출시</span>
+          <span class="tl-tag tt-green">홈탭 신설</span>
+          <span class="tl-tag tt-green">팀모집 공고</span>
+          <span class="tl-tag tt-green">구독 플랜 통합</span>
+          <span class="tl-tag tt-green">sw.js v284</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TAB: ROADMAP -->
+<div class="tab-content" id="tab-roadmap">
+  <div class="sh">
+    <div class="label">In Progress / Next Up</div>
+    <h2>진행중 & 다음 작업</h2>
+    <p>바로모임 출시 이후 단기·중기 우선순위 기반 작업 계획</p>
+  </div>
+  <div class="plan-grid">
+
+    <div class="plan-card p1">
+      <span class="plan-badge pb-red">P1 — 즉시 처리</span>
+      <h3>바로모임 플랜 결제 연동</h3>
+      <p>바로모임 구독 플랜의 실결제 연동. 토스페이먼츠 SDK 기반 수익화 1단계.</p>
+      <ul class="plan-items">
+        <li><span class="pi-icon">💳</span> 토스페이먼츠 SDK 연동</li>
+        <li><span class="pi-icon">📦</span> 구독 플랜 결제 UI (업주 + 모임 통합)</li>
+        <li><span class="pi-icon">📊</span> 결제 내역 관리 화면</li>
+        <li><span class="pi-icon">↩️</span> 환불 처리 플로우</li>
+      </ul>
+      <div class="plan-period">⏱ 예상 소요: 3~5일</div>
+    </div>
+
+    <div class="plan-card p1">
+      <span class="plan-badge pb-red">P1 — 즉시 처리</span>
+      <h3>모임 지도 마커 위치 입력 UX</h3>
+      <p>바로모임 개설 시 모임 장소 lat/lng를 지도 클릭 또는 주소 검색으로 입력하는 UX 개선.</p>
+      <ul class="plan-items">
+        <li><span class="pi-icon">📍</span> 카카오맵 클릭으로 좌표 입력</li>
+        <li><span class="pi-icon">🔍</span> 주소 검색 후 좌표 자동 추출</li>
+        <li><span class="pi-icon">🗺️</span> 입력된 위치 미리보기 미니맵</li>
+      </ul>
+      <div class="plan-period">⏱ 예상 소요: 1일</div>
+    </div>
+
+    <div class="plan-card p2">
+      <span class="plan-badge pb-orange">P2 — 단기 (1주)</span>
+      <h3>모임 이미지 업로드</h3>
+      <p>바로모임 개설 시 모임 대표 이미지 업로드 기능. Supabase Storage 활용.</p>
+      <ul class="plan-items">
+        <li><span class="pi-icon">🖼️</span> 이미지 선택 + Crop UI</li>
+        <li><span class="pi-icon">☁️</span> Supabase Storage 업로드</li>
+        <li><span class="pi-icon">👁️</span> 모임 카드에 썸네일 표시</li>
+      </ul>
+      <div class="plan-period">⏱ 예상 소요: 반나절</div>
+    </div>
+
+    <div class="plan-card p2">
+      <span class="plan-badge pb-orange">P2 — 단기 (1주)</span>
+      <h3>바로모임 모범 모임장 뱃지</h3>
+      <p>활성 모임 운영, 참가자 만족도, 정기 개최 실적 기반으로 모범 모임장 뱃지 발급.</p>
+      <ul class="plan-items">
+        <li><span class="pi-icon">🏅</span> 모임장 점수 산출 기준 정의</li>
+        <li><span class="pi-icon">🎖️</span> 모임 카드에 뱃지 표시</li>
+        <li><span class="pi-icon">📢</span> 뱃지 취득 시 푸시 알림</li>
+      </ul>
+      <div class="plan-period">⏱ 예상 소요: 1~2일</div>
+    </div>
+
+    <div class="plan-card p3">
+      <span class="plan-badge pb-blue">P3 — 중기 (2~4주)</span>
+      <h3>알바생 앱 최적화 — AI 추천 고도화</h3>
+      <p>지원·합격·완주 이력을 AI 추천 알고리즘에 반영. 시간이 지날수록 맞춤도 향상.</p>
+      <ul class="plan-items">
+        <li><span class="pi-icon">🤖</span> 피드백 루프 데이터 수집</li>
+        <li><span class="pi-icon">📈</span> 추천 정확도 A/B 비교</li>
+        <li><span class="pi-icon">⚡</span> 홈탭 추천 피드 로딩 최적화</li>
+        <li><span class="pi-icon">🔔</span> 맞춤 공고 알림 정교화</li>
+      </ul>
+      <div class="plan-period">⏱ 예상 소요: 1주</div>
+    </div>
+
+    <div class="plan-card p3">
+      <span class="plan-badge pb-blue">P3 — 중기 (1개월)</span>
+      <h3>iOS 앱 (WKWebView 래퍼)</h3>
+      <p>현재 Android only. Swift WKWebView 래퍼 앱으로 App Store 등록. FCM 대신 APNs 연동.</p>
+      <ul class="plan-items">
+        <li><span class="pi-icon">🍎</span> Swift WKWebView 래퍼 앱</li>
+        <li><span class="pi-icon">📱</span> Apple 개발자 계정 등록</li>
+        <li><span class="pi-icon">🔔</span> APNs 푸시알림 연동</li>
+        <li><span class="pi-icon">📤</span> App Store 심사 제출</li>
+      </ul>
+      <div class="plan-period">⏱ 예상 소요: 1~2주</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TAB: FUTURE -->
+<div class="tab-content" id="tab-future">
+  <div class="sh">
+    <div class="label">Future Roadmap</div>
+    <h2>미래 서비스 확장 계획</h2>
+    <p>바로모임 출시 이후 중장기 서비스 확장 비전</p>
+  </div>
+  <div class="future-grid">
+
+    <div class="future-card">
+      <div class="fc-icon">🚛</div>
+      <h3>바로이사 서비스 연계</h3>
+      <p>멀티무브의 이사 서비스와 바로알바를 연계. 이사 당일 단기 인력 매칭, 짐 운반 알바 공고 자동 생성.</p>
+      <span class="fc-tag">2026 하반기</span>
+    </div>
+
+    <div class="future-card">
+      <div class="fc-icon">📦</div>
+      <h3>바로대행 서비스 연계</h3>
+      <p>대행 심부름 서비스 연계. 바로심부름 공고 유형을 확장해 심부름 전문 플랫폼으로 발전.</p>
+      <span class="fc-tag">2026 하반기</span>
+    </div>
+
+    <div class="future-card">
+      <div class="fc-icon">🏢</div>
+      <h3>기업 단체 계정</h3>
+      <p>중소기업 HR 담당자용 기업 계정. 다수 공고 일괄 관리, 팀원 초대, 채용 통계 대시보드 제공.</p>
+      <span class="fc-tag">2027 상반기</span>
+    </div>
+
+    <div class="future-card">
+      <div class="fc-icon">💰</div>
+      <h3>급여 정산 서비스 내재화</h3>
+      <p>에스크로 알바비 보장 + 급여 자동 정산. 업주 선입금 → 근무 확인 후 알바생 지급. 임금 체불 원천 차단.</p>
+      <span class="fc-tag">2027 상반기</span>
+    </div>
+
+    <div class="future-card">
+      <div class="fc-icon">🌏</div>
+      <h3>동남아 시장 진출</h3>
+      <p>6개국어 다국어 엔진 기반으로 베트남·필리핀·태국 등 외국인 근로자 많은 지역으로 확장.</p>
+      <span class="fc-tag">장기 전략</span>
+    </div>
+
+    <div class="future-card">
+      <div class="fc-icon">🎓</div>
+      <h3>알바 교육 콘텐츠</h3>
+      <p>서비스직 매너, 카페 바리스타 기초 등 단기 교육 영상 연계. 수료 뱃지 발급으로 알바생 스펙 강화.</p>
+      <span class="fc-tag">장기 전략</span>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">바로알바</div>
+  <p>바로알바 · MultiMOVE 주식회사 · baroalba.multimove.co.kr</p>
+  <p style="margin-top:4px">최종 업데이트: 2026-06-30 · SW v284</p>
+</footer>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['completed','roadmap','future'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab-' + name);
+  });
+}
+</script>
+</body>
+</html>

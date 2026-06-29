@@ -635,15 +635,18 @@ function tWorkType(code) {
 // ── 언어 선택 (저장 전 미리보기) ────────────────────────────
 function selectLang(lang) {
   _pendingLang = lang;
+  const RED = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#C8102E';
   _LANGS.forEach(l => {
+    const isSel = l === lang;
     const b1 = document.getElementById('lang-' + l + '-btn');
-    if (b1) { b1.style.background = l === lang ? '#555' : '#f0f0f0'; b1.style.color = l === lang ? '#fff' : '#666'; }
+    if (b1) { b1.style.background = isSel ? RED : '#f0f0f0'; b1.style.color = isSel ? '#fff' : '#666'; }
     const b2 = document.getElementById('owner-lang-' + l);
-    if (b2) { b2.style.background = l === lang ? '#555' : '#f0f0f0'; b2.style.color = l === lang ? '#fff' : '#666'; }
+    if (b2) { b2.style.background = isSel ? RED : '#f0f0f0'; b2.style.color = isSel ? '#fff' : '#666'; }
   });
+  const isSaved = lang === currentLang;
   ['lang-desc', 'owner-lang-desc'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = (TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc + ' (저장 전)';
+    if (el) el.textContent = (TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc + (isSaved ? '' : ' (저장 전)');
   });
 }
 

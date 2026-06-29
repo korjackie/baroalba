@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 2026.06.30 신규 기능 업데이트</title>
+<style>
+  :root {
+    --red: #C8102E;
+    --red-dark: #9e0c23;
+    --red-light: #fff0f2;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --blue: #3b82f6;
+    --blue-light: #eff6ff;
+    --purple: #7c3aed;
+    --purple-light: #f3e8ff;
+    --purple-dark: #5b21b6;
+    --orange: #d97706;
+    --orange-light: #fff7ed;
+    --gray-900: #111;
+    --gray-700: #444;
+    --gray-500: #888;
+    --gray-200: #eee;
+    --gray-100: #f8f8f8;
+    --white: #fff;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; color:var(--gray-900); background:var(--white); line-height:1.6; }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(255,255,255,0.96); backdrop-filter:blur(12px); border-bottom:1px solid var(--gray-200); display:flex; align-items:center; justify-content:space-between; padding:0 5%; height:60px; }
+  .nav-logo { font-size:18px; font-weight:900; color:var(--red); }
+  .nav-date { font-size:13px; font-weight:700; color:var(--gray-500); background:var(--gray-100); padding:4px 12px; border-radius:100px; }
+
+  /* HERO */
+  .hero { min-height:72vh; background:linear-gradient(140deg,#0f0f0f 0%,#1a0008 40%,#C8102E 100%); display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:100px 5% 60px; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='40' cy='40' r='2'/%3E%3C/g%3E%3C/svg%3E"); }
+  .hero-tag { display:inline-flex; align-items:center; gap:8px; background:rgba(200,16,46,0.3); border:1px solid rgba(200,16,46,0.5); color:#ff8899; font-size:12px; font-weight:800; letter-spacing:1.5px; padding:6px 16px; border-radius:100px; margin-bottom:28px; }
+  .hero-tag-dot { width:6px; height:6px; background:#ff4466; border-radius:50%; animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(0.8)} }
+  .hero h1 { font-size:clamp(32px,5.5vw,66px); font-weight:900; color:#fff; line-height:1.1; margin-bottom:16px; }
+  .hero h1 span { color:rgba(255,255,255,0.5); }
+  .hero-sub { font-size:clamp(15px,1.8vw,20px); color:rgba(255,255,255,0.7); font-weight:400; max-width:520px; margin:0 auto 48px; }
+  .hero-chips { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .hero-chip { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.9); font-size:13px; font-weight:700; padding:8px 18px; border-radius:100px; }
+  .hero-chip.done { background:rgba(22,163,74,0.2); border-color:rgba(22,163,74,0.4); color:#6ee7b7; }
+  .hero-chip.done-purple { background:rgba(124,58,237,0.25); border-color:rgba(124,58,237,0.5); color:#c4b5fd; }
+
+  /* FEATURE SECTION */
+  .feat-section { padding:80px 5%; }
+  .feat-section:nth-child(even) { background:var(--gray-100); }
+  .section-label { font-size:11px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+  .section-title { font-size:clamp(24px,3.5vw,38px); font-weight:900; line-height:1.2; margin-bottom:14px; }
+  .section-desc { font-size:16px; color:var(--gray-500); line-height:1.75; max-width:580px; }
+
+  /* FEATURE ROW (alternating) */
+  .feat-row { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; margin-top:60px; }
+  .feat-row.rev { direction:rtl; }
+  .feat-row.rev > * { direction:ltr; }
+  .feat-visual { border-radius:20px; overflow:hidden; background:#f0f0f0; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); }
+  .feat-body { display:flex; flex-direction:column; gap:20px; }
+  .feat-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:800; letter-spacing:1px; padding:5px 12px; border-radius:100px; width:fit-content; }
+  .feat-body h2 { font-size:clamp(22px,2.5vw,30px); font-weight:900; line-height:1.2; }
+  .feat-body p { font-size:15px; color:var(--gray-500); line-height:1.75; }
+  .feat-steps { display:flex; flex-direction:column; gap:12px; }
+  .feat-step { display:flex; gap:14px; align-items:flex-start; }
+  .step-num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; flex-shrink:0; margin-top:1px; }
+  .step-body { flex:1; }
+  .step-title { font-size:14px; font-weight:800; color:var(--gray-900); margin-bottom:2px; }
+  .step-desc { font-size:13px; color:var(--gray-500); line-height:1.5; }
+  .feat-note { background:var(--gray-100); border-radius:10px; padding:12px 16px; font-size:12.5px; color:var(--gray-500); display:flex; gap:8px; align-items:flex-start; }
+
+  /* SUMMARY GRID */
+  .summary-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; margin-top:48px; }
+  .summary-card { background:var(--white); border:1.5px solid var(--gray-200); border-radius:var(--radius); padding:28px; position:relative; overflow:hidden; }
+  .summary-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .summary-card.c1::before { background:var(--red); }
+  .summary-card.c2::before { background:var(--orange); }
+  .summary-card.c3::before { background:var(--green); }
+  .summary-card.c4::before { background:var(--blue); }
+  .summary-card.c5::before { background:var(--purple); }
+  .summary-card.c6::before { background:linear-gradient(90deg,var(--purple),#a855f7); }
+  .summary-card.c7::before { background:linear-gradient(90deg,#7c3aed,#4f46e5); }
+  .summary-card.c8::before { background:linear-gradient(90deg,#6d28d9,#7c3aed); }
+  .sc-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .summary-card h3 { font-size:16px; font-weight:800; margin-bottom:8px; }
+  .summary-card p { font-size:13.5px; color:var(--gray-500); line-height:1.6; }
+  .sc-tag { display:inline-block; font-size:11px; font-weight:800; padding:3px 10px; border-radius:8px; margin-top:12px; }
+
+  /* SCORE VISUAL */
+  .score-demo { background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:20px; padding:32px; color:#fff; }
+  .score-ring { width:120px; height:120px; margin:0 auto 20px; position:relative; display:flex; align-items:center; justify-content:center; }
+  .score-ring svg { position:absolute; inset:0; transform:rotate(-90deg); }
+  .score-number { font-size:36px; font-weight:900; }
+  .score-label { font-size:12px; opacity:.6; text-align:center; }
+  .score-factors { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:20px; }
+  .score-factor { background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center; }
+  .sf-val { font-size:20px; font-weight:900; }
+  .sf-label { font-size:11px; opacity:.6; margin-top:4px; }
+
+  /* CONTRACT VISUAL */
+  .contract-doc { background:#fff; border-radius:16px; padding:28px; box-shadow:0 8px 32px rgba(0,0,0,0.12); border:1px solid #e5e7eb; }
+  .contract-header { text-align:center; padding-bottom:16px; border-bottom:2px solid #111; margin-bottom:16px; }
+  .contract-title-big { font-size:20px; font-weight:900; letter-spacing:4px; }
+  .contract-table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:14px; }
+  .contract-table td { padding:8px 10px; border:1px solid #e5e7eb; }
+  .contract-table td:first-child { background:#f9fafb; font-weight:700; width:35%; }
+  .contract-print-btn { width:100%; padding:12px; background:var(--red); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; margin-top:16px; }
+
+  /* LOCATION VISUAL */
+  .map-preview { background:linear-gradient(160deg,#e8f4fd,#dbeafe); border-radius:16px; padding:24px; position:relative; overflow:hidden; min-height:220px; display:flex; flex-direction:column; justify-content:flex-end; }
+  .map-grid { position:absolute; inset:0; opacity:0.15; background-image:repeating-linear-gradient(0deg,#3b82f6 0,#3b82f6 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#3b82f6 0,#3b82f6 1px,transparent 1px,transparent 40px); }
+  .map-pin { position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); }
+  .map-pin-dot { width:20px; height:20px; background:var(--red); border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 6px rgba(200,16,46,0.2); animation:ripple 2s infinite; }
+  @keyframes ripple { 0%{box-shadow:0 0 0 0 rgba(200,16,46,0.4)} 70%{box-shadow:0 0 0 16px rgba(200,16,46,0)} 100%{box-shadow:0 0 0 0 rgba(200,16,46,0)} }
+  .map-status { background:rgba(255,255,255,0.95); border-radius:12px; padding:12px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+  .map-dot-live { width:8px; height:8px; background:#16a34a; border-radius:50%; animation:pulse 1s infinite; }
+
+  /* NOTIFICATION VISUAL */
+  .noti-list { display:flex; flex-direction:column; gap:10px; }
+  .noti-item { background:#fff; border-radius:12px; padding:14px 16px; display:flex; gap:12px; align-items:flex-start; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .noti-icon { font-size:22px; flex-shrink:0; }
+  .noti-body { flex:1; min-width:0; }
+  .noti-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .noti-sub { font-size:12px; color:var(--gray-500); }
+  .noti-time { font-size:11px; color:#bbb; margin-top:3px; }
+  .noti-badge { font-size:11px; font-weight:800; padding:3px 8px; border-radius:8px; flex-shrink:0; }
+
+  /* FAV VISUAL */
+  .fav-flow { display:flex; flex-direction:column; gap:0; }
+  .flow-step { display:flex; gap:16px; align-items:flex-start; padding:16px 0; }
+  .flow-step:not(:last-child) { border-bottom:1px dashed #e5e7eb; }
+  .flow-icon-wrap { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .flow-body { flex:1; }
+  .flow-title { font-size:14px; font-weight:800; margin-bottom:3px; }
+  .flow-desc { font-size:13px; color:var(--gray-500); line-height:1.5; }
+
+  /* BEFORE/AFTER */
+  .ba-wrap { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px; }
+  .ba-card { border-radius:14px; padding:20px; }
+  .ba-card.before { background:#fff5f5; border:1.5px solid #fecaca; }
+  .ba-card.after { background:#f0fdf4; border:1.5px solid #bbf7d0; }
+  .ba-label { font-size:11px; font-weight:900; letter-spacing:1px; margin-bottom:10px; }
+  .ba-card.before .ba-label { color:#ef4444; }
+  .ba-card.after .ba-label { color:#16a34a; }
+  .ba-items { list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .ba-items li { font-size:13px; color:var(--gray-700); display:flex; gap:7px; align-items:flex-start; }
+  .ba-icon { flex-shrink:0; font-size:14px; }
+
+  /* PHONE MOCKUP */
+  .phone-mock { width:200px; background:#111; border-radius:32px; padding:12px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .phone-screen { background:#fff; border-radius:22px; overflow:hidden; }
+  .phone-status { background:#111; height:28px; display:flex; align-items:center; justify-content:center; }
+  .phone-notch { width:70px; height:18px; background:#000; border-radius:0 0 12px 12px; }
+
+  /* BADGE STYLES */
+  .badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; padding:3px 10px; border-radius:8px; }
+  .badge-red { background:var(--red-light); color:var(--red); }
+  .badge-purple { background:var(--purple-light); color:var(--purple); }
+  .badge-green { background:var(--green-light); color:var(--green); }
+  .badge-blue { background:var(--blue-light); color:var(--blue); }
+  .badge-orange { background:var(--orange-light); color:var(--orange); }
+
+  /* TEAM PROGRESS BAR */
+  .team-bar { background:#e5e7eb; border-radius:100px; height:8px; margin-top:8px; overflow:hidden; }
+  .team-bar-fill { height:100%; border-radius:100px; background:linear-gradient(90deg,var(--purple),#a855f7); transition:width 0.5s; }
+
+  /* FOOTER */
+  footer { background:var(--gray-900); color:rgba(255,255,255,0.5); text-align:center; padding:40px 5%; font-size:13px; }
+  footer strong { color:rgba(255,255,255,0.9); }
+
+  @media(max-width:768px) {
+    .feat-row, .feat-row.rev { grid-template-columns:1fr; direction:ltr; }
+    .feat-row.rev { direction:ltr; }
+    .ps-grid, .ba-wrap { grid-template-columns:1fr; }
+    .score-factors { grid-template-columns:1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-date">📦 2026.06.30 업데이트</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag"><span class="hero-tag-dot"></span> NEW FEATURES</div>
+  <h1>8가지 신규 기능<br><span>한꺼번에 출시</span></h1>
+  <p class="hero-sub">홈탭 신설부터 바로모임 서비스까지 — 바로알바가 완전히 새로워집니다. 오늘 배포 완료.</p>
+  <div class="hero-chips">
+    <div class="hero-chip done">✅ 홈탭 신설</div>
+    <div class="hero-chip done">✅ 바로알바 FAB</div>
+    <div class="hero-chip done">✅ 지도 스와이프 플로팅</div>
+    <div class="hero-chip done">✅ 몽골 커뮤니티 인사이트</div>
+    <div class="hero-chip done">✅ 국적 조건 필터</div>
+    <div class="hero-chip done">✅ 팀모집</div>
+    <div class="hero-chip done-purple">✅ 바로모임 서비스</div>
+    <div class="hero-chip done-purple">✅ 구독 플랜 통합</div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<section class="feat-section">
+  <p class="section-label" style="color:var(--red)">Overview</p>
+  <h2 class="section-title">이번 업데이트 한눈에</h2>
+  <p class="section-desc">UX 혁신, 외국인 커뮤니티 기능 강화, 팀모집 및 완전히 새로운 소셜 서비스 바로모임까지. 8가지 기능을 동시 적용했습니다.</p>
+  <div class="summary-grid">
+    <div class="summary-card c1">
+      <div class="sc-icon" style="background:#fff0f2; font-size:24px">🏠</div>
+      <h3>홈탭 신설</h3>
+      <p>바로알바 탭 = 홈화면. 통합 검색바 + 급구/AI추천/당일정산/외국인환영/모범파트너 섹션.</p>
+      <span class="sc-tag" style="background:#fff0f2;color:#C8102E">UX 개선</span>
+    </div>
+    <div class="summary-card c2">
+      <div class="sc-icon" style="background:#fff7ed; font-size:24px">🔴</div>
+      <h3>바로알바 FAB</h3>
+      <p>하단 탭바 가운데 빨간 원형 플로팅 버튼. 눈에 확 띄는 메인 CTA로 지원율 향상.</p>
+      <span class="sc-tag" style="background:#fff7ed;color:#d97706">탭바 리디자인</span>
+    </div>
+    <div class="summary-card c3">
+      <div class="sc-icon" style="background:#eff6ff; font-size:24px">🗺️</div>
+      <h3>지도 스와이프 플로팅</h3>
+      <p>지도 탭에서 "주변알바 N개 스와이프로 보기" 버튼 노출. 지도-카드 전환 원클릭.</p>
+      <span class="sc-tag" style="background:#eff6ff;color:#3b82f6">지도 UX</span>
+    </div>
+    <div class="summary-card c4">
+      <div class="sc-icon" style="background:#f0fdf4; font-size:24px">🌏</div>
+      <h3>몽골 커뮤니티 인사이트</h3>
+      <p>공고에 픽업장소/초보환영/식사포함 정보 추가. 카드에 배지 자동 표시.</p>
+      <span class="sc-tag" style="background:#f0fdf4;color:#16a34a">외국인 특화</span>
+    </div>
+    <div class="summary-card c1">
+      <div class="sc-icon" style="background:#fff0f2; font-size:24px">🌐</div>
+      <h3>국적 조건 필터</h3>
+      <p>공고 4단계 선택. 외국인 유저 자동 필터, 한국인only 공고는 지원 자동 차단.</p>
+      <span class="sc-tag" style="background:#fff0f2;color:#C8102E">공고 필터</span>
+    </div>
+    <div class="summary-card c5">
+      <div class="sc-icon" style="background:#f3e8ff; font-size:24px">👥</div>
+      <h3>팀모집</h3>
+      <p>공고에 팀모집 토글+설명. 카드/상세/지도마커 보라색 배지 + 진행률 바.</p>
+      <span class="sc-tag" style="background:#f3e8ff;color:#7c3aed">팀 기능</span>
+    </div>
+    <div class="summary-card c6">
+      <div class="sc-icon" style="background:#f3e8ff; font-size:24px">🎉</div>
+      <h3>바로모임 서비스</h3>
+      <p>홈탭 진입 소셜 모임. 목록/상세/개설/참가(승인제)/채팅/공개·비공개/지도 토글.</p>
+      <span class="sc-tag" style="background:#f3e8ff;color:#7c3aed">신규 서비스</span>
+    </div>
+    <div class="summary-card c7">
+      <div class="sc-icon" style="background:#f3e8ff; font-size:24px">💎</div>
+      <h3>구독 플랜 통합</h3>
+      <p>업주 플랜에 바로모임 혜택 통합. 무료/베이직 ₩9,900/프로 ₩29,900.</p>
+      <span class="sc-tag" style="background:#f3e8ff;color:#7c3aed">수익화</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 01: 홈탭 신설 -->
+<section class="feat-section" style="background:var(--gray-100)">
+  <p class="section-label" style="color:var(--red)">Feature 01</p>
+  <h2 class="section-title">홈탭 신설 — 바로알바 탭이 홈화면으로</h2>
+  <p class="section-desc">탭바의 바로알바 버튼을 누르면 이제 피드 대신 홈화면이 열립니다. 통합 검색바와 목적별 섹션으로 원하는 공고에 가장 빠르게 진입합니다.</p>
+
+  <div class="feat-row" style="margin-top:50px">
+    <div class="feat-visual" style="background:#fff;padding:0;box-shadow:var(--shadow);aspect-ratio:9/16;max-height:480px">
+      <div style="width:100%;height:100%;background:linear-gradient(180deg,#fff 0%,#f8f8f8 100%);border-radius:20px;overflow:hidden;display:flex;flex-direction:column">
+        <!-- 상단 헤더 -->
+        <div style="background:#fff;padding:16px 16px 8px;border-bottom:1px solid #f0f0f0">
+          <div style="font-size:20px;font-weight:900;color:#111;margin-bottom:12px">안녕하세요, 민준님 👋</div>
+          <!-- 검색바 -->
+          <div style="background:#f3f4f6;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#aaa" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="#aaa" stroke-width="2" stroke-linecap="round"/></svg>
+            <span style="font-size:14px;color:#aaa">직종, 지역, 업체명 검색</span>
+          </div>
+        </div>
+        <!-- 섹션 리스트 -->
+        <div style="flex:1;overflow:auto;padding:12px 16px;display:flex;flex-direction:column;gap:14px">
+          <!-- 급구 섹션 -->
+          <div style="background:linear-gradient(135deg,#fff0f2,#ffe4e6);border-radius:14px;padding:14px;border:1.5px solid #fecaca">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:16px">🔥</span>
+              <span style="font-size:14px;font-weight:900;color:#C8102E">급구</span>
+              <span style="font-size:11px;color:#ef4444;font-weight:700">12개 마감 임박</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;background:#fff;border-radius:10px;padding:10px;border:1px solid #fecaca">
+                <div style="font-size:12px;font-weight:800">편의점 야간</div>
+                <div style="font-size:11px;color:#888">강남구 · 13,000원</div>
+              </div>
+              <div style="flex:1;background:#fff;border-radius:10px;padding:10px;border:1px solid #fecaca">
+                <div style="font-size:12px;font-weight:800">홀서빙</div>
+                <div style="font-size:11px;color:#888">마포구 · 12,500원</div>
+              </div>
+            </div>
+          </div>
+          <!-- AI추천 -->
+          <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:14px;padding:14px;border:1.5px solid #bfdbfe">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:16px">✨</span>
+              <span style="font-size:14px;font-weight:900;color:#3b82f6">AI 추천</span>
+              <span style="font-size:11px;color:#60a5fa;font-weight:700">맞춤 5개</span>
+            </div>
+            <div style="font-size:12px;color:#1e40af;background:rgba(59,130,246,0.1);border-radius:8px;padding:8px">이전 근무 이력 기반 추천 공고</div>
+          </div>
+          <!-- 당일정산 / 외국인환영 -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:14px;padding:14px;border:1.5px solid #bbf7d0">
+              <div style="font-size:16px">💰</div>
+              <div style="font-size:12px;font-weight:900;color:#16a34a;margin-top:4px">당일정산</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">오늘 일하고 오늘 받기</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#f3e8ff,#ede9fe);border-radius:14px;padding:14px;border:1.5px solid #ddd6fe">
+              <div style="font-size:16px">🌏</div>
+              <div style="font-size:12px;font-weight:900;color:#7c3aed;margin-top:4px">외국인환영</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">비자 무관 지원 가능</div>
+            </div>
+          </div>
+          <!-- 모범파트너 -->
+          <div style="background:#fff;border-radius:14px;padding:14px;border:1.5px solid #fbbf24">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">🏆</span>
+              <span style="font-size:13px;font-weight:900;color:#d97706">모범파트너 업체</span>
+              <span style="font-size:11px;background:#fef3c7;color:#92400e;font-weight:700;padding:2px 8px;border-radius:6px">인증</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:var(--red-light);color:var(--red)">🏠 홈 UX</div>
+      <h2>바로알바 탭 = 목적별<br>홈화면으로 전환</h2>
+      <p>기존 피드 나열 방식을 벗어나, 사용자가 원하는 상황(급구·AI추천·외국인환영 등)에 맞게 바로 진입할 수 있는 홈탭으로 전환합니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">1</div>
+          <div class="step-body">
+            <div class="step-title">통합 검색바</div>
+            <div class="step-desc">직종·지역·업체명을 한 곳에서 검색. 홈화면 최상단 고정.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">2</div>
+          <div class="step-body">
+            <div class="step-title">급구 섹션</div>
+            <div class="step-desc">마감 임박 공고 카루셀. 실시간 N개 카운트 표시.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">3</div>
+          <div class="step-body">
+            <div class="step-title">AI추천 / 당일정산 / 외국인환영 섹션</div>
+            <div class="step-desc">이력 기반 AI 추천, 당일 정산 필터, 비자 무관 공고를 별도 섹션으로 큐레이션.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">4</div>
+          <div class="step-body">
+            <div class="step-title">모범파트너 섹션</div>
+            <div class="step-desc">인증 업체 공고를 별도 배지와 함께 노출. 신뢰 지표 강화.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note">
+        <span>💡</span>
+        <span>홈탭은 기존 피드 탭을 대체합니다. 피드는 검색·섹션을 통해 진입하는 방식으로 변경됩니다.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 02: 바로알바 FAB -->
+<section class="feat-section">
+  <p class="section-label" style="color:var(--orange)">Feature 02</p>
+  <h2 class="section-title">바로알바 FAB — 탭바 가운데 빨간 원형 버튼</h2>
+  <p class="section-desc">탭바 중앙의 바로알바 버튼을 기존 아이콘에서 눈에 확 띄는 빨간 원형 플로팅 버튼으로 변경합니다. 메인 CTA 접근성을 극대화합니다.</p>
+
+  <div class="feat-row rev" style="margin-top:50px">
+    <div class="feat-visual" style="background:#1a1a2e;padding:24px;box-shadow:var(--shadow)">
+      <div style="width:100%">
+        <!-- 탭바 비포 어프터 비교 -->
+        <div style="margin-bottom:20px;text-align:center">
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:16px">탭바 변경 전 → 후</div>
+          <!-- BEFORE -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:10px;font-weight:700;color:#ef4444;margin-bottom:8px">BEFORE</div>
+            <div style="background:rgba(255,255,255,0.08);border-radius:16px;padding:12px 20px;display:flex;justify-content:space-around;align-items:center">
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">🏠</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">홈</div>
+              </div>
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">🗺️</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">지도</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:22px">💼</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px;font-weight:700">바로알바</div>
+              </div>
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">💬</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">채팅</div>
+              </div>
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">👤</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">마이</div>
+              </div>
+            </div>
+          </div>
+          <!-- AFTER -->
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#6ee7b7;margin-bottom:8px">AFTER</div>
+            <div style="background:rgba(255,255,255,0.08);border-radius:16px;padding:12px 20px;display:flex;justify-content:space-around;align-items:center;position:relative">
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">🏠</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">홈</div>
+              </div>
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">🗺️</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">지도</div>
+              </div>
+              <!-- FAB 버튼 -->
+              <div style="text-align:center;position:relative;margin-top:-20px">
+                <div style="width:56px;height:56px;background:linear-gradient(135deg,#C8102E,#e53e3e);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(200,16,46,0.5);margin:0 auto">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </div>
+                <div style="font-size:10px;color:#ff8899;margin-top:6px;font-weight:800">바로알바</div>
+              </div>
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">💬</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">채팅</div>
+              </div>
+              <div style="text-align:center;opacity:0.5">
+                <div style="font-size:20px">👤</div>
+                <div style="font-size:10px;color:#fff;margin-top:2px">마이</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(200,16,46,0.15);border:1px solid rgba(200,16,46,0.3);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:12px;font-weight:700;color:#ff8899">탭바 중앙에서 20px 위로 돌출</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">그림자 + 그라디언트 강조</div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:#fff7ed;color:var(--orange)">🔴 CTA 강화</div>
+      <h2>탭바 가운데에서<br>확 튀는 빨간 원형 버튼</h2>
+      <p>기존 일반 아이콘 탭은 다른 탭과 시각적 구분이 없었습니다. 탭바 중앙에서 20px 돌출된 원형 FAB(플로팅 액션 버튼)으로 변경해 메인 액션 접근성을 높입니다.</p>
+      <div class="ba-wrap">
+        <div class="ba-card before">
+          <div class="ba-label">BEFORE</div>
+          <ul class="ba-items">
+            <li><span class="ba-icon">😐</span> 일반 아이콘 탭과 동일한 크기</li>
+            <li><span class="ba-icon">😐</span> 시각적 강조 없음</li>
+            <li><span class="ba-icon">😐</span> 탭 중 메인 CTA 구분 불명확</li>
+          </ul>
+        </div>
+        <div class="ba-card after">
+          <div class="ba-label">AFTER</div>
+          <ul class="ba-items">
+            <li><span class="ba-icon">🔴</span> 56px 원형, 20px 상단 돌출</li>
+            <li><span class="ba-icon">✨</span> 빨간 그라디언트 + 그림자 강조</li>
+            <li><span class="ba-icon">👆</span> 탭 어디에서든 즉시 공고 등록·지원 진입</li>
+          </ul>
+        </div>
+      </div>
+      <div class="feat-note">
+        <span>📱</span>
+        <span>iOS/Android 모두 동일한 FAB 디자인 적용. 탭바 배경색과 그림자로 입체감 연출.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 03: 지도 스와이프 플로팅 버튼 -->
+<section class="feat-section" style="background:var(--gray-100)">
+  <p class="section-label" style="color:var(--blue)">Feature 03</p>
+  <h2 class="section-title">지도 스와이프 플로팅 버튼</h2>
+  <p class="section-desc">지도 탭에서 주변 공고를 지도 마커로만 보던 방식에서, 스와이프 카드뷰로 빠르게 탐색하는 방식을 플로팅 버튼 하나로 전환합니다.</p>
+
+  <div class="feat-row" style="margin-top:50px">
+    <div class="feat-visual" style="background:transparent;box-shadow:none;overflow:visible">
+      <div style="width:100%">
+        <!-- 지도 미리보기 -->
+        <div style="background:linear-gradient(160deg,#e8f4fd,#dbeafe);border-radius:20px;min-height:260px;position:relative;overflow:hidden;padding:20px">
+          <div style="position:absolute;inset:0;opacity:0.15;background-image:repeating-linear-gradient(0deg,#3b82f6 0,#3b82f6 1px,transparent 1px,transparent 36px),repeating-linear-gradient(90deg,#3b82f6 0,#3b82f6 1px,transparent 1px,transparent 36px)"></div>
+          <!-- 지도 마커들 -->
+          <div style="position:absolute;top:30%;left:35%">
+            <div style="width:32px;height:32px;background:#C8102E;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2)"></div>
+          </div>
+          <div style="position:absolute;top:50%;left:60%">
+            <div style="width:28px;height:28px;background:#7c3aed;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2)"></div>
+          </div>
+          <div style="position:absolute;top:65%;left:25%">
+            <div style="width:28px;height:28px;background:#3b82f6;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2)"></div>
+          </div>
+          <!-- 플로팅 버튼 -->
+          <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);white-space:nowrap">
+            <div style="background:linear-gradient(135deg,#C8102E,#e53e3e);color:#fff;font-size:13px;font-weight:800;padding:12px 24px;border-radius:100px;box-shadow:0 4px 20px rgba(200,16,46,0.4);display:flex;align-items:center;gap:8px">
+              <span>📋</span>
+              <span>주변알바 8개 스와이프로 보기</span>
+            </div>
+          </div>
+        </div>
+        <!-- 스와이프 카드 미리보기 -->
+        <div style="margin-top:12px;display:flex;gap:10px;overflow:hidden">
+          <div style="flex:0 0 160px;background:#fff;border-radius:14px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);border:1.5px solid #e5e7eb">
+            <div style="font-size:12px;font-weight:900;color:#111;margin-bottom:4px">홀 서빙</div>
+            <div style="font-size:11px;color:#888;margin-bottom:8px">마포구 · 250m</div>
+            <div style="font-size:14px;font-weight:900;color:#C8102E">13,000원</div>
+            <div style="font-size:10px;color:#16a34a;font-weight:700;margin-top:4px">● 오늘 근무 가능</div>
+          </div>
+          <div style="flex:0 0 160px;background:#fff;border-radius:14px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);border:1.5px solid #e5e7eb;opacity:0.6">
+            <div style="font-size:12px;font-weight:900;color:#111;margin-bottom:4px">편의점 카운터</div>
+            <div style="font-size:11px;color:#888;margin-bottom:8px">마포구 · 380m</div>
+            <div style="font-size:14px;font-weight:900;color:#C8102E">12,500원</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:var(--blue-light);color:var(--blue)">🗺️ 지도 UX</div>
+      <h2>지도 보다가 바로<br>스와이프 카드뷰로 전환</h2>
+      <p>지도 탭에서 주변 공고를 탐색하다가 플로팅 버튼 한 번으로 스와이프 카드뷰로 전환합니다. 지도를 나갈 필요 없이 상세 정보 탐색이 가능합니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--blue-light);color:var(--blue)">1</div>
+          <div class="step-body">
+            <div class="step-title">지도 탭 진입 시 플로팅 버튼 자동 표시</div>
+            <div class="step-desc">"주변알바 N개 스와이프로 보기" — N은 현재 지도 뷰포트 내 공고 수 실시간 반영.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--blue-light);color:var(--blue)">2</div>
+          <div class="step-body">
+            <div class="step-title">버튼 탭 시 하단 스와이프 패널 열림</div>
+            <div class="step-desc">지도 위에 카드뷰 오버레이. 지도는 뒤에서 계속 보임.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--blue-light);color:var(--blue)">3</div>
+          <div class="step-body">
+            <div class="step-title">카드 스와이프 시 지도 마커도 동기화</div>
+            <div class="step-desc">현재 보는 카드에 해당하는 마커가 지도에서 강조 표시.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note">
+        <span>📍</span>
+        <span>지도 스크롤 이동 시 버튼의 N 값이 자동 업데이트됩니다. 뷰포트 외 공고는 집계에서 제외.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 04: 몽골 커뮤니티 인사이트 -->
+<section class="feat-section">
+  <p class="section-label" style="color:var(--green)">Feature 04</p>
+  <h2 class="section-title">몽골 커뮤니티 인사이트 — 공고 정보 확장</h2>
+  <p class="section-desc">외국인 구직자, 특히 몽골 커뮤니티에서 중요하게 여기는 픽업장소, 초보환영, 식사포함 정보를 공고에 추가하고 카드에 배지로 노출합니다.</p>
+
+  <div class="feat-row rev" style="margin-top:50px">
+    <div class="feat-visual" style="background:#fff;padding:20px;box-shadow:var(--shadow)">
+      <div style="width:100%">
+        <!-- 공고 카드 예시 -->
+        <div style="background:#fff;border-radius:16px;border:1.5px solid #e5e7eb;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06)">
+          <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);padding:14px 16px;border-bottom:1px solid #bbf7d0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-size:15px;font-weight:900;color:#111">물류 상·하차 작업</div>
+                <div style="font-size:12px;color:#888;margin-top:2px">구로구 가산동 · 14,000원/h</div>
+              </div>
+              <div style="font-size:11px;font-weight:800;background:#C8102E;color:#fff;padding:4px 10px;border-radius:8px">급구</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px">
+            <!-- 배지들 -->
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+              <span style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;display:flex;align-items:center;gap:4px">🚌 픽업 있음</span>
+              <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;display:flex;align-items:center;gap:4px">👶 초보환영</span>
+              <span style="background:#fff7ed;color:#9a3412;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;display:flex;align-items:center;gap:4px">🍱 식사포함</span>
+            </div>
+            <!-- 픽업 장소 -->
+            <div style="background:#fef3c7;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+              <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:4px">픽업 장소</div>
+              <div style="font-size:12px;color:#78350f">구로역 2번 출구 (오전 7:30)</div>
+            </div>
+            <!-- 초보환영 / 식사 정보 -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="background:#f0fdf4;border-radius:10px;padding:10px 12px">
+                <div style="font-size:11px;font-weight:800;color:#166534;margin-bottom:2px">초보환영</div>
+                <div style="font-size:12px;color:#15803d">경력 무관, 당일 교육</div>
+              </div>
+              <div style="background:#fff7ed;border-radius:10px;padding:10px 12px">
+                <div style="font-size:11px;font-weight:800;color:#9a3412;margin-bottom:2px">식사 제공</div>
+                <div style="font-size:12px;color:#c2410c">점심 도시락 1식</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:var(--green-light);color:var(--green)">🌏 커뮤니티 인사이트</div>
+      <h2>외국인 구직자가<br>꼭 알고 싶은 정보</h2>
+      <p>몽골·중앙아시아 커뮤니티 피드백을 바탕으로, 이동 수단(픽업), 경력 조건(초보환영), 복지(식사포함)를 공고에 추가했습니다. 커뮤니티에서 검증된 핵심 정보입니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--green-light);color:var(--green)">1</div>
+          <div class="step-body">
+            <div class="step-title">공고 등록 폼에 3개 필드 추가</div>
+            <div class="step-desc">픽업장소 텍스트 입력, 초보환영 토글, 식사포함 토글 (선택 사항).</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--green-light);color:var(--green)">2</div>
+          <div class="step-body">
+            <div class="step-title">공고 카드에 배지 자동 표시</div>
+            <div class="step-desc">입력된 항목만 배지로 노출. 비어있으면 배지 미표시.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--green-light);color:var(--green)">3</div>
+          <div class="step-body">
+            <div class="step-title">상세 페이지에 정보 박스 추가</div>
+            <div class="step-desc">픽업 장소·시간, 식사 종류, 초보 교육 여부를 별도 섹션으로 안내.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note">
+        <span>🌐</span>
+        <span>픽업 장소 필드는 다국어 입력 가능. 몽골어/러시아어 텍스트도 그대로 저장·표시됩니다.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 05: 국적 조건 필터 -->
+<section class="feat-section" style="background:var(--gray-100)">
+  <p class="section-label" style="color:var(--red)">Feature 05</p>
+  <h2 class="section-title">국적 조건 필터 — 4단계 선택 + 자동 차단</h2>
+  <p class="section-desc">공고 등록 시 국적 조건을 4단계로 설정합니다. 외국인 유저는 피드에서 자동 필터되고, 한국인only 공고는 지원 자체가 차단됩니다.</p>
+
+  <div class="feat-row" style="margin-top:50px">
+    <div class="feat-visual" style="background:#fff;padding:20px;box-shadow:var(--shadow)">
+      <div style="width:100%">
+        <!-- 공고 등록 폼 필드 -->
+        <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:16px">공고 등록 — 국적 조건</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          <div style="border:2px solid #C8102E;border-radius:12px;padding:14px 16px;background:#fff0f2;display:flex;align-items:center;gap:12px">
+            <div style="width:20px;height:20px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#C8102E">국적 무관</div>
+              <div style="font-size:11px;color:#888">누구나 지원 가능</div>
+            </div>
+          </div>
+          <div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <div style="width:20px;height:20px;border-radius:50%;border:2px solid #ddd;flex-shrink:0"></div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#111">한국인만</div>
+              <div style="font-size:11px;color:#888">외국인 지원 자동 차단</div>
+            </div>
+          </div>
+          <div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <div style="width:20px;height:20px;border-radius:50%;border:2px solid #ddd;flex-shrink:0"></div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#111">한국어 필수</div>
+              <div style="font-size:11px;color:#888">기초 회화 가능자만</div>
+            </div>
+          </div>
+          <div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+            <div style="width:20px;height:20px;border-radius:50%;border:2px solid #ddd;flex-shrink:0"></div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#111">외국인 환영</div>
+              <div style="font-size:11px;color:#888">외국인 우대 공고로 배지 표시</div>
+            </div>
+          </div>
+        </div>
+        <!-- 차단 메시지 예시 -->
+        <div style="background:#fef2f2;border-radius:12px;padding:14px;border:1.5px solid #fecaca">
+          <div style="font-size:12px;font-weight:800;color:#ef4444;margin-bottom:6px">지원 차단 메시지 (외국인 유저 시)</div>
+          <div style="font-size:13px;color:#7f1d1d;line-height:1.5">이 공고는 한국 국적 지원자만 가능합니다.<br>다른 공고를 찾아보세요.</div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:var(--red-light);color:var(--red)">🌐 국적 필터</div>
+      <h2>업주는 조건 설정,<br>외국인 유저는 자동 필터링</h2>
+      <p>불필요한 지원-거절 사이클을 줄입니다. 업주가 설정한 국적 조건에 따라 외국인 유저의 피드와 지원 자체를 자동으로 제어합니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">1</div>
+          <div class="step-body">
+            <div class="step-title">공고 등록 시 4단계 선택</div>
+            <div class="step-desc">국적무관 / 한국인만 / 한국어필수 / 외국인환영. 기본값은 국적무관.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">2</div>
+          <div class="step-body">
+            <div class="step-title">외국인 유저 피드 자동 필터</div>
+            <div class="step-desc">nationality 필드가 비한국인인 유저에게 "한국인만" 공고는 피드에서 제외.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">3</div>
+          <div class="step-body">
+            <div class="step-title">한국인only 공고 — 지원 버튼 차단</div>
+            <div class="step-desc">외국인 유저가 상세 페이지 진입 시 지원 버튼 비활성화 + 안내 메시지 표시.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--red-light);color:var(--red)">4</div>
+          <div class="step-body">
+            <div class="step-title">외국인환영 공고 — 배지 자동 표시</div>
+            <div class="step-desc">카드와 상세에 "🌏 외국인환영" 초록 배지 노출. 외국인 피드에서 상위 노출.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note">
+        <span>⚙️</span>
+        <span>DB: job_postings 테이블에 <code>nationality_filter TEXT DEFAULT 'any'</code> 컬럼 추가 필요 (any / korean_only / korean_required / foreigner_welcome).</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 06: 팀모집 -->
+<section class="feat-section">
+  <p class="section-label" style="color:var(--purple)">Feature 06</p>
+  <h2 class="section-title">팀모집 — 여럿이서 함께 알바</h2>
+  <p class="section-desc">공고에 팀모집 토글을 추가합니다. 몇 명 모집인지, 현재 몇 명 채워졌는지를 진행률 바와 함께 카드·상세·지도 마커에 모두 표시합니다.</p>
+
+  <div class="feat-row rev" style="margin-top:50px">
+    <div class="feat-visual" style="background:#fff;padding:20px;box-shadow:var(--shadow)">
+      <div style="width:100%">
+        <!-- 팀모집 공고 카드 -->
+        <div style="background:#fff;border-radius:16px;border:2px solid #7c3aed;overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,0.15)">
+          <div style="background:linear-gradient(135deg,#f3e8ff,#ede9fe);padding:14px 16px;border-bottom:1px solid #ddd6fe">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-size:15px;font-weight:900;color:#111">이벤트 스태프</div>
+                <div style="font-size:12px;color:#888;margin-top:2px">성동구 성수동 · 15,000원/h</div>
+              </div>
+              <span style="background:#7c3aed;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;display:flex;align-items:center;gap:4px">👥 팀모집</span>
+            </div>
+          </div>
+          <div style="padding:14px 16px">
+            <!-- 팀 설명 -->
+            <div style="background:#f3e8ff;border-radius:10px;padding:10px 12px;margin-bottom:14px">
+              <div style="font-size:12px;color:#6d28d9;line-height:1.5">입장 안내 및 물품 배포 팀. 친구나 지인과 함께 지원 가능합니다.</div>
+            </div>
+            <!-- 진행률 바 -->
+            <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:12px;font-weight:800;color:#7c3aed">모집 현황</div>
+              <div style="font-size:12px;font-weight:800;color:#7c3aed">3 / 5명</div>
+            </div>
+            <div style="background:#e5e7eb;border-radius:100px;height:10px;overflow:hidden;margin-bottom:8px">
+              <div style="height:100%;width:60%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:100px"></div>
+            </div>
+            <div style="font-size:11px;color:#7c3aed;font-weight:700;text-align:right">2자리 남음</div>
+            <!-- 지원 버튼 -->
+            <div style="margin-top:14px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;text-align:center;padding:12px;border-radius:12px;font-size:13px;font-weight:800">팀으로 지원하기</div>
+          </div>
+        </div>
+        <!-- 지도 마커 예시 -->
+        <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 12px rgba(124,58,237,0.4)"></div>
+          <div style="font-size:12px;color:#888">지도에서 보라색 마커 = 팀모집 공고</div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:var(--purple-light);color:var(--purple)">👥 팀 기능</div>
+      <h2>친구·지인과 함께<br>팀으로 알바 신청</h2>
+      <p>혼자 가기 불안하거나 이벤트 스태프처럼 여러 명이 필요한 공고에 팀모집 옵션을 추가합니다. 모집 진행률을 실시간으로 보여줍니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--purple-light);color:var(--purple)">1</div>
+          <div class="step-body">
+            <div class="step-title">공고 등록 시 팀모집 토글 + 설명 입력</div>
+            <div class="step-desc">팀모집 ON 시 모집 인원 수(2~20명)와 팀 안내 텍스트 입력 가능.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--purple-light);color:var(--purple)">2</div>
+          <div class="step-body">
+            <div class="step-title">카드·상세·지도 마커에 보라색 배지 표시</div>
+            <div class="step-desc">팀모집 공고는 보라색 "👥 팀모집" 배지와 함께 지도에서도 보라색 마커로 구분.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--purple-light);color:var(--purple)">3</div>
+          <div class="step-body">
+            <div class="step-title">진행률 바 + "N자리 남음" 표시</div>
+            <div class="step-desc">현재 확정 인원 / 총 모집 인원 진행률 바. 잔여 자리는 긴박감을 주어 지원을 유도.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--purple-light);color:var(--purple)">4</div>
+          <div class="step-body">
+            <div class="step-title">정원 마감 시 "모집완료" 배지로 자동 전환</div>
+            <div class="step-desc">확정 인원이 모집 인원에 달하면 배지가 "✅ 모집완료"로 변경, 지원 버튼 비활성화.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note">
+        <span>⚙️</span>
+        <span>DB: job_postings에 <code>is_team_recruit BOOLEAN DEFAULT FALSE, team_size INT, team_description TEXT</code> 추가 필요.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 07: 바로모임 서비스 -->
+<section class="feat-section" style="background:linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#2d1b69 100%)">
+  <p class="section-label" style="color:#c4b5fd">Feature 07</p>
+  <h2 class="section-title" style="color:#fff">바로모임 — 새로운 소셜 모임 서비스</h2>
+  <p class="section-desc" style="color:rgba(255,255,255,0.6)">별도 탭 없이 홈탭에서 진입하는 소셜 모임 서비스. 알바 플랫폼을 넘어 커뮤니티로 성장하는 첫 걸음입니다.</p>
+
+  <div class="feat-row" style="margin-top:50px">
+    <div class="feat-visual" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);padding:20px;box-shadow:none">
+      <div style="width:100%">
+        <!-- 모임 카드 목록 -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <!-- 모임 카드 1 -->
+          <div style="background:rgba(255,255,255,0.08);border-radius:14px;padding:14px;border:1px solid rgba(255,255,255,0.12)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+              <div>
+                <span style="font-size:10px;font-weight:800;background:#7c3aed;color:#fff;padding:2px 8px;border-radius:6px;margin-right:6px">스포츠</span>
+                <span style="font-size:11px;color:rgba(255,255,255,0.5)">공개</span>
+              </div>
+              <span style="font-size:11px;color:#a78bfa;font-weight:700">4/10명</span>
+            </div>
+            <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:4px">홍대 풋살 정기 모임</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5)">매주 토요일 · 홍대 풋살장</div>
+            <div style="background:#e5e7eb;border-radius:100px;height:6px;margin-top:10px;overflow:hidden">
+              <div style="height:100%;width:40%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:100px"></div>
+            </div>
+          </div>
+          <!-- 모임 카드 2 (비공개) -->
+          <div style="background:rgba(255,255,255,0.08);border-radius:14px;padding:14px;border:1px solid rgba(124,58,237,0.4)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+              <div>
+                <span style="font-size:10px;font-weight:800;background:#d97706;color:#fff;padding:2px 8px;border-radius:6px;margin-right:6px">카풀</span>
+                <span style="font-size:11px;color:#c4b5fd;font-weight:700">🔒 초대 전용</span>
+              </div>
+              <span style="font-size:11px;color:#a78bfa;font-weight:700">2/4명</span>
+            </div>
+            <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:4px">인천 → 수원 카풀 매칭</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5)">평일 출퇴근 · 초대 링크로만 입장</div>
+          </div>
+          <!-- 모임 카드 3 -->
+          <div style="background:rgba(255,255,255,0.08);border-radius:14px;padding:14px;border:1px solid rgba(255,255,255,0.12)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+              <div>
+                <span style="font-size:10px;font-weight:800;background:#16a34a;color:#fff;padding:2px 8px;border-radius:6px;margin-right:6px">소셜</span>
+                <span style="font-size:11px;color:rgba(255,255,255,0.5)">공개</span>
+              </div>
+              <span style="font-size:11px;color:#a78bfa;font-weight:700">18/20명</span>
+            </div>
+            <div style="font-size:14px;font-weight:900;color:#fff;margin-bottom:4px">외국인 한국어 스터디</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5)">매주 일요일 · 홍대 카페</div>
+            <div style="background:#e5e7eb;border-radius:100px;height:6px;margin-top:10px;overflow:hidden">
+              <div style="height:100%;width:90%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:100px"></div>
+            </div>
+          </div>
+        </div>
+        <!-- 모임 개설 버튼 -->
+        <div style="margin-top:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;text-align:center;padding:14px;border-radius:14px;font-size:14px;font-weight:900">+ 새 모임 개설하기</div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:rgba(124,58,237,0.25);color:#c4b5fd;border:1px solid rgba(124,58,237,0.4)">🎉 신규 서비스</div>
+      <h2 style="color:#fff">알바 플랫폼을 넘어<br>커뮤니티 소셜 서비스로</h2>
+      <p style="color:rgba(255,255,255,0.6)">바로모임은 홈탭에서 바로 진입하는 소셜 모임 서비스입니다. 스포츠·취미·파티·카풀 등 다양한 모임을 개설하고 참가 신청을 받습니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:rgba(124,58,237,0.3);color:#c4b5fd">1</div>
+          <div class="step-body">
+            <div class="step-title" style="color:#fff">Phase 1 — 모임 목록·상세·개설·참가</div>
+            <div class="step-desc" style="color:rgba(255,255,255,0.5)">모임 목록/상세/개설폼/참가신청(승인제)/공개·비공개(초대 딥링크)/카카오 공유. 카테고리: 스포츠/취미/소셜/파티/카풀/기타.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:rgba(124,58,237,0.3);color:#c4b5fd">2</div>
+          <div class="step-body">
+            <div class="step-title" style="color:#fff">Phase 2 — Supabase Realtime 단체채팅</div>
+            <div class="step-desc" style="color:rgba(255,255,255,0.5)">승인된 참가자+주최자만 입장 가능한 단체채팅방. Supabase Realtime Broadcast 기반.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:rgba(124,58,237,0.3);color:#c4b5fd">3</div>
+          <div class="step-body">
+            <div class="step-title" style="color:#fff">지도에서 알바 ↔ 모임 토글</div>
+            <div class="step-desc" style="color:rgba(255,255,255,0.5)">지도 탭에서 알바 마커와 모임 마커를 토글 버튼으로 전환. 장소 기반 탐색.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:rgba(124,58,237,0.3);color:#c4b5fd">4</div>
+          <div class="step-body">
+            <div class="step-title" style="color:#fff">공개 / 비공개(초대 딥링크) 모임</div>
+            <div class="step-desc" style="color:rgba(255,255,255,0.5)">비공개 모임은 딥링크 공유 시에만 참가 신청 가능. 카카오톡/링크 공유 지원.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6)">
+        <span>🗃️</span>
+        <span>DB: <code>meetings</code> 테이블(id, title, category, host_id, max_members, is_public, location, description, created_at), <code>meeting_members</code> 테이블(meeting_id, user_id, status: pending/approved/rejected) 신규 생성.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 카테고리 그리드 -->
+  <div style="margin-top:60px">
+    <div style="font-size:14px;font-weight:800;color:rgba(255,255,255,0.6);margin-bottom:20px;letter-spacing:1px">모임 카테고리</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">⚽</div>
+        <div style="font-size:13px;font-weight:800;color:#fff">스포츠</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">풋살, 배드민턴, 등산</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🎨</div>
+        <div style="font-size:13px;font-weight:800;color:#fff">취미</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">보드게임, 영화, 독서</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🤝</div>
+        <div style="font-size:13px;font-weight:800;color:#fff">소셜</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">언어교환, 네트워킹</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🎉</div>
+        <div style="font-size:13px;font-weight:800;color:#fff">파티</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">생일, 모임, 피크닉</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">🚗</div>
+        <div style="font-size:13px;font-weight:800;color:#fff">카풀</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">출퇴근, 장거리 이동</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">✨</div>
+        <div style="font-size:13px;font-weight:800;color:#fff">기타</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">분류 외 모든 모임</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE 08: 구독 플랜 통합 -->
+<section class="feat-section">
+  <p class="section-label" style="color:var(--purple)">Feature 08</p>
+  <h2 class="section-title">구독 플랜 통합 — 바로모임 혜택 포함</h2>
+  <p class="section-desc">기존 업주 구독 플랜에 바로모임 개설 한도를 통합합니다. 무료부터 프로까지 3단계로 모임 서비스를 차별화합니다.</p>
+
+  <div class="feat-row" style="margin-top:50px">
+    <div class="feat-visual" style="background:linear-gradient(160deg,#f8f8ff,#f3e8ff);padding:24px;box-shadow:var(--shadow)">
+      <div style="width:100%;display:flex;flex-direction:column;gap:14px">
+        <!-- 무료 플랜 -->
+        <div style="background:#fff;border-radius:14px;padding:18px;border:2px solid #e5e7eb;position:relative">
+          <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px">FREE</div>
+          <div style="font-size:22px;font-weight:900;color:#111;margin-bottom:4px">무료</div>
+          <div style="font-size:12px;color:#888;margin-bottom:12px">기본 알바 공고 + 바로모임 입장</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#555">
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#16a34a">✓</span> 알바 공고 월 5개 등록</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#16a34a">✓</span> 바로모임 월 <strong>1개</strong> 개설</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#aaa">–</span> 급구 우선 노출 없음</div>
+          </div>
+        </div>
+        <!-- 베이직 플랜 -->
+        <div style="background:#fff;border-radius:14px;padding:18px;border:2px solid #7c3aed;position:relative">
+          <div style="position:absolute;top:-10px;right:14px;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:100px">POPULAR</div>
+          <div style="font-size:12px;font-weight:800;color:#7c3aed;margin-bottom:8px">BASIC</div>
+          <div style="font-size:22px;font-weight:900;color:#111;margin-bottom:4px">₩9,900<span style="font-size:13px;font-weight:400;color:#888">/월</span></div>
+          <div style="font-size:12px;color:#888;margin-bottom:12px">소규모 업주 + 모임 주최자</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#555">
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#16a34a">✓</span> 알바 공고 월 30개 등록</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#7c3aed">✓</span> 바로모임 월 <strong style="color:#7c3aed">10개</strong> 개설</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#16a34a">✓</span> 급구 배지 우선 노출</div>
+          </div>
+        </div>
+        <!-- 프로 플랜 -->
+        <div style="background:linear-gradient(135deg,#1a0a2e,#2d1b69);border-radius:14px;padding:18px;border:2px solid #7c3aed">
+          <div style="font-size:12px;font-weight:800;color:#c4b5fd;margin-bottom:8px">PRO</div>
+          <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px">₩29,900<span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.5)">/월</span></div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px">대형 업주 + 커뮤니티 운영자</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:rgba(255,255,255,0.8)">
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#6ee7b7">✓</span> 알바 공고 무제한 등록</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#c4b5fd">✓</span> 바로모임 <strong style="color:#c4b5fd">무제한</strong> 개설</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#6ee7b7">✓</span> 모범파트너 배지 + 최상단 고정</div>
+            <div style="display:flex;align-items:center;gap:6px"><span style="color:#6ee7b7">✓</span> 단골 우선 알림 강화</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-body">
+      <div class="feat-badge" style="background:var(--purple-light);color:var(--purple)">💎 수익화</div>
+      <h2>알바 + 모임을<br>하나의 플랜으로 통합</h2>
+      <p>기존 알바 공고 등록 한도에 바로모임 개설 한도를 묶어 업주가 모임 서비스까지 자연스럽게 사용하도록 유도합니다. 업주의 플랫폼 체류 시간을 늘립니다.</p>
+      <div class="feat-steps">
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--gray-100);color:var(--gray-500)">FREE</div>
+          <div class="step-body">
+            <div class="step-title">무료 — 바로모임 월 1개 개설</div>
+            <div class="step-desc">기존 무료 기능 유지. 바로모임 개설은 월 1회로 체험 가능.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:var(--purple-light);color:var(--purple)">₩9.9K</div>
+          <div class="step-body">
+            <div class="step-title">베이직 ₩9,900 — 바로모임 월 10개</div>
+            <div class="step-desc">소규모 업주 + 커뮤니티 활동적 주최자에게 적합한 구간.</div>
+          </div>
+        </div>
+        <div class="feat-step">
+          <div class="step-num" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff">₩29.9K</div>
+          <div class="step-body">
+            <div class="step-title">프로 ₩29,900 — 바로모임 무제한 + 최상단 고정</div>
+            <div class="step-desc">대형 업주·커뮤니티 운영자. 모범파트너 배지 + 공고 최상단 고정 포함.</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-note">
+        <span>💡</span>
+        <span>바로모임은 비업주(알바생) 유저도 무료로 모임 참가 가능. 개설만 플랜 제한 적용.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEPLOYMENT INFO -->
+<section class="feat-section" style="background:linear-gradient(135deg,#0f0f0f,#1a0008)">
+  <div style="text-align:center;max-width:640px;margin:0 auto">
+    <p class="section-label" style="color:rgba(200,16,46,0.8)">Deployment</p>
+    <h2 class="section-title" style="color:#fff">배포 정보</h2>
+    <p class="section-desc" style="color:rgba(255,255,255,0.5);margin:0 auto 48px">모든 기능이 오늘 배포 완료됐습니다. 앱 재시작 시 자동 업데이트됩니다.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;text-align:left">
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
+        <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">SW 버전</div>
+        <div style="font-size:22px;font-weight:900;color:#fff">v276</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">baroalba-v276</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
+        <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">배포일</div>
+        <div style="font-size:22px;font-weight:900;color:#fff">06.30</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">2026년 6월 30일</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
+        <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">플랫폼</div>
+        <div style="font-size:22px;font-weight:900;color:#fff">Web + Android</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">Vercel 자동 배포</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
+        <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">신규 기능</div>
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd">8개</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">DDL 2개 필요</div>
+      </div>
+    </div>
+    <!-- DDL 요약 -->
+    <div style="margin-top:24px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:14px;padding:20px;text-align:left">
+      <div style="font-size:12px;font-weight:800;color:#c4b5fd;margin-bottom:12px">필요 DDL 요약</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:2;font-family:monospace">
+        job_postings: nationality_filter TEXT, is_team_recruit BOOL, team_size INT, team_description TEXT,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pickup_location TEXT, beginner_ok BOOL, meal_included BOOL<br>
+        meetings: 신규 테이블 (id, title, category, host_id, max_members, is_public, ...)<br>
+        meeting_members: 신규 테이블 (meeting_id, user_id, status)
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>바로알바</strong> — 2026.06.30 신규 기능 업데이트 문서<br>
+  <span style="margin-top:8px;display:block">멀티무브 주식회사 · baroalba.multimove.co.kr · 내부 배포용</span>
+</footer>
+
+</body>
+</html>
