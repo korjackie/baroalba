@@ -895,6 +895,40 @@
     @keyframes emptyFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
     @keyframes swipe-float-pulse { 0%,100%{box-shadow:0 4px 18px rgba(200,16,46,0.45)} 50%{box-shadow:0 6px 28px rgba(200,16,46,0.75)} }
+
+    /* ══ 바로모임 ══ */
+    .moim-card {
+      background:#fff; border-radius:18px; overflow:hidden;
+      box-shadow:0 2px 12px rgba(0,0,0,0.09); border:1.5px solid #f0f0f0; cursor:pointer;
+    }
+    .moim-card:active { opacity:0.85; }
+    .moim-cat-chip {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:6px 14px; border-radius:20px; border:1.5px solid #e5e7eb;
+      background:#f8f8f8; color:#555; font-size:12px; font-weight:600;
+      cursor:pointer; white-space:nowrap; flex-shrink:0;
+    }
+    .moim-cat-chip.active { background:#EDE9FE; border-color:#7C3AED; color:#7C3AED; font-weight:800; }
+    .map-mode-toggle {
+      position:fixed;
+      bottom: calc(var(--nav-h) + var(--sheet-peek) + 16px + 48px + 10px);
+      left: 16px;
+      background:#fff; border-radius:22px; padding:0; overflow:hidden;
+      box-shadow:0 2px 8px rgba(0,0,0,0.12); z-index:200;
+      display:flex; border:1.5px solid #e5e7eb;
+    }
+    .map-mode-btn {
+      padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer;
+      border:none; background:none; color:#999;
+    }
+    .map-mode-btn.active { background:#7C3AED; color:#fff; border-radius:20px; }
+    #map-mode-toggle { display:none; }
+    .moim-marker-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+    .moim-marker-bubble {
+      background:#7C3AED; color:#fff; border-radius:12px; padding:5px 10px;
+      font-size:11px; font-weight:800; white-space:nowrap; box-shadow:0 2px 8px rgba(124,58,237,0.4);
+    }
+    .moim-marker-tail { width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #7C3AED; }
     @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
     .sk-card { background:#fff;border-radius:16px;padding:16px;margin:8px 0;box-shadow:0 1px 4px rgba(0,0,0,0.06); }
     .sk-line { background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px; }
@@ -1615,6 +1649,12 @@
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 </div>
 
+<!-- 지도 모드 토글 (알바|모임) -->
+<div class="map-mode-toggle" id="map-mode-toggle">
+  <button class="map-mode-btn active" id="mapmode-job"  onclick="setMapMode('job')">💼 알바</button>
+  <button class="map-mode-btn"        id="mapmode-moim" onclick="setMapMode('moim')">🤝 모임</button>
+</div>
+
 <!-- 반경 배지 -->
 <div class="radius-badge" id="radius-badge" onclick="toggleRadiusPopup()">
   &#128225; <span id="radius-txt">10km</span>
@@ -2245,6 +2285,22 @@
           <button onclick="setHomeFilter(document.querySelector('[data-nat=foreigner]'),'','','foreigner')" style="font-size:12px;color:#16a34a;font-weight:700;background:none;border:none;cursor:pointer">더보기 ›</button>
         </div>
         <div id="home-foreigner-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+      </div>
+
+      <!-- 🤝 바로모임 -->
+      <div style="padding:16px 16px 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,#7C3AED,#5B21B6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">🤝</div>
+            <span style="font-size:15px;font-weight:900;color:#111">바로모임</span>
+            <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:#7C3AED;padding:2px 7px;border-radius:8px">NEW</span>
+          </div>
+          <button onclick="openMoimPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer">전체보기 ›</button>
+        </div>
+        <div id="home-moim-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+          <div style="color:#bbb;font-size:13px;padding:20px 0">불러오는 중...</div>
+        </div>
+        <button onclick="openMoimPanel(true)" style="width:100%;margin-top:10px;padding:11px;border-radius:14px;border:1.5px dashed #7C3AED;background:#F5F3FF;color:#7C3AED;font-size:13px;font-weight:800;cursor:pointer">+ 모임 만들기</button>
       </div>
 
       <!-- 🏆 모범 업주 / 알바생 -->
@@ -3343,6 +3399,201 @@
   </div>
   <div id="my-lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
     <div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     바로모임 패널들 (z-index:370 — 기존 community:360 위)
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- ① 바로모임 목록 패널 -->
+<div class="full-panel" id="panel-moim" style="z-index:370">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="closeMoimPanel()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span style="font-size:18px;font-weight:900;color:#111">🤝 바로모임</span>
+    </div>
+    <button onclick="openMoimCreate()" style="background:#7C3AED;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:800;cursor:pointer">+ 모임 만들기</button>
+  </div>
+
+  <!-- 카테고리 필터 -->
+  <div style="padding:10px 16px;border-bottom:1px solid #f5f5f5;flex-shrink:0">
+    <div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px">
+      <button class="moim-cat-chip active" data-cat="" onclick="filterMoimList(this,'')">전체</button>
+      <button class="moim-cat-chip" data-cat="스포츠" onclick="filterMoimList(this,'스포츠')">🎾 스포츠</button>
+      <button class="moim-cat-chip" data-cat="취미" onclick="filterMoimList(this,'취미')">🍷 취미생활</button>
+      <button class="moim-cat-chip" data-cat="소셜" onclick="filterMoimList(this,'소셜')">🤝 소셜</button>
+      <button class="moim-cat-chip" data-cat="파티" onclick="filterMoimList(this,'파티')">🎉 파티</button>
+      <button class="moim-cat-chip" data-cat="카풀" onclick="filterMoimList(this,'카풀')">🚗 카풀</button>
+      <button class="moim-cat-chip" data-cat="기타" onclick="filterMoimList(this,'기타')">💡 기타</button>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 80px" id="moim-list-container">
+    <div style="text-align:center;padding:40px 0;color:#bbb">
+      <div style="font-size:32px;margin-bottom:8px">🤝</div>
+      <div style="font-size:14px;font-weight:600">모임을 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ② 바로모임 상세 패널 -->
+<div class="full-panel" id="panel-moim-detail" style="z-index:380">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button onclick="closeMoimDetail()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span style="font-size:17px;font-weight:900;color:#111" id="moim-detail-title">모임 상세</span>
+    <button id="moim-share-btn" onclick="shareMoim()" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:4px" title="공유">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </button>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px" id="moim-detail-body"></div>
+  <!-- 하단 CTA -->
+  <div style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:12px 16px;padding-bottom:calc(12px + var(--sab-safe));flex-shrink:0">
+    <button id="moim-apply-btn" onclick="applyMoim()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer">참가 신청하기</button>
+  </div>
+</div>
+
+<!-- ③ 바로모임 개설 폼 패널 -->
+<div class="full-panel" id="panel-moim-create" style="z-index:390">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button onclick="closeMoimCreate()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span id="moim-create-title" style="font-size:17px;font-weight:900;color:#111">모임 만들기</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;padding-bottom:80px">
+    <input type="hidden" id="f-moim-id" value="">
+
+    <!-- 카테고리 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">카테고리 *</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="moim-cat-select">
+        <button type="button" onclick="selectMoimCat(this,'스포츠')" style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🎾 스포츠</button>
+        <button type="button" onclick="selectMoimCat(this,'취미')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🍷 취미생활</button>
+        <button type="button" onclick="selectMoimCat(this,'소셜')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🤝 소셜</button>
+        <button type="button" onclick="selectMoimCat(this,'파티')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🎉 파티</button>
+        <button type="button" onclick="selectMoimCat(this,'카풀')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">🚗 카풀</button>
+        <button type="button" onclick="selectMoimCat(this,'기타')"   style="padding:10px 4px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer">💡 기타</button>
+      </div>
+      <input type="hidden" id="f-moim-cat" value="">
+    </div>
+
+    <!-- 세부 카테고리 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">세부 종류</div>
+      <input id="f-moim-subcat" class="form-input" placeholder="예) 테니스, 와인, 독서, 러닝 등">
+    </div>
+
+    <!-- 제목 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">모임 제목 *</div>
+      <input id="f-moim-title" class="form-input" placeholder="예) 주말 테니스 같이 치실 분!">
+    </div>
+
+    <!-- 설명 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">모임 소개</div>
+      <textarea id="f-moim-desc" class="form-input" rows="4" placeholder="모임 목적, 분위기, 주의사항 등 자유롭게 적어주세요" style="resize:none;min-height:90px;font-family:inherit"></textarea>
+    </div>
+
+    <!-- 날짜/시간 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">날짜 *</div>
+        <input id="f-moim-date" class="form-input" type="date">
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">시간</div>
+        <input id="f-moim-time" class="form-input" type="time" value="14:00">
+      </div>
+    </div>
+
+    <!-- 장소 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">장소명</div>
+      <input id="f-moim-location" class="form-input" placeholder="예) 잠실 실내 테니스장, 강남 와인바 등">
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">상세 주소</div>
+      <input id="f-moim-address" class="form-input" placeholder="도로명 주소">
+    </div>
+
+    <!-- 인원/참가비 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">최대 인원 *</div>
+        <input id="f-moim-maxcount" class="form-input" type="number" min="2" max="200" value="10">
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">참가비 (원)</div>
+        <input id="f-moim-fee" class="form-input" type="number" min="0" value="0" placeholder="0=무료">
+      </div>
+    </div>
+
+    <!-- 스포츠 실력 조건 -->
+    <div id="moim-skill-section" style="display:none;margin-bottom:16px;padding:14px;background:#F5F3FF;border-radius:14px;border:1.5px solid #DDD6FE">
+      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🏅 실력 조건</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="moim-skill-btns">
+        <button type="button" onclick="selectMoimSkill(this,'무관')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #DDD6FE;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#7C3AED">무관</button>
+        <button type="button" onclick="selectMoimSkill(this,'입문')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">입문</button>
+        <button type="button" onclick="selectMoimSkill(this,'중급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">중급</button>
+        <button type="button" onclick="selectMoimSkill(this,'상급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">상급</button>
+      </div>
+      <input type="hidden" id="f-moim-skill" value="무관">
+      <div style="margin-top:10px">
+        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px">핸디/수준 설명 <span style="font-weight:400;color:#9CA3AF">(선택)</span></div>
+        <input id="f-moim-skill-desc" class="form-input" placeholder="예) 100타 이하, NTRP 3.0 이상 등">
+      </div>
+    </div>
+
+    <!-- 성별 조건 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">성별 조건</div>
+      <div style="display:flex;gap:6px">
+        <button type="button" onclick="selectMoimGender(this,'any')"    style="padding:8px 18px;border-radius:20px;border:2px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:800;cursor:pointer">무관</button>
+        <button type="button" onclick="selectMoimGender(this,'male')"   style="padding:8px 18px;border-radius:20px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">남성만</button>
+        <button type="button" onclick="selectMoimGender(this,'female')" style="padding:8px 18px;border-radius:20px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">여성만</button>
+      </div>
+      <input type="hidden" id="f-moim-gender" value="any">
+    </div>
+
+    <!-- 공개 설정 -->
+    <div style="margin-bottom:16px;padding:14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:14px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🔒 공개 설정</div>
+      <div style="display:flex;gap:8px">
+        <button type="button" id="pub-btn-public"  onclick="selectMoimPublic(true)"  style="flex:1;padding:10px;border-radius:12px;border:2px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:12px;font-weight:800;cursor:pointer">🌍 공개 모임<br><span style="font-size:10px;font-weight:400">누구나 검색 가능</span></button>
+        <button type="button" id="pub-btn-private" onclick="selectMoimPublic(false)" style="flex:1;padding:10px;border-radius:12px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">🔐 비공개 모임<br><span style="font-size:10px;font-weight:400">초대 링크로만</span></button>
+      </div>
+      <input type="hidden" id="f-moim-public" value="true">
+    </div>
+
+    <button onclick="submitMoimForm()" style="width:100%;padding:15px;background:#7C3AED;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer" id="moim-submit-btn">모임 개설하기</button>
+  </div>
+</div>
+
+<!-- ④ 바로모임 단체채팅 패널 -->
+<div class="full-panel" id="panel-moim-chat" style="z-index:400">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button onclick="closeMoimChat()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div>
+      <div style="font-size:15px;font-weight:900;color:#111" id="moim-chat-title">모임 채팅</div>
+      <div style="font-size:11px;color:#7C3AED;font-weight:700" id="moim-chat-members">참가자 -명</div>
+    </div>
+  </div>
+  <div id="moim-chat-messages" style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch"></div>
+  <div style="display:flex;gap:8px;padding:10px 16px;padding-bottom:calc(10px + var(--sab-safe));border-top:1px solid #f0f0f0;flex-shrink:0;background:#fff">
+    <input id="moim-chat-input" type="text" placeholder="메시지 입력..." maxlength="300"
+      style="flex:1;border:1.5px solid #e5e7eb;border-radius:20px;padding:10px 14px;font-size:14px;outline:none;background:#f9fafb"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMoimChat();}">
+    <button onclick="sendMoimChat()" style="background:#7C3AED;color:#fff;border:none;border-radius:50%;width:42px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
   </div>
 </div>
 
@@ -4496,7 +4747,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=282').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=283').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -4569,6 +4820,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (deepChatId) { sessionStorage.removeItem('pending_deep_chat'); sessionStorage.removeItem('pending_deep_chat_view'); }
   await loadJobs();
   if (deepJobId) openDeepLink(deepJobId);
+  // 바로모임 딥링크 처리
+  const deepMoimCode = _dParams.get('moim');
+  if (deepMoimCode) setTimeout(() => handleMoimDeeplink(deepMoimCode), 800);
   if (deepChatId && currentUser) setTimeout(() => {
     if (deepChatView === 'worker') openWChat(deepChatId, '업주');
     else openChat(deepChatId, '채팅');
@@ -5285,6 +5539,553 @@ function renderUrgentFeed() {
 function renderTodayPick() {}
 
 // ══════════════════════════════════════════════════════════
+// ── 바로모임 (Baro Moim) ────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+
+const MOIM_CAT_EMOJI = { 스포츠:'🎾', 취미:'🍷', 소셜:'🤝', 파티:'🎉', 카풀:'🚗', 기타:'💡' };
+const MOIM_PLAN_LIMITS = { free: 1, standard: 10, pro: Infinity };
+
+let _currentMoimId = null;   // 상세 보고 있는 모임 id
+let _moimRealtimeCh = null;  // 단체채팅 Realtime 채널
+let _moimList = [];          // 전체 모임 목록
+let _moimMapMode = false;    // 지도 모임 모드
+let _moimOverlays = [];      // 지도 모임 마커
+
+// ── 패널 열기/닫기 ────────────────────────────────────────
+function openMoimPanel(showCreate = false) {
+  document.getElementById('panel-moim').classList.add('show');
+  loadMoimList();
+  if (showCreate) setTimeout(() => openMoimCreate(), 300);
+}
+function closeMoimPanel() { document.getElementById('panel-moim').classList.remove('show'); }
+function closeMoimDetail() { document.getElementById('panel-moim-detail').classList.remove('show'); }
+function openMoimCreate(editData = null) {
+  const panel = document.getElementById('panel-moim-create');
+  panel.classList.add('show');
+  _resetMoimForm();
+  if (editData) _fillMoimForm(editData);
+  document.getElementById('moim-create-title').textContent = editData ? '모임 수정' : '모임 만들기';
+  document.getElementById('moim-submit-btn').textContent = editData ? '수정 완료' : '모임 개설하기';
+}
+function closeMoimCreate() { document.getElementById('panel-moim-create').classList.remove('show'); }
+function closeMoimChat() {
+  document.getElementById('panel-moim-chat').classList.remove('show');
+  if (_moimRealtimeCh) { db.removeChannel(_moimRealtimeCh); _moimRealtimeCh = null; }
+}
+
+// ── 모임 목록 로드 ────────────────────────────────────────
+async function loadMoimList(cat = '') {
+  const container = document.getElementById('moim-list-container');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">불러오는 중...</div></div>';
+
+  let q = db.from('gatherings')
+    .select('*')
+    .eq('is_public', true)
+    .eq('status', 'open')
+    .order('gathering_date', { ascending: true });
+  if (cat) q = q.eq('category', cat);
+
+  const { data, error } = await q.limit(50);
+  _moimList = data || [];
+  _renderMoimCards(container, _moimList);
+
+  // 홈 패널 미리보기도 갱신
+  const homeList = document.getElementById('home-moim-list');
+  if (homeList && _moimList.length) {
+    homeList.innerHTML = _moimList.slice(0, 6).map(_moimHomeCard).join('');
+  }
+}
+
+function _moimHomeCard(m) {
+  const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' }) : '날짜 미정';
+  const rem = (m.max_count || 10) - (m.current_count || 0);
+  return `<div onclick="openMoimDetail('${m.id}')" style="flex-shrink:0;width:160px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.09);cursor:pointer;border:1.5px solid #EDE9FE">
+    <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:14px 12px 10px;position:relative">
+      <div style="font-size:28px;margin-bottom:4px">${emoji}</div>
+      <div style="font-size:11px;font-weight:900;color:#5B21B6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.category || '기타'}</div>
+    </div>
+    <div style="padding:10px 12px">
+      <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.title}</div>
+      <div style="font-size:11px;color:#888">📅 ${dateStr}</div>
+      <div style="font-size:11px;color:${rem<=2?'#C8102E':'#7C3AED'};font-weight:700;margin-top:2px">${rem > 0 ? rem+'자리 남음' : '마감'}</div>
+      ${m.entry_fee > 0 ? `<div style="font-size:11px;color:#D97706;font-weight:700">💰 ${m.entry_fee.toLocaleString()}원</div>` : '<div style="font-size:11px;color:#16a34a;font-weight:700">무료</div>'}
+    </div>
+  </div>`;
+}
+
+function _renderMoimCards(container, list) {
+  if (!list.length) {
+    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:12px">🤝</div><div style="font-size:14px;font-weight:600">모임이 없어요<br>첫 번째 모임을 만들어보세요!</div></div>';
+    return;
+  }
+  container.innerHTML = list.map(m => {
+    const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
+    const dateStr = m.gathering_date
+      ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' })
+      : '날짜 미정';
+    const rem = (m.max_count || 10) - (m.current_count || 0);
+    const pct = Math.min(100, Math.round((m.current_count || 0) / (m.max_count || 10) * 100));
+    return `<div class="moim-card" onclick="openMoimDetail('${m.id}')" style="margin-bottom:12px">
+      <div style="display:flex;gap:12px;padding:14px">
+        <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="font-size:15px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}</div>
+            ${m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}원</div>` : '<div style="font-size:12px;font-weight:700;color:#16a34a;flex-shrink:0">무료</div>'}
+          </div>
+          <div style="font-size:12px;color:#888;margin-top:3px">📅 ${dateStr}</div>
+          ${m.location_name ? `<div style="font-size:12px;color:#888;margin-top:1px">📍 ${m.location_name}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:#7C3AED;padding:2px 8px;border-radius:8px">${m.category || '기타'}</span>
+            ${m.sub_category ? `<span style="font-size:10px;font-weight:700;background:#f5f5f5;color:#555;padding:2px 8px;border-radius:8px">${m.sub_category}</span>` : ''}
+            ${m.skill_level && m.skill_level !== '무관' ? `<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#B45309;padding:2px 8px;border-radius:8px">🏅${m.skill_level}</span>` : ''}
+            ${m.gender_req !== 'any' ? `<span style="font-size:10px;font-weight:700;background:#F0F9FF;color:#0369A1;padding:2px 8px;border-radius:8px">${m.gender_req === 'male' ? '남성만' : '여성만'}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 14px 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:11px;color:#888">${m.current_count || 0}/${m.max_count || 10}명</span>
+          <span style="font-size:11px;font-weight:800;color:${rem<=2?'#C8102E':rem<=4?'#EA580C':'#7C3AED'}">${rem > 0 ? rem+'자리 남음' : '🔒 마감'}</span>
+        </div>
+        <div style="height:4px;background:#EDE9FE;border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${pct>=90?'#C8102E':'#7C3AED'};border-radius:2px;transition:width 0.4s"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterMoimList(btn, cat) {
+  document.querySelectorAll('.moim-cat-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadMoimList(cat);
+}
+
+// ── 모임 상세 ────────────────────────────────────────────
+async function openMoimDetail(moimId) {
+  _currentMoimId = moimId;
+  document.getElementById('panel-moim-detail').classList.add('show');
+  document.getElementById('moim-detail-body').innerHTML = '<div style="text-align:center;padding:60px;color:#bbb">불러오는 중...</div>';
+
+  const { data: m } = await db.from('gatherings').select('*').eq('id', moimId).single();
+  if (!m) { showToast('모임 정보를 불러올 수 없어요'); return; }
+
+  document.getElementById('moim-detail-title').textContent = m.title;
+  const isHost = currentUser && m.host_id === currentUser.id;
+  const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long', hour:'2-digit', minute:'2-digit' }) : '날짜 미정';
+  const rem = (m.max_count || 10) - (m.current_count || 0);
+  const pct = Math.min(100, Math.round((m.current_count || 0) / (m.max_count || 10) * 100));
+
+  // 내 신청 상태 조회
+  let myApp = null;
+  if (currentUser && !isHost) {
+    const { data: apps } = await db.from('gathering_applications').select('*').eq('gathering_id', moimId).eq('applicant_id', currentUser.id).limit(1);
+    myApp = apps?.[0] || null;
+  }
+
+  // 단체채팅 버튼 표시 조건: 승인된 참가자 또는 주최자
+  const canChat = isHost || myApp?.status === 'approved';
+
+  document.getElementById('moim-detail-body').innerHTML = `
+    <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:24px 20px 20px;text-align:center">
+      <div style="font-size:56px;margin-bottom:8px">${emoji}</div>
+      <div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:6px">${m.category || ''} ${m.sub_category ? '· '+m.sub_category : ''}</div>
+      <div style="font-size:20px;font-weight:900;color:#111;line-height:1.3">${m.title}</div>
+    </div>
+
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+      <!-- 모집 현황 -->
+      <div style="background:#F5F3FF;border-radius:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:800;color:#7C3AED">👥 모집 현황</span>
+          <span style="font-size:13px;font-weight:900;color:${rem<=2?'#C8102E':'#7C3AED'}">${m.current_count||0}/${m.max_count||10}명 ${rem>0?'('+rem+'자리 남음)':'(마감)'}</span>
+        </div>
+        <div style="height:8px;background:#DDD6FE;border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${pct>=90?'#C8102E':'#7C3AED'};border-radius:4px"></div>
+        </div>
+      </div>
+
+      <!-- 기본 정보 -->
+      ${m.gathering_date ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📅</div><div><div style="font-size:12px;font-weight:700;color:#888">일시</div><div style="font-size:14px;font-weight:800;color:#111">${dateStr}</div></div></div>` : ''}
+      ${m.location_name ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📍</div><div><div style="font-size:12px;font-weight:700;color:#888">장소</div><div style="font-size:14px;font-weight:800;color:#111">${m.location_name}</div>${m.location_address?`<div style="font-size:12px;color:#888">${m.location_address}</div>`:''}</div></div>` : ''}
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="font-size:20px;flex-shrink:0">💰</div>
+        <div><div style="font-size:12px;font-weight:700;color:#888">참가비</div>
+        <div style="font-size:14px;font-weight:800;color:${m.entry_fee>0?'#D97706':'#16a34a'}">${m.entry_fee > 0 ? m.entry_fee.toLocaleString()+'원 (현장 납부)' : '무료'}</div></div>
+      </div>
+      ${m.skill_level && m.skill_level !== '무관' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">🏅</div><div><div style="font-size:12px;font-weight:700;color:#888">실력 조건</div><div style="font-size:14px;font-weight:800;color:#B45309">${m.skill_level}${m.skill_desc?' · '+m.skill_desc:''}</div></div></div>` : ''}
+      ${m.gender_req !== 'any' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">👤</div><div><div style="font-size:12px;font-weight:700;color:#888">성별 조건</div><div style="font-size:14px;font-weight:800;color:#0369A1">${m.gender_req==='male'?'남성만':'여성만'}</div></div></div>` : ''}
+      ${m.description ? `<div style="background:#f9fafb;border-radius:14px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 모임 소개</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
+
+      ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">💬 단체채팅방 입장</button>` : ''}
+
+      ${isHost ? `
+        <div style="border-top:1px solid #f0f0f0;padding-top:16px">
+          <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🛠️ 주최자 관리</div>
+          <div style="display:flex;gap:8px">
+            <button onclick="openMoimCreate(${JSON.stringify(m).replace(/"/g,'&quot;')})" style="flex:1;padding:10px;border:1.5px solid #7C3AED;color:#7C3AED;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>
+            <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">👥 신청자 관리</button>
+          </div>
+        </div>
+        <div id="moim-applicants-section" style="display:none"></div>
+      ` : ''}
+    </div>`;
+
+  // 하단 버튼 상태
+  const applyBtn = document.getElementById('moim-apply-btn');
+  if (isHost) {
+    applyBtn.style.display = 'none';
+  } else if (myApp) {
+    applyBtn.style.display = 'block';
+    if (myApp.status === 'pending')  { applyBtn.textContent = '⏳ 승인 대기 중'; applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
+    if (myApp.status === 'approved') { applyBtn.textContent = '✅ 참가 확정됨'; applyBtn.style.background = '#16a34a'; applyBtn.disabled = true; }
+    if (myApp.status === 'rejected') { applyBtn.textContent = '❌ 신청 거절됨'; applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
+  } else if (rem <= 0) {
+    applyBtn.textContent = '🔒 마감된 모임'; applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true;
+  } else {
+    applyBtn.textContent = '참가 신청하기'; applyBtn.style.background = '#7C3AED'; applyBtn.disabled = false;
+  }
+}
+
+async function applyMoim() {
+  if (!currentUser) { showLoginPrompt('로그인 후 신청할 수 있어요', '모임 참가는 로그인이 필요합니다.'); return; }
+  const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', _currentMoimId).eq('applicant_id', currentUser.id).limit(1);
+  if (existing?.length) { showToast('이미 신청한 모임이에요'); return; }
+  showConfirm('이 모임에 참가 신청할까요?\n주최자 승인 후 확정됩니다.', async () => {
+    const { error } = await db.from('gathering_applications').insert({ gathering_id: _currentMoimId, applicant_id: currentUser.id, status: 'pending' });
+    if (error) { showToast('신청 중 오류가 발생했어요'); return; }
+    showToast('✅ 신청 완료! 주최자 승인을 기다려주세요');
+    openMoimDetail(_currentMoimId); // 버튼 상태 갱신
+  }, { icon:'🤝', title:'참가 신청', okLabel:'신청하기' });
+}
+
+async function loadMoimApplicants(gatheringId) {
+  const sec = document.getElementById('moim-applicants-section');
+  if (!sec) return;
+  sec.style.display = 'block';
+  sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">불러오는 중...</div>';
+  const { data } = await db.from('gathering_applications').select('*, workers(name,rating,review_count,nationality)').eq('gathering_id', gatheringId).order('applied_at');
+  if (!data?.length) { sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">신청자가 없어요</div>'; return; }
+  const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
+  sec.innerHTML = data.map(app => {
+    const w = app.workers;
+    const statusColor = { pending:'#D97706', approved:'#16a34a', rejected:'#9CA3AF' }[app.status] || '#888';
+    const statusLabel = { pending:'대기중', approved:'승인됨', rejected:'거절됨' }[app.status] || app.status;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #f0f0f0;border-radius:12px;margin-bottom:6px;background:#fff">
+      <div style="font-size:24px">${_NAT_FLAG[w?.nationality] || '👤'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#111">${w?.name || '익명'}</div>
+        ${w?.rating ? `<div style="font-size:11px;color:#888">⭐ ${w.rating.toFixed(1)} (${w.review_count}건)</div>` : ''}
+      </div>
+      <span style="font-size:11px;font-weight:800;color:${statusColor};background:${statusColor}22;padding:4px 10px;border-radius:10px">${statusLabel}</span>
+      ${app.status === 'pending' ? `
+        <div style="display:flex;gap:4px">
+          <button onclick="decideMoimApp('${app.id}','approved','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#16a34a;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">승인</button>
+          <button onclick="decideMoimApp('${app.id}','rejected','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#e5e7eb;color:#555;border:none;font-size:11px;font-weight:700;cursor:pointer">거절</button>
+        </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function decideMoimApp(appId, decision, gatheringId) {
+  const { error } = await db.from('gathering_applications').update({ status: decision }).eq('id', appId);
+  if (error) { showToast('처리 중 오류가 발생했어요'); return; }
+  // 승인 시 current_count 증가
+  if (decision === 'approved') {
+    const { data: g } = await db.from('gatherings').select('current_count').eq('id', gatheringId).single();
+    await db.from('gatherings').update({ current_count: (g?.current_count || 0) + 1 }).eq('id', gatheringId);
+  }
+  showToast(decision === 'approved' ? '✅ 승인했습니다' : '거절했습니다');
+  loadMoimApplicants(gatheringId);
+}
+
+// ── 모임 개설/수정 폼 ─────────────────────────────────────
+function _resetMoimForm() {
+  document.getElementById('f-moim-id').value = '';
+  document.getElementById('f-moim-cat').value = '';
+  document.getElementById('f-moim-subcat').value = '';
+  document.getElementById('f-moim-title').value = '';
+  document.getElementById('f-moim-desc').value = '';
+  document.getElementById('f-moim-date').value = '';
+  document.getElementById('f-moim-time').value = '14:00';
+  document.getElementById('f-moim-location').value = '';
+  document.getElementById('f-moim-address').value = '';
+  document.getElementById('f-moim-maxcount').value = '10';
+  document.getElementById('f-moim-fee').value = '0';
+  document.getElementById('f-moim-skill').value = '무관';
+  document.getElementById('f-moim-gender').value = 'any';
+  document.getElementById('f-moim-public').value = 'true';
+  // 버튼 상태 초기화
+  document.querySelectorAll('#moim-cat-select button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
+  document.querySelectorAll('#moim-skill-btns button').forEach(b => { b.style.background=(b.textContent==='무관'?'#fff':'#f9fafb'); b.style.borderColor=(b.textContent==='무관'?'#DDD6FE':'#e5e7eb'); b.style.color=(b.textContent==='무관'?'#7C3AED':'#555'); });
+  selectMoimPublic(true);
+  document.getElementById('moim-skill-section').style.display = 'none';
+}
+function _fillMoimForm(m) {
+  document.getElementById('f-moim-id').value = m.id;
+  document.getElementById('f-moim-cat').value = m.category || '';
+  document.getElementById('f-moim-subcat').value = m.sub_category || '';
+  document.getElementById('f-moim-title').value = m.title || '';
+  document.getElementById('f-moim-desc').value = m.description || '';
+  if (m.gathering_date) {
+    const d = new Date(m.gathering_date);
+    document.getElementById('f-moim-date').value = d.toISOString().slice(0,10);
+    document.getElementById('f-moim-time').value = d.toTimeString().slice(0,5);
+  }
+  document.getElementById('f-moim-location').value = m.location_name || '';
+  document.getElementById('f-moim-address').value = m.location_address || '';
+  document.getElementById('f-moim-maxcount').value = m.max_count || 10;
+  document.getElementById('f-moim-fee').value = m.entry_fee || 0;
+  selectMoimPublic(m.is_public !== false);
+  if (m.category) { const btn = [...document.querySelectorAll('#moim-cat-select button')].find(b => b.textContent.includes(m.category)); if (btn) selectMoimCat(btn, m.category); }
+  if (m.skill_level) { const btn = [...document.querySelectorAll('#moim-skill-btns button')].find(b => b.textContent === m.skill_level); if (btn) selectMoimSkill(btn, m.skill_level); }
+  if (m.gender_req) { const btn = [...document.querySelectorAll('#moim-create-btn [onclick*=selectMoimGender]')]; } // handled by selectMoimGender
+}
+
+function selectMoimCat(btn, cat) {
+  document.querySelectorAll('#moim-cat-select button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
+  btn.style.background='#EDE9FE'; btn.style.borderColor='#7C3AED'; btn.style.color='#7C3AED';
+  document.getElementById('f-moim-cat').value = cat;
+  document.getElementById('moim-skill-section').style.display = cat === '스포츠' ? 'block' : 'none';
+}
+function selectMoimSkill(btn, val) {
+  document.querySelectorAll('#moim-skill-btns button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
+  btn.style.background='#EDE9FE'; btn.style.borderColor='#7C3AED'; btn.style.color='#7C3AED';
+  document.getElementById('f-moim-skill').value = val;
+}
+function selectMoimGender(btn, val) {
+  btn.parentElement.querySelectorAll('button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; b.style.border='2px solid #e5e7eb'; });
+  btn.style.background='#7C3AED'; btn.style.color='#fff'; btn.style.borderColor='#7C3AED';
+  document.getElementById('f-moim-gender').value = val;
+}
+function selectMoimPublic(isPublic) {
+  document.getElementById('f-moim-public').value = String(isPublic);
+  document.getElementById('pub-btn-public').style.background  = isPublic ? '#EDE9FE' : '#f9fafb';
+  document.getElementById('pub-btn-public').style.borderColor = isPublic ? '#7C3AED' : '#e5e7eb';
+  document.getElementById('pub-btn-public').style.color       = isPublic ? '#7C3AED' : '#555';
+  document.getElementById('pub-btn-private').style.background  = !isPublic ? '#EDE9FE' : '#f9fafb';
+  document.getElementById('pub-btn-private').style.borderColor = !isPublic ? '#7C3AED' : '#e5e7eb';
+  document.getElementById('pub-btn-private').style.color       = !isPublic ? '#7C3AED' : '#555';
+}
+
+async function submitMoimForm() {
+  if (!currentUser) { showLoginPrompt('로그인 후 모임을 만들 수 있어요', ''); return; }
+  const cat = document.getElementById('f-moim-cat').value;
+  const title = document.getElementById('f-moim-title').value.trim();
+  const dateVal = document.getElementById('f-moim-date').value;
+  if (!cat) { showToast('카테고리를 선택해주세요'); return; }
+  if (!title) { showToast('모임 제목을 입력해주세요'); return; }
+
+  // 무료 플랜 월 1개 제한 체크
+  const editId = document.getElementById('f-moim-id').value;
+  if (!editId) {
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const { count } = await db.from('gatherings').select('id', { count:'exact', head:true }).eq('host_id', currentUser.id).gte('created_at', monthStart.toISOString());
+    const plan = 'free'; // TODO: 결제 연동 시 실제 플랜으로 교체
+    if (count >= MOIM_PLAN_LIMITS[plan]) {
+      showAlert(`무료 플랜은 월 ${MOIM_PLAN_LIMITS[plan]}개까지 개설 가능합니다.\n스탠다드(월 9,900원) 또는 프로(월 29,900원)로 업그레이드하세요.`, { icon:'⭐' });
+      return;
+    }
+  }
+
+  const dateTime = dateVal ? new Date(`${dateVal}T${document.getElementById('f-moim-time').value || '14:00'}:00`) : null;
+  const isPublic = document.getElementById('f-moim-public').value === 'true';
+  const invite_code = !isPublic ? crypto.randomUUID() : null;
+
+  const payload = {
+    host_id:          currentUser.id,
+    category:         cat,
+    sub_category:     document.getElementById('f-moim-subcat').value.trim() || null,
+    title,
+    description:      document.getElementById('f-moim-desc').value.trim() || null,
+    gathering_date:   dateTime?.toISOString() || null,
+    location_name:    document.getElementById('f-moim-location').value.trim() || null,
+    location_address: document.getElementById('f-moim-address').value.trim() || null,
+    max_count:        parseInt(document.getElementById('f-moim-maxcount').value) || 10,
+    entry_fee:        parseInt(document.getElementById('f-moim-fee').value) || 0,
+    skill_level:      document.getElementById('f-moim-skill').value || '무관',
+    skill_desc:       document.getElementById('f-moim-skill-desc')?.value.trim() || null,
+    gender_req:       document.getElementById('f-moim-gender').value || 'any',
+    is_public:        isPublic,
+    invite_code,
+    status:           'open',
+  };
+
+  const btn = document.getElementById('moim-submit-btn');
+  btn.disabled = true; btn.textContent = '처리 중...';
+
+  let error, data;
+  if (editId) {
+    ({ error, data } = await db.from('gatherings').update(payload).eq('id', editId).select().single());
+  } else {
+    ({ error, data } = await db.from('gatherings').insert(payload).select().single());
+  }
+
+  btn.disabled = false; btn.textContent = editId ? '수정 완료' : '모임 개설하기';
+  if (error) { showToast('오류가 발생했어요: ' + error.message); return; }
+
+  showToast(editId ? '✅ 모임을 수정했어요' : '✅ 모임을 개설했어요!');
+  closeMoimCreate();
+
+  // 비공개 모임은 즉시 초대 링크 공유 안내
+  if (!isPublic && data?.invite_code) {
+    const link = `${location.origin}${location.pathname}?moim=${data.invite_code}`;
+    showConfirm('비공개 모임이 개설됐어요.\n초대 링크를 복사하시겠어요?', () => {
+      navigator.clipboard.writeText(link).then(() => showToast('📋 초대 링크 복사됨')).catch(() => showToast(link));
+    }, { icon:'🔐', title:'초대 링크', okLabel:'복사하기' });
+  }
+
+  loadMoimList();
+}
+
+// ── 공유 / 딥링크 ─────────────────────────────────────────
+async function shareMoim() {
+  if (!_currentMoimId) return;
+  const { data: m } = await db.from('gatherings').select('is_public,invite_code,title').eq('id', _currentMoimId).single();
+  if (!m) return;
+  const code = m.is_public ? _currentMoimId : m.invite_code;
+  const paramKey = m.is_public ? 'moim' : 'moim';
+  const link = `${location.origin}${location.pathname}?moim=${code}`;
+  if (navigator.share) {
+    navigator.share({ title: m.title + ' — 바로모임', text: '같이 모임 참가해요!', url: link }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
+  }
+}
+
+async function handleMoimDeeplink(codeOrId) {
+  // public: id 직접, private: invite_code로 검색
+  let { data: m } = await db.from('gatherings').select('*').eq('id', codeOrId).maybeSingle();
+  if (!m) {
+    const { data: m2 } = await db.from('gatherings').select('*').eq('invite_code', codeOrId).maybeSingle();
+    m = m2;
+  }
+  if (!m) { showToast('유효하지 않은 모임 링크입니다'); return; }
+  openMoimPanel();
+  setTimeout(() => openMoimDetail(m.id), 300);
+}
+
+// ── 단체 채팅 ────────────────────────────────────────────
+async function openMoimChat(gatheringId, title) {
+  document.getElementById('panel-moim-chat').classList.add('show');
+  document.getElementById('moim-chat-title').textContent = title || '모임 채팅';
+  document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
+
+  // 참가자 수
+  const { count } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
+  document.getElementById('moim-chat-members').textContent = `참가자 ${(count||0)+1}명`;
+
+  // 기존 메시지 로드
+  const { data: msgs } = await db.from('gathering_chats').select('*, sender:sender_id(raw_user_meta_data)').eq('gathering_id', gatheringId).order('sent_at').limit(100);
+  _renderMoimChatMessages(msgs || []);
+
+  // Realtime 구독
+  if (_moimRealtimeCh) db.removeChannel(_moimRealtimeCh);
+  _moimRealtimeCh = db.channel('moim-chat-' + gatheringId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'gathering_chats', filter:`gathering_id=eq.${gatheringId}` }, payload => {
+      _appendMoimChatMsg(payload.new);
+    }).subscribe();
+
+  // 채팅 인풋 gatheringId 저장
+  document.getElementById('moim-chat-input').dataset.gatheringId = gatheringId;
+}
+
+function _renderMoimChatMessages(msgs) {
+  const el = document.getElementById('moim-chat-messages');
+  if (!msgs.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">아직 메시지가 없어요<br>첫 인사를 남겨보세요 👋</div>'; return; }
+  el.innerHTML = msgs.map(m => _moimChatBubble(m)).join('');
+  el.scrollTop = el.scrollHeight;
+}
+function _appendMoimChatMsg(msg) {
+  const el = document.getElementById('moim-chat-messages');
+  el.insertAdjacentHTML('beforeend', _moimChatBubble(msg));
+  el.scrollTop = el.scrollHeight;
+}
+function _moimChatBubble(m) {
+  const isMine = currentUser && m.sender_id === currentUser.id;
+  const name = m.sender?.raw_user_meta_data?.full_name || '참가자';
+  const time = new Date(m.sent_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+  return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};margin-bottom:4px">
+    ${!isMine ? `<div style="font-size:10px;color:#999;font-weight:600;margin-bottom:2px;padding-left:4px">${name}</div>` : ''}
+    <div style="display:flex;align-items:flex-end;gap:4px;flex-direction:${isMine?'row-reverse':'row'}">
+      <div style="max-width:72%;padding:9px 13px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'#7C3AED':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>
+      <div style="font-size:10px;color:#bbb;white-space:nowrap">${time}</div>
+    </div>
+  </div>`;
+}
+
+async function sendMoimChat() {
+  const input = document.getElementById('moim-chat-input');
+  const gatheringId = input.dataset.gatheringId;
+  const msg = input.value.trim();
+  if (!msg || !gatheringId || !currentUser) return;
+  input.value = '';
+  await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, message: msg });
+}
+
+// ── 지도 모임 모드 ────────────────────────────────────────
+let _currentMapMode = 'job'; // 'job' | 'moim'
+
+function setMapMode(mode) {
+  _currentMapMode = mode;
+  document.getElementById('mapmode-job').classList.toggle('active', mode === 'job');
+  document.getElementById('mapmode-moim').classList.toggle('active', mode === 'moim');
+
+  const topBar = document.querySelector('.top-bar');
+  const bottomSheet = document.getElementById('bottom-sheet');
+  const radiusBadge = document.getElementById('radius-badge');
+
+  if (mode === 'moim') {
+    // 알바 UI 숨기기
+    if (topBar) topBar.style.display = 'none';
+    if (bottomSheet) bottomSheet.style.display = 'none';
+    if (radiusBadge) radiusBadge.style.display = 'none';
+    const floatBtn = document.getElementById('map-swipe-float');
+    if (floatBtn) floatBtn.style.display = 'none';
+    // 기존 알바 마커 숨기기
+    overlays.forEach(o => o.setMap(null));
+    // 모임 마커 표시
+    _renderMoimMarkers();
+  } else {
+    // 알바 UI 복원
+    if (topBar) topBar.style.display = '';
+    if (bottomSheet) bottomSheet.style.display = '';
+    if (radiusBadge) radiusBadge.style.display = '';
+    // 모임 마커 제거
+    _moimOverlays.forEach(o => o.setMap(null));
+    _moimOverlays = [];
+    // 알바 마커 복원
+    overlays.forEach(o => o.setMap(kakaoMap));
+  }
+}
+
+async function _renderMoimMarkers() {
+  _moimOverlays.forEach(o => o.setMap(null));
+  _moimOverlays = [];
+  if (!kakaoMap) return;
+
+  const { data: moims } = await db.from('gatherings').select('id,title,category,gathering_date,current_count,max_count,lat,lng').eq('status','open').eq('is_public',true).not('lat','is',null);
+  if (!moims?.length) return;
+
+  moims.forEach(m => {
+    if (!m.lat || !m.lng) return;
+    const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
+    const rem = (m.max_count || 10) - (m.current_count || 0);
+    const content = `<div class="moim-marker-wrap" onclick="openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)">
+      <div class="moim-marker-bubble">${emoji} ${m.category || '모임'} · ${rem}자리</div>
+      <div class="moim-marker-tail"></div>
+    </div>`;
+    const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(m.lat, m.lng), content, yAnchor: 1.1 });
+    overlay.setMap(kakaoMap);
+    _moimOverlays.push(overlay);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
 // ── 홈 패널 ───────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════
 let _homeFilterCat = '';
@@ -5303,6 +6104,8 @@ function loadHomePanel() {
   _renderHomeSameDay();
   if (isForeigner) _renderHomeForeigner();
   _loadHomeTopPartners();
+  // 바로모임 미리보기
+  loadMoimList('').catch(() => {});
 
   // 지도에 주변알바 플로팅 버튼 상태 복원 (지도 탭 진입 시 표시)
   const floatBtn = document.getElementById('map-swipe-float');
@@ -9142,6 +9945,10 @@ function setNav(el, tab) {
     if (tab === 'map') {
       setSheetState('peek');
       if (kakaoMap) setTimeout(() => { try { kakaoMap.relayout(); } catch(e) {} }, 50);
+      // 지도 모드 토글 표시 (알바|모임)
+      const _modeToggle = document.getElementById('map-mode-toggle');
+      if (_modeToggle) _modeToggle.style.display = 'flex';
+      setMapMode('job'); // 항상 알바 모드로 시작
       // 주변알바 스와이프 버튼 표시 (공고 있을 때)
       const _floatBtn = document.getElementById('map-swipe-float');
       if (_floatBtn) {
@@ -9155,6 +9962,8 @@ function setNav(el, tab) {
     } else {
       const _floatBtn = document.getElementById('map-swipe-float');
       if (_floatBtn) _floatBtn.style.display = 'none';
+      const _modeToggle = document.getElementById('map-mode-toggle');
+      if (_modeToggle) _modeToggle.style.display = 'none';
     }
     // 채팅 탭에서 다른 탭으로 이동 시 실제 미읽음 수로 배지 갱신
     refreshWorkerChatBadge();
