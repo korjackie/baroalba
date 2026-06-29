@@ -725,6 +725,128 @@
   </div>
 </section>
 
+<!-- Feature 09: Staff 관리 -->
+<section class="feat-section">
+  <div class="feat-body">
+    <p class="section-label" style="color:var(--red)">Feature 09</p>
+    <h2 class="section-title">👥 Staff 관리 패널</h2>
+    <p class="section-desc">업주 패널에 새로운 "Staff" 탭이 추가됐습니다. 지원자·근무중·완료 직원을 한 화면에서 통합 관리하고 급여 지급도 처리할 수 있습니다.</p>
+    <div class="feat-steps">
+      <div class="feat-step">
+        <div class="step-num" style="background:var(--red-light);color:var(--red)">1</div>
+        <div class="step-body">
+          <div class="step-title">요약 통계 대시보드</div>
+          <div class="step-desc">현재 근무중 인원 · 미지급 급여 인원 · 이달 예상 총 급여를 상단에서 한눈에 확인합니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:var(--red-light);color:var(--red)">2</div>
+        <div class="step-body">
+          <div class="step-title">필터 칩으로 빠른 조회</div>
+          <div class="step-desc">전체 / 근무중 / 완료 / 지원자 / 미지급 필터로 원하는 Staff만 빠르게 조회합니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:var(--red-light);color:var(--red)">3</div>
+        <div class="step-body">
+          <div class="step-title">급여 지급 토글 처리</div>
+          <div class="step-desc">완료 상태 Staff 카드에서 "지급완료 / 미지급" 버튼을 눌러 급여 지급 여부를 즉시 업데이트합니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:var(--red-light);color:var(--red)">4</div>
+        <div class="step-body">
+          <div class="step-title">비자 인증 배지 표시</div>
+          <div class="step-desc">외국인 근로자가 비자 사본을 제출하면 Staff 카드에 ✅ 비자인증 배지가 자동 노출됩니다.</div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-note" style="background:#FFF0F0;border-color:#fecaca">
+      <span>⚙️</span>
+      <span>DB 준비: <code>ALTER TABLE applications ADD COLUMN IF NOT EXISTS wage_paid BOOLEAN DEFAULT FALSE; ADD COLUMN IF NOT EXISTS wage_paid_at TIMESTAMPTZ;</code></span>
+    </div>
+  </div>
+</section>
+
+<!-- Feature 10: 외국인 특화 플랫폼 -->
+<section class="feat-section" style="background:#F0F7FF">
+  <div class="feat-body">
+    <p class="section-label" style="color:#1e40af">Feature 10</p>
+    <h2 class="section-title">🌏 외국인 특화 플랫폼</h2>
+    <p class="section-desc">국가·비자 종류를 등록하면 취업 가능 업종을 자동 안내합니다. 비자 사본 업로드 시 업주에게 인증 배지가 표시됩니다.</p>
+    <div class="feat-steps">
+      <div class="feat-step">
+        <div class="step-num" style="background:#DBEAFE;color:#1e40af">1</div>
+        <div class="step-body">
+          <div class="step-title">출신 국가 · 비자 종류 선택</div>
+          <div class="step-desc">마이페이지 → 외국인 근로자 인증에서 H-2, E-9, F-4, F-5 등 비자 종류를 선택합니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:#DBEAFE;color:#1e40af">2</div>
+        <div class="step-body">
+          <div class="step-title">취업 가능 업종 자동 안내</div>
+          <div class="step-desc">선택한 비자에 따라 근무 가능 업종 태그와 주의사항 노트를 자동으로 표시합니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:#DBEAFE;color:#1e40af">3</div>
+        <div class="step-body">
+          <div class="step-title">비자 사본 업로드</div>
+          <div class="step-desc">비자 사본 이미지를 업로드하면 업주의 Staff 카드에 ✅ 비자인증 배지가 표시됩니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:#DBEAFE;color:#1e40af">4</div>
+        <div class="step-body">
+          <div class="step-title">근무 희망 업종 선택</div>
+          <div class="step-desc">F&amp;B, 물류, 제조 등 12개 업종 중 희망 업종을 복수 선택해 저장합니다.</div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-note" style="background:#EFF6FF;border-color:#bfdbfe">
+      <span>⚙️</span>
+      <span>DB 준비: <code>ALTER TABLE workers ADD COLUMN IF NOT EXISTS visa_type TEXT; ADD COLUMN IF NOT EXISTS visa_doc_url TEXT; ADD COLUMN IF NOT EXISTS pref_job_types JSONB; ADD COLUMN IF NOT EXISTS nationality TEXT;</code></span>
+    </div>
+  </div>
+</section>
+
+<!-- Feature 11: 워커 신뢰 구축 -->
+<section class="feat-section">
+  <div class="feat-body">
+    <p class="section-label" style="color:#16a34a">Feature 11</p>
+    <h2 class="section-title">💴 급여 수령 확인 · 권리 가이드</h2>
+    <p class="section-desc">알바생이 직접 급여 수령을 확인합니다. 미수령 시 임금체불 신고 버튼으로 바로 신고할 수 있고, 내 권리 가이드는 5개 언어로 제공됩니다.</p>
+    <div class="feat-steps">
+      <div class="feat-step">
+        <div class="step-num" style="background:#D1FAE5;color:#065F46">1</div>
+        <div class="step-body">
+          <div class="step-title">급여 수령 확인 내역</div>
+          <div class="step-desc">마이페이지 → 외국인 근로자 인증 → 급여 수령 확인 내역에서 완료 근무별 수령 상태를 확인합니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:#D1FAE5;color:#065F46">2</div>
+        <div class="step-body">
+          <div class="step-title">임금체불 신고 버튼</div>
+          <div class="step-desc">미수령 상태 근무에서 "⚠️ 임금체불 신고" 버튼 클릭 시 고용노동부 1350 안내가 즉시 표시됩니다.</div>
+        </div>
+      </div>
+      <div class="feat-step">
+        <div class="step-num" style="background:#D1FAE5;color:#065F46">3</div>
+        <div class="step-body">
+          <div class="step-title">내 권리 가이드 (5개 언어)</div>
+          <div class="step-desc">한국어·영어·베트남어·러시아어·우즈베크어로 최저시급, 연장근무 수당, 신고 연락처를 안내합니다.</div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-note" style="background:#ECFDF5;border-color:#a7f3d0">
+      <span>ℹ️</span>
+      <span>외국인근로자지원센터 1644-0644 · 고용노동부 임금체불 신고 1350 · minwage.kr</span>
+    </div>
+  </div>
+</section>
+
 <!-- DEPLOYMENT INFO -->
 <section class="feat-section" style="background:linear-gradient(135deg,#0f0f0f,#1a0008)">
   <div style="text-align:center;max-width:640px;margin:0 auto">
@@ -734,8 +856,8 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;text-align:left">
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">SW 버전</div>
-        <div style="font-size:22px;font-weight:900;color:#fff">v273</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">baroalba-v273</div>
+        <div style="font-size:22px;font-weight:900;color:#fff">v275</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">baroalba-v275</div>
       </div>
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">배포일</div>
@@ -749,7 +871,7 @@
       </div>
       <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px">
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:8px">신규 기능</div>
-        <div style="font-size:22px;font-weight:900;color:#16a34a">8개</div>
+        <div style="font-size:22px;font-weight:900;color:#16a34a">11개</div>
         <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">리뷰답글은 DDL 1개 필요</div>
       </div>
     </div>

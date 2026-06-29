@@ -587,6 +587,37 @@
     /* ── 위치공유 버튼 ── */
     .loc-share-btn { display:flex; align-items:center; gap:6px; width:100%; margin-top:8px; padding:10px 14px; border-radius:10px; border:1.5px solid #e0e7ff; background:#f0f4ff; color:#3b82f6; font-size:13px; font-weight:700; cursor:pointer; }
     .loc-share-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
+    /* ── Staff 관리 ── */
+    .staff-summary { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 14px 0 }
+    .staff-stat { background:#fff;border-radius:12px;padding:12px 8px;border:1px solid #f0f0f0;text-align:center }
+    .staff-stat-val { font-size:20px;font-weight:900;color:#C8102E }
+    .staff-stat-lbl { font-size:10px;color:#aaa;font-weight:600;margin-top:2px;line-height:1.3 }
+    .staff-filter { display:flex;gap:6px;padding:12px 14px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none }
+    .staff-filter::-webkit-scrollbar { display:none }
+    .staff-chip { padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap;flex-shrink:0 }
+    .staff-chip.active { background:#C8102E;border-color:#C8102E;color:#fff }
+    .staff-list { padding:0 14px 80px }
+    .staff-card { background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,0.04) }
+    .staff-card-top { display:flex;align-items:center;gap:10px;margin-bottom:10px }
+    .staff-avatar { width:36px;height:36px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0 }
+    .staff-name { font-size:14px;font-weight:800;color:#111 }
+    .staff-meta { font-size:11px;color:#aaa;margin-top:1px }
+    .staff-visa-badge { display:inline-flex;align-items:center;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;background:#EFF6FF;color:#1e40af;margin-left:4px }
+    .staff-rows { border-top:1px solid #f5f5f5;padding-top:10px;display:flex;flex-direction:column;gap:6px }
+    .staff-row { display:flex;align-items:center;justify-content:space-between;font-size:12px }
+    .staff-row-label { color:#888;font-weight:600;min-width:64px }
+    .staff-row-val { color:#111;font-weight:700;text-align:right;flex:1 }
+    .wage-paid-btn { padding:4px 12px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s }
+    .wage-paid-btn.paid { background:#D1FAE5;color:#065F46 }
+    .wage-paid-btn.unpaid { background:#FEE2E2;color:#991B1B }
+    .staff-actions { display:flex;gap:6px;margin-top:10px;border-top:1px solid #f5f5f5;padding-top:10px }
+    .staff-act-btn { flex:1;padding:8px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#f5f5f5;color:#444 }
+    /* ── 외국인 특화 ── */
+    .visa-eligible-tag { display:inline-block;padding:3px 8px;border-radius:8px;background:#EFF6FF;color:#1e40af;font-size:11px;font-weight:700;margin:2px }
+    .visa-eligible-tag.warn { background:#FFF7ED;color:#c2410c }
+    .job-type-chip { padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s }
+    .job-type-chip.selected { background:#C8102E;border-color:#C8102E;color:#fff }
+    .rights-card { background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;padding:16px;color:#fff;margin-top:12px }
     .mpsub-panel { position:fixed; inset:0; background:#f5f5f5; z-index:360; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
     .mpsub-panel.show { transform:translateX(0); }
     .mpsub-hdr { display:flex; align-items:center; gap:8px; padding:calc(var(--sat,0px) + 14px) 16px 14px; background:#fff; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
@@ -2332,6 +2363,25 @@
         <div id="worker-grade-progress" style="padding:0 16px 12px;background:#fff;font-size:12px;color:#888;line-height:1.8"></div>
       </div>
 
+      <!-- ── 외국인 근로자 특화 (워커만) ── -->
+      <div class="mp-section" id="foreigner-section" style="display:none">
+        <div class="mp-section-title">🌏 외국인 근로자 인증</div>
+        <div class="mp-rows">
+          <div class="mp-row" onclick="openMpSub('foreigner')">
+            <div class="mp-row-left"><span class="mp-row-icon">🛂</span><span>비자 정보 · 가능 업종</span></div>
+            <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
+          </div>
+          <div class="mp-row" onclick="openWorkerRightsGuide()">
+            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span>내 권리 가이드</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
+          <div class="mp-row" onclick="openMpSub('wage-history')">
+            <div class="mp-row-left"><span class="mp-row-icon">💴</span><span>급여 수령 확인 내역</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── 설정 ── -->
       <div class="mp-section">
         <div class="mp-section-title">설정</div>
@@ -2789,6 +2839,98 @@
   </div>
 </div>
 
+<!-- 비자 정보 패널 -->
+<div class="mpsub-panel" id="mpsub-foreigner" style="z-index:365">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('foreigner')">‹</button>
+    <div class="mpsub-ttl">🛂 비자 정보 · 가능 업종</div>
+    <button onclick="saveVisaProfile()" style="background:#C8102E;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer;padding:6px 14px;border-radius:10px">저장</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px 16px 60px">
+
+    <!-- 국가 선택 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">출신 국가</div>
+      <select id="visa-country" onchange="onVisaCountryChange()" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;color:#111;background:#fff;outline:none;appearance:none">
+        <option value="">국가를 선택하세요</option>
+        <option value="KR">🇰🇷 대한민국 (Korea)</option>
+        <option value="UZ">🇺🇿 우즈베키스탄 (Uzbekistan)</option>
+        <option value="VN">🇻🇳 베트남 (Vietnam)</option>
+        <option value="RU">🇷🇺 러시아 (Russia)</option>
+        <option value="KZ">🇰🇿 카자흐스탄 (Kazakhstan)</option>
+        <option value="KG">🇰🇬 키르기스스탄 (Kyrgyzstan)</option>
+        <option value="MN">🇲🇳 몽골 (Mongolia)</option>
+        <option value="CN">🇨🇳 중국 (China)</option>
+        <option value="PH">🇵🇭 필리핀 (Philippines)</option>
+        <option value="ID">🇮🇩 인도네시아 (Indonesia)</option>
+        <option value="TH">🇹🇭 태국 (Thailand)</option>
+        <option value="JP">🇯🇵 일본 (Japan)</option>
+        <option value="US">🇺🇸 미국 (USA)</option>
+        <option value="OTHER">기타 (Other)</option>
+      </select>
+    </div>
+
+    <!-- 비자 종류 선택 -->
+    <div id="visa-type-section" style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">체류 비자 종류</div>
+      <select id="visa-type" onchange="onVisaTypeChange()" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;color:#111;background:#fff;outline:none;appearance:none">
+        <option value="">비자 종류 선택</option>
+        <option value="KR">해당없음 (한국 국적)</option>
+        <option value="H-2">H-2 방문취업</option>
+        <option value="E-9">E-9 비전문취업 (고용허가제)</option>
+        <option value="F-4">F-4 재외동포</option>
+        <option value="F-5">F-5 영주권</option>
+        <option value="F-6">F-6 결혼이민</option>
+        <option value="F-2">F-2 거주</option>
+        <option value="D-2">D-2 유학</option>
+        <option value="D-4">D-4 어학연수</option>
+        <option value="E-7">E-7 특정활동</option>
+        <option value="C-4">C-4 단기취업</option>
+        <option value="OTHER">기타</option>
+      </select>
+    </div>
+
+    <!-- 비자 가능 업종 안내 -->
+    <div id="visa-eligible-section" style="margin-bottom:20px;display:none">
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">✅ 취업 가능 업종</div>
+      <div id="visa-eligible-tags" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      <div id="visa-eligible-note" style="margin-top:8px;font-size:11px;color:#6b7280;line-height:1.6;padding:8px 10px;background:#f8f9fa;border-radius:8px"></div>
+    </div>
+
+    <!-- 비자 사본 업로드 -->
+    <div id="visa-doc-section" style="margin-bottom:20px;display:none">
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">📎 비자 사본 업로드 <span style="font-weight:500;color:#bbb">(선택)</span></div>
+      <div style="border:1.5px dashed #e5e7eb;border-radius:12px;padding:16px;text-align:center">
+        <input type="file" id="visa-doc-file" accept="image/*,application/pdf" style="display:none" onchange="onVisaDocSelect(event)">
+        <div id="visa-doc-preview" style="font-size:13px;color:#aaa">
+          <div style="font-size:24px;margin-bottom:6px">📄</div>
+          <button onclick="document.getElementById('visa-doc-file').click()" style="padding:8px 20px;background:#f5f5f5;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#555;cursor:pointer">파일 선택</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px">비자 사본을 제출하면 업주에게 ✅ 비자 인증 배지가 표시됩니다.</div>
+    </div>
+
+    <!-- 근무 희망 업종 -->
+    <div id="visa-pref-section" style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:10px;letter-spacing:0.5px">🎯 근무 희망 업종 <span style="font-weight:500;color:#bbb">(복수 선택)</span></div>
+      <div id="pref-job-chips" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 급여 수령 확인 내역 -->
+<div class="mpsub-panel" id="mpsub-wage-history" style="z-index:365">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('wage-history')">‹</button>
+    <div class="mpsub-ttl">💴 급여 수령 확인</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+    <div style="font-size:12px;color:#aaa;margin-bottom:12px;line-height:1.6">완료된 근무의 급여를 직접 확인하세요. 미수령 상태면 업체에 문의하거나 신고할 수 있습니다.</div>
+    <div id="wage-history-list"><div class="spinner" style="margin:32px auto"></div></div>
+  </div>
+</div>
+
 <!-- 앱 언어 -->
 <div class="mpsub-panel" id="mpsub-lang">
   <div class="mpsub-hdr">
@@ -3243,6 +3385,7 @@
 <div class="tabs">
   <button class="tab-btn active" onclick="ownerSwitchTab('postings',this)">내 공고</button>
   <button class="tab-btn" onclick="ownerSwitchTab('applicants',this)">지원자</button>
+  <button class="tab-btn" onclick="ownerSwitchTab('staff',this)">👥 Staff</button>
 </div>
 
 <!-- 내 공고 탭 -->
@@ -3305,6 +3448,23 @@
     <button class="filter-chip" style="border-color:#FFF1F2;color:#BE123C" id="fchip-blocked" onclick="showBlockedWorkers()">🚫 차단</button>
   </div>
   <div id="applicants-list"><div style="text-align:center;padding:32px"><div class="spinner"></div></div></div>
+</div>
+
+<!-- Staff 관리 탭 -->
+<div class="tab-content" id="tab-staff">
+  <div class="staff-summary">
+    <div class="staff-stat"><div class="staff-stat-val" id="st-active">-</div><div class="staff-stat-lbl">현재 근무중</div></div>
+    <div class="staff-stat"><div class="staff-stat-val" id="st-unpaid">-</div><div class="staff-stat-lbl">급여 미지급</div></div>
+    <div class="staff-stat"><div class="staff-stat-val" id="st-total-wage" style="font-size:14px">-</div><div class="staff-stat-lbl">이달 예상급여</div></div>
+  </div>
+  <div class="staff-filter">
+    <div class="staff-chip active" id="sc-all" onclick="filterStaff('all',this)">전체</div>
+    <div class="staff-chip" id="sc-accepted" onclick="filterStaff('accepted',this)">🔄 근무중</div>
+    <div class="staff-chip" id="sc-completed" onclick="filterStaff('completed',this)">✅ 완료</div>
+    <div class="staff-chip" id="sc-pending" onclick="filterStaff('pending',this)">📋 지원자</div>
+    <div class="staff-chip" id="sc-unpaid" onclick="filterStaff('unpaid',this)">💰 미지급</div>
+  </div>
+  <div class="staff-list" id="staff-list"><div style="text-align:center;padding:32px"><div class="spinner"></div></div></div>
 </div>
 
 <!-- ── 공고 상세 패널 ── -->
@@ -4089,7 +4249,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=274').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=275').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -6055,7 +6215,11 @@ async function loadMyApplications() {
 
 function openMpSub(name) {
   const el = document.getElementById('mpsub-' + name);
-  if (el) { el.classList.add('show'); if (name === 'income') loadWorkerIncome(); }
+  if (!el) return;
+  el.classList.add('show');
+  if (name === 'income')        loadWorkerIncome();
+  if (name === 'foreigner')     loadVisaProfile();
+  if (name === 'wage-history')  loadWageHistory();
 }
 function closeMpSub(name) {
   const el = document.getElementById('mpsub-' + name);
@@ -8964,6 +9128,9 @@ function openProfile() {
     loadWorkerProfileForm();
     loadWorkerGrade();
     loadOwnerProfileForm();
+    // 외국인 근로자 섹션 표시 (워커 role인 경우)
+    const fSec = document.getElementById('foreigner-section');
+    if (fSec) fSec.style.display = 'block';
   } else {
     document.getElementById('profile-logged-in').style.display = 'none';
     document.getElementById('profile-guest').style.display = 'block';
@@ -14395,15 +14562,13 @@ async function loadOwnerChatList() {
 
 // ── 유틸 ──────────────────────────────────────────────────
 function ownerSwitchTab(name, btn) {
-  if (name === 'settings') {
-    openOwnerSettings();
-    return;
-  }
+  if (name === 'settings') { openOwnerSettings(); return; }
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'applicants' && bizRecord) loadApplicants();
+  if (name === 'staff' && bizRecord) loadStaffPanel();
 }
 
 function ownerSetNav(el, tab) {
@@ -17063,6 +17228,351 @@ async function _notifyFavWorkers(jobId, title, wage) {
 // ═══════════════════════════════════════════════════════════════════
 // ── 전자계약서 자동 생성 ───────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// STAFF 관리 패널
+// ══════════════════════════════════════════════════════════════
+
+let _staffData = [];
+let _staffFilter = 'all';
+
+async function loadStaffPanel() {
+  const el = document.getElementById('staff-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+
+  let jobIds = postings.map(p => p.id);
+  if (!jobIds.length) {
+    const { data: jobs } = await db.from('job_postings').select('id').eq('business_id', bizRecord.id);
+    jobIds = (jobs || []).map(j => j.id);
+  }
+  if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">등록된 공고가 없어요</div>'; return; }
+
+  const { data, error } = await db.from('applications')
+    .select('*, wage_paid, workers(id,name,phone,rating,review_count,nationality,visa_type,visa_doc_url), job_postings(id,title,current_wage,duration_hours,start_time,work_type)')
+    .in('job_posting_id', jobIds)
+    .order('applied_at', { ascending: false });
+
+  if (error) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">불러오기 실패</div>'; return; }
+  _staffData = data || [];
+  renderStaffPanel();
+}
+
+function filterStaff(filter, chipEl) {
+  _staffFilter = filter;
+  document.querySelectorAll('.staff-chip').forEach(c => c.classList.remove('active'));
+  if (chipEl) chipEl.classList.add('active');
+  renderStaffPanel();
+}
+
+function renderStaffPanel() {
+  const el = document.getElementById('staff-list');
+  const now = new Date();
+  const thisMonth = now.toISOString().slice(0, 7);
+
+  let filtered = _staffData;
+  if (_staffFilter === 'accepted')   filtered = _staffData.filter(a => a.status === 'accepted');
+  else if (_staffFilter === 'completed') filtered = _staffData.filter(a => a.status === 'completed');
+  else if (_staffFilter === 'pending')   filtered = _staffData.filter(a => a.status === 'pending' || a.status === 'reviewing');
+  else if (_staffFilter === 'unpaid')    filtered = _staffData.filter(a => a.status === 'completed' && !a.wage_paid);
+
+  // 요약 통계
+  const activeCount  = _staffData.filter(a => a.status === 'accepted').length;
+  const unpaidCount  = _staffData.filter(a => a.status === 'completed' && !a.wage_paid).length;
+  const monthlyWage  = _staffData
+    .filter(a => a.status === 'completed' && (a.completed_at||'').startsWith(thisMonth))
+    .reduce((sum, a) => {
+      const w = a.job_postings?.current_wage || 0;
+      const h = a.job_postings?.duration_hours || 0;
+      return sum + w * h;
+    }, 0);
+
+  document.getElementById('st-active').textContent = activeCount + '명';
+  document.getElementById('st-unpaid').textContent = unpaidCount + '명';
+  document.getElementById('st-total-wage').textContent = monthlyWage ? monthlyWage.toLocaleString() + '원' : '—';
+
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">해당 데이터가 없어요</div>';
+    return;
+  }
+
+  const STATUS_LABEL = { pending:'접수', reviewing:'검토중', accepted:'근무중', rejected:'탈락', completed:'완료', noshow:'노쇼' };
+  const STATUS_CLS   = { pending:'background:#FEF3C7;color:#92400E', reviewing:'background:#DBEAFE;color:#1e40af', accepted:'background:#D1FAE5;color:#065F46', rejected:'background:#F3F4F6;color:#9CA3AF', completed:'background:#EDE9FE;color:#5b21b6', noshow:'background:#FEE2E2;color:#991B1B' };
+
+  el.innerHTML = filtered.map(a => {
+    const w = a.workers || {};
+    const job = a.job_postings || {};
+    const wage = (job.current_wage || 0) * (job.duration_hours || 0);
+    const visaBadge = w.visa_doc_url ? '<span class="staff-visa-badge">✅ 비자인증</span>' : (w.visa_type && w.visa_type !== 'KR' ? `<span class="staff-visa-badge" style="background:#FFF7ED;color:#c2410c">${w.visa_type}</span>` : '');
+    const startStr  = job.start_time ? new Date(job.start_time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+    const sStyle    = STATUS_CLS[a.status] || '';
+    const isPaid    = a.wage_paid;
+    const wageStr   = wage ? wage.toLocaleString() + '원' : '-';
+
+    return `<div class="staff-card">
+      <div class="staff-card-top">
+        <div class="staff-avatar">👤</div>
+        <div style="flex:1;min-width:0">
+          <div class="staff-name">${w.name||'—'}${visaBadge}</div>
+          <div class="staff-meta">${w.phone||''} ${w.nationality ? '· '+w.nationality : ''}</div>
+        </div>
+        <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;${sStyle}">${STATUS_LABEL[a.status]||a.status}</span>
+      </div>
+      <div class="staff-rows">
+        <div class="staff-row">
+          <span class="staff-row-label">공고</span>
+          <span class="staff-row-val" style="font-size:12px">${job.title||'-'}</span>
+        </div>
+        <div class="staff-row">
+          <span class="staff-row-label">근무일시</span>
+          <span class="staff-row-val">${startStr}</span>
+        </div>
+        <div class="staff-row">
+          <span class="staff-row-label">시급 × 시간</span>
+          <span class="staff-row-val">${(job.current_wage||0).toLocaleString()}원 × ${job.duration_hours||0}h</span>
+        </div>
+        <div class="staff-row">
+          <span class="staff-row-label">예상 급여</span>
+          <span class="staff-row-val" style="color:#C8102E;font-size:14px;font-weight:900">${wageStr}</span>
+        </div>
+        ${a.status === 'completed' ? `
+        <div class="staff-row">
+          <span class="staff-row-label">급여 지급</span>
+          <button class="wage-paid-btn ${isPaid?'paid':'unpaid'}" onclick="toggleWagePaid('${a.id}',${isPaid},this)">
+            ${isPaid ? '✅ 지급완료' : '❌ 미지급'}
+          </button>
+        </div>` : ''}
+      </div>
+      <div class="staff-actions">
+        <button class="staff-act-btn" onclick="openChat('${a.id}','${(w.name||'').replace(/'/g,"\\'")}')">💬 채팅</button>
+        ${w.phone ? `<button class="staff-act-btn" onclick="window.location.href='tel:${w.phone}'">📞 전화</button>` : ''}
+        ${a.status === 'completed' ? `<button class="staff-act-btn" style="background:#FFF0F0;color:#C8102E" onclick="relistPosting('${job.id||''}')">🔄 재채용</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleWagePaid(appId, currentPaid, btnEl) {
+  const newPaid = !currentPaid;
+  btnEl.disabled = true;
+  const { error } = await db.from('applications').update({
+    wage_paid: newPaid,
+    wage_paid_at: newPaid ? new Date().toISOString() : null
+  }).eq('id', appId);
+  if (error) { showToast('저장 실패'); btnEl.disabled = false; return; }
+  const app = _staffData.find(a => a.id === appId);
+  if (app) app.wage_paid = newPaid;
+  btnEl.className = 'wage-paid-btn ' + (newPaid ? 'paid' : 'unpaid');
+  btnEl.textContent = newPaid ? '✅ 지급완료' : '❌ 미지급';
+  btnEl.disabled = false;
+  showToast(newPaid ? '✅ 급여 지급 완료 처리' : '급여 미지급으로 변경');
+  // 요약 수치 갱신
+  const unpaid = _staffData.filter(a => a.status === 'completed' && !a.wage_paid).length;
+  document.getElementById('st-unpaid').textContent = unpaid + '명';
+}
+
+// ══════════════════════════════════════════════════════════════
+// 외국인 특화 비자 시스템
+// ══════════════════════════════════════════════════════════════
+
+const VISA_ELIGIBLE_JOBS = {
+  'KR':    { label:'한국 국적', jobs:['전 업종 가능'], note:'취업에 제한이 없습니다.', color:'#16a34a' },
+  'H-2':   { label:'H-2 방문취업', jobs:['F&B/식음료','물류/배달','청소/위생','건설보조','제조/생산','농업/어업','판매/서비스','주차/경비'], note:'동포(중국·구소련) 대상. 법무부 허용 업종 내 자유취업 가능. 단순노무 위주.', color:'#2563eb' },
+  'E-9':   { label:'E-9 비전문취업', jobs:['제조업','농업','어업','건설업 일부','서비스업 일부'], note:'고용허가제 적용. 지정 업체·업종 외 근무 불가. 업체 변경 시 고용센터 신고 필요.', color:'#d97706', warn:true },
+  'F-4':   { label:'F-4 재외동포', jobs:['전 업종 가능 (단순노무 제외)'], note:'단순노무(청소, 단순조립 등) 업종은 제한. 대부분 전문·사무 업종 가능.', color:'#2563eb' },
+  'F-5':   { label:'F-5 영주권', jobs:['제한 없음 (전 업종)'], note:'한국 국적자와 동일하게 취업 제한 없음.', color:'#16a34a' },
+  'F-6':   { label:'F-6 결혼이민', jobs:['제한 없음 (전 업종)'], note:'국민의 배우자로서 취업 제한 없음.', color:'#16a34a' },
+  'F-2':   { label:'F-2 거주', jobs:['대부분 업종 가능'], note:'체류자격별 허가 범위 내 취업 가능. 허가증 업종 확인 필요.', color:'#2563eb' },
+  'D-2':   { label:'D-2 유학', jobs:['시간제 알바 (주 20시간 이내)'], note:'학기 중 주 20시간 이내만 가능. 방학 중에는 시간 제한 없음.', color:'#d97706', warn:true },
+  'D-4':   { label:'D-4 어학연수', jobs:['시간제 알바 (주 20시간 이내)'], note:'시간제 취업허가 필요. 주 20시간 초과 불가.', color:'#d97706', warn:true },
+  'E-7':   { label:'E-7 특정활동', jobs:['허가된 전문직 업무만 가능'], note:'허가증에 명시된 직종 외 근무 불가.', color:'#7c3aed', warn:true },
+  'C-4':   { label:'C-4 단기취업', jobs:['단기 허가 업종'], note:'90일 이내 단기. 허가된 업종 외 불가.', color:'#d97706', warn:true },
+  'OTHER': { label:'기타 비자', jobs:['비자 종류에 따라 상이'], note:'출입국관리사무소 또는 고용지원센터에 확인하세요.', color:'#888' },
+};
+
+const ALL_JOB_TYPES = ['F&B/식음료','물류/배달','청소/위생','건설/시설','제조/생산','농업/어업','판매/서비스','주차/경비','사무/행정','IT/개발','교육/강사','미용/헬스'];
+
+let _visaDocFile = null;
+let _selectedPrefJobs = new Set();
+
+function onVisaCountryChange() {
+  const country = document.getElementById('visa-country').value;
+  const visaSection = document.getElementById('visa-type-section');
+  const docSection  = document.getElementById('visa-doc-section');
+  visaSection.style.display = country && country !== 'KR' ? '' : 'none';
+  docSection.style.display  = country && country !== 'KR' ? '' : 'none';
+  if (country === 'KR') {
+    document.getElementById('visa-type').value = 'KR';
+    onVisaTypeChange();
+  }
+}
+
+function onVisaTypeChange() {
+  const vt = document.getElementById('visa-type').value;
+  const sec = document.getElementById('visa-eligible-section');
+  const tags = document.getElementById('visa-eligible-tags');
+  const note = document.getElementById('visa-eligible-note');
+  if (!vt) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  const info = VISA_ELIGIBLE_JOBS[vt] || VISA_ELIGIBLE_JOBS['OTHER'];
+  tags.innerHTML = info.jobs.map(j =>
+    `<span class="visa-eligible-tag${info.warn?' warn':''}">${j}</span>`
+  ).join('');
+  note.innerHTML = (info.warn ? '⚠️ ' : 'ℹ️ ') + info.note;
+  note.style.background = info.warn ? '#FFF7ED' : '#EFF6FF';
+  note.style.color = info.warn ? '#92400E' : '#1e3a8a';
+
+  // 희망 업종 칩 렌더
+  renderPrefJobChips(vt);
+}
+
+function renderPrefJobChips(visaType) {
+  const el = document.getElementById('pref-job-chips');
+  const eligibleInfo = VISA_ELIGIBLE_JOBS[visaType] || VISA_ELIGIBLE_JOBS['OTHER'];
+  const eligibleSet  = new Set(eligibleInfo.jobs.flatMap(j => ALL_JOB_TYPES.filter(t => j.includes('전') || j.includes('제한 없음') || t.includes(j.split('/')[0]))));
+  el.innerHTML = ALL_JOB_TYPES.map(type => {
+    const sel  = _selectedPrefJobs.has(type);
+    return `<div class="job-type-chip${sel?' selected':''}" onclick="togglePrefJob('${type}',this)">${type}</div>`;
+  }).join('');
+}
+
+function togglePrefJob(type, el) {
+  if (_selectedPrefJobs.has(type)) { _selectedPrefJobs.delete(type); el.classList.remove('selected'); }
+  else { _selectedPrefJobs.add(type); el.classList.add('selected'); }
+}
+
+function onVisaDocSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  _visaDocFile = file;
+  const preview = document.getElementById('visa-doc-preview');
+  preview.innerHTML = `<div style="font-size:13px;font-weight:700;color:#16a34a">✅ ${file.name}</div>
+    <button onclick="document.getElementById('visa-doc-file').click()" style="margin-top:6px;padding:6px 14px;background:#f5f5f5;border:none;border-radius:8px;font-size:12px;font-weight:700;color:#555;cursor:pointer">변경</button>`;
+}
+
+async function loadVisaProfile() {
+  const wid = await _getWorkerId();
+  if (!wid) return;
+  const { data } = await db.from('workers').select('visa_type,visa_doc_url,pref_job_types,nationality').eq('id', wid).single();
+  if (!data) return;
+  if (data.visa_type)  document.getElementById('visa-type').value   = data.visa_type;
+  if (data.nationality) {
+    const sel = document.getElementById('visa-country');
+    for (const opt of sel.options) { if (opt.value === data.nationality) { sel.value = data.nationality; break; } }
+  }
+  if (data.pref_job_types) {
+    _selectedPrefJobs = new Set(Array.isArray(data.pref_job_types) ? data.pref_job_types : []);
+  }
+  if (data.visa_doc_url) {
+    document.getElementById('visa-doc-preview').innerHTML = `<div style="font-size:12px;color:#16a34a;font-weight:700">✅ 비자 사본 등록됨</div>
+      <a href="${data.visa_doc_url}" target="_blank" style="font-size:11px;color:#3b82f6">파일 보기</a>`;
+  }
+  document.getElementById('mp-visa-val').textContent = data.visa_type || '';
+  onVisaCountryChange();
+  onVisaTypeChange();
+}
+
+async function saveVisaProfile() {
+  const wid = await _getWorkerId();
+  if (!wid) return;
+  const visaType   = document.getElementById('visa-type').value;
+  const country    = document.getElementById('visa-country').value;
+  const prefJobs   = Array.from(_selectedPrefJobs);
+
+  let visaDocUrl = null;
+  if (_visaDocFile) {
+    const ext  = _visaDocFile.name.split('.').pop();
+    const path = `visa/${wid}/${Date.now()}.${ext}`;
+    const { data: up, error: upErr } = await db.storage.from('worker-docs').upload(path, _visaDocFile, { upsert:true });
+    if (!upErr) {
+      const { data: pub } = db.storage.from('worker-docs').getPublicUrl(path);
+      visaDocUrl = pub.publicUrl;
+    }
+  }
+
+  const payload = { visa_type: visaType || null, nationality: country || null, pref_job_types: prefJobs };
+  if (visaDocUrl) payload.visa_doc_url = visaDocUrl;
+
+  const { error } = await db.from('workers').update(payload).eq('id', wid);
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  document.getElementById('mp-visa-val').textContent = visaType || '';
+  showToast('✅ 비자 정보가 저장됐어요!');
+  closeMpSub('foreigner');
+}
+
+async function loadWageHistory() {
+  const wid = await _getWorkerId();
+  if (!wid) return;
+  const el = document.getElementById('wage-history-list');
+  const { data: apps } = await db.from('applications')
+    .select('id, wage_paid, wage_paid_at, job_postings(title, current_wage, duration_hours, start_time, businesses(name))')
+    .eq('worker_id', wid)
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false });
+  if (!apps?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
+  el.innerHTML = apps.map(a => {
+    const job  = a.job_postings || {};
+    const wage = (job.current_wage||0) * (job.duration_hours||0);
+    const isPaid = a.wage_paid;
+    const date = job.start_time ? new Date(job.start_time).toLocaleDateString('ko-KR') : '-';
+    return `<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #f0f0f0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:800;color:#111">${job.businesses?.name||'업체'}</div>
+        <span style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;${isPaid?'background:#D1FAE5;color:#065F46':'background:#FEE2E2;color:#991B1B'}">${isPaid?'✅ 수령확인':'❌ 미수령'}</span>
+      </div>
+      <div style="font-size:12px;color:#555">${job.title||''} · ${date}</div>
+      <div style="font-size:18px;font-weight:900;color:#C8102E;margin-top:6px">${wage?wage.toLocaleString()+'원':'시급 미기재'}</div>
+      ${!isPaid ? `<button onclick="workerConfirmWageReceived('${a.id}',this)" style="margin-top:8px;width:100%;padding:10px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">💴 급여 수령 확인</button>
+      <button onclick="reportWageIssue('${a.id}')" style="margin-top:4px;width:100%;padding:8px;background:#f5f5f5;color:#888;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚠️ 임금체불 신고</button>` : `<div style="font-size:11px;color:#aaa;margin-top:6px">${a.wage_paid_at ? '수령일: ' + new Date(a.wage_paid_at).toLocaleDateString('ko-KR') : ''}</div>`}
+    </div>`;
+  }).join('');
+}
+
+async function workerConfirmWageReceived(appId, btn) {
+  btn.disabled = true; btn.textContent = '저장 중...';
+  const { error } = await db.from('applications').update({ wage_paid:true, wage_paid_at: new Date().toISOString() }).eq('id', appId);
+  if (error) { showToast('저장 실패'); btn.disabled = false; return; }
+  showToast('✅ 급여 수령 확인 완료');
+  loadWageHistory();
+}
+
+function reportWageIssue(appId) {
+  showToast('고용노동부 임금체불 신고: 1350으로 전화하거나 minwage.kr에서 신고하세요', 5000);
+}
+
+function openWorkerRightsGuide() {
+  const lang = localStorage.getItem('appLang') || 'ko';
+  const guides = {
+    ko: { title:'내 권리 가이드', items:['최저시급(2025): 10,030원/시간','연장근무: 기본시급 × 1.5배','야간(22~06시): 기본시급 × 1.5배','임금체불 신고: ☎ 1350 (고용노동부)','산업재해: 근로복지공단 1588-0075','외국인근로자지원센터: 1644-0644'] },
+    vi: { title:'Hướng dẫn quyền lợi', items:['Lương tối thiểu(2025): 10,030₩/giờ','Làm thêm giờ: lương × 1.5 lần','Tố cáo chậm trả lương: ☎ 1350','Hỗ trợ lao động nước ngoài: 1644-0644'] },
+    ru: { title:'Руководство по правам', items:['Минимальная зарплата(2025): 10,030₩/час','Сверхурочные: зарплата × 1.5','Жалоба на задержку: ☎ 1350','Поддержка иностранных рабочих: 1644-0644'] },
+    uz: { title:"Huquqlar bo'yicha qo'llanma", items:["Minimal ish haqi(2025): 10,030₩/soat","Qo'shimcha ish: maosh × 1.5","Ish haqi kechiktirilsa: ☎ 1350","Xorijiy ishchilarni qo'llab-quvvatlash: 1644-0644"] },
+    zh: { title:'权益指南', items:['最低时薪(2025): 10,030₩/小时','加班: 工资×1.5倍','欠薪投诉: ☎ 1350','外国劳动者支援中心: 1644-0644'] },
+  };
+  const g = guides[lang] || guides.ko;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 48px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:900">📋 ${g.title}</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div class="rights-card">
+      <div style="font-size:12px;font-weight:800;opacity:0.7;margin-bottom:10px;letter-spacing:0.5px">WORKER RIGHTS</div>
+      ${g.items.map(item => `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.15);font-size:13px;font-weight:600;line-height:1.5">${item}</div>`).join('')}
+    </div>
+    <div style="margin-top:16px;padding:14px;background:#FEF3C7;border-radius:12px;font-size:12px;color:#92400E;line-height:1.6">
+      <strong>외국인근로자지원센터 1644-0644</strong><br>
+      무료 통역 서비스 · 법률 상담 · 임금체불 지원<br>
+      월~금 09:00–18:00
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+// mpsub-foreigner 열릴 때 데이터 로드
+const _origOpenMpSub = typeof openMpSub === 'function' ? openMpSub : null;
+
 function openWorkerReviewReplyModal(appId, bizName, review, existingReply) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end';
