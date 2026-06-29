@@ -4089,7 +4089,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=273').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=274').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -6148,7 +6148,7 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
 async function showMyRatings() {
   if (!currentUser) return;
   const { data: apps } = await db.from('applications')
-    .select('worker_review, worker_rating, review_reply, job_postings(title, businesses(name))')
+    .select('id, worker_review, worker_rating, review_reply, worker_review_reply, job_postings(title, businesses(name))')
     .eq('worker_id', (await _getWorkerId()) || '')
     .not('worker_rating', 'is', null)
     .order('completed_at', { ascending: false });
@@ -6172,7 +6172,16 @@ async function showMyRatings() {
               <div style="font-size:14px;font-weight:900;color:#F59E0B">${'★'.repeat(Math.round(a.worker_rating))} ${a.worker_rating?.toFixed(1)}</div>
             </div>
             ${a.worker_review ? `<div style="font-size:13px;color:#555;line-height:1.6">"${a.worker_review}"</div>` : ''}
-            ${a.review_reply ? `<div style="margin-top:8px;padding:8px 10px;background:#EFF6FF;border-radius:8px;border-left:2px solid #3b82f6;font-size:12px;color:#1e3a8a;line-height:1.5"><span style="font-weight:800">업체 답글:</span> ${a.review_reply}</div>` : ''}
+            ${a.worker_review ? `
+              <div style="margin-top:8px;display:flex;justify-content:flex-end">
+                <button onclick="openWorkerReviewReplyModal('${a.id}','${(a.job_postings?.businesses?.name||'업체').replace(/'/g,"\\'")}','${(a.worker_review||'').replace(/'/g,"\\'").replace(/\n/g,' ')}','${(a.worker_review_reply||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"
+                  style="font-size:11px;font-weight:700;color:${a.worker_review_reply?'#3b82f6':'#aaa'};background:${a.worker_review_reply?'#eff6ff':'#f5f5f5'};border:none;border-radius:8px;padding:5px 10px;cursor:pointer">
+                  ${a.worker_review_reply ? '✏️ 내 답글 수정' : '💬 답글 달기'}
+                </button>
+              </div>
+              ${a.worker_review_reply ? `<div style="margin-top:6px;padding:8px 10px;background:#eff6ff;border-radius:8px;border-left:2px solid #3b82f6;font-size:12px;color:#1e3a8a;line-height:1.5"><span style="font-weight:800">내 답글:</span> ${a.worker_review_reply}</div>` : ''}
+            ` : ''}
+            ${a.review_reply ? `<div style="margin-top:8px;padding:8px 10px;background:#FEF3C7;border-radius:8px;border-left:2px solid #F59E0B;font-size:12px;color:#92400E;line-height:1.5"><span style="font-weight:800">업체 답글:</span> ${a.review_reply}</div>` : ''}
           </div>`).join('')}
     </div>`;
   document.body.appendChild(overlay);
@@ -11968,6 +11977,11 @@ function makeApplicantCardHtml(a, opts = {}) {
       <div style="font-size:12px;color:#78350F;line-height:1.5">"${a.worker_review.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
       ${a.review_reply ? `<div style="margin-top:6px;padding:6px 8px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E"><span style="font-weight:800">업체 답글:</span> ${a.review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     </div>` : ''}
+    ${a.status === 'completed' && a.worker_rating && a.worker_review_reply ? `
+    <div style="margin:0 14px 10px;padding:10px 12px;background:#EFF6FF;border-radius:10px;border-left:3px solid #3b82f6">
+      <div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:3px">💬 ${name}님의 평가 답글</div>
+      <div style="font-size:12px;color:#1e3a8a;line-height:1.5">"${a.worker_review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
+    </div>` : ''}
     <div class="ac-actions" onclick="${sp}">${actions}</div>
   </div>`;
 }
@@ -17049,6 +17063,57 @@ async function _notifyFavWorkers(jobId, title, wage) {
 // ═══════════════════════════════════════════════════════════════════
 // ── 전자계약서 자동 생성 ───────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════
+function openWorkerReviewReplyModal(appId, bizName, review, existingReply) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:#222">💬 업체 평가에 답글 달기</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">${bizName}의 나에 대한 평가</div>
+        </div>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+      </div>
+      <div style="background:#f8f8f8;border-radius:12px;padding:12px;margin-bottom:16px;font-size:13px;color:#555;line-height:1.5;border-left:3px solid #F59E0B">
+        ⭐ "${review}"
+      </div>
+      <textarea id="wreply-content" placeholder="이 평가에 대한 답글을 남겨주세요 (최대 200자)" maxlength="200"
+        style="width:100%;box-sizing:border-box;height:90px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;outline:none">${existingReply||''}</textarea>
+      <div style="font-size:11px;color:#bbb;text-align:right;margin-top:4px" id="wreply-char-count">${(existingReply||'').length}/200자</div>
+      <button id="wreply-submit-btn" onclick="window._submitWorkerReviewReply('${appId}')"
+        style="margin-top:16px;width:100%;padding:14px;background:#3b82f6;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">
+        ${existingReply ? '수정하기' : '답글 등록하기'}
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+  const ta = overlay.querySelector('#wreply-content');
+  if (ta) ta.addEventListener('input', () => {
+    const cnt = overlay.querySelector('#wreply-char-count');
+    if (cnt) cnt.textContent = ta.value.length + '/200자';
+  });
+  window._submitWorkerReviewReply = async (appId) => {
+    const content = (overlay.querySelector('#wreply-content')?.value || '').trim();
+    if (!content) { showToast('답글 내용을 입력해주세요'); return; }
+    const btn = overlay.querySelector('#wreply-submit-btn');
+    if (btn) { btn.textContent = '저장 중...'; btn.disabled = true; }
+    const { error } = await db.from('applications').update({
+      worker_review_reply: content,
+      worker_review_replied_at: new Date().toISOString()
+    }).eq('id', appId);
+    if (error) {
+      showToast('저장 실패: ' + error.message);
+      if (btn) { btn.textContent = '답글 등록하기'; btn.disabled = false; }
+      return;
+    }
+    showToast('✅ 답글이 등록됐어요!');
+    overlay.remove();
+    delete window._submitWorkerReviewReply;
+    showMyRatings();
+  };
+}
+
 function openReviewReplyModal(appId, workerName, review, existingReply) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end';
