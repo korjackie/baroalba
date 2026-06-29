@@ -4088,9 +4088,36 @@
         <span id="plan-badge" style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:#e5e7eb;color:#555">무료 플랜</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div id="plan-free" onclick="selectPlan('free')" style="border:2px solid #C8102E;background:#FFF5F5;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">무료 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">기본 공고 등록 · 지원자 관리</div><div style="font-size:16px;font-weight:900;color:#222;margin-top:4px">₩0</div></div>
-        <div id="plan-basic" onclick="selectPlan('basic')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">베이직 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">서지 자동화 · 추가 공고 슬롯</div><div style="font-size:16px;font-weight:900;color:#C8102E;margin-top:4px">₩9,900/월</div></div>
-        <div id="plan-pro" onclick="selectPlan('pro')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer"><div style="font-size:13px;font-weight:800;color:#222">프로 플랜</div><div style="font-size:12px;color:#aaa;margin-top:2px">프리미엄 노출 · 무제한 공고</div><div style="font-size:16px;font-weight:900;color:#7C3AED;margin-top:4px">₩29,900/월</div></div>
+        <div id="plan-free" onclick="selectPlan('free')" style="border:2px solid #C8102E;background:#FFF5F5;border-radius:12px;padding:12px 14px;cursor:pointer">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:13px;font-weight:800;color:#222">무료 플랜</div>
+            <div style="font-size:16px;font-weight:900;color:#222">₩0</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px">💼 공고 1개</span>
+            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px">🤝 모임 월1개</span>
+          </div>
+        </div>
+        <div id="plan-basic" onclick="selectPlan('basic')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:13px;font-weight:800;color:#222">베이직 플랜</div>
+            <div style="font-size:16px;font-weight:900;color:#C8102E">₩9,900/월</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px">💼 공고 5개 · 서지자동화</span>
+            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px">🤝 모임 월10개</span>
+          </div>
+        </div>
+        <div id="plan-pro" onclick="selectPlan('pro')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:13px;font-weight:800;color:#222">프로 플랜</div>
+            <div style="font-size:16px;font-weight:900;color:#7C3AED">₩29,900/월</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px">💼 공고 무제한 · 프리미엄 노출</span>
+            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px">🤝 모임 무제한</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -4747,7 +4774,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=283').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=284').then(reg => {
       reg.update();
     }).catch(()=>{});
     // HTML은 항상 네트워크 우선으로 서빙되므로 controllerchange reload 불필요
@@ -5546,6 +5573,8 @@ const MOIM_CAT_EMOJI = { 스포츠:'🎾', 취미:'🍷', 소셜:'🤝', 파티:
 const MOIM_PLAN_LIMITS = { free: 1, standard: 10, pro: Infinity };
 
 let _currentMoimId = null;   // 상세 보고 있는 모임 id
+let _moimDetailData = null; // openMoimDetail에서 로드된 원본 객체
+let _editingMoim = null;    // 수정 모드에서 원본 데이터
 let _moimRealtimeCh = null;  // 단체채팅 Realtime 채널
 let _moimList = [];          // 전체 모임 목록
 let _moimMapMode = false;    // 지도 모임 모드
@@ -5560,12 +5589,13 @@ function openMoimPanel(showCreate = false) {
 function closeMoimPanel() { document.getElementById('panel-moim').classList.remove('show'); }
 function closeMoimDetail() { document.getElementById('panel-moim-detail').classList.remove('show'); }
 function openMoimCreate(editData = null) {
+  _editingMoim = editData || null;
   const panel = document.getElementById('panel-moim-create');
   panel.classList.add('show');
   _resetMoimForm();
-  if (editData) _fillMoimForm(editData);
-  document.getElementById('moim-create-title').textContent = editData ? '모임 수정' : '모임 만들기';
-  document.getElementById('moim-submit-btn').textContent = editData ? '수정 완료' : '모임 개설하기';
+  if (_editingMoim) _fillMoimForm(_editingMoim);
+  document.getElementById('moim-create-title').textContent = _editingMoim ? '모임 수정' : '모임 만들기';
+  document.getElementById('moim-submit-btn').textContent = _editingMoim ? '수정 완료' : '모임 개설하기';
 }
 function closeMoimCreate() { document.getElementById('panel-moim-create').classList.remove('show'); }
 function closeMoimChat() {
@@ -5672,6 +5702,7 @@ async function openMoimDetail(moimId) {
 
   const { data: m } = await db.from('gatherings').select('*').eq('id', moimId).single();
   if (!m) { showToast('모임 정보를 불러올 수 없어요'); return; }
+  _moimDetailData = m;
 
   document.getElementById('moim-detail-title').textContent = m.title;
   const isHost = currentUser && m.host_id === currentUser.id;
@@ -5727,7 +5758,7 @@ async function openMoimDetail(moimId) {
         <div style="border-top:1px solid #f0f0f0;padding-top:16px">
           <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🛠️ 주최자 관리</div>
           <div style="display:flex;gap:8px">
-            <button onclick="openMoimCreate(${JSON.stringify(m).replace(/"/g,'&quot;')})" style="flex:1;padding:10px;border:1.5px solid #7C3AED;color:#7C3AED;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>
+            <button onclick="_editingMoim=_moimDetailData;openMoimCreate(_moimDetailData)" style="flex:1;padding:10px;border:1.5px solid #7C3AED;color:#7C3AED;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>
             <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">👥 신청자 관리</button>
           </div>
         </div>
@@ -5843,7 +5874,10 @@ function _fillMoimForm(m) {
   selectMoimPublic(m.is_public !== false);
   if (m.category) { const btn = [...document.querySelectorAll('#moim-cat-select button')].find(b => b.textContent.includes(m.category)); if (btn) selectMoimCat(btn, m.category); }
   if (m.skill_level) { const btn = [...document.querySelectorAll('#moim-skill-btns button')].find(b => b.textContent === m.skill_level); if (btn) selectMoimSkill(btn, m.skill_level); }
-  if (m.gender_req) { const btn = [...document.querySelectorAll('#moim-create-btn [onclick*=selectMoimGender]')]; } // handled by selectMoimGender
+  if (m.gender_req) {
+    const genderBtn = [...document.querySelectorAll('[onclick*=selectMoimGender]')].find(b => b.getAttribute('onclick').includes(`'${m.gender_req}'`));
+    if (genderBtn) selectMoimGender(genderBtn, m.gender_req);
+  }
 }
 
 function selectMoimCat(btn, cat) {
@@ -5883,12 +5917,16 @@ async function submitMoimForm() {
   // 무료 플랜 월 1개 제한 체크
   const editId = document.getElementById('f-moim-id').value;
   if (!editId) {
-    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
-    const { count } = await db.from('gatherings').select('id', { count:'exact', head:true }).eq('host_id', currentUser.id).gte('created_at', monthStart.toISOString());
-    const plan = 'free'; // TODO: 결제 연동 시 실제 플랜으로 교체
-    if (count >= MOIM_PLAN_LIMITS[plan]) {
-      showAlert(`무료 플랜은 월 ${MOIM_PLAN_LIMITS[plan]}개까지 개설 가능합니다.\n스탠다드(월 9,900원) 또는 프로(월 29,900원)로 업그레이드하세요.`, { icon:'⭐' });
-      return;
+    const plan = (typeof _currentPlan !== 'undefined' ? _currentPlan : 'free');
+    const limit = MOIM_PLAN_LIMITS[plan] ?? 1;
+    if (isFinite(limit)) {
+      const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+      const { count } = await db.from('gatherings').select('id', { count:'exact', head:true }).eq('host_id', currentUser.id).gte('created_at', monthStart.toISOString());
+      if ((count || 0) >= limit) {
+        const planName = { free:'무료', basic:'베이직', pro:'프로' }[plan] || '현재';
+        showAlert(`${planName} 플랜은 월 ${limit}개까지 모임을 개설할 수 있어요.\n베이직(₩9,900/월)은 월 10개, 프로(₩29,900/월)는 무제한입니다.`, { icon:'⭐', title:'플랜 업그레이드' });
+        return;
+      }
     }
   }
 
@@ -5948,7 +5986,6 @@ async function shareMoim() {
   const { data: m } = await db.from('gatherings').select('is_public,invite_code,title').eq('id', _currentMoimId).single();
   if (!m) return;
   const code = m.is_public ? _currentMoimId : m.invite_code;
-  const paramKey = m.is_public ? 'moim' : 'moim';
   const link = `${location.origin}${location.pathname}?moim=${code}`;
   if (navigator.share) {
     navigator.share({ title: m.title + ' — 바로모임', text: '같이 모임 참가해요!', url: link }).catch(() => {});
@@ -5974,13 +6011,21 @@ async function openMoimChat(gatheringId, title) {
   document.getElementById('panel-moim-chat').classList.add('show');
   document.getElementById('moim-chat-title').textContent = title || '모임 채팅';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
+  // 날짜 부제목 — _moimDetailData에서 읽음
+  const chatSub = document.getElementById('moim-chat-members');
+  if (_moimDetailData?.gathering_date) {
+    const dStr = new Date(_moimDetailData.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' });
+    chatSub.textContent = `📅 ${dStr} · 참가자 로딩 중`;
+  }
 
   // 참가자 수
   const { count } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
-  document.getElementById('moim-chat-members').textContent = `참가자 ${(count||0)+1}명`;
+  const memberCount = (count || 0) + 1; // 주최자 포함
+  const dStr2 = _moimDetailData?.gathering_date ? new Date(_moimDetailData.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' }) + ' · ' : '';
+  document.getElementById('moim-chat-members').textContent = `${dStr2}참가자 ${memberCount}명`;
 
-  // 기존 메시지 로드
-  const { data: msgs } = await db.from('gathering_chats').select('*, sender:sender_id(raw_user_meta_data)').eq('gathering_id', gatheringId).order('sent_at').limit(100);
+  // 기존 메시지 로드 (sender_name은 insert 시 denormalize된 값)
+  const { data: msgs } = await db.from('gathering_chats').select('*').eq('gathering_id', gatheringId).order('sent_at').limit(100);
   _renderMoimChatMessages(msgs || []);
 
   // Realtime 구독
@@ -6007,7 +6052,7 @@ function _appendMoimChatMsg(msg) {
 }
 function _moimChatBubble(m) {
   const isMine = currentUser && m.sender_id === currentUser.id;
-  const name = m.sender?.raw_user_meta_data?.full_name || '참가자';
+  const name = m.sender_name || '참가자';
   const time = new Date(m.sent_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
   return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};margin-bottom:4px">
     ${!isMine ? `<div style="font-size:10px;color:#999;font-weight:600;margin-bottom:2px;padding-left:4px">${name}</div>` : ''}
@@ -6024,7 +6069,8 @@ async function sendMoimChat() {
   const msg = input.value.trim();
   if (!msg || !gatheringId || !currentUser) return;
   input.value = '';
-  await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, message: msg });
+  const senderName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '참가자';
+  await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, message: msg });
 }
 
 // ── 지도 모임 모드 ────────────────────────────────────────
@@ -17764,18 +17810,24 @@ const PLAN_DETAILS = {
     color: '#C8102E',
     badge: '베이직',
     features: [
+      '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">💼 업주 혜택</strong>',
       '📢 공고 등록 슬롯 <strong>5개</strong> (무료: 1개)',
       '⚡ 시급 서지 자동 스케줄 설정',
       '👥 지원자 2명 나란히 비교',
       '📋 공고 복사 1클릭 재등록',
       '📊 공고별 조회수 트래킹',
       '⭐ 즐겨찾는 알바생 북마크',
+      '<strong style="font-size:11px;color:#7C3AED;display:block;margin-top:6px;margin-bottom:4px">🤝 바로모임 혜택</strong>',
+      '🎪 모임 <strong>월 10개</strong> 개설 (무료: 1개)',
+      '🔗 비공개 모임 초대링크 무제한',
+      '💬 단체채팅방 개설 무제한',
     ],
   },
   pro: {
     color: '#7C3AED',
     badge: '프로',
     features: [
+      '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">💼 업주 혜택</strong>',
       '🔥 프리미엄 노출 — 검색 상단 고정 (지원율 3배)',
       '📢 공고 등록 슬롯 <strong>무제한</strong>',
       '⚡ 시급 서지 자동 스케줄 설정',
@@ -17783,7 +17835,11 @@ const PLAN_DETAILS = {
       '📋 공고 복사 1클릭 재등록',
       '📊 공고별 조회수 트래킹',
       '⭐ 즐겨찾는 알바생 북마크',
-      '🎯 베이직 플랜 모든 기능 포함',
+      '<strong style="font-size:11px;color:#7C3AED;display:block;margin-top:6px;margin-bottom:4px">🤝 바로모임 혜택</strong>',
+      '🎪 모임 <strong>무제한</strong> 개설',
+      '🔗 비공개 모임 초대링크 무제한',
+      '💬 단체채팅방 개설 무제한',
+      '⭐ 모임 상단 추천 노출',
     ],
   },
 };
