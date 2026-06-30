@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 신규 기능 (2026.06.30-C)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--indigo:#6366f1;--indigo-light:#eef2ff;--orange:#f59e0b;--orange-light:#fffbeb;--purple:#7c3aed;--purple-light:#f3e8ff;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:var(--red-light);color:var(--red);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:860px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#fff0f2,#fff5f7);border:2px solid #fecdd3;border-radius:24px;padding:40px;margin-bottom:40px;text-align:center}
+  .hero-tag{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:16px}
+  .hero h1{font-size:32px;font-weight:900;color:var(--gray-900);line-height:1.25;letter-spacing:-0.5px;margin-bottom:12px}
+  .hero p{font-size:15px;color:var(--gray-500);font-weight:500}
+  .version-row{display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+  .v-chip{background:#fff;border:2px solid var(--red);color:var(--red);font-size:13px;font-weight:800;padding:6px 16px;border-radius:100px}
+  .section{margin-bottom:32px}
+  .section-title{font-size:13px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+  .card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--gray-200)}
+  .card-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+  .card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .card-icon.red{background:var(--red-light)}
+  .card-icon.green{background:var(--green-light)}
+  .card-icon.blue{background:var(--blue-light)}
+  .card-icon.indigo{background:var(--indigo-light)}
+  .card-icon.orange{background:var(--orange-light)}
+  .card-icon.purple{background:var(--purple-light)}
+  .card-title{font-size:18px;font-weight:900;color:var(--gray-900);line-height:1.3;margin-bottom:4px}
+  .card-sub{font-size:13px;color:var(--gray-500);font-weight:500}
+  .card-body{font-size:14px;color:var(--gray-700);line-height:1.8}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px;margin-right:6px;margin-bottom:4px}
+  .tag.bug{background:#fee2e2;color:#991b1b}
+  .tag.new{background:#dcfce7;color:#14532d}
+  .tag.fix{background:#dbeafe;color:#1e3a8a}
+  .tag.ux{background:#ede9fe;color:#4c1d95}
+  .code{background:#f4f4f8;border:1px solid #e0e0e8;border-radius:10px;padding:14px 16px;font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;color:#1a1a2e;margin:12px 0;overflow-x:auto;white-space:pre}
+  .diff-before{color:#dc2626}
+  .diff-after{color:#16a34a}
+  .lang-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
+  .lang-ball{background:var(--gray-100);border-radius:12px;padding:10px 4px;text-align:center;font-size:11px;font-weight:800;color:var(--gray-700)}
+  .lang-ball .flag{font-size:20px;display:block;margin-bottom:4px}
+  .layout-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+  .layout-col{background:var(--gray-100);border-radius:12px;padding:16px}
+  .layout-col h4{font-size:12px;font-weight:900;color:var(--gray-500);margin-bottom:10px;letter-spacing:0.5px}
+  .layout-row{background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:12px;font-weight:700;color:var(--gray-700);border:1px solid var(--gray-200)}
+  .layout-row.highlight{border-color:var(--red);background:var(--red-light);color:var(--red)}
+  .flow-list{list-style:none;padding:0;margin-top:10px}
+  .flow-list li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-200);font-size:13px;color:var(--gray-700)}
+  .flow-list li:last-child{border-bottom:none}
+  .flow-num{width:22px;height:22px;background:var(--red);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;margin-top:1px}
+  .highlight{background:linear-gradient(transparent 60%,rgba(200,16,46,0.15) 60%)}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">신규 기능 · 2026.06.30-C</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-tag">Feature Update</div>
+    <h1>홈 화면 <span class="highlight">B3 레이아웃</span> 전면 개편<br>+ 3가지 실기기 버그 수정</h1>
+    <p>급구슬라이더 → 숏컷4개 → 주변알바 → 바로모임 → FEATURED → RANK<br>_trustScore 스코프 오류, 뒤로가기 빈화면, 언어패널 순서/누락 해결</p>
+    <div class="version-row">
+      <span class="v-chip">v311</span>
+      <span class="v-chip">v312</span>
+    </div>
+  </div>
+
+  <!-- 홈 레이아웃 -->
+  <div class="section">
+    <div class="section-title">신규 기능 — 홈 화면 B3 레이아웃</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">🏠</div>
+        <div>
+          <div class="card-title">홈 화면 전면 개편 — B3 레이아웃</div>
+          <div class="card-sub"><span class="tag new">NEW</span> v311 · home-default-content 완전 재구성</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>기존 단순 리스트 홈을 <strong>6개 섹션으로 구조화</strong>했습니다. 정보 밀도를 높이면서 스크롤 낭비 없는 레이아웃.</p>
+        <div class="layout-grid">
+          <div class="layout-col">
+            <h4>이전 (v310)</h4>
+            <div class="layout-row">급구 배너 (단순)</div>
+            <div class="layout-row">숏컷 아이콘 6개</div>
+            <div class="layout-row">외국인 섹션</div>
+            <div class="layout-row">레슨/과외 섹션</div>
+            <div class="layout-row">주변 알바 리스트</div>
+          </div>
+          <div class="layout-col">
+            <h4>이후 (v311 · B3)</h4>
+            <div class="layout-row highlight">① 급구 슬라이더</div>
+            <div class="layout-row highlight">② 숏컷 아이콘 4개</div>
+            <div class="layout-row highlight">③ 주변 알바 공고</div>
+            <div class="layout-row highlight">④ 바로모임</div>
+            <div class="layout-row highlight">⑤ FEATURED 2열 그리드</div>
+            <div class="layout-row highlight">⑥ RANK 진입점 배너</div>
+          </div>
+        </div>
+        <p style="margin-top:14px">숏컷 6개 → 4개로 압축 (<strong>높은시급, AI추천, 외국인환영, 레슨/과외</strong>). 불필요한 섹션은 JS 호환성을 위해 숨김 요소로 유지.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">💰</div>
+        <div>
+          <div class="card-title">높은시급 숏컷 — openWageFilter() 신규</div>
+          <div class="card-sub"><span class="tag new">NEW</span> v311 · 홈 검색결과 연동</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>숏컷 '높은시급' 클릭 시 시급 내림차순으로 정렬된 공고 목록을 홈 검색결과 영역에 표시합니다.</p>
+        <div class="code"><span class="diff-after">function openWageFilter() {
+  _homeSort = 'wage';  // _renderHomeSearchList가 항상 _homeSort로 재정렬하므로 반드시 먼저 설정
+  const wageJobs = (jobs||[]).filter(j =>
+    (j.status==='open'||j.status==='urgent') &amp;&amp; j.current_wage &gt; 0
+  );
+  const label = document.getElementById('home-search-result-label');
+  if (label) label.textContent = `💰 높은 시급 공고 ${wageJobs.length}개`;
+  document.getElementById('home-search-results').style.display = 'block';
+  document.getElementById('home-default-content').style.display = 'none';
+  _renderHomeSearchList(wageJobs);
+}</span></div>
+        <p>× 초기화 버튼으로 기본 홈 복귀 (clearHomeFilter 기존 함수 재활용).</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">🌏</div>
+        <div>
+          <div class="card-title">외국인환영 숏컷 — badge 카운터</div>
+          <div class="card-sub"><span class="tag new">NEW</span> v311 · _renderHomeForeigner 변경</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>기존 외국인 섹션 표시 방식 대신, <strong>숏컷 아이콘 우상단에 공고 수 badge</strong>로 표시합니다. 홈 스크롤 공간 절약.</p>
+        <div class="code"><span class="diff-before">// 이전: section.style.display = 'block' — 별도 섹션 렌더</span>
+
+<span class="diff-after">// 이후: badge 카운터만 업데이트
+const badge = document.getElementById('shortcut-foreigner-badge');
+if (total > 0) { badge.textContent = total; badge.style.display = ''; }
+else { badge.style.display = 'none'; }</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 버그 수정 -->
+  <div class="section">
+    <div class="section-title">버그 수정 (v312)</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">🏆</div>
+        <div>
+          <div class="card-title">RANK 패널 불러오기 실패 — _trustScore 스코프 오류</div>
+          <div class="card-sub"><span class="tag bug">BUG FIX</span> v312 · _renderRankPanel 접근 불가</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>실기기에서 RANK 패널 진입 시 <strong>"불러오기 실패 · _trustScore is not defined"</strong> 오류 발생.</p>
+        <div class="code"><span class="diff-before">// 버그: _loadHomeTopPartners() 내부 로컬 함수
+async function _loadHomeTopPartners() {
+  const _trustScore = (rating, cnt) => rating * Math.log(1 + cnt); // 로컬 스코프
+}
+// _renderRankPanel()은 별도 함수 → _trustScore 접근 불가 → ReferenceError</span>
+
+<span class="diff-after">// 수정: 글로벌 스코프로 이동
+const _trustScore = (rating, cnt) => (rating || 0) * Math.log(1 + (cnt || 0));
+
+async function _loadHomeTopPartners() { /* _trustScore 정의 제거 */ }
+async function _renderRankPanel() { /* 이제 _trustScore 정상 접근 */ }</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon indigo">🔙</div>
+        <div>
+          <div class="card-title">뒤로가기 후 빈 화면 — popstate 미처리</div>
+          <div class="card-sub"><span class="tag bug">BUG FIX</span> v312 · Android 뒤로가기 내비게이션</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>외국인 필터 → 공고 상세 진입 → Android 뒤로가기 → <strong>빈 화면(지도탭)</strong>으로 이동하는 버그.</p>
+        <p style="margin-top:8px"><strong>원인:</strong> popstate 핸들러가 <code>.full-panel.show</code>만 체크. 공고 상세(detail-overlay)는 <code>.open</code> 클래스를 사용하므로 감지 불가 → 브라우저 기본 히스토리 pop 발생.</p>
+        <ul class="flow-list">
+          <li><div class="flow-num">1</div><div>detail-overlay.classList.contains('open') → 상세 닫기</div></li>
+          <li><div class="flow-num">2</div><div>panel-foreigner-lang.style.display === 'block' → 언어 패널 닫기</div></li>
+          <li><div class="flow-num">3</div><div>panel-rank.style.display === 'block' → RANK 패널 닫기</div></li>
+          <li><div class="flow-num">4</div><div>기존 .full-panel.show 처리 (유지)</div></li>
+        </ul>
+        <p style="margin-top:8px">각 케이스 처리 후 <code>history.pushState</code>로 히스토리 기준점 재설정.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">🌐</div>
+        <div>
+          <div class="card-title">외국인 언어 패널 개편 — 순서 재정렬 + 일본어 추가</div>
+          <div class="card-sub"><span class="tag fix">FIX</span><span class="tag new">NEW</span> v312 · panel-foreigner-lang</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>실사용자 인구 순으로 언어 버튼 재정렬, 누락된 일본어 추가.</p>
+        <div class="lang-grid">
+          <div class="lang-ball"><span class="flag">🇺🇸</span>영어</div>
+          <div class="lang-ball"><span class="flag">🇨🇳</span>중국어</div>
+          <div class="lang-ball" style="border:2px solid var(--red);background:var(--red-light)"><span class="flag">🇯🇵</span>일본어<br><span style="font-size:10px;color:var(--red)">신규</span></div>
+          <div class="lang-ball"><span class="flag">🇻🇳</span>베트남어</div>
+          <div class="lang-ball"><span class="flag">🇷🇺</span>러시아어</div>
+          <div class="lang-ball"><span class="flag">🇲🇳</span>몽골어</div>
+        </div>
+        <p style="margin-top:14px">중앙아시아(uz) 항목은 러시아어(ru)로 통합 제거. 한국 현장에서 중앙아시아 근로자 대부분이 러시아어 구사 가능(소련 교육 유산)이므로 실용적으로 동일 처리.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>바로알바 · 멀티무브 주식회사 · 2026.06.30-C 업데이트</footer>
+</main>
+</body>
+</html>
