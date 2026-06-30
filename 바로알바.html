@@ -3544,30 +3544,30 @@
     <div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px" id="foreigner-lang-options">
       <button onclick="applyForeignerLangFilter('any')" style="display:flex;align-items:center;gap:12px;background:#f6fdf8;border:1.5px solid #c6efd4;border-radius:14px;padding:13px 16px;cursor:pointer;text-align:left;width:100%">
         <span style="font-size:20px">🌏</span>
-        <div><div style="font-size:14px;font-weight:800;color:#15803d">언어 무관 — 외국인 환영</div><div style="font-size:11px;color:#aaa;margin-top:2px">nationality_requirement: foreigner_welcome</div></div>
+        <div><div style="font-size:14px;font-weight:800;color:#15803d">언어 무관 — 외국인 환영</div><div style="font-size:11px;color:#aaa;margin-top:2px">국적·언어 상관없이 환영하는 공고</div></div>
       </button>
       <button onclick="applyForeignerLangFilter('ko')" style="display:flex;align-items:center;gap:12px;background:#f8faff;border:1.5px solid #dbeafe;border-radius:14px;padding:13px 16px;cursor:pointer;text-align:left;width:100%">
         <span style="font-size:20px">🇰🇷</span>
-        <div><div style="font-size:14px;font-weight:800;color:#1d4ed8">한국어만 가능</div><div style="font-size:11px;color:#aaa;margin-top:2px">한국어만 요구하는 공고</div></div>
+        <div><div style="font-size:14px;font-weight:800;color:#1d4ed8">한국어만 가능</div><div style="font-size:11px;color:#aaa;margin-top:2px">한국어 능통자만 지원 가능한 공고</div></div>
       </button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="applyForeignerLangFilter('en')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
+          <span style="font-size:18px">🇺🇸</span><div style="font-size:13px;font-weight:800;color:#374151">영어 우대</div>
+        </button>
+        <button onclick="applyForeignerLangFilter('zh')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
+          <span style="font-size:18px">🇨🇳</span><div style="font-size:13px;font-weight:800;color:#374151">중국어 우대</div>
+        </button>
+        <button onclick="applyForeignerLangFilter('ja')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
+          <span style="font-size:18px">🇯🇵</span><div style="font-size:13px;font-weight:800;color:#374151">일본어 우대</div>
+        </button>
         <button onclick="applyForeignerLangFilter('vi')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
           <span style="font-size:18px">🇻🇳</span><div style="font-size:13px;font-weight:800;color:#374151">베트남어 우대</div>
         </button>
         <button onclick="applyForeignerLangFilter('ru')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
           <span style="font-size:18px">🇷🇺</span><div style="font-size:13px;font-weight:800;color:#374151">러시아어 우대</div>
         </button>
-        <button onclick="applyForeignerLangFilter('zh')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
-          <span style="font-size:18px">🇨🇳</span><div style="font-size:13px;font-weight:800;color:#374151">중국어 우대</div>
-        </button>
         <button onclick="applyForeignerLangFilter('mn')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
           <span style="font-size:18px">🇲🇳</span><div style="font-size:13px;font-weight:800;color:#374151">몽골어 우대</div>
-        </button>
-        <button onclick="applyForeignerLangFilter('en')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
-          <span style="font-size:18px">🇺🇸</span><div style="font-size:13px;font-weight:800;color:#374151">영어 우대</div>
-        </button>
-        <button onclick="applyForeignerLangFilter('uz')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
-          <span style="font-size:18px">🇺🇿</span><div style="font-size:13px;font-weight:800;color:#374151">중앙아시아 우대</div>
         </button>
       </div>
     </div>
@@ -4941,7 +4941,29 @@ const _PANEL_CLOSE_MAP = {
 };
 history.pushState({ panel: null }, ''); // 초기 기준점
 window.addEventListener('popstate', () => {
-  // 가장 위에 열린 full-panel 찾기 (z-index 내림차순)
+  // 1. 공고 상세 (detail-overlay .open)
+  const detailEl = document.getElementById('detail-overlay');
+  if (detailEl && detailEl.classList.contains('open')) {
+    detailEl.classList.remove('open');
+    selectedJobId = null;
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 2. 외국인환영 언어 패널
+  const foreignerEl = document.getElementById('panel-foreigner-lang');
+  if (foreignerEl && foreignerEl.style.display === 'block') {
+    closeForeignerLangPanel();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 3. RANK 패널
+  const rankEl = document.getElementById('panel-rank');
+  if (rankEl && rankEl.style.display === 'block') {
+    closeRankPanel();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 4. full-panel.show (기존)
   const visible = [...document.querySelectorAll('.full-panel.show')]
     .sort((a, b) => (parseInt(b.style.zIndex) || 100) - (parseInt(a.style.zIndex) || 100));
   if (visible.length) {
@@ -4949,7 +4971,7 @@ window.addEventListener('popstate', () => {
     const closeFn = _PANEL_CLOSE_MAP[id];
     if (closeFn) closeFn();
     else visible[0].classList.remove('show');
-    history.pushState({ panel: null }, ''); // 다음 뒤로가기를 위한 상태 재설정
+    history.pushState({ panel: null }, '');
   }
 });
 
@@ -4970,7 +4992,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '311';
+  const _APP_V = '312';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4994,7 +5016,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=311').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=312').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6709,6 +6731,8 @@ async function _renderHomeLessonHot() {
 let _rankCurrentTab = 'employer';
 let _rankCurrentCat = '';
 
+const _trustScore = (rating, cnt) => (rating || 0) * Math.log(1 + (cnt || 0));
+
 function showRankPanel(type) {
   _rankCurrentTab = type || 'employer';
   _rankCurrentCat = '';
@@ -6814,8 +6838,6 @@ function showAllJobs() {
 }
 
 async function _loadHomeTopPartners() {
-  // 신뢰도 점수 = rating × ln(1 + review_count) — 평점·물량 동시 고려
-  const _trustScore = (rating, cnt) => (rating || 0) * Math.log(1 + (cnt || 0));
 
   // ── 이달의 추천 업체: businesses 테이블 기준 ──────────────────
   try {
