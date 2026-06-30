@@ -68,7 +68,7 @@ const STRENGTH_LABELS = {
 const TRANSLATIONS = {
   ko: {
     // 내비게이션 (알바생 앱)
-    nav_map:'지도', nav_swipe:'스와이프', nav_applications:'바로알바', nav_chats:'채팅', nav_profile:'마이페이지',
+    nav_home:'홈', nav_map:'지도', nav_swipe:'스와이프', nav_applications:'바로알바', nav_chats:'채팅', nav_profile:'마이페이지',
     // 서브탭
     tab_status:'지원 현황', tab_bookmarks:'🔖 북마크',
     // 지원 상태
@@ -162,7 +162,7 @@ const TRANSLATIONS = {
     lesson_nearby:'내 주변 레슨/과외', lesson_tab_lesson:'🎾 레슨', lesson_tab_tutoring:'📚 과외', lesson_tab_technical:'🔧 전문기술', lesson_reg_title:'레슨/과외 등록', lesson_my_title:'내 레슨/과외 프로필', lesson_my_empty:'등록된 레슨/과외가 없어요', lesson_my_noworker:'알바생 프로필을 먼저 만들어주세요',
   },
   en: {
-    nav_map:'Map', nav_swipe:'Swipe', nav_applications:'Applied', nav_chats:'Chat', nav_profile:'My Page',
+    nav_home:'Home', nav_map:'Map', nav_swipe:'Swipe', nav_applications:'Applied', nav_chats:'Chat', nav_profile:'My Page',
     tab_status:'Applications', tab_bookmarks:'🔖 Bookmarks',
     status_pending:'Pending', status_accepted:'✅ Accepted', status_rejected:'❌ Rejected', status_cancelled:'Cancelled',
     apply_btn:'⚡ Apply Now', apply_chat_btn:'💬 Message Owner',
@@ -238,7 +238,7 @@ const TRANSLATIONS = {
     lesson_nearby:'Nearby Lessons', lesson_tab_lesson:'🎾 Lesson', lesson_tab_tutoring:'📚 Tutoring', lesson_tab_technical:'🔧 Skills', lesson_reg_title:'Add Lesson', lesson_my_title:'My Lessons', lesson_my_empty:'No lessons registered', lesson_my_noworker:'Please create a worker profile first',
   },
   zh: {
-    nav_map:'地图', nav_swipe:'滑动', nav_applications:'我的申请', nav_chats:'聊天', nav_profile:'我的',
+    nav_home:'首页', nav_map:'地图', nav_swipe:'滑动', nav_applications:'我的申请', nav_chats:'聊天', nav_profile:'我的',
     tab_status:'申请状态', tab_bookmarks:'🔖 收藏',
     status_pending:'审核中', status_accepted:'✅ 录用', status_rejected:'❌ 拒绝', status_cancelled:'已取消',
     apply_btn:'⚡ 立即申请', apply_chat_btn:'💬 联系雇主',
@@ -314,7 +314,7 @@ const TRANSLATIONS = {
     lesson_nearby:'附近课程', lesson_tab_lesson:'🎾 课程', lesson_tab_tutoring:'📚 辅导', lesson_tab_technical:'🔧 专业技能', lesson_reg_title:'添加课程', lesson_my_title:'我的课程', lesson_my_empty:'暂无课程', lesson_my_noworker:'请先创建打工者资料',
   },
   ja: {
-    nav_map:'地図', nav_swipe:'スワイプ', nav_applications:'応募履歴', nav_chats:'チャット', nav_profile:'マイページ',
+    nav_home:'ホーム', nav_map:'地図', nav_swipe:'スワイプ', nav_applications:'応募履歴', nav_chats:'チャット', nav_profile:'マイページ',
     tab_status:'応募状況', tab_bookmarks:'🔖 ブックマーク',
     status_pending:'審査中', status_accepted:'✅ 合格', status_rejected:'❌ 不合格', status_cancelled:'キャンセル',
     apply_btn:'⚡ 今すぐ応募', apply_chat_btn:'💬 雇用主に連絡',
@@ -390,7 +390,7 @@ const TRANSLATIONS = {
     lesson_nearby:'近くのレッスン', lesson_tab_lesson:'🎾 レッスン', lesson_tab_tutoring:'📚 家庭教師', lesson_tab_technical:'🔧 専門技術', lesson_reg_title:'レッスン登録', lesson_my_title:'マイレッスン', lesson_my_empty:'登録されたレッスンなし', lesson_my_noworker:'先にアルバイト用プロフィールを作成してください',
   },
   vi: {
-    nav_map:'Bản đồ', nav_swipe:'Vuốt', nav_applications:'Đã ứng tuyển', nav_chats:'Chat', nav_profile:'Trang của tôi',
+    nav_home:'Trang chủ', nav_map:'Bản đồ', nav_swipe:'Vuốt', nav_applications:'Đã ứng tuyển', nav_chats:'Chat', nav_profile:'Trang của tôi',
     tab_status:'Trạng thái', tab_bookmarks:'🔖 Đã lưu',
     status_pending:'Đang xét', status_accepted:'✅ Đã nhận', status_rejected:'❌ Từ chối', status_cancelled:'Đã hủy',
     apply_btn:'⚡ Ứng tuyển ngay', apply_chat_btn:'💬 Nhắn tin chủ',
@@ -466,7 +466,7 @@ const TRANSLATIONS = {
     lesson_nearby:'Lớp học gần đây', lesson_tab_lesson:'🎾 Bài học', lesson_tab_tutoring:'📚 Gia sư', lesson_tab_technical:'🔧 Kỹ năng', lesson_reg_title:'Thêm lớp học', lesson_my_title:'Lớp học của tôi', lesson_my_empty:'Chưa có lớp học nào', lesson_my_noworker:'Vui lòng tạo hồ sơ ứng viên trước',
   },
   mn: {
-    nav_map:'Газрын зураг', nav_swipe:'Свайп', nav_applications:'Өргөдлүүд', nav_chats:'Чат', nav_profile:'Миний хуудас',
+    nav_home:'Нүүр', nav_map:'Газрын зураг', nav_swipe:'Свайп', nav_applications:'Өргөдлүүд', nav_chats:'Чат', nav_profile:'Миний хуудас',
     tab_status:'Өргөдлийн байдал', tab_bookmarks:'🔖 Хадгалсан',
     status_pending:'Хянаж байна', status_accepted:'✅ Авсан', status_rejected:'❌ Татгалзсан', status_cancelled:'Цуцлагдсан',
     apply_btn:'⚡ Өргөдөл гаргах', apply_chat_btn:'💬 Ажил олгогчид бичих',
@@ -542,7 +542,7 @@ const TRANSLATIONS = {
     lesson_nearby:'Ойролцоох хичээл', lesson_tab_lesson:'🎾 Хичээл', lesson_tab_tutoring:'📚 Хувийн багш', lesson_tab_technical:'🔧 Мэргэжлийн ур чадвар', lesson_reg_title:'Хичээл нэмэх', lesson_my_title:'Миний хичээлүүд', lesson_my_empty:'Бүртгэлтэй хичээл байхгүй', lesson_my_noworker:'Эхлээд ажилтны профайл үүсгэнэ үү',
   },
   ru: {
-    nav_map:'Карта', nav_swipe:'Свайп', nav_applications:'Заявки', nav_chats:'Чат', nav_profile:'Профиль',
+    nav_home:'Главная', nav_map:'Карта', nav_swipe:'Свайп', nav_applications:'Заявки', nav_chats:'Чат', nav_profile:'Профиль',
     tab_status:'Мои заявки', tab_bookmarks:'🔖 Закладки',
     status_pending:'На рассмотрении', status_accepted:'✅ Принят', status_rejected:'❌ Отказ', status_cancelled:'Отменено',
     apply_btn:'⚡ Подать заявку', apply_chat_btn:'💬 Написать работодателю',
@@ -752,7 +752,7 @@ function applyLang() {
   } else {
     // ── 알바생 앱 전용 ────────────────────────────────────────────
     // 5탭: 지도/스와이프/바로알바/채팅/마이페이지
-    const navKeys = ['nav_map','nav_swipe','nav_applications','nav_chats','nav_profile'];
+    const navKeys = ['nav_home','nav_map','nav_applications','nav_chats','nav_profile'];
     navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
     // 서브탭
     si('subtab-status', 'tab_status');
