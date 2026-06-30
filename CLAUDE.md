@@ -12,12 +12,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |---|------|------|
 | 1 | **owner.html 편집 금지** | redirect 전용 파일. 업주 기능은 바로알바.html의 panel-owner에 있음 |
 | 2 | **배포: `git push origin main`만** | Vercel 자동배포. SCP 절대 금지 |
-| 3 | **HTML/JS 수정 시 sw.js CACHE 버전 증가** | PWA 캐시 미갱신 방지. 현재 v270 |
+| 3 | **HTML/JS 수정 시 sw.js CACHE 버전 증가** | PWA 캐시 미갱신 방지 |
 | 4 | **DML은 JS 클라이언트 직접** | `db.from(...)`으로 처리. SQL 실행 위임 금지 (DDL만 예외) |
 | 5 | **버전 파일 생성 금지** | 소스파일은 단일본. `바로알바_v2.html` 불가 |
 | 6 | **편집 후 즉시 배포** | 편집만 하고 완료 보고 금지 |
 | 7 | **같은 기능은 소스 복붙 + 변수명만 교체** | 재해석 구현 절대 금지 |
 | 8 | **shared-lang.js 수정 시 data-i18n 동기화 확인** | 번역키 불일치 방지 |
+| 9 | **Android 리빌드 시 versionCode 반드시 +1** | Play Console은 같거나 낮은 versionCode APK 업로드 거부. 예외 없음 |
 
 ---
 
