@@ -6634,24 +6634,15 @@ function _renderHomeForeigner() {
 }
 
 function openWageFilter() {
-  const toHourly = j => {
-    const w = j.current_wage||0, h = j.duration_hours||0, t = j.wage_type;
-    const d = (j.work_days||'').split(',').filter(Boolean).length||0;
-    if (!t||t==='hourly') return w;
-    if (t==='daily') return h>0?Math.round(w/h):0;
-    if (t==='weekly'){const wh=d>0?d*h:h;return wh>0?Math.round(w/wh):0;}
-    if (t==='monthly'){const wh=d>0?d*h:h;return wh>0?Math.round(w/(wh*4.333)):0;}
-    return 0;
-  };
-  const sorted = (jobs||[]).filter(j=>(j.status==='open'||j.status==='urgent')&&j.current_wage>0)
-    .sort((a,b)=>toHourly(b)-toHourly(a));
+  _homeSort = 'wage';
+  const wageJobs = (jobs||[]).filter(j=>(j.status==='open'||j.status==='urgent')&&j.current_wage>0);
   const srEl = document.getElementById('home-search-results');
   const defEl = document.getElementById('home-default-content');
   const label = document.getElementById('home-search-result-label');
-  if (label) label.textContent = `💰 높은 시급 공고 ${sorted.length}개`;
+  if (label) label.textContent = `💰 높은 시급 공고 ${wageJobs.length}개`;
   if (srEl) srEl.style.display = 'block';
   if (defEl) defEl.style.display = 'none';
-  _renderHomeSearchList(sorted);
+  _renderHomeSearchList(wageJobs);
 }
 
 function showForeignerLangPanel() {
