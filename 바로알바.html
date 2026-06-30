@@ -4881,7 +4881,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '304';
+  const _APP_V = '305';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4905,7 +4905,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=304').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=305').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -5695,7 +5695,7 @@ function renderUrgentFeed() {
     <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:150px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid #C8102E">
       <div style="background:${bg};padding:10px 12px 8px;position:relative">
         <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
-        <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.biz_name || job.title}</div>
+        <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title || job.biz_name}</div>
         <span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥급구</span>
       </div>
       <div style="padding:8px 10px">
@@ -6395,7 +6395,8 @@ function _homeJobCard(job) {
   return `<div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:140px;background:#fff;border-radius:13px;overflow:hidden;cursor:pointer;border:1.5px solid #f0f0f0">
     <div style="padding:10px 11px 7px">
       <div style="font-size:9px;font-weight:800;letter-spacing:.4px;color:#bbb;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.category||''}</div>
-      <div style="font-size:12px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.biz_name || job.title}</div>
+      <div style="font-size:12px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title || job.biz_name}</div>
+      ${job.biz_name ? `<div style="font-size:10px;color:#bbb;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${job.biz_name}</div>` : ''}
     </div>
     <div style="padding:0 11px 10px;border-top:1px solid #f8f8f8;padding-top:7px">
       <div style="font-size:15px;font-weight:900;color:#C8102E;line-height:1.1">${wage > 0 ? wage.toLocaleString('ko-KR')+'원' : '협의'}</div>
@@ -10421,6 +10422,7 @@ function setNav(el, tab) {
   document.getElementById('panel-community')?.classList.remove('show');
   document.getElementById('panel-lesson')?.classList.remove('show');
   document.getElementById('panel-lesson-manage')?.classList.remove('show');
+  document.querySelectorAll('.mpsub-panel').forEach(p => p.classList.remove('show'));
 
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
@@ -10988,6 +10990,17 @@ function showQuickGradeModal(type, data = {}) {
 
 async function applySwipeJob(job, isQuick = false) {
   if (isGuest || !currentUser) return;
+  // 18세 미만 차단 (홈과 동일한 로직)
+  if (job.age_limit) {
+    if (_myAge === null) {
+      const { data: w } = await db.from('workers').select('age, birth_date').eq('kakao_uid', currentUser.id).maybeSingle();
+      _myAge = w?.age || (w?.birth_date ? calcAgeFromBirth(w.birth_date) : null);
+    }
+    if (_myAge !== null && _myAge < 18) {
+      showToast('\u{1F51E} 만 18세 이상만 지원 가능한 공고입니다');
+      return;
+    }
+  }
   appliedSwipeIds.add(job.id);
   let wid = await _getWorkerId();
   if (!wid) {
@@ -12462,10 +12475,6 @@ function calcAgeFromBirth(yymmdd) {
 
 async function saveWorkerProfile() {
   if (!currentUser) return;
-  if (!localStorage.getItem('baro_banned_agreed')) {
-    checkBannedAgree(() => saveWorkerProfile());
-    return;
-  }
   const birthVal = document.getElementById('worker-birth').value.trim();
   if (birthVal && !calcAgeFromBirth(birthVal)) {
     showToast('생년월일을 올바르게 입력해주세요 (예: 990115)');
@@ -16171,6 +16180,7 @@ async function submitPosting() {
     showToast('금액을 입력해주세요'); return;
   }
   if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
+  if (!isErrand && startTime < new Date()) { showToast('이미 지난 시간은 선택할 수 없어요'); return; }
   if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
   // 비대면 공고는 위치 불필요
   const _isRemote = document.getElementById('f-is-remote').value === 'true';
@@ -19414,22 +19424,30 @@ async function loadStaffPanel() {
   const el = document.getElementById('staff-list');
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+  try {
+    let jobIds = postings.map(p => p.id);
+    if (!jobIds.length) {
+      const { data: jobs } = await db.from('job_postings').select('id').eq('business_id', bizRecord?.id);
+      jobIds = (jobs || []).map(j => j.id);
+    }
+    if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">등록된 공고가 없어요</div>'; return; }
 
-  let jobIds = postings.map(p => p.id);
-  if (!jobIds.length) {
-    const { data: jobs } = await db.from('job_postings').select('id').eq('business_id', bizRecord.id);
-    jobIds = (jobs || []).map(j => j.id);
+    const { data, error } = await db.from('applications')
+      .select('id,status,applied_at,worker_rating,wage_paid,job_posting_id,workers(id,name,phone,rating,review_count,nationality,visa_type), job_postings(id,title,current_wage,duration_hours,start_time,work_type)')
+      .in('job_posting_id', jobIds)
+      .order('applied_at', { ascending: false });
+
+    if (error) {
+      console.error('[Staff] 조회 실패:', error);
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">불러오기 실패<br><span style="font-size:11px;color:#ccc">${error.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
+      return;
+    }
+    _staffData = data || [];
+    renderStaffPanel();
+  } catch(e) {
+    console.error('[Staff] 예외:', e);
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">오류 발생<br><span style="font-size:11px;color:#ccc">${e.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
   }
-  if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">등록된 공고가 없어요</div>'; return; }
-
-  const { data, error } = await db.from('applications')
-    .select('*, wage_paid, workers(id,name,phone,rating,review_count,nationality,visa_type,visa_doc_url), job_postings(id,title,current_wage,duration_hours,start_time,work_type)')
-    .in('job_posting_id', jobIds)
-    .order('applied_at', { ascending: false });
-
-  if (error) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">불러오기 실패</div>'; return; }
-  _staffData = data || [];
-  renderStaffPanel();
 }
 
 function filterStaff(filter, chipEl) {
