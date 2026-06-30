@@ -4868,21 +4868,24 @@ window.addEventListener('popstate', () => {
 
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  // 앱 버전 캐시 강제 초기화 — 이전 버전 SW 캐시가 남아있으면 전부 삭제 후 reload
-  const _APP_V = '297';
+  // 앱 버전 캐시 강제 초기화 — localStorage 클리어 후에도 반드시 최신 버전 로드
+  const _APP_V = '298';
   const _savedV = localStorage.getItem('_baroV');
-  if (_savedV && _savedV !== _APP_V) {
+  if (_savedV !== _APP_V) {
+    const _hadPrev = !!_savedV;
     localStorage.setItem('_baroV', _APP_V);
     if ('caches' in window) {
       await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
     }
-    location.reload(true);
-    return;
+    if (_hadPrev) {
+      // 이전 버전이 있었을 때만 reload (첫 방문은 reload 불필요)
+      location.reload(true);
+      return;
+    }
   }
-  localStorage.setItem('_baroV', _APP_V);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=297').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=298').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
