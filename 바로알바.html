@@ -4881,7 +4881,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '303';
+  const _APP_V = '304';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4905,7 +4905,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=303').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=304').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6416,9 +6416,11 @@ function _renderHomeUrgent() {
   section.style.display = 'flex';
   const samples = urgentJobs.slice(0, 2);
   section.innerHTML = `
-    <div style="font-size:9px;font-weight:900;letter-spacing:1.5px;color:rgba(210,120,130,.9);margin-bottom:5px">URGENT NOW</div>
-    <div style="font-size:15px;font-weight:900;color:#fff;line-height:1.3">급구 <span style="color:#ff6677">${urgentJobs.length}건</span></div>
-    <div style="display:flex;gap:6px;margin-top:9px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+      <div style="font-size:16px;font-weight:900;color:#fff;line-height:1">급구 <span style="color:#ff6677">${urgentJobs.length}건</span></div>
+      <div style="font-size:9px;font-weight:900;letter-spacing:1.5px;color:rgba(210,120,130,.85)">URGENT NOW</div>
+    </div>
+    <div style="display:flex;gap:6px">
       ${samples.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="flex:1;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 9px;cursor:pointer;border:1px solid rgba(255,255,255,.05)">
         <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.title||j.category}</div>
         <div style="font-size:13px;font-weight:900;color:#fff;display:flex;align-items:baseline;gap:4px">${j.current_wage>0?`${j.current_wage.toLocaleString('ko-KR')}원<span style="font-size:10px;font-weight:800;opacity:.75">${_wageLabel(j)}</span>`:'협의'}</div>
@@ -6473,12 +6475,12 @@ function _renderHomeSameDay() {
   const section = document.getElementById('home-sameday-section');
   if (!section) return;
   if (!sdJobs.length) {
-    section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#b45309;margin-bottom:5px">SAME DAY</div><div style="font-size:12px;color:#ddd;margin-top:auto">공고 없음</div>`;
+    section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#b45309;margin-bottom:5px">당일정산</div><div style="font-size:12px;color:#ddd;margin-top:auto">공고 없음</div>`;
     return;
   }
   const top = sdJobs[0];
   section.innerHTML = `
-    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#b45309;margin-bottom:5px">SAME DAY</div>
+    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#b45309;margin-bottom:5px">당일정산</div>
     <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
     <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
     <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#b45309">${top.current_wage>0?top.current_wage.toLocaleString('ko-KR')+'원':'협의'}</span>${top.current_wage>0?`<span style="font-size:10px;font-weight:900;background:#fef3c7;color:#b45309;padding:2px 6px;border-radius:5px">${_wageLabel(top)}</span>`:''}</div>
@@ -13954,6 +13956,18 @@ function openPostingDetail(jobId) {
 
       <!-- 근무 정보 그리드 -->
       ${(() => {
+        const isRegular = p.work_type === 'regular';
+        const fmtTime = iso => { const d = new Date(iso); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+        if (isRegular && p.start_time) {
+          const startT = fmtTime(p.start_time);
+          const endT = p.duration_hours ? (() => { const e = new Date(p.start_time); e.setHours(e.getHours() + p.duration_hours); return fmtTime(e.toISOString()); })() : null;
+          return `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px;grid-column:1/-1">
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 시간</div>
+          <div style="font-size:13px;font-weight:800;color:#333">${startT}${endT ? ' ~ ' + endT : ''}${p.duration_hours ? ` (${p.duration_hours}시간)` : ''}</div>
+        </div>`;
+        }
         const endStr = (p.start_time && p.duration_hours) ? (() => {
           const e = new Date(p.start_time); e.setHours(e.getHours() + p.duration_hours); return fmtDate(e.toISOString());
         })() : null;
