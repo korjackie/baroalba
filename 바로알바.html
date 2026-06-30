@@ -2281,24 +2281,32 @@
     <!-- 기본 콘텐츠 -->
     <div id="home-default-content">
 
-      <!-- Bento Grid -->
-      <div style="padding:8px 12px 0;display:grid;grid-template-columns:1fr 1fr;gap:7px">
-
-        <!-- 급구 타일 (full-width, dark, JS로 채움) -->
-        <div id="home-urgent-section" style="display:none;grid-column:1/-1;background:#111;border-radius:15px;padding:13px;cursor:pointer;flex-direction:column"></div>
-
-        <!-- 높은 시급 (left col, JS로 채움) -->
-        <div id="home-sameday-section" style="background:#fff5f5;border:1.5px solid #fecdd3;border-radius:15px;padding:13px;flex-direction:column;cursor:pointer"></div>
-
-        <!-- AI PICKS (right col, JS로 채움) -->
-        <div id="home-ai-section" style="display:none;background:#fff;border:1.5px solid #efefef;border-radius:15px;padding:13px;flex-direction:column;cursor:pointer"></div>
-
-        <!-- 외국인환영 (full-width, JS로 채움) -->
-        <div id="home-foreigner-section" style="display:none;grid-column:1/-1;background:#f6fdf8;border:1.5px solid #c6efd4;border-radius:15px;padding:13px;flex-direction:column;cursor:pointer"></div>
-
+      <!-- ① 급구 슬라이더 -->
+      <div style="padding:8px 12px 0">
+        <div id="home-urgent-section" style="display:none;background:#111;border-radius:15px;padding:13px;cursor:pointer;flex-direction:column"></div>
       </div>
 
-      <!-- 최근 공고 섹션 -->
+      <!-- ② 숏컷 아이콘 4개 -->
+      <div style="background:#fff;display:flex;justify-content:space-around;padding:14px 16px;margin-top:8px;border-bottom:1px solid #f5f5f5">
+        <div onclick="openWageFilter()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:50px;height:50px;border-radius:15px;background:#fff0f2;display:flex;align-items:center;justify-content:center;font-size:22px">💰</div>
+          <div style="font-size:11px;font-weight:700;color:#333">높은시급</div>
+        </div>
+        <div onclick="(function(){var s=document.getElementById('home-ai-section');if(s&&s.onclick)s.onclick();})()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:50px;height:50px;border-radius:15px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:22px">🤖</div>
+          <div style="font-size:11px;font-weight:700;color:#333">AI추천</div>
+        </div>
+        <div onclick="showForeignerLangPanel()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:50px;height:50px;border-radius:15px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative">🌏<span id="shortcut-foreigner-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#C8102E;color:#fff;font-size:8px;font-weight:900;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center"></span></div>
+          <div style="font-size:11px;font-weight:700;color:#333">외국인환영</div>
+        </div>
+        <div onclick="openLessonPanel()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          <div style="width:50px;height:50px;border-radius:15px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:22px">📚</div>
+          <div style="font-size:11px;font-weight:700;color:#333">레슨/과외</div>
+        </div>
+      </div>
+
+      <!-- ③ 주변 알바 공고 -->
       <div id="home-recent-section" style="padding:7px 12px 0;display:none">
         <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;overflow:hidden">
           <div style="padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between">
@@ -2309,26 +2317,7 @@
         </div>
       </div>
 
-      <!-- 레슨/과외 HOT 섹션 -->
-      <div id="home-lesson-section" style="display:none;padding:7px 12px 0">
-        <div style="background:#fff;border:1.5px solid #dbeafe;border-radius:15px;overflow:hidden">
-          <div style="padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #eff6ff">
-            <div style="width:30px;height:30px;background:#3b82f6;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            </div>
-            <div style="flex:1">
-              <div style="font-size:14px;font-weight:900;color:#1d4ed8">레슨 · 과외 HOT</div>
-              <div style="font-size:10px;color:#93c5fd;margin-top:1px">최근 등록 · 평점 우수</div>
-            </div>
-            <button onclick="openLessonPanel()" style="font-size:12px;color:#3b82f6;font-weight:700;background:none;border:none;cursor:pointer">전체 ›</button>
-          </div>
-          <div id="home-lesson-list" style="display:flex;gap:8px;overflow-x:auto;padding:10px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-height:44px">
-            <div style="color:#bbb;font-size:12px;padding:10px 0;flex-shrink:0"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 바로모임 섹션 -->
+      <!-- ④ 바로모임 -->
       <div style="padding:7px 12px 0">
         <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:15px;overflow:hidden">
           <div style="padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #f5f3ff">
@@ -2348,24 +2337,39 @@
         </div>
       </div>
 
-      <!-- 파트너 RANK 진입점 -->
-      <div style="padding:7px 12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <div onclick="showRankPanel('employer')" style="background:#fffbf2;border:1.5px solid #fde8bb;border-radius:15px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(180,83,9,0.05)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <div style="font-size:12px;font-weight:900;color:#b45309">추천 업체</div>
-            <div style="font-size:10px;font-weight:800;background:#b45309;color:#fff;padding:2px 7px;border-radius:8px">RANK ›</div>
-          </div>
-          <div style="font-size:10px;color:#bbb;font-weight:600;margin-bottom:8px">업종별 신뢰도 순위</div>
-          <div id="home-top-employer"><div style="text-align:center;padding:4px 0;color:#ddd;font-size:11px">-</div></div>
+      <!-- ⑤ FEATURED -->
+      <div style="padding:14px 16px 6px">
+        <div style="font-size:11px;font-weight:900;color:#bbb;letter-spacing:.5px">FEATURED</div>
+      </div>
+      <div style="padding:0 12px;display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <div id="home-sameday-section" style="background:#fff5f5;border:1.5px solid #fecdd3;border-radius:15px;padding:13px;display:flex;flex-direction:column;cursor:pointer;min-height:110px">
+          <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div>
+          <div style="font-size:12px;color:#ddd;margin-top:auto">로딩중...</div>
         </div>
-        <div onclick="showRankPanel('worker')" style="background:#f0fdf7;border:1.5px solid #c6efd4;border-radius:15px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(21,128,61,0.05)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <div style="font-size:12px;font-weight:900;color:#15803d">우수 알바생</div>
-            <div style="font-size:10px;font-weight:800;background:#15803d;color:#fff;padding:2px 7px;border-radius:8px">RANK ›</div>
-          </div>
-          <div style="font-size:10px;color:#bbb;font-weight:600;margin-bottom:8px">분야별 신뢰도 순위</div>
-          <div id="home-top-worker"><div style="text-align:center;padding:4px 0;color:#ddd;font-size:11px">-</div></div>
+        <div id="home-ai-section" style="background:#fff;border:1.5px solid #efefef;border-radius:15px;padding:13px;display:flex;flex-direction:column;cursor:pointer;min-height:110px">
+          <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div>
+          <div style="font-size:12px;color:#bbb;line-height:1.6">공고를 둘러볼수록<br>맞춤 추천이 시작돼요</div>
+          <div style="margin-top:auto;padding-top:8px;font-size:10px;color:#e0e0e0;font-weight:700">🤖 AI 학습 중...</div>
         </div>
+      </div>
+
+      <!-- ⑥ RANK 진입점 -->
+      <div onclick="showRankPanel('employer')" style="margin:10px 12px 16px;background:linear-gradient(135deg,#92400e,#b45309);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:rgba(146,64,14,0.05)">
+        <div style="width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏆</div>
+        <div style="flex:1">
+          <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:4px">TRUST RANK</div>
+          <div style="font-size:16px;font-weight:900;color:#fff;line-height:1.25">업체 · 알바생<br>신뢰도 순위</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">업종별 1위가 누구인지 확인하세요</div>
+        </div>
+        <div style="font-size:20px;color:rgba(255,255,255,.6)">›</div>
+      </div>
+
+      <!-- 숨김 요소 (JS 호환성 유지) -->
+      <div style="display:none">
+        <div id="home-foreigner-section"></div>
+        <div id="home-lesson-section"><div id="home-lesson-list"></div></div>
+        <div id="home-top-employer"></div>
+        <div id="home-top-worker"></div>
       </div>
 
     </div><!-- /#home-default-content -->
@@ -4966,7 +4970,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '310';
+  const _APP_V = '311';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4990,7 +4994,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=310').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=311').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6618,23 +6622,36 @@ function _renderHomeSameDay() {
 
 function _renderHomeForeigner() {
   const section = document.getElementById('home-foreigner-section');
-  if (!section) return;
   const fjobs = jobs.filter(j => j.nationality_requirement==='foreigner_welcome'&&(j.status==='open'||j.status==='urgent'));
   const langJobs = jobs.filter(j => (j.status==='open'||j.status==='urgent') && j.preferred_languages?.length);
   const total = fjobs.length + langJobs.length;
-  if (!total) { section.style.display='none'; return; }
-  section.style.display = 'flex';
-  section.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;width:100%">
-      <div style="width:36px;height:36px;background:#15803d;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌏</div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:900;color:#166534">외국인 환영 알바</div>
-        <div style="font-size:11px;color:#16a34a;margin-top:1px">언어별 공고 ${total}건 · 탭해서 언어 선택</div>
-      </div>
-      <div style="font-size:18px;color:#16a34a">›</div>
-    </div>
-  `;
-  section.onclick = (e) => { e.stopPropagation(); showForeignerLangPanel(); };
+  // B3: 숏컷 아이콘 배지 업데이트
+  const badge = document.getElementById('shortcut-foreigner-badge');
+  if (badge) {
+    if (total > 0) { badge.textContent = total; badge.style.display = ''; }
+    else { badge.style.display = 'none'; }
+  }
+}
+
+function openWageFilter() {
+  const toHourly = j => {
+    const w = j.current_wage||0, h = j.duration_hours||0, t = j.wage_type;
+    const d = (j.work_days||'').split(',').filter(Boolean).length||0;
+    if (!t||t==='hourly') return w;
+    if (t==='daily') return h>0?Math.round(w/h):0;
+    if (t==='weekly'){const wh=d>0?d*h:h;return wh>0?Math.round(w/wh):0;}
+    if (t==='monthly'){const wh=d>0?d*h:h;return wh>0?Math.round(w/(wh*4.333)):0;}
+    return 0;
+  };
+  const sorted = (jobs||[]).filter(j=>(j.status==='open'||j.status==='urgent')&&j.current_wage>0)
+    .sort((a,b)=>toHourly(b)-toHourly(a));
+  const srEl = document.getElementById('home-search-results');
+  const defEl = document.getElementById('home-default-content');
+  const label = document.getElementById('home-search-result-label');
+  if (label) label.textContent = `💰 높은 시급 공고 ${sorted.length}개`;
+  if (srEl) srEl.style.display = 'block';
+  if (defEl) defEl.style.display = 'none';
+  _renderHomeSearchList(sorted);
 }
 
 function showForeignerLangPanel() {
