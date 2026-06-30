@@ -4881,7 +4881,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '306';
+  const _APP_V = '307';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4905,7 +4905,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=306').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=307').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6449,17 +6449,33 @@ function showHomeUrgentList() {
 
 function _renderHomeAI() {
   const hwSection = document.getElementById('home-sameday-section');
+  const section = document.getElementById('home-ai-section');
+  if (!section) return;
+  section.style.display = 'flex';
+  if (hwSection) hwSection.style.gridColumn = '';
   try {
     const raw = localStorage.getItem(_aiKey());
-    const section = document.getElementById('home-ai-section');
-    if (!section || !raw) { if (hwSection) hwSection.style.gridColumn='1/-1'; return; }
-    const prefs = JSON.parse(raw);
-    if ((prefs.totalSignals || 0) < 3) { section.style.display='none'; if (hwSection) hwSection.style.gridColumn='1/-1'; return; }
+    const prefs = raw ? JSON.parse(raw) : null;
+    if (!prefs || (prefs.totalSignals || 0) < 3) {
+      section.innerHTML = `
+        <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div>
+        <div style="font-size:12px;color:#bbb;line-height:1.6">공고를 둘러볼수록<br>맞춤 추천이 시작돼요</div>
+        <div style="margin-top:auto;padding-top:8px;font-size:10px;color:#e0e0e0;font-weight:700">🤖 AI 학습 중...</div>
+      `;
+      section.onclick = null;
+      return;
+    }
     const scored = (jobs||[]).filter(j=>j.status==='open'||j.status==='urgent')
       .map(j=>({job:j,score:_aiScoreJob(j,prefs)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-    if (!scored.length) { section.style.display='none'; if (hwSection) hwSection.style.gridColumn='1/-1'; return; }
-    section.style.display = 'flex';
-    if (hwSection) hwSection.style.gridColumn = '';
+    if (!scored.length) {
+      section.innerHTML = `
+        <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div>
+        <div style="font-size:12px;color:#bbb;line-height:1.6">지금 주변에 맞춤<br>공고가 없어요</div>
+        <div style="margin-top:auto;padding-top:8px;font-size:10px;color:#e0e0e0;font-weight:700">🤖 계속 학습 중...</div>
+      `;
+      section.onclick = null;
+      return;
+    }
     const top = scored[0].job;
     section.innerHTML = `
       <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">AI PICKS</div>
@@ -6468,26 +6484,41 @@ function _renderHomeAI() {
       <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#C8102E">${top.current_wage>0?top.current_wage.toLocaleString('ko-KR')+'원':'협의'}</span>${top.current_wage>0?`<span style="font-size:10px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px">${_wageLabel(top)}</span>`:''}</div>
     `;
     section.onclick = () => openDetail(top.id);
-  } catch(e) { if (hwSection) hwSection.style.gridColumn='1/-1'; }
+  } catch(e) {
+    section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div><div style="font-size:12px;color:#ddd">준비 중</div>`;
+  }
 }
 
 function _renderHomeSameDay() {
   const section = document.getElementById('home-sameday-section');
   if (!section) return;
+  // 모든 임금 유형을 시급으로 환산 (비교 기준 통일)
+  const toHourly = j => {
+    const w = j.current_wage || 0;
+    const h = j.duration_hours || 8;
+    const t = j.wage_type;
+    if (!t || t === 'hourly') return w;
+    if (t === 'daily') return Math.round(w / h);
+    if (t === 'monthly') return Math.round(w / 209); // 한국 법정 209시간/월
+    if (t === 'weekly') return Math.round(w / 40);
+    return null; // 건당/기타 제외
+  };
   const hwJobs = (jobs||[])
-    .filter(j => (j.status==='open'||j.status==='urgent') && j.current_wage > 0)
-    .sort((a,b) => b.current_wage - a.current_wage);
+    .filter(j => (j.status==='open'||j.status==='urgent') && j.current_wage > 0 && toHourly(j) !== null)
+    .sort((a,b) => toHourly(b) - toHourly(a));
   if (!hwJobs.length) {
+    section.style.display = 'flex';
     section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div><div style="font-size:12px;color:#ddd;margin-top:auto">공고 없음</div>`;
     return;
   }
   const top = hwJobs[0];
+  const hourly = toHourly(top);
   section.style.display = 'flex';
   section.innerHTML = `
     <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div>
     <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
     <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
-    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#C8102E">${top.current_wage.toLocaleString('ko-KR')}원</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px">${_wageLabel(top)}</span></div>
+    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#C8102E">${hourly.toLocaleString('ko-KR')}원</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px">시급</span></div>
   `;
   section.onclick = () => openDetail(top.id);
 }
