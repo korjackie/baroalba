@@ -4868,24 +4868,32 @@ window.addEventListener('popstate', () => {
 
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  // 앱 버전 캐시 강제 초기화 — localStorage 클리어 후에도 반드시 최신 버전 로드
-  const _APP_V = '298';
+  // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
+  const _APP_V = '299';
   const _savedV = localStorage.getItem('_baroV');
+  const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
-    const _hadPrev = !!_savedV;
     localStorage.setItem('_baroV', _APP_V);
+    // 1) SW CacheStorage 전부 삭제
     if ('caches' in window) {
       await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
     }
-    if (_hadPrev) {
-      // 이전 버전이 있었을 때만 reload (첫 방문은 reload 불필요)
-      location.reload(true);
+    // 2) SW 등록 전부 해제 (구버전 SW가 구버전 HTML 서빙하는 문제 근본 차단)
+    if (navigator.serviceWorker) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    // 3) URL 기반 캐시 우회: ?_v=299는 브라우저/WebView HTTP캐시에 없는 URL → 반드시 서버에서 신규 수신
+    if (_urlV !== _APP_V) {
+      window.location.replace('/바로알바.html?_v=' + _APP_V);
       return;
     }
   }
+  // _v 파라미터 URL에서 제거 (히스토리 정리)
+  if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=298').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=299').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
