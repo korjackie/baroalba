@@ -61,9 +61,8 @@ public class ChatReplyReceiver extends BroadcastReceiver {
             conn.setDoOutput(true);
 
             String safeContent = content.replace("\\", "\\\\").replace("\"", "\\\"");
-            String userId = extractUserIdFromJwt(authToken);
-            String body = "{\"application_id\":\"" + appId + "\",\"content\":\"" + safeContent + "\""
-                    + (userId != null ? ",\"sender_id\":\"" + userId + "\"" : "") + "}";
+            // messages 테이블: chat_id (FK), sender_role ('worker'|'business'), content
+            String body = "{\"chat_id\":\"" + appId + "\",\"content\":\"" + safeContent + "\",\"sender_role\":\"worker\"}";
 
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body.getBytes(StandardCharsets.UTF_8));

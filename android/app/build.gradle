@@ -9,8 +9,8 @@ android {
         applicationId 'kr.co.multimove.baroalba'
         minSdk 21
         targetSdk 35
-        versionCode 23
-        versionName '1.4.2'
+        versionCode 24
+        versionName '1.5.0'
     }
 
     signingConfigs {
