@@ -2251,7 +2251,7 @@
 
     <!-- 검색바 -->
     <div style="padding:8px 12px 0">
-      <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:13px;padding:8px 12px">
+      <div style="display:flex;align-items:center;gap:8px;background:#efefef;border:1.5px solid #e2e2e2;border-radius:13px;padding:9px 12px">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="home-search-input" type="text" placeholder="업종, 지역, 공고명 검색" style="border:none;background:none;font-size:13px;color:#222;flex:1;outline:none;min-width:0"
           oninput="doHomeSearch()"
@@ -2331,18 +2331,14 @@
 
       <!-- 우수 파트너 -->
       <div style="padding:7px 12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;padding:12px">
-          <div style="display:flex;align-items:center;gap:4px;margin-bottom:8px">
-            <span style="font-size:9px;font-weight:900;color:#b45309;letter-spacing:.3px">이달의 추천 업체</span>
-          </div>
-          <div style="font-size:9px;color:#ccc;font-weight:600;margin-bottom:8px;margin-top:-4px">평점+신뢰도 기준</div>
+        <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;padding:14px">
+          <div style="font-size:13px;font-weight:900;color:#b45309;margin-bottom:2px">추천 업체</div>
+          <div style="font-size:11px;color:#bbb;font-weight:600;margin-bottom:10px">평점+신뢰도 기준</div>
           <div id="home-top-employer"><div style="text-align:center;padding:6px 0;color:#ddd;font-size:12px">-</div></div>
         </div>
-        <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;padding:12px">
-          <div style="display:flex;align-items:center;gap:4px;margin-bottom:8px">
-            <span style="font-size:9px;font-weight:900;color:#15803d;letter-spacing:.3px">이달의 우수 알바생</span>
-          </div>
-          <div style="font-size:9px;color:#ccc;font-weight:600;margin-bottom:8px;margin-top:-4px">신뢰도+리뷰수 기준</div>
+        <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;padding:14px">
+          <div style="font-size:13px;font-weight:900;color:#15803d;margin-bottom:2px">우수 알바생</div>
+          <div style="font-size:11px;color:#bbb;font-weight:600;margin-bottom:10px">신뢰도+리뷰수 기준</div>
           <div id="home-top-worker"><div style="text-align:center;padding:6px 0;color:#ddd;font-size:12px">-</div></div>
         </div>
       </div>
@@ -4881,7 +4877,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '308';
+  const _APP_V = '309';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4905,7 +4901,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=308').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=309').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6422,9 +6418,9 @@ function _renderHomeUrgent() {
       <div style="font-size:9px;font-weight:900;letter-spacing:1.5px;color:rgba(210,120,130,.85)">URGENT NOW</div>
     </div>
     <div style="display:flex;gap:6px">
-      ${samples.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="flex:1;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 9px;cursor:pointer;border:1px solid rgba(255,255,255,.05)">
-        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.title||j.category}</div>
-        <div style="font-size:13px;font-weight:900;color:#fff;display:flex;align-items:baseline;gap:4px">${j.current_wage>0?`${j.current_wage.toLocaleString('ko-KR')}원<span style="font-size:10px;font-weight:800;opacity:.75">${_wageLabel(j)}</span>`:'협의'}</div>
+      ${samples.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="flex:1;background:rgba(255,255,255,.07);border-radius:10px;padding:9px 10px;cursor:pointer;border:1px solid rgba(255,255,255,.08)">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.title||j.category}</div>
+        <div style="font-size:14px;font-weight:900;color:#fff;display:flex;align-items:baseline;gap:4px">${j.current_wage>0?`${j.current_wage.toLocaleString('ko-KR')}원<span style="font-size:10px;font-weight:800;opacity:.75">${_wageLabel(j)}</span>`:'협의'}</div>
       </div>`).join('')}
     </div>
     <div onclick="event.stopPropagation();showHomeUrgentList()" style="display:inline-flex;align-items:center;gap:3px;background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;margin-top:9px;cursor:pointer;width:fit-content">전체보기 →</div>
@@ -6589,15 +6585,15 @@ async function _loadHomeTopPartners() {
           ? `<img src="${e.photo_url}" style="width:32px;height:32px;border-radius:9px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
           : '';
         const fallback = `<div style="width:32px;height:32px;border-radius:9px;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:${ac.text};flex-shrink:0${e.photo_url?';display:none':''}">${(e.name||'?')[0]}</div>`;
-        const typeTag = e.biz_type ? `<span style="font-size:9px;background:#fff7ed;color:#b45309;border-radius:4px;padding:1px 5px;font-weight:800">${e.biz_type}</span>` : '';
-        return `<div onclick="_showDetailBizProfile('${e.id}')" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent" title="${e.name} 프로필 보기">
+        const typeTag = e.biz_type ? `<span style="font-size:10px;background:#fff7ed;color:#b45309;border-radius:4px;padding:2px 6px;font-weight:800">${e.biz_type}</span>` : '';
+        return `<div onclick="_showDetailBizProfile('${e.id}')" style="display:flex;align-items:center;gap:9px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent" title="${e.name} 프로필 보기">
           ${avatarHtml}${fallback}
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-              <span style="font-size:11px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px">${e.name||'업체'}</span>
+              <span style="font-size:13px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${e.name||'업체'}</span>
               ${typeTag}
             </div>
-            <div style="font-size:10px;color:#b45309;font-weight:700;margin-top:1px">⭐ ${(e.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${e.review_count}건)</span></div>
+            <div style="font-size:12px;color:#b45309;font-weight:700;margin-top:2px">⭐ ${(e.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${e.review_count}건)</span></div>
           </div>
         </div>`;
       }).join('');
@@ -6627,15 +6623,15 @@ async function _loadHomeTopPartners() {
         const skls = Array.isArray(w.skills) ? w.skills : (typeof w.skills === 'string' && w.skills ? JSON.parse(w.skills) : []);
         const specialty = cats[0] || skls[0] || '';
         const specIcon = _CAT_ICON[specialty] || '';
-        const specTag = specialty ? `<span style="font-size:9px;background:#f0fdf4;color:#15803d;border-radius:4px;padding:1px 5px;font-weight:800">${specIcon} ${specialty}</span>` : '';
-        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        const specTag = specialty ? `<span style="font-size:10px;background:#f0fdf4;color:#15803d;border-radius:4px;padding:2px 6px;font-weight:800">${specIcon} ${specialty}</span>` : '';
+        return `<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
           ${avatarHtml}${flagFallback}
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-              <span style="font-size:11px;font-weight:800;color:#111">${anonName}</span>
+              <span style="font-size:13px;font-weight:800;color:#111">${anonName}</span>
               ${specTag}
             </div>
-            <div style="font-size:10px;color:#15803d;font-weight:700;margin-top:1px">⭐ ${(w.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${w.review_count}건)</span></div>
+            <div style="font-size:12px;color:#15803d;font-weight:700;margin-top:2px">⭐ ${(w.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${w.review_count}건)</span></div>
           </div>
         </div>`;
       }).join('');
