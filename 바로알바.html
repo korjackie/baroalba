@@ -2158,9 +2158,14 @@
 <div id="swipe-screen" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);background:#f0f0f5;z-index:250;flex-direction:column;align-items:center;justify-content:center;">
 
   <div style="width:100%;padding:14px 20px 6px;display:flex;align-items:center;justify-content:space-between;">
-    <div>
-      <div style="font-size:20px;font-weight:900;color:#111;letter-spacing:-0.5px">바로지원</div>
-      <div style="font-size:11px;color:#ccc;font-weight:600;margin-top:2px">← 패스 &nbsp;·&nbsp; ↑ 번개지원 &nbsp;·&nbsp; → 지원</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="swipe-back-btn" onclick="closeSwipeBackToMap()" style="display:none;background:none;border:none;padding:6px 2px;cursor:pointer;color:#888;font-size:13px;font-weight:700;display:none;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>지도
+      </button>
+      <div>
+        <div style="font-size:20px;font-weight:900;color:#111;letter-spacing:-0.5px">바로지원</div>
+        <div style="font-size:11px;color:#ccc;font-weight:600;margin-top:2px">← 패스 &nbsp;·&nbsp; ↑ 번개지원 &nbsp;·&nbsp; → 지원</div>
+      </div>
     </div>
     <div id="swipe-counter" style="font-size:13px;color:#aaa;font-weight:700"></div>
   </div>
@@ -4870,7 +4875,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '300';
+  const _APP_V = '301';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4894,7 +4899,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=300').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=301').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6778,7 +6783,6 @@ function _renderHomeSearchList(filtered) {
 
 function openNearbySwipe() {
   // 현재 지도에서 스와이프 탭으로 전환 (지도 중심 기준 반경 필터는 이미 jobs에 적용됨)
-  const swipeBtn = document.querySelectorAll('.nav-item')[2]; // 바로알바 탭 대신 swipe 직접 실행
   const swipeScreen = document.getElementById('swipe-screen');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelector('.top-bar').style.display = 'none';
@@ -6788,8 +6792,18 @@ function openNearbySwipe() {
   if (mapLocBtn) mapLocBtn.style.display = 'none';
   const floatBtn = document.getElementById('map-swipe-float');
   if (floatBtn) floatBtn.style.display = 'none';
+  // 지도에서 진입한 경우 뒤로가기 버튼 표시
+  const backBtn = document.getElementById('swipe-back-btn');
+  if (backBtn) backBtn.style.display = 'flex';
   swipeScreen.style.display = 'flex';
   initSwipe();
+}
+
+function closeSwipeBackToMap() {
+  const backBtn = document.getElementById('swipe-back-btn');
+  if (backBtn) backBtn.style.display = 'none';
+  const mapNavItem = document.querySelectorAll('.nav-item')[1]; // 지도 탭 (홈 다음)
+  setNav(mapNavItem, 'map');
 }
 
 // ── 공고 상세 ─────────────────────────────────────────────
