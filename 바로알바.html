@@ -3976,7 +3976,7 @@
 <!-- 토스트 -->
 
 <!-- ── owner 기능 패널 (공고 관리 전체화면 패널) ── -->
-<div id="panel-owner" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);z-index:500;background:#f8f8f8;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div id="panel-owner" style="display:none;position:fixed;inset:0;bottom:0;z-index:500;background:#f8f8f8;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--sab-safe))">
 <!-- 헤더 -->
 <div class="header">
   <div class="header-left">
@@ -4992,7 +4992,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '313';
+  const _APP_V = '314';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5016,7 +5016,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=313').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=314').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -14356,6 +14356,10 @@ function openPostingDetail(jobId) {
   // 지원자 로드
   loadPostingDetailApplicants(p.id);
 
+  // FAB 숨기기 (패널 위에 겹침 방지)
+  const _pdFab = document.getElementById('posting-fab');
+  if (_pdFab) _pdFab.style.display = 'none';
+
   // 패널 열기
   document.getElementById('panel-posting-detail').classList.add('show');
 
@@ -14378,6 +14382,8 @@ function openPostingDetail(jobId) {
 
 function closePostingDetail() {
   document.getElementById('panel-posting-detail').classList.remove('show');
+  const _pdFab = document.getElementById('posting-fab');
+  if (_pdFab) _pdFab.style.display = 'flex';
 }
 
 async function loadPostingDetailApplicants(jobId) {
@@ -14385,7 +14391,7 @@ async function loadPostingDetailApplicants(jobId) {
   if (!el) return;
   try {
     const { data: apps, error } = await db.from('applications')
-      .select('*, workers(id, name, phone, rating, review_count, noshow_count)')
+      .select('*')
       .eq('job_posting_id', jobId)
       .order('applied_at', { ascending: false });
     if (error) throw error;
@@ -14393,7 +14399,16 @@ async function loadPostingDetailApplicants(jobId) {
       el.innerHTML = '<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">아직 지원자가 없어요</div>';
       return;
     }
-    el.innerHTML = apps.map(a => makeApplicantCardHtml(a, { stopProp: false })).join('');
+    const wids = [...new Set(apps.filter(a => a.worker_id).map(a => a.worker_id))];
+    let workerMap = {};
+    if (wids.length) {
+      const { data: wks } = await db.from('workers')
+        .select('id, name, phone, rating, review_count, noshow_count')
+        .in('id', wids);
+      (wks || []).forEach(w => { workerMap[w.id] = w; });
+    }
+    const enriched = apps.map(a => ({ ...a, workers: workerMap[a.worker_id] || null }));
+    el.innerHTML = enriched.map(a => makeApplicantCardHtml(a, { stopProp: false })).join('');
   } catch(e) {
     el.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">지원자 목록을 불러오지 못했어요<br><button onclick="loadPostingDetailApplicants('${jobId}')" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
   }
@@ -14404,14 +14419,23 @@ async function loadInlineApplicants(jobId, targetId) {
   const el = document.getElementById(elId);
   if (!el) return;
   const { data: apps } = await db.from('applications')
-    .select('*, workers(id, name, phone, rating, review_count, noshow_count)')
+    .select('*')
     .eq('job_posting_id', jobId)
     .order('applied_at', { ascending: false });
   if (!apps?.length) {
     el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0">아직 지원자가 없어요</div>';
     return;
   }
-  el.innerHTML = apps.map(a => makeApplicantCardHtml(a, { stopProp: true })).join('');
+  const wids = [...new Set(apps.filter(a => a.worker_id).map(a => a.worker_id))];
+  let workerMap = {};
+  if (wids.length) {
+    const { data: wks } = await db.from('workers')
+      .select('id, name, phone, rating, review_count, noshow_count')
+      .in('id', wids);
+    (wks || []).forEach(w => { workerMap[w.id] = w; });
+  }
+  const enriched = apps.map(a => ({ ...a, workers: workerMap[a.worker_id] || null }));
+  el.innerHTML = enriched.map(a => makeApplicantCardHtml(a, { stopProp: true })).join('');
 }
 
 function deleteApplication(appId) {
