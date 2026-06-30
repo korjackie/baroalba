@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 기술 소개 (2026.06.30-B)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--indigo:#6366f1;--indigo-light:#eef2ff;--orange:#f59e0b;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:#dbeafe;color:#1e40af;font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:860px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;border-radius:24px;padding:40px;margin-bottom:40px;text-align:center}
+  .hero-tag{display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:16px}
+  .hero h1{font-size:28px;font-weight:900;line-height:1.3;letter-spacing:-0.5px;margin-bottom:10px}
+  .hero p{font-size:14px;color:var(--gray-500)}
+  .card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:20px;border:1px solid var(--gray-200)}
+  .card-title{font-size:17px;font-weight:900;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .card-sub{font-size:12px;color:var(--gray-500);margin-bottom:16px}
+  .badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px}
+  .badge.js{background:#fef9c3;color:#854d0e}
+  .badge.android{background:#dcfce7;color:#14532d}
+  .badge.cache{background:#ede9fe;color:#4c1d95}
+  .badge.api{background:#ffedd5;color:#9a3412}
+  p{font-size:14px;color:var(--gray-700);margin-bottom:10px}
+  .code{background:#1a1a2e;color:#e2e8f0;border-radius:12px;padding:16px 20px;font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;margin:12px 0;overflow-x:auto;white-space:pre;line-height:1.7}
+  .code .c{color:#94a3b8}
+  .code .k{color:#7dd3fc}
+  .code .s{color:#86efac}
+  .code .bad{color:#f87171}
+  .code .good{color:#86efac}
+  .section-title{font-size:13px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin:32px 0 14px}
+  .flow{display:flex;flex-direction:column;gap:0}
+  .flow-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--gray-200)}
+  .flow-step:last-child{border-bottom:none}
+  .step-num{width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+  .step-content strong{display:block;font-size:14px;font-weight:800;margin-bottom:4px}
+  .step-content span{font-size:13px;color:var(--gray-500)}
+  .table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  .table th{background:var(--gray-100);padding:10px 14px;text-align:left;font-weight:800;border-bottom:2px solid var(--gray-200)}
+  .table td{padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:top}
+  .green{color:var(--green);font-weight:700}
+  .red{color:var(--red);font-weight:700}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">기술 소개 · 2026.06.30-B</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-tag">Tech Deep Dive</div>
+    <h1>shared-lang.js 번역 시스템 구조 분석<br>nav 라벨 버그 근본 원인 해부</h1>
+    <p>캐시가 아니라 코드였다 — applyLang()이 매번 HTML 텍스트를 덮어쓰는 구조</p>
+  </div>
+
+  <div class="section-title">1. 버그 분석 — 왜 캐시가 아니었나</div>
+
+  <div class="card">
+    <div class="card-title">🔍 applyLang() 번역 덮어쓰기 메커니즘 <span class="badge js">shared-lang.js</span></div>
+    <div class="card-sub">근본 원인 / 756번 줄</div>
+    <p>바로알바 앱은 6~7개 언어 번역을 <code>shared-lang.js</code>에서 관리합니다. 페이지 로드 시 <code>applyLang()</code>이 실행되어 <code>.nav-label</code> 요소들의 <code>textContent</code>를 번역값으로 <strong>덮어씁니다.</strong></p>
+    <div class="code"><span class="c">// shared-lang.js 755-756번 줄 (버그)</span>
+<span class="bad">const navKeys = ['nav_map','nav_swipe','nav_applications','nav_chats','nav_profile'];</span>
+navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
+
+<span class="c">// TRANSLATIONS.ko (71번 줄)</span>
+nav_map: <span class="s">'지도'</span>, nav_swipe: <span class="s">'스와이프'</span>  <span class="c">← 이 값이 적용됨</span>
+
+<span class="c">// 결과: HTML이 아무리 바뀌어도 JS가 덮어씀</span>
+<span class="c">// nav[0] "홈" → '지도' 출력 (nav_map 값)</span>
+<span class="c">// nav[1] "지도" → '스와이프' 출력 (nav_swipe 값)</span></div>
+    <p><strong>왜 다른 수정은 다 됐는가?</strong> 다른 텍스트들은 <code>applyLang()</code> 대상이 아님. nav 라벨만 <code>navKeys</code> 배열로 인덱스 기반 적용.</p>
+    <div class="code"><span class="c">// 수정 — nav_home 신규 추가, navKeys 재정렬</span>
+<span class="good">const navKeys = ['nav_home','nav_map','nav_applications','nav_chats','nav_profile'];</span>
+
+<span class="c">// 7개 언어 TRANSLATIONS에 nav_home 추가:</span>
+ko: nav_home:<span class="s">'홈'</span>  en: nav_home:<span class="s">'Home'</span>  zh: nav_home:<span class="s">'首页'</span>  ja: nav_home:<span class="s">'ホーム'</span>
+vi: nav_home:<span class="s">'Trang chủ'</span>  mn: nav_home:<span class="s">'Нүүр'</span>  ru: nav_home:<span class="s">'Главная'</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🗂️ SW 캐시 전략 — 3개 레이어</div>
+    <div class="card-sub">캐시 vs 코드 버그 구분이 중요한 이유</div>
+    <table class="table">
+      <tr><th>레이어</th><th>대상</th><th>전략</th><th>우회 방법</th></tr>
+      <tr><td>WebView HTTP 캐시</td><td>모든 리소스</td><td>브라우저 기본</td><td>clearCache(true)</td></tr>
+      <tr><td>SW CacheStorage</td><td>JS, CSS, 이미지</td><td>Cache-First</td><td>caches.delete()</td></tr>
+      <tr><td>SW HTML 처리</td><td>.html 파일</td><td>Network-First (no-store)</td><td>자동 최신 버전</td></tr>
+    </table>
+    <p style="margin-top:12px"><strong>핵심:</strong> HTML은 항상 최신, JS(shared-lang.js)는 Cache-First. 따라서 SW 캐시 버전을 올리지 않으면 구 버전 JS가 계속 사용됨. v300에서 <code>baroalba-v300</code>으로 bump하여 강제 갱신.</p>
+  </div>
+
+  <div class="section-title">2. Android 빌드 수정</div>
+
+  <div class="card">
+    <div class="card-title">🤖 Android 수정 사항 (이전 세션)</div>
+    <div class="card-sub"><span class="badge android">Android</span></div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>build.gradle — versionCode 24 / versionName 1.5.0</strong>
+          <span>versionCode는 반드시 증가 (Play Console 정책). 누락 시 업로드 불가.</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <strong>styles.xml — windowLightStatusBar false</strong>
+          <span>빨간 배경(#C8102E)에 dark icon(기본값 true)이면 상태바 아이콘 안 보임. false로 변경 → 흰색 아이콘.</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <strong>ChatReplyReceiver.java — messages 테이블 스키마 수정</strong>
+          <span>알림에서 답장 시 Supabase REST POST 필드 수정:<br>
+          <code class="bad">application_id, sender_id</code> → <code class="good">chat_id, sender_role:'worker'</code></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">3. SW 등록 버전 관리</div>
+
+  <div class="card">
+    <div class="card-title">📦 버전 동기화 규칙</div>
+    <div class="card-sub">바로알바.html ↔ sw.js 항상 동일 버전</div>
+    <div class="code"><span class="c">// 바로알바.html</span>
+const _APP_V = <span class="s">'301'</span>;                    <span class="c">← 앱 버전</span>
+navigator.serviceWorker.register(<span class="s">'./sw.js?v=301'</span>);  <span class="c">← SW 등록 쿼리</span>
+
+<span class="c">// sw.js</span>
+const CACHE = <span class="s">'baroalba-v301'</span>;          <span class="c">← 캐시 키 (이전 캐시 자동 삭제)</span></div>
+    <p>activate 이벤트에서 <code>k !== CACHE</code>인 모든 캐시 삭제 → SW 버전 올리면 구 JS 캐시 자동 제거.</p>
+  </div>
+
+</main>
+<footer>바로알바 · 멀티무브 주식회사 · 2026-06-30-B</footer>
+</body>
+</html>

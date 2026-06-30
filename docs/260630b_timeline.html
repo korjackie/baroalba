@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 개발 타임라인 (2026.06.30-B)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--orange:#f59e0b;--orange-light:#fffbeb;--purple:#7c3aed;--purple-light:#f3e8ff;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-300:#ccc;--gray-200:#eee;--gray-100:#f8f9fa;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:var(--orange-light);color:#92400e;font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:760px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #fde68a;border-radius:24px;padding:36px;margin-bottom:40px;text-align:center}
+  .hero h1{font-size:26px;font-weight:900;letter-spacing:-0.5px;margin-bottom:8px}
+  .hero p{font-size:14px;color:var(--gray-500)}
+  .timeline{position:relative;padding-left:32px}
+  .timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--gray-200)}
+  .tl-group{margin-bottom:40px}
+  .tl-date{font-size:12px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .tl-date::before{content:'';display:inline-block;width:12px;height:12px;background:var(--gray-300);border-radius:50%;margin-left:-38px;flex-shrink:0;border:3px solid var(--gray-100);box-sizing:border-box}
+  .tl-item{background:#fff;border-radius:var(--radius);padding:20px 22px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--gray-200);border:1px solid var(--gray-200);position:relative}
+  .tl-item.bug{border-left:4px solid #ef4444}
+  .tl-item.feat{border-left:4px solid var(--green)}
+  .tl-item.ux{border-left:4px solid var(--blue)}
+  .tl-item.android{border-left:4px solid var(--orange)}
+  .tl-item.infra{border-left:4px solid var(--purple)}
+  .tl-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .v-chip{font-size:11px;font-weight:900;background:var(--gray-100);color:var(--gray-700);padding:2px 10px;border-radius:100px;font-family:'SF Mono',monospace}
+  .type-chip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:100px}
+  .type-chip.bug{background:#fee2e2;color:#991b1b}
+  .type-chip.feat{background:#dcfce7;color:#14532d}
+  .type-chip.ux{background:#dbeafe;color:#1e3a8a}
+  .type-chip.android{background:#ffedd5;color:#9a3412}
+  .type-chip.infra{background:#ede9fe;color:#4c1d95}
+  .type-chip.fix{background:#fef9c3;color:#713f12}
+  .tl-title{font-size:15px;font-weight:900;margin-bottom:4px}
+  .tl-desc{font-size:13px;color:var(--gray-500);line-height:1.6}
+  .tl-detail{background:var(--gray-100);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--gray-700);margin-top:10px;font-family:'SF Mono',monospace;white-space:pre-wrap}
+  .highlight-item{background:linear-gradient(135deg,var(--red-light),#fff5f5);border:1.5px solid #fecdd3}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">타임라인 · 2026.06.30-B</div>
+</nav>
+<main>
+  <div class="hero">
+    <h1>📅 바로알바 개발 타임라인</h1>
+    <p>v295 ~ v301 · 2026-06-29 ~ 2026-06-30</p>
+  </div>
+
+  <div class="timeline">
+
+    <!-- 2026-06-30 B 세션 -->
+    <div class="tl-group">
+      <div class="tl-date" style="--dot-color:var(--red)">2026-06-30 · 세션 B</div>
+
+      <div class="tl-item bug highlight-item">
+        <div class="tl-header">
+          <span class="v-chip">v300</span>
+          <span class="type-chip bug">BUG FIX</span>
+          <span class="type-chip" style="background:#f3e8ff;color:#4c1d95">7시간 추적</span>
+        </div>
+        <div class="tl-title">🔴 홈/지도 nav 라벨 — 근본 원인 발견 및 수정</div>
+        <div class="tl-desc">HTML, 캐시, APK 리빌드 모두 무관. shared-lang.js의 applyLang()이 매 실행마다 nav 텍스트를 덮어쓰는 코드 버그였음.</div>
+        <div class="tl-detail">// shared-lang.js 755-756번 줄
+Before: navKeys = ['nav_map','nav_swipe',...]
+After:  navKeys = ['nav_home','nav_map',...]
++ 7개 언어에 nav_home 키 추가</div>
+      </div>
+
+      <div class="tl-item feat">
+        <div class="tl-header">
+          <span class="v-chip">v300</span>
+          <span class="type-chip feat">NEW</span>
+        </div>
+        <div class="tl-title">🇲🇳 구사 가능 언어 몽골어 추가 — 7개국어 완성</div>
+        <div class="tl-desc">lang-ability-chips, LANG_LABELS, _LANG_FLAG, _LANG_NAME, _swLangFlag, _swLangName, MAP 등 5개 위치 전부 업데이트.</div>
+      </div>
+
+      <div class="tl-item feat">
+        <div class="tl-header">
+          <span class="v-chip">v300</span>
+          <span class="type-chip feat">REDESIGN</span>
+        </div>
+        <div class="tl-title">✨ 온보딩 5개 슬라이드 전면 개편</div>
+        <div class="tl-desc">텍스트 중앙 정렬, 슬라이드 3 일러스트 7개 언어 글로브(KR/EN/CN/JA/VN/MN/RU), 전 슬라이드 임팩트 문구로 교체.</div>
+        <div class="tl-detail">1. 일한 당일, 통장에 바로 꽂힌다
+2. 지금 내 주변 일자리가 보인다
+3. 7개 언어로 누구나 바로 취업
+4. 같이 일할 사람 바로 모아라
+5. 공고 올리면 지원자가 알아서 온다</div>
+      </div>
+
+      <div class="tl-item ux">
+        <div class="tl-header">
+          <span class="v-chip">v301</span>
+          <span class="type-chip ux">UX FIX</span>
+        </div>
+        <div class="tl-title">🗺️ 스와이프 → 지도 뒤로가기 버튼 추가</div>
+        <div class="tl-desc">지도 → "스와이프로 보기" 진입 후 복귀 방법 없던 문제 해결. 헤더에 ← 지도 버튼 추가. closeSwipeBackToMap() → setNav(map) 호출.</div>
+      </div>
+    </div>
+
+    <!-- 2026-06-30 A 세션 -->
+    <div class="tl-group">
+      <div class="tl-date">2026-06-30 · 세션 A</div>
+
+      <div class="tl-item feat">
+        <div class="tl-header">
+          <span class="v-chip">v299</span>
+          <span class="type-chip feat">NEW</span>
+        </div>
+        <div class="tl-title">⭐ 양방향 리뷰 시스템 완성</div>
+        <div class="tl-desc">업주↔알바생 상호 평가 + 양방향 답글 구조 구현. DDL(review_reply, worker_review_reply) 미실행 상태 확인 필요.</div>
+      </div>
+
+      <div class="tl-item infra">
+        <div class="tl-header">
+          <span class="v-chip">v298~299</span>
+          <span class="type-chip infra">CACHE</span>
+        </div>
+        <div class="tl-title">🔧 버전 체크 null 버그 + SW 캐시 우회 개선</div>
+        <div class="tl-desc">_savedV null일 때 조건문 오류 수정. location.reload(true) → window.location.replace + SW unregister 방식으로 교체.</div>
+      </div>
+    </div>
+
+    <!-- 2026-06-29 -->
+    <div class="tl-group">
+      <div class="tl-date">2026-06-29</div>
+
+      <div class="tl-item android">
+        <div class="tl-header">
+          <span class="v-chip">versionCode 24</span>
+          <span class="type-chip android">ANDROID</span>
+        </div>
+        <div class="tl-title">🤖 Android 빌드 1.5.0 — 3개 수정</div>
+        <div class="tl-desc">① build.gradle versionCode 23→24, versionName 1.5.0<br>② styles.xml windowLightStatusBar false (흰색 상태바 아이콘)<br>③ ChatReplyReceiver.java messages 스키마 수정 (chat_id, sender_role)</div>
+      </div>
+
+      <div class="tl-item infra">
+        <div class="tl-header">
+          <span class="v-chip">CLAUDE.md</span>
+          <span class="type-chip infra">PROCESS</span>
+        </div>
+        <div class="tl-title">📋 CLAUDE.md 업데이트 — 디버깅 원칙 정립</div>
+        <div class="tl-desc">Rule 9: versionCode 반드시 +1. Section 13: 캐시 vs 코드 버그 구분표, 진단 순서, 배포 전 체크리스트, Android 리빌드 기준표 추가.</div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+<footer>바로알바 · 멀티무브 주식회사 · 2026-06-30-B</footer>
+</body>
+</html>

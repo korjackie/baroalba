@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 서비스 소개 (2026.06.30-B)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--indigo:#6366f1;--indigo-light:#eef2ff;--orange:#f59e0b;--orange-light:#fffbeb;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:var(--green-light);color:var(--green);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:860px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#fff0f2 0%,#fff5f5 50%,#f0fff4 100%);border-radius:24px;padding:48px 40px;margin-bottom:40px;text-align:center;border:1px solid var(--gray-200)}
+  .hero-logo{font-size:48px;font-weight:900;color:var(--red);letter-spacing:-2px;margin-bottom:8px}
+  .hero-sub{font-size:14px;color:var(--gray-500);margin-bottom:24px}
+  .hero-desc{font-size:16px;color:var(--gray-700);font-weight:500;max-width:520px;margin:0 auto 24px;line-height:1.8}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+  .stat{background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+  .stat-num{font-size:28px;font-weight:900;color:var(--red);line-height:1}
+  .stat-label{font-size:12px;color:var(--gray-500);font-weight:700;margin-top:4px}
+  .section-title{font-size:13px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin:40px 0 16px}
+  .card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--gray-200)}
+  .feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .feature-card{background:#fff;border-radius:16px;padding:22px;border:1.5px solid var(--gray-200);transition:border-color 0.2s}
+  .feature-icon{font-size:28px;margin-bottom:10px}
+  .feature-title{font-size:15px;font-weight:900;margin-bottom:6px}
+  .feature-desc{font-size:13px;color:var(--gray-500);line-height:1.6}
+  .lang-section{background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-radius:20px;padding:28px;margin-bottom:20px}
+  .lang-title{font-size:16px;font-weight:900;margin-bottom:6px}
+  .lang-sub{font-size:13px;color:#4338ca;margin-bottom:16px}
+  .lang-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .lang-chip{background:#fff;border-radius:100px;padding:8px 16px;font-size:13px;font-weight:800;color:#3730a3;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(99,102,241,0.15)}
+  .ob-slides{display:flex;flex-direction:column;gap:12px}
+  .ob-slide{display:flex;align-items:center;gap:14px;padding:14px;background:var(--gray-100);border-radius:12px}
+  .ob-num{width:32px;height:32px;border-radius:50%;background:var(--red);color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ob-title{font-size:14px;font-weight:800}
+  .ob-desc{font-size:12px;color:var(--gray-500);margin-top:2px}
+  .nav-demo{display:flex;background:#fff;border-radius:16px;padding:12px 0;border:1.5px solid var(--gray-200);margin-top:12px}
+  .nav-item{flex:1;text-align:center;font-size:11px;font-weight:800;color:var(--gray-500);padding:8px 4px}
+  .nav-item.active{color:var(--red)}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">서비스 소개 · 2026.06.30-B</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-logo">바로알바</div>
+    <div class="hero-sub">멀티무브 주식회사 · 단기 아르바이트 플랫폼</div>
+    <div class="hero-desc">
+      일하면 당일 입금. 주변 공고를 지도로 탐색.<br>
+      7개 언어로 내국인·외국인 모두 이용 가능한<br>
+      대한민국 최초 당일정산 알바 매칭 앱.
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-num">7</div><div class="stat-label">지원 언어</div></div>
+      <div class="stat"><div class="stat-num">당일</div><div class="stat-label">정산 시스템</div></div>
+      <div class="stat"><div class="stat-num">v301</div><div class="stat-label">현재 버전</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">핵심 기능</div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <div class="feature-title">당일 정산</div>
+      <div class="feature-desc">일한 당일 바로 입금. 기다림 없는 알바 플랫폼의 새 기준.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🗺️</div>
+      <div class="feature-title">지도 탐색</div>
+      <div class="feature-desc">현재 위치 기반으로 걸어갈 수 있는 공고를 지도에서 바로 발견.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">스와이프 지원</div>
+      <div class="feature-desc">틴더처럼 스와이프로 빠른 지원. 번개지원으로 최우선 매칭.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👥</div>
+      <div class="feature-title">바로모임</div>
+      <div class="feature-desc">팀 모집, 스포츠, 스터디 — 같이 일하고 함께 성장.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <div class="feature-title">업주 공고 관리</div>
+      <div class="feature-desc">3분이면 공고 등록 완료. 실시간 지원 알림으로 즉시 소통.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⭐</div>
+      <div class="feature-title">양방향 평가</div>
+      <div class="feature-desc">업주↔알바생 상호 평가 + 리뷰 답글 시스템.</div>
+    </div>
+  </div>
+
+  <div class="section-title">다국어 지원</div>
+  <div class="lang-section">
+    <div class="lang-title">🌍 7개 언어 완벽 지원</div>
+    <div class="lang-sub">공고 검색, 채팅, UI 전체를 7개 언어로 이용 가능</div>
+    <div class="lang-chips">
+      <div class="lang-chip">🇰🇷 한국어</div>
+      <div class="lang-chip">🇺🇸 영어</div>
+      <div class="lang-chip">🇨🇳 중국어</div>
+      <div class="lang-chip">🇯🇵 일본어</div>
+      <div class="lang-chip">🇻🇳 베트남어</div>
+      <div class="lang-chip">🇷🇺 러시아어</div>
+      <div class="lang-chip">🇲🇳 몽골어</div>
+    </div>
+  </div>
+
+  <div class="section-title">온보딩 5단계 플로우 (개편 후)</div>
+  <div class="card">
+    <div class="ob-slides">
+      <div class="ob-slide">
+        <div class="ob-num">1</div>
+        <div>
+          <div class="ob-title">일한 당일, 통장에 바로 꽂힌다</div>
+          <div class="ob-desc">당일정산 · 즉시매칭 · 실시간 알림</div>
+        </div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-num">2</div>
+        <div>
+          <div class="ob-title">지금 내 주변 일자리가 보인다</div>
+          <div class="ob-desc">위치 기반 · 지도 탐색 · 스마트 필터</div>
+        </div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-num">3</div>
+        <div>
+          <div class="ob-title">7개 언어로 누구나 바로 취업</div>
+          <div class="ob-desc">🌍 7개국어 완벽 지원 · 외국인 환영 · 번역 채팅</div>
+        </div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-num">4</div>
+        <div>
+          <div class="ob-title">같이 일할 사람 바로 모아라</div>
+          <div class="ob-desc">팀 모집 · 스포츠 모임 · 스터디 그룹</div>
+        </div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-num">5</div>
+        <div>
+          <div class="ob-title">공고 올리면 지원자가 알아서 온다</div>
+          <div class="ob-desc">빠른 공고 등록 · 지원자 관리 · 실시간 채팅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">하단 네비게이션 (v300 수정 후)</div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:12px">5탭 구조 — applyLang() nav_home 추가로 정상 표시</div>
+    <div class="nav-demo">
+      <div class="nav-item active">🏠<br>홈</div>
+      <div class="nav-item">🗺️<br>지도</div>
+      <div class="nav-item">⚡<br>바로알바</div>
+      <div class="nav-item">💬<br>채팅</div>
+      <div class="nav-item">👤<br>마이페이지</div>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 · 멀티무브 주식회사 · 2026-06-30-B</footer>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 신규 기능 (2026.06.30-B)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--indigo:#6366f1;--indigo-light:#eef2ff;--orange:#f59e0b;--orange-light:#fffbeb;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:var(--red-light);color:var(--red);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:860px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#fff0f2,#fff5f7);border:2px solid #fecdd3;border-radius:24px;padding:40px;margin-bottom:40px;text-align:center}
+  .hero-tag{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:16px}
+  .hero h1{font-size:32px;font-weight:900;color:var(--gray-900);line-height:1.25;letter-spacing:-0.5px;margin-bottom:12px}
+  .hero p{font-size:15px;color:var(--gray-500);font-weight:500}
+  .version-row{display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+  .v-chip{background:#fff;border:2px solid var(--red);color:var(--red);font-size:13px;font-weight:800;padding:6px 16px;border-radius:100px}
+  .section{margin-bottom:32px}
+  .section-title{font-size:13px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+  .card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--gray-200)}
+  .card-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+  .card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .card-icon.red{background:var(--red-light)}
+  .card-icon.green{background:var(--green-light)}
+  .card-icon.blue{background:var(--blue-light)}
+  .card-icon.indigo{background:var(--indigo-light)}
+  .card-icon.orange{background:var(--orange-light)}
+  .card-title{font-size:18px;font-weight:900;color:var(--gray-900);line-height:1.3;margin-bottom:4px}
+  .card-sub{font-size:13px;color:var(--gray-500);font-weight:500}
+  .card-body{font-size:14px;color:var(--gray-700);line-height:1.8}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px;margin-right:6px;margin-bottom:4px}
+  .tag.bug{background:#fee2e2;color:#991b1b}
+  .tag.new{background:#dcfce7;color:#14532d}
+  .tag.fix{background:#dbeafe;color:#1e3a8a}
+  .tag.ux{background:#ede9fe;color:#4c1d95}
+  .code{background:#f4f4f8;border:1px solid #e0e0e8;border-radius:10px;padding:14px 16px;font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;color:#1a1a2e;margin:12px 0;overflow-x:auto;white-space:pre}
+  .diff-before{color:#dc2626}
+  .diff-after{color:#16a34a}
+  .lang-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+  .lang-ball{background:var(--gray-100);border-radius:12px;padding:10px 4px;text-align:center;font-size:11px;font-weight:800;color:var(--gray-700)}
+  .lang-ball .flag{font-size:20px;display:block;margin-bottom:4px}
+  .slide-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  .slide-table th{background:var(--gray-100);padding:10px 14px;text-align:left;font-weight:800;color:var(--gray-700);border-bottom:2px solid var(--gray-200)}
+  .slide-table td{padding:10px 14px;border-bottom:1px solid var(--gray-200);vertical-align:top}
+  .slide-table td:first-child{font-weight:700;color:var(--gray-700);white-space:nowrap}
+  .strike{text-decoration:line-through;color:#bbb;font-size:12px}
+  .arrow{color:var(--red);font-weight:900;margin:0 6px}
+  .highlight{background:linear-gradient(transparent 60%,rgba(200,16,46,0.15) 60%)}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">신규 기능 · 2026.06.30-B</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-tag">Feature Update</div>
+    <h1>드디어 해결 — <span class="highlight">홈/지도</span> nav 라벨 수정<br>+ 7개국어 완성 + 온보딩 전면 개편</h1>
+    <p>7시간 추적 끝에 발견한 JS 코드 버그, 몽골어 추가로 완성된 7개국어 지원,<br>온보딩 전면 개편 + 지도↔스와이프 UX 개선</p>
+    <div class="version-row">
+      <span class="v-chip">v300</span>
+      <span class="v-chip">v301</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">핵심 버그 수정</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">🧭</div>
+        <div>
+          <div class="card-title">홈/지도 nav 라벨 오류 — 7시간만에 찾은 근본 원인</div>
+          <div class="card-sub"><span class="tag bug">BUG FIX</span> shared-lang.js · v300</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>수백 번의 HTML 수정, 캐시 삭제, APK 리빌드도 소용없었던 이유:<br>
+        <strong>JS 코드 자체가 매 실행마다 nav 라벨을 덮어쓰고 있었습니다.</strong></p>
+        <div class="code"><span class="diff-before">// 버그: navKeys 배열이 구 구조(지도탭→nav_map, 스와이프탭→nav_swipe)를 참조
+const navKeys = ['nav_map','nav_swipe','nav_applications','nav_chats','nav_profile'];
+navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
+// → 홈버튼에 '지도' 출력, 지도버튼에 '스와이프' 출력</span>
+
+<span class="diff-after">// 수정: nav_home 신규 추가, 배열 재정렬
+const navKeys = ['nav_home','nav_map','nav_applications','nav_chats','nav_profile'];
+navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
+// → 홈버튼에 '홈' 출력, 지도버튼에 '지도' 출력</span></div>
+        <p>7개 언어 전체에 <code>nav_home</code> 키 신규 추가:</p>
+        <div class="code">ko:'홈'  en:'Home'  zh:'首页'  ja:'ホーム'  vi:'Trang chủ'  mn:'Нүүр'  ru:'Главная'</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">신규 기능</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">🌍</div>
+        <div>
+          <div class="card-title">구사 가능 언어 — 몽골어 추가로 7개국어 완성</div>
+          <div class="card-sub"><span class="tag new">NEW</span> 바로알바.html · v300</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>앱 언어 설정 7개국어인데 구사 가능 언어에 몽골어가 빠져 있었습니다. 5개 언어 맵 모두 업데이트.</p>
+        <div class="lang-grid">
+          <div class="lang-ball"><span class="flag">🇰🇷</span>한국어</div>
+          <div class="lang-ball"><span class="flag">🇺🇸</span>영어</div>
+          <div class="lang-ball"><span class="flag">🇨🇳</span>중국어</div>
+          <div class="lang-ball"><span class="flag">🇯🇵</span>일본어</div>
+          <div class="lang-ball"><span class="flag">🇻🇳</span>베트남어</div>
+          <div class="lang-ball"><span class="flag">🇷🇺</span>러시아어</div>
+          <div class="lang-ball" style="background:#e0e7ff;color:#3730a3"><span class="flag">🇲🇳</span>몽골어</div>
+        </div>
+        <p style="margin-top:12px;font-size:13px;color:var(--gray-500)">수정 파일: lang-ability-chips 버튼, LANG_LABELS, _LANG_FLAG, _LANG_NAME, _swLangFlag, _swLangName, worker card MAP</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon indigo">🗺️</div>
+        <div>
+          <div class="card-title">스와이프 화면 → 지도 뒤로가기 버튼</div>
+          <div class="card-sub"><span class="tag ux">UX</span> 바로알바.html · v301</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>기존 문제:</strong> 지도 하단 "주변알바 스와이프로 보기" 진입 후 지도로 돌아갈 방법 없음. 사용자가 갇히는 구조.</p>
+        <p style="margin-top:8px"><strong>수정:</strong> 스와이프 헤더 좌상단에 <code>← 지도</code> 버튼 표시 (지도 진입 시에만)</p>
+        <div class="code">// openNearbySwipe(): 버튼 표시
+document.getElementById('swipe-back-btn').style.display = 'flex';
+
+// closeSwipeBackToMap(): 지도 완전 복원
+function closeSwipeBackToMap() {
+  document.getElementById('swipe-back-btn').style.display = 'none';
+  setNav(document.querySelectorAll('.nav-item')[1], 'map');
+}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">온보딩 전면 개편</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">✨</div>
+        <div>
+          <div class="card-title">온보딩 5개 슬라이드 전면 개편</div>
+          <div class="card-sub"><span class="tag new">NEW</span> 바로알바.html · v300</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>공통:</strong> 텍스트 중앙 정렬 (<code>text-align:center; align-items:center</code>), chips <code>justify-content:center</code></p>
+        <p style="margin-top:12px"><strong>슬라이드 3 일러스트:</strong> 4개 언어 → 7개 언어 글로브 (KR/EN/CN/JA/VN/MN/RU)</p>
+        <table class="slide-table">
+          <tr><th>슬라이드</th><th>수정 전 제목</th><th></th><th>수정 후 제목</th></tr>
+          <tr><td>1 당일정산</td><td class="strike">오늘 일하고, 오늘 바로 받는다</td><td class="arrow">→</td><td><strong>일한 당일, 통장에 바로 꽂힌다</strong></td></tr>
+          <tr><td>2 지도</td><td class="strike">내 주변 일자리를 지도로 찾는다</td><td class="arrow">→</td><td><strong>지금 내 주변 일자리가 보인다</strong></td></tr>
+          <tr><td>3 외국인</td><td class="strike">외국인도 알바 걱정 없다</td><td class="arrow">→</td><td><strong>7개 언어로 누구나 바로 취업</strong></td></tr>
+          <tr><td>4 모임</td><td class="strike">알바 친구와 바로모임 만들기</td><td class="arrow">→</td><td><strong>같이 일할 사람 바로 모아라</strong></td></tr>
+          <tr><td>5 업주</td><td class="strike">업주라면 공고 등록이 간편해요</td><td class="arrow">→</td><td><strong>공고 올리면 지원자가 알아서 온다</strong></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 · 멀티무브 주식회사 · 2026-06-30-B</footer>
+</body>
+</html>
