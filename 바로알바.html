@@ -4992,7 +4992,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '312';
+  const _APP_V = '313';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5016,7 +5016,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=312').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=313').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6128,8 +6128,8 @@ function selectMoimPlace(name, addr, lat, lng) {
   document.getElementById('f-moim-address').value = addr;
   document.getElementById('f-moim-lat').value = lat;
   document.getElementById('f-moim-lng').value = lng;
-  document.getElementById('f-moim-place-results').style.display = 'none';
-  document.getElementById('f-moim-place-selected').style.display = 'block';
+  document.getElementById('moim-place-results').style.display = 'none';
+  document.getElementById('moim-place-selected').style.display = 'block';
   document.getElementById('moim-place-sel-name').textContent = name;
   document.getElementById('moim-place-sel-addr').textContent = addr;
   document.getElementById('f-moim-place-search').value = name;
@@ -6148,8 +6148,8 @@ function _resetMoimForm() {
   document.getElementById('f-moim-lat').value = '';
   document.getElementById('f-moim-lng').value = '';
   document.getElementById('f-moim-place-search').value = '';
-  document.getElementById('f-moim-place-results').style.display = 'none';
-  document.getElementById('f-moim-place-selected').style.display = 'none';
+  document.getElementById('moim-place-results').style.display = 'none';
+  document.getElementById('moim-place-selected').style.display = 'none';
   document.getElementById('f-moim-maxcount').value = '10';
   document.getElementById('f-moim-fee').value = '0';
   document.getElementById('f-moim-skill').value = '무관';
