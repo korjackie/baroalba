@@ -4933,7 +4933,7 @@ const _PANEL_CLOSE_MAP = {
   'panel-community':     () => closeCommunityPanel(),
   'panel-applications':  () => document.getElementById('panel-applications')?.classList.remove('show'),
   'panel-profile':       () => document.getElementById('panel-profile')?.classList.remove('show'),
-  'panel-posting-detail':() => document.getElementById('panel-posting-detail')?.classList.remove('show'),
+  'panel-posting-detail':() => closePostingDetail(),
   'panel-app-job-detail':() => document.getElementById('panel-app-job-detail')?.classList.remove('show'),
   'panel-owner-settings':() => { document.getElementById('panel-owner-settings')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
   'panel-owner-chats':   () => { document.getElementById('panel-owner-chats')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
@@ -4992,7 +4992,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '314';
+  const _APP_V = '315';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5016,7 +5016,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=314').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=315').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -14410,7 +14410,8 @@ async function loadPostingDetailApplicants(jobId) {
     const enriched = apps.map(a => ({ ...a, workers: workerMap[a.worker_id] || null }));
     el.innerHTML = enriched.map(a => makeApplicantCardHtml(a, { stopProp: false })).join('');
   } catch(e) {
-    el.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">지원자 목록을 불러오지 못했어요<br><button onclick="loadPostingDetailApplicants('${jobId}')" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
+    console.error('[applicants]', e);
+    el.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">지원자 목록을 불러오지 못했어요<br><span style="font-size:11px;color:#ddd">${e?.message||''}</span><br><button onclick="loadPostingDetailApplicants('${jobId}')" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
   }
 }
 
