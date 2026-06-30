@@ -4006,7 +4006,7 @@
 </div>
 
 <!-- ── 공고 상세 패널 ── -->
-<div class="full-panel" id="panel-posting-detail" style="z-index:510;background:#fff">
+<div class="full-panel" id="panel-posting-detail" style="z-index:510;background:#fff;bottom:0">
   <div class="panel-header" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <button onclick="closePostingDetail()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px 0 0;line-height:1">‹</button>
     공고 상세
@@ -4881,7 +4881,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '302';
+  const _APP_V = '303';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -4905,7 +4905,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=302').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=303').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -14054,16 +14054,20 @@ function closePostingDetail() {
 async function loadPostingDetailApplicants(jobId) {
   const el = document.getElementById('pd-applicants');
   if (!el) return;
-  const { data: apps } = await db.from('applications')
-    .select('*, workers(id, name, phone, rating, review_count, noshow_count)')
-    .eq('job_posting_id', jobId)
-    .order('applied_at', { ascending: false });
-  if (!apps?.length) {
-    el.innerHTML = '<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">아직 지원자가 없어요</div>';
-    return;
+  try {
+    const { data: apps, error } = await db.from('applications')
+      .select('*, workers(id, name, phone, rating, review_count, noshow_count)')
+      .eq('job_posting_id', jobId)
+      .order('applied_at', { ascending: false });
+    if (error) throw error;
+    if (!apps?.length) {
+      el.innerHTML = '<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">아직 지원자가 없어요</div>';
+      return;
+    }
+    el.innerHTML = apps.map(a => makeApplicantCardHtml(a, { stopProp: false })).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">지원자 목록을 불러오지 못했어요<br><button onclick="loadPostingDetailApplicants('${jobId}')" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
   }
-  const fmtPhone = p => p ? p.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
-  el.innerHTML = apps.map(a => makeApplicantCardHtml(a, { stopProp: false })).join('');
 }
 
 async function loadInlineApplicants(jobId, targetId) {
