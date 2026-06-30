@@ -14,13 +14,15 @@
     body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f8f8f8; color: #222; }
 
     .header {
-      position: sticky; top: 0; background: #fff; padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+      position: sticky; top: 0; background: #fff;
+      padding: 16px 20px; padding-top: calc(16px + env(safe-area-inset-top));
+      border-bottom: 1px solid #f0f0f0;
       display: flex; align-items: center; gap: 12px; z-index: 10;
     }
     .header-back { background: none; border: none; font-size: 22px; cursor: pointer; color: #555; line-height: 1; padding: 0 4px 0 0; }
     .header-title { font-size: 17px; font-weight: 800; color: #222; }
 
-    .tabs { display: flex; background: #fff; border-bottom: 2px solid #f0f0f0; position: sticky; top: 57px; z-index: 9; }
+    .tabs { display: flex; background: #fff; border-bottom: 2px solid #f0f0f0; position: sticky; top: calc(57px + env(safe-area-inset-top)); z-index: 9; }
     .tab-btn { flex: 1; padding: 14px 0; font-size: 14px; font-weight: 700; color: #bbb; border: none; background: none; cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -2px; }
     .tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
 
@@ -44,7 +46,7 @@
 <body>
 
 <div class="header">
-  <button class="header-back" onclick="history.back()">←</button>
+  <button class="header-back" onclick="if(window.opener||history.length<=1)window.close();else history.back()">←</button>
   <div class="header-title">이용약관 및 개인정보처리방침</div>
 </div>
 
