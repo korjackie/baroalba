@@ -5064,7 +5064,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '326';
+  const _APP_V = '327';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5088,7 +5088,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=326').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=327').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -6389,15 +6389,49 @@ async function submitMoimForm() {
 // ── 공유 / 딥링크 ─────────────────────────────────────────
 async function shareMoim() {
   if (!_currentMoimId) return;
-  const { data: m } = await db.from('gatherings').select('is_public,invite_code,title').eq('id', _currentMoimId).single();
+  const m = _moimDetailData;
   if (!m) return;
   const code = m.is_public ? _currentMoimId : m.invite_code;
   const link = `${location.origin}${location.pathname}?moim=${code}`;
-  if (navigator.share) {
-    navigator.share({ title: m.title + ' — 바로모임', text: '같이 모임 참가해요!', url: link }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
+
+  // 카카오 공유 메시지 구성
+  const dateStr = m.gathering_date
+    ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })
+    : '일정 미정';
+  const feeStr = m.entry_fee > 0 ? `참가비 ${m.entry_fee.toLocaleString()}원` : '참가비 무료';
+  const desc = `📅 ${dateStr}  📍 ${m.location_name || '장소 미정'}  ${feeStr}`;
+
+  // Android: AndroidBridge 네이티브 공유 시트
+  if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
+    window.AndroidBridge.share(m.title + ' — 바로모임', desc + '\n같이 모임 참가해요!', link);
+    return;
   }
+
+  // Kakao SDK 공유
+  if (window.Kakao?.isInitialized?.()) {
+    try {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: m.title + ' — 바로모임',
+          description: desc,
+          imageUrl: `${location.origin}/icons/og-share.png`,
+          link: { mobileWebUrl: link, webUrl: link }
+        },
+        buttons: [{ title: '모임 참여하기', link: { mobileWebUrl: link, webUrl: link } }]
+      });
+      return;
+    } catch(e) {}
+  }
+
+  // Web Share API (iOS Safari 등)
+  if (navigator.share) {
+    navigator.share({ title: m.title + ' — 바로모임', text: desc, url: link }).catch(() => {});
+    return;
+  }
+
+  // 최종 fallback: 링크 복사
+  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
 }
 
 async function handleMoimDeeplink(codeOrId) {
