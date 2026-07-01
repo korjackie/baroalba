@@ -989,7 +989,7 @@
     .posting-card {
       background:#fff; border-radius:16px; padding:16px;
       margin-bottom:12px; box-shadow:0 1px 6px rgba(0,0,0,0.06);
-      position:relative; overflow:hidden;
+      position:relative;
       border-left:4px solid #22c55e; cursor:pointer;
     }
     .posting-card.urgent-card { border-left-color:var(--red); }
@@ -5064,7 +5064,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '327';
+  const _APP_V = '328';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5088,7 +5088,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=327').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=328').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5919,8 +5919,27 @@ function openMoimCreate(editData = null) {
 }
 function closeMoimCreate() { document.getElementById('panel-moim-create').classList.remove('show'); }
 function closeMoimChat() {
-  document.getElementById('panel-moim-chat').classList.remove('show');
+  const _mc = document.getElementById('panel-moim-chat');
+  _mc.classList.remove('show');
+  _mc.style.bottom = '';
   if (_moimRealtimeCh) { db.removeChannel(_moimRealtimeCh); _moimRealtimeCh = null; }
+  if (window.visualViewport) window.visualViewport.removeEventListener('resize', _moimChatKbResize);
+  // FAB 복원 — owner 패널이 열려있을 때만
+  const _mcFab = document.getElementById('posting-fab');
+  const _ownerPanelEl = document.getElementById('panel-owner');
+  if (_mcFab && _ownerPanelEl && _ownerPanelEl.style.display !== 'none') _mcFab.style.display = 'flex';
+}
+function _moimChatKbResize() {
+  const panel = document.getElementById('panel-moim-chat');
+  if (!panel || !panel.classList.contains('show')) return;
+  const vp = window.visualViewport;
+  if (!vp) return;
+  const kbH = Math.max(0, window.innerHeight - vp.height - (vp.offsetTop || 0));
+  panel.style.bottom = kbH > 0 ? `${kbH}px` : '';
+  if (kbH > 0) {
+    const msgs = document.getElementById('moim-chat-messages');
+    if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 80);
+  }
 }
 
 // ── 모임 목록 로드 ────────────────────────────────────────
@@ -6449,6 +6468,11 @@ async function handleMoimDeeplink(codeOrId) {
 // ── 단체 채팅 ────────────────────────────────────────────
 async function openMoimChat(gatheringId, title) {
   document.getElementById('panel-moim-chat').classList.add('show');
+  // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지
+  const _mcFab = document.getElementById('posting-fab');
+  if (_mcFab) _mcFab.style.display = 'none';
+  // 키보드 올라올 때 입력창 가림 방지
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', _moimChatKbResize);
   document.getElementById('moim-chat-title').textContent = title || '모임 채팅';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
   // 날짜 부제목 — _moimDetailData에서 읽음
