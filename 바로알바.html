@@ -2389,9 +2389,7 @@
   <div id="home-filter-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:20" onclick="if(event.target===this)closeHomeFilter()">
     <div style="height:100%;display:flex;flex-direction:column;justify-content:flex-end">
       <div style="background:#fff;border-radius:20px 20px 0 0;max-height:90%;display:flex;flex-direction:column">
-        <div style="touch-action:none;padding:10px 0 6px;cursor:grab;text-align:center;flex-shrink:0"
-             ontouchstart="window._hfDragY=event.touches[0].clientY"
-             ontouchend="if((event.changedTouches[0].clientY-window._hfDragY)>50)closeHomeFilter()"
+        <div id="bsh-hf" style="touch-action:none;padding:10px 0 6px;cursor:grab;text-align:center;flex-shrink:0"
              onclick="closeHomeFilter()">
           <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto"></div>
         </div>
@@ -3551,9 +3549,7 @@
 <!-- 외국인환영 언어필터 바텀시트 -->
 <div id="panel-foreigner-lang" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45)" onclick="if(event.target===this)closeForeignerLangPanel()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:0 0 env(safe-area-inset-bottom)">
-    <div style="touch-action:none;padding:10px 0 4px;cursor:grab;text-align:center"
-         ontouchstart="window._flDragY=event.touches[0].clientY"
-         ontouchend="if((event.changedTouches[0].clientY-window._flDragY)>50)closeForeignerLangPanel()"
+    <div id="bsh-fl" style="touch-action:none;padding:10px 0 4px;cursor:grab;text-align:center"
          onclick="closeForeignerLangPanel()">
       <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto"></div>
     </div>
@@ -3600,9 +3596,7 @@
 <!-- RANK 바텀시트 -->
 <div id="panel-rank" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45)" onclick="if(event.target===this)closeRankPanel()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)">
-    <div style="touch-action:none;padding:10px 0 4px;cursor:grab;text-align:center;flex-shrink:0"
-         ontouchstart="window._rkDragY=event.touches[0].clientY"
-         ontouchend="if((event.changedTouches[0].clientY-window._rkDragY)>50)closeRankPanel()"
+    <div id="bsh-rk" style="touch-action:none;padding:10px 0 4px;cursor:grab;text-align:center;flex-shrink:0"
          onclick="closeRankPanel()">
       <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto"></div>
     </div>
@@ -4968,6 +4962,10 @@ const _PANEL_CLOSE_MAP = {
   'panel-owner-settings':() => { document.getElementById('panel-owner-settings')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
   'panel-owner-chats':   () => { document.getElementById('panel-owner-chats')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
   'panel-owner-map':     () => { document.getElementById('panel-owner-map')?.classList.remove('show'); ownerSwitchTab('postings', document.querySelectorAll('.tab-btn')[0]); },
+  'panel-moim':          () => closeMoimPanel(),
+  'panel-moim-create':   () => closeMoimCreate(),
+  'panel-moim-detail':   () => closeMoimDetail(),
+  'panel-moim-chat':     () => closeMoimChat(),
 };
 history.pushState({ panel: null }, ''); // 초기 기준점
 window.addEventListener('popstate', () => {
@@ -5035,6 +5033,13 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 8.5. 소프트 키보드 방어 — INPUT/TEXTAREA 포커스 중엔 full-panel 닫지 않음
+  // Android WebView에서 키보드 표시/숨김 시 spurious popstate가 발생해 패널이 닫히는 버그 방지
+  const _focEl = document.activeElement;
+  if (_focEl && (_focEl.tagName === 'INPUT' || _focEl.tagName === 'TEXTAREA')) {
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 9. full-panel.show (기존)
   const visible = [...document.querySelectorAll('.full-panel.show')]
     .sort((a, b) => (parseInt(b.style.zIndex) || 100) - (parseInt(a.style.zIndex) || 100));
@@ -5067,7 +5072,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '321';
+  const _APP_V = '322';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5091,7 +5096,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=321').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=322').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -7784,6 +7789,29 @@ function closeDetail(e) {
       if (overlay) overlay.classList.remove('open');
       selectedJobId = null;
     }
+  }, { passive: true });
+})();
+
+// 바텀시트 공통 드래그 핸들러 (외국인환영/RANK/홈필터)
+// 인라인 ontouchstart/ontouchend 대신 document 레벨 리스너 사용 (Android WebView 호환성)
+(function setupBottomSheetDrags() {
+  const _bshMap = [
+    { id: 'bsh-fl', close: () => closeForeignerLangPanel() },
+    { id: 'bsh-rk', close: () => closeRankPanel() },
+    { id: 'bsh-hf', close: () => closeHomeFilter() },
+  ];
+  let _bshCur = null, _bshSy = 0;
+  document.addEventListener('touchstart', e => {
+    _bshCur = null;
+    for (const m of _bshMap) {
+      const el = document.getElementById(m.id);
+      if (el && el.contains(e.target)) { _bshCur = m; _bshSy = e.touches[0].clientY; break; }
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!_bshCur) return;
+    if (e.changedTouches[0].clientY - _bshSy > 50) _bshCur.close();
+    _bshCur = null;
   }, { passive: true });
 })();
 
