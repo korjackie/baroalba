@@ -1328,6 +1328,14 @@
 </head>
 <body>
 
+<!-- 앱 초기 로딩 스플래시 (loadJobs+loadHomePanel 완료 후 제거) -->
+<div id="app-splash" style="position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.28s ease">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <img src="./icons/바로알바 최종로고.png" style="width:48px;height:48px;border-radius:13px;object-fit:cover;box-shadow:0 2px 12px rgba(200,16,46,0.18)">
+    <span style="font-size:28px;font-weight:900;color:#C8102E;letter-spacing:-0.5px">바로알바</span>
+  </div>
+  <div style="font-size:13px;color:#ccc;margin-top:4px;letter-spacing:0.3px">잠깐만요...</div>
+</div>
 
 <!-- 앱 헤더 -->
 <div class="app-header">
@@ -5037,7 +5045,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '319';
+  const _APP_V = '320';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5061,7 +5069,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=319').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=320').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -5113,6 +5121,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     profileNav.querySelector('.nav-label').textContent = '로그인';
     profileNav.querySelector('.nav-label').style.color = 'var(--red)';
   } else {
+    document.getElementById('app-splash')?.remove();
     goToLogin();
     return;
   }
@@ -5158,6 +5167,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   await loadJobs();
   // loadJobs 완료 후 홈 패널 타일 새로고침 (데이터 반영)
   if (!tabParam || tabParam === 'home') loadHomePanel();
+  // 스플래시 제거 — 데이터 로드 완료 후 페이드아웃
+  const _splash = document.getElementById('app-splash');
+  if (_splash) { _splash.style.opacity = '0'; setTimeout(() => _splash.remove(), 290); }
 
   if (deepJobId) openDeepLink(deepJobId);
   // 바로모임 딥링크 처리
