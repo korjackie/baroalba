@@ -5037,7 +5037,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '317';
+  const _APP_V = '318';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5061,7 +5061,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=317').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=318').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6234,15 +6234,15 @@ function _fillMoimForm(m) {
 }
 
 const _MOIM_SUBCATS = {
-  '스포츠': ['스크린골프','테니스','라운딩','탁구','배드민턴','수영','클라이밍','헬스/PT','자전거','기타 스포츠'],
-  '취미':   ['보드게임','게임','그림/드로잉','영화/드라마','요리','등산/트레킹','독서','기타 취미'],
-  '친목':   ['와인','위스키','맥주/펍','커피/카페','독서','맛집탐방','여행','기타 친목'],
+  '스포츠': ['스크린골프','테니스','라운딩','탁구','배드민턴','수영','클라이밍','헬스/PT','자전거','러닝','요가/필라테스','기타 스포츠'],
+  '취미':   ['보드게임','게임','그림/드로잉','영화','요리','등산/트레킹','독서','기타 취미'],
+  '친목':   ['와인','위스키','맥주/펍','커피/카페','맛집탐방','여행','기타 친목'],
   '기타':   [],
 };
 const _MOIM_SUBCAT_EMOJI = {
   '스크린골프':'⛳','테니스':'🎾','라운딩':'🏌️','탁구':'🏓','배드민턴':'🏸','수영':'🏊',
-  '클라이밍':'🧗','헬스/PT':'💪','자전거':'🚴','기타 스포츠':'🏃',
-  '보드게임':'🎲','게임':'🎮','그림/드로잉':'🎨','영화/드라마':'🎬','요리':'🍳',
+  '클라이밍':'🧗','헬스/PT':'💪','자전거':'🚴','러닝':'🏃','요가/필라테스':'🧘','기타 스포츠':'🏅',
+  '보드게임':'🎲','게임':'🎮','그림/드로잉':'🎨','영화':'🎬','요리':'🍳',
   '등산/트레킹':'🏔️','독서':'📚','기타 취미':'✨',
   '와인':'🍷','위스키':'🥃','맥주/펍':'🍺','커피/카페':'☕','맛집탐방':'🍜','여행':'✈️','기타 친목':'🤝',
 };
@@ -10809,6 +10809,19 @@ function setNav(el, tab) {
   document.getElementById('panel-lesson')?.classList.remove('show');
   document.getElementById('panel-lesson-manage')?.classList.remove('show');
   document.querySelectorAll('.mpsub-panel').forEach(p => p.classList.remove('show'));
+  // 모임 패널 닫기
+  closeMoimCreate();
+  closeMoimDetail();
+  closeMoimPanel();
+  closeMoimChat();
+  // 기타 플로팅 오버레이 닫기
+  closePostingForm();
+  closeShareModal();
+  closeLessonDetailModal();
+  const _rankEl = document.getElementById('panel-rank');
+  if (_rankEl) _rankEl.style.display = 'none';
+  closeForeignerLangPanel();
+  closeHomeFilter();
 
   // 모든 패널 숨기기
   swipeScreen.style.display = 'none';
@@ -17929,7 +17942,8 @@ async function _doSendChat(content) {
   const msgRow = { sender_id: currentUser.id, content };
   if (_chatInquiryId) msgRow.inquiry_id = _chatInquiryId;
   else msgRow.application_id = _chatAppId;
-  await db.from('messages').insert(msgRow);
+  const { error: _sendErr } = await db.from('messages').insert(msgRow);
+  if (_sendErr) { showToast('메시지 전송 실패: ' + _sendErr.message); return; }
   if (_chatWorkerUserId) {
     try {
       const ch = db.channel(`worker-${_chatWorkerUserId}-notify`);
