@@ -1311,7 +1311,7 @@
     /* ── 레슨 기능 ── */
     .lesson-card { background:#fff; border-radius:16px; padding:16px; margin-bottom:10px; border:1px solid #f0f0f0; cursor:pointer; active:background:#f9f9f9; }
     .lesson-card:active { background:#fafafa; }
-    .lesson-subject-tag { display:inline-block; background:#f0f4ff; color:#3b82f6; font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; margin-bottom:8px; }
+    .lesson-subject-tag { display:inline-block; background:#f0f4ff; color:#3b82f6; font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; }
     .lesson-name { font-size:15px; font-weight:800; color:#222; margin-bottom:2px; }
     .lesson-price { font-size:14px; font-weight:700; color:#C8102E; }
     .lesson-meta { font-size:12px; color:#aaa; font-weight:500; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -5071,7 +5071,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '329';
+  const _APP_V = '330';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5095,7 +5095,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=329').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=330').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -14824,11 +14824,16 @@ const LESSON_SUBS = {
 function openLessonPanel() {
   _lessonMainFilter = ''; _lessonSubFilter = '';
   document.getElementById('panel-lesson').classList.add('show');
+  const _lpFab = document.getElementById('posting-fab');
+  if (_lpFab) _lpFab.style.display = 'none';
   _updateLessonSubcatRow();
   loadLessons();
 }
 function closeLessonPanel() {
   document.getElementById('panel-lesson').classList.remove('show');
+  const _lpFab = document.getElementById('posting-fab');
+  const _ownerPanelEl = document.getElementById('panel-owner');
+  if (_lpFab && _ownerPanelEl && _ownerPanelEl.style.display !== 'none') _lpFab.style.display = 'flex';
   _clearLessonOverlays();
   document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
   const allChip = document.querySelector('#filter-row .chip[data-cat=""]');
