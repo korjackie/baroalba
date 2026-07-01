@@ -3672,6 +3672,11 @@
         <button type="button" onclick="selectMoimCat(this,'기타')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💡 기타</button>
       </div>
       <input type="hidden" id="f-moim-cat" value="">
+      <div id="moim-subcat-section" style="display:none;margin-top:10px">
+        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px">세부 종목 <span style="font-size:11px;font-weight:400;color:#9CA3AF">(선택)</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="moim-subcat-btns"></div>
+      </div>
+      <input type="hidden" id="f-moim-subcat" value="">
     </div>
 
     <!-- 제목 -->
@@ -5032,7 +5037,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '316';
+  const _APP_V = '317';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5056,7 +5061,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=316').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=317').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6200,6 +6205,8 @@ function _resetMoimForm() {
   document.querySelectorAll('#moim-skill-btns button').forEach(b => { b.style.background=(b.textContent==='무관'?'#fff':'#f9fafb'); b.style.borderColor=(b.textContent==='무관'?'#DDD6FE':'#e5e7eb'); b.style.color=(b.textContent==='무관'?'#7C3AED':'#555'); });
   selectMoimPublic(true);
   document.getElementById('moim-skill-section').style.display = 'none';
+  document.getElementById('moim-subcat-section').style.display = 'none';
+  document.getElementById('moim-subcat-btns').innerHTML = '';
 }
 function _fillMoimForm(m) {
   document.getElementById('f-moim-id').value = m.id;
@@ -6218,6 +6225,7 @@ function _fillMoimForm(m) {
   document.getElementById('f-moim-fee').value = m.entry_fee || 0;
   selectMoimPublic(m.is_public !== false);
   if (m.category) { const btn = [...document.querySelectorAll('#moim-cat-select button')].find(b => b.textContent.includes(m.category)); if (btn) selectMoimCat(btn, m.category); }
+  if (m.sub_category) { const subBtn = [...document.querySelectorAll('#moim-subcat-btns button')].find(b => b.textContent.trim().includes(m.sub_category)); if (subBtn) selectMoimSubcat(subBtn, m.sub_category); }
   if (m.skill_level) { const btn = [...document.querySelectorAll('#moim-skill-btns button')].find(b => b.textContent === m.skill_level); if (btn) selectMoimSkill(btn, m.skill_level); }
   if (m.gender_req) {
     const genderBtn = [...document.querySelectorAll('[onclick*=selectMoimGender]')].find(b => b.getAttribute('onclick').includes(`'${m.gender_req}'`));
@@ -6225,11 +6233,42 @@ function _fillMoimForm(m) {
   }
 }
 
+const _MOIM_SUBCATS = {
+  '스포츠': ['스크린골프','테니스','라운딩','탁구','배드민턴','수영','클라이밍','헬스/PT','자전거','기타 스포츠'],
+  '취미':   ['보드게임','게임','그림/드로잉','영화/드라마','요리','등산/트레킹','독서','기타 취미'],
+  '친목':   ['와인','위스키','맥주/펍','커피/카페','독서','맛집탐방','여행','기타 친목'],
+  '기타':   [],
+};
+const _MOIM_SUBCAT_EMOJI = {
+  '스크린골프':'⛳','테니스':'🎾','라운딩':'🏌️','탁구':'🏓','배드민턴':'🏸','수영':'🏊',
+  '클라이밍':'🧗','헬스/PT':'💪','자전거':'🚴','기타 스포츠':'🏃',
+  '보드게임':'🎲','게임':'🎮','그림/드로잉':'🎨','영화/드라마':'🎬','요리':'🍳',
+  '등산/트레킹':'🏔️','독서':'📚','기타 취미':'✨',
+  '와인':'🍷','위스키':'🥃','맥주/펍':'🍺','커피/카페':'☕','맛집탐방':'🍜','여행':'✈️','기타 친목':'🤝',
+};
 function selectMoimCat(btn, cat) {
   document.querySelectorAll('#moim-cat-select button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
   btn.style.background='#EDE9FE'; btn.style.borderColor='#7C3AED'; btn.style.color='#7C3AED';
   document.getElementById('f-moim-cat').value = cat;
   document.getElementById('moim-skill-section').style.display = cat === '스포츠' ? 'block' : 'none';
+  const subs = _MOIM_SUBCATS[cat] || [];
+  const sec = document.getElementById('moim-subcat-section');
+  const btnsEl = document.getElementById('moim-subcat-btns');
+  document.getElementById('f-moim-subcat').value = '';
+  if (subs.length) {
+    btnsEl.innerHTML = subs.map(s => {
+      const em = _MOIM_SUBCAT_EMOJI[s] || '';
+      return `<button type="button" onclick="selectMoimSubcat(this,'${s}')" style="padding:7px 12px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">${em} ${s}</button>`;
+    }).join('');
+    sec.style.display = 'block';
+  } else {
+    sec.style.display = 'none';
+  }
+}
+function selectMoimSubcat(btn, val) {
+  document.querySelectorAll('#moim-subcat-btns button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
+  btn.style.background='#EDE9FE'; btn.style.borderColor='#7C3AED'; btn.style.color='#7C3AED';
+  document.getElementById('f-moim-subcat').value = val;
 }
 function selectMoimSkill(btn, val) {
   document.querySelectorAll('#moim-skill-btns button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
