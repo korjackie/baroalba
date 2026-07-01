@@ -2379,8 +2379,13 @@
   <div id="home-filter-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:20" onclick="if(event.target===this)closeHomeFilter()">
     <div style="height:100%;display:flex;flex-direction:column;justify-content:flex-end">
       <div style="background:#fff;border-radius:20px 20px 0 0;max-height:90%;display:flex;flex-direction:column">
-        <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0;flex-shrink:0"></div>
-        <div style="padding:12px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f5f5f5;flex-shrink:0">
+        <div style="touch-action:none;padding:10px 0 6px;cursor:grab;text-align:center;flex-shrink:0"
+             ontouchstart="window._hfDragY=event.touches[0].clientY"
+             ontouchend="if((event.changedTouches[0].clientY-window._hfDragY)>50)closeHomeFilter()"
+             onclick="closeHomeFilter()">
+          <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto"></div>
+        </div>
+        <div style="padding:4px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f5f5f5;flex-shrink:0">
           <span style="font-size:15px;font-weight:900;color:#111">공고 검색 · 필터</span>
           <button onclick="closeHomeFilter()" style="background:none;border:none;font-size:22px;color:#bbb;cursor:pointer;line-height:1">&#215;</button>
         </div>
@@ -3548,7 +3553,7 @@
       </button>
       <button onclick="applyForeignerLangFilter('ko')" style="display:flex;align-items:center;gap:12px;background:#f8faff;border:1.5px solid #dbeafe;border-radius:14px;padding:13px 16px;cursor:pointer;text-align:left;width:100%">
         <span style="font-size:20px">🇰🇷</span>
-        <div><div style="font-size:14px;font-weight:800;color:#1d4ed8">한국어만 가능</div><div style="font-size:11px;color:#aaa;margin-top:2px">한국어 능통자만 지원 가능한 공고</div></div>
+        <div><div style="font-size:14px;font-weight:800;color:#1d4ed8">한국어 가능</div><div style="font-size:11px;color:#aaa;margin-top:2px">한국어 소통 가능자 우대 공고</div></div>
       </button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="applyForeignerLangFilter('en')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
@@ -4949,21 +4954,56 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
-  // 2. 외국인환영 언어 패널
+  // 2. 레슨 상세 모달 (.open)
+  const lessonModal = document.getElementById('lesson-detail-modal');
+  if (lessonModal && lessonModal.classList.contains('open')) {
+    closeLessonDetailModal();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 3. 공유 모달 (.open)
+  const shareEl = document.getElementById('share-overlay');
+  if (shareEl && shareEl.classList.contains('open')) {
+    closeShareModal();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 4. 채팅 오버레이 (display:flex)
+  const chatEl = document.getElementById('chat-overlay');
+  if (chatEl && chatEl.style.display === 'flex') {
+    closeChat(false);
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 5. 외국인환영 언어 패널
   const foreignerEl = document.getElementById('panel-foreigner-lang');
   if (foreignerEl && foreignerEl.style.display === 'block') {
     closeForeignerLangPanel();
     history.pushState({ panel: null }, '');
     return;
   }
-  // 3. RANK 패널
+  // 6. RANK 패널
   const rankEl = document.getElementById('panel-rank');
   if (rankEl && rankEl.style.display === 'block') {
     closeRankPanel();
     history.pushState({ panel: null }, '');
     return;
   }
-  // 4. full-panel.show (기존)
+  // 7. 공고 등록/수정 폼 오버레이 (.open)
+  const formEl = document.getElementById('form-overlay');
+  if (formEl && formEl.classList.contains('open')) {
+    closePostingForm();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 8. 홈 필터 오버레이 (display:block)
+  const filterEl = document.getElementById('home-filter-overlay');
+  if (filterEl && filterEl.style.display === 'block') {
+    closeHomeFilter();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 9. full-panel.show (기존)
   const visible = [...document.querySelectorAll('.full-panel.show')]
     .sort((a, b) => (parseInt(b.style.zIndex) || 100) - (parseInt(a.style.zIndex) || 100));
   if (visible.length) {
@@ -4992,7 +5032,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '315';
+  const _APP_V = '316';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5016,7 +5056,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=315').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=316').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6675,7 +6715,7 @@ function closeForeignerLangPanel() {
 }
 function applyForeignerLangFilter(langCode) {
   closeForeignerLangPanel();
-  const langNames = {vi:'베트남어',ru:'러시아어',zh:'중국어',mn:'몽골어',en:'영어',uz:'중앙아시아',ja:'일본어',ko:'한국어만'};
+  const langNames = {vi:'베트남어',ru:'러시아어',zh:'중국어',mn:'몽골어',en:'영어',uz:'중앙아시아',ja:'일본어',ko:'한국어 가능'};
   const flags = {vi:'🇻🇳',ru:'🇷🇺',zh:'🇨🇳',mn:'🇲🇳',en:'🇺🇸',uz:'🇺🇿',ja:'🇯🇵',ko:'🇰🇷'};
   let filtered, labelText;
   if (langCode === 'any') {
@@ -6683,7 +6723,7 @@ function applyForeignerLangFilter(langCode) {
     labelText = '🌏 외국인 환영 공고';
   } else if (langCode === 'ko') {
     filtered = (jobs||[]).filter(j => (j.status==='open'||j.status==='urgent') && (j.nationality_requirement==='korean_only'||j.nationality_requirement==='korean_lang'));
-    labelText = '🇰🇷 한국어만 가능 공고';
+    labelText = '🇰🇷 한국어 가능 공고';
   } else {
     filtered = (jobs||[]).filter(j => (j.status==='open'||j.status==='urgent') && (j.preferred_languages||[]).includes(langCode));
     labelText = `${flags[langCode]||''} ${langNames[langCode]||langCode} 우대 공고`;
@@ -6990,9 +7030,9 @@ function applyHomeFilter() {
   _homeFilterSearch = (document.getElementById('hfc-search-input')?.value || '').trim();
   _homeFilterCat = _hfPendingCat; _homeFilterWage = _hfPendingWage; _homeFilterNat = _hfPendingNat;
   _homeFilterJobType = _hfPendingJobType; _homeFilterWorkType = _hfPendingWorkType;
-  // 홈 검색바에도 검색어 반영
   const si = document.getElementById('home-search-input');
   if (si) si.value = _homeFilterSearch;
+  window._homeFilterApplied = true; // 필터 명시 적용 — 전체여도 결과창 유지
   closeHomeFilter();
   _doHomeFilterRender();
 }
@@ -7014,6 +7054,7 @@ function clearHomeFilter() {
   _homeFilterSearch = ''; _homeFilterCat = ''; _homeFilterWage = '';
   _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
   _homeSort = 'latest';
+  window._homeFilterApplied = false;
   const si = document.getElementById('home-search-input'); if (si) si.value = '';
   document.getElementById('home-search-results').style.display = 'none';
   document.getElementById('home-default-content').style.display = 'block';
@@ -7028,7 +7069,7 @@ function _doHomeFilterRender() {
   if (_homeFilterWage === 'same_day') filtered = filtered.filter(j => j.same_day_payment);
   if (_homeFilterNat === 'foreigner') filtered = filtered.filter(j => j.nationality_requirement === 'foreigner_welcome');
 
-  const hasFilter = _homeFilterSearch || _homeFilterCat || _homeFilterWage || _homeFilterNat || _homeFilterJobType || _homeFilterWorkType;
+  const hasFilter = window._homeFilterApplied || _homeFilterSearch || _homeFilterCat || _homeFilterWage || _homeFilterNat || _homeFilterJobType || _homeFilterWorkType;
   const srEl = document.getElementById('home-search-results');
   const defaultEl = document.getElementById('home-default-content');
   if (!hasFilter) {
@@ -17814,9 +17855,12 @@ function renderChatMessages(msgs) {
 
 function subscribeChatMessages() {
   if (_chatSub) _chatSub.unsubscribe();
-  _chatSub = db.channel('chat-' + _chatAppId)
+  const isInquiry = !!_chatInquiryId;
+  const channelId = isInquiry ? ('inq-' + _chatInquiryId) : ('chat-' + _chatAppId);
+  const filterStr = isInquiry ? `inquiry_id=eq.${_chatInquiryId}` : `application_id=eq.${_chatAppId}`;
+  _chatSub = db.channel(channelId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages',
-      filter: `application_id=eq.${_chatAppId}` }, payload => {
+      filter: filterStr }, payload => {
       const el = document.getElementById('chat-messages');
       const msg = payload.new;
       const isMine = msg.sender_id === currentUser?.id;
@@ -17826,7 +17870,7 @@ function subscribeChatMessages() {
       el.appendChild(div.firstElementChild || div);
       const csc = document.getElementById('chat-scroll');
       if (csc) csc.scrollTop = csc.scrollHeight; else el.scrollTop = el.scrollHeight;
-      if (!isMine) markMessagesRead(_chatAppId);
+      if (!isMine && !isInquiry) markMessagesRead(_chatAppId);
       if (isMine) {
         if (window.AndroidBridge?.setScrollKbGuard) window.AndroidBridge.setScrollKbGuard(false);
         const _co = document.getElementById('chat-overlay');
