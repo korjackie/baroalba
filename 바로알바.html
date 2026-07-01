@@ -5037,7 +5037,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '318';
+  const _APP_V = '319';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5061,7 +5061,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=318').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=319').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6456,7 +6456,8 @@ async function sendMoimChat() {
   if (!msg || !gatheringId || !currentUser) return;
   input.value = '';
   const senderName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '참가자';
-  await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, message: msg });
+  const { error: _gcErr } = await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, message: msg });
+  if (_gcErr) { showToast('전송 실패: ' + _gcErr.message); }
 }
 
 // ── 지도 모임 모드 ────────────────────────────────────────
@@ -9880,7 +9881,8 @@ async function _uploadAndSendChatImage() {
 
 async function _doSendWChat(content) {
   if (!content || !_wchatAppId) return;
-  await db.from('messages').insert({ application_id: _wchatAppId, sender_id: currentUser.id, content });
+  const { error: _wsendErr } = await db.from('messages').insert({ application_id: _wchatAppId, sender_id: currentUser.id, content });
+  if (_wsendErr) { showToast('메시지 전송 실패: ' + _wsendErr.message); return; }
   try {
     const { data: ad } = await db.from('applications')
       .select('job_postings(businesses(kakao_uid))').eq('id', _wchatAppId).single();
