@@ -4952,6 +4952,9 @@ let _calYear = null, _calMonth = null;
 
 // ── 뒤로가기 전역 핸들러 ──────────────────────────────────
 const _PANEL_CLOSE_MAP = {
+  'panel-home':          () => { const sr = document.getElementById('home-search-results'); if (sr && sr.style.display !== 'none') clearHomeFilter(); },
+  'panel-dashboard':     () => { /* 기본 탭, 닫지 않음 */ },
+  'panel-chats':         () => { /* 기본 탭, 닫지 않음 */ },
   'panel-lesson-manage': () => closeLessonManagePanel(),
   'panel-community':     () => closeCommunityPanel(),
   'panel-applications':  () => document.getElementById('panel-applications')?.classList.remove('show'),
@@ -5071,7 +5074,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '330';
+  const _APP_V = '331';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5095,7 +5098,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=330').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=331').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -6860,6 +6863,8 @@ function openWageFilter() {
 }
 
 function showForeignerLangPanel() {
+  const _flSheet = document.querySelector('#panel-foreigner-lang > div');
+  if (_flSheet) { _flSheet.style.transform = ''; _flSheet.style.transition = ''; }
   document.getElementById('panel-foreigner-lang').style.display = 'block';
 }
 function closeForeignerLangPanel() {
@@ -7864,26 +7869,41 @@ function closeDetail(e) {
   }, { passive: true });
 })();
 
-// 바텀시트 공통 드래그 핸들러 (외국인환영/RANK/홈필터)
-// 인라인 ontouchstart/ontouchend 대신 document 레벨 리스너 사용 (Android WebView 호환성)
+// 바텀시트 공통 드래그 핸들러 (외국인환영/RANK/홈필터) — touchmove 애니메이션 포함
 (function setupBottomSheetDrags() {
   const _bshMap = [
-    { id: 'bsh-fl', close: () => closeForeignerLangPanel() },
-    { id: 'bsh-rk', close: () => closeRankPanel() },
-    { id: 'bsh-hf', close: () => closeHomeFilter() },
+    { id: 'bsh-fl', sheetSel: '#panel-foreigner-lang > div', close: () => closeForeignerLangPanel() },
+    { id: 'bsh-rk', sheetSel: '#panel-rank > div',           close: () => closeRankPanel() },
+    { id: 'bsh-hf', sheetSel: '#home-filter-overlay > div > div', close: () => closeHomeFilter() },
   ];
-  let _bshCur = null, _bshSy = 0;
+  let _bshCur = null, _bshSy = 0, _bshSheet = null;
   document.addEventListener('touchstart', e => {
-    _bshCur = null;
+    _bshCur = null; _bshSheet = null;
     for (const m of _bshMap) {
       const el = document.getElementById(m.id);
-      if (el && el.contains(e.target)) { _bshCur = m; _bshSy = e.touches[0].clientY; break; }
+      if (el && el.contains(e.target)) {
+        _bshCur = m; _bshSy = e.touches[0].clientY;
+        _bshSheet = document.querySelector(m.sheetSel);
+        if (_bshSheet) _bshSheet.style.transition = 'none';
+        break;
+      }
     }
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!_bshCur || !_bshSheet) return;
+    const dy = Math.max(0, e.touches[0].clientY - _bshSy);
+    _bshSheet.style.transform = `translateY(${dy}px)`;
   }, { passive: true });
   document.addEventListener('touchend', e => {
     if (!_bshCur) return;
-    if (e.changedTouches[0].clientY - _bshSy > 50) _bshCur.close();
-    _bshCur = null;
+    const dy = e.changedTouches[0].clientY - _bshSy;
+    if (dy > 80) {
+      if (_bshSheet) { _bshSheet.style.transition = 'transform 0.15s ease'; _bshSheet.style.transform = 'translateY(100%)'; }
+      setTimeout(() => { if (_bshSheet) { _bshSheet.style.transform = ''; _bshSheet.style.transition = ''; } _bshCur?.close(); }, 140);
+    } else {
+      if (_bshSheet) { _bshSheet.style.transition = 'transform 0.2s ease'; _bshSheet.style.transform = ''; }
+    }
+    _bshCur = null; _bshSheet = null;
   }, { passive: true });
 })();
 
@@ -10978,6 +10998,8 @@ function setNav(el, tab) {
     if (mapLocBtn) mapLocBtn.style.display = 'none';
     const _homeFloat = document.getElementById('map-swipe-float');
     if (_homeFloat) _homeFloat.style.display = 'none';
+    const _homeFab = document.getElementById('posting-fab');
+    if (_homeFab) _homeFab.style.display = 'none';
     panelHome?.classList.add('show');
     loadHomePanel();
   } else if (tab === 'swipe') {
@@ -16373,7 +16395,8 @@ function openEditForm(jobId) {
 function closePostingForm() {
   document.getElementById('form-overlay').classList.remove('open');
   const _fab = document.getElementById('posting-fab');
-  if (_fab) _fab.style.display = 'flex';
+  const _ownerEl = document.getElementById('panel-owner');
+  if (_fab && _ownerEl && _ownerEl.style.display !== 'none') _fab.style.display = 'flex';
 }
 function closeFormIfBg(e) { if (e.target === document.getElementById('form-overlay')) closePostingForm(); }
 
