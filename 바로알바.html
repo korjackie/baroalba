@@ -1788,7 +1788,9 @@
 <!-- 공고 상세 모달 -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
   <div class="detail-sheet" id="detail-sheet">
-    <div class="detail-handle" id="detail-drag-handle" style="cursor:grab"></div>
+    <div id="detail-drag-handle" style="touch-action:none;padding:12px 0 8px;cursor:grab;text-align:center">
+      <div class="detail-handle" style="margin:0 auto"></div>
+    </div>
     <div class="detail-header">
       <div class="detail-status-row" style="justify-content:space-between">
         <div style="display:flex;align-items:center;gap:8px">
@@ -3549,7 +3551,12 @@
 <!-- 외국인환영 언어필터 바텀시트 -->
 <div id="panel-foreigner-lang" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45)" onclick="if(event.target===this)closeForeignerLangPanel()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:0 0 env(safe-area-inset-bottom)">
-    <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0"></div>
+    <div style="touch-action:none;padding:10px 0 4px;cursor:grab;text-align:center"
+         ontouchstart="window._flDragY=event.touches[0].clientY"
+         ontouchend="if((event.changedTouches[0].clientY-window._flDragY)>50)closeForeignerLangPanel()"
+         onclick="closeForeignerLangPanel()">
+      <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto"></div>
+    </div>
     <div style="padding:14px 18px 10px;border-bottom:1px solid #f5f5f5">
       <div style="font-size:16px;font-weight:900;color:#111">🌏 외국인 환영 알바</div>
       <div style="font-size:12px;color:#aaa;margin-top:3px">내가 사용할 수 있는 언어를 선택하세요</div>
@@ -3593,7 +3600,12 @@
 <!-- RANK 바텀시트 -->
 <div id="panel-rank" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45)" onclick="if(event.target===this)closeRankPanel()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)">
-    <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0;flex-shrink:0"></div>
+    <div style="touch-action:none;padding:10px 0 4px;cursor:grab;text-align:center;flex-shrink:0"
+         ontouchstart="window._rkDragY=event.touches[0].clientY"
+         ontouchend="if((event.changedTouches[0].clientY-window._rkDragY)>50)closeRankPanel()"
+         onclick="closeRankPanel()">
+      <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto"></div>
+    </div>
     <div style="padding:14px 18px 10px;border-bottom:1px solid #f5f5f5;flex-shrink:0">
       <div id="rank-panel-title" style="font-size:16px;font-weight:900;color:#111">추천 업체 RANK</div>
       <!-- 탭 -->
@@ -4981,10 +4993,17 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
-  // 4. 채팅 오버레이 (display:flex)
+  // 4. 채팅 오버레이 - 업주 side (display:flex)
   const chatEl = document.getElementById('chat-overlay');
   if (chatEl && chatEl.style.display === 'flex') {
     closeChat(false);
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 4-1. 알바생 채팅 오버레이 - wchat (display:flex)
+  const wchatEl = document.getElementById('wchat-overlay');
+  if (wchatEl && wchatEl.style.display === 'flex') {
+    closeWChat(false);
     history.pushState({ panel: null }, '');
     return;
   }
@@ -5025,7 +5044,10 @@ window.addEventListener('popstate', () => {
     if (closeFn) closeFn();
     else visible[0].classList.remove('show');
     history.pushState({ panel: null }, '');
+    return;
   }
+  // 아무것도 없음 — 히스토리 기준점 재설정 (브라우저 뒤로가기/지도 이탈 방지)
+  history.pushState({ panel: null }, '');
 });
 
 
@@ -5045,7 +5067,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '320';
+  const _APP_V = '321';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5069,7 +5091,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=320').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=321').then(reg => {
       reg.update();
       // 새 SW가 설치되면 즉시 페이지 reload → 구 캐시로 보이는 문제 해결
       reg.addEventListener('updatefound', () => {
@@ -6749,6 +6771,7 @@ function _renderHomeForeigner() {
 
 function openWageFilter() {
   _homeSort = 'wage';
+  window._homeFilterApplied = true;
   const wageJobs = (jobs||[]).filter(j=>(j.status==='open'||j.status==='urgent')&&j.current_wage>0);
   const srEl = document.getElementById('home-search-results');
   const defEl = document.getElementById('home-default-content');
@@ -6767,6 +6790,7 @@ function closeForeignerLangPanel() {
 }
 function applyForeignerLangFilter(langCode) {
   closeForeignerLangPanel();
+  window._homeFilterApplied = true;
   const langNames = {vi:'베트남어',ru:'러시아어',zh:'중국어',mn:'몽골어',en:'영어',uz:'중앙아시아',ja:'일본어',ko:'한국어 가능'};
   const flags = {vi:'🇻🇳',ru:'🇷🇺',zh:'🇨🇳',mn:'🇲🇳',en:'🇺🇸',uz:'🇺🇿',ja:'🇯🇵',ko:'🇰🇷'};
   let filtered, labelText;
@@ -10775,10 +10799,10 @@ function openOwnerPanel(tab) {
 
 function closeOwnerPanel() {
   const panel = document.getElementById('panel-owner');
-  if (panel.style.display === 'none') return;
-  panel.style.display = 'none';
   const fab = document.getElementById('posting-fab');
   if (fab) fab.style.display = 'none';
+  if (panel.style.display === 'none') return;
+  panel.style.display = 'none';
   if (window._fromProfile) {
     window._fromProfile = false;
     setNav(document.querySelectorAll('.nav-item')[4], 'profile');
