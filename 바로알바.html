@@ -5064,7 +5064,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '325';
+  const _APP_V = '326';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5088,7 +5088,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=325').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=326').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5167,13 +5167,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   } else if (tabParam === 'profile') {
     if (_navItems[4]) setNav(_navItems[4], 'profile');
   } else {
-    // 기본 진입 또는 구형 ?tab=swipe: 홈 즉시 활성화
-    if (_navItems[0]) setNav(_navItems[0], 'home');
+    // 기본 진입: 지도 먼저 표시 (데이터 로드 전 빈 홈 방지)
+    if (_navItems[1]) setNav(_navItems[1], 'map');
   }
 
   await loadJobs();
-  // loadJobs 완료 후 홈 패널 타일 새로고침 (데이터 반영)
-  if (!tabParam || tabParam === 'home') loadHomePanel();
+  // loadJobs 완료 후 홈으로 전환 + 타일 렌더링
+  if (!tabParam || tabParam === 'home') {
+    loadHomePanel();
+    if (_navItems[0]) setNav(_navItems[0], 'home');
+  }
 
 
   if (deepJobId) openDeepLink(deepJobId);
