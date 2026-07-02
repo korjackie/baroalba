@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 기술 소개 통합본 (2026.07.02)</title>
+<style>
+  :root {
+    --red: #C8102E;
+    --red-light: #fff0f2;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --blue: #3b82f6;
+    --blue-light: #eff6ff;
+    --orange: #f59e0b;
+    --orange-light: #fffbeb;
+    --purple: #7c3aed;
+    --purple-light: #f3e8ff;
+    --indigo: #6366f1;
+    --indigo-light: #eef2ff;
+    --gray-900: #111;
+    --gray-700: #444;
+    --gray-500: #888;
+    --gray-300: #ccc;
+    --gray-200: #eee;
+    --gray-100: #f8f9fa;
+    --white: #fff;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    color: var(--gray-900);
+    background: var(--gray-100);
+    line-height: 1.6;
+  }
+
+  /* 상단 네비게이션 */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5%;
+    height: 60px;
+  }
+
+  .nav-logo {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--red);
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-tab {
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .nav-tab.active {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .nav-tab:hover:not(.active) {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .nav-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+
+  /* 히어로 */
+  .hero {
+    background: linear-gradient(135deg, #0a0a1a 0%, #0a1a2e 50%, #0a0a1a 100%);
+    padding: 120px 5% 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center top, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 5px 16px;
+    border-radius: 100px;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: clamp(26px, 4vw, 44px);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1.25;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span {
+    color: #60a5fa;
+  }
+
+  .hero-desc {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 40px;
+  }
+
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 28px;
+    font-weight: 900;
+    color: #60a5fa;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 4px;
+    font-weight: 700;
+  }
+
+  /* 컨테이너 */
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 60px 5%;
+  }
+
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  /* 섹션 */
+  .section-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--blue);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+  }
+
+  .section-desc {
+    font-size: 15px;
+    color: var(--gray-500);
+    margin-bottom: 40px;
+    max-width: 600px;
+  }
+
+  .subsection-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 40px 0 16px;
+  }
+
+  /* 카드 */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    border: 1px solid var(--gray-200);
+  }
+
+  .card-title {
+    font-size: 17px;
+    font-weight: 900;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-bottom: 16px;
+  }
+
+  /* 배지 */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .badge.new { background: #dcfce7; color: #14532d; }
+  .badge.js { background: #fef9c3; color: #854d0e; }
+  .badge.android { background: #dcfce7; color: #14532d; }
+  .badge.cache { background: #ede9fe; color: #4c1d95; }
+  .badge.api { background: #ffedd5; color: #9a3412; }
+  .badge.db { background: #dbeafe; color: #1e3a8a; }
+  .badge.infra { background: #f3e8ff; color: #4c1d95; }
+
+  /* 기술 스택 그리드 */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .tech-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .tech-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .tech-name {
+    font-size: 16px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .tech-desc {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.6;
+  }
+
+  .tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .tech-tag {
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--gray-100);
+    color: var(--gray-700);
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+
+  /* 아키텍처 다이어그램 */
+  .arch-diagram {
+    background: #1a1a2e;
+    border-radius: var(--radius);
+    padding: 32px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+
+  .arch-layer {
+    margin-bottom: 20px;
+  }
+
+  .arch-layer:last-child {
+    margin-bottom: 0;
+  }
+
+  .arch-layer-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .arch-boxes {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .arch-box {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .arch-box.client { background: rgba(200, 16, 46, 0.2); color: #fca5a5; border: 1px solid rgba(200, 16, 46, 0.3); }
+  .arch-box.cdn { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+  .arch-box.backend { background: rgba(22, 163, 74, 0.2); color: #86efac; border: 1px solid rgba(22, 163, 74, 0.3); }
+  .arch-box.cicd { background: rgba(124, 58, 237, 0.2); color: #c4b5fd; border: 1px solid rgba(124, 58, 237, 0.3); }
+  .arch-box.native { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+  .arch-arrow {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 18px;
+    margin: 4px 0;
+  }
+
+  /* 코드 블록 */
+  .code-block {
+    background: #1a1a2e;
+    color: #e2e8f0;
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    margin: 16px 0;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.8;
+  }
+
+  .code-block .c { color: #94a3b8; }
+  .code-block .k { color: #7dd3fc; }
+  .code-block .s { color: #86efac; }
+  .code-block .bad { color: #f87171; }
+  .code-block .good { color: #86efac; }
+
+  /* DB 스키마 그리드 */
+  .db-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .db-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 22px;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .db-card.new-table {
+    border-color: rgba(22, 163, 74, 0.35);
+    background: linear-gradient(135deg, #f0fdf4, #fff);
+  }
+
+  .db-table-name {
+    font-size: 14px;
+    font-weight: 900;
+    font-family: 'SF Mono', monospace;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+
+  .db-desc {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+
+  .db-columns {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .db-col {
+    font-size: 12px;
+    font-family: 'SF Mono', monospace;
+    color: var(--gray-700);
+    padding: 3px 8px;
+    background: var(--gray-100);
+    border-radius: 6px;
+  }
+
+  .db-col .col-type {
+    color: var(--gray-400, #bbb);
+    font-size: 11px;
+  }
+
+  /* Realtime 채널 테이블 */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+
+  .data-table th {
+    background: var(--gray-100);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--gray-500);
+    border-bottom: 2px solid var(--gray-200);
+  }
+
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .data-table code {
+    font-family: 'SF Mono', monospace;
+    font-size: 12px;
+    background: var(--gray-100);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--blue);
+  }
+
+  /* SW 캐시 카드 */
+  .cache-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .cache-card {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 22px;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .cache-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .cache-layer {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--gray-500);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .cache-title {
+    font-size: 15px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .cache-desc {
+    font-size: 12px;
+    color: var(--gray-500);
+    line-height: 1.6;
+  }
+
+  /* Android 카드 그리드 */
+  .android-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .android-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 22px;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-top: 4px solid var(--orange);
+  }
+
+  .android-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .android-title {
+    font-size: 15px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .android-desc {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.6;
+  }
+
+  /* 바로모임 아키텍처 */
+  .moim-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .moim-step {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 22px;
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    text-align: center;
+  }
+
+  .moim-step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(124, 58, 237, 0.15);
+    color: var(--purple);
+    font-size: 16px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+  }
+
+  .moim-step-title {
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .moim-step-desc {
+    font-size: 12px;
+    color: var(--gray-500);
+    line-height: 1.6;
+  }
+
+  /* 빌드 히스토리 */
+  .build-history {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .build-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .build-row:last-child {
+    border-bottom: none;
+  }
+
+  .build-version {
+    font-size: 13px;
+    font-weight: 900;
+    font-family: 'SF Mono', monospace;
+    color: var(--orange);
+    width: 120px;
+    flex-shrink: 0;
+  }
+
+  .build-desc {
+    font-size: 13px;
+    color: var(--gray-700);
+    line-height: 1.6;
+  }
+
+  /* 기술 하이라이트 */
+  .highlight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .highlight-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .highlight-num {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--gray-200);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .highlight-title {
+    font-size: 15px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .highlight-desc {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.6;
+  }
+
+  /* 플로우 스텝 */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .flow-step {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .flow-step:last-child {
+    border-bottom: none;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-content strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .step-content span {
+    font-size: 13px;
+    color: var(--gray-500);
+  }
+
+  /* 푸터 */
+  footer {
+    text-align: center;
+    padding: 40px 5%;
+    font-size: 13px;
+    color: var(--gray-500);
+    border-top: 1px solid var(--gray-200);
+  }
+
+  /* 반응형 */
+  @media (max-width: 768px) {
+    .nav-tabs {
+      display: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- 네비게이션 -->
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('stack')">기술 스택</button>
+    <button class="nav-tab" onclick="switchTab('arch')">아키텍처</button>
+    <button class="nav-tab" onclick="switchTab('db')">DB 스키마</button>
+    <button class="nav-tab" onclick="switchTab('android')">Android</button>
+    <button class="nav-tab" onclick="switchTab('sw')">SW 캐시</button>
+    <button class="nav-tab" onclick="switchTab('moim')">바로모임</button>
+  </div>
+  <div class="nav-badge">기술 통합본 · 2026.07.02</div>
+</nav>
+
+<!-- 히어로 -->
+<div class="hero">
+  <div class="hero-tag">Tech Intro</div>
+  <h1>바로알바<br><span>기술 스택 완전 해부</span></h1>
+  <p class="hero-desc">Vanilla JS PWA · Supabase BaaS · Android 하이브리드 · 7개국어 · v332</p>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">~20K</div>
+      <div class="stat-label">라인 단일 파일</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">15+</div>
+      <div class="stat-label">DB 테이블</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">3채널</div>
+      <div class="stat-label">Realtime</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">v25</div>
+      <div class="stat-label">Android 빌드</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">7개국어</div>
+      <div class="stat-label">shared-lang.js</div>
+    </div>
+  </div>
+</div>
+
+<!-- 탭 컨텐츠 -->
+<div class="container">
+
+  <!-- TAB 1: 기술 스택 -->
+  <div class="tab-panel active" id="tab-stack">
+    <div class="section-label">TECH STACK</div>
+    <h2 class="section-title">기술 스택</h2>
+    <p class="section-desc">바로알바를 구성하는 핵심 기술들입니다.</p>
+
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-icon">&#9889;</div>
+        <div class="tech-name">Vanilla JS PWA</div>
+        <div class="tech-desc">프레임워크 없는 순수 JS. 약 20,000라인 단일 파일(바로알바.html). Service Worker로 오프라인 지원 및 PWA 설치 가능.</div>
+        <div class="tech-tags">
+          <span class="tech-tag">ES6+</span>
+          <span class="tech-tag">PWA</span>
+          <span class="tech-tag">Service Worker</span>
+          <span class="tech-tag">단일 파일</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-icon">&#128452;</div>
+        <div class="tech-name">Supabase</div>
+        <div class="tech-desc">PostgreSQL + RLS + Auth + Realtime + Storage. DML은 REST API 직접 호출. DDL만 콘솔에서 실행. BaaS로 백엔드 서버리스 운영.</div>
+        <div class="tech-tags">
+          <span class="tech-tag">PostgreSQL</span>
+          <span class="tech-tag">RLS</span>
+          <span class="tech-tag">Realtime</span>
+          <span class="tech-tag">REST API</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-icon">&#127760;</div>
+        <div class="tech-name">Vercel</div>
+        <div class="tech-desc">CDN + Serverless Functions. api/send-push.js로 FCM Web Push 발송 처리. GitHub push → 자동 배포. 글로벌 CDN 엣지.</div>
+        <div class="tech-tags">
+          <span class="tech-tag">CDN</span>
+          <span class="tech-tag">Serverless</span>
+          <span class="tech-tag">자동배포</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-icon">&#128241;</div>
+        <div class="tech-name">Android WebView</div>
+        <div class="tech-desc">WebView 기반 하이브리드 앱. AndroidBridge JavascriptInterface로 JS ↔ Native 통신. GitHub Actions로 AAB 빌드 자동화.</div>
+        <div class="tech-tags">
+          <span class="tech-tag">WebView</span>
+          <span class="tech-tag">AndroidBridge</span>
+          <span class="tech-tag">GitHub Actions</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-icon">&#128276;</div>
+        <div class="tech-name">푸시 알림 이중화</div>
+        <div class="tech-desc">Firebase FCM (Android 네이티브 푸시) + Web Push VAPID (브라우저/PWA). 이중 채널로 알림 누락 방지. api/send-push.js 경유 발송.</div>
+        <div class="tech-tags">
+          <span class="tech-tag">FCM</span>
+          <span class="tech-tag">VAPID</span>
+          <span class="tech-tag">이중화</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-icon">&#127757;</div>
+        <div class="tech-name">shared-lang.js</div>
+        <div class="tech-desc">7개국어 i18n 엔진 (한국어/영어/중국어/일본어/베트남어/러시아어/몽골어). applyLang() 함수가 DOM 텍스트를 번역값으로 교체.</div>
+        <div class="tech-tags">
+          <span class="tech-tag">i18n</span>
+          <span class="tech-tag">7개국어</span>
+          <span class="tech-tag">applyLang()</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection-title">Tech Highlights</div>
+    <div class="highlight-grid">
+      <div class="highlight-card">
+        <div class="highlight-num">01</div>
+        <div class="highlight-title">단일 파일 아키텍처</div>
+        <div class="highlight-desc">~20,000라인 HTML + CSS + JS 단일 파일. 배포가 파일 하나 교체로 끝남. CDN 최적화 극대화.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">02</div>
+        <div class="highlight-title">Supabase RLS 보안</div>
+        <div class="highlight-desc">Row Level Security로 유저별 데이터 접근 제어. 클라이언트에서 직접 DB 호출해도 보안 유지.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">03</div>
+        <div class="highlight-title">Realtime 채팅 3채널</div>
+        <div class="highlight-desc">app_chat:{appId} (1:1 채팅), location:{appId} (위치 공유), moim-chat-{gatheringId} (모임 단체채팅).</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">04</div>
+        <div class="highlight-title">SW 버전 강제 동기화</div>
+        <div class="highlight-desc">바로알바.html의 SW_VERSION과 sw.js의 CACHE 키가 항상 일치해야 구버전 JS 캐시 자동 제거.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">05</div>
+        <div class="highlight-title">GitHub Actions CI/CD</div>
+        <div class="highlight-desc">Android AAB 서명 빌드 + Google Play 업로드 자동화. 키스토어 시크릿 GitHub Secrets 관리.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">06</div>
+        <div class="highlight-title">AndroidBridge 브릿지</div>
+        <div class="highlight-desc">JavascriptInterface로 JS → Native 함수 직접 호출. FCM 토큰 전달, 카메라, 갤러리 접근.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">07</div>
+        <div class="highlight-title">_PANEL_CLOSE_MAP 패널 관리</div>
+        <div class="highlight-desc">전체 패널 ID를 닫기 함수에 매핑. popstate 핸들러가 이 맵을 조회해 뒤로가기 시 현재 열린 패널 자동 닫기 처리 (v331).</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">08</div>
+        <div class="highlight-title">바로모임 Realtime 채팅</div>
+        <div class="highlight-desc">승인된 참가자+주최자만 입장 가능한 단체채팅방. Supabase Realtime Broadcast 기반.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: 아키텍처 -->
+  <div class="tab-panel" id="tab-arch">
+    <div class="section-label">ARCHITECTURE</div>
+    <h2 class="section-title">시스템 아키텍처</h2>
+    <p class="section-desc">클라이언트부터 백엔드, CI/CD까지 전체 시스템 구성도입니다.</p>
+
+    <div class="arch-diagram">
+      <div class="arch-layer">
+        <div class="arch-layer-label">CLIENT LAYER</div>
+        <div class="arch-boxes">
+          <span class="arch-box client">바로알바.html (~20K lines)</span>
+          <span class="arch-box client">shared-lang.js (7개국어)</span>
+          <span class="arch-box client">sw.js (Service Worker)</span>
+          <span class="arch-box native">Android WebView (v25)</span>
+        </div>
+      </div>
+      <div class="arch-arrow">&#8597;</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">CDN / SERVERLESS</div>
+        <div class="arch-boxes">
+          <span class="arch-box cdn">Vercel CDN (글로벌 엣지)</span>
+          <span class="arch-box cdn">api/send-push.js (Web Push)</span>
+          <span class="arch-box cdn">baroalba.multimove.co.kr</span>
+        </div>
+      </div>
+      <div class="arch-arrow">&#8597;</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">BACKEND / BAAS</div>
+        <div class="arch-boxes">
+          <span class="arch-box backend">Supabase PostgreSQL</span>
+          <span class="arch-box backend">Supabase Auth + RLS</span>
+          <span class="arch-box backend">Supabase Realtime (3채널)</span>
+          <span class="arch-box backend">Supabase Storage</span>
+          <span class="arch-box backend">Firebase FCM</span>
+        </div>
+      </div>
+      <div class="arch-arrow">&#8597;</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">CI / CD</div>
+        <div class="arch-boxes">
+          <span class="arch-box cicd">GitHub Repository</span>
+          <span class="arch-box cicd">GitHub Actions (Android AAB)</span>
+          <span class="arch-box cicd">Vercel Auto Deploy (git push)</span>
+          <span class="arch-box cicd">Google Play Console</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection-title">Supabase Realtime 채널</div>
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>채널명</th>
+            <th>용도</th>
+            <th>대상</th>
+            <th>메시지 타입</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>app_chat:{appId}</code></td>
+            <td>1:1 채팅</td>
+            <td>업주 &#8596; 알바생</td>
+            <td>Broadcast (메시지 전송)</td>
+          </tr>
+          <tr>
+            <td><code>location:{appId}</code></td>
+            <td>실시간 위치 공유</td>
+            <td>당일 알바 중</td>
+            <td>Broadcast (위치 좌표)</td>
+          </tr>
+          <tr>
+            <td><code>moim-chat-{gatheringId}</code></td>
+            <td>바로모임 단체채팅</td>
+            <td>승인된 참가자 + 주최자</td>
+            <td>Broadcast (그룹 메시지)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection-title">DML vs DDL 원칙</div>
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>처리 방법</th>
+            <th>이유</th>
+            <th>예시</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>DML</strong> (INSERT/UPDATE/DELETE/SELECT)</td>
+            <td>Supabase REST API 직접</td>
+            <td>RLS 적용 보장, 클라이언트에서 직접 처리</td>
+            <td>공고 등록, 지원, 채팅 메시지</td>
+          </tr>
+          <tr>
+            <td><strong>DDL</strong> (CREATE TABLE/ALTER TABLE)</td>
+            <td>Supabase 콘솔 SQL 에디터</td>
+            <td>스키마 변경은 관리자 권한 필요</td>
+            <td>신규 테이블 생성, 컬럼 추가</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: DB 스키마 -->
+  <div class="tab-panel" id="tab-db">
+    <div class="section-label">DATABASE</div>
+    <h2 class="section-title">DB 스키마</h2>
+    <p class="section-desc">Supabase PostgreSQL 테이블 구조입니다. 초록색은 신규 추가 테이블입니다.</p>
+
+    <div class="db-grid">
+      <div class="db-card">
+        <div class="db-table-name">profiles</div>
+        <div class="db-desc">사용자 프로필 (알바생/업주 공용)</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID (FK auth.users)</span></div>
+          <div class="db-col">name <span class="col-type">TEXT</span></div>
+          <div class="db-col">role <span class="col-type">'worker' | 'employer'</span></div>
+          <div class="db-col">lang <span class="col-type">TEXT (7개국어)</span></div>
+          <div class="db-col">trust_score <span class="col-type">INT (0~99)</span></div>
+          <div class="db-col">subscription_plan <span class="col-type">TEXT</span></div>
+          <div class="db-col">lang_abilities <span class="col-type">TEXT[]</span></div>
+          <div class="db-col">nationality <span class="col-type">TEXT</span></div>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-table-name">job_postings</div>
+        <div class="db-desc">알바 공고</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">employer_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">title, description <span class="col-type">TEXT</span></div>
+          <div class="db-col">hourly_rate <span class="col-type">INT</span></div>
+          <div class="db-col">location, lat, lng <span class="col-type">FLOAT</span></div>
+          <div class="db-col">nationality_filter <span class="col-type">TEXT</span></div>
+          <div class="db-col">is_team_recruit <span class="col-type">BOOL</span></div>
+          <div class="db-col">team_size <span class="col-type">INT</span></div>
+          <div class="db-col">pickup_location <span class="col-type">TEXT</span></div>
+          <div class="db-col">beginner_ok <span class="col-type">BOOL</span></div>
+          <div class="db-col">meal_included <span class="col-type">BOOL</span></div>
+          <div class="db-col">closed_at <span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-table-name">applications</div>
+        <div class="db-desc">지원 내역</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">job_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">worker_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">status <span class="col-type">pending|accepted|rejected</span></div>
+          <div class="db-col">is_lightning <span class="col-type">BOOL (번개지원)</span></div>
+          <div class="db-col">created_at <span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-table-name">messages</div>
+        <div class="db-desc">채팅 메시지</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">chat_id <span class="col-type">UUID</span></div>
+          <div class="db-col">sender_role <span class="col-type">'worker' | 'employer'</span></div>
+          <div class="db-col">content <span class="col-type">TEXT</span></div>
+          <div class="db-col">application_id <span class="col-type">UUID nullable (지원 연결)</span></div>
+          <div class="db-col">inquiry_id <span class="col-type">UUID nullable (레슨 문의)</span></div>
+          <div class="db-col">read_at <span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="db-col">created_at <span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-table-name">reviews</div>
+        <div class="db-desc">알바생 → 업주 평가</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">job_id, reviewer_id, reviewee_id <span class="col-type">UUID</span></div>
+          <div class="db-col">rating <span class="col-type">INT (1~5)</span></div>
+          <div class="db-col">content <span class="col-type">TEXT</span></div>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-table-name">worker_reviews</div>
+        <div class="db-desc">업주 → 알바생 평가</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">job_id, reviewer_id, reviewee_id <span class="col-type">UUID</span></div>
+          <div class="db-col">rating <span class="col-type">INT (1~5)</span></div>
+          <div class="db-col">content <span class="col-type">TEXT</span></div>
+          <div class="db-col">trust_impact <span class="col-type">INT (신뢰점수 영향)</span></div>
+        </div>
+      </div>
+
+      <div class="db-card new-table">
+        <div class="db-table-name">review_reply <span class="badge new">NEW</span></div>
+        <div class="db-desc">업주 리뷰 답글</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">review_id <span class="col-type">UUID (FK reviews)</span></div>
+          <div class="db-col">author_id <span class="col-type">UUID</span></div>
+          <div class="db-col">content <span class="col-type">TEXT</span></div>
+        </div>
+      </div>
+
+      <div class="db-card new-table">
+        <div class="db-table-name">worker_review_reply <span class="badge new">NEW</span></div>
+        <div class="db-desc">알바생 리뷰 답글</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">review_id <span class="col-type">UUID (FK worker_reviews)</span></div>
+          <div class="db-col">author_id <span class="col-type">UUID</span></div>
+          <div class="db-col">content <span class="col-type">TEXT</span></div>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-table-name">notifications</div>
+        <div class="db-desc">알림 히스토리</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">user_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">type <span class="col-type">TEXT (지원/채팅/모임)</span></div>
+          <div class="db-col">title, body <span class="col-type">TEXT</span></div>
+          <div class="db-col">read_at <span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="db-card new-table">
+        <div class="db-table-name">gatherings <span class="badge new">NEW</span></div>
+        <div class="db-desc">바로모임 (소셜 모임)</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">title <span class="col-type">TEXT</span></div>
+          <div class="db-col">category <span class="col-type">스포츠|취미|소셜|파티|카풀|기타</span></div>
+          <div class="db-col">host_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">max_members <span class="col-type">INT</span></div>
+          <div class="db-col">is_public <span class="col-type">BOOL</span></div>
+          <div class="db-col">location <span class="col-type">TEXT</span></div>
+          <div class="db-col">description <span class="col-type">TEXT</span></div>
+          <div class="db-col">invite_token <span class="col-type">TEXT (비공개 딥링크)</span></div>
+        </div>
+      </div>
+
+      <div class="db-card new-table">
+        <div class="db-table-name">gathering_applications <span class="badge new">NEW</span></div>
+        <div class="db-desc">바로모임 참가 신청</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">gathering_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">user_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">status <span class="col-type">pending|approved|rejected</span></div>
+        </div>
+      </div>
+
+      <div class="db-card new-table">
+        <div class="db-table-name">gathering_chats <span class="badge new">NEW</span></div>
+        <div class="db-desc">바로모임 단체채팅</div>
+        <div class="db-columns">
+          <div class="db-col">id <span class="col-type">UUID</span></div>
+          <div class="db-col">gathering_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">sender_id <span class="col-type">UUID (FK)</span></div>
+          <div class="db-col">content <span class="col-type">TEXT</span></div>
+          <div class="db-col">created_at <span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Android -->
+  <div class="tab-panel" id="tab-android">
+    <div class="section-label">ANDROID</div>
+    <h2 class="section-title">Android 앱 구조</h2>
+    <p class="section-desc">WebView 기반 하이브리드 앱. GitHub Actions 자동 빌드.</p>
+
+    <div class="android-grid">
+      <div class="android-card">
+        <div class="android-icon">&#127787;</div>
+        <div class="android-title">AndroidBridge</div>
+        <div class="android-desc">JavascriptInterface 브릿지. JS에서 Android.showToast(), Android.getFCMToken(), Android.openGallery() 등 네이티브 기능 직접 호출.</div>
+      </div>
+
+      <div class="android-card">
+        <div class="android-icon">&#128640;</div>
+        <div class="android-title">스플래시 화면 v23</div>
+        <div class="android-desc">앱 시작 시 바로알바 로고 스플래시. 로딩 중 WebView 숨김 처리. 첫 화면 준비 완료 후 스플래시 제거.</div>
+      </div>
+
+      <div class="android-card">
+        <div class="android-icon">&#9000;</div>
+        <div class="android-title">키보드 SHOW_FORCED</div>
+        <div class="android-desc">채팅 입력창 포커스 시 키보드 강제 표시. InputMethodManager.SHOW_FORCED 플래그 적용으로 안정적 키보드 표시.</div>
+      </div>
+
+      <div class="android-card">
+        <div class="android-icon">&#128279;</div>
+        <div class="android-title">딥링크 처리</div>
+        <div class="android-desc">카카오 공유, 비공개 모임 초대링크 등 딥링크 수신 처리. Intent Filter로 baroalba:// 스킴 등록.</div>
+      </div>
+
+      <div class="android-card">
+        <div class="android-icon">&#128276;</div>
+        <div class="android-title">FCM 토큰 타이밍</div>
+        <div class="android-desc">WebView 로드 완료 후 onPageFinished에서 FCM 토큰 전달. 너무 이르면 JS가 준비되기 전 호출되어 토큰 누락. 타이밍이 핵심.</div>
+      </div>
+
+      <div class="android-card">
+        <div class="android-icon">&#129302;</div>
+        <div class="android-title">GitHub Actions 빌드</div>
+        <div class="android-desc">git push → Actions 자동 실행 → AAB 빌드 → 서명 (키스토어 Secrets) → Google Play 업로드. Android Studio 직접 빌드 불필요.</div>
+      </div>
+    </div>
+
+    <div class="subsection-title">Android 빌드 히스토리</div>
+    <div class="card">
+      <div class="build-history">
+        <div class="build-row">
+          <div class="build-version">v18 (초기)</div>
+          <div class="build-desc">WebView 기반 초기 빌드. 기본 구조 설립.</div>
+        </div>
+        <div class="build-row">
+          <div class="build-version">v19</div>
+          <div class="build-desc">FCM 통합. Firebase Messaging Service 구현. 푸시 알림 수신 기반 구축.</div>
+        </div>
+        <div class="build-row">
+          <div class="build-version">v20</div>
+          <div class="build-desc">ChatReplyReceiver 추가. 알림에서 채팅 답장 기능. Supabase REST API 직접 호출.</div>
+        </div>
+        <div class="build-row">
+          <div class="build-version">v21</div>
+          <div class="build-desc">딥링크 처리 추가. Intent Filter baroalba:// 스킴 등록.</div>
+        </div>
+        <div class="build-row">
+          <div class="build-version">v22</div>
+          <div class="build-desc">스플래시 화면 개선. 로딩 UX 개선.</div>
+        </div>
+        <div class="build-row">
+          <div class="build-version">v23</div>
+          <div class="build-desc">키보드 SHOW_FORCED 적용. 스플래시 v23 최종화. GitHub Actions 빌드 자동화 완성.</div>
+        </div>
+        <div class="build-row">
+          <div class="build-version">v24</div>
+          <div class="build-desc">versionCode 24, versionName 1.5.0. styles.xml windowLightStatusBar false (흰색 상태바 아이콘). ChatReplyReceiver messages 스키마 수정 (chat_id, sender_role).</div>
+        </div>
+        <div class="build-row">
+          <div class="build-version" style="color:var(--red)">v25 (현재)</div>
+          <div class="build-desc">versionCode 25, versionName 1.5.0. Google Play Store Production 트랙 심사 제출 (2026-07-02). 레슨/과외 매칭 기능 포함 최초 스토어 출시 버전.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection-title">Android 리빌드 기준표</div>
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>변경 사항</th>
+            <th>리빌드 필요?</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>바로알바.html 수정</td>
+            <td style="color:var(--green);font-weight:800">불필요</td>
+            <td>Vercel 배포 → WebView가 자동으로 최신 로드</td>
+          </tr>
+          <tr>
+            <td>sw.js 수정</td>
+            <td style="color:var(--green);font-weight:800">불필요</td>
+            <td>SW 버전 올리면 자동 교체</td>
+          </tr>
+          <tr>
+            <td>AndroidManifest 수정</td>
+            <td style="color:var(--red);font-weight:800">필요</td>
+            <td>권한, 딥링크 스킴 변경</td>
+          </tr>
+          <tr>
+            <td>Java/Kotlin 코드 수정</td>
+            <td style="color:var(--red);font-weight:800">필요</td>
+            <td>네이티브 로직 변경</td>
+          </tr>
+          <tr>
+            <td>versionCode 변경</td>
+            <td style="color:var(--red);font-weight:800">필요</td>
+            <td>반드시 +1 (Play Console 정책)</td>
+          </tr>
+          <tr>
+            <td>FCM google-services.json</td>
+            <td style="color:var(--red);font-weight:800">필요</td>
+            <td>파이어베이스 설정 변경</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 5: SW 캐시 -->
+  <div class="tab-panel" id="tab-sw">
+    <div class="section-label">SERVICE WORKER</div>
+    <h2 class="section-title">Service Worker 캐시 전략</h2>
+    <p class="section-desc">3개 레이어 캐시 구조와 버전 동기화 규칙입니다.</p>
+
+    <div class="cache-grid">
+      <div class="cache-card">
+        <div class="cache-icon">&#127760;</div>
+        <div class="cache-layer">Layer 1</div>
+        <div class="cache-title">WebView HTTP 캐시</div>
+        <div class="cache-desc">브라우저 기본 HTTP 캐시. 모든 리소스 대상. clearCache(true)로 우회 가능.</div>
+      </div>
+      <div class="cache-card">
+        <div class="cache-icon">&#128230;</div>
+        <div class="cache-layer">Layer 2</div>
+        <div class="cache-title">SW CacheStorage</div>
+        <div class="cache-desc">JS, CSS, 이미지 대상. Cache-First 전략. SW 버전 올리면 이전 캐시 자동 삭제.</div>
+      </div>
+      <div class="cache-card">
+        <div class="cache-icon">&#128196;</div>
+        <div class="cache-layer">Layer 3</div>
+        <div class="cache-title">SW HTML 처리</div>
+        <div class="cache-desc">.html 파일. Network-First (no-store) 전략. 항상 최신 버전 로드.</div>
+      </div>
+    </div>
+
+    <div class="subsection-title">버전 동기화 규칙</div>
+    <div class="card">
+      <div class="card-title">바로알바.html ↔ sw.js 항상 동일 버전</div>
+      <div class="card-sub">SW_VERSION 상수와 캐시 키 이름이 항상 일치해야 합니다</div>
+      <div class="code-block"><span class="c">// 바로알바.html</span>
+<span class="k">const</span> _APP_V = <span class="s">'332'</span>;                          <span class="c">← 앱 버전 상수</span>
+navigator.serviceWorker.register(<span class="s">'./sw.js?v=332'</span>);  <span class="c">← SW 등록 쿼리 파라미터</span>
+
+<span class="c">// sw.js</span>
+<span class="k">const</span> CACHE = <span class="s">'baroalba-v332'</span>;              <span class="c">← 캐시 키 (이전 캐시 자동 삭제)</span>
+
+<span class="c">// activate 이벤트에서 이전 캐시 삭제</span>
+self.addEventListener(<span class="s">'activate'</span>, e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+});</div>
+      <p style="font-size:14px;color:var(--gray-700);margin-top:16px"><strong>핵심:</strong> SW 버전을 올리지 않으면 구 버전 JS (shared-lang.js 포함)가 Cache-First로 계속 사용됩니다. v300에서 <code>baroalba-v300</code>으로 bump하여 nav 라벨 버그 수정분이 실제 적용되었습니다.</p>
+    </div>
+
+    <div class="subsection-title">shared-lang.js applyLang() 버그 분석</div>
+    <div class="card">
+      <div class="card-title">&#128269; 왜 캐시가 아니었나 <span class="badge js">shared-lang.js</span></div>
+      <div class="card-sub">7시간 추적 끝에 발견한 JS 코드 버그 — 755-756번 줄</div>
+      <p style="font-size:14px;color:var(--gray-700);margin-bottom:16px">바로알바 앱은 6~7개 언어 번역을 <code>shared-lang.js</code>에서 관리합니다. 페이지 로드 시 <code>applyLang()</code>이 실행되어 <code>.nav-label</code> 요소들의 <code>textContent</code>를 번역값으로 <strong>덮어씁니다.</strong></p>
+      <div class="code-block"><span class="c">// shared-lang.js 755-756번 줄 (버그)</span>
+<span class="bad">const navKeys = ['nav_map','nav_swipe','nav_applications','nav_chats','nav_profile'];</span>
+navLabels.forEach((el, i) => &#123; if (navKeys[i]) el.textContent = t(navKeys[i]); &#125;);
+
+<span class="c">// 결과: HTML이 아무리 바뀌어도 JS가 덮어씀</span>
+<span class="c">// nav[0] "홈" → '지도' 출력 (nav_map 값)</span>
+<span class="c">// nav[1] "지도" → '스와이프' 출력 (nav_swipe 값)</span>
+
+<span class="c">// 수정 — nav_home 신규 추가, navKeys 재정렬</span>
+<span class="good">const navKeys = ['nav_home','nav_map','nav_applications','nav_chats','nav_profile'];</span>
+
+<span class="c">// 7개 언어 TRANSLATIONS에 nav_home 추가:</span>
+ko: nav_home:<span class="s">'홈'</span>  en: nav_home:<span class="s">'Home'</span>  zh: nav_home:<span class="s">'&#39318;&#39029;'</span>  ja: nav_home:<span class="s">'&#12507;&#12540;&#12512;'</span>
+vi: nav_home:<span class="s">'Trang ch&#7911;'</span>  mn: nav_home:<span class="s">'&#1053;&#1199;&#1199;&#1088;'</span>  ru: nav_home:<span class="s">'&#1043;&#1083;&#1072;&#1074;&#1085;&#1072;&#1103;'</span></div>
+    </div>
+  </div>
+
+  <!-- TAB 6: 바로모임 -->
+  <div class="tab-panel" id="tab-moim">
+    <div class="section-label">BAROMOIM</div>
+    <h2 class="section-title">바로모임 아키텍처</h2>
+    <p class="section-desc">홈탭에서 진입하는 소셜 모임 서비스의 기술 구조입니다.</p>
+
+    <div class="moim-steps">
+      <div class="moim-step">
+        <div class="moim-step-num">1</div>
+        <div class="moim-step-title">모임 개설</div>
+        <div class="moim-step-desc">카테고리, 인원, 공개/비공개 설정. gatherings 테이블 INSERT. 비공개 시 invite_token 생성.</div>
+      </div>
+      <div class="moim-step">
+        <div class="moim-step-num">2</div>
+        <div class="moim-step-title">참가 신청</div>
+        <div class="moim-step-desc">공개: 목록에서 바로 신청. 비공개: 딥링크 초대 링크 통해서만 진입. gathering_applications INSERT.</div>
+      </div>
+      <div class="moim-step">
+        <div class="moim-step-num">3</div>
+        <div class="moim-step-title">주최자 승인</div>
+        <div class="moim-step-desc">주최자 대시보드에서 pending → approved/rejected. 승인 시 FCM 알림 발송.</div>
+      </div>
+      <div class="moim-step">
+        <div class="moim-step-num">4</div>
+        <div class="moim-step-title">단체채팅</div>
+        <div class="moim-step-desc">승인된 참가자 + 주최자만 입장. Supabase Realtime moim-chat-{gatheringId} 채널 Broadcast.</div>
+      </div>
+    </div>
+
+    <div class="subsection-title">구독 플랜 × 바로모임 한도</div>
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>플랜</th>
+            <th>가격</th>
+            <th>알바 공고</th>
+            <th>바로모임 개설</th>
+            <th>추가 혜택</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>FREE</strong></td>
+            <td>무료</td>
+            <td>월 5개</td>
+            <td>월 1개</td>
+            <td>기본 기능</td>
+          </tr>
+          <tr>
+            <td><strong>BASIC</strong></td>
+            <td>&#8361;9,900/월</td>
+            <td>월 30개</td>
+            <td>월 10개</td>
+            <td>급구 배지 우선 노출</td>
+          </tr>
+          <tr>
+            <td><strong>PRO</strong></td>
+            <td>&#8361;29,900/월</td>
+            <td>무제한</td>
+            <td>무제한</td>
+            <td>모범파트너 배지 + 최상단 고정 + 단골 알림 강화</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:13px;color:var(--gray-500);margin-top:12px">알바생(비업주)은 모든 모임 무료 참가 가능. 개설 한도만 플랜 제한 적용.</p>
+    </div>
+
+    <div class="subsection-title">지도 탭 통합</div>
+    <div class="card">
+      <div class="card-title">알바 마커 ↔ 모임 마커 토글</div>
+      <div class="card-sub">지도 탭에서 알바 공고와 모임을 모두 탐색 가능</div>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>기본 상태 — 알바 마커</strong>
+            <span>지도 탭 진입 시 기본으로 알바 공고 마커 표시.</span>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>토글 버튼 — 모임 마커로 전환</strong>
+            <span>상단 토글 버튼으로 알바 ↔ 모임 마커 전환. 모임 위치 기반 탐색.</span>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>마커 클릭 — 모임 상세</strong>
+            <span>모임 마커 클릭 시 모임 상세 시트 표시. 참가 신청 CTA.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>바로알바</strong> — 기술 소개 통합본 (260702)<br>
+  <span style="margin-top:6px;display:block">멀티무브 주식회사 · baroalba.multimove.co.kr · 내부 배포용 · 2026-07-02</span>
+</footer>
+
+<script>
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+      panel.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.getElementById('tab-' + tabId).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
