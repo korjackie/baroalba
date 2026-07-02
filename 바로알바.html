@@ -3368,6 +3368,15 @@
   <div id="lesson-subcat-row" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:10px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">전체</button>
   </div>
+  <!-- 가격 필터 -->
+  <div id="lesson-price-row" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button class="lesson-cat-btn active" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,0)">전체 가격</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,20000)">2만원 이하</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,50000)">5만원 이하</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,100000)">10만원 이하</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,999999)">10만원+</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,-1)">가격 협의</button>
+  </div>
   <div id="lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
     <div class="empty"><div class="empty-icon">🎾</div><div class="empty-txt">불러오는 중...</div></div>
   </div>
@@ -3528,10 +3537,18 @@
   <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button onclick="closeLessonManagePanel()" style="background:none;border:none;cursor:pointer;padding:0;color:#333;display:flex;align-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div style="font-size:17px;font-weight:900;color:#222" data-i18n="lesson_my_title">내 레슨/과외 프로필</div>
-    <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
+    <button onclick="openLessonRegisterModal()" id="lm-register-btn" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
+  </div>
+  <!-- 탭 -->
+  <div style="display:flex;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <button id="lm-tab-profile" onclick="switchLessonManageTab('profile')" style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #3b82f6;color:#3b82f6;background:#fff;cursor:pointer">📋 내 프로필</button>
+    <button id="lm-tab-inquiries" onclick="switchLessonManageTab('inquiries')" style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">💬 문의함 <span id="lm-inq-badge" style="display:none;background:#C8102E;color:#fff;font-size:10px;font-weight:900;padding:1px 5px;border-radius:8px;margin-left:3px"></span></button>
   </div>
   <div id="my-lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
     <div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>
+  </div>
+  <div id="my-lesson-inquiries" style="display:none;flex:1;overflow-y:auto;padding:12px 16px 80px">
+    <div style="text-align:center;padding:40px;color:#bbb;font-size:13px">불러오는 중...</div>
   </div>
 </div>
 
@@ -5074,7 +5091,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '332';
+  const _APP_V = '333';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5098,7 +5115,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=332').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=333').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -6162,27 +6179,58 @@ async function loadMoimApplicants(gatheringId) {
   if (!sec) return;
   sec.style.display = 'block';
   sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">불러오는 중...</div>';
-  const { data } = await db.from('gathering_applications').select('*, workers(name,rating,review_count,nationality)').eq('gathering_id', gatheringId).order('applied_at');
+  const { data } = await db.from('gathering_applications')
+    .select('*, profiles(name,rating,review_count,nationality)')
+    .eq('gathering_id', gatheringId).order('applied_at');
   if (!data?.length) { sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">신청자가 없어요</div>'; return; }
+  const m = _moimDetailData;
+  const hasFee = m && (m.entry_fee > 0 || m.entry_fee < 0);
   const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
-  sec.innerHTML = data.map(app => {
-    const w = app.workers;
+  sec.innerHTML = `<div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding:0 2px">신청자 ${data.length}명</div>` + data.map(app => {
+    const w = app.profiles || app.workers || {};
     const statusColor = { pending:'#D97706', approved:'#16a34a', rejected:'#9CA3AF' }[app.status] || '#888';
     const statusLabel = { pending:'대기중', approved:'승인됨', rejected:'거절됨' }[app.status] || app.status;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #f0f0f0;border-radius:12px;margin-bottom:6px;background:#fff">
-      <div style="font-size:24px">${_NAT_FLAG[w?.nationality] || '👤'}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:800;color:#111">${w?.name || '익명'}</div>
-        ${w?.rating ? `<div style="font-size:11px;color:#888">⭐ ${w.rating.toFixed(1)} (${w.review_count}건)</div>` : ''}
+    const feePaidHtml = (hasFee && app.status === 'approved') ? `
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f5f5f5;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;color:#888">${m.entry_fee > 0 ? '참가비 ' + m.entry_fee.toLocaleString() + '원' : '각자분담'} · 현장납부</span>
+        <button id="fee-btn-${app.id}" onclick="toggleMoimFeePaid('${app.id}','${gatheringId}',${!!app.fee_paid},this)"
+          style="padding:5px 12px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;${app.fee_paid ? 'background:#dcfce7;color:#15803d' : 'background:#f3f4f6;color:#6b7280'}">
+          ${app.fee_paid ? '✅ 납부확인' : '□ 미납부'}
+        </button>
+      </div>` : '';
+    return `<div style="padding:12px;border:1px solid #f0f0f0;border-radius:12px;margin-bottom:6px;background:#fff">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:24px">${_NAT_FLAG[w?.nationality] || '👤'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:800;color:#111">${w?.name || '익명'}</div>
+          ${w?.rating ? `<div style="font-size:11px;color:#888">⭐ ${Number(w.rating).toFixed(1)} (${w.review_count||0}건)</div>` : ''}
+        </div>
+        <span style="font-size:11px;font-weight:800;color:${statusColor};background:${statusColor}22;padding:4px 10px;border-radius:10px">${statusLabel}</span>
+        ${app.status === 'pending' ? `
+          <div style="display:flex;gap:4px">
+            <button onclick="decideMoimApp('${app.id}','approved','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#16a34a;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">승인</button>
+            <button onclick="decideMoimApp('${app.id}','rejected','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#e5e7eb;color:#555;border:none;font-size:11px;font-weight:700;cursor:pointer">거절</button>
+          </div>` : ''}
       </div>
-      <span style="font-size:11px;font-weight:800;color:${statusColor};background:${statusColor}22;padding:4px 10px;border-radius:10px">${statusLabel}</span>
-      ${app.status === 'pending' ? `
-        <div style="display:flex;gap:4px">
-          <button onclick="decideMoimApp('${app.id}','approved','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#16a34a;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">승인</button>
-          <button onclick="decideMoimApp('${app.id}','rejected','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#e5e7eb;color:#555;border:none;font-size:11px;font-weight:700;cursor:pointer">거절</button>
-        </div>` : ''}
+      ${feePaidHtml}
     </div>`;
   }).join('');
+}
+
+async function toggleMoimFeePaid(appId, gatheringId, currentPaid, btn) {
+  const newPaid = !currentPaid;
+  btn.disabled = true;
+  const { error } = await db.from('gathering_applications').update({
+    fee_paid: newPaid,
+    fee_paid_at: newPaid ? new Date().toISOString() : null
+  }).eq('id', appId);
+  if (error) { showToast('저장 실패'); btn.disabled = false; return; }
+  btn.style.background = newPaid ? '#dcfce7' : '#f3f4f6';
+  btn.style.color = newPaid ? '#15803d' : '#6b7280';
+  btn.textContent = newPaid ? '✅ 납부확인' : '□ 미납부';
+  btn.onclick = () => toggleMoimFeePaid(appId, gatheringId, newPaid, btn);
+  btn.disabled = false;
+  showToast(newPaid ? '✅ 참가비 납부 확인' : '납부 확인 취소');
 }
 
 async function decideMoimApp(appId, decision, gatheringId) {
@@ -14937,6 +14985,14 @@ function filterLessonSub(el, sub) {
   loadLessons();
 }
 
+let _lessonPriceMax = 0; // 0=전체, -1=협의만, 양수=최대금액
+function filterLessonPrice(el, maxPrice) {
+  document.querySelectorAll('#lesson-price-row .lesson-cat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  _lessonPriceMax = maxPrice;
+  loadLessons();
+}
+
 async function loadLessons() {
   const el = document.getElementById('lesson-list');
   el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">🧑‍🏫</div><div class="empty-txt">불러오는 중...</div></div>';
@@ -14956,6 +15012,15 @@ async function loadLessons() {
         (!p.mid_category && _getSubjectMidCat(p.subject) === _lessonSubFilter)
       );
     }
+    if (_lessonPriceMax === -1) {
+      lessons = lessons.filter(p => !p.price_per_session);
+    } else if (_lessonPriceMax > 0) {
+      if (_lessonPriceMax === 999999) {
+        lessons = lessons.filter(p => p.price_per_session && p.price_per_session > 100000);
+      } else {
+        lessons = lessons.filter(p => p.price_per_session && p.price_per_session <= _lessonPriceMax);
+      }
+    }
     if (!lessons.length) {
       const emptyTxt = _lessonMainFilter === '전문기술' ? '등록된 전문기술 서비스가 없어요' : '등록된 레슨/과외가 없어요';
       el.innerHTML = `<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">${emptyTxt}<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>`;
@@ -14966,6 +15031,104 @@ async function loadLessons() {
   } catch(e) {
     el.innerHTML = '<div class="empty"><div class="empty-txt">불러오기 실패</div></div>';
   }
+}
+
+// ── 레슨 관리 패널 탭 전환 + 문의함 ──────────────────────────
+function switchLessonManageTab(tab) {
+  const profileList = document.getElementById('my-lesson-list');
+  const inqList = document.getElementById('my-lesson-inquiries');
+  const tabProfile = document.getElementById('lm-tab-profile');
+  const tabInq = document.getElementById('lm-tab-inquiries');
+  const regBtn = document.getElementById('lm-register-btn');
+  if (tab === 'profile') {
+    profileList.style.display = 'block';
+    inqList.style.display = 'none';
+    tabProfile.style.borderBottomColor = '#3b82f6'; tabProfile.style.color = '#3b82f6';
+    tabInq.style.borderBottomColor = 'transparent'; tabInq.style.color = '#888';
+    regBtn.style.display = '';
+  } else {
+    profileList.style.display = 'none';
+    inqList.style.display = 'block';
+    tabProfile.style.borderBottomColor = 'transparent'; tabProfile.style.color = '#888';
+    tabInq.style.borderBottomColor = '#3b82f6'; tabInq.style.color = '#3b82f6';
+    regBtn.style.display = 'none';
+    loadMyLessonInquiries();
+  }
+}
+
+async function loadMyLessonInquiries() {
+  if (!currentUser) return;
+  const el = document.getElementById('my-lesson-inquiries');
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">불러오는 중...</div>';
+  try {
+    // 내가 강사인 프로필에 들어온 문의
+    const { data: profiles } = await db.from('lesson_profiles').select('id,subject,main_category').eq('worker_id', currentUser.id);
+    if (!profiles?.length) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">등록된 레슨 프로필이 없어요</div>';
+      return;
+    }
+    const profileIds = profiles.map(p => p.id);
+    const profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
+    const { data: inquiries } = await db.from('lesson_inquiries')
+      .select('*, profiles!seeker_kakao_uid(name,nationality)')
+      .in('lesson_profile_id', profileIds)
+      .order('created_at', { ascending: false });
+    if (!inquiries?.length) {
+      el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:13px">아직 문의가 없어요<br><span style="font-size:12px">수강생이 문의하면 여기서 확인할 수 있어요</span></div>';
+      const badge = document.getElementById('lm-inq-badge');
+      if (badge) badge.style.display = 'none';
+      return;
+    }
+    const STATUS_MAP = { pending:'대기중', accepted:'수락됨', rejected:'거절됨', closed:'종료' };
+    const STATUS_COLOR = { pending:'#D97706', accepted:'#16a34a', rejected:'#9CA3AF', closed:'#9CA3AF' };
+    el.innerHTML = inquiries.map(inq => {
+      const seeker = inq.profiles || {};
+      const prof = profileMap[inq.lesson_profile_id] || {};
+      const stColor = STATUS_COLOR[inq.status] || '#888';
+      const stLabel = STATUS_MAP[inq.status] || inq.status;
+      const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleDateString('ko-KR', {month:'short',day:'numeric'}) : '';
+      const isPending = inq.status === 'pending';
+      return `<div style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:800;color:#111">${seeker.name || '수강생'}</div>
+            <div style="font-size:11px;color:#888;margin-top:1px">${prof.main_category||'레슨'} · ${prof.subject||''} · ${dateStr}</div>
+          </div>
+          <span style="font-size:11px;font-weight:800;color:${stColor};background:${stColor}22;padding:3px 9px;border-radius:8px">${stLabel}</span>
+        </div>
+        ${inq.message ? `<div style="font-size:12px;color:#555;background:#f9fafb;border-radius:8px;padding:9px 11px;margin-bottom:8px;line-height:1.6">"${inq.message}"</div>` : ''}
+        ${inq.proposed_price ? `<div style="font-size:12px;color:#C8102E;font-weight:700;margin-bottom:8px">제안 금액: ${Number(inq.proposed_price).toLocaleString()}원/회</div>` : ''}
+        <div style="display:flex;gap:6px">
+          <button onclick="openLessonInquiryChat('${inq.id}')" style="flex:1;padding:8px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 채팅</button>
+          ${isPending ? `
+          <button onclick="decideLessonInquiry('${inq.id}','accepted')" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">✅ 수락</button>
+          <button onclick="decideLessonInquiry('${inq.id}','rejected')" style="flex:1;padding:8px;background:#f3f4f6;color:#6b7280;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">거절</button>
+          ` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    // 대기중 뱃지
+    const pendingCnt = inquiries.filter(i => i.status === 'pending').length;
+    const badge = document.getElementById('lm-inq-badge');
+    if (badge) { badge.textContent = pendingCnt; badge.style.display = pendingCnt > 0 ? 'inline-block' : 'none'; }
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">불러오기 실패</div>';
+  }
+}
+
+async function decideLessonInquiry(inquiryId, decision) {
+  const { error } = await db.from('lesson_inquiries').update({ status: decision, decided_at: new Date().toISOString() }).eq('id', inquiryId);
+  if (error) { showToast('처리 실패'); return; }
+  showToast(decision === 'accepted' ? '✅ 문의를 수락했어요' : '문의를 거절했어요');
+  loadMyLessonInquiries();
+}
+
+async function openLessonInquiryChat(inquiryId) {
+  // lesson_inquiries의 chat_id(또는 messages 연결) 로 채팅 열기
+  const { data: inq } = await db.from('lesson_inquiries').select('id,seeker_kakao_uid,lesson_profile_id').eq('id', inquiryId).single();
+  if (!inq) { showToast('문의 정보를 찾을 수 없어요'); return; }
+  // messages 테이블에서 inquiry_id로 찾거나 없으면 신규
+  showToast('채팅 기능 연결 중...');
 }
 
 function _renderLessonMarkers(data) {
@@ -15419,7 +15582,19 @@ function openLessonManagePanel() {
   setTimeout(() => {
     document.getElementById('panel-lesson-manage').classList.add('show');
     history.pushState({ panel: 'lesson-manage' }, '');
+    switchLessonManageTab('profile');
     loadMyLessons();
+    // 문의 뱃지 비동기 갱신
+    if (currentUser) {
+      db.from('lesson_profiles').select('id').eq('worker_id', currentUser.id).then(({ data: profs }) => {
+        if (!profs?.length) return;
+        db.from('lesson_inquiries').select('id', { count: 'exact' })
+          .in('lesson_profile_id', profs.map(p => p.id)).eq('status', 'pending').then(({ count }) => {
+            const badge = document.getElementById('lm-inq-badge');
+            if (badge) { badge.textContent = count || 0; badge.style.display = count > 0 ? 'inline-block' : 'none'; }
+          });
+      });
+    }
   }, 50);
 }
 function closeLessonManagePanel() {
@@ -20168,6 +20343,7 @@ function renderStaffPanel() {
           </button>
         </div>` : ''}
       </div>
+      ${a.status === 'completed' && !isPaid && wage ? `<div style="margin:4px 0 8px"><button onclick="openWageTransferModal('${a.id}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}',${wage})" style="width:100%;padding:11px;background:linear-gradient(135deg,#0064FF,#0051CC);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💸 토스/카카오페이로 송금하기</button></div>` : ''}
       <div class="staff-actions">
         <button class="staff-act-btn" onclick="openChat('${a.id}','${(w.name||'').replace(/'/g,"\\'")}')">💬 채팅</button>
         ${w.phone ? `<button class="staff-act-btn" onclick="window.location.href='tel:${w.phone}'">📞 전화</button>` : ''}
@@ -20194,6 +20370,64 @@ async function toggleWagePaid(appId, currentPaid, btnEl) {
   // 요약 수치 갱신
   const unpaid = _staffData.filter(a => a.status === 'completed' && !a.wage_paid).length;
   document.getElementById('st-unpaid').textContent = unpaid + '명';
+}
+
+// ── 당일정산 송금 모달 ──────────────────────────────────────────
+let _wtAppId = null, _wtWage = 0, _wtPhone = '';
+function openWageTransferModal(appId, workerName, phone, wage) {
+  _wtAppId = appId; _wtWage = wage; _wtPhone = phone;
+  document.getElementById('wt-worker-name').textContent = workerName + ' 님의 급여';
+  document.getElementById('wt-wage-display').textContent = wage.toLocaleString() + '원';
+  const phoneRow = document.getElementById('wt-phone-row');
+  const phoneDisp = document.getElementById('wt-phone-display');
+  if (phone) {
+    phoneRow.style.display = 'block';
+    phoneDisp.textContent = phone;
+  } else {
+    phoneRow.style.display = 'none';
+  }
+  document.getElementById('wage-transfer-modal').style.display = 'flex';
+}
+function closeWageTransferModal() {
+  document.getElementById('wage-transfer-modal').style.display = 'none';
+  _wtAppId = null; _wtWage = 0; _wtPhone = '';
+}
+function sendViaToss() {
+  const amount = _wtWage;
+  const phone = _wtPhone ? _wtPhone.replace(/-/g, '') : '';
+  // 토스 딥링크: 금액+수신자 전화번호(있을 경우)
+  const params = new URLSearchParams({ amount });
+  if (phone) params.append('bank', ''); // phone 기반 송금
+  const deeplink = phone
+    ? `supertoss://send?amount=${amount}&phone=${phone}&memo=${encodeURIComponent('바로알바 급여')}`
+    : `supertoss://send?amount=${amount}&memo=${encodeURIComponent('바로알바 급여')}`;
+  // Android intent fallback
+  const intentUrl = `intent://send?amount=${amount}${phone?'&phone='+phone:''}&memo=${encodeURIComponent('바로알바 급여')}#Intent;scheme=supertoss;package=viva.republica.toss;end`;
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes('android')) {
+    window.location.href = intentUrl;
+  } else {
+    window.location.href = deeplink;
+  }
+  setTimeout(() => showToast('토스 앱이 열리지 않으면 앱을 먼저 설치해주세요'), 1200);
+}
+function sendViaKakaoPay() {
+  const amount = _wtWage;
+  const deeplink = `kakaotalk://kakaopay/money/transfer?sender_name=바로알바&amount=${amount}`;
+  window.location.href = deeplink;
+  setTimeout(() => showToast('카카오페이 앱이 열리지 않으면 앱을 먼저 설치해주세요'), 1200);
+}
+async function confirmWageSent() {
+  if (!_wtAppId) return;
+  const { error } = await db.from('applications').update({
+    wage_paid: true, wage_paid_at: new Date().toISOString()
+  }).eq('id', _wtAppId);
+  if (error) { showToast('저장 실패'); return; }
+  const app = _staffData.find(a => a.id === _wtAppId);
+  if (app) app.wage_paid = true;
+  showToast('✅ 급여 지급 완료 처리됐어요');
+  closeWageTransferModal();
+  renderStaffList();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -20545,12 +20779,23 @@ function printContract() {
   const content = document.getElementById('contract-content').innerHTML;
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>근로계약서</title>
-    <style>body{font-family:'Apple SD Gothic Neo',sans-serif;padding:48px;max-width:580px;margin:0 auto;color:#222}
-    table{width:100%;border-collapse:collapse}td{padding:9px 10px;border:1px solid #ddd}
-    @media print{button{display:none}}</style></head>
-    <body><h2 style="text-align:center;letter-spacing:4px;margin-bottom:28px">근 로 계 약 서</h2>
-    ${content}<br><br>
-    <button onclick="window.print()" style="padding:12px 28px;background:#C8102E;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer">🖨️ 출력</button>
+    <style>
+      @page { size: A4; margin: 20mm; }
+      body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; padding: 40px 48px; max-width: 580px; margin: 0 auto; color: #222; line-height: 1.7; }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+      td { padding: 9px 10px; border: 1px solid #ddd; font-size: 13px; }
+      h2 { text-align: center; letter-spacing: 4px; margin-bottom: 28px; font-size: 20px; }
+      .no-print { margin-top: 24px; display: flex; gap: 10px; }
+      @media print { .no-print { display: none !important; } }
+    </style></head>
+    <body>
+    <h2>근 로 계 약 서</h2>
+    ${content}<br>
+    <div class="no-print">
+      <button onclick="window.print()" style="padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer">🖨️ 출력 / PDF 저장</button>
+      <button onclick="window.close()" style="padding:12px 20px;background:#f5f5f5;color:#555;border:none;border-radius:8px;font-size:14px;cursor:pointer">닫기</button>
+    </div>
+    <script>window.onload = () => { setTimeout(() => window.print(), 400); };<\/script>
     </body></html>`);
   w.document.close();
 }
@@ -20696,6 +20941,31 @@ function renderWorkerLocMap(containerId, lat, lng) {
   </div>`;
 }
 </script>
+
+<!-- ── 당일정산 송금 모달 ── -->
+<div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;padding:0 20px 36px;box-sizing:border-box">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 20px;cursor:pointer" onclick="closeWageTransferModal()"></div>
+    <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">💸 급여 송금</div>
+    <div id="wt-worker-name" style="font-size:13px;color:#888;margin-bottom:20px"></div>
+    <div style="background:#FFF8F8;border:1.5px solid #FEE2E2;border-radius:16px;padding:16px;margin-bottom:20px;text-align:center">
+      <div style="font-size:12px;font-weight:700;color:#9CA3AF;margin-bottom:4px">송금할 금액</div>
+      <div id="wt-wage-display" style="font-size:28px;font-weight:900;color:#C8102E"></div>
+    </div>
+    <div id="wt-phone-row" style="display:none;background:#f8faff;border-radius:12px;padding:12px 16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:3px">근로자 전화번호</div>
+      <div id="wt-phone-display" style="font-size:15px;font-weight:800;color:#1d4ed8"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <button id="wt-toss-btn" onclick="sendViaToss()" style="width:100%;padding:14px;background:linear-gradient(135deg,#0064FF,#0051CC);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">🏦 토스로 송금하기</button>
+      <button id="wt-kakao-btn" onclick="sendViaKakaoPay()" style="width:100%;padding:14px;background:linear-gradient(135deg,#FEE500,#F0D800);color:#3C1E1E;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💛 카카오페이로 송금하기</button>
+    </div>
+    <div style="border-top:1px solid #f0f0f0;padding-top:14px">
+      <div style="font-size:12px;color:#888;text-align:center;margin-bottom:10px">이미 송금하셨나요?</div>
+      <button onclick="confirmWageSent()" style="width:100%;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 송금 완료 확인</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── 전자계약서 모달 ── -->
 <div class="modal-overlay" id="contract-modal" style="display:none;z-index:800" onclick="if(event.target===this)document.getElementById('contract-modal').style.display='none'">
