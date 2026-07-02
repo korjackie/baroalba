@@ -5091,7 +5091,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '333';
+  const _APP_V = '334';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5115,7 +5115,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=333').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=334').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -7992,6 +7992,41 @@ function closeDetail(e) {
     }
     _bshCur = null; _bshSheet = null;
   }, { passive: true });
+})();
+
+// bsh-hf 전용 직접 핸들러 — panel-home(overflow-y:auto) 안에 있어서
+// document 레벨 passive 핸들러로는 브라우저 스크롤 개시를 막지 못하는 문제 해결
+(function() {
+  let _sy = 0, _sheet = null;
+  const el = document.getElementById('bsh-hf');
+  if (!el) return;
+  el.addEventListener('touchstart', e => {
+    e.stopPropagation(); // document _bshMap 핸들러 중복 방지
+    e.preventDefault();  // panel-home 스크롤 개시 차단
+    _sy = e.touches[0].clientY;
+    _sheet = document.querySelector('#home-filter-overlay > div > div');
+    if (_sheet) _sheet.style.transition = 'none';
+  }, { passive: false });
+  el.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!_sheet) return;
+    _sheet.style.transform = `translateY(${Math.max(0, e.touches[0].clientY - _sy)}px)`;
+  }, { passive: false });
+  el.addEventListener('touchend', e => {
+    if (!_sheet) return;
+    const dy = e.changedTouches[0].clientY - _sy;
+    if (dy > 80) {
+      _sheet.style.transition = 'transform 0.15s ease';
+      _sheet.style.transform = 'translateY(100%)';
+      const s = _sheet; _sheet = null;
+      setTimeout(() => { s.style.transform = ''; s.style.transition = ''; closeHomeFilter(); }, 140);
+    } else {
+      _sheet.style.transition = 'transform 0.2s ease';
+      _sheet.style.transform = '';
+      _sheet = null;
+      if (Math.abs(dy) < 5) closeHomeFilter(); // 탭으로 닫기
+    }
+  }, { passive: false });
 })();
 
 function isRealJobId(id) {
