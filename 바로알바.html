@@ -2294,11 +2294,11 @@
           <div style="width:50px;height:50px;border-radius:15px;background:#fff0f2;display:flex;align-items:center;justify-content:center;font-size:22px">💰</div>
           <div style="font-size:11px;font-weight:700;color:#333">높은시급</div>
         </div>
-        <div onclick="(function(){var s=document.getElementById('home-ai-section');if(s&&s.onclick)s.onclick();})()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+        <div onclick="openAIFilter()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
           <div style="width:50px;height:50px;border-radius:15px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:22px">🤖</div>
           <div style="font-size:11px;font-weight:700;color:#333">AI추천</div>
         </div>
-        <div onclick="showForeignerLangPanel()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+        <div onclick="showForeignerInHome()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent">
           <div style="width:50px;height:50px;border-radius:15px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative">🌏<span id="shortcut-foreigner-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#C8102E;color:#fff;font-size:8px;font-weight:900;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center"></span></div>
           <div style="font-size:11px;font-weight:700;color:#333">외국인환영</div>
         </div>
@@ -5074,7 +5074,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '331';
+  const _APP_V = '332';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5098,7 +5098,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=331').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=332').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -6860,6 +6860,45 @@ function openWageFilter() {
   if (srEl) srEl.style.display = 'block';
   if (defEl) defEl.style.display = 'none';
   _renderHomeSearchList(wageJobs);
+}
+
+function openAIFilter() {
+  window._homeFilterApplied = true;
+  const srEl = document.getElementById('home-search-results');
+  const defEl = document.getElementById('home-default-content');
+  const label = document.getElementById('home-search-result-label');
+  const list = document.getElementById('home-search-result-list');
+  if (srEl) srEl.style.display = 'block';
+  if (defEl) defEl.style.display = 'none';
+  try {
+    const raw = localStorage.getItem(_aiKey());
+    const prefs = raw ? JSON.parse(raw) : null;
+    if (!prefs || (prefs.totalSignals || 0) < 3) {
+      if (label) label.textContent = '🤖 AI 추천 공고';
+      if (list) list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:12px">🤖</div><div style="font-size:13px;font-weight:700;line-height:1.7">공고를 더 둘러볼수록<br>맞춤 추천이 시작돼요!</div></div>';
+      return;
+    }
+    const scored = (jobs||[]).filter(j=>j.status==='open'||j.status==='urgent')
+      .map(j=>({job:j,score:_aiScoreJob(j,prefs)})).filter(x=>x.score>0)
+      .sort((a,b)=>b.score-a.score).map(x=>x.job);
+    if (label) label.textContent = `🤖 AI 추천 공고 ${scored.length}개`;
+    _renderHomeSearchList(scored);
+  } catch(e) {
+    if (label) label.textContent = '🤖 AI 추천 공고';
+    if (list) list.innerHTML = '<div style="text-align:center;padding:32px 0;color:#bbb;font-size:13px">잠시 후 다시 시도해주세요</div>';
+  }
+}
+
+function showForeignerInHome() {
+  window._homeFilterApplied = true;
+  const filtered = (jobs||[]).filter(j=>(j.status==='open'||j.status==='urgent')&&j.nationality_requirement==='foreigner_welcome');
+  const srEl = document.getElementById('home-search-results');
+  const defEl = document.getElementById('home-default-content');
+  const label = document.getElementById('home-search-result-label');
+  if (label) label.textContent = `🌏 외국인 환영 공고 ${filtered.length}개`;
+  if (srEl) srEl.style.display = 'block';
+  if (defEl) defEl.style.display = 'none';
+  _renderHomeSearchList(filtered);
 }
 
 function showForeignerLangPanel() {
