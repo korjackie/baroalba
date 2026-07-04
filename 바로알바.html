@@ -5100,7 +5100,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '336';
+  const _APP_V = '337';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5124,7 +5124,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=336').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=337').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -20476,7 +20476,7 @@ async function confirmWageSent() {
   if (app) app.wage_paid = true;
   showToast('✅ 급여 지급 완료 처리됐어요');
   closeWageTransferModal();
-  renderStaffList();
+  renderStaffPanel();
 }
 
 // ══════════════════════════════════════════════════════════════
