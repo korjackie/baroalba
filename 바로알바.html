@@ -5091,7 +5091,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '334';
+  const _APP_V = '335';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5115,7 +5115,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=334').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=335').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5367,6 +5367,7 @@ async function loadCategoriesWorker() {
 }
 
 async function loadJobs() {
+  if (_currentMapMode === 'moim') return; // 모임 모드에서는 알바 공고 로드 안 함
   const _skList = document.getElementById('job-cards-container');
   if (_skList) _skList.innerHTML = Array(4).fill(`<div class="sk-card"><div class="sk-line" style="height:16px;width:55%;margin-bottom:8px"></div><div class="sk-line" style="height:22px;width:38%;margin-bottom:10px"></div><div style="display:flex;gap:8px"><div class="sk-line" style="height:13px;width:30%"></div><div class="sk-line" style="height:13px;width:25%"></div></div></div>`).join('');
   try {
@@ -6670,8 +6671,9 @@ async function _renderMoimMarkers() {
     if (!m.lat || !m.lng) return;
     const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
     const rem = (m.max_count || 10) - (m.current_count || 0);
+    const titleShort = m.title ? (m.title.length > 11 ? m.title.slice(0, 10) + '…' : m.title) : (m.category || '모임');
     const content = `<div class="moim-marker-wrap" onclick="openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)">
-      <div class="moim-marker-bubble">${emoji} ${m.category || '모임'} · ${rem}자리</div>
+      <div class="moim-marker-bubble">${emoji} ${titleShort}<span style="font-size:10px;opacity:0.75"> · ${m.category||''} · ${rem}자리</span></div>
       <div class="moim-marker-tail"></div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(m.lat, m.lng), content, yAnchor: 1.1 });
@@ -15159,11 +15161,12 @@ async function decideLessonInquiry(inquiryId, decision) {
 }
 
 async function openLessonInquiryChat(inquiryId) {
-  // lesson_inquiries의 chat_id(또는 messages 연결) 로 채팅 열기
-  const { data: inq } = await db.from('lesson_inquiries').select('id,seeker_kakao_uid,lesson_profile_id').eq('id', inquiryId).single();
+  const { data: inq } = await db.from('lesson_inquiries')
+    .select('id,seeker_kakao_uid,lesson_profile_id,profiles!seeker_kakao_uid(name)')
+    .eq('id', inquiryId).single();
   if (!inq) { showToast('문의 정보를 찾을 수 없어요'); return; }
-  // messages 테이블에서 inquiry_id로 찾거나 없으면 신규
-  showToast('채팅 기능 연결 중...');
+  const seekerName = inq.profiles?.name || '문의자';
+  _openLessonChatOverlay(inquiryId, seekerName, inq.seeker_kakao_uid);
 }
 
 function _renderLessonMarkers(data) {
