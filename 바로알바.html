@@ -2539,6 +2539,15 @@
       </div>
       <span style="font-size:18px;color:#94a3b8">›</span>
     </div>
+
+    <div onclick="openMoimPanel()" style="display:flex;align-items:center;gap:12px;background:#f5f3ff;border:1.5px solid #DDD6FE;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(124,58,237,0.05)">
+      <div style="width:44px;height:44px;border-radius:13px;background:#7C3AED;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">🤝</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">내 모임</div>
+        <div style="font-size:12px;color:#7C3AED;margin-top:2px">참가 모임 · 주최 모임 확인</div>
+      </div>
+      <span style="font-size:18px;color:#94a3b8">›</span>
+    </div>
   </div>
 </div>
 
@@ -5091,7 +5100,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '335';
+  const _APP_V = '336';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5115,7 +5124,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=335').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=336').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -6181,14 +6190,16 @@ async function loadMoimApplicants(gatheringId) {
   sec.style.display = 'block';
   sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">불러오는 중...</div>';
   const { data } = await db.from('gathering_applications')
-    .select('*, profiles(name,rating,review_count,nationality)')
-    .eq('gathering_id', gatheringId).order('applied_at');
+    .select('id,gathering_id,applicant_id,status,fee_paid,fee_paid_at,created_at')
+    .eq('gathering_id', gatheringId).order('created_at', { ascending: false });
   if (!data?.length) { sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">신청자가 없어요</div>'; return; }
+  const { data: profileRows } = await db.from('profiles').select('id,name,rating,review_count,nationality').in('id', data.map(a => a.applicant_id));
+  const _pMap = Object.fromEntries((profileRows || []).map(p => [p.id, p]));
   const m = _moimDetailData;
   const hasFee = m && (m.entry_fee > 0 || m.entry_fee < 0);
   const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
   sec.innerHTML = `<div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding:0 2px">신청자 ${data.length}명</div>` + data.map(app => {
-    const w = app.profiles || app.workers || {};
+    const w = _pMap[app.applicant_id] || {};
     const statusColor = { pending:'#D97706', approved:'#16a34a', rejected:'#9CA3AF' }[app.status] || '#888';
     const statusLabel = { pending:'대기중', approved:'승인됨', rejected:'거절됨' }[app.status] || app.status;
     const feePaidHtml = (hasFee && app.status === 'approved') ? `
@@ -20279,7 +20290,7 @@ async function loadStaffPanel() {
     if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">등록된 공고가 없어요</div>'; return; }
 
     const { data, error } = await db.from('applications')
-      .select('id,status,applied_at,worker_rating,wage_paid,job_posting_id,workers(id,name,phone,rating,review_count,nationality,visa_type), job_postings(id,title,current_wage,duration_hours,start_time,work_type)')
+      .select('id,status,applied_at,worker_rating,wage_paid,job_posting_id,workers(id,name,rating,review_count,nationality,kakao_uid), job_postings(id,title,current_wage,duration_hours,work_type)')
       .in('job_posting_id', jobIds)
       .order('applied_at', { ascending: false });
 
