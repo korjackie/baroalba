@@ -4972,6 +4972,8 @@ let dateFilter = '';
 let timeFilter = '';
 let currentUser = null;
 let isGuest = false;
+let _isAdmin = false;
+const _ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
 let sheetState = 'peek'; // peek | half | full
 let _myAppsCache = null;
 let _calYear = null, _calMonth = null;
@@ -5100,7 +5102,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '338';
+  const _APP_V = '339';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5124,7 +5126,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=338').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=339').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5826,7 +5828,7 @@ function renderList() {
       <div class="card-top">
         <div class="card-left">
           <div class="card-biz">${job.biz_name}${appliedBadge}</div>
-          <div class="card-title">${job.title}</div>
+          <div class="card-title">${job.title}${_isAdmin ? _adminBtn('job_postings',job.id,'title',job.title,'공고 제목') : ''}</div>
         </div>
         <div class="card-right">
           <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${isErrand ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
@@ -6052,7 +6054,7 @@ function _renderMoimCards(container, list) {
         <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#EDE9FE,#DDD6FE);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div style="font-size:15px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}</div>
+            <div style="font-size:15px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}${_isAdmin ? _adminBtn('gatherings',m.id,'title',m.title,'모임 제목') : ''}</div>
             ${m.entry_fee < 0 ? '<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">각자 분담</div>' : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}원</div>` : '<div style="font-size:12px;font-weight:700;color:#16a34a;flex-shrink:0">무료</div>'}
           </div>
           <div style="font-size:12px;color:#888;margin-top:3px">📅 ${dateStr}</div>
@@ -6094,7 +6096,15 @@ async function openMoimDetail(moimId) {
   if (!m) { showToast('모임 정보를 불러올 수 없어요'); return; }
   _moimDetailData = m;
 
-  document.getElementById('moim-detail-title').textContent = m.title;
+  const _mdt = document.getElementById('moim-detail-title');
+  _mdt.textContent = m.title;
+  if (_isAdmin) {
+    const _eb = document.createElement('button');
+    _eb.onclick = e => { e.stopPropagation(); adminQuickEdit('gatherings', m.id, 'title', m.title, '모임 제목'); };
+    _eb.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:6px;vertical-align:middle;flex-shrink:0';
+    _eb.title = '어드민 수정'; _eb.textContent = '✏️';
+    _mdt.appendChild(_eb);
+  }
   const isHost = currentUser && m.host_id === currentUser.id;
   const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
   const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long', hour:'2-digit', minute:'2-digit' }) : '날짜 미정';
@@ -11734,9 +11744,9 @@ function openProfile() {
       const meta2 = currentUser?.user_metadata || {};
       avatarInner.innerHTML = _initialAvatar((meta2.full_name || currentUser.email || '?').charAt(0), 58);
     }
-    const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
+    _isAdmin = _ADMIN_EMAILS.includes(currentUser.email);
     const adminBanner = document.getElementById('admin-banner');
-    if (adminBanner) adminBanner.style.display = ADMIN_EMAILS.includes(currentUser.email) ? 'flex' : 'none';
+    if (adminBanner) adminBanner.style.display = _isAdmin ? 'flex' : 'none';
     document.getElementById('profile-role').style.display = 'none';
     const providerMap = {
       email:  {
@@ -20866,6 +20876,46 @@ async function showContractModal(appId) {
     </div>`;
   document.getElementById('contract-modal').style.display = 'flex';
 }
+// ── 어드민 인라인 편집 ───────────────────────────────────────
+function _adminBtn(table, id, field, value, label) {
+  const safe = (value || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  return `<button onclick="event.stopPropagation();adminQuickEdit('${table}','${id}','${field}','${safe}','${label}')" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;vertical-align:middle;flex-shrink:0" title="어드민 수정">✏️</button>`;
+}
+
+function adminQuickEdit(table, id, field, currentValue, label) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99000;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:18px">🛡️</span>
+        <div style="font-size:16px;font-weight:900;color:#222">어드민 수정</div>
+      </div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:14px">${label}</div>
+      <textarea id="_aqe-input" style="width:100%;box-sizing:border-box;height:72px;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.5;outline:none"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+        <button id="_aqe-save" style="flex:1;padding:12px;background:#1e293b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const ta = overlay.querySelector('#_aqe-input');
+  ta.value = currentValue || '';
+  setTimeout(() => ta.focus(), 80);
+  overlay.querySelector('#_aqe-save').onclick = async () => {
+    const val = ta.value.trim();
+    if (!val) { showToast('내용을 입력해주세요'); return; }
+    const { error } = await db.from(table).update({ [field]: val }).eq('id', id);
+    if (error) { showToast('저장 실패: ' + error.message); return; }
+    showToast('✅ 수정됐어요');
+    overlay.remove();
+    if (table === 'job_postings') loadJobs();
+    else if (table === 'gatherings') loadMoimList();
+    else if (table === 'community_posts') loadCommunityPosts?.();
+  };
+}
+
 function _printInPage(bodyHtml, extraCss) {
   const styleId = '_ps_style', divId = '_ps_content';
   let styleEl = document.getElementById(styleId);
