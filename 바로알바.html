@@ -5100,7 +5100,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '337';
+  const _APP_V = '338';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5124,7 +5124,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=337').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=338').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -8223,18 +8223,12 @@ function printQR() {
   const canvas = document.getElementById('qr-code-canvas');
   const qrDataUrl = canvas ? canvas.toDataURL('image/png') : '';
   const jobInfo = document.getElementById('qr-job-info').innerHTML;
-  const pw = window.open('', '_blank', 'width=600,height=800');
-  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>' +
-    '<style>body{font-family:"Apple SD Gothic Neo",sans-serif;padding:40px;max-width:500px;margin:0 auto}' +
-    'img.qr{display:block;margin:0 auto 16px;width:200px;height:200px}h2{text-align:center;margin-bottom:20px;font-size:20px}' +
-    '.info{background:#f8f9fa;border-radius:12px;padding:16px;line-height:1.9;font-size:14px}' +
-    '.info b{color:#333}@media print{body{padding:20px}}</style>' +
-    '</head><body><h2>📋 알바 공고 모집</h2>' +
-    (qrDataUrl ? '<img class="qr" src="' + qrDataUrl + '" alt="QR">' : '') +
-    '<div class="info">' + jobInfo + '</div></body></html>');
-  pw.document.close();
-  pw.focus();
-  setTimeout(function(){ pw.print(); }, 400);
+  _printInPage(
+    `<h2 style="text-align:center;font-size:20px;margin-bottom:20px">📋 알바 공고 모집</h2>` +
+    (qrDataUrl ? `<img src="${qrDataUrl}" style="display:block;margin:0 auto 16px;width:200px;height:200px">` : '') +
+    `<div style="background:#f8f9fa;border-radius:12px;padding:16px;line-height:1.9;font-size:14px">${jobInfo}</div>`,
+    `#_ps_content { font-family:'Apple SD Gothic Neo',sans-serif; padding:40px; max-width:500px; margin:0 auto; }`
+  );
 }
 
 let _bizRatingAppId = null;
@@ -8393,9 +8387,14 @@ async function openWorkerProfileDirect(appId) {
       <span style="background:${b.bg};color:${b.color};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800">${b.label}</span>
     </div>
     <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;margin-bottom:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:3px">지원 공고</div><div style="font-size:14px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div></div>
+    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#FFF5F5;border-radius:10px;border-left:3px solid #C8102E;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#C8102E;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${w.skills?.length ? `<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:5px">${w.skills.map(s=>`<span style="background:#f5f5f5;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#555">${s}</span>`).join('')}</div>` : ''}
     ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:13px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone}</a>` : ''}
     <div style="display:flex;gap:8px;margin-bottom:10px">${actionBtns}</div>
-    <button onclick="${close}" style="width:100%;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+    <div style="display:flex;gap:8px">
+      <button onclick="${close}" style="flex:1;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+      <button onclick="printWorkerProfile('${app.id}')" style="padding:12px 16px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">📄 출력</button>
+    </div>
   </div>`;
   document.body.appendChild(el);
 }
@@ -18233,10 +18232,53 @@ async function openWorkerProfile() {
            <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;min-width:90px;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>`
         : ''}
     </div>
-    <div style="text-align:right;margin-top:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
       <button onclick="openOwnerReport('worker','${w.kakao_uid || app.workers?.id || ''}')" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
+      <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:#3B82F6;cursor:pointer;font-weight:700">📄 지원서 출력</button>
     </div>`;
   document.getElementById('worker-profile-overlay').classList.add('open');
+}
+
+async function printWorkerProfile(appId) {
+  const { data: app } = await db.from('applications')
+    .select('*, workers(*), job_postings(title)')
+    .eq('id', appId).single();
+  if (!app) return;
+  const w = app.workers || {};
+  const STATUS = { pending:'접수중', reviewing:'검토중', accepted:'합격', rejected:'탈락', completed:'완료', cancelled:'취소' };
+  const rating = w.rating != null ? Number(w.rating).toFixed(1) : '-';
+  const today = new Date().toLocaleDateString('ko-KR');
+
+  const row = (label, val) => val
+    ? `<tr><td style="padding:8px 10px;border:1px solid #ddd;background:#f9f9f9;font-weight:700;white-space:nowrap;width:28%">${label}</td><td style="padding:8px 10px;border:1px solid #ddd">${val}</td></tr>`
+    : '';
+
+  const skills = (w.skills || []).join(', ') || null;
+  const vehicles = (w.vehicles || []).map(v => ({'bicycle':'자전거','kickboard':'킥보드','motorcycle':'오토바이','car_compact':'차량(소형)','car_midsize':'차량(중형)','car_suv':'차량(SUV)','car_large':'차량(대형)','truck':'트럭/화물'}[v]||v)).join(', ') || null;
+  const langs = (w.languages || []).map(l => ({'ko':'한국어','en':'영어','zh':'중국어','ja':'일본어','vi':'베트남어','ru':'러시아어','mn':'몽골어'}[l]||l)).join(', ') || null;
+  const phone = w.phone ? w.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') : null;
+
+  _printInPage(
+    `<h2 style="text-align:center;letter-spacing:3px;margin-bottom:6px;font-size:20px">지 원 서</h2>
+     <p style="text-align:center;font-size:12px;color:#888;margin-bottom:24px">바로알바 플랫폼 자동 생성 · ${today}</p>
+     <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px">
+       ${row('지원 공고', app.job_postings?.title)}
+       ${row('지원 상태', STATUS[app.status] || app.status)}
+       ${row('이름', w.name)}
+       ${row('나이', w.age ? `만 ${w.age}세` : null)}
+       ${row('성별', w.gender === 'male' ? '남성' : w.gender === 'female' ? '여성' : w.gender)}
+       ${row('연락처', phone)}
+       ${row('이메일', w.email)}
+       ${row('평점', `★ ${rating} (완료 ${w.review_count||0}건 · 노쇼 ${w.noshow_count||0}건)`)}
+       ${row('보유 스킬', skills)}
+       ${row('구사 언어', langs)}
+       ${row('이동수단', vehicles)}
+     </table>
+     ${w.bio ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">자기소개</div><div style="font-size:13px;line-height:1.7;color:#333">${w.bio.replace(/</g,'&lt;')}</div></div>` : ''}
+     ${w.experience ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">경력 / 특기</div><div style="font-size:13px;line-height:1.7;color:#333">${w.experience.replace(/</g,'&lt;')}</div></div>` : ''}
+     ${app.apply_message ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">지원 메시지</div><div style="font-size:13px;line-height:1.7;color:#333">${app.apply_message.replace(/</g,'&lt;')}</div></div>` : ''}`,
+    `#_ps_content{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;padding:40px 48px;max-width:580px;margin:0 auto;color:#222;line-height:1.7}@page{size:A4;margin:20mm}`
+  );
 }
 
 async function updateApplicationFromProfile(appId, status) {
@@ -20824,29 +20866,28 @@ async function showContractModal(appId) {
     </div>`;
   document.getElementById('contract-modal').style.display = 'flex';
 }
+function _printInPage(bodyHtml, extraCss) {
+  const styleId = '_ps_style', divId = '_ps_content';
+  let styleEl = document.getElementById(styleId);
+  if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = styleId; document.head.appendChild(styleEl); }
+  styleEl.textContent = `@media print{body>*:not(#${divId}){display:none!important}#${divId}{display:block!important}}${extraCss||''}`;
+  let div = document.getElementById(divId);
+  if (!div) { div = document.createElement('div'); div.id = divId; div.style.display = 'none'; document.body.appendChild(div); }
+  div.innerHTML = bodyHtml;
+  const cleanup = () => { styleEl.textContent = ''; div.innerHTML = ''; window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
+}
+
 function printContract() {
   const content = document.getElementById('contract-content').innerHTML;
-  const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>근로계약서</title>
-    <style>
-      @page { size: A4; margin: 20mm; }
-      body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; padding: 40px 48px; max-width: 580px; margin: 0 auto; color: #222; line-height: 1.7; }
-      table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-      td { padding: 9px 10px; border: 1px solid #ddd; font-size: 13px; }
-      h2 { text-align: center; letter-spacing: 4px; margin-bottom: 28px; font-size: 20px; }
-      .no-print { margin-top: 24px; display: flex; gap: 10px; }
-      @media print { .no-print { display: none !important; } }
-    </style></head>
-    <body>
-    <h2>근 로 계 약 서</h2>
-    ${content}<br>
-    <div class="no-print">
-      <button onclick="window.print()" style="padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer">🖨️ 출력 / PDF 저장</button>
-      <button onclick="window.close()" style="padding:12px 20px;background:#f5f5f5;color:#555;border:none;border-radius:8px;font-size:14px;cursor:pointer">닫기</button>
-    </div>
-    <script>window.onload = () => { setTimeout(() => window.print(), 400); };<\/script>
-    </body></html>`);
-  w.document.close();
+  _printInPage(
+    `<h2 style="text-align:center;letter-spacing:4px;margin-bottom:28px;font-size:20px">근 로 계 약 서</h2>${content}`,
+    `#_ps_content{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;padding:40px 48px;max-width:580px;margin:0 auto;color:#222;line-height:1.7}` +
+    `#_ps_content table{width:100%;border-collapse:collapse;margin:12px 0}` +
+    `#_ps_content td{padding:9px 10px;border:1px solid #ddd;font-size:13px}` +
+    `@page{size:A4;margin:20mm}`
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════
