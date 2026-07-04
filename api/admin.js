@@ -1,10 +1,10 @@
 const SUPABASE_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
-const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
+const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com', 'nicepkw@naver.com'];
 
 function getEmailFromJWT(token) {
   try {
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.email || '';
+    return payload.email || payload.user_metadata?.email || '';
   } catch { return ''; }
 }
 

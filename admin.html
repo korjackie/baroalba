@@ -226,7 +226,6 @@
 const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
 
-const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
 let currentSession = null;
 let _reports = [];
 let _reportFilter = 'all';
@@ -234,13 +233,20 @@ let _reportFilter = 'all';
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await db.auth.getSession();
-  if (!session || !ADMIN_EMAILS.includes(session.user.email)) {
+  if (!session) {
+    alert('관리자 권한이 없습니다.');
+    location.href = '/login.html';
+    return;
+  }
+  const authEmail = session.user.email || session.user.user_metadata?.email || '';
+  const { data: adminRow } = await db.from('app_admins').select('email').eq('email', authEmail).maybeSingle();
+  if (!adminRow) {
     alert('관리자 권한이 없습니다.');
     location.href = '/login.html';
     return;
   }
   currentSession = session;
-  document.getElementById('admin-email').textContent = session.user.email;
+  document.getElementById('admin-email').textContent = authEmail;
   loadDashboard();
 });
 
