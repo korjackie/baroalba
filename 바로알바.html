@@ -4973,7 +4973,6 @@ let timeFilter = '';
 let currentUser = null;
 let isGuest = false;
 let _isAdmin = false;
-const _ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com'];
 let sheetState = 'peek'; // peek | half | full
 let _myAppsCache = null;
 let _calYear = null, _calMonth = null;
@@ -5102,7 +5101,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '339';
+  const _APP_V = '340';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5126,7 +5125,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=339').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=340').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5141,6 +5140,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
     if (window.AndroidBridge?.saveAuthToken) window.AndroidBridge.saveAuthToken(session.access_token);
+    // 어드민 여부 로드 (app_admins 테이블)
+    db.from('app_admins').select('email').eq('email', session.user.email).maybeSingle()
+      .then(({ data: ad }) => {
+        _isAdmin = !!ad;
+        const ab = document.getElementById('admin-banner');
+        if (ab) ab.style.display = _isAdmin ? 'flex' : 'none';
+      });
     // 나이·언어 미리 로드
     db.from('workers').select('age, birth_date, languages').eq('kakao_uid', session.user.id).maybeSingle()
       .then(({ data: w }) => {
@@ -11744,7 +11750,6 @@ function openProfile() {
       const meta2 = currentUser?.user_metadata || {};
       avatarInner.innerHTML = _initialAvatar((meta2.full_name || currentUser.email || '?').charAt(0), 58);
     }
-    _isAdmin = _ADMIN_EMAILS.includes(currentUser.email);
     const adminBanner = document.getElementById('admin-banner');
     if (adminBanner) adminBanner.style.display = _isAdmin ? 'flex' : 'none';
     document.getElementById('profile-role').style.display = 'none';
@@ -18715,33 +18720,90 @@ function renderCategorySelect() {
   if (prev && cats.find(c => c.name === prev)) sel.value = prev;
 }
 
+async function renderAdminSection() {
+  const sec = document.getElementById('admin-cat-section');
+  if (!sec) return;
+
+  const { data: admins } = await db.from('app_admins').select('email, added_at').order('added_at');
+  const adminRows = (admins || []).map(a => {
+    const isSelf = a.email === currentUser?.email;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px;margin-bottom:4px">
+      <span style="font-size:14px">🛡️</span>
+      <span style="flex:1;font-size:13px;font-weight:700;color:#222;word-break:break-all">${a.email}</span>
+      ${isSelf
+        ? '<span style="font-size:11px;color:#aaa;flex-shrink:0">(본인)</span>'
+        : `<button onclick="removeAdminEmail('${a.email}')" style="padding:4px 10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>`}
+    </div>`;
+  }).join('');
+
+  const catRows = categories.map(c => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px;margin-bottom:4px">
+      <span style="font-size:18px">${c.icon}</span>
+      <span style="flex:1;font-size:14px;font-weight:700">${c.name}</span>
+      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+    </div>`).join('');
+
+  sec.innerHTML = `
+    <div style="font-size:12px;font-weight:800;color:#3B82F6;margin-bottom:10px;display:flex;align-items:center;gap:6px">🛡️ 어드민 계정 관리</div>
+    <div id="admin-email-list">${adminRows}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <input id="new-admin-email" type="email" placeholder="추가할 이메일" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;font-family:inherit">
+      <button onclick="addAdminEmail()" style="padding:9px 14px;background:#1e3a8a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">+ 추가</button>
+    </div>
+
+    <div style="height:1px;background:#eee;margin:16px 0"></div>
+
+    <div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:10px">📂 카테고리 관리</div>
+    <div id="admin-cat-list">${catRows}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <input id="admin-cat-icon" placeholder="🍕" style="width:44px;text-align:center;padding:9px 6px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:16px;outline:none;font-family:inherit">
+      <input id="admin-cat-name" placeholder="카테고리명" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;font-family:inherit">
+      <button onclick="addCategory()" style="padding:9px 14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">+ 추가</button>
+    </div>`;
+}
+
 function renderAdminCatList() {
   const list = document.getElementById('admin-cat-list');
   if (!list) return;
-  list.innerHTML = categories.map((c, i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px">
+  list.innerHTML = categories.map(c => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px;margin-bottom:4px">
       <span style="font-size:18px">${c.icon}</span>
       <span style="flex:1;font-size:14px;font-weight:700">${c.name}</span>
       <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
     </div>`).join('');
 }
 
+async function addAdminEmail() {
+  const input = document.getElementById('new-admin-email');
+  const email = (input?.value || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) { showToast('올바른 이메일을 입력해주세요'); return; }
+  const { error } = await db.from('app_admins').insert({ email });
+  if (error) { showToast(error.code === '23505' ? '이미 등록된 이메일이에요' : '저장 실패: ' + error.message); return; }
+  if (input) input.value = '';
+  showToast('✅ 어드민 추가됐어요');
+  renderAdminSection();
+}
+
+async function removeAdminEmail(email) {
+  showConfirm('', async () => {
+    await db.from('app_admins').delete().eq('email', email);
+    showToast('삭제됐어요');
+    renderAdminSection();
+  }, { icon:'🛡️', title:`${email} 어드민 삭제`, okLabel:'삭제', danger:true });
+}
+
 async function addCategory() {
-  const icon = document.getElementById('admin-cat-icon').value.trim() || '\u{1F4CB}';
-  const name = document.getElementById('admin-cat-name').value.trim();
+  const icon = document.getElementById('admin-cat-icon')?.value.trim() || '📋';
+  const name = document.getElementById('admin-cat-name')?.value.trim();
   if (!name) { showToast('카테고리명을 입력해주세요'); return; }
   if (categories.find(c => c.name === name)) { showToast('이미 있는 카테고리예요'); return; }
-
-  const newOrder = Math.max(...categories.map(c => c.display_order || 0)) + 1;
+  const newOrder = Math.max(...categories.map(c => c.display_order || 0), 0) + 1;
   const { error } = await db.from('job_categories').insert({ name, icon, display_order: newOrder, active: true });
-  if (error) {
-    // 테이블 없으면 로컬에만 추가
-    categories.push({ name, icon, display_order: newOrder });
-  } else {
-    categories.push({ name, icon, display_order: newOrder });
-  }
-  document.getElementById('admin-cat-icon').value = '';
-  document.getElementById('admin-cat-name').value = '';
+  if (!error) categories.push({ name, icon, display_order: newOrder });
+  const iconEl = document.getElementById('admin-cat-icon');
+  const nameEl = document.getElementById('admin-cat-name');
+  if (iconEl) iconEl.value = '';
+  if (nameEl) nameEl.value = '';
   renderCategorySelect();
   renderAdminCatList();
   showToast(`✅ '${name}' 추가됨`);
@@ -18753,7 +18815,7 @@ function deleteCategory(name) {
     categories = categories.filter(c => c.name !== name);
     renderCategorySelect();
     renderAdminCatList();
-  }, {icon:'🗑️', title:`'${name}' 카테고리 삭제`, okLabel:'삭제', danger:true});
+  }, { icon:'🗑️', title:`'${name}' 카테고리 삭제`, okLabel:'삭제', danger:true });
 }
 
 async function openOwnerSettings() {
@@ -18816,11 +18878,10 @@ async function openOwnerSettings() {
     document.getElementById('settings-biz-phone').value = bizRecord?.phone || '';
     document.getElementById('settings-biz-desc').value  = bizRecord?.description || '';
     updateBizDescCounter(document.getElementById('settings-biz-desc'));
-    const isAdmin = ['jackie@multimove.co.kr','nicepkw@gmail.com'].includes(currentUser.email);
-    document.getElementById('admin-cat-section').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('admin-cat-section').style.display = _isAdmin ? 'block' : 'none';
     const ownerAdminBanner = document.getElementById('owner-admin-banner');
-    if (ownerAdminBanner) ownerAdminBanner.style.display = isAdmin ? 'block' : 'none';
-    if (isAdmin) renderAdminCatList();
+    if (ownerAdminBanner) ownerAdminBanner.style.display = _isAdmin ? 'block' : 'none';
+    if (_isAdmin) renderAdminSection();
     loadMyPlaces();
     renderPlanUI();
     loadBizPhotos();
