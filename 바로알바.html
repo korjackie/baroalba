@@ -2736,21 +2736,13 @@
         <div id="worker-grade-progress" style="padding:0 16px 12px;background:#fff;font-size:12px;color:#888;line-height:1.8"></div>
       </div>
 
-      <!-- ── 외국인 근로자 특화 (워커만) ── -->
+      <!-- ── 외국인 전용 서비스 (워커만) ── -->
       <div class="mp-section" id="foreigner-section" style="display:none">
-        <div class="mp-section-title">🌏 외국인 근로자 인증</div>
+        <div class="mp-section-title">🌏 외국인 전용 서비스</div>
         <div class="mp-rows">
-          <div class="mp-row" onclick="openMpSub('foreigner')">
-            <div class="mp-row-left"><span class="mp-row-icon">🛂</span><span>비자 정보 · 가능 업종</span></div>
-            <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openWorkerRightsGuide()">
-            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span>내 권리 가이드</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('wage-history')">
-            <div class="mp-row-left"><span class="mp-row-icon">💴</span><span>급여 수령 확인 내역</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          <div class="mp-row" onclick="openMpSub('foreigner-hub')">
+            <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span>외국인 전용</span></div>
+            <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
       </div>
@@ -3214,7 +3206,48 @@
 </div>
 
 <!-- 비자 정보 패널 -->
-<div class="mpsub-panel" id="mpsub-foreigner" style="z-index:365">
+<!-- 외국인 전용 허브 패널 -->
+<div class="mpsub-panel" id="mpsub-foreigner-hub" style="z-index:365">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('foreigner-hub')">‹</button>
+    <div class="mpsub-ttl">🌏 외국인 전용 서비스</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px 16px 60px">
+    <div style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.6">국적·비자 등록부터 근로권리 확인까지 외국인 근로자를 위한 서비스입니다.</div>
+
+    <!-- 비자·국적 등록 -->
+    <div onclick="closeMpSub('foreigner-hub');setTimeout(()=>openMpSub('foreigner'),200)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+      <div style="width:46px;height:46px;border-radius:14px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🛂</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">국적 · 비자 등록</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">비자 종류 · 가능 업종 설정</div>
+      </div>
+      <span style="font-size:18px;color:#ccc">›</span>
+    </div>
+
+    <!-- 권리 가이드 -->
+    <div onclick="openWorkerRightsGuide()" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+      <div style="width:46px;height:46px;border-radius:14px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📋</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">내 권리 가이드</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">최저임금 · 근로시간 · 신고 방법</div>
+      </div>
+      <span style="font-size:18px;color:#ccc">›</span>
+    </div>
+
+    <!-- 급여 수령 확인 -->
+    <div onclick="closeMpSub('foreigner-hub');setTimeout(()=>openMpSub('wage-history'),200)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+      <div style="width:46px;height:46px;border-radius:14px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💴</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:#222">급여 수령 확인</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">완료된 근무 급여 확인 · 미수령 신고</div>
+      </div>
+      <span style="font-size:18px;color:#ccc">›</span>
+    </div>
+  </div>
+</div>
+
+<div class="mpsub-panel" id="mpsub-foreigner" style="z-index:366">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('foreigner')">‹</button>
     <div class="mpsub-ttl">🛂 비자 정보 · 가능 업종</div>
@@ -5101,7 +5134,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '340';
+  const _APP_V = '341';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5125,7 +5158,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=340').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=341').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5140,8 +5173,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
     if (window.AndroidBridge?.saveAuthToken) window.AndroidBridge.saveAuthToken(session.access_token);
-    // 어드민 여부 로드 (app_admins 테이블)
-    db.from('app_admins').select('email').eq('email', session.user.email).maybeSingle()
+    // 어드민 여부 로드 (app_admins 테이블) — Naver 등 일부 OAuth는 email이 user_metadata에만 존재
+    const _authEmail = session.user.email || session.user.user_metadata?.email || '';
+    db.from('app_admins').select('email').eq('email', _authEmail).maybeSingle()
       .then(({ data: ad }) => {
         _isAdmin = !!ad;
         const ab = document.getElementById('admin-banner');
@@ -20731,14 +20765,15 @@ async function saveVisaProfile() {
 }
 
 async function loadWageHistory() {
-  const wid = await _getWorkerId();
-  if (!wid) return;
   const el = document.getElementById('wage-history-list');
-  const { data: apps } = await db.from('applications')
+  const wid = await _getWorkerId();
+  if (!wid) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
+  const { data: apps, error } = await db.from('applications')
     .select('id, wage_paid, wage_paid_at, job_postings(title, current_wage, duration_hours, start_time, businesses(name))')
     .eq('worker_id', wid)
     .eq('status', 'completed')
-    .order('completed_at', { ascending: false });
+    .order('created_at', { ascending: false });
+  if (error) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">불러오기 실패</div>'; return; }
   if (!apps?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
   el.innerHTML = apps.map(a => {
     const job  = a.job_postings || {};
