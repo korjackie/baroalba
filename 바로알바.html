@@ -5253,7 +5253,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   await loadJobs();
   // loadJobs 완료 후 홈으로 전환 + 타일 렌더링
   if (!tabParam || tabParam === 'home') {
-    loadHomePanel();
     if (_navItems[0]) setNav(_navItems[0], 'home');
   }
 

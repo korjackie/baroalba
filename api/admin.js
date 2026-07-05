@@ -162,6 +162,23 @@ module.exports = async function handler(req, res) {
       ]);
       const worker = Array.isArray(workerArr) ? workerArr[0] : null;
       if (!worker) return res.status(404).json({ error: 'User not found' });
+
+      // Supabase Auth에서 이메일 + 로그인 provider 조회
+      let authEmail = null, authProvider = null;
+      if (worker.kakao_uid) {
+        try {
+          const authRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${worker.kakao_uid}`, {
+            headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` }
+          });
+          if (authRes.ok) {
+            const au = await authRes.json();
+            authEmail = au.email || null;
+            const identity = (au.identities || [])[0];
+            authProvider = identity?.provider || au.app_metadata?.provider || 'email';
+          }
+        } catch {}
+      }
+
       const appList = Array.isArray(apps) ? apps : [];
       const jobIds = [...new Set(appList.map(a => a.job_posting_id).filter(Boolean))];
       const jobs = jobIds.length
@@ -169,7 +186,7 @@ module.exports = async function handler(req, res) {
         : [];
       const jobMap = Object.fromEntries((Array.isArray(jobs) ? jobs : []).map(j => [j.id, j]));
       return res.json({
-        worker,
+        worker: { ...worker, auth_email: authEmail, auth_provider: authProvider },
         applications: appList.map(a => ({
           ...a,
           job_title: jobMap[a.job_posting_id]?.title || '(삭제된 공고)',
@@ -244,11 +261,19 @@ module.exports = async function handler(req, res) {
 
     // ── 모임 제목/내용 수정 ───────────────────────────────────
     if (action === 'update_moim' && req.method === 'PATCH') {
-      const { id, title } = req.body || {};
-      if (!id || !title) return res.status(400).json({ error: 'id, title required' });
+      const { id, title, category, gathering_date, location_name, max_count, is_public } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      const updates = {};
+      if (title !== undefined) updates.title = title.trim();
+      if (category !== undefined) updates.category = category;
+      if (gathering_date !== undefined) updates.gathering_date = gathering_date || null;
+      if (location_name !== undefined) updates.location_name = location_name;
+      if (max_count !== undefined) updates.max_count = parseInt(max_count) || 10;
+      if (is_public !== undefined) updates.is_public = is_public;
+      if (!Object.keys(updates).length) return res.status(400).json({ error: 'no fields to update' });
       await sb(`gatherings?id=eq.${id}`, svcKey, {
         method: 'PATCH',
-        body: JSON.stringify({ title: title.trim() })
+        body: JSON.stringify(updates)
       });
       return res.json({ ok: true });
     }
