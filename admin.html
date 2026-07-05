@@ -124,22 +124,78 @@
     .user-row {
       background:#fff; border-radius:12px; margin-bottom:8px;
       box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:14px 16px;
-      display:flex; align-items:center; gap:12px;
+      display:flex; align-items:center; gap:12px; cursor:pointer;
+      transition:background 0.1s;
     }
+    .user-row:active { background:#f8fafc; }
     .user-avatar {
-      width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#FFE4E4,#FFCACA);
-      display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+      width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#EDE9FE,#DDD6FE);
+      display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+      font-weight:800; color:#7C3AED;
     }
-    .user-info { flex:1; }
     .user-name  { font-size:14px; font-weight:800; color:#1e293b; }
     .user-meta  { font-size:11px; color:#94a3b8; margin-top:2px; }
-    .user-stats { font-size:12px; color:#475569; font-weight:600; }
-    .user-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-    .u-btn { padding:6px 12px; border-radius:8px; border:none; font-size:11px; font-weight:700; cursor:pointer; }
-    .u-btn-noshow  { background:#EFF6FF; color:#3B82F6; }
-    .u-btn-ban     { background:#FEE2E2; color:#EF4444; }
-    .u-btn-unban   { background:#DCFCE7; color:#16a34a; }
-    .user-row.banned { opacity:0.6; border-left:3px solid #EF4444; }
+    .user-stats { font-size:12px; color:#64748b; font-weight:600; margin-top:3px; }
+    .user-row.banned { border-left:3px solid #EF4444; }
+    .user-row.banned .user-avatar { background:linear-gradient(135deg,#FEE2E2,#FECACA); color:#EF4444; }
+
+    /* 회원 상세 패널 */
+    .detail-overlay {
+      position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:600;
+      display:none; align-items:flex-end;
+    }
+    .detail-overlay.show { display:flex; }
+    .detail-panel {
+      width:100%; max-height:93vh; background:#fff; border-radius:20px 20px 0 0;
+      overflow-y:auto; animation:slideUp 0.22s cubic-bezier(0.32,0.72,0,1);
+      display:flex; flex-direction:column;
+    }
+    @keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+    .dp-header {
+      position:sticky; top:0; background:#fff; padding:14px 16px;
+      border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:10px; z-index:10;
+      flex-shrink:0;
+    }
+    .dp-body { padding:20px; flex:1; }
+    .dp-avatar {
+      width:72px; height:72px; border-radius:50%;
+      background:linear-gradient(135deg,#EDE9FE,#DDD6FE);
+      display:flex; align-items:center; justify-content:center;
+      font-size:28px; font-weight:900; color:#7C3AED; margin:0 auto 12px;
+    }
+    .dp-avatar.banned { background:linear-gradient(135deg,#FEE2E2,#FECACA); color:#EF4444; }
+    .dp-name { font-size:22px; font-weight:900; color:#1e293b; text-align:center; }
+    .dp-phone { font-size:13px; color:#94a3b8; text-align:center; margin-top:4px; }
+    .dp-stats { display:flex; gap:0; margin:16px 0; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; }
+    .dp-stat { flex:1; padding:14px 8px; text-align:center; border-right:1px solid #e2e8f0; }
+    .dp-stat:last-child { border-right:none; }
+    .dp-stat-val { font-size:20px; font-weight:900; color:#1e293b; }
+    .dp-stat-label { font-size:10px; color:#94a3b8; font-weight:600; margin-top:2px; }
+    .dp-tabs { display:flex; border-bottom:1px solid #e2e8f0; margin-bottom:16px; }
+    .dp-tab { flex:1; padding:11px; font-size:13px; font-weight:700; color:#94a3b8; background:none; border:none; cursor:pointer; border-bottom:2.5px solid transparent; }
+    .dp-tab.active { color:#C8102E; border-bottom-color:#C8102E; }
+    .dp-actions {
+      position:sticky; bottom:0; background:#fff; padding:12px 16px;
+      border-top:1px solid #e2e8f0; display:flex; gap:8px; flex-shrink:0;
+    }
+    .dp-action-btn { flex:1; padding:13px; border-radius:12px; border:none; font-size:13px; font-weight:800; cursor:pointer; }
+    .da-noshow { background:#EFF6FF; color:#3B82F6; }
+    .da-ban    { background:#FEE2E2; color:#EF4444; }
+    .da-unban  { background:#DCFCE7; color:#16a34a; }
+
+    /* 활동 아이템 */
+    .app-item { padding:12px 0; border-bottom:1px solid #f1f5f9; }
+    .app-item:last-child { border-bottom:none; }
+    .app-item-title { font-size:13px; font-weight:700; color:#1e293b; }
+    .app-item-meta { font-size:11px; color:#94a3b8; margin-top:3px; }
+    .app-item-review { font-size:12px; color:#64748b; margin-top:4px; font-style:italic; }
+    .as-badge { font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; white-space:nowrap; }
+    .as-hired    { background:#DCFCE7; color:#16a34a; }
+    .as-done     { background:#EFF6FF; color:#3B82F6; }
+    .as-pending  { background:#FFF7ED; color:#F59E0B; }
+    .as-rejected { background:#f1f5f9; color:#94a3b8; }
+    .as-noshow   { background:#FEE2E2; color:#EF4444; }
+    .as-cancelled{ background:#f1f5f9; color:#94a3b8; }
 
     /* 모임 카드 */
     .moim-row {
@@ -255,6 +311,18 @@
     <div id="moims-list"><div class="loading">로딩 중...</div></div>
   </div>
 
+</div>
+
+<!-- 회원 상세 패널 -->
+<div class="detail-overlay" id="user-detail-overlay" onclick="closeUserDetail()">
+  <div class="detail-panel" onclick="event.stopPropagation()">
+    <div class="dp-header">
+      <button onclick="closeUserDetail()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
+      <span style="font-size:16px;font-weight:800;color:#1e293b" id="dp-title">회원 상세</span>
+    </div>
+    <div class="dp-body" id="dp-body"><div class="loading">로딩 중...</div></div>
+    <div class="dp-actions" id="dp-actions" style="display:none"></div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -446,6 +514,8 @@ async function closePostingById(id) {
 
 // ── 회원 관리 ─────────────────────────────────────────────
 let _users = [];
+let _currentUser = null;
+let _detailData = null;
 
 async function loadUsers() {
   const data = await adminApi('users');
@@ -453,47 +523,167 @@ async function loadUsers() {
   renderUsers();
 }
 
+function userInitial(name) {
+  if (!name) return '?';
+  return name.trim().slice(-1);
+}
+
 function renderUsers() {
   document.getElementById('users-list').innerHTML = _users.length
     ? _users.map(u => {
         const banned = u.is_banned;
+        const noshow = u.noshow_count || 0;
+        const joinDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR', { year:'2-digit', month:'numeric', day:'numeric' }) : '-';
         return `
-          <div class="user-row ${banned ? 'banned' : ''}" id="ur-${u.id}">
-            <div class="user-avatar">${banned ? '🚫' : '👤'}</div>
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:8px">
-                <div class="user-name">${u.name || '(이름없음)'}</div>
-                ${banned ? '<span style="font-size:10px;background:#FEE2E2;color:#EF4444;padding:2px 7px;border-radius:5px;font-weight:800">정지됨</span>' : ''}
+          <div class="user-row ${banned ? 'banned' : ''}" onclick="openUserDetail('${u.id}')">
+            <div class="user-avatar ${banned ? 'banned' : ''}">${banned ? '🚫' : userInitial(u.name)}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span class="user-name">${u.name || '(이름없음)'}</span>
+                ${banned ? '<span style="font-size:10px;background:#FEE2E2;color:#EF4444;padding:1px 6px;border-radius:5px;font-weight:800">정지</span>' : ''}
+                ${noshow >= 3 ? '<span style="font-size:10px;background:#FFF7ED;color:#F59E0B;padding:1px 6px;border-radius:5px;font-weight:800">노쇼주의</span>' : ''}
               </div>
-              <div class="user-meta">${u.phone || '-'} · 가입 ${u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR') : '-'}</div>
-              <div class="user-stats" style="margin-top:3px">⭐ ${u.rating ? u.rating.toFixed(1) : '-'} · 노쇼 ${u.noshow_count || 0}회 · 완료 ${u.review_count || 0}회</div>
-              <div class="user-actions">
-                ${(u.noshow_count || 0) > 0 ? `<button class="u-btn u-btn-noshow" onclick="resetNoshow('${u.id}')">노쇼 초기화</button>` : ''}
-                ${banned
-                  ? `<button class="u-btn u-btn-unban" onclick="toggleBan('${u.id}', false)">정지 해제</button>`
-                  : `<button class="u-btn u-btn-ban" onclick="toggleBan('${u.id}', true)">계정 정지</button>`}
-              </div>
+              <div class="user-meta">${u.phone || '-'}</div>
+              <div class="user-stats">⭐ ${u.rating ? u.rating.toFixed(1) : '-'} &nbsp;·&nbsp; 완료 ${u.review_count || 0}회 &nbsp;·&nbsp; 노쇼 ${noshow}회 &nbsp;·&nbsp; ${joinDate} 가입</div>
             </div>
+            <span style="color:#cbd5e1;font-size:20px;flex-shrink:0">›</span>
           </div>`;
       }).join('')
     : '<div class="empty">회원 없음</div>';
 }
 
-async function resetNoshow(id) {
-  if (!confirm('노쇼 횟수를 0으로 초기화하겠습니까?')) return;
-  await adminApi('reset_noshow', 'PATCH', { id });
-  const u = _users.find(u => u.id === id);
+// ── 회원 상세 패널 ─────────────────────────────────────────
+async function openUserDetail(id) {
+  _currentUser = _users.find(u => u.id === id) || { id };
+  document.getElementById('user-detail-overlay').classList.add('show');
+  document.getElementById('dp-title').textContent = _currentUser.name || '회원 상세';
+  document.getElementById('dp-body').innerHTML = '<div class="loading">로딩 중...</div>';
+  document.getElementById('dp-actions').style.display = 'none';
+
+  try {
+    const data = await adminApi('user_detail&id=' + encodeURIComponent(id));
+    _detailData = data;
+    if (data.worker) _currentUser = data.worker;
+    renderUserDetail();
+  } catch(e) {
+    document.getElementById('dp-body').innerHTML = '<div class="empty">정보를 불러올 수 없습니다</div>';
+  }
+}
+
+function closeUserDetail() {
+  document.getElementById('user-detail-overlay').classList.remove('show');
+}
+
+function renderUserDetail() {
+  const u = _currentUser;
+  const apps = _detailData?.applications || [];
+  if (!u) return;
+
+  document.getElementById('dp-title').textContent = u.name || '회원 상세';
+  const joinDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR') : '-';
+  const rated = apps.filter(a => a.employer_rating);
+  const done = apps.filter(a => a.status === 'done').length;
+
+  document.getElementById('dp-body').innerHTML = `
+    <div style="text-align:center;padding-bottom:4px">
+      <div class="dp-avatar ${u.is_banned ? 'banned' : ''}">${u.is_banned ? '🚫' : userInitial(u.name)}</div>
+      <div class="dp-name">${u.name || '(이름없음)'}</div>
+      <div class="dp-phone">${u.phone || '-'}</div>
+      ${u.is_banned ? '<div style="margin-top:8px"><span style="background:#FEE2E2;color:#EF4444;padding:4px 14px;border-radius:8px;font-size:12px;font-weight:800">계정 정지 중</span></div>' : ''}
+    </div>
+    <div class="dp-stats">
+      <div class="dp-stat">
+        <div class="dp-stat-val">⭐ ${u.rating ? u.rating.toFixed(1) : '-'}</div>
+        <div class="dp-stat-label">평점</div>
+      </div>
+      <div class="dp-stat">
+        <div class="dp-stat-val">${done}</div>
+        <div class="dp-stat-label">완료</div>
+      </div>
+      <div class="dp-stat">
+        <div class="dp-stat-val" style="${(u.noshow_count||0)>0?'color:#EF4444':''}">${u.noshow_count || 0}</div>
+        <div class="dp-stat-label">노쇼</div>
+      </div>
+      <div class="dp-stat">
+        <div class="dp-stat-val">${apps.length}</div>
+        <div class="dp-stat-label">총 지원</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#94a3b8;text-align:center;margin-bottom:20px">가입일 ${joinDate}</div>
+
+    <div class="dp-tabs">
+      <button class="dp-tab active" id="dtab-apps" onclick="showDetailTab('apps')">활동내역 (${apps.length})</button>
+      <button class="dp-tab" id="dtab-reviews" onclick="showDetailTab('reviews')">받은 리뷰 (${rated.length})</button>
+    </div>
+
+    <div id="dtab-content-apps">
+      ${apps.length ? apps.map(a => {
+        const sc = {hired:'as-hired',done:'as-done',pending:'as-pending',rejected:'as-rejected',noshow:'as-noshow',cancelled:'as-cancelled'};
+        const sl = {hired:'합격',done:'완료',pending:'지원중',rejected:'탈락',noshow:'노쇼',cancelled:'취소'};
+        const date = a.applied_at ? new Date(a.applied_at).toLocaleDateString('ko-KR') : '-';
+        return `<div class="app-item">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div class="app-item-title">${a.job_title}</div>
+            <span class="as-badge ${sc[a.status]||'as-pending'}">${sl[a.status]||a.status}</span>
+          </div>
+          <div class="app-item-meta">${a.biz_name} · ${date}</div>
+          ${a.employer_rating ? `<div class="app-item-review">업주 평가 ⭐${a.employer_rating}${a.review ? ' · "'+a.review+'"' : ''}</div>` : ''}
+        </div>`;
+      }).join('') : '<div class="empty" style="padding:24px 0">지원 내역 없음</div>'}
+    </div>
+
+    <div id="dtab-content-reviews" style="display:none">
+      ${rated.length ? rated.map(a => {
+        const stars = '⭐'.repeat(Math.round(a.employer_rating));
+        const date = a.reviewed_at ? new Date(a.reviewed_at).toLocaleDateString('ko-KR') : '';
+        return `<div class="app-item">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span>${stars}</span><span style="font-size:14px;font-weight:900">${a.employer_rating}</span>
+          </div>
+          ${a.review ? `<div class="app-item-review">"${a.review}"</div>` : ''}
+          <div class="app-item-meta">${a.biz_name}${date ? ' · ' + date : ''}</div>
+        </div>`;
+      }).join('') : '<div class="empty" style="padding:24px 0">받은 리뷰 없음</div>'}
+    </div>
+  `;
+
+  const actionsEl = document.getElementById('dp-actions');
+  const btns = [];
+  if ((u.noshow_count || 0) > 0) btns.push(`<button class="dp-action-btn da-noshow" onclick="resetNoshowFromDetail()">노쇼 ${u.noshow_count}회 초기화</button>`);
+  btns.push(u.is_banned
+    ? `<button class="dp-action-btn da-unban" onclick="toggleBanFromDetail(false)">정지 해제</button>`
+    : `<button class="dp-action-btn da-ban" onclick="toggleBanFromDetail(true)">계정 정지</button>`);
+  actionsEl.innerHTML = btns.join('');
+  actionsEl.style.display = 'flex';
+}
+
+function showDetailTab(name) {
+  document.querySelectorAll('.dp-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('dtab-' + name).classList.add('active');
+  document.getElementById('dtab-content-apps').style.display    = name === 'apps'    ? 'block' : 'none';
+  document.getElementById('dtab-content-reviews').style.display = name === 'reviews' ? 'block' : 'none';
+}
+
+async function resetNoshowFromDetail() {
+  if (!_currentUser || !confirm('노쇼 횟수를 0으로 초기화하겠습니까?')) return;
+  await adminApi('reset_noshow', 'PATCH', { id: _currentUser.id });
+  _currentUser.noshow_count = 0;
+  const u = _users.find(u => u.id === _currentUser.id);
   if (u) u.noshow_count = 0;
+  renderUserDetail();
   renderUsers();
   showToast('노쇼 횟수가 초기화됐습니다');
 }
 
-async function toggleBan(id, ban) {
+async function toggleBanFromDetail(ban) {
+  if (!_currentUser) return;
   const msg = ban ? '이 회원을 정지하겠습니까?\n정지된 회원은 앱 접근이 차단됩니다.' : '정지를 해제하겠습니까?';
   if (!confirm(msg)) return;
-  await adminApi('ban_user', 'PATCH', { id, is_banned: ban });
-  const u = _users.find(u => u.id === id);
+  await adminApi('ban_user', 'PATCH', { id: _currentUser.id, is_banned: ban });
+  _currentUser.is_banned = ban;
+  const u = _users.find(u => u.id === _currentUser.id);
   if (u) u.is_banned = ban;
+  renderUserDetail();
   renderUsers();
   showToast(ban ? '🚫 계정이 정지됐습니다' : '✅ 정지가 해제됐습니다');
 }

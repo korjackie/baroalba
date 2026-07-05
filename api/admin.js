@@ -150,6 +150,32 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // ── 회원 상세 ──────────────────────────────────────────────
+    if (action === 'user_detail') {
+      const { id } = req.query;
+      if (!id) return res.status(400).json({ error: 'id required' });
+      const [workerArr, apps] = await Promise.all([
+        sb(`workers?id=eq.${id}&select=*`, svcKey).then(r => r.json()),
+        sb(`applications?worker_id=eq.${id}&select=id,status,applied_at,job_posting_id,employer_rating,review,reviewed_at,biz_rating&order=applied_at.desc&limit=20`, svcKey).then(r => r.json()),
+      ]);
+      const worker = Array.isArray(workerArr) ? workerArr[0] : null;
+      if (!worker) return res.status(404).json({ error: 'User not found' });
+      const appList = Array.isArray(apps) ? apps : [];
+      const jobIds = [...new Set(appList.map(a => a.job_posting_id).filter(Boolean))];
+      const jobs = jobIds.length
+        ? await sb(`job_postings?id=in.(${jobIds.join(',')})&select=id,title,biz_name`, svcKey).then(r => r.json())
+        : [];
+      const jobMap = Object.fromEntries((Array.isArray(jobs) ? jobs : []).map(j => [j.id, j]));
+      return res.json({
+        worker,
+        applications: appList.map(a => ({
+          ...a,
+          job_title: jobMap[a.job_posting_id]?.title || '(삭제된 공고)',
+          biz_name: jobMap[a.job_posting_id]?.biz_name || '-',
+        })),
+      });
+    }
+
     // ── 모임 목록 ──────────────────────────────────────────────
     if (action === 'moims') {
       const data = await sb(
