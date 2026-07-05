@@ -178,6 +178,47 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    // ── 카테고리 목록 ─────────────────────────────────────────
+    if (action === 'categories') {
+      const data = await sb('job_categories?select=name,icon,display_order,active&order=display_order', svcKey).then(r => r.json());
+      return res.json(Array.isArray(data) ? data : []);
+    }
+
+    // ── 카테고리 추가 ─────────────────────────────────────────
+    if (action === 'add_category' && req.method === 'POST') {
+      const { name, icon, display_order } = req.body || {};
+      if (!name) return res.status(400).json({ error: 'name required' });
+      const r = await sb('job_categories', svcKey, {
+        method: 'POST',
+        body: JSON.stringify({ name, icon: icon || '📋', display_order: display_order || 99, active: true }),
+        headers: { 'Prefer': 'return=representation' }
+      });
+      return res.json(await r.json());
+    }
+
+    // ── 카테고리 수정 ─────────────────────────────────────────
+    if (action === 'update_category' && req.method === 'PATCH') {
+      const { name, newName, icon } = req.body || {};
+      if (!name) return res.status(400).json({ error: 'name required' });
+      const updates = {};
+      if (newName && newName !== name) updates.name = newName;
+      if (icon !== undefined) updates.icon = icon;
+      await sb(`job_categories?name=eq.${encodeURIComponent(name)}`, svcKey, {
+        method: 'PATCH', body: JSON.stringify(updates)
+      });
+      return res.json({ ok: true });
+    }
+
+    // ── 카테고리 삭제 (soft) ──────────────────────────────────
+    if (action === 'delete_category' && req.method === 'PATCH') {
+      const { name } = req.body || {};
+      if (!name) return res.status(400).json({ error: 'name required' });
+      await sb(`job_categories?name=eq.${encodeURIComponent(name)}`, svcKey, {
+        method: 'PATCH', body: JSON.stringify({ active: false })
+      });
+      return res.json({ ok: true });
+    }
+
     // ── 모임 목록 ──────────────────────────────────────────────
     if (action === 'moims') {
       const data = await sb(

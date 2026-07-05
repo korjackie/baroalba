@@ -321,13 +321,19 @@
 
 <!-- 관리자 설정 패널 -->
 <div class="detail-overlay" id="settings-overlay" onclick="closeSettings()">
-  <div class="detail-panel" onclick="event.stopPropagation()" style="max-height:75vh">
+  <div class="detail-panel" onclick="event.stopPropagation()" style="max-height:88vh">
     <div class="dp-header">
       <button onclick="closeSettings()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
       <span style="font-size:16px;font-weight:800;color:#1e293b">관리자 설정</span>
     </div>
-    <div class="dp-body">
-      <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:12px">🛡️ 관리자 계정 목록</div>
+    <div style="display:flex;border-bottom:1px solid #e2e8f0;flex-shrink:0">
+      <button class="dp-tab active" id="stab-admins" onclick="switchSettingsTab('admins')">🛡️ 관리자 계정</button>
+      <button class="dp-tab" id="stab-categories" onclick="switchSettingsTab('categories')">📂 카테고리</button>
+    </div>
+
+    <!-- 관리자 계정 탭 -->
+    <div id="stab-content-admins" class="dp-body">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">admin.html에 접근 가능한 관리자 계정 목록입니다.</div>
       <div id="settings-admin-list"><div class="loading">로딩 중...</div></div>
       <div style="margin-top:20px;border-top:1px solid #e2e8f0;padding-top:16px">
         <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">관리자 추가</div>
@@ -336,9 +342,25 @@
             style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
             onkeydown="if(event.key==='Enter')addAdmin()">
           <button onclick="addAdmin()"
-            style="padding:11px 18px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">
-            추가
-          </button>
+            style="padding:11px 18px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카테고리 탭 -->
+    <div id="stab-content-categories" class="dp-body" style="display:none">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 표시되는 카테고리를 관리합니다.</div>
+      <div id="settings-cat-list"><div class="loading">로딩 중...</div></div>
+      <div style="margin-top:16px;border-top:1px solid #e2e8f0;padding-top:16px">
+        <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">카테고리 추가</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="new-cat-icon" placeholder="🍕" maxlength="4"
+            style="width:50px;text-align:center;padding:11px 6px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
+          <input id="new-cat-name" placeholder="카테고리명"
+            style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
+            onkeydown="if(event.key==='Enter')addCategory()">
+          <button onclick="addCategory()"
+            style="padding:11px 18px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
         </div>
       </div>
     </div>
@@ -793,11 +815,23 @@ async function deleteMoimById(id) {
 // ── 관리자 설정 ───────────────────────────────────────────
 function openSettings() {
   document.getElementById('settings-overlay').classList.add('show');
-  loadAdminList();
+  // 현재 활성 탭 콘텐츠 로드
+  if (document.getElementById('stab-admins').classList.contains('active')) {
+    if (document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
+  }
 }
 
 function closeSettings() {
   document.getElementById('settings-overlay').classList.remove('show');
+}
+
+function switchSettingsTab(name) {
+  ['admins', 'categories'].forEach(t => {
+    document.getElementById('stab-' + t).classList.toggle('active', t === name);
+    document.getElementById('stab-content-' + t).style.display = t === name ? 'block' : 'none';
+  });
+  if (name === 'admins' && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
+  if (name === 'categories' && document.getElementById('settings-cat-list').innerHTML.includes('로딩')) loadCategoryList();
 }
 
 async function loadAdminList() {
@@ -835,6 +869,81 @@ async function addAdmin() {
   input.value = '';
   loadAdminList();
   showToast('✅ 관리자가 추가됐습니다');
+}
+
+// ── 카테고리 관리 ─────────────────────────────────────────
+let _categories = [];
+
+async function loadCategoryList() {
+  document.getElementById('settings-cat-list').innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('categories');
+  _categories = (Array.isArray(data) ? data : []).filter(c => c.active !== false);
+  renderCategoryList();
+}
+
+function renderCategoryList() {
+  const el = document.getElementById('settings-cat-list');
+  if (!_categories.length) {
+    el.innerHTML = '<div class="empty" style="padding:16px 0">카테고리 없음</div>';
+    return;
+  }
+  el.innerHTML = _categories.map((c, i) => `
+    <div id="cat-row-${i}" style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f1f5f9">
+      <span style="font-size:20px;width:28px;text-align:center;flex-shrink:0">${c.icon || '📋'}</span>
+      <span style="flex:1;font-size:14px;font-weight:700;color:#1e293b">${c.name}</span>
+      <button onclick="editCategoryRow(${i})"
+        style="padding:5px 11px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">수정</button>
+      <button onclick="deleteCategoryByName('${c.name}')"
+        style="padding:5px 11px;background:#FEE2E2;color:#EF4444;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">삭제</button>
+    </div>`).join('');
+}
+
+function editCategoryRow(i) {
+  const c = _categories[i];
+  const row = document.getElementById('cat-row-' + i);
+  row.innerHTML = `
+    <input id="edit-cat-icon-${i}" value="${c.icon || ''}" maxlength="4"
+      style="width:44px;text-align:center;padding:8px 4px;border:1.5px solid #7C3AED;border-radius:8px;font-size:18px;outline:none;flex-shrink:0">
+    <input id="edit-cat-name-${i}" value="${c.name}"
+      style="flex:1;padding:8px 10px;border:1.5px solid #7C3AED;border-radius:8px;font-size:13px;outline:none"
+      onkeydown="if(event.key==='Enter')saveCategoryEdit('${c.name}',${i})">
+    <button onclick="saveCategoryEdit('${c.name}',${i})"
+      style="padding:6px 11px;background:#7C3AED;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">저장</button>
+    <button onclick="renderCategoryList()"
+      style="padding:6px 11px;background:#f1f5f9;color:#64748b;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">취소</button>
+  `;
+  document.getElementById('edit-cat-name-' + i).focus();
+}
+
+async function saveCategoryEdit(origName, i) {
+  const newIcon = document.getElementById('edit-cat-icon-' + i).value.trim();
+  const newName = document.getElementById('edit-cat-name-' + i).value.trim();
+  if (!newName) { showToast('카테고리명을 입력하세요'); return; }
+  await adminApi('update_category', 'PATCH', { name: origName, newName, icon: newIcon || '📋' });
+  _categories[i] = { ..._categories[i], name: newName, icon: newIcon || '📋' };
+  renderCategoryList();
+  showToast('✅ 수정됐습니다');
+}
+
+async function addCategory() {
+  const icon = (document.getElementById('new-cat-icon').value.trim() || '📋');
+  const name = document.getElementById('new-cat-name').value.trim();
+  if (!name) { showToast('카테고리명을 입력하세요'); return; }
+  if (_categories.find(c => c.name === name)) { showToast('이미 있는 카테고리입니다'); return; }
+  const newOrder = Math.max(0, ..._categories.map(c => c.display_order || 0)) + 1;
+  await adminApi('add_category', 'POST', { name, icon, display_order: newOrder });
+  document.getElementById('new-cat-icon').value = '';
+  document.getElementById('new-cat-name').value = '';
+  loadCategoryList();
+  showToast(`✅ '${name}' 카테고리가 추가됐습니다`);
+}
+
+async function deleteCategoryByName(name) {
+  if (!confirm(`'${name}' 카테고리를 삭제하겠습니까?\n해당 카테고리의 기존 공고에는 영향을 주지 않습니다.`)) return;
+  await adminApi('delete_category', 'PATCH', { name });
+  _categories = _categories.filter(c => c.name !== name);
+  renderCategoryList();
+  showToast('카테고리가 삭제됐습니다');
 }
 
 async function removeAdmin(email) {
