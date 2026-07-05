@@ -5562,6 +5562,14 @@ async function loadJobs() {
     }
 
     jobs = result;
+    // 홈 패널이 표시 중이면 job 섹션 갱신 (GPS 위치 확정 후 재호출 시 반영)
+    if (document.getElementById('panel-home')?.classList.contains('show')) {
+      try { _renderHomeUrgent(); } catch(e) {}
+      try { _renderHomeAI(); } catch(e) {}
+      try { _renderHomeSameDay(); } catch(e) {}
+      try { _renderHomeRecent(); } catch(e) {}
+      try { _renderHomeForeigner(); } catch(e) {}
+    }
     renderMarkers();
     renderDateSlider();
     renderDistrictFilter();

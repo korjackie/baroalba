@@ -459,6 +459,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   currentSession = session;
   document.getElementById('admin-email').textContent = authEmail;
   loadDashboard();
+
+  // 입력창 포커스 시 키보드에 가려지지 않도록 스크롤
+  document.addEventListener('focusin', e => {
+    if (e.target.matches('input, textarea, select')) {
+      setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 320);
+    }
+  });
 });
 
 // ── 탭 전환 ─────────────────────────────────────────────
