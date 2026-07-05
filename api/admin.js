@@ -1,5 +1,4 @@
 const SUPABASE_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
-const ADMIN_EMAILS = ['jackie@multimove.co.kr', 'nicepkw@gmail.com', 'nicepkw@naver.com', 'first30800@gmail.com'];
 
 function getEmailFromJWT(token) {
   try {
@@ -27,12 +26,16 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // 관리자 인증
+  // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   const email = getEmailFromJWT(token);
-  if (!ADMIN_EMAILS.includes(email)) return res.status(403).json({ error: 'Forbidden' });
+  if (!email) return res.status(403).json({ error: 'Forbidden' });
 
   const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const adminCheck = await sb(`app_admins?email=eq.${encodeURIComponent(email)}&select=email&limit=1`, svcKey);
+  const adminRows = await adminCheck.json();
+  if (!Array.isArray(adminRows) || adminRows.length === 0) return res.status(403).json({ error: 'Forbidden' });
   const action = req.query.action;
 
   try {
