@@ -3,264 +3,286 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>바로알바 — 신규 기능 (2026.07.06)</title>
+<title>바로알바 — 신규 기능 & 버그수정 (2026.07.06)</title>
 <style>
-  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--orange:#f59e0b;--orange-light:#fffbeb;--purple:#7c3aed;--purple-light:#f3e8ff;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  :root{--red:#C8102E;--green:#16a34a;--blue:#3b82f6;--orange:#f59e0b;--purple:#7c3aed;--pink:#f43f5e;--radius:16px;--shadow:0 4px 20px rgba(0,0,0,0.10)}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
-  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
-  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
-  .nav-badge{background:var(--red-light);color:var(--red);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
-  main{max-width:860px;margin:0 auto;padding:80px 5% 60px}
-  .hero{background:linear-gradient(135deg,#fff0f2,#fff5f7);border:2px solid #fecdd3;border-radius:24px;padding:40px;margin-bottom:40px;text-align:center}
-  .hero-tag{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:16px}
-  .hero h1{font-size:26px;font-weight:900;color:var(--gray-900);line-height:1.3;letter-spacing:-0.5px;margin-bottom:12px}
-  .hero p{font-size:15px;color:var(--gray-500);font-weight:500;line-height:1.7}
-  .version-row{display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap}
-  .v-chip{background:#fff;border:2px solid var(--red);color:var(--red);font-size:13px;font-weight:800;padding:6px 16px;border-radius:100px}
-  .section{margin-bottom:32px}
-  .section-title{font-size:13px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
-  .card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--gray-200)}
-  .card-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
-  .card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-  .card-icon.red{background:var(--red-light)}
-  .card-icon.green{background:var(--green-light)}
-  .card-icon.blue{background:var(--blue-light)}
-  .card-icon.orange{background:var(--orange-light)}
-  .card-icon.purple{background:var(--purple-light)}
-  .card-title{font-size:18px;font-weight:900;color:var(--gray-900);line-height:1.3;margin-bottom:4px}
-  .card-sub{font-size:13px;color:var(--gray-500);font-weight:500}
-  .card-body{font-size:14px;color:var(--gray-700);line-height:1.8}
-  .tag{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px;margin-right:6px;margin-bottom:4px}
-  .tag.bug{background:#fee2e2;color:#991b1b}
-  .tag.new{background:#dcfce7;color:#14532d}
-  .tag.fix{background:#dbeafe;color:#1e3a8a}
-  .tag.ux{background:#ede9fe;color:#4c1d95}
-  .tag.api{background:#fffbeb;color:#92400e}
-  .code{background:#f4f4f8;border:1px solid #e0e0e8;border-radius:10px;padding:14px 16px;font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;color:#1a1a2e;margin:12px 0;overflow-x:auto;white-space:pre}
-  .diff-before{color:#dc2626}
-  .diff-after{color:#16a34a}
-  .flow-list{list-style:none;padding:0;margin-top:10px}
-  .flow-list li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-200);font-size:13px;color:var(--gray-700)}
-  .flow-list li:last-child{border-bottom:none}
-  .flow-num{width:22px;height:22px;background:var(--red);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;margin-top:1px}
-  .highlight{background:linear-gradient(transparent 60%,rgba(200,16,46,0.15) 60%)}
-  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#f8f9fa;color:#111;line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:56px}
+  .nav-logo{font-size:16px;font-weight:900;color:var(--red)}
+  .nav-tag{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);padding:3px 10px;border-radius:100px}
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);padding:88px 5% 52px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(200,16,46,0.25),transparent 65%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#ff6b7a;font-size:11px;font-weight:800;padding:4px 14px;border-radius:100px;letter-spacing:1px;margin-bottom:16px}
+  .hero h1{font-size:clamp(22px,4vw,36px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
+  .hero h1 span{color:var(--red)}
+  .hero-sub{font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:32px}
+  .hero-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .hero-chip{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px}
+  .hero-chip.new{background:rgba(244,63,94,0.2);border-color:rgba(244,63,94,0.4);color:#fb7185}
+  .container{max-width:860px;margin:0 auto;padding:52px 5%}
+  .section{margin-bottom:52px}
+  .section-label{font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .section-title{font-size:clamp(18px,2.5vw,24px);font-weight:900;letter-spacing:-0.5px;margin-bottom:6px}
+  .section-desc{font-size:13px;color:#888;margin-bottom:24px}
+  .cards{display:flex;flex-direction:column;gap:16px}
+  .card{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);border:1px solid #ebebeb}
+  .card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .badge{font-size:10px;font-weight:900;padding:3px 10px;border-radius:100px}
+  .badge-feat{background:#dcfce7;color:#14532d}
+  .badge-fix{background:#fee2e2;color:#991b1b}
+  .badge-ux{background:#dbeafe;color:#1e3a8a}
+  .badge-api{background:#fef9c3;color:#713f12}
+  .badge-infra{background:#ede9fe;color:#4c1d95}
+  .badge-new{background:linear-gradient(90deg,#f43f5e,#a855f7);color:#fff}
+  .badge-ok{background:#dcfce7;color:#14532d}
+  .badge-warn{background:#ffedd5;color:#9a3412}
+  .card-title{font-size:16px;font-weight:900;color:#111;margin-bottom:6px}
+  .card-desc{font-size:13px;color:#666;line-height:1.7}
+  .card.highlight{background:linear-gradient(135deg,#fff0f5,#fdf4ff);border:1.5px solid rgba(244,63,94,0.25)}
+  .card.highlight .card-title{color:var(--pink)}
+  .code-block{background:#0f172a;border-radius:10px;padding:14px 16px;margin:12px 0;font-family:'SF Mono',monospace;font-size:12px;line-height:1.8;color:#e2e8f0;overflow-x:auto}
+  .code-block .cm{color:#94a3b8}
+  .code-block .kw{color:#f472b6}
+  .code-block .fn{color:#60a5fa}
+  .code-block .str{color:#86efac}
+  .code-block .num{color:#fdba74}
+  .feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin:12px 0}
+  .feat-cell{background:#f8f9fa;border-radius:12px;padding:14px 16px}
+  .feat-icon{font-size:22px;margin-bottom:8px}
+  .feat-name{font-size:12px;font-weight:900;color:#333;margin-bottom:3px}
+  .feat-desc{font-size:11px;color:#888}
+  .diff{background:#0f172a;border-radius:10px;padding:14px 16px;margin:12px 0;font-family:'SF Mono',monospace;font-size:12px;line-height:1.9;overflow-x:auto}
+  .diff-del{color:#fca5a5}
+  .diff-add{color:#86efac}
+  .diff-ctx{color:#64748b}
+  .lang-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .lang-chip{display:flex;align-items:center;gap:6px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:700;color:#0369a1}
+  .lang-chip.new{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}
+  footer{text-align:center;padding:32px 5% 20px;font-size:12px;color:#aaa;border-top:1px solid #eee}
+  @media(max-width:600px){.container{padding:40px 4%}}
 </style>
 </head>
 <body>
 <nav>
   <div class="nav-logo">바로알바</div>
-  <div class="nav-badge">신규 기능 · 2026.07.06</div>
+  <div class="nav-tag">신규기능 · 2026.07.06</div>
 </nav>
-<main>
 
-  <div class="hero">
-    <div class="hero-tag">Feature Update</div>
-    <h1>애니메이션 시스템 도입 + <span class="highlight">버그 수정</span><br>+ 가입 환영 이메일 자동 발송</h1>
-    <p>antigravity 디자인 언어 이식 · 신뢰점수 로직 수정 · 급여수령확인 개선<br>신규 가입자 환영 이메일 · 브라우저 접속 시 앱 설치 유도 버튼</p>
-    <div class="version-row">
-      <span class="v-chip">sw v360</span>
-      <span class="v-chip">sw v361</span>
+<div class="hero">
+  <div class="hero-tag">RELEASE NOTES · v360~v362</div>
+  <h1>2026년 <span>7월 6일</span> 업데이트</h1>
+  <p class="hero-sub">바로만남 서비스 론칭 · 애니메이션 시스템 · 버그수정 · 네팔어 추가</p>
+  <div class="hero-chips">
+    <span class="hero-chip new">💫 바로만남 신규</span>
+    <span class="hero-chip">🎨 애니메이션</span>
+    <span class="hero-chip">🪲 버그수정 4건</span>
+    <span class="hero-chip">🇳🇵 네팔어</span>
+    <span class="hero-chip">📧 환영이메일</span>
+    <span class="hero-chip">📲 앱 설치버튼</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ① 바로만남 -->
+  <div class="section">
+    <div class="section-label">Core Feature</div>
+    <div class="section-title">💫 바로만남 서비스 신규 론칭</div>
+    <div class="section-desc">바로알바 앱 내에서 GPS 기반 소셜 매칭 서비스 정식 구현. 홈 배너 → 풀스크린 패널 구조. 2026.07.06 새벽 출시.</div>
+    <div class="cards">
+      <div class="card highlight">
+        <div class="card-header"><span class="badge badge-new">NEW SERVICE</span></div>
+        <div class="card-title">바로만남 패널 — 바로스팟 + 바로점심</div>
+        <div class="card-desc">
+          홈화면 하단에 pink/rose 그라디언트 배너를 탭하면 전용 풀스크린 패널이 열립니다. 두 가지 서브서비스를 제공합니다.<br><br>
+          <strong>📍 바로스팟</strong> — GPS 반경 내 상대방 발견. 위치를 ON하면 주변 회원이 표시되며, 포인트(500P)로 연락처 확인. 상호 수락 시 최종 연결.<br><br>
+          <strong>🍱 바로점심</strong> — 4:4 소셜 점심 자동 매칭. 포인트(2,000P) 신청 후 자동 매칭, 장소 안내. 직장인·알바생·프리랜서 누구나 참여 가능.
+        </div>
+        <div class="feat-grid" style="margin-top:16px">
+          <div class="feat-cell"><div class="feat-icon">📍</div><div class="feat-name">바로스팟</div><div class="feat-desc">GPS 반경 위치 매칭 · 500P</div></div>
+          <div class="feat-cell"><div class="feat-icon">🍱</div><div class="feat-name">바로점심</div><div class="feat-desc">4:4 소셜 점심 그룹 · 2,000P</div></div>
+          <div class="feat-cell"><div class="feat-icon">💎</div><div class="feat-name">포인트 연동</div><div class="feat-desc">Toss 결제 시스템</div></div>
+          <div class="feat-cell"><div class="feat-icon">🔐</div><div class="feat-name">상호 수락</div><div class="feat-desc">양방향 동의 후 연결</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">홈화면 바로만남 배너 + 동적 광고 배너</div>
+        <div class="card-desc">홈 피드 하단에 pink/rose 그라디언트 바로만남 카드 고정 노출. Supabase banners 테이블과 연동하는 동적 광고 배너 슬롯 추가 (link_type: mannnam / moim / external URL).</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG FIX</span></div>
+        <div class="card-title">바로만남 패널 — Android 뒤로가기 미작동 수정</div>
+        <div class="card-desc">mannnam-panel이 popstate 핸들러의 패널 맵에서 누락되어 Android 뒤로가기 버튼으로 패널이 닫히지 않던 버그 수정. 6-1번 순서로 삽입.</div>
+        <div class="diff">
+<span class="diff-ctx">// popstate 핸들러에 추가</span>
+<span class="diff-add">+ const mannnamEl = document.getElementById('mannnam-panel');</span>
+<span class="diff-add">+ if (mannnamEl && mannnamEl.style.display === 'block') {</span>
+<span class="diff-add">+   closeMannnamPanel();</span>
+<span class="diff-add">+   history.pushState({ panel: null }, '');</span>
+<span class="diff-add">+   return;</span>
+<span class="diff-add">+ }</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 애니메이션 -->
+  <!-- ② 애니메이션 -->
   <div class="section">
-    <div class="section-title">디자인 · 애니메이션 (v360)</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon red">✨</div>
-        <div>
-          <div class="card-title">pulse-ring 애니메이션 — CTA 버튼</div>
-          <div class="card-sub"><span class="tag new">NEW</span><span class="tag ux">UX</span> antigravity → 바로알바 이식</div>
-        </div>
-      </div>
-      <div class="card-body">
-        "⚡ 바로 지원하기"와 "공고 등록하기" 버튼에 pulse-ring 애니메이션 적용. 버튼이 0.97→1.0 scale로 호흡하며 레드 그림자가 방사되어 클릭을 유도합니다.
-        <div class="code"><span class="diff-after">@keyframes pulse-ring {
-  0%   { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0.65); }
-  70%  { transform:scale(1);    box-shadow:0 0 0 10px rgba(200,16,46,0); }
-  100% { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0); }
+    <div class="section-label">Animation System</div>
+    <div class="section-title">🎨 애니메이션 시스템 (antigravity 이식)</div>
+    <div class="section-desc">바로만남(antigravity) 앱의 애니메이션 패턴을 이식. 공고카드·모임카드·CTA버튼·입력폼 전반에 적용.</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">pulse-ring — CTA 버튼 지속 애니메이션</div>
+        <div class="card-desc">지원하기 버튼, 제출 버튼, 헤더 앱 설치 버튼에 pulse-ring 키프레임 적용. disabled/active 상태에서 animation:none 자동 해제.</div>
+        <div class="code-block">
+<span class="kw">@keyframes</span> <span class="fn">pulse-ring</span> {
+  <span class="num">0%</span>   { transform:<span class="fn">scale</span>(<span class="num">0.97</span>); box-shadow:<span class="num">0 0 0 0</span> <span class="str">rgba(200,16,46,0.65)</span>; }
+  <span class="num">70%</span>  { transform:<span class="fn">scale</span>(<span class="num">1</span>);    box-shadow:<span class="num">0 0 0 10px</span> <span class="str">rgba(200,16,46,0)</span>; }
+  <span class="num">100%</span> { transform:<span class="fn">scale</span>(<span class="num">0.97</span>); box-shadow:<span class="num">0 0 0 0</span> <span class="str">rgba(200,16,46,0)</span>; }
 }
-.detail-apply-btn { animation: pulse-ring 2s infinite; }
-.detail-apply-btn:disabled { animation: none; }</span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon blue">🃏</div>
-        <div>
-          <div class="card-title">카드 hover lift 효과</div>
-          <div class="card-sub"><span class="tag ux">UX</span> 공고 카드 · 모임 카드</div>
         </div>
       </div>
-      <div class="card-body">
-        <code>.job-card:hover</code> · <code>.moim-card:hover</code>에 translateY(-2px) + box-shadow 상승 효과. 데스크톱 브라우저 접속 시 카드가 살아있는 느낌을 줍니다.
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">카드 Hover Lift — 공고·모임 카드</div>
+        <div class="card-desc">.job-card .moim-card에 hover 시 translateY(-2px) + box-shadow 강화. active 시 scale(0.98) 적용.</div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon purple">🔵</div>
-        <div>
-          <div class="card-title">입력 필드 포커스 링</div>
-          <div class="card-sub"><span class="tag ux">UX</span> input · textarea · select 전역 적용</div>
-        </div>
-      </div>
-      <div class="card-body">
-        포커스 시 테두리가 브랜드 레드(#C8102E)로 바뀌고 3px 글로우 링이 표시됩니다.
-        <div class="code"><span class="diff-after">input:not([type="checkbox"]):focus, textarea:focus, select:focus {
-  border-color: #C8102E !important;
-  box-shadow: 0 0 0 3px rgba(200,16,46,0.12) !important;
-}</span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon orange">📍</div>
-        <div>
-          <div class="card-title">marker-bounce / marker-wave 클래스</div>
-          <div class="card-sub"><span class="tag new">NEW</span> 지도 마커 애니메이션용 유틸리티 클래스</div>
-        </div>
-      </div>
-      <div class="card-body">
-        <code>.marker-pin-anim</code> (위아래 8px 바운스) · <code>.marker-wave-anim</code> (파문 확산) 클래스 추가. 향후 지도 마커나 위치 표시 UI에 적용 가능합니다.
+      <div class="card">
+        <div class="card-header"><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">Input Focus 레드 링</div>
+        <div class="card-desc">모든 input/textarea/select 포커스 시 border-color:#C8102E + 0 0 0 3px rgba(200,16,46,0.12) 박스섀도우. 브랜드 컬러 일관성.</div>
       </div>
     </div>
   </div>
 
-  <!-- 버그 수정 -->
+  <!-- ③ 버그수정 -->
   <div class="section">
-    <div class="section-title">버그 수정 (v360)</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon red">🐛</div>
-        <div>
-          <div class="card-title">신뢰점수 신규 유저 75점 인플레이션 수정</div>
-          <div class="card-sub"><span class="tag bug">BUG</span> calcBakalbaScore 로직 수정</div>
+    <div class="section-label">Bug Fixes</div>
+    <div class="section-title">🪲 버그 수정 4건</div>
+    <div class="section-desc">신뢰점수 인플레이션 · 급여확인 스피너 · 외국인허브 타이밍 · 바로만남 뒤로가기.</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">신뢰점수 신규 유저 인플레이션 수정</div>
+        <div class="card-desc"><strong>원인:</strong> <code>rating || 3.0</code> 기본값으로 리뷰 없어도 75점 출력. <strong>수정:</strong> 리뷰 0건 시 rating 기여 0. 기본점수 60→40. 마이페이지 통계에서 review_count=0이면 숫자 대신 '-' 표시.</div>
+        <div class="diff">
+<span class="diff-del">- const rating = parseFloat(w?.rating) || 3.0;</span>
+<span class="diff-add">+ const rating = reviews > 0 ? (parseFloat(w?.rating) || 0) : 0;</span>
+<span class="diff-del">- const score = Math.round(60 + ...);</span>
+<span class="diff-add">+ const score = Math.round(40 + ...);</span>
         </div>
       </div>
-      <div class="card-body">
-        후기가 없어도 rating 기본값을 3.0으로 설정해 신규 유저가 75점을 받는 버그. 후기 0건이면 rating 기여 0으로 처리하고 기본점수를 60→40으로 낮춤.
-        <div class="code"><span class="diff-before">// 이전: 후기 없으면 3.0 기본 → 60 + 15 = 75점
-const rating = parseFloat(w?.rating) || 3.0;
-score = 60 + (rating/5)*25 + reviews*0.5 - noshow*7</span>
-
-<span class="diff-after">// 수정: 후기 없으면 rating 기여 0
-const rating = reviews > 0 ? (parseFloat(w?.rating) || 0) : 0;
-score = 40 + (rating/5)*35 + reviews*1.5 - noshow*8</span></div>
-        <ul class="flow-list">
-          <li><div class="flow-num">→</div><div>신규 유저: 75점 → <strong>40점</strong></div></li>
-          <li><div class="flow-num">→</div><div>5.0점 · 6회: 40+35+9 = <strong>84점</strong></div></li>
-          <li><div class="flow-num">→</div><div>노쇼 1건: -8점 패널티</div></li>
-        </ul>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">급여수령확인 무한 스피너 수정</div>
+        <div class="card-desc">재호출 시 spinner 리셋 누락 수정. Promise.race로 8초 타임아웃 추가. status 필터에서 미사용 'done' 제거.</div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon orange">⏳</div>
-        <div>
-          <div class="card-title">급여수령확인 무한 스피너 수정</div>
-          <div class="card-sub"><span class="tag bug">BUG</span><span class="tag fix">FIX</span> loadWageHistory 타임아웃 + 재진입 초기화</div>
-        </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">외국인허브 전환 타이밍 (200ms→320ms)</div>
+        <div class="card-desc">CSS 전환(280ms)보다 짧은 setTimeout(200ms)으로 패널이 겹치던 버그. 320ms로 연장.</div>
       </div>
-      <div class="card-body">
-        패널 재열기 시 스피너가 초기화되지 않고, DB 쿼리가 무한 대기하는 문제 수정.
-        <ul class="flow-list">
-          <li><div class="flow-num">1</div><div>패널 열 때마다 <code>wage-history-list</code>를 spinner로 초기화</div></li>
-          <li><div class="flow-num">2</div><div><code>_getWorkerId()</code>에 8초 타임아웃 (Promise.race)</div></li>
-          <li><div class="flow-num">3</div><div>status 조건에서 'done' 제거 (미사용 상태값)</div></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon blue">🌏</div>
-        <div>
-          <div class="card-title">외국인 허브 → 하위 패널 전환 타이밍 수정</div>
-          <div class="card-sub"><span class="tag fix">FIX</span> setTimeout 200ms → 320ms</div>
-        </div>
-      </div>
-      <div class="card-body">
-        mpsub 트랜지션이 280ms인데 200ms 딜레이로 패널을 전환해 겹치는 문제. 320ms로 수정해 이전 패널이 완전히 닫힌 후 새 패널이 열립니다.
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">바로만남 패널 Android 뒤로가기 미작동</div>
+        <div class="card-desc">popstate 핸들러에서 mannnam-panel 누락. 이번 릴리즈에서 수정 완료.</div>
       </div>
     </div>
   </div>
 
-  <!-- UX 개선 -->
+  <!-- ④ 신규 기능 -->
   <div class="section">
-    <div class="section-title">UX 개선 (v360)</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon green">💴</div>
-        <div>
-          <div class="card-title">급여수령확인 — 일반 워커 메뉴로 이전</div>
-          <div class="card-sub"><span class="tag ux">UX</span> 외국인 전용 → 전체 워커 접근 가능</div>
-        </div>
+    <div class="section-label">New Features</div>
+    <div class="section-title">✨ 신규 기능</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span><span class="badge badge-api">API</span></div>
+        <div class="card-title">신규 가입자 환영 이메일 자동 발송</div>
+        <div class="card-desc">가입 5분 이내 세션 감지 시 Resend API로 환영 이메일 발송. localStorage 플래그로 1회 발송 보장. <code>POST /api/welcome-email</code> Vercel Function 신규 생성.</div>
       </div>
-      <div class="card-body">
-        기존에 외국인 전용 메뉴 안에만 있던 급여수령확인을 마이페이지 → 수입현황 바로 아래로 이동. 모든 워커가 완료된 근무의 급여를 직접 확인·신고할 수 있습니다.
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">브라우저 전용 "앱 설치" 헤더 버튼</div>
+        <div class="card-desc">PWA/네이티브 앱 모드에서 자동 숨김. 브라우저에서만 헤더 우측 pulse-ring 버튼 노출. Android: beforeinstallprompt 연동. iOS: 홈 화면 추가 토스트 안내.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">급여수령확인 — 일반 마이페이지 메뉴로 이전</div>
+        <div class="card-desc">외국인 허브 전용에서 마이페이지 수입현황 아래로 이전. 모든 알바생 접근 가능.</div>
       </div>
     </div>
   </div>
 
-  <!-- 신규 기능 -->
+  <!-- ⑤ 네팔어 -->
   <div class="section">
-    <div class="section-title">신규 기능 (v361)</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon green">📧</div>
-        <div>
-          <div class="card-title">신규 가입 환영 이메일 자동 발송</div>
-          <div class="card-sub"><span class="tag new">NEW</span><span class="tag api">API</span> api/welcome-email.js · Resend</div>
+    <div class="section-label">Localization</div>
+    <div class="section-title">🇳🇵 네팔어(Nepali) 지원 추가</div>
+    <div class="section-desc">한국 내 네팔 출신 E-9 근로자 증가에 대응. 8번째 지원 언어 추가. 네팔어(नेपाली)와 힌디어(हिन्दी)는 다른 언어로, 네팔 전용 번역 완성.</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">네팔어 전체 UI 번역 완성</div>
+        <div class="card-desc">shared-lang.js에 np 엔트리 추가. TRANSLATIONS(100+ 키), WORK_TYPE_LABELS, VEHICLE_LABELS, STRENGTH_LABELS 모두 번역.</div>
+        <div class="lang-chips">
+          <span class="lang-chip">🇰🇷 한국어</span>
+          <span class="lang-chip">🇺🇸 English</span>
+          <span class="lang-chip">🇨🇳 中文</span>
+          <span class="lang-chip">🇯🇵 日本語</span>
+          <span class="lang-chip">🇻🇳 Tiếng Việt</span>
+          <span class="lang-chip">🇷🇺 Русский</span>
+          <span class="lang-chip">🇲🇳 Монгол</span>
+          <span class="lang-chip new">🇳🇵 नेपाली (신규)</span>
         </div>
       </div>
-      <div class="card-body">
-        카카오/네이버 OAuth 가입 완료 후 5분 이내 첫 세션에서 환영 이메일을 자동 발송합니다.
-        <ul class="flow-list">
-          <li><div class="flow-num">1</div><div>세션 초기화 시 <code>created_at</code>과 현재 시각 비교 (5분 기준)</div></li>
-          <li><div class="flow-num">2</div><div><code>welcome_sent_{userId}</code> localStorage 플래그로 중복 방지</div></li>
-          <li><div class="flow-num">3</div><div>Vercel Function <code>/api/welcome-email</code> → Resend API 호출</div></li>
-          <li><div class="flow-num">4</div><div>발송 실패 시 앱 동작에 영향 없음 (silent catch)</div></li>
-        </ul>
-        <div class="code">// 이메일 내용
-From: baroalba@multimove.co.kr
-To: 가입자 이메일
-Subject: [바로알바] 가입을 환영합니다, {name}님! 🎉
-내용: 브랜드 헤더 + 주요 기능 3가지 + CTA 버튼 + 푸터</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon red">📲</div>
-        <div>
-          <div class="card-title">브라우저 접속 시 앱 설치 유도 버튼</div>
-          <div class="card-sub"><span class="tag new">NEW</span><span class="tag ux">UX</span> 헤더 우측 · pulse-ring 애니메이션</div>
-        </div>
-      </div>
-      <div class="card-body">
-        브라우저로 접속한 경우 헤더 우측에 "앱 설치" 버튼이 pulse-ring 애니메이션과 함께 표시됩니다.
-        <ul class="flow-list">
-          <li><div class="flow-num">•</div><div>PWA standalone 모드 또는 Android 네이티브 앱: <strong>자동 숨김</strong></div></li>
-          <li><div class="flow-num">•</div><div>Android Chrome: beforeinstallprompt 연동 → 설치 프롬프트</div></li>
-          <li><div class="flow-num">•</div><div>iOS Safari: "공유 → 홈 화면에 추가" 안내 토스트</div></li>
-          <li><div class="flow-num">•</div><div>앱 설치 완료 시 버튼 자동 숨김</div></li>
-        </ul>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">국적 드롭다운 + 국기 맵 + 외국인 필터 업데이트</div>
+        <div class="card-desc">워커 프로필 국적 선택에 🇳🇵 네팔(NP) 추가. _NAT/_NAT_FLAG 맵에 NP 추가. 외국인 언어 필터에 "네팔어 우대" 버튼 추가.</div>
       </div>
     </div>
   </div>
 
-</main>
-<footer>바로알바 by MultiMOVE · 2026.07.06</footer>
+  <!-- ⑥ 인프라 -->
+  <div class="section">
+    <div class="section-label">Infrastructure</div>
+    <div class="section-title">⚙️ 인프라</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-infra">INFRA</span></div>
+        <div class="card-title">SW v362 · _APP_V 362 동기화</div>
+        <div class="card-desc">sw.js CACHE 키 baroalba-v362 업데이트. HTML _APP_V도 362로 동기화. 기존 캐시 자동 제거.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ 잔존 이슈 -->
+  <div class="section">
+    <div class="section-label">Known Issues</div>
+    <div class="section-title">⚠️ 잔존 이슈 / DDL 미실행</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">MONITOR</span></div>
+        <div class="card-title">loadWageHistory 병렬 호출 경쟁 조건</div>
+        <div class="card-desc">패널을 빠르게 열었다 닫았다 반복 시 두 호출이 경쟁. 발생빈도 낮음. 추후 AbortController 적용 고려.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">CHECK</span></div>
+        <div class="card-title">iOS Chrome 앱 설치 버튼 노출 오판 가능성</div>
+        <div class="card-desc">Chrome iOS는 standalone 감지 불가. 항상 "앱 설치" 버튼이 노출될 수 있음. 실기기 확인 필요.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">DDL 미실행</span></div>
+        <div class="card-title">review_reply / worker_review_reply / point_charge_requests</div>
+        <div class="card-desc">양방향 답글 및 현금 포인트 충전을 위한 DB 테이블 DDL 미실행. 프론트 코드는 완성.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>바로알바 by MultiMOVE · 릴리즈 노트 · 2026.07.06</footer>
 </body>
 </html>

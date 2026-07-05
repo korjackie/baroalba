@@ -5159,6 +5159,13 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 6-1. 바로만남 패널
+  const mannnamEl = document.getElementById('mannnam-panel');
+  if (mannnamEl && mannnamEl.style.display === 'block') {
+    closeMannnamPanel();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 7. 공고 등록/수정 폼 오버레이 (.open)
   const formEl = document.getElementById('form-overlay');
   if (formEl && formEl.classList.contains('open')) {
@@ -5212,7 +5219,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '345';
+  const _APP_V = '362';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {

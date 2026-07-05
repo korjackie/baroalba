@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>바로알바 — 개발 타임라인 (2026.07.06)</title>
 <style>
-  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--orange:#f59e0b;--orange-light:#fffbeb;--purple:#7c3aed;--purple-light:#f3e8ff;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-300:#ccc;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.12)}
+  :root{--red:#C8102E;--green:#16a34a;--blue:#3b82f6;--orange:#f59e0b;--purple:#7c3aed;--pink:#f43f5e;--gray-100:#f8f9fa;--gray-200:#eee;--gray-500:#888;--gray-900:#111;--white:#fff;--radius:16px;--shadow:0 2px 12px rgba(0,0,0,0.06)}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
   nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
@@ -27,38 +27,42 @@
   .section-desc{font-size:14px;color:var(--gray-500);margin-bottom:36px}
   .timeline-wrapper{position:relative}
   .timeline-wrapper::before{content:'';position:absolute;left:130px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red),rgba(200,16,46,0.1))}
-  .tl-group{margin-bottom:40px}
-  .tl-date-header{display:flex;align-items:center;margin-bottom:16px}
+  .tl-group{margin-bottom:44px}
+  .tl-date-header{display:flex;align-items:center;margin-bottom:18px}
   .tl-date-label{width:120px;font-size:11px;font-weight:800;color:var(--gray-500);text-align:right;padding-right:18px;flex-shrink:0;letter-spacing:0.5px}
   .tl-date-dot{width:14px;height:14px;border-radius:50%;background:var(--red);border:3px solid var(--gray-100);flex-shrink:0;margin-left:-8px;position:relative;z-index:1}
-  .tl-date-dot.today{background:var(--green);box-shadow:0 0 0 4px rgba(22,163,74,0.2)}
+  .tl-date-dot.today{background:var(--green);box-shadow:0 0 0 5px rgba(22,163,74,0.2)}
+  .tl-date-dot.pink{background:var(--pink);box-shadow:0 0 0 4px rgba(244,63,94,0.2)}
   .tl-date-text{font-size:14px;font-weight:800;color:var(--gray-900);margin-left:14px}
   .tl-items{padding-left:148px;display:flex;flex-direction:column;gap:10px}
-  .tl-item{background:var(--white);border-radius:var(--radius);padding:18px 22px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid var(--gray-200);border-left:4px solid var(--gray-300)}
+  .tl-item{background:var(--white);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200)}
   .tl-item.bug{border-left-color:#ef4444}
   .tl-item.feat{border-left-color:var(--green)}
   .tl-item.ux{border-left-color:var(--blue)}
   .tl-item.fix{border-left-color:var(--orange)}
   .tl-item.infra{border-left-color:var(--purple)}
-  .tl-item.today-item{background:linear-gradient(135deg,#0a2a0a,#1a3a0a);border:1.5px solid rgba(22,163,74,0.5);border-left:4px solid var(--green)}
+  .tl-item.dawn-item{background:linear-gradient(135deg,#1a001a,#2a0010);border:1.5px solid rgba(244,63,94,0.4);border-left:4px solid var(--pink)}
+  .tl-item.today-item{background:linear-gradient(135deg,#0a2a0a,#1a3a0a);border:1.5px solid rgba(22,163,74,0.4);border-left:4px solid var(--green)}
   .tl-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
-  .v-chip{font-size:11px;font-weight:900;background:var(--gray-100);color:var(--gray-700);padding:2px 10px;border-radius:100px;font-family:'SF Mono',monospace}
-  .tl-item.today-item .v-chip{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8)}
+  .v-chip{font-size:11px;font-weight:900;background:var(--gray-100);color:#666;padding:2px 10px;border-radius:100px;font-family:'SF Mono',monospace}
+  .tl-item.dawn-item .v-chip,.tl-item.today-item .v-chip{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8)}
   .type-chip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:100px}
   .type-chip.bug{background:#fee2e2;color:#991b1b}
   .type-chip.feat{background:#dcfce7;color:#14532d}
   .type-chip.ux{background:#dbeafe;color:#1e3a8a}
   .type-chip.fix{background:#fef9c3;color:#713f12}
   .type-chip.infra{background:#ede9fe;color:#4c1d95}
+  .type-chip.new{background:linear-gradient(90deg,#f43f5e,#a855f7);color:#fff}
   .type-chip.api{background:#fffbeb;color:#92400e}
   .tl-title{font-size:15px;font-weight:900;margin-bottom:4px;color:var(--gray-900)}
-  .tl-item.today-item .tl-title{color:#fff}
+  .tl-item.dawn-item .tl-title,.tl-item.today-item .tl-title{color:#fff}
   .tl-desc{font-size:12px;color:var(--gray-500);line-height:1.6}
-  .tl-item.today-item .tl-desc{color:rgba(255,255,255,0.6)}
+  .tl-item.dawn-item .tl-desc,.tl-item.today-item .tl-desc{color:rgba(255,255,255,0.6)}
   .today-badge{display:inline-block;background:var(--green);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:100px;letter-spacing:1px}
+  .dawn-badge{display:inline-block;background:var(--pink);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:100px;letter-spacing:1px}
   .pending-section{margin-top:56px}
   .pending-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:20px}
-  .pending-card{background:var(--white);border-radius:var(--radius);padding:20px;border:1px solid var(--gray-200);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+  .pending-card{background:var(--white);border-radius:var(--radius);padding:20px;border:1px solid var(--gray-200);box-shadow:var(--shadow)}
   .pending-prio{display:inline-block;font-size:11px;font-weight:900;padding:3px 10px;border-radius:100px;margin-bottom:12px}
   .prio-high{background:#fee2e2;color:#991b1b}
   .prio-mid{background:#ffedd5;color:#9a3412}
@@ -79,11 +83,11 @@
 <div class="hero">
   <div class="hero-tag">DEV TIMELINE</div>
   <h1>바로알바 <span>개발 타임라인</span></h1>
-  <p class="hero-desc">2026년 상반기 ~ 2026년 7월 개발 이력 통합본</p>
+  <p class="hero-desc">2026년 상반기 ~ 7월 6일 개발 이력 통합본</p>
   <div class="hero-stats">
-    <div class="stat-item"><div class="stat-num">361</div><div class="stat-label">SW 최신 버전</div></div>
+    <div class="stat-item"><div class="stat-num">362</div><div class="stat-label">SW 최신 버전</div></div>
     <div class="stat-item"><div class="stat-num">9</div><div class="stat-label">Vercel API 엔드포인트</div></div>
-    <div class="stat-item"><div class="stat-num">1.5.0</div><div class="stat-label">Android 버전</div></div>
+    <div class="stat-item"><div class="stat-num">8</div><div class="stat-label">지원 언어</div></div>
     <div class="stat-item"><div class="stat-num">13+</div><div class="stat-label">Supabase 테이블</div></div>
   </div>
 </div>
@@ -91,125 +95,155 @@
 <div class="container">
   <div class="section-label">Timeline</div>
   <div class="section-title">개발 이력</div>
-  <div class="section-desc">최신 순으로 정렬. 오늘 작업은 초록색으로 표시됩니다.</div>
+  <div class="section-desc">최신 순. 새벽(바로만남 론칭)은 분홍색, 낮 작업은 초록색.</div>
 
   <div class="timeline-wrapper">
 
-    <!-- 2026.07.06 -->
+    <!-- 7/6 새벽 — 바로만남 -->
     <div class="tl-group">
       <div class="tl-date-header">
-        <div class="tl-date-label">2026.07.06</div>
-        <div class="tl-date-dot today"></div>
-        <div class="tl-date-text">오늘 <span class="today-badge">TODAY</span></div>
+        <div class="tl-date-label">07.06 새벽</div>
+        <div class="tl-date-dot pink"></div>
+        <div class="tl-date-text">💫 바로만남 서비스 론칭 <span class="dawn-badge">NEW</span></div>
       </div>
       <div class="tl-items">
+        <div class="tl-item dawn-item">
+          <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip new">NEW SERVICE</span></div>
+          <div class="tl-title">바로만남 풀스크린 패널 — 바로스팟 + 바로점심</div>
+          <div class="tl-desc">홈 핑크 배너 → 풀스크린 패널. 📍바로스팟(GPS 매칭·500P) + 🍱바로점심(4:4 소셜 점심·2,000P). 포인트 충전 연동.</div>
+        </div>
+        <div class="tl-item dawn-item">
+          <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip feat">FEAT</span></div>
+          <div class="tl-title">홈화면 바로만남 배너 + Supabase 동적 광고 배너 슬롯</div>
+          <div class="tl-desc">pink/rose 그라디언트 바로만남 카드 고정. banners 테이블 연동 동적 광고 슬롯(link_type: mannnam/moim/외부URL).</div>
+        </div>
+        <div class="tl-item dawn-item bug">
+          <div class="tl-header"><span class="v-chip">v362</span><span class="type-chip bug">BUG FIX</span></div>
+          <div class="tl-title">바로만남 패널 Android 뒤로가기 미작동 수정</div>
+          <div class="tl-desc">popstate 핸들러에 mannnam-panel 누락 발견·수정. 뒤로가기 시 정상 닫힘.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7/6 낮 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.06 낮</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">애니메이션·버그·네팔어 <span class="today-badge">TODAY</span></div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item feat">
+          <div class="tl-header"><span class="v-chip">v362</span><span class="type-chip feat">FEAT</span></div>
+          <div class="tl-title">🇳🇵 네팔어(नेपाली) 전체 UI 지원</div>
+          <div class="tl-desc">shared-lang.js np 엔트리 전체 번역(100+ 키). 국적 드롭다운 NP, 외국인 필터 네팔어 우대, _NAT 국기 맵. 총 8개 언어.</div>
+        </div>
         <div class="tl-item today-item feat">
           <div class="tl-header"><span class="v-chip">v361</span><span class="type-chip feat">FEAT</span><span class="type-chip api">API</span></div>
           <div class="tl-title">신규 가입자 환영 이메일 자동 발송</div>
-          <div class="tl-desc">api/welcome-email.js 신규 생성. 가입 5분 이내 세션 감지 + localStorage 플래그로 1회 발송. Resend API.</div>
+          <div class="tl-desc">api/welcome-email.js 신규 생성. 가입 5분 이내 감지, localStorage 플래그 1회 발송. Resend API.</div>
         </div>
         <div class="tl-item today-item ux">
           <div class="tl-header"><span class="v-chip">v361</span><span class="type-chip ux">UX</span></div>
-          <div class="tl-title">브라우저 접속 시 "앱 설치" 버튼 (pulse-ring)</div>
-          <div class="tl-desc">헤더 우측에 pulse-ring 애니메이션 버튼 추가. PWA/네이티브 앱에서는 자동 숨김. Android 설치 프롬프트 또는 iOS 토스트 안내.</div>
+          <div class="tl-title">브라우저 전용 "앱 설치" 헤더 버튼 (pulse-ring)</div>
+          <div class="tl-desc">PWA/네이티브 앱 자동 숨김. Android beforeinstallprompt 연동. iOS 홈 화면 추가 토스트.</div>
         </div>
         <div class="tl-item today-item feat">
           <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip feat">FEAT</span><span class="type-chip ux">UX</span></div>
-          <div class="tl-title">애니메이션 시스템 (antigravity 이식)</div>
-          <div class="tl-desc">pulse-ring(CTA 버튼), card hover lift(공고·모임 카드), input focus 레드 링, marker-bounce/wave 유틸리티 클래스 추가.</div>
-        </div>
-        <div class="tl-item today-item bug">
-          <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip bug">BUG</span><span class="type-chip fix">FIX</span></div>
-          <div class="tl-title">신뢰점수 신규 유저 75점 인플레이션 수정</div>
-          <div class="tl-desc">calcBakalbaScore에서 rating || 3.0 기본값 제거. 후기 없으면 rating 기여 0. 기본점수 60→40으로 조정. 신규 유저 75점→40점.</div>
+          <div class="tl-title">애니메이션 시스템 이식 (pulse-ring · card hover · input focus)</div>
+          <div class="tl-desc">pulse-ring CTA, job/moim-card hover lift, input 레드 포커스링, marker-bounce/wave 유틸 클래스.</div>
         </div>
         <div class="tl-item today-item bug">
           <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip bug">BUG</span></div>
-          <div class="tl-title">급여수령확인 무한 스피너 수정</div>
-          <div class="tl-desc">loadWageHistory()에 8초 타임아웃(Promise.race) + 재열기 시 spinner 초기화. 외국인허브 전환 딜레이 200ms→320ms.</div>
+          <div class="tl-title">신뢰점수 인플레이션 수정 (리뷰 없으면 '-')</div>
+          <div class="tl-desc">rating || 3.0 제거. 리뷰 0건이면 rating 기여 없음. 기본점수 60→40. stat 패널 review_count=0 시 '-'.</div>
         </div>
-        <div class="tl-item today-item ux">
-          <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip ux">UX</span></div>
-          <div class="tl-title">급여수령확인 — 일반 워커 메뉴로 이전</div>
-          <div class="tl-desc">외국인 전용 메뉴에서 마이페이지 수입현황 바로 아래로 이동. 모든 워커 접근 가능.</div>
+        <div class="tl-item today-item bug">
+          <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip bug">BUG</span></div>
+          <div class="tl-title">급여수령확인 스피너 수정 + 메뉴 이전</div>
+          <div class="tl-desc">8초 타임아웃 + 재열기 spinner 리셋. 외국인 허브→마이페이지 수입현황 아래 이전.</div>
+        </div>
+        <div class="tl-item today-item fix">
+          <div class="tl-header"><span class="v-chip">v360</span><span class="type-chip fix">FIX</span></div>
+          <div class="tl-title">외국인허브 패널 전환 딜레이 200ms → 320ms</div>
+          <div class="tl-desc">CSS 전환(280ms)보다 짧은 setTimeout으로 패널 겹침 → 320ms로 수정.</div>
         </div>
       </div>
     </div>
 
-    <!-- 2026.07.02 -->
+    <!-- 6/29~30 -->
     <div class="tl-group">
       <div class="tl-date-header">
-        <div class="tl-date-label">2026.07.02</div>
+        <div class="tl-date-label">06.29~30</div>
         <div class="tl-date-dot"></div>
-        <div class="tl-date-text">레슨·모임 UX + Google Play 정식 출시</div>
+        <div class="tl-date-text">포인트 충전 시스템</div>
       </div>
       <div class="tl-items">
-        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v328~332</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">Google Play Store 정식 출시 (Android v1.5.0)</div><div class="tl-desc">모임채팅 FAB · 레슨채팅 DDL · 뒤로가기 버그 · 외국인환영 드래그 · 숏컷 3종 인플레이스 필터 통일</div></div>
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v359</span><span class="type-chip feat">FEAT</span><span class="type-chip api">API</span></div><div class="tl-title">포인트 충전 시스템 (Toss Payments + 현금입금)</div><div class="tl-desc">3단계 모달(결제수단→금액→계좌), api/toss-points.js, 5천원→56000P 런칭 이벤트, 1만원당 1천P 보너스.</div></div>
       </div>
     </div>
 
-    <!-- 2026.06.29~30 -->
+    <!-- 7/2 -->
     <div class="tl-group">
       <div class="tl-date-header">
-        <div class="tl-date-label">2026.06.29~30</div>
+        <div class="tl-date-label">07.02</div>
         <div class="tl-date-dot"></div>
-        <div class="tl-date-text">포인트 시스템 + 바로만남 배너</div>
+        <div class="tl-date-text">Google Play 정식 출시 (Android v1.5.0)</div>
       </div>
       <div class="tl-items">
-        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v359</span><span class="type-chip feat">FEAT</span><span class="type-chip api">API</span></div><div class="tl-title">포인트 충전 시스템 (Toss Payments + 현금입금)</div><div class="tl-desc">3단계 모달(결제수단→금액→계좌), api/toss-points.js, 5천원→56000P 런칭 이벤트, 1만원당 1천P 보너스</div></div>
-        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v359</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">홈화면 바로만남 배너 + 광고 배너 슬롯</div><div class="tl-desc">pink/rose 그라디언트 바로만남 카드, Supabase banners 테이블 연동 광고 배너</div></div>
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v328~332</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">Google Play Store 정식 출시</div><div class="tl-desc">모임채팅 FAB · 레슨채팅 DDL · 뒤로가기 버그 · 외국인환영 드래그 · 숏컷 3종 인플레이스 필터 통일.</div></div>
       </div>
     </div>
 
-    <!-- 2026.06.17 이전 -->
+    <!-- 6/17~ -->
     <div class="tl-group">
       <div class="tl-date-header">
-        <div class="tl-date-label">2026.06.17~</div>
+        <div class="tl-date-label">06.17~</div>
         <div class="tl-date-dot"></div>
-        <div class="tl-date-text">양방향 리뷰·답글 + 관리자 개선</div>
+        <div class="tl-date-text">양방향 리뷰·답글 시스템</div>
       </div>
       <div class="tl-items">
-        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v273~320</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">양방향 평가 + 양방향 답글 시스템 완성</div><div class="tl-desc">알바생→업체, 업체→알바생 평가. 양쪽 답글(review_reply, worker_review_reply). DDL 미실행 상태.</div></div>
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v273~320</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">양방향 평가 + 양방향 답글</div><div class="tl-desc">알바생↔업체 상호 평가, 양쪽 답글(review_reply, worker_review_reply). DDL 미실행.</div></div>
         <div class="tl-item bug"><div class="tl-header"><span class="v-chip">v2xx</span><span class="type-chip bug">BUG</span></div><div class="tl-title">관리자 데이터 미노출, 인라인 답장 실패 수정</div><div class="tl-desc">ADMIN_EMAILS 하드코딩→app_admins 테이블 쿼리. TOKEN_REFRESHED 이벤트 SW SET_AUTH 전달.</div></div>
       </div>
     </div>
 
   </div>
 
-  <!-- 미결 DDL -->
+  <!-- 미결 작업 -->
   <div class="pending-section">
     <div class="section-label">Pending</div>
-    <div class="section-title">미실행 DDL · 미결 작업</div>
+    <div class="section-title">미실행 DDL · 예정 작업</div>
     <div class="pending-grid">
       <div class="pending-card">
         <div class="pending-prio prio-ddl">DDL 미실행</div>
         <div class="pending-title">review_reply 테이블</div>
-        <div class="pending-desc">업체 → 알바생 후기에 대한 업체 답글 저장용. 양방향 답글 완전 구현을 위해 필요.</div>
+        <div class="pending-desc">업체 → 알바생 후기 답글. Supabase 테이블 생성 필요.</div>
       </div>
       <div class="pending-card">
         <div class="pending-prio prio-ddl">DDL 미실행</div>
         <div class="pending-title">worker_review_reply 테이블</div>
-        <div class="pending-desc">알바생 → 업체 후기에 대한 알바생 답글 저장용.</div>
+        <div class="pending-desc">알바생 → 업체 후기 답글 저장용.</div>
       </div>
       <div class="pending-card">
         <div class="pending-prio prio-ddl">DDL 미실행</div>
         <div class="pending-title">point_charge_requests 테이블</div>
-        <div class="pending-desc">현금 입금 포인트 충전 요청 관리. status: pending/approved/rejected.</div>
+        <div class="pending-desc">현금 입금 포인트 충전 요청 관리.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-high">HIGH</div>
+        <div class="pending-title">포인트 현금입금 관리자 승인 패널</div>
+        <div class="pending-desc">관리자가 수동으로 포인트 지급하는 UI. DDL 실행 후 구현.</div>
       </div>
       <div class="pending-card">
         <div class="pending-prio prio-mid">MEDIUM</div>
         <div class="pending-title">바로만남 추가 프로필 플로우</div>
-        <div class="pending-desc">바로만남 서비스 이용 시 사진, 한줄소개, 나이 공개 여부 추가 입력 유도. 미구현.</div>
-      </div>
-      <div class="pending-card">
-        <div class="pending-prio prio-mid">MEDIUM</div>
-        <div class="pending-title">포인트 현금입금 관리자 승인 패널</div>
-        <div class="pending-desc">관리자가 point_charge_requests 목록을 확인하고 수동으로 포인트를 지급하는 UI.</div>
+        <div class="pending-desc">바로만남 이용 시 사진·한줄소개·나이공개 여부 추가 입력. 미구현.</div>
       </div>
       <div class="pending-card">
         <div class="pending-prio prio-low">LOW</div>
         <div class="pending-title">홈화면 바로만남 모임 카드 리스트</div>
-        <div class="pending-desc">mannnam_gatherings DB 테이블 신설 후 홈화면에 카드 형태로 조회. DB 설계 선행 필요.</div>
+        <div class="pending-desc">mannnam_gatherings 테이블 설계 후 홈화면 카드 표시.</div>
       </div>
     </div>
   </div>
