@@ -460,12 +460,29 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('admin-email').textContent = authEmail;
   loadDashboard();
 
-  // 입력창 포커스 시 키보드에 가려지지 않도록 스크롤
-  document.addEventListener('focusin', e => {
-    if (e.target.matches('input, textarea, select')) {
-      setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 320);
-    }
-  });
+  // 키보드 가림 방지: visualViewport로 패널 높이를 실시간 조정
+  if (window.visualViewport) {
+    let _vpTimer;
+    const _adjustPanels = () => {
+      clearTimeout(_vpTimer);
+      _vpTimer = setTimeout(() => {
+        const kbH = window.innerHeight - window.visualViewport.height;
+        document.querySelectorAll('.detail-overlay.show .detail-panel').forEach(panel => {
+          if (kbH > 100) {
+            panel.style.maxHeight = (window.visualViewport.height - 16) + 'px';
+            const f = document.activeElement;
+            if (f && f.matches('input, textarea')) {
+              f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else {
+            panel.style.maxHeight = '';
+          }
+        });
+      }, 60);
+    };
+    window.visualViewport.addEventListener('resize', _adjustPanels);
+    window.visualViewport.addEventListener('scroll', _adjustPanels);
+  }
 });
 
 // ── 탭 전환 ─────────────────────────────────────────────
