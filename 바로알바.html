@@ -5246,14 +5246,19 @@ window.addEventListener('DOMContentLoaded', async () => {
   } else if (tabParam === 'profile') {
     if (_navItems[4]) setNav(_navItems[4], 'profile');
   } else {
-    // 기본 진입: 지도 먼저 표시 (데이터 로드 전 빈 홈 방지)
-    if (_navItems[1]) setNav(_navItems[1], 'map');
+    // 기본 진입: 홈으로 바로 표시 (지도 깜빡임 제거)
+    if (_navItems[0]) setNav(_navItems[0], 'home');
   }
 
   await loadJobs();
-  // loadJobs 완료 후 홈으로 전환 + 타일 렌더링
+  // loadJobs 완료 후 홈 job 섹션 갱신 (저장 위치 기반 초기 조회 결과 반영)
   if (!tabParam || tabParam === 'home') {
-    if (_navItems[0]) setNav(_navItems[0], 'home');
+    const _hp = document.getElementById('panel-home');
+    if (_hp?.classList.contains('show')) {
+      clearTimeout(_homeJobRetryTimer);
+      _renderHomeUrgent(); _renderHomeAI(); _renderHomeSameDay();
+      _renderHomeRecent(); _renderHomeForeigner();
+    }
   }
 
 
@@ -6871,19 +6876,31 @@ function loadHomePanel() {
   // 바로모임 미리보기
   loadMoimList('').catch(() => {});
 
-  // 공고가 없으면 2초 후 GPS 확보 시점에 재조회 (위치 미확보 대응)
+  // 공고가 없으면 GPS 확보 후 재조회 (홈 진입 시 watchPosition이 중단되므로 getCurrentPosition 사용)
   clearTimeout(_homeJobRetryTimer);
   if (!jobs || jobs.length === 0) {
-    _homeJobRetryTimer = setTimeout(async () => {
-      await loadJobs();
-      if (document.getElementById('panel-home')?.classList.contains('show')) {
-        _renderHomeUrgent();
-        _renderHomeAI();
-        _renderHomeSameDay();
-        _renderHomeRecent();
-        _renderHomeForeigner();
+    _homeJobRetryTimer = setTimeout(() => {
+      const _retryRender = () => {
+        if (document.getElementById('panel-home')?.classList.contains('show')) {
+          _renderHomeUrgent(); _renderHomeAI(); _renderHomeSameDay();
+          _renderHomeRecent(); _renderHomeForeigner();
+        }
+      };
+      const _retryLoad = () => loadJobs().then(_retryRender).catch(_retryRender);
+      if (navigator.geolocation && kakaoMap) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            saveMapCenter(pos.coords.latitude, pos.coords.longitude);
+            kakaoMap.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+            _retryLoad();
+          },
+          () => _retryLoad(),
+          { maximumAge: 5000, timeout: 5000, enableHighAccuracy: false }
+        );
+      } else {
+        _retryLoad();
       }
-    }, 2000);
+    }, 1500);
   }
 
   // 지도에 주변알바 플로팅 버튼 상태 복원 (지도 탭 진입 시 표시)
@@ -6970,14 +6987,21 @@ function _renderHomeAI() {
     const scored = (jobs||[]).filter(j=>j.status==='open'||j.status==='urgent')
       .map(j=>({job:j,score:_aiScoreJob(j,prefs)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
     if (!scored.length) {
-      section.innerHTML = `
-        <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div>
-        <div style="font-size:12px;color:#bbb;line-height:1.6">지금 주변에 맞춤<br>공고가 없어요</div>
-        <div style="margin-top:auto;padding-top:8px;font-size:10px;color:#e0e0e0;font-weight:700">🤖 계속 학습 중...</div>
-      `;
+      if (!jobs || jobs.length === 0) {
+        section.style.display = 'none'; // GPS 미확보 - 카드 숨김, 높은시급 카드가 전체 차지
+        if (hwSection) hwSection.style.gridColumn = '1 / -1';
+      } else {
+        section.style.display = 'flex';
+        section.innerHTML = `
+          <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div>
+          <div style="font-size:12px;color:#bbb;line-height:1.6">지금 주변에 맞춤<br>공고가 없어요</div>
+          <div style="margin-top:auto;padding-top:8px;font-size:10px;color:#e0e0e0;font-weight:700">🤖 계속 학습 중...</div>
+        `;
+      }
       section.onclick = null;
       return;
     }
+    if (hwSection) hwSection.style.gridColumn = '';
     const top = scored[0].job;
     section.innerHTML = `
       <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">AI PICKS</div>
@@ -7016,8 +7040,12 @@ function _renderHomeSameDay() {
     .filter(j => (j.status==='open'||j.status==='urgent') && j.current_wage > 0 && toHourly(j) !== null)
     .sort((a,b) => toHourly(b) - toHourly(a));
   if (!hwJobs.length) {
-    section.style.display = 'flex';
-    section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div><div style="font-size:12px;color:#ddd;margin-top:auto">공고 없음</div>`;
+    if (!jobs || jobs.length === 0) {
+      section.style.display = 'none'; // GPS 미확보 상태 - 카드 숨김
+    } else {
+      section.style.display = 'flex';
+      section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div><div style="font-size:12px;color:#ddd;margin-top:auto">공고 없음</div>`;
+    }
     return;
   }
   const top = hwJobs[0];
@@ -20585,7 +20613,7 @@ function renderStaffPanel() {
     const job = a.job_postings || {};
     const wage = (job.current_wage || 0) * (job.duration_hours || 0);
     const visaBadge = w.visa_doc_url ? '<span class="staff-visa-badge">✅ 비자인증</span>' : (w.visa_type && w.visa_type !== 'KR' ? `<span class="staff-visa-badge" style="background:#FFF7ED;color:#c2410c">${w.visa_type}</span>` : '');
-    const startStr  = job.start_time ? new Date(job.start_time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+    const startStr  = job.start_time ? new Date(job.start_time).toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
     const sStyle    = STATUS_CLS[a.status] || '';
     const isPaid    = a.wage_paid;
     const wageStr   = wage ? wage.toLocaleString() + '원' : '-';

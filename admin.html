@@ -598,7 +598,7 @@ function reportCardHtml(r, compact) {
   const status = r.status || 'pending';
   const statusLabel = { pending:'대기', reviewing:'검토중', done:'조치완료', dismissed:'기각' };
   const typeLabel = r.target_type === 'job' ? '공고' : '사용자';
-  const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
+  const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
 
   const actions = compact ? '' : `
     <div class="report-actions">
@@ -649,7 +649,7 @@ async function loadPostings() {
   document.getElementById('postings-list').innerHTML = list.length
     ? list.map(p => {
         const isClosed = p.status === 'closed';
-        const date = p.start_time ? new Date(p.start_time).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+        const date = p.start_time ? new Date(p.start_time).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
         return `
           <div class="posting-row ${isClosed ? 'closed' : ''}" id="pr-${p.id}">
             <div class="posting-info">
@@ -696,7 +696,7 @@ function renderUsers() {
     ? _users.map(u => {
         const banned = u.is_banned;
         const noshow = u.noshow_count || 0;
-        const joinDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR', { year:'2-digit', month:'numeric', day:'numeric' }) : '-';
+        const joinDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR', { year:'numeric', month:'numeric', day:'numeric' }) : '-';
         return `
           <div class="user-row ${banned ? 'banned' : ''}" onclick="openUserDetail('${u.id}')">
             <div class="user-avatar ${banned ? 'banned' : ''}">${banned ? '🚫' : userInitial(u.name)}</div>
@@ -896,7 +896,7 @@ function renderMoims() {
   document.getElementById('moims-list').innerHTML = list.map(m => {
     const isClosed = m.status === 'closed';
     const dateStr = m.gathering_date
-      ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })
+      ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })
       : '-';
     const icon = catIcon[m.category] || '🤝';
     const spots = `${m.current_count || 0}/${m.max_count || '?'}명`;
