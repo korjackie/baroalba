@@ -8565,12 +8565,16 @@ async function openWorkerProfileDirect(appId) {
   let statusActions = '';
   if (app.status === 'pending') {
     statusActions = `
-      <button onclick="${close}updateApplication('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">🔍 검토</button>
-      <button onclick="${close}updateApplication('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 합격</button>
-      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
+      <button onclick="${close}updateApplication('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⭐ 1차합격</button>
+      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>`;
   } else if (app.status === 'reviewing') {
     statusActions = `
-      <button onclick="${close}updateApplication('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 합격</button>
+      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 최종합격</button>
+      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
+  } else if (app.status === 'on_hold') {
+    statusActions = `
+      <button onclick="${close}updateApplication('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">↩ 1차합격</button>
       <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
   } else if (app.status === 'accepted') {
     statusActions = `
@@ -14767,7 +14771,7 @@ function renderPostings() {
     const statusCls = p.status === 'urgent' ? 'urgent' : p.status === 'open' ? 'open' : 'closed';
     const start = p.start_time ? formatTime(p.start_time) : '미정';
     // 날짜 표시 헬퍼
-    const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
+    const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}(${['일','월','화','수','목','금','토'][d.getDay()]}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
     const fmtDay  = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}`; };
     const createdStr = p.created_at ? fmtDay(p.created_at) + ' 등록' : '';
     const workTimeStr = p.start_time ? fmtDate(p.start_time) : '';
@@ -14965,10 +14969,12 @@ function openPostingDetail(jobId) {
           <button onclick="toggleStatus('${p.id}','${p.status}')" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
         </div>
         <div style="display:flex;gap:8px">
-          ${isOpen ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚡ 서지</button>` : ''}
+          ${p.status === 'open' ? `<button onclick="setPostingUrgent('${p.id}',true)" style="flex:1;padding:10px;background:#FFF0F0;color:#C8102E;border:1.5px solid #FECACA;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">🔥 급구 설정</button>` : ''}
+          ${p.status === 'urgent' ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚡ 서지(시급↑)</button>` : ''}
           <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#FEE500;color:#3C1E1E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>공유</button>
           <button onclick="copyPosting('${p.id}')" style="flex:1;padding:10px;background:#F0F9FF;color:#0284C7;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>복사</button>
         </div>
+        ${p.status === 'urgent' ? `<button onclick="setPostingUrgent('${p.id}',false)" style="background:none;border:none;color:#aaa;font-size:12px;padding:4px;cursor:pointer;width:100%;text-align:center;font-weight:600">급구 해제 → 일반 모집으로 전환</button>` : ''}
         <button onclick="deletePosting('${p.id}')" style="background:none;border:none;color:#EF4444;font-size:13px;padding:6px;cursor:pointer;width:100%;text-align:center;font-weight:600">공고 삭제</button>
       </div>
     </div>`;
@@ -15091,13 +15097,14 @@ function deletePosting(jobId) {
 
 // ── 지원자 카드 공통 생성 함수 ──────────────────────────────
 const _STATUS_BADGE = {
-  pending:   { bg:'#FFF0F0', color:'#C8102E', label:'검토 전' },
-  reviewing: { bg:'#FFF0F0', color:'#C8102E', label:'검토중' },
-  accepted:  { bg:'#FFF0F0', color:'#C8102E', label:'연락중' },
+  pending:   { bg:'#F3F4F6', color:'#6B7280', label:'검토 전' },
+  reviewing: { bg:'#FFF7ED', color:'#D97706', label:'1차합격' },
+  on_hold:   { bg:'#EFF6FF', color:'#3B82F6', label:'보류' },
+  accepted:  { bg:'#D1FAE5', color:'#065F46', label:'✅ 최종합격' },
   rejected:  { bg:'#F5F5F5', color:'#888',    label:'탈락' },
   cancelled: { bg:'#F5F5F5', color:'#aaa',    label:'지원취소' },
-  completed: { bg:'#F5F5F5', color:'#555',    label:'근무완료' },
-  noshow:    { bg:'#F5F5F5', color:'#888',    label:'노쇼' },
+  completed: { bg:'#DBEAFE', color:'#1e40af', label:'🏁 근무완료' },
+  noshow:    { bg:'#FEE2E2', color:'#DC2626', label:'노쇼' },
 };
 
 function _adminBtn(table, id, field, value, label) {
@@ -15178,18 +15185,20 @@ function makeApplicantCardHtml(a, opts = {}) {
   // 액션 버튼 (상태별로 필요한 것만)
   let actions = `<button onclick="${sp}openChat('${a.id}','${name}')" class="ac-btn ac-chat">💬 채팅</button>`;
   if (a.status === 'pending') {
-    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">🔍 검토</button>`;
-    actions += `<button onclick="${sp}updateApplication('${a.id}','accepted')" class="ac-btn ac-pass">✓ 합격</button>`;
-    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">✗ 탈락</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-pass">⭐ 1차합격</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">📌 보류</button>`;
   } else if (a.status === 'reviewing') {
-    actions += `<button onclick="${sp}updateApplication('${a.id}','accepted')" class="ac-btn ac-pass">✓ 합격</button>`;
+    actions += `<button onclick="${sp}confirmAccept('${a.id}')" class="ac-btn ac-pass" style="background:#22c55e;color:#fff">✅ 최종합격</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">📌 보류</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">✗ 탈락</button>`;
+  } else if (a.status === 'on_hold') {
+    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">↩ 1차합격으로</button>`;
     actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">✗ 탈락</button>`;
   } else if (a.status === 'accepted') {
     actions += `<button onclick="${sp}showRatingModal('${a.id}','${wid}')" class="ac-btn ac-done">🏁 완료</button>`;
     actions += `<button onclick="${sp}markNoshow('${a.id}','${wid}')" class="ac-btn ac-fail">노쇼</button>`;
-    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">↩</button>`;
   } else if (a.status === 'rejected') {
-    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">↩ 재검토</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">↩ 보류로</button>`;
   } else if (a.status === 'completed') {
     const stars = a.worker_rating ? '⭐'.repeat(a.worker_rating) : '';
     if (stars) actions += `<span style="font-size:13px;letter-spacing:1px">${stars}</span>`;
@@ -16098,15 +16107,25 @@ function setWageType(type) {
   }
 }
 
-// ── 시급 서지 ─────────────────────────────────────────────
+// ── 시급 서지 (급구 상태에서만 사용) ──────────────────────
 async function surgeWage(jobId, currentWage) {
   const newWage = currentWage + 1000;
   const { error } = await db.from('job_postings')
-    .update({ current_wage: newWage, status: 'urgent' })
+    .update({ current_wage: newWage })
     .eq('id', jobId);
   if (error) { showToast('시급 인상 실패: ' + error.message); return; }
   showToast(`⚡ 시급 ${newWage.toLocaleString()}원으로 인상!`);
   loadPostings();
+}
+
+// ── 급구 상태 설정/해제 ───────────────────────────────────
+async function setPostingUrgent(jobId, makeUrgent) {
+  const newStatus = makeUrgent ? 'urgent' : 'open';
+  const { error } = await db.from('job_postings').update({ status: newStatus }).eq('id', jobId);
+  if (error) { showToast('상태 변경 실패: ' + error.message); return; }
+  showToast(makeUrgent ? '🔥 급구 설정됐습니다 — 홈 급구 섹션에 노출돼요' : '일반 모집으로 전환됐습니다');
+  loadPostings();
+  closePostingDetail();
 }
 
 // ── 시급 서지 자동 스케줄 ───────────────────────────────────
@@ -16170,9 +16189,9 @@ async function checkSurgeSchedules() {
   for (const [jobId, sched] of Object.entries(schedules)) {
     if (sched.triggerAt <= now) {
       const { data: p } = await db.from('job_postings').select('current_wage,status').eq('id', jobId).single();
-      if (p && (p.status === 'open' || p.status === 'urgent')) {
+      if (p && p.status === 'urgent') {
         const newWage = (p.current_wage || 0) + sched.amount;
-        await db.from('job_postings').update({ current_wage: newWage, status: 'urgent' }).eq('id', jobId);
+        await db.from('job_postings').update({ current_wage: newWage }).eq('id', jobId);
         showToast(`⚡ 예약된 시급 서지 실행! ${newWage.toLocaleString()}원`);
       }
       cancelSurgeSchedule(jobId);
@@ -16187,7 +16206,7 @@ async function checkSurgeIntervals() {
     .select('id, current_wage, base_wage, surge_max_wage, surge_amount, surge_interval_min, updated_at')
     .eq('surge_enabled', true)
     .eq('business_id', bizRecord.id)
-    .in('status', ['open', 'urgent']);
+    .eq('status', 'urgent');
   if (!surgePostings?.length) return;
   const now = Date.now();
   let anyUpdated = false;
@@ -16196,14 +16215,13 @@ async function checkSurgeIntervals() {
     const lastUpdate = new Date(p.updated_at).getTime();
     const elapsed = now - lastUpdate;
     if (elapsed < intervalMs) continue;
-    // 경과된 사이클 수 계산 → 한 번에 모두 적용
     const cyclesPassed = Math.floor(elapsed / intervalMs);
     const maxWage = p.surge_max_wage || 9999999;
     const currentWage = p.current_wage || p.base_wage || 0;
     const newWage = Math.min(currentWage + (p.surge_amount || 1000) * cyclesPassed, maxWage);
     if (newWage <= currentWage) continue;
     await db.from('job_postings')
-      .update({ current_wage: newWage, status: 'urgent', updated_at: new Date().toISOString() })
+      .update({ current_wage: newWage, updated_at: new Date().toISOString() })
       .eq('id', p.id);
     anyUpdated = true;
     showToast(`⚡ 시급 자동 인상 → ${newWage.toLocaleString()}원 (+${(newWage - currentWage).toLocaleString()}원)`);
@@ -16616,8 +16634,35 @@ function calcCancelDeadline(workType, startTime) {
   return new Date(start.getTime() - offset).toISOString();
 }
 
+async function confirmAccept(appId) {
+  const confirmed = await showConfirmDialog('최종합격 확정', '최종합격하면 근무 확정 메시지가 발송됩니다.\n인원이 다 채워지면 공고도 자동 마감됩니다.\n\n진행하시겠습니까?', '✅ 최종합격', '취소');
+  if (!confirmed) return;
+  updateApplication(appId, 'accepted');
+}
+
+function showConfirmDialog(title, msg, okLabel, cancelLabel) {
+  return new Promise(resolve => {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    el.innerHTML = `<div style="background:#fff;border-radius:20px;padding:24px;max-width:320px;width:100%;text-align:center">
+      <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:12px">${title}</div>
+      <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:20px;white-space:pre-line">${msg}</div>
+      <div style="display:flex;gap:10px">
+        <button style="flex:1;padding:13px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
+        <button style="flex:1;padding:13px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
+      </div>
+    </div>`;
+    document.body.appendChild(el);
+    const btns = el.querySelectorAll('button');
+    btns[0].textContent = cancelLabel;
+    btns[0].onclick = () => { el.remove(); resolve(false); };
+    btns[1].textContent = okLabel;
+    btns[1].onclick = () => { el.remove(); resolve(true); };
+  });
+}
+
 async function updateApplication(appId, status) {
-  // 낙관적 업데이트: _allApplicants 즉시 반영 후 렌더링 (DB 응답 전 깜빡임 방지)
+  // 낙관적 업데이트
   const _aIdx = _allApplicants.findIndex(a => a.id === appId);
   if (_aIdx !== -1) {
     _allApplicants[_aIdx] = { ..._allApplicants[_aIdx], status };
@@ -16625,24 +16670,50 @@ async function updateApplication(appId, status) {
   }
 
   let updateData = { status };
+
   if (status === 'accepted') {
     const { data: appData } = await db.from('applications')
-      .select('job_postings(work_type, start_time)').eq('id', appId).single();
+      .select('job_posting_id, job_postings(work_type, start_time, needed_count, filled_count)')
+      .eq('id', appId).single();
     const dl = calcCancelDeadline(appData?.job_postings?.work_type, appData?.job_postings?.start_time);
     if (dl) updateData.cancel_deadline = dl;
-  }
-  const { error } = await db.from('applications').update(updateData).eq('id', appId);
-  if (error) { showToast('처리 실패'); loadApplicants(); return; }
-  if (status === 'accepted') {
+
+    const { error } = await db.from('applications').update(updateData).eq('id', appId);
+    if (error) { showToast('처리 실패'); loadApplicants(); return; }
+
+    // filled_count 증가 + 자동마감
+    if (appData?.job_posting_id) {
+      const { data: jp } = await db.from('job_postings')
+        .select('needed_count, filled_count, status').eq('id', appData.job_posting_id).single();
+      if (jp) {
+        const newFilled = (jp.filled_count || 0) + 1;
+        const updJob = { filled_count: newFilled };
+        if (newFilled >= (jp.needed_count || 1) && jp.status !== 'closed') {
+          updJob.status = 'closed';
+          showToast('🏁 인원 충족 — 공고가 자동 마감됐습니다');
+        }
+        await db.from('job_postings').update(updJob).eq('id', appData.job_posting_id);
+      }
+    }
+
     await sendAcceptMessage(appId);
     sendAppStatusPush(appId, 'accepted');
-    showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
+    showToast('✅ 최종합격 확정! 합격 메시지를 전송했습니다');
     setTimeout(() => showContractModal(appId), 500);
+    loadPostings();
+    return;
+  }
+
+  const { error } = await db.from('applications').update(updateData).eq('id', appId);
+  if (error) { showToast('처리 실패'); loadApplicants(); return; }
+
+  if (status === 'reviewing') {
+    showToast('⭐ 1차합격 처리됐습니다');
+  } else if (status === 'on_hold') {
+    showToast('📌 보류 처리됐습니다');
   } else if (status === 'rejected') {
     sendAppStatusPush(appId, 'rejected');
     showToast('탈락 처리됐습니다');
-  } else if (status === 'pending') {
-    showToast('↩ 합격 취소 — 검토중으로 변경됐습니다');
   } else {
     showToast('처리됐습니다');
   }
@@ -17735,13 +17806,38 @@ function updateSurgePreview() {
 async function autoCloseExpiredPostings() {
   if (!bizRecord) return;
   const today = new Date().toISOString().slice(0, 10);
-  // work_end_date가 오늘 이전이고 아직 open/urgent 상태인 내 공고 자동 closed
+  const now = new Date();
+
+  // 1) work_end_date 기준: 종료일 지난 공고
   await db.from('job_postings')
     .update({ status: 'closed' })
     .eq('business_id', bizRecord.id)
     .in('status', ['open', 'urgent'])
     .not('work_end_date', 'is', null)
     .lt('work_end_date', today);
+
+  // 2) start_time + duration_hours 기준: 단건 공고(work_end_date 없음)가 끝난 경우
+  const { data: oneshots } = await db.from('job_postings')
+    .select('id, start_time, duration_hours')
+    .eq('business_id', bizRecord.id)
+    .in('status', ['open', 'urgent'])
+    .is('work_end_date', null)
+    .not('start_time', 'is', null);
+  if (oneshots?.length) {
+    const expiredIds = oneshots
+      .filter(p => {
+        if (!p.start_time) return false;
+        const end = new Date(p.start_time);
+        end.setHours(end.getHours() + (p.duration_hours || 0));
+        return end < now;
+      })
+      .map(p => p.id);
+    if (expiredIds.length) {
+      await db.from('job_postings')
+        .update({ status: 'closed' })
+        .in('id', expiredIds);
+    }
+  }
 }
 
 function setupRealtime() {
@@ -18412,11 +18508,11 @@ async function openWorkerProfile() {
   const w = app.workers || {};
   const STATUS = { pending:'⏳ 접수중', reviewing:'\u{1F50D} 검토중', accepted:'✅ 합격', rejected:'❌ 탈락', completed:'\u{1F3C1} 완료', cancelled:'취소' };
 
-  const infoRow = (label, value, extra = '') => `
+  const infoRow = (label, value) => `
     <div style="background:#f8f8f8;border-radius:12px;padding:14px">
       <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${label}</div>
       ${value
-        ? `<div style="font-size:14px;font-weight:700;color:#222;line-height:1.5">${value}</div>${extra}`
+        ? `<div style="font-size:14px;font-weight:700;color:#222;line-height:1.5">${String(value).replace(/</g,'&lt;')}</div>`
         : `<div style="font-size:13px;color:#ccc;font-weight:600">미입력</div>`}
     </div>`;
 
@@ -18440,7 +18536,14 @@ async function openWorkerProfile() {
       </div>`
     : infoRow('✉️ 이메일', null);
 
-  document.getElementById('worker-profile-content').innerHTML = `
+  document.getElementById('_wp-overlay')?.remove();
+  const el = document.createElement('div');
+  el.id = '_wp-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9100;display:flex;align-items:flex-end;justify-content:center';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;padding:20px 20px 40px;max-height:90vh;overflow-y:auto">
+    <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 16px"></div>
+
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
       <div style="width:64px;height:64px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0">\u{1F464}</div>
@@ -18454,77 +18557,53 @@ async function openWorkerProfile() {
       </div>
     </div>
 
-    <!-- 연락처 블록 -->
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+    <!-- 지원 공고 -->
+    <div style="background:#FFF5F5;border-radius:12px;padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">\u{1F4CB} 지원 공고</div>
+      <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:4px">${app.job_postings?.title || '-'}</div>
+      <div style="font-size:12px;color:#666">지원 상태: <span style="font-weight:800">${STATUS[app.status] || app.status}</span></div>
+    </div>
+
+    <!-- 지원 메시지 -->
+    ${app.apply_message ? `<div style="margin-bottom:12px;padding:12px;background:#FFFBEB;border-radius:12px;border-left:3px solid #F59E0B;font-size:13px;color:#444;line-height:1.6"><span style="font-size:10px;font-weight:800;color:#D97706;display:block;margin-bottom:4px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;')}</div>` : ''}
+
+    <!-- 연락처 -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
       ${phoneRow}
       ${emailRow}
     </div>
 
     <!-- 상세 정보 -->
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
       ${infoRow('\u{1F4DD} 자기소개', w.bio)}
       ${infoRow('\u{1F4BC} 경력 / 특기', w.experience)}
-      ${w.skills?.length
-        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
-            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F3F7}️ 보유 스킬</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1.5px solid #eee;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#444">${s}</span>`).join('')}</div>
-           </div>`
-        : infoRow('\u{1F3F7}️ 보유 스킬', null)
-      }
-      ${w.languages?.length
-        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
-            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F5E3} 구사 가능 언어</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.languages.map(l => {
-              const MAP = {ko:'\u{1F1F0}\u{1F1F7} 한국어', en:'\u{1F1FA}\u{1F1F8} 영어', zh:'\u{1F1E8}\u{1F1F3} 중국어', ja:'\u{1F1EF}\u{1F1F5} 일본어', vi:'\u{1F1FB}\u{1F1F3} 베트남어', ru:'\u{1F1F7}\u{1F1FA} 러시아어', mn:'\u{1F1F2}\u{1F1F3} 몽골어'};
-              return `<span style="background:#F0FDF4;color:#16a34a;border:1.5px solid #86EFAC;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[l]||l}</span>`;
-            }).join('')}</div>
-           </div>`
-        : ''
-      }
-      ${w.vehicles?.length
-        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
-            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F697} 보유 이동수단</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.vehicles.map(v => {
-              const MAP = {bicycle:'\u{1F6B2} 자전거',kickboard:'\u{1F6F4} 킥보드',motorcycle:'\u{1F6F5} 오토바이',car_compact:'\u{1F697} 차량(소형)',car_midsize:'\u{1F699} 차량(중형)',car_suv:'\u{1F690} 차량(SUV)',car_large:'\u{1F68C} 차량(대형)',truck:'\u{1F69A} 트럭/화물'};
-              return `<span style="background:#EFF6FF;color:#3B82F6;border:1.5px solid #BFDBFE;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[v]||v}</span>`;
-            }).join('')}</div>
-           </div>`
-        : ''
-      }
-      ${w.strengths?.length
-        ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px">
-            <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">✨ 나의 강점</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">${w.strengths.map(s => {
-              const MAP = {strong:'\u{1F4AA} 힘이 강함',speed:'⚡ 스피드',numbers:'\u{1F522} 숫자에 밝음',design:'\u{1F3A8} 디자인 안목',experience:'\u{1F30D} 다양한 경험',always_on:'\u{1F550} 상시출동 가능',educated:'\u{1F393} 좋은 학벌',kind:'\u{1F91D} 친절함',driving:'\u{1F697} 운전 능숙',language:'\u{1F5E3} 외국어 가능',detail:'\u{1F50D} 꼼꼼함',stamina:'\u{1F3C3} 체력 강함',night:'\u{1F319} 야간 가능',clean:'\u{1F9F9} 청결 철저',photo:'\u{1F4F8} 사진/영상',cooking:'\u{1F373} 요리 잘 함',elderly:'\u{1F474} 어르신 친화',pet:'\u{1F43E} 반려동물 OK',handyman:'\u{1F527} 손재주 있음',moving:'\u{1F4E6} 이사/운반 경험'};
-              return `<span style="background:#FFF5F5;color:#C8102E;border:1.5px solid #FECACA;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${MAP[s]||s}</span>`;
-            }).join('')}</div>
-           </div>`
-        : ''
-      }
-    </div>
-
-    <!-- 지원 정보 -->
-    <div style="background:#FFF5F5;border-radius:12px;padding:14px;margin-bottom:16px">
-      <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">\u{1F4CB} 지원 공고</div>
-      <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:4px">${app.job_postings?.title || '-'}</div>
-      <div style="font-size:12px;color:#666">지원 상태: <span style="font-weight:800">${STATUS[app.status] || app.status}</span></div>
+      ${w.skills?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F3F7}️ 보유 스킬</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1.5px solid #eee;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#444">${s}</span>`).join('')}</div></div>` : ''}
+      ${w.languages?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F5E3} 구사 가능 언어</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.languages.map(l=>{const M={ko:'\u{1F1F0}\u{1F1F7} 한국어',en:'\u{1F1FA}\u{1F1F8} 영어',zh:'\u{1F1E8}\u{1F1F3} 중국어',ja:'\u{1F1EF}\u{1F1F5} 일본어',vi:'\u{1F1FB}\u{1F1F3} 베트남어',ru:'\u{1F1F7}\u{1F1FA} 러시아어',mn:'\u{1F1F2}\u{1F1F3} 몽골어'};return `<span style="background:#F0FDF4;color:#16a34a;border:1.5px solid #86EFAC;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${M[l]||l}</span>`;}).join('')}</div></div>` : ''}
+      ${w.vehicles?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F697} 보유 이동수단</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.vehicles.map(v=>{const M={bicycle:'\u{1F6B2} 자전거',kickboard:'\u{1F6F4} 킥보드',motorcycle:'\u{1F6F5} 오토바이',car_compact:'\u{1F697} 차량(소형)',car_midsize:'\u{1F699} 차량(중형)',car_suv:'\u{1F690} 차량(SUV)',car_large:'\u{1F68C} 차량(대형)',truck:'\u{1F69A} 트럭/화물'};return `<span style="background:#EFF6FF;color:#3B82F6;border:1.5px solid #BFDBFE;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${M[v]||v}</span>`;}).join('')}</div></div>` : ''}
     </div>
 
     <!-- 액션 버튼 -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      ${(app.status==='pending'||app.status==='reviewing')
-        ? `${app.status==='pending'
-            ? `<button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;min-width:90px;padding:13px;background:#FFF7ED;color:#F59E0B;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">\u{1F50D} 검토 진행</button>`
-            : ''}
-           <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;min-width:90px;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 합격</button>
-           <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;min-width:90px;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>`
-        : ''}
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-      <button onclick="openOwnerReport('worker','${w.kakao_uid || app.workers?.id || ''}')" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
+    ${app.status === 'pending' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⭐ 1차합격</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+    </div>` : ''}
+    ${app.status === 'reviewing' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 최종합격</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>
+    </div>` : ''}
+    ${app.status === 'on_hold' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">↩ 1차합격으로</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>
+    </div>` : ''}
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+      <button onclick="openOwnerReport('worker','${w.kakao_uid || w.id || ''}')" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
       <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:#3B82F6;cursor:pointer;font-weight:700">📄 지원서 출력</button>
-    </div>`;
-  document.getElementById('worker-profile-overlay').classList.add('open');
+    </div>
+    <button onclick="document.getElementById('_wp-overlay').remove()" style="width:100%;margin-top:10px;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+  </div>`;
+  document.body.appendChild(el);
 }
 
 async function printWorkerProfile(appId) {
@@ -18570,28 +18649,8 @@ async function printWorkerProfile(appId) {
 }
 
 async function updateApplicationFromProfile(appId, status) {
-  let updateData = { status };
-  if (status === 'accepted') {
-    const { data: appData } = await db.from('applications')
-      .select('job_postings(work_type, start_time)').eq('id', appId).single();
-    const dl = calcCancelDeadline(appData?.job_postings?.work_type, appData?.job_postings?.start_time);
-    if (dl) updateData.cancel_deadline = dl;
-  }
-  await db.from('applications').update(updateData).eq('id', appId);
-  if (status === 'accepted') {
-    await sendAcceptMessage(appId);
-    sendAppStatusPush(appId, 'accepted');
-    showToast('✅ 최종 확정! 합격 메시지를 전송했습니다');
-  } else if (status === 'rejected') {
-    sendAppStatusPush(appId, 'rejected');
-    showToast('탈락 처리됐습니다');
-  } else if (status === 'reviewing') {
-    showToast('\u{1F50D} 검토 진행 중으로 변경됐습니다');
-  } else {
-    showToast('탈락 처리됐습니다');
-  }
-  document.getElementById('worker-profile-overlay').classList.remove('open');
-  loadApplicants(); loadPostings();
+  document.getElementById('_wp-overlay')?.remove();
+  await updateApplication(appId, status);
 }
 
 async function openChat(applicationId, workerName) {
