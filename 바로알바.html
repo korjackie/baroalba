@@ -486,7 +486,8 @@
       position: relative;
       overflow: hidden;
     }
-    .job-card:active { transform: scale(0.98); background: #fafafa; }
+    .job-card:hover  { box-shadow:0 4px 18px rgba(0,0,0,0.10); transform:translateY(-2px); }
+    .job-card:active { transform: scale(0.98); background: #fafafa; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
     .job-card.urgent-card { border-color: #FFE0E0; background: #FFFAFA; }
 
     .card-top {
@@ -708,9 +709,11 @@
       font-weight: 900;
       cursor: pointer;
       transition: background 0.15s, transform 0.1s;
+      animation: pulse-ring 2s infinite;
     }
-    .detail-apply-btn:active { transform: scale(0.98); }
-    .detail-apply-btn:hover  { background: #e03333; }
+    .detail-apply-btn:active   { transform: scale(0.98); animation: none; }
+    .detail-apply-btn:hover    { background: #e03333; }
+    .detail-apply-btn:disabled { animation: none; }
 
     /* ── 하단 내비게이션 ── */
     .bottom-nav {
@@ -904,12 +907,41 @@
     @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
     @keyframes swipe-float-pulse { 0%,100%{box-shadow:0 4px 18px rgba(200,16,46,0.45)} 50%{box-shadow:0 6px 28px rgba(200,16,46,0.75)} }
 
+    /* ── antigravity 이식 애니메이션 ── */
+    @keyframes pulse-ring {
+      0%   { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0.65); }
+      70%  { transform:scale(1);    box-shadow:0 0 0 10px rgba(200,16,46,0); }
+      100% { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0); }
+    }
+    @keyframes marker-bounce {
+      0%,100% { transform:translateY(0); }
+      50%     { transform:translateY(-8px); }
+    }
+    @keyframes marker-wave-kf {
+      0%   { transform:scale(0.5); opacity:0.8; }
+      100% { transform:scale(2.2); opacity:0; }
+    }
+    .pulse-ring       { animation:pulse-ring 2s infinite; }
+    .marker-pin-anim  { animation:marker-bounce 2s ease-in-out infinite; }
+    .marker-wave-anim { animation:marker-wave-kf 2s cubic-bezier(0,0.5,0.5,1) infinite; }
+    /* 폼 입력 포커스 — 브랜드 레드 링 */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+    textarea:focus,
+    select:focus {
+      outline:none;
+      border-color:#C8102E !important;
+      box-shadow:0 0 0 3px rgba(200,16,46,0.12) !important;
+      transition:border-color 0.15s, box-shadow 0.15s;
+    }
+
     /* ══ 바로모임 ══ */
     .moim-card {
       background:#fff; border-radius:18px; overflow:hidden;
       box-shadow:0 2px 12px rgba(0,0,0,0.09); border:1.5px solid #f0f0f0; cursor:pointer;
+      transition:box-shadow 0.18s, transform 0.18s;
     }
-    .moim-card:active { opacity:0.85; }
+    .moim-card:hover  { box-shadow:0 6px 20px rgba(0,0,0,0.13); transform:translateY(-2px); }
+    .moim-card:active { opacity:0.85; transform:scale(0.98); }
     .moim-cat-chip {
       display:inline-flex; align-items:center; gap:4px;
       padding:6px 14px; border-radius:20px; border:1.5px solid #e5e7eb;
@@ -1106,9 +1138,10 @@
       width:100%; padding:16px; background:var(--red); color:#fff;
       border:none; border-radius:14px; font-size:16px; font-weight:900; cursor:pointer;
       margin-top:4px; transition:background 0.15s;
+      animation:pulse-ring 2s infinite;
     }
-    .submit-btn:hover { background:#e03333; }
-    .submit-btn:disabled { background:#ddd; cursor:default; }
+    .submit-btn:hover    { background:#e03333; }
+    .submit-btn:disabled { background:#ddd; cursor:default; animation:none; }
 
     /* ── 지원자 카드 ── */
     .applicant-card {
@@ -2696,6 +2729,10 @@
             <div class="mp-row-left"><span class="mp-row-icon">💵</span><span>수입 현황</span></div>
             <div class="mp-row-right"><span id="mp-income-val" style="font-size:13px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
           </div>
+          <div class="mp-row" onclick="openMpSub('wage-history')">
+            <div class="mp-row-left"><span class="mp-row-icon">💴</span><span>급여 수령 확인</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
           <div class="mp-row" onclick="openPointHistory()">
             <div class="mp-row-left"><span class="mp-row-icon">💎</span><span>포인트 잔액</span></div>
             <div class="mp-row-right">
@@ -3245,7 +3282,7 @@
     <div style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.6">국적·비자 등록부터 근로권리 확인까지 외국인 근로자를 위한 서비스입니다.</div>
 
     <!-- 비자·국적 등록 -->
-    <div onclick="closeMpSub('foreigner-hub');setTimeout(()=>openMpSub('foreigner'),200)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+    <div onclick="closeMpSub('foreigner-hub');setTimeout(()=>openMpSub('foreigner'),320)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
       <div style="width:46px;height:46px;border-radius:14px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🛂</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:800;color:#222">국적 · 비자 등록</div>
@@ -3255,7 +3292,7 @@
     </div>
 
     <!-- 권리 가이드 -->
-    <div onclick="closeMpSub('foreigner-hub');setTimeout(openWorkerRightsGuide,250)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+    <div onclick="closeMpSub('foreigner-hub');setTimeout(openWorkerRightsGuide,320)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
       <div style="width:46px;height:46px;border-radius:14px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📋</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:800;color:#222">내 권리 가이드</div>
@@ -3265,7 +3302,7 @@
     </div>
 
     <!-- 급여 수령 확인 -->
-    <div onclick="closeMpSub('foreigner-hub');setTimeout(()=>openMpSub('wage-history'),200)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+    <div onclick="closeMpSub('foreigner-hub');setTimeout(()=>openMpSub('wage-history'),320)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
       <div style="width:46px;height:46px;border-radius:14px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">💴</div>
       <div style="flex:1">
         <div style="font-size:14px;font-weight:800;color:#222">급여 수령 확인</div>
@@ -15254,14 +15291,15 @@ function adminQuickEdit(table, id, field, currentValue, label) {
 }
 
 function calcBakalbaScore(w) {
-  const rating  = parseFloat(w?.rating) || 3.0;
-  const noshow  = Math.min(parseInt(w?.noshow_count) || 0, 10);
   const reviews = Math.min(parseInt(w?.review_count) || 0, 20);
+  const noshow  = Math.min(parseInt(w?.noshow_count) || 0, 10);
+  // 후기가 없으면 rating 기여 없음 (신규 유저 점수 인플레이션 방지)
+  const rating  = reviews > 0 ? (parseFloat(w?.rating) || 0) : 0;
   const score = Math.round(
-    60 +
-    (rating / 5) * 25 +
-    Math.min(reviews, 10) * 0.5 -
-    noshow * 7
+    40 +                           // 기본 40점
+    (rating / 5) * 35 +            // 평점 최대 35점
+    Math.min(reviews, 10) * 1.5 -  // 완료횟수 최대 15점
+    noshow * 8                      // 노쇼 패널티 -8점/건
   );
   return Math.max(0, Math.min(99, score));
 }
@@ -21520,13 +21558,17 @@ async function saveVisaProfile() {
 async function loadWageHistory() {
   const el = document.getElementById('wage-history-list');
   if (!el) return;
+  el.innerHTML = '<div class="spinner" style="margin:32px auto"></div>';
   try {
-  const wid = await _getWorkerId();
+  const wid = await Promise.race([
+    _getWorkerId(),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+  ]);
   if (!wid) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
   const { data: apps, error } = await db.from('applications')
     .select('id, wage_paid, wage_paid_at, job_postings(title, current_wage, duration_hours, start_time, businesses(name))')
     .eq('worker_id', wid)
-    .in('status', ['completed', 'done'])
+    .in('status', ['completed'])
     .order('created_at', { ascending: false });
   if (error) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">불러오기 실패</div>'; return; }
   if (!apps?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
