@@ -5597,6 +5597,27 @@ async function loadJobs() {
       });
     }
 
+    // 필터 없이 주변 공고 0개면 → 위치 무관 전체 최신 공고 fallback (홈화면용)
+    const _noActiveFilter = !selectedCategories.size && !selectedWorkTypes.size && !urgentOnly && !filterRemote && !minWageFilter && !dateFilter && !timeFilter;
+    if (result.length === 0 && _noActiveFilter) {
+      const { data: _fallback } = await db.from('job_postings')
+        .select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
+                 start_time, duration_hours, needed_count, filled_count, description,
+                 surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
+                 work_type, same_day_payment, noshow_deposit, age_limit, return_bonus,
+                 preferred_languages, is_remote, work_end_date, work_days,
+                 biz_name, businesses(name, rating, kindness_rating, review_count)`)
+        .in('status', ['open', 'urgent'])
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (_fallback?.length) {
+        result = _fallback.map(j => {
+          const _rb = j.businesses || {};
+          return { ...j, wage_delta: (j.current_wage||0)-(j.base_wage||0), biz_name: j.biz_name||_rb.name||'', biz_rating: _rb.rating, biz_kindness: _rb.kindness_rating, distance_m: null };
+        });
+      }
+    }
+
     jobs = result;
     // 홈 패널이 표시 중이면 job 섹션 갱신 (GPS 위치 확정 후 재호출 시 반영)
     if (document.getElementById('panel-home')?.classList.contains('show')) {
@@ -15033,6 +15054,44 @@ const _STATUS_BADGE = {
   noshow:    { bg:'#F5F5F5', color:'#888',    label:'노쇼' },
 };
 
+function _adminBtn(table, id, field, value, label) {
+  const safe = (value || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  return `<button onclick="event.stopPropagation();adminQuickEdit('${table}','${id}','${field}','${safe}','${label}')" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;vertical-align:middle;flex-shrink:0" title="어드민 수정">✏️</button>`;
+}
+function adminQuickEdit(table, id, field, currentValue, label) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99000;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:18px">🛡️</span>
+        <div style="font-size:16px;font-weight:900;color:#222">어드민 수정</div>
+      </div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:14px">${label}</div>
+      <textarea id="_aqe-input" style="width:100%;box-sizing:border-box;height:72px;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.5;outline:none"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+        <button id="_aqe-save" style="flex:1;padding:12px;background:#1e293b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const ta = overlay.querySelector('#_aqe-input');
+  ta.value = currentValue || '';
+  setTimeout(() => ta.focus(), 80);
+  overlay.querySelector('#_aqe-save').onclick = async () => {
+    const val = ta.value.trim();
+    if (!val) { showToast('내용을 입력해주세요'); return; }
+    const { error } = await db.from(table).update({ [field]: val }).eq('id', id);
+    if (error) { showToast('저장 실패: ' + error.message); return; }
+    showToast('✅ 수정됐어요');
+    overlay.remove();
+    if (table === 'job_postings') loadJobs();
+    else if (table === 'gatherings') loadMoimList();
+    else if (table === 'community_posts') loadCommunityPosts?.();
+  };
+}
+
 function calcBakalbaScore(w) {
   const rating  = parseFloat(w?.rating) || 3.0;
   const noshow  = Math.min(parseInt(w?.noshow_count) || 0, 10);
@@ -21090,46 +21149,6 @@ async function showContractModal(appId) {
     </div>`;
   document.getElementById('contract-modal').style.display = 'flex';
 }
-// ── 어드민 인라인 편집 ───────────────────────────────────────
-function _adminBtn(table, id, field, value, label) {
-  const safe = (value || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-  return `<button onclick="event.stopPropagation();adminQuickEdit('${table}','${id}','${field}','${safe}','${label}')" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;vertical-align:middle;flex-shrink:0" title="어드민 수정">✏️</button>`;
-}
-
-function adminQuickEdit(table, id, field, currentValue, label) {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99000;display:flex;align-items:center;justify-content:center;padding:24px';
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  overlay.innerHTML = `
-    <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span style="font-size:18px">🛡️</span>
-        <div style="font-size:16px;font-weight:900;color:#222">어드민 수정</div>
-      </div>
-      <div style="font-size:12px;color:#aaa;margin-bottom:14px">${label}</div>
-      <textarea id="_aqe-input" style="width:100%;box-sizing:border-box;height:72px;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.5;outline:none"></textarea>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
-        <button id="_aqe-save" style="flex:1;padding:12px;background:#1e293b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  const ta = overlay.querySelector('#_aqe-input');
-  ta.value = currentValue || '';
-  setTimeout(() => ta.focus(), 80);
-  overlay.querySelector('#_aqe-save').onclick = async () => {
-    const val = ta.value.trim();
-    if (!val) { showToast('내용을 입력해주세요'); return; }
-    const { error } = await db.from(table).update({ [field]: val }).eq('id', id);
-    if (error) { showToast('저장 실패: ' + error.message); return; }
-    showToast('✅ 수정됐어요');
-    overlay.remove();
-    if (table === 'job_postings') loadJobs();
-    else if (table === 'gatherings') loadMoimList();
-    else if (table === 'community_posts') loadCommunityPosts?.();
-  };
-}
-
 function _printInPage(bodyHtml, extraCss) {
   const styleId = '_ps_style', divId = '_ps_content';
   let styleEl = document.getElementById(styleId);
