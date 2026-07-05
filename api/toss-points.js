@@ -1,11 +1,10 @@
 const SB_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
 
 // 서버 사이드 보너스 계산 (클라이언트 조작 방지)
+// 5,000원 → +51,000P 런칭 이벤트 / 그 외 1만원당 1,000P
 function getBonus(amount) {
-  if (amount >= 50000) return 8000;
-  if (amount >= 30000) return 4000;
-  if (amount >= 10000) return 1000;
-  return 0;
+  if (amount === 5000) return 51000;
+  return Math.floor(amount / 10000) * 1000;
 }
 
 export default async function handler(req, res) {
@@ -15,7 +14,7 @@ export default async function handler(req, res) {
   if (!paymentKey || !orderId || !amount || !userId) {
     return res.status(400).json({ error: '필수 파라미터 누락' });
   }
-  if (typeof amount !== 'number' || amount < 5000 || amount > 500000) {
+  if (typeof amount !== 'number' || amount < 5000 || amount > 1000000) {
     return res.status(400).json({ error: '충전 금액 범위 오류' });
   }
 
