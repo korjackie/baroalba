@@ -6768,9 +6768,12 @@ async function _renderMoimMarkers() {
     const dateStr = m.gathering_date
       ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' })
       : '';
-    const content = `<div class="moim-marker-wrap" onclick="openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)">
-      <div class="moim-marker-bubble"><div>${emoji} ${titleShort}</div><div style="font-size:10px;font-weight:700;opacity:0.8;margin-top:2px">${dateStr ? dateStr + ' · ' : ''}${rem > 0 ? rem + '자리' : '마감'}</div></div>
-      <div class="moim-marker-tail"></div>
+    const content = `<div onclick="openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:max-content">
+      <div style="background:#7C3AED;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(124,58,237,0.4);white-space:nowrap;max-width:150px">
+        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${emoji} ${titleShort}</div>
+        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${dateStr ? dateStr + ' · ' : ''}${rem > 0 ? rem + '자리' : '마감'}</div>
+      </div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #7C3AED"></div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(m.lat, m.lng), content, yAnchor: 1.1 });
     overlay.setMap(kakaoMap);
