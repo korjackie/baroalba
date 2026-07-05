@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BARO 생태계 — 서비스 소개 (2026.07.06)</title>
+<style>
+  :root{--red:#C8102E;--rose:#f43f5e;--violet:#7c3aed;--green:#16a34a;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:20px;--shadow:0 8px 32px rgba(0,0,0,0.10)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:#fff0f2;color:var(--red);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:900px;margin:0 auto;padding:80px 5% 60px}
+  .notice{background:#fffbeb;border:2px solid #fde68a;border-radius:14px;padding:16px 20px;margin-bottom:32px;font-size:13px;color:#92400e;font-weight:600}
+  .notice strong{color:#d97706}
+
+  /* 히어로 */
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);border-radius:28px;padding:60px 40px;margin-bottom:48px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(200,16,46,0.3),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(124,58,237,0.2),transparent 60%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(200,16,46,0.25);border:1px solid rgba(200,16,46,0.5);color:#ff6b7a;font-size:12px;font-weight:800;padding:5px 16px;border-radius:100px;letter-spacing:1px;margin-bottom:20px}
+  .hero h1{font-size:clamp(26px,4vw,42px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.2;margin-bottom:12px}
+  .hero h1 span{color:var(--red)}
+  .hero-desc{font-size:15px;color:rgba(255,255,255,0.55);max-width:500px;margin:0 auto}
+
+  /* 서비스 카드 */
+  .service-section{margin-bottom:56px}
+  .service-header{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+  .service-badge{font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;letter-spacing:0.5px}
+  .badge-red{background:#fff0f2;color:var(--red)}
+  .badge-violet{background:#f3e8ff;color:var(--violet)}
+  .badge-rose{background:#fff1f2;color:var(--rose)}
+  .service-title{font-size:clamp(22px,3vw,32px);font-weight:900;letter-spacing:-0.5px;margin-bottom:6px}
+  .service-subtitle{font-size:15px;color:var(--gray-500);margin-bottom:28px;font-weight:500}
+  .service-desc{font-size:15px;color:var(--gray-700);line-height:1.9;margin-bottom:28px;background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);border:1px solid var(--gray-200)}
+  .service-desc p{margin-bottom:14px}
+  .service-desc p:last-child{margin-bottom:0}
+  .service-desc strong{color:var(--gray-900);font-weight:800}
+
+  /* 기능 그리드 */
+  .feature-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:28px}
+  .feature-card{background:#fff;border-radius:16px;padding:22px;box-shadow:var(--shadow);border:1px solid var(--gray-200)}
+  .feature-icon{font-size:28px;margin-bottom:10px}
+  .feature-title{font-size:14px;font-weight:900;color:var(--gray-900);margin-bottom:4px}
+  .feature-desc{font-size:12px;color:var(--gray-500);line-height:1.6}
+
+  /* 카피 섹션 */
+  .copy-box{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);border:1px solid var(--gray-200);margin-bottom:16px}
+  .copy-label{font-size:11px;font-weight:800;color:var(--gray-500);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+  .copy-main{font-size:20px;font-weight:900;color:var(--gray-900);line-height:1.4;margin-bottom:8px}
+  .copy-sub{font-size:14px;color:var(--gray-500);line-height:1.7}
+  .copy-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .copy-tag{font-size:11px;font-weight:700;padding:4px 12px;border-radius:100px;background:var(--gray-100);color:var(--gray-700)}
+
+  .divider{border:none;border-top:2px dashed var(--gray-200);margin:48px 0}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">BARO 생태계</div>
+  <div class="nav-badge">서비스 소개 · 2026.07.06</div>
+</nav>
+<main>
+
+  <div class="notice">
+    📌 이 문서는 <strong>안티그래비티(바로만남 랜딩페이지) 디자이너</strong>에게 전달하는 바로알바 · 바로모임 서비스 소개 자료입니다. 랜딩페이지 서비스 소개 섹션 작성 시 참고해 주세요.
+  </div>
+
+  <!-- 히어로 -->
+  <div class="hero">
+    <div class="hero-tag">BARO ECOSYSTEM</div>
+    <h1>일하고 · 모이고 · <span>만나는</span><br>BARO 생태계</h1>
+    <p class="hero-desc">바로알바 · 바로모임 · 바로만남 — 세 서비스가 하나의 계정으로 연결됩니다</p>
+  </div>
+
+  <!-- ═══ 바로알바 ═══ -->
+  <div class="service-section">
+    <div class="service-header">
+      <span class="service-badge badge-red">① 바로알바</span>
+    </div>
+    <div class="service-title">지도에서 찾고, 클릭으로 지원하는<br>초단기 알바 매칭</div>
+    <div class="service-subtitle">실시간 지도 기반 · 즉시 지원 · N잡 플랫폼</div>
+
+    <div class="service-desc">
+      <p>
+        <strong>바로알바</strong>는 내 위치를 중심으로 주변 알바 공고를 지도 위에 실시간으로 보여주는 초단기 알바 매칭 플랫폼입니다. 수십 개의 공고를 스크롤로 훑는 기존 방식 대신, 지도 위에서 바로 확인하고 단 한 번의 클릭으로 지원할 수 있습니다.
+      </p>
+      <p>
+        <strong>당일 출근, 시간제, 이벤트 스태프</strong> 등 단기·초단기 공고에 특화되어 있습니다. F&B(카페·식당), 물류, 판매, 청소, 이벤트 등 업종별로 필터링이 가능하며, 실시간 시급 급등 알림(Surge Alert)으로 고시급 공고를 놓치지 않습니다.
+      </p>
+      <p>
+        지원 후 업주와의 실시간 채팅, 합격/불합격 알림, 근무 완료 후 상호 평점 시스템까지 알바의 전 과정이 앱 안에서 완결됩니다. 신뢰점수(0~99)와 번개등급 시스템으로 성실한 알바생이 우선 노출되는 구조입니다.
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <div class="feature-title">지도 기반 탐색</div>
+        <div class="feature-desc">현 위치 반경 1~30km 내 공고를 지도 핀으로 시각화. 거리순·시급순·날짜순 정렬</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">바로 지원</div>
+        <div class="feature-desc">클릭 한 번으로 즉시 지원. 번개등급 취득 시 메시지 없이 원클릭 지원 가능</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title">실시간 채팅</div>
+        <div class="feature-desc">지원 후 업주와 1:1 채팅. 알림 답장(인라인 리플라이) 지원</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">수입 관리</div>
+        <div class="feature-desc">완료 알바 수입 내역 · 급여 수령 확인 · 미수령 신고 기능</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌏</div>
+        <div class="feature-title">외국인 특화</div>
+        <div class="feature-desc">6개국어 지원 · 비자별 취업 가능 업종 안내 · 근로권리 가이드</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <div class="feature-title">신뢰 랭킹</div>
+        <div class="feature-desc">알바생 신뢰점수 시스템 · 업체 평점 · 우수 알바생/업체 RANK</div>
+      </div>
+    </div>
+
+    <div class="copy-box">
+      <div class="copy-label">헤드라인 카피 (안티그래비티 랜딩용)</div>
+      <div class="copy-main">오늘 당장 일하고 싶다면,<br>지도를 열어보세요.</div>
+      <div class="copy-sub">바로알바는 내 주변 알바를 지도에서 바로 찾고, 클릭 한 번으로 지원하는 초단기 알바 매칭 앱입니다. 카페, 물류, 이벤트 스태프… 당일 출근도 OK.</div>
+      <div class="copy-tags">
+        <span class="copy-tag">#초단기알바</span>
+        <span class="copy-tag">#지도기반</span>
+        <span class="copy-tag">#N잡</span>
+        <span class="copy-tag">#당일출근</span>
+        <span class="copy-tag">#실시간매칭</span>
+      </div>
+    </div>
+
+    <div class="copy-box">
+      <div class="copy-label">서브 카피 A (업주 타겟)</div>
+      <div class="copy-main">급하게 사람 필요하세요?<br>공고 올리면 5분 내 지원자가 옵니다.</div>
+      <div class="copy-sub">바로알바 업주 앱으로 공고를 올리면 근처 알바생에게 실시간으로 노출됩니다. 지원자 관리, 채팅, 합격 처리까지 한 화면에서.</div>
+    </div>
+
+    <div class="copy-box">
+      <div class="copy-label">서브 카피 B (워커 타겟)</div>
+      <div class="copy-main">출근 가능한 날, 딱 그날만 일하면 됩니다.</div>
+      <div class="copy-sub">계약서 없이 부담 없이. 내가 원하는 날, 원하는 시간, 원하는 장소에서 일하세요. 완료 후 급여 수령 확인까지 앱 안에서 끝납니다.</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ 바로모임 ═══ -->
+  <div class="service-section">
+    <div class="service-header">
+      <span class="service-badge badge-violet">② 바로모임</span>
+    </div>
+    <div class="service-title">관심사로 만나는<br>직장인 소모임 플랫폼</div>
+    <div class="service-subtitle">취향 공유 · 위치 기반 · 가벼운 모임</div>
+
+    <div class="service-desc">
+      <p>
+        <strong>바로모임</strong>은 비슷한 관심사를 가진 사람들이 가볍게 모임을 만들고 참여하는 플랫폼입니다. 오래된 동호회나 무거운 커뮤니티 앱 대신, <strong>오늘 당장 함께할 사람을 찾는</strong> 것에 초점을 맞췄습니다.
+      </p>
+      <p>
+        투자·재테크, 운동·스포츠, 맛집 탐방, 독서, 언어 교환, 게임, 취미, 봉사활동 등 <strong>10가지 카테고리</strong>로 분류된 모임을 지도 또는 리스트로 탐색할 수 있습니다. 참여 인원, 장소, 날짜를 직접 설정해 모임을 개설하면 주변 사람들이 바로 참여 신청을 할 수 있습니다.
+      </p>
+      <p>
+        모임 내 실시간 단체 채팅, 멤버 리스트, 게시판 기능으로 모임 이후에도 지속적인 소통이 가능합니다. <strong>바로알바와 동일한 계정</strong>으로 이용할 수 있어 별도 가입이 필요 없습니다.
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤝</div>
+        <div class="feature-title">모임 개설·참여</div>
+        <div class="feature-desc">카테고리, 인원, 장소, 날짜 설정으로 10초 만에 모임 개설. 참여 신청 즉시 가능</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <div class="feature-title">위치 기반 탐색</div>
+        <div class="feature-desc">지도 위에 모임 핀으로 표시. 내 주변 모임을 거리순으로 탐색</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title">모임 채팅</div>
+        <div class="feature-desc">모임별 단체 채팅방 자동 생성. 참여자끼리 실시간 소통</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title">커뮤니티 게시판</div>
+        <div class="feature-desc">자유 게시글, 댓글, 좋아요. 관심사 기반 커뮤니티 활동</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">카테고리 필터</div>
+        <div class="feature-desc">10개 카테고리 멀티 선택 필터. 내 관심사에 맞는 모임만 보기</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <div class="feature-title">팔로우 알림</div>
+        <div class="feature-desc">관심 업체·모임장 팔로우 시 신규 모임 푸시 알림 수신</div>
+      </div>
+    </div>
+
+    <div class="copy-box">
+      <div class="copy-label">헤드라인 카피 (안티그래비티 랜딩용)</div>
+      <div class="copy-main">혼자였던 취미를,<br>함께하는 습관으로.</div>
+      <div class="copy-sub">바로모임에서 관심사가 같은 사람들과 가볍게 만나보세요. 투자 스터디, 러닝 크루, 맛집 탐방, 독서 모임… 오늘 출발합니다.</div>
+      <div class="copy-tags">
+        <span class="copy-tag">#소모임</span>
+        <span class="copy-tag">#취미공유</span>
+        <span class="copy-tag">#직장인모임</span>
+        <span class="copy-tag">#위치기반</span>
+        <span class="copy-tag">#커뮤니티</span>
+      </div>
+    </div>
+
+    <div class="copy-box">
+      <div class="copy-label">서브 카피</div>
+      <div class="copy-main">모임 개설에 5분도 안 걸립니다.<br>참여는 클릭 한 번이면 충분합니다.</div>
+      <div class="copy-sub">카테고리 선택 → 인원·날짜·장소 입력 → 개설 완료. 참여자가 신청하면 모임 채팅이 자동으로 열립니다.</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ 바로만남 연계 안내 ═══ -->
+  <div class="service-section">
+    <div class="service-header">
+      <span class="service-badge badge-rose">③ 바로만남 (개발 중)</span>
+    </div>
+    <div class="service-title">검증된 직장인들의<br>프리미엄 만남 플랫폼</div>
+    <div class="service-subtitle">바로미팅 · 바로스팟 · 직장인 전용</div>
+    <div class="service-desc">
+      <p>
+        <strong>바로만남</strong>은 바로알바 생태계의 세 번째 서비스로, 직장인들을 위한 검증된 만남을 제공합니다. 현재 베타 테스터 모집 중이며, <strong>바로미팅</strong>(점심·저녁 4:4 룸 미팅)과 <strong>바로스팟</strong>(위치 기반 미션 매칭) 두 가지 서비스로 구성됩니다.
+      </p>
+      <p>
+        바로알바·바로모임과 동일 계정으로 이용 가능하며, 추가 프로필(사진, 직장, 나이 공개 여부)을 등록한 검증된 사용자만 이용할 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 by MultiMOVE · 2026.07.06 · 안티그래비티 전달용 서비스 소개 자료</footer>
+</body>
+</html>

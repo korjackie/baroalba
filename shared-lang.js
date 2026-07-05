@@ -9,6 +9,7 @@ const WORK_TYPE_LABELS = {
   vi: { regular:'Thường xuyên', short:'Ngắn hạn', spot:'Tạm thời', errand:'Việc vặt' },
   ru: { regular:'Постоянная', short:'Краткосрочная', spot:'Разовая', errand:'Поручение' },
   mn: { regular:'Байнгын', short:'Богино хугацаа', spot:'Нэг удаагийн', errand:'Даалгавар' },
+  np: { regular:'नियमित', short:'अल्पकालीन', spot:'एकपटक', errand:'सन्देश' },
 };
 
 const VEHICLE_LABELS = {
@@ -18,6 +19,7 @@ const VEHICLE_LABELS = {
   ja: { bicycle:'自転車', kickboard:'電動キック', motorcycle:'バイク', car_compact:'普通車(小)', car_midsize:'普通車(中)', car_suv:'SUV', car_large:'大型車', truck:'トラック' },
   vi: { bicycle:'Xe đạp', kickboard:'Xe điện', motorcycle:'Xe máy', car_compact:'Ô tô nhỏ', car_midsize:'Ô tô vừa', car_suv:'SUV', car_large:'Ô tô lớn', truck:'Xe tải' },
   ru: { bicycle:'Велосипед', kickboard:'Самокат', motorcycle:'Мотоцикл', car_compact:'Малый авто', car_midsize:'Средний авто', car_suv:'SUV', car_large:'Большой авто', truck:'Грузовик' },
+  np: { bicycle:'साइकल', kickboard:'इलेक्ट्रिक स्कुटर', motorcycle:'मोटरसाइकल', car_compact:'साना कार', car_midsize:'मझौला कार', car_suv:'SUV', car_large:'ठूलो कार', truck:'ट्रक' },
 };
 
 const STRENGTH_LABELS = {
@@ -62,6 +64,13 @@ const STRENGTH_LABELS = {
     driving:'Вождение', language:'Языки', detail:'Внимательность', stamina:'Выносливость',
     night:'Ночные смены', clean:'Чистоплотность', photo:'Фото/Видео', cooking:'Кулинария',
     elderly:'Уход за пожилыми', pet:'С животными', handyman:'Умелые руки', moving:'Переезды',
+  },
+  np: {
+    strong:'शारीरिक बल', speed:'छिटो', numbers:'संख्यामा दक्ष', design:'डिजाइन',
+    experience:'विविध अनुभव', always_on:'सधैं तयार', educated:'उच्च शिक्षा', kind:'मित्रवत्',
+    driving:'राम्रो चालक', language:'बहुभाषी', detail:'सूक्ष्मता', stamina:'शारीरिक क्षमता',
+    night:'राति गर्न सकिन्छ', clean:'सफाई', photo:'फोटो/भिडियो', cooking:'राम्रो पकाउने',
+    elderly:'वृद्धसेवा', pet:'पाल्तु जनावर OK', handyman:'हातको काम', moving:'सरसामान ढुवानी',
   },
 };
 
@@ -617,6 +626,82 @@ const TRANSLATIONS = {
     nearby_no_jobs:'Нет вакансий рядом', expand_radius:'Расш. до {n}км',
     lesson_nearby:'Занятия рядом', lesson_tab_lesson:'🎾 Урок', lesson_tab_tutoring:'📚 Репетитор', lesson_tab_technical:'🔧 Спецнавык', lesson_reg_title:'Добавить урок', lesson_my_title:'Мои занятия', lesson_my_empty:'Нет занятий', lesson_my_noworker:'Сначала создайте профиль работника',
   },
+  np: {
+    nav_home:'घर', nav_map:'नक्सा', nav_swipe:'स्वाइप', nav_applications:'आवेदन', nav_chats:'कुराकानी', nav_profile:'मेरो पेज',
+    tab_status:'आवेदनको स्थिति', tab_bookmarks:'🔖 बुकमार्क',
+    status_pending:'समीक्षाधीन', status_accepted:'✅ स्वीकृत', status_rejected:'❌ अस्वीकृत', status_cancelled:'रद्द',
+    apply_btn:'⚡ अहिले आवेदन गर्नुहोस्', apply_chat_btn:'💬 नियोक्तालाई सन्देश',
+    cat_all:'सबै', cat_urgent:'🔥 अत्यावश्यक',
+    loading:'नक्सा लोड हुँदैछ...',
+    search_placeholder:'क्षेत्र, पेशा खोज्नुहोस्',
+    job_search_placeholder:'काम, कम्पनी खोज्नुहोस्',
+    work_type_label:'काम प्रकार', wage_label:'प्रति घण्टा', location_label:'स्थान',
+    apply_success:'आवेदन सफलतापूर्वक पठाइयो!', cancel_confirm:'आवेदन रद्द गर्ने?',
+    no_jobs:'नजिक कुनै काम छैन', profile_incomplete:'कृपया प्रोफाइल पूरा गर्नुहोस्',
+    login_required:'लगइन आवश्यक छ',
+    lang_desc:'भाषा: नेपाली',
+    pw_toggle:'पासवर्ड परिवर्तन', pw_submit:'परिवर्तन', lang_save:'भाषा सुरक्षित गर्नुहोस्',
+    terms:'सेवा सर्तहरू', privacy:'गोपनीयता नीति',
+    cancel:'रद्द', save:'सुरक्षित', logout:'बाहिर निस्कनुहोस्', withdraw:'खाता मेटाउनुहोस्',
+    section_profile:'मेरो प्रोफाइल',
+    portfolio_title:'प्रोफाइल र पोर्टफोलियो फोटो',
+    profile_main_photo:'प्रोफाइल फोटो (मुख्य)',
+    birth_label:'जन्म मिति', phone_label:'फोन नम्बर', gender_label:'लिंग',
+    gender_male:'पुरुष', gender_female:'महिला', region_label:'बस्ने ठाउँ',
+    bio_label:'आफूबारे', exp_label:'अनुभव',
+    skill_label:'सिप', skill_add:'+ थप्नुहोस्',
+    vehicle_section:'यातायात', multi_select:'धेरै छनोट सकिन्छ',
+    strength_section:'मेरो विशेषता', strength_max:'अधिकतम ५',
+    strength_desc:'वैकल्पिक · नियोक्तालाई देखाउने आफ्ना विशेषता छान्नुहोस्',
+    lang_ability:'बोल्न सक्ने भाषाहरू', lang_other_add:'+ थप्नुहोस्',
+    cert_section:'प्रमाणपत्रहरू', cert_owner_only:'केवल नियोक्तालाई देखिन्छ',
+    cert_not_reg:'दर्ता छैन', cert_upload_btn:'अपलोड',
+    cert_health:'स्वास्थ्य प्रमाणपत्र', cert_health_desc:'खाद्य उद्योगमा अनिवार्य',
+    cert_driver:'सवारी चालक अनुमतिपत्र', cert_driver_desc:'डेलिभरी/ट्रान्सपोर्ट',
+    cert_food:'खाद्य स्वच्छता लाइसेन्स', cert_food_desc:'भान्सा/खाद्य उद्योग',
+    cert_sanitation:'स्वच्छता प्रशिक्षण', cert_sanitation_desc:'खाद्य कर्मचारी शिक्षा',
+    cert_other:'अन्य प्रमाणपत्र', cert_other_desc:'स्वतन्त्र रूपले अपलोड गर्नुहोस्',
+    noti_section:'सूचना सेटिङ',
+    noti_chat:'च्याट सूचना', noti_chat_desc:'नयाँ सन्देश प्राप्त हुँदा',
+    noti_status:'आवेदन सूचना', noti_status_desc:'आवेदनको स्थिति परिवर्तन हुँदा',
+    biz_name_label:'व्यापार नाम', biz_desc_label:'व्यापार विवरण', biz_photo_title:'व्यापार फोटो',
+    owner_badge:'नियोक्ता', owner_account:'नियोक्ता खाता',
+    tab_my_postings:'मेरो जागिर', tab_applicants:'आवेदकहरू',
+    stat_open:'भर्ना', stat_total_applicants:'कुल आवेदन', stat_confirmed:'पुष्टि भयो',
+    section_my_postings:'मेरो जागिर सूची', section_all_applicants:'सबै आवेदकहरू',
+    community_title:'समुदाय', community_desc_owner:'नियोक्ता बोर्ड · जागिर जानकारी',
+    owner_biz_section:'व्यापार जानकारी', biz_photo_hint:'(अधिकतम ५ · पहिलो मुख्य)',
+    biz_add_photo:'+ फोटो थप्नुहोस्', owner_places_section:'मेरो ठाउँहरू',
+    owner_places_hint:'ठाउँ थप्नुहोस् र जागिर पोस्ट गर्दा छिटो छान्नुहोस्',
+    owner_plan_section:'योजना', lang_section:'भाषा सेटिङ',
+    plan_free_name:'निःशुल्क योजना', plan_free_desc:'अधिकतम ३ जागिर, सामान्य',
+    plan_basic_name:'आधारभूत योजना', plan_basic_desc:'१० जागिर, फिल्टर, तथ्याङ्क',
+    plan_pro_name:'प्रो योजना ⚡', plan_pro_desc:'असीमित, प्रिमियम, AI',
+    owner_map_hint:'नक्सा मार्कर क्लिक गर्नुहोस्',
+    chats_panel:'कुराकानी सूची', posting_detail_title:'जागिर विवरण',
+    applicant_profile:'आवेदकको प्रोफाइल', share_posting:'जागिर साझा गर्नुहोस्',
+    copy_link:'लिंक कपी गर्नुहोस्', kakao_share:'KakaoTalk', share_more:'थप साझा गर्नुहोस्',
+    send_btn:'पठाउनुहोस्', chat_msg_placeholder:'सन्देश लेख्नुहोस्',
+    form_post_new:'जागिर पोस्ट गर्नुहोस्', form_post_edit:'जागिर सम्पादन',
+    job_type_alba:'सामान्य', job_type_errand:'सन्देश', job_type_technical:'प्राविधिक', job_type_care:'हेरचाह',
+    form_category_label:'श्रेणी', form_needed_label:'चाहिने जनशक्ति', form_wage_label:'प्रति घण्टा (₩)',
+    form_days_label:'काम गर्ने दिन', form_start_date:'सुरु मिति', form_end_date:'अन्त मिति',
+    form_start_time:'सुरु समय', form_end_time:'अन्त समय',
+    form_duration_label:'अनुमानित अवधि', form_desc_label:'विवरण',
+    form_submit_post:'जागिर पोस्ट गर्नुहोस्', form_submit_edit:'परिवर्तन सुरक्षित',
+    same_day_label:'उही दिन भुक्तानी', surge_mode_label:'फ्ल्यास मोड',
+    premium_label:'प्रिमियम', age_limit_label:'केवल १८+ मात्र',
+    loc_tab_place:'ठाउँ', loc_tab_addr:'ठेगाना', loc_tab_direct:'म्यानुअल',
+    work_type_spot:'एकपटक', work_type_short:'अल्पकालीन', work_type_regular:'नियमित',
+    status_open_label:'खुला', status_closed_label:'बन्द', status_expired_label:'म्याद सकियो',
+    filter_cat:'श्रेणी', filter_work_type:'काम प्रकार', filter_lesson:'पाठ', filter_technical:'प्राविधिक', filter_more:'फिल्टर',
+    sort_dist:'नजिक', sort_wage_desc:'तलब↑', sort_wage_asc:'तलब↓', sort_date_asc:'सबैभन्दा पहिले', sort_date_desc:'पछि',
+    nearby_jobs_fmt:'नजिक {n} काम',
+    today_urgent:'आजको अत्यावश्यक', ai_rec_title:'तपाईंका लागि', ai_rec_subtitle:'हेराइ र स्वाइपमा आधारित',
+    status_ongoing:'जारी छ', status_not_started:'सुरु भएको छैन', cycle_spot:'एक दिन',
+    nearby_no_jobs:'नजिक कुनै काम छैन', expand_radius:'{n}km सम्म विस्तार गर्नुहोस्',
+    lesson_nearby:'नजिकका पाठहरू', lesson_tab_lesson:'🎾 पाठ', lesson_tab_tutoring:'📚 ट्युटरिङ', lesson_tab_technical:'🔧 सिप', lesson_reg_title:'पाठ थप्नुहोस्', lesson_my_title:'मेरो पाठहरू', lesson_my_empty:'कुनै पाठ दर्ता छैन', lesson_my_noworker:'पहिले कर्मचारी प्रोफाइल बनाउनुहोस्',
+  },
 };
 
 // ── 현재 언어 상태 ────────────────────────────────────────────
@@ -659,7 +744,7 @@ function saveLang() {
 }
 
 // ── 전체 UI 번역 적용 (두 앱 공통 ID 모두 처리) ──────────────
-const _LANGS = ['ko','en','zh','ja','vi','ru','mn'];
+const _LANGS = ['ko','en','zh','ja','vi','ru','mn','np'];
 
 function applyLang() {
   _pendingLang = currentLang;

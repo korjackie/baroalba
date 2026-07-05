@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 신규 기능 (2026.07.06)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--orange:#f59e0b;--orange-light:#fffbeb;--purple:#7c3aed;--purple-light:#f3e8ff;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:var(--red-light);color:var(--red);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:860px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#fff0f2,#fff5f7);border:2px solid #fecdd3;border-radius:24px;padding:40px;margin-bottom:40px;text-align:center}
+  .hero-tag{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:16px}
+  .hero h1{font-size:26px;font-weight:900;color:var(--gray-900);line-height:1.3;letter-spacing:-0.5px;margin-bottom:12px}
+  .hero p{font-size:15px;color:var(--gray-500);font-weight:500;line-height:1.7}
+  .version-row{display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+  .v-chip{background:#fff;border:2px solid var(--red);color:var(--red);font-size:13px;font-weight:800;padding:6px 16px;border-radius:100px}
+  .section{margin-bottom:32px}
+  .section-title{font-size:13px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+  .card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--gray-200)}
+  .card-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+  .card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .card-icon.red{background:var(--red-light)}
+  .card-icon.green{background:var(--green-light)}
+  .card-icon.blue{background:var(--blue-light)}
+  .card-icon.orange{background:var(--orange-light)}
+  .card-icon.purple{background:var(--purple-light)}
+  .card-title{font-size:18px;font-weight:900;color:var(--gray-900);line-height:1.3;margin-bottom:4px}
+  .card-sub{font-size:13px;color:var(--gray-500);font-weight:500}
+  .card-body{font-size:14px;color:var(--gray-700);line-height:1.8}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px;margin-right:6px;margin-bottom:4px}
+  .tag.bug{background:#fee2e2;color:#991b1b}
+  .tag.new{background:#dcfce7;color:#14532d}
+  .tag.fix{background:#dbeafe;color:#1e3a8a}
+  .tag.ux{background:#ede9fe;color:#4c1d95}
+  .tag.api{background:#fffbeb;color:#92400e}
+  .code{background:#f4f4f8;border:1px solid #e0e0e8;border-radius:10px;padding:14px 16px;font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;color:#1a1a2e;margin:12px 0;overflow-x:auto;white-space:pre}
+  .diff-before{color:#dc2626}
+  .diff-after{color:#16a34a}
+  .flow-list{list-style:none;padding:0;margin-top:10px}
+  .flow-list li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-200);font-size:13px;color:var(--gray-700)}
+  .flow-list li:last-child{border-bottom:none}
+  .flow-num{width:22px;height:22px;background:var(--red);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;margin-top:1px}
+  .highlight{background:linear-gradient(transparent 60%,rgba(200,16,46,0.15) 60%)}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">신규 기능 · 2026.07.06</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-tag">Feature Update</div>
+    <h1>애니메이션 시스템 도입 + <span class="highlight">버그 수정</span><br>+ 가입 환영 이메일 자동 발송</h1>
+    <p>antigravity 디자인 언어 이식 · 신뢰점수 로직 수정 · 급여수령확인 개선<br>신규 가입자 환영 이메일 · 브라우저 접속 시 앱 설치 유도 버튼</p>
+    <div class="version-row">
+      <span class="v-chip">sw v360</span>
+      <span class="v-chip">sw v361</span>
+    </div>
+  </div>
+
+  <!-- 애니메이션 -->
+  <div class="section">
+    <div class="section-title">디자인 · 애니메이션 (v360)</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">✨</div>
+        <div>
+          <div class="card-title">pulse-ring 애니메이션 — CTA 버튼</div>
+          <div class="card-sub"><span class="tag new">NEW</span><span class="tag ux">UX</span> antigravity → 바로알바 이식</div>
+        </div>
+      </div>
+      <div class="card-body">
+        "⚡ 바로 지원하기"와 "공고 등록하기" 버튼에 pulse-ring 애니메이션 적용. 버튼이 0.97→1.0 scale로 호흡하며 레드 그림자가 방사되어 클릭을 유도합니다.
+        <div class="code"><span class="diff-after">@keyframes pulse-ring {
+  0%   { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0.65); }
+  70%  { transform:scale(1);    box-shadow:0 0 0 10px rgba(200,16,46,0); }
+  100% { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0); }
+}
+.detail-apply-btn { animation: pulse-ring 2s infinite; }
+.detail-apply-btn:disabled { animation: none; }</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">🃏</div>
+        <div>
+          <div class="card-title">카드 hover lift 효과</div>
+          <div class="card-sub"><span class="tag ux">UX</span> 공고 카드 · 모임 카드</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <code>.job-card:hover</code> · <code>.moim-card:hover</code>에 translateY(-2px) + box-shadow 상승 효과. 데스크톱 브라우저 접속 시 카드가 살아있는 느낌을 줍니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon purple">🔵</div>
+        <div>
+          <div class="card-title">입력 필드 포커스 링</div>
+          <div class="card-sub"><span class="tag ux">UX</span> input · textarea · select 전역 적용</div>
+        </div>
+      </div>
+      <div class="card-body">
+        포커스 시 테두리가 브랜드 레드(#C8102E)로 바뀌고 3px 글로우 링이 표시됩니다.
+        <div class="code"><span class="diff-after">input:not([type="checkbox"]):focus, textarea:focus, select:focus {
+  border-color: #C8102E !important;
+  box-shadow: 0 0 0 3px rgba(200,16,46,0.12) !important;
+}</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">📍</div>
+        <div>
+          <div class="card-title">marker-bounce / marker-wave 클래스</div>
+          <div class="card-sub"><span class="tag new">NEW</span> 지도 마커 애니메이션용 유틸리티 클래스</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <code>.marker-pin-anim</code> (위아래 8px 바운스) · <code>.marker-wave-anim</code> (파문 확산) 클래스 추가. 향후 지도 마커나 위치 표시 UI에 적용 가능합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 버그 수정 -->
+  <div class="section">
+    <div class="section-title">버그 수정 (v360)</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">🐛</div>
+        <div>
+          <div class="card-title">신뢰점수 신규 유저 75점 인플레이션 수정</div>
+          <div class="card-sub"><span class="tag bug">BUG</span> calcBakalbaScore 로직 수정</div>
+        </div>
+      </div>
+      <div class="card-body">
+        후기가 없어도 rating 기본값을 3.0으로 설정해 신규 유저가 75점을 받는 버그. 후기 0건이면 rating 기여 0으로 처리하고 기본점수를 60→40으로 낮춤.
+        <div class="code"><span class="diff-before">// 이전: 후기 없으면 3.0 기본 → 60 + 15 = 75점
+const rating = parseFloat(w?.rating) || 3.0;
+score = 60 + (rating/5)*25 + reviews*0.5 - noshow*7</span>
+
+<span class="diff-after">// 수정: 후기 없으면 rating 기여 0
+const rating = reviews > 0 ? (parseFloat(w?.rating) || 0) : 0;
+score = 40 + (rating/5)*35 + reviews*1.5 - noshow*8</span></div>
+        <ul class="flow-list">
+          <li><div class="flow-num">→</div><div>신규 유저: 75점 → <strong>40점</strong></div></li>
+          <li><div class="flow-num">→</div><div>5.0점 · 6회: 40+35+9 = <strong>84점</strong></div></li>
+          <li><div class="flow-num">→</div><div>노쇼 1건: -8점 패널티</div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon orange">⏳</div>
+        <div>
+          <div class="card-title">급여수령확인 무한 스피너 수정</div>
+          <div class="card-sub"><span class="tag bug">BUG</span><span class="tag fix">FIX</span> loadWageHistory 타임아웃 + 재진입 초기화</div>
+        </div>
+      </div>
+      <div class="card-body">
+        패널 재열기 시 스피너가 초기화되지 않고, DB 쿼리가 무한 대기하는 문제 수정.
+        <ul class="flow-list">
+          <li><div class="flow-num">1</div><div>패널 열 때마다 <code>wage-history-list</code>를 spinner로 초기화</div></li>
+          <li><div class="flow-num">2</div><div><code>_getWorkerId()</code>에 8초 타임아웃 (Promise.race)</div></li>
+          <li><div class="flow-num">3</div><div>status 조건에서 'done' 제거 (미사용 상태값)</div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">🌏</div>
+        <div>
+          <div class="card-title">외국인 허브 → 하위 패널 전환 타이밍 수정</div>
+          <div class="card-sub"><span class="tag fix">FIX</span> setTimeout 200ms → 320ms</div>
+        </div>
+      </div>
+      <div class="card-body">
+        mpsub 트랜지션이 280ms인데 200ms 딜레이로 패널을 전환해 겹치는 문제. 320ms로 수정해 이전 패널이 완전히 닫힌 후 새 패널이 열립니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- UX 개선 -->
+  <div class="section">
+    <div class="section-title">UX 개선 (v360)</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">💴</div>
+        <div>
+          <div class="card-title">급여수령확인 — 일반 워커 메뉴로 이전</div>
+          <div class="card-sub"><span class="tag ux">UX</span> 외국인 전용 → 전체 워커 접근 가능</div>
+        </div>
+      </div>
+      <div class="card-body">
+        기존에 외국인 전용 메뉴 안에만 있던 급여수령확인을 마이페이지 → 수입현황 바로 아래로 이동. 모든 워커가 완료된 근무의 급여를 직접 확인·신고할 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 신규 기능 -->
+  <div class="section">
+    <div class="section-title">신규 기능 (v361)</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">📧</div>
+        <div>
+          <div class="card-title">신규 가입 환영 이메일 자동 발송</div>
+          <div class="card-sub"><span class="tag new">NEW</span><span class="tag api">API</span> api/welcome-email.js · Resend</div>
+        </div>
+      </div>
+      <div class="card-body">
+        카카오/네이버 OAuth 가입 완료 후 5분 이내 첫 세션에서 환영 이메일을 자동 발송합니다.
+        <ul class="flow-list">
+          <li><div class="flow-num">1</div><div>세션 초기화 시 <code>created_at</code>과 현재 시각 비교 (5분 기준)</div></li>
+          <li><div class="flow-num">2</div><div><code>welcome_sent_{userId}</code> localStorage 플래그로 중복 방지</div></li>
+          <li><div class="flow-num">3</div><div>Vercel Function <code>/api/welcome-email</code> → Resend API 호출</div></li>
+          <li><div class="flow-num">4</div><div>발송 실패 시 앱 동작에 영향 없음 (silent catch)</div></li>
+        </ul>
+        <div class="code">// 이메일 내용
+From: baroalba@multimove.co.kr
+To: 가입자 이메일
+Subject: [바로알바] 가입을 환영합니다, {name}님! 🎉
+내용: 브랜드 헤더 + 주요 기능 3가지 + CTA 버튼 + 푸터</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">📲</div>
+        <div>
+          <div class="card-title">브라우저 접속 시 앱 설치 유도 버튼</div>
+          <div class="card-sub"><span class="tag new">NEW</span><span class="tag ux">UX</span> 헤더 우측 · pulse-ring 애니메이션</div>
+        </div>
+      </div>
+      <div class="card-body">
+        브라우저로 접속한 경우 헤더 우측에 "앱 설치" 버튼이 pulse-ring 애니메이션과 함께 표시됩니다.
+        <ul class="flow-list">
+          <li><div class="flow-num">•</div><div>PWA standalone 모드 또는 Android 네이티브 앱: <strong>자동 숨김</strong></div></li>
+          <li><div class="flow-num">•</div><div>Android Chrome: beforeinstallprompt 연동 → 설치 프롬프트</div></li>
+          <li><div class="flow-num">•</div><div>iOS Safari: "공유 → 홈 화면에 추가" 안내 토스트</div></li>
+          <li><div class="flow-num">•</div><div>앱 설치 완료 시 버튼 자동 숨김</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 by MultiMOVE · 2026.07.06</footer>
+</body>
+</html>

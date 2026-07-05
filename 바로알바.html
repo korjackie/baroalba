@@ -3338,6 +3338,7 @@
         <option value="KZ">🇰🇿 카자흐스탄 (Kazakhstan)</option>
         <option value="KG">🇰🇬 키르기스스탄 (Kyrgyzstan)</option>
         <option value="MN">🇲🇳 몽골 (Mongolia)</option>
+        <option value="NP">🇳🇵 네팔 (Nepal)</option>
         <option value="CN">🇨🇳 중국 (China)</option>
         <option value="PH">🇵🇭 필리핀 (Philippines)</option>
         <option value="ID">🇮🇩 인도네시아 (Indonesia)</option>
@@ -3425,6 +3426,7 @@
       <button id="lang-vi-btn" onclick="selectLang('vi')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇻🇳 Tiếng Việt</button>
       <button id="lang-ru-btn" onclick="selectLang('ru')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇷🇺 Русский</button>
       <button id="lang-mn-btn" onclick="selectLang('mn')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇲🇳 Монгол</button>
+      <button id="lang-np-btn" onclick="selectLang('np')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇳🇵 नेपाली</button>
     </div>
   </div>
   <div style="padding:16px;flex-shrink:0">
@@ -3707,6 +3709,9 @@
         </button>
         <button onclick="applyForeignerLangFilter('mn')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
           <span style="font-size:18px">🇲🇳</span><div style="font-size:13px;font-weight:800;color:#374151">몽골어 우대</div>
+        </button>
+        <button onclick="applyForeignerLangFilter('np')" style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:11px 13px;cursor:pointer">
+          <span style="font-size:18px">🇳🇵</span><div style="font-size:13px;font-weight:800;color:#374151">네팔어 우대</div>
         </button>
       </div>
     </div>
@@ -6497,7 +6502,7 @@ async function loadMoimApplicants(gatheringId) {
   const _pMap = Object.fromEntries((profileRows || []).map(p => [p.id, p]));
   const m = _moimDetailData;
   const hasFee = m && (m.entry_fee > 0 || m.entry_fee < 0);
-  const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
+  const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', NP:'🇳🇵', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
   sec.innerHTML = `<div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding:0 2px">신청자 ${data.length}명</div>` + data.map(app => {
     const w = _pMap[app.applicant_id] || {};
     const statusColor = { pending:'#D97706', approved:'#16a34a', rejected:'#9CA3AF' }[app.status] || '#888';
@@ -7349,7 +7354,7 @@ function closeForeignerLangPanel() {
 function applyForeignerLangFilter(langCode) {
   closeForeignerLangPanel();
   window._homeFilterApplied = true;
-  const langNames = {vi:'베트남어',ru:'러시아어',zh:'중국어',mn:'몽골어',en:'영어',uz:'중앙아시아',ja:'일본어',ko:'한국어 가능'};
+  const langNames = {vi:'베트남어',ru:'러시아어',zh:'중국어',mn:'몽골어',np:'네팔어',en:'영어',uz:'중앙아시아',ja:'일본어',ko:'한국어 가능'};
   const flags = {vi:'🇻🇳',ru:'🇷🇺',zh:'🇨🇳',mn:'🇲🇳',en:'🇺🇸',uz:'🇺🇿',ja:'🇯🇵',ko:'🇰🇷'};
   let filtered, labelText;
   if (langCode === 'any') {
@@ -7457,7 +7462,7 @@ async function _renderRankPanel() {
     }
     const sorted = data.sort((a,b) => _trustScore(b.rating,b.review_count) - _trustScore(a.rating,a.review_count)).slice(0,20);
     if (!sorted.length) { listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">해당 업종 데이터가 없어요</div>'; return; }
-    const _NAT = {KR:'🇰🇷',MN:'🇲🇳',VN:'🇻🇳',RU:'🇷🇺',CN:'🇨🇳',UZ:'🇺🇿',KZ:'🇰🇿',JP:'🇯🇵',US:'🇺🇸'};
+    const _NAT = {KR:'🇰🇷',MN:'🇲🇳',NP:'🇳🇵',VN:'🇻🇳',RU:'🇷🇺',CN:'🇨🇳',UZ:'🇺🇿',KZ:'🇰🇿',JP:'🇯🇵',US:'🇺🇸'};
     const medalColors = ['#FFD700','#C0C0C0','#CD7F32'];
     listEl.innerHTML = sorted.map((d,i) => {
       const ac = avatarColor(d.name||'?');
@@ -7550,7 +7555,7 @@ async function _loadHomeTopPartners() {
       .not('rating', 'is', null).gte('review_count', 2)
       .order('review_count', { ascending: false }).limit(8);
     const wkEl = document.getElementById('home-top-worker');
-    const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿', KZ:'🇰🇿', JP:'🇯🇵', US:'🇺🇸' };
+    const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', NP:'🇳🇵', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿', KZ:'🇰🇿', JP:'🇯🇵', US:'🇺🇸' };
     const _CAT_ICON = { 'F&B':'☕', '물류':'📦', '판매':'🛍', '청소':'🧹', '이벤트':'🎉', '커플알바':'💑', '컨텐츠':'🎬', '챌린지':'🏆' };
     if (wkEl && wk && wk.length) {
       const sorted = [...wk].sort((a,b) => _trustScore(b.rating,b.review_count) - _trustScore(a.rating,a.review_count));
@@ -12429,7 +12434,7 @@ async function loadWorkerGrade() {
     document.getElementById('stat-complete-count').textContent = done;
     document.getElementById('stat-rating').textContent = w?.rating ? `★${w.rating.toFixed(1)}` : '-';
     const _ts = document.getElementById('stat-trust-score');
-    if (_ts) _ts.textContent = w ? `${calcBakalbaScore(w)}점` : '-';
+    if (_ts) _ts.textContent = (w && parseInt(w?.review_count || 0) > 0) ? `${calcBakalbaScore(w)}점` : '-';
     const mpApply = document.getElementById('mp-apply-val');
     if (mpApply) mpApply.textContent = total > 0 ? `${total}건` : '';
     const mpRating = document.getElementById('mp-rating-val');
