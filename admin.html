@@ -2,10 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1e293b">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>바로알바 관리자</title>
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,9 +13,11 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,'Apple SD Gothic Neo',sans-serif; background:#f1f5f9; min-height:100vh; }
 
+    :root { --sat: env(safe-area-inset-top, 0px); }
     .header {
       background:#1e293b; color:#fff;
       padding:14px 16px;
+      padding-top: calc(var(--sat) + 14px);
       display:flex; align-items:center; justify-content:space-between;
       position:sticky; top:0; z-index:100;
     }
@@ -139,6 +141,24 @@
     .u-btn-unban   { background:#DCFCE7; color:#16a34a; }
     .user-row.banned { opacity:0.6; border-left:3px solid #EF4444; }
 
+    /* 모임 카드 */
+    .moim-row {
+      background:#fff; border-radius:12px; margin-bottom:8px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:14px 16px;
+    }
+    .moim-row.closed { opacity:0.5; }
+    .moim-title-wrap { display:flex; align-items:center; gap:8px; margin-bottom:3px; }
+    .moim-title { font-size:14px; font-weight:800; color:#1e293b; }
+    .moim-meta { font-size:11px; color:#94a3b8; margin-top:2px; }
+    .moim-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+    .m-btn { padding:6px 12px; border-radius:8px; border:none; font-size:11px; font-weight:700; cursor:pointer; }
+    .m-btn-close  { background:#FEE2E2; color:#EF4444; }
+    .m-btn-open   { background:#DCFCE7; color:#16a34a; }
+    .m-btn-delete { background:#f1f5f9; color:#94a3b8; }
+    .moim-status-badge { font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; }
+    .ms-open   { background:#DCFCE7; color:#16a34a; }
+    .ms-closed { background:#f1f5f9; color:#94a3b8; }
+
     /* 빈 상태 */
     .empty { text-align:center; padding:48px 20px; color:#94a3b8; font-size:14px; }
 
@@ -182,6 +202,7 @@
   <button class="tab-btn" onclick="switchTab('reports')">신고관리<span id="report-badge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:0 5px;border-radius:8px;margin-left:3px;vertical-align:middle">0</span></button>
   <button class="tab-btn" onclick="switchTab('postings')">공고관리</button>
   <button class="tab-btn" onclick="switchTab('users')">회원관리</button>
+  <button class="tab-btn" onclick="switchTab('moims')">모임관리</button>
 </div>
 
 <div class="content">
@@ -193,6 +214,7 @@
       <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val" id="s-postings">-</div><div class="stat-label">활성 공고</div></div>
       <div class="stat-card alert"><div class="stat-icon">🚨</div><div class="stat-val" id="s-reports">-</div><div class="stat-label">미처리 신고</div></div>
       <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-val" id="s-apps">-</div><div class="stat-label">오늘 지원</div></div>
+      <div class="stat-card"><div class="stat-icon">🤝</div><div class="stat-val" id="s-moims">-</div><div class="stat-label">활성 모임</div></div>
     </div>
     <div class="section-head">
       <div class="section-title">최근 신고</div>
@@ -223,6 +245,16 @@
     <div id="users-list"><div class="loading">로딩 중...</div></div>
   </div>
 
+  <!-- 모임관리 -->
+  <div class="tab-content" id="tab-moims">
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterMoims('all', this)">전체</button>
+      <button class="filter-btn" onclick="filterMoims('open', this)">🟢 진행중</button>
+      <button class="filter-btn" onclick="filterMoims('closed', this)">⚫ 마감됨</button>
+    </div>
+    <div id="moims-list"><div class="loading">로딩 중...</div></div>
+  </div>
+
 </div>
 
 <div id="toast"></div>
@@ -234,6 +266,8 @@ const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
 let currentSession = null;
 let _reports = [];
 let _reportFilter = 'all';
+let _moims = [];
+let _moimFilter = 'all';
 
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
@@ -258,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ── 탭 전환 ─────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    const names = ['dashboard','reports','postings','users'];
+    const names = ['dashboard','reports','postings','users','moims'];
     b.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -266,6 +300,7 @@ function switchTab(name) {
   if (name === 'reports' && document.getElementById('reports-list').innerHTML.includes('로딩')) loadReports();
   if (name === 'postings' && document.getElementById('postings-list').innerHTML.includes('로딩')) loadPostings();
   if (name === 'users' && document.getElementById('users-list').innerHTML.includes('로딩')) loadUsers();
+  if (name === 'moims' && document.getElementById('moims-list').innerHTML.includes('로딩')) loadMoims();
 }
 
 // ── API 호출 ─────────────────────────────────────────────
@@ -289,6 +324,7 @@ async function loadDashboard() {
   document.getElementById('s-postings').textContent = stats.postings ?? '-';
   document.getElementById('s-reports').textContent = stats.pending_reports ?? '-';
   document.getElementById('s-apps').textContent = stats.today_apps ?? '-';
+  document.getElementById('s-moims').textContent = stats.moims ?? '-';
 
   if (stats.pending_reports > 0) {
     const badge = document.getElementById('report-badge');
@@ -460,6 +496,75 @@ async function toggleBan(id, ban) {
   if (u) u.is_banned = ban;
   renderUsers();
   showToast(ban ? '🚫 계정이 정지됐습니다' : '✅ 정지가 해제됐습니다');
+}
+
+// ── 모임 관리 ─────────────────────────────────────────────
+async function loadMoims() {
+  const data = await adminApi('moims');
+  _moims = Array.isArray(data) ? data : [];
+  renderMoims();
+}
+
+function filterMoims(filter, btn) {
+  _moimFilter = filter;
+  document.querySelectorAll('#tab-moims .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMoims();
+}
+
+function renderMoims() {
+  const list = _moimFilter === 'all' ? _moims : _moims.filter(m => m.status === _moimFilter);
+  if (!list.length) {
+    document.getElementById('moims-list').innerHTML = '<div class="empty">모임 없음</div>';
+    return;
+  }
+  const catIcon = { exercise:'🏋️', hobby:'🎨', study:'📚', game:'🎮', food:'🍜', travel:'✈️', social:'🤝' };
+  document.getElementById('moims-list').innerHTML = list.map(m => {
+    const isClosed = m.status === 'closed';
+    const dateStr = m.gathering_date
+      ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })
+      : '-';
+    const icon = catIcon[m.category] || '🤝';
+    const spots = `${m.current_count || 0}/${m.max_count || '?'}명`;
+    return `
+      <div class="moim-row ${isClosed ? 'closed' : ''}" id="mr-${m.id}">
+        <div class="moim-title-wrap">
+          <span>${icon}</span>
+          <span class="moim-title">${m.title || '(제목없음)'}</span>
+          <span class="moim-status-badge ${isClosed ? 'ms-closed' : 'ms-open'}">${isClosed ? '마감' : '진행중'}</span>
+          ${!m.is_public ? '<span style="font-size:10px;background:#FEF3C7;color:#D97706;padding:2px 7px;border-radius:5px;font-weight:800">비공개</span>' : ''}
+        </div>
+        <div class="moim-meta">${dateStr} · ${spots} · 주최 ${m.host_name || '-'}${m.host_phone ? ' (' + m.host_phone + ')' : ''}</div>
+        ${m.location_name ? `<div class="moim-meta" style="margin-top:2px">📍 ${m.location_name}</div>` : ''}
+        <div class="moim-actions">
+          ${isClosed
+            ? `<button class="m-btn m-btn-open" onclick="toggleMoimStatus('${m.id}','open')">재오픈</button>`
+            : `<button class="m-btn m-btn-close" onclick="toggleMoimStatus('${m.id}','closed')">강제마감</button>`}
+          <button class="m-btn m-btn-delete" onclick="deleteMoimById('${m.id}')">삭제</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function toggleMoimStatus(id, status) {
+  const msg = status === 'closed' ? '이 모임을 강제 마감하겠습니까?' : '이 모임을 재오픈하겠습니까?';
+  if (!confirm(msg)) return;
+  await adminApi('close_moim', 'PATCH', { id, status });
+  const m = _moims.find(m => m.id === id);
+  if (m) m.status = status;
+  renderMoims();
+  document.getElementById('s-moims').textContent = _moims.filter(m => m.status === 'open').length;
+  showToast(status === 'closed' ? '모임이 강제 마감됐습니다' : '✅ 모임이 재오픈됐습니다');
+}
+
+async function deleteMoimById(id) {
+  const m = _moims.find(m => m.id === id);
+  if (!confirm(`"${m?.title || '이 모임'}"을 완전히 삭제하겠습니까?\n삭제된 데이터는 복구되지 않습니다.`)) return;
+  await adminApi('delete_moim', 'DELETE', { id });
+  _moims = _moims.filter(m => m.id !== id);
+  renderMoims();
+  document.getElementById('s-moims').textContent = _moims.filter(m => m.status === 'open').length;
+  showToast('모임이 삭제됐습니다');
 }
 
 // ── 공통 ─────────────────────────────────────────────────

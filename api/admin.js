@@ -38,11 +38,12 @@ module.exports = async function handler(req, res) {
   try {
     // ── 대시보드 통계 ──────────────────────────────────
     if (action === 'stats') {
-      const [workers, postings, reports, apps] = await Promise.all([
+      const [workers, postings, reports, apps, moims] = await Promise.all([
         sb('workers?select=id', svcKey).then(r => r.json()),
         sb('job_postings?select=id&status=neq.closed', svcKey).then(r => r.json()),
         sb('reports?select=id,status', svcKey).then(r => r.json()),
         sb(`applications?select=id&created_at=gte.${new Date().toISOString().slice(0,10)}`, svcKey).then(r => r.json()),
+        sb('gatherings?select=id&status=eq.open', svcKey).then(r => r.json()),
       ]);
       const pending = (Array.isArray(reports) ? reports : []).filter(r => !r.status || r.status === 'pending').length;
       return res.json({
@@ -50,6 +51,7 @@ module.exports = async function handler(req, res) {
         postings: Array.isArray(postings) ? postings.length : 0,
         pending_reports: pending,
         today_apps: Array.isArray(apps) ? apps.length : 0,
+        moims: Array.isArray(moims) ? moims.length : 0,
       });
     }
 
@@ -145,6 +147,44 @@ module.exports = async function handler(req, res) {
         method: 'PATCH',
         body: JSON.stringify({ is_banned: !!is_banned })
       });
+      return res.json({ ok: true });
+    }
+
+    // ── 모임 목록 ──────────────────────────────────────────────
+    if (action === 'moims') {
+      const data = await sb(
+        'gatherings?select=id,title,category,gathering_date,host_id,current_count,max_count,status,is_public,location_name,created_at&order=created_at.desc&limit=200',
+        svcKey
+      ).then(r => r.json());
+      const list = Array.isArray(data) ? data : [];
+      const hostIds = [...new Set(list.map(m => m.host_id).filter(Boolean))];
+      const hosts = hostIds.length
+        ? await sb(`workers?id=in.(${hostIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json())
+        : [];
+      const hostMap = Object.fromEntries((Array.isArray(hosts) ? hosts : []).map(h => [h.id, h]));
+      return res.json(list.map(m => ({
+        ...m,
+        host_name: hostMap[m.host_id]?.name || m.host_id?.slice(0, 8) || '-',
+        host_phone: hostMap[m.host_id]?.phone || '',
+      })));
+    }
+
+    // ── 모임 상태 변경 (강제마감 / 재오픈) ───────────────────
+    if (action === 'close_moim' && req.method === 'PATCH') {
+      const { id, status } = req.body || {};
+      if (!id || !status) return res.status(400).json({ error: 'id, status required' });
+      await sb(`gatherings?id=eq.${id}`, svcKey, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+      return res.json({ ok: true });
+    }
+
+    // ── 모임 삭제 ─────────────────────────────────────────────
+    if (action === 'delete_moim' && req.method === 'DELETE') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      await sb(`gatherings?id=eq.${id}`, svcKey, { method: 'DELETE' });
       return res.json({ ok: true });
     }
 
