@@ -16424,11 +16424,10 @@ async function loadApplicants() {
   const { data, error } = await db.from('applications')
     .select('*, apply_message, workers(id, name, phone, rating, review_count, noshow_count, skills), job_postings(title)')
     .in('job_posting_id', jobIds)
-    .order('is_quick', { ascending: false })
     .order('applied_at', { ascending: false });
 
   if (error) { showToast('지원자 불러오기 실패'); return; }
-  const apps = data || [];
+  const apps = (data || []).sort((a, b) => (b.is_quick ? 1 : 0) - (a.is_quick ? 1 : 0));
   // 마지막 근무일 배치 조회
   const wIds = apps.map(a => a.workers?.id).filter(Boolean);
   let lastWorkedMap = {};
