@@ -1,5 +1,13 @@
 const SB_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
 
+// 서버 사이드 보너스 계산 (클라이언트 조작 방지)
+function getBonus(amount) {
+  if (amount >= 50000) return 8000;
+  if (amount >= 30000) return 4000;
+  if (amount >= 10000) return 1000;
+  return 0;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -7,8 +15,8 @@ export default async function handler(req, res) {
   if (!paymentKey || !orderId || !amount || !userId) {
     return res.status(400).json({ error: '필수 파라미터 누락' });
   }
-  if (typeof amount !== 'number' || amount < 100 || amount > 500000) {
-    return res.status(400).json({ error: '충전 금액 범위 초과' });
+  if (typeof amount !== 'number' || amount < 5000 || amount > 500000) {
+    return res.status(400).json({ error: '충전 금액 범위 오류' });
   }
 
   const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -44,6 +52,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: tossData.message || '결제 승인 실패' });
   }
 
+  // 보너스 계산
+  const bonus = getBonus(amount);
+  const totalPoints = amount + bonus;
+
   // 현재 잔액 조회
   const balRes = await fetch(
     `${SB_URL}/rest/v1/point_accounts?user_id=eq.${userId}&select=balance&limit=1`,
@@ -51,9 +63,9 @@ export default async function handler(req, res) {
   );
   const balRows = await balRes.json();
   const currentBalance = Array.isArray(balRows) && balRows.length ? (balRows[0].balance || 0) : 0;
-  const newBalance = currentBalance + amount;
+  const newBalance = currentBalance + totalPoints;
 
-  // point_accounts upsert (잔액 갱신)
+  // point_accounts upsert
   await fetch(`${SB_URL}/rest/v1/point_accounts`, {
     method: 'POST',
     headers: { ...sbHeaders, Prefer: 'resolution=merge-duplicates,return=minimal' },
@@ -65,19 +77,22 @@ export default async function handler(req, res) {
   });
 
   // point_transactions 기록
+  const desc = bonus > 0
+    ? `포인트 충전 ${amount.toLocaleString()}원 (+보너스 ${bonus.toLocaleString()}P)`
+    : `포인트 충전 ${amount.toLocaleString()}원`;
   await fetch(`${SB_URL}/rest/v1/point_transactions`, {
     method: 'POST',
     headers: { ...sbHeaders, Prefer: 'return=minimal' },
     body: JSON.stringify({
       user_id: userId,
       type: 'charge',
-      amount,
+      amount: totalPoints,
       balance_after: newBalance,
-      description: `포인트 충전 ${amount.toLocaleString()}P`,
+      description: desc,
       payment_key: paymentKey,
       order_id: orderId,
     }),
   });
 
-  return res.status(200).json({ success: true, balance: newBalance });
+  return res.status(200).json({ success: true, balance: newBalance, totalPoints });
 }

@@ -20600,8 +20600,19 @@ function closeMannnamPanel() {
 }
 
 // ── 포인트 시스템 ──────────────────────────────────────────
-let _selectedChargeAmt = 0;
-const CHARGE_AMTS = [1000, 3000, 5000, 10000, 30000, 50000];
+// 충전 티어: { amount(KRW), bonus(P 추가 지급), total(최종 포인트) }
+const CHARGE_TIERS = [
+  { amount: 5000,  bonus: 0,    total: 5000  },
+  { amount: 10000, bonus: 1000, total: 11000 },
+  { amount: 30000, bonus: 4000, total: 34000 },
+  { amount: 50000, bonus: 8000, total: 58000 },
+];
+// ▼ 계좌이체용 입금 계좌 정보 (변경 필요)
+const BANK_INFO = { bank: '국민은행', account: '123-456-78901234', holder: '멀티무브(주)' };
+
+let _selectedChargeTier = null;   // 선택된 티어 (null=기타)
+let _selectedChargeAmt  = 0;      // 최종 KRW 금액 (기타 포함)
+let _selectedChargeMethod = '';   // 'toss' | 'cash'
 
 async function loadUserPoints() {
   if (!currentUser) return 0;
@@ -20613,7 +20624,7 @@ async function loadUserPoints() {
     if (mpEl) mpEl.textContent = bal.toLocaleString() + 'P';
     const phBal = document.getElementById('ph-balance');
     if (phBal) phBal.textContent = bal.toLocaleString();
-    const ccb = document.getElementById('charge-current-balance');
+    const ccb = document.getElementById('charge-balance-display');
     if (ccb) ccb.textContent = bal.toLocaleString();
     return bal;
   } catch(_) { return 0; }
@@ -20621,15 +20632,11 @@ async function loadUserPoints() {
 
 function openPointCharge() {
   if (!currentUser) { showLoginPrompt('로그인이 필요해요', '포인트 충전은 로그인 후 이용 가능합니다.'); return; }
-  _selectedChargeAmt = 0;
+  _selectedChargeTier = null;
+  _selectedChargeAmt  = 0;
+  _selectedChargeMethod = '';
   loadUserPoints();
-  _buildChargeAmtGrid();
-  const btn = document.getElementById('pc-pay-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.style.cssText = 'width:100%;padding:15px;border:none;border-radius:14px;background:#e0e0e0;color:#aaa;font-size:15px;font-weight:900;cursor:not-allowed';
-    btn.textContent = '금액을 선택해주세요';
-  }
+  _pcGoToStep('method');
   const overlay = document.getElementById('point-charge-overlay');
   if (overlay) { overlay.style.display = 'flex'; overlay.style.alignItems = 'flex-end'; }
 }
@@ -20639,39 +20646,130 @@ function closePointCharge() {
   if (overlay) overlay.style.display = 'none';
 }
 
+function _pcGoToStep(step) {
+  ['method','amount','bank'].forEach(s => {
+    const el = document.getElementById(`pc-step-${s}`);
+    if (el) el.style.display = s === step ? 'block' : 'none';
+  });
+  // 금액 단계 진입 시 그리드 초기화
+  if (step === 'amount') _buildChargeAmtGrid();
+  // 계좌이체 단계 진입 시 은행 정보 + 입금자명 초기화
+  if (step === 'bank') {
+    const ni = document.getElementById('pc-depositor-name');
+    if (ni) ni.value = currentUser?.user_metadata?.full_name || '';
+    const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
+    const bnEl = document.getElementById('pc-bank-name');    if (bnEl) bnEl.textContent = BANK_INFO.bank;
+    const baEl = document.getElementById('pc-bank-account'); if (baEl) baEl.textContent = BANK_INFO.account;
+    const bhEl = document.getElementById('pc-bank-holder');  if (bhEl) bhEl.textContent = BANK_INFO.holder;
+    const amEl = document.getElementById('pc-bank-amount');  if (amEl) amEl.textContent = `₩${_selectedChargeAmt.toLocaleString()} → ${totalPts.toLocaleString()}P`;
+    _updateCashBtn();
+  }
+}
+
+function selectChargeMethod(method) {
+  _selectedChargeMethod = method;
+  document.querySelectorAll('.pc-method-btn').forEach(b => {
+    const isSelected = b.dataset.method === method;
+    b.style.borderColor  = isSelected ? '#7C3AED' : '#e0e0e0';
+    b.style.background   = isSelected ? '#f3e8ff' : '#fff';
+    b.style.color        = isSelected ? '#7C3AED' : '#555';
+    b.style.fontWeight   = isSelected ? '900' : '600';
+  });
+  const nextBtn = document.getElementById('pc-method-next');
+  if (nextBtn) {
+    nextBtn.disabled = false;
+    nextBtn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px';
+    nextBtn.textContent = method === 'cash' ? '계좌이체로 충전 ›' : '토스로 결제 ›';
+  }
+}
+
 function _buildChargeAmtGrid() {
   const grid = document.getElementById('point-amt-grid');
   if (!grid) return;
-  grid.innerHTML = CHARGE_AMTS.map(amt => `
-    <button class="pc-amt-btn" data-amt="${amt}" onclick="selectChargeAmt(this,${amt})"
-      style="border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 6px;background:#fff;cursor:pointer;text-align:center;font-size:13px;font-weight:800;color:#333;line-height:1.4">
-      ${amt.toLocaleString()}P<br><span style="font-size:10px;font-weight:500;color:#aaa">₩${amt.toLocaleString()}</span>
-    </button>`).join('');
+  // 티어 버튼
+  const tierHtml = CHARGE_TIERS.map((t, i) => {
+    const bonusHtml = t.bonus > 0
+      ? `<div style="font-size:9px;font-weight:800;color:#f43f5e;margin-top:1px">+${t.bonus.toLocaleString()}P 보너스!</div>`
+      : `<div style="font-size:9px;color:transparent;margin-top:1px">ㅡ</div>`;
+    return `<button class="pc-amt-btn" data-tier="${i}" onclick="selectChargeTier(this,${i})"
+      style="border:1.5px solid #e0e0e0;border-radius:12px;padding:10px 6px;background:#fff;cursor:pointer;text-align:center;line-height:1.3;transition:all .15s">
+      <div style="font-size:13px;font-weight:900;color:#333">₩${t.amount.toLocaleString()}</div>
+      <div style="font-size:11px;font-weight:700;color:#7C3AED;margin-top:2px">${t.total.toLocaleString()}P</div>
+      ${bonusHtml}
+    </button>`;
+  }).join('');
+  // 기타금액
+  const customHtml = `<div style="grid-column:1/-1;margin-top:2px">
+    <div style="font-size:11px;color:#aaa;margin-bottom:5px;font-weight:700">기타 금액 (최소 5,000원, 보너스 없음)</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="pc-custom-amt" type="number" min="5000" max="500000" step="1000" placeholder="직접 입력"
+        oninput="onCustomAmtInput(this)"
+        style="flex:1;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;outline:none">
+      <span style="font-size:12px;color:#888;flex-shrink:0">원</span>
+    </div>
+  </div>`;
+  grid.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">${tierHtml}</div>${customHtml}`;
+
+  const proceedBtn = document.getElementById('pc-amt-proceed');
+  if (proceedBtn) { proceedBtn.disabled = true; proceedBtn.style.background = '#e0e0e0'; proceedBtn.style.color = '#aaa'; proceedBtn.style.cursor = 'not-allowed'; proceedBtn.textContent = '금액을 선택해주세요'; }
 }
 
-function selectChargeAmt(btn, amt) {
-  _selectedChargeAmt = amt;
+function selectChargeTier(btn, tierIdx) {
+  _selectedChargeTier = CHARGE_TIERS[tierIdx];
+  _selectedChargeAmt  = _selectedChargeTier.amount;
+  // 커스텀 입력 초기화
+  const ci = document.getElementById('pc-custom-amt');
+  if (ci) ci.value = '';
+  // 버튼 스타일
   document.querySelectorAll('.pc-amt-btn').forEach(b => {
-    b.style.borderColor = '#e0e0e0';
-    b.style.background = '#fff';
-    b.style.color = '#333';
+    b.style.borderColor = '#e0e0e0'; b.style.background = '#fff';
   });
-  btn.style.borderColor = '#7C3AED';
-  btn.style.background = '#f3e8ff';
-  btn.style.color = '#7C3AED';
-  const payBtn = document.getElementById('pc-pay-btn');
-  if (payBtn) {
-    payBtn.disabled = false;
-    payBtn.style.cssText = `width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer`;
-    payBtn.textContent = `💎 ${amt.toLocaleString()}P 충전하기 (₩${amt.toLocaleString()})`;
+  btn.style.borderColor = '#7C3AED'; btn.style.background = '#f3e8ff';
+  _updateAmtProceedBtn();
+}
+
+function onCustomAmtInput(inp) {
+  const v = parseInt(inp.value, 10);
+  if (v >= 5000) {
+    _selectedChargeTier = null;
+    _selectedChargeAmt  = v;
+    document.querySelectorAll('.pc-amt-btn').forEach(b => { b.style.borderColor = '#e0e0e0'; b.style.background = '#fff'; });
+    _updateAmtProceedBtn();
+  } else {
+    _selectedChargeTier = null;
+    _selectedChargeAmt  = 0;
+    _updateAmtProceedBtn();
+  }
+}
+
+function _updateAmtProceedBtn() {
+  const btn = document.getElementById('pc-amt-proceed');
+  if (!btn) return;
+  if (!_selectedChargeAmt) {
+    btn.disabled = true; btn.style.background = '#e0e0e0'; btn.style.color = '#aaa'; btn.style.cursor = 'not-allowed'; btn.textContent = '금액을 선택해주세요';
+    return;
+  }
+  const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
+  btn.disabled = false;
+  btn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer';
+  btn.textContent = `💎 ${totalPts.toLocaleString()}P 충전 (₩${_selectedChargeAmt.toLocaleString()})`;
+}
+
+function proceedFromAmount() {
+  if (!_selectedChargeAmt) return;
+  if (_selectedChargeMethod === 'cash') {
+    _pcGoToStep('bank');
+  } else {
+    requestTossPointPayment();
   }
 }
 
 async function requestTossPointPayment() {
   if (!_selectedChargeAmt) return;
   if (typeof TossPayments === 'undefined') { showToast('결제 모듈 로드 실패. 새로고침 후 시도해주세요.'); return; }
-  const btn = document.getElementById('pc-pay-btn');
+  const btn = document.getElementById('pc-amt-proceed');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+  const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
   const orderId = `point-${(currentUser.id || '').slice(0,8)}-${Date.now()}`;
   const base = window.location.origin + window.location.pathname;
   try {
@@ -20679,7 +20777,7 @@ async function requestTossPointPayment() {
     await tossPayments.requestPayment('카드', {
       amount: _selectedChargeAmt,
       orderId,
-      orderName: `바로알바 포인트 ${_selectedChargeAmt.toLocaleString()}P`,
+      orderName: `바로알바 포인트 ${totalPts.toLocaleString()}P`,
       successUrl: `${base}?point_payment=success&orderId=${orderId}&amount=${_selectedChargeAmt}`,
       failUrl: `${base}?point_payment=fail`,
       customerEmail: currentUser.email || '',
@@ -20687,11 +20785,7 @@ async function requestTossPointPayment() {
     });
   } catch (e) {
     if (e.code !== 'USER_CANCEL') showToast('결제 오류: ' + (e.message || '다시 시도해주세요'));
-    if (btn) {
-      btn.disabled = false;
-      btn.style.cssText = `width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer`;
-      btn.textContent = `💎 ${_selectedChargeAmt.toLocaleString()}P 충전하기 (₩${_selectedChargeAmt.toLocaleString()})`;
-    }
+    if (btn) { btn.disabled = false; _updateAmtProceedBtn(); }
   }
 }
 
@@ -20703,8 +20797,8 @@ async function handlePointPaymentResult() {
   if (result === 'fail') { showToast('포인트 충전이 취소됐습니다'); return; }
   if (result !== 'success') return;
   const paymentKey = params.get('paymentKey');
-  const orderId = params.get('orderId');
-  const amount = params.get('amount');
+  const orderId    = params.get('orderId');
+  const amount     = params.get('amount');
   if (!paymentKey || !orderId || !amount) return;
   showToast('포인트 충전 확인 중...');
   try {
@@ -20715,13 +20809,52 @@ async function handlePointPaymentResult() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(`✅ ${Number(amount).toLocaleString()}P 충전 완료!`);
+      showToast(`✅ ${(data.totalPoints || Number(amount)).toLocaleString()}P 충전 완료!`);
       loadUserPoints();
     } else {
       showToast('충전 확인 실패: ' + (data.error || '오류'));
     }
   } catch (e) {
     showToast('충전 확인 중 오류 발생');
+  }
+}
+
+function _updateCashBtn() {
+  const ni = document.getElementById('pc-depositor-name');
+  const btn = document.getElementById('pc-cash-submit');
+  if (!btn) return;
+  const hasName = ni?.value.trim().length > 0;
+  btn.disabled = !hasName;
+  btn.style.background = hasName ? 'linear-gradient(135deg,#16a34a,#22c55e)' : '#e0e0e0';
+  btn.style.color = hasName ? '#fff' : '#aaa';
+  btn.style.cursor = hasName ? 'pointer' : 'not-allowed';
+}
+
+async function submitCashDeposit() {
+  const depositorName = document.getElementById('pc-depositor-name')?.value.trim();
+  if (!depositorName) { showToast('입금자명을 입력해주세요'); return; }
+  if (!_selectedChargeAmt) return;
+  const btn = document.getElementById('pc-cash-submit');
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+  const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
+  try {
+    const { error } = await db.from('point_charge_requests').insert({
+      user_id: currentUser.id,
+      user_name: currentUser.user_metadata?.full_name || depositorName,
+      user_email: currentUser.email || '',
+      amount: _selectedChargeAmt,
+      bonus_points: _selectedChargeTier ? _selectedChargeTier.bonus : 0,
+      total_points: totalPts,
+      method: 'cash',
+      status: 'pending',
+      deposit_name: depositorName,
+    });
+    if (error) throw error;
+    closePointCharge();
+    showToast(`✅ 입금 신청 완료! 확인 후 ${totalPts.toLocaleString()}P가 지급됩니다.`);
+  } catch (e) {
+    showToast('신청 중 오류: ' + (e.message || '다시 시도해주세요'));
+    if (btn) { btn.disabled = false; btn.textContent = '입금 완료 알림 보내기'; }
   }
 }
 
@@ -21780,19 +21913,91 @@ function renderWorkerLocMap(containerId, lat, lng) {
   </div>
 </div>
 
-<!-- ── 포인트 충전 모달 ── -->
+<!-- ── 포인트 충전 모달 (3단계: 수단선택 → 금액선택 → 계좌이체) ── -->
 <div id="point-charge-overlay" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.5)" onclick="if(event.target===this)closePointCharge()">
-  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom))">
-    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:0 20px;padding-bottom:max(20px,env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 18px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <div style="font-size:17px;font-weight:900;color:#111">💎 포인트 충전</div>
       <button onclick="closePointCharge()" style="background:none;border:none;font-size:26px;color:#bbb;cursor:pointer;line-height:1;padding:0">×</button>
     </div>
-    <div style="font-size:13px;color:#aaa;text-align:center;margin-bottom:18px">현재 잔액: <span id="charge-current-balance" style="font-weight:800;color:#7C3AED">-</span>P</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px" id="point-amt-grid"></div>
-    <button id="pc-pay-btn" onclick="requestTossPointPayment()" disabled
-      style="width:100%;padding:15px;border:none;border-radius:14px;background:#e0e0e0;color:#aaa;font-size:15px;font-weight:900;cursor:not-allowed">금액을 선택해주세요</button>
-    <div style="font-size:10px;color:#ccc;text-align:center;margin-top:10px">1P = 1원 · 토스페이먼츠 안전결제 · 유효기간 없음</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:18px">보유: <span id="charge-balance-display" style="font-weight:800;color:#7C3AED">-</span>P &nbsp;·&nbsp; 1P = 1원 · 유효기간 없음</div>
+
+    <!-- Step 1: 결제 수단 선택 -->
+    <div id="pc-step-method">
+      <div style="font-size:12px;font-weight:900;color:#888;letter-spacing:.5px;margin-bottom:10px">결제 수단 선택</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="pc-method-btn" data-method="toss" onclick="selectChargeMethod('toss')"
+          style="border:1.5px solid #e0e0e0;border-radius:14px;padding:16px 10px;background:#fff;cursor:pointer;text-align:center;color:#555;font-weight:600;transition:all .15s">
+          <div style="font-size:24px;margin-bottom:6px">💳</div>
+          <div style="font-size:13px;font-weight:800">토스결제</div>
+          <div style="font-size:10px;color:#aaa;margin-top:3px">카드 · 간편결제</div>
+        </button>
+        <button class="pc-method-btn" data-method="cash" onclick="selectChargeMethod('cash')"
+          style="border:1.5px solid #e0e0e0;border-radius:14px;padding:16px 10px;background:#fff;cursor:pointer;text-align:center;color:#555;font-weight:600;transition:all .15s">
+          <div style="font-size:24px;margin-bottom:6px">🏦</div>
+          <div style="font-size:13px;font-weight:800">현금입금</div>
+          <div style="font-size:10px;color:#aaa;margin-top:3px">계좌이체 · 확인 후 지급</div>
+        </button>
+      </div>
+      <button id="pc-method-next" onclick="_pcGoToStep('amount')" disabled
+        style="width:100%;padding:14px;border:none;border-radius:14px;background:#e0e0e0;color:#aaa;font-size:15px;font-weight:900;cursor:not-allowed;margin-top:14px;margin-bottom:4px">결제 수단을 선택해주세요</button>
+    </div>
+
+    <!-- Step 2: 금액 선택 -->
+    <div id="pc-step-amount" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <button onclick="_pcGoToStep('method')" style="background:none;border:none;cursor:pointer;padding:2px;display:flex">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div style="font-size:12px;font-weight:900;color:#888;letter-spacing:.5px">충전 금액 선택</div>
+      </div>
+      <div id="point-amt-grid"></div>
+      <button id="pc-amt-proceed" onclick="proceedFromAmount()" disabled
+        style="width:100%;padding:14px;border:none;border-radius:14px;background:#e0e0e0;color:#aaa;font-size:15px;font-weight:900;cursor:not-allowed;margin-top:12px;margin-bottom:4px">금액을 선택해주세요</button>
+    </div>
+
+    <!-- Step 3: 계좌이체 안내 (현금입금 선택 시만) -->
+    <div id="pc-step-bank" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <button onclick="_pcGoToStep('amount')" style="background:none;border:none;cursor:pointer;padding:2px;display:flex">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div style="font-size:12px;font-weight:900;color:#888;letter-spacing:.5px">입금 안내</div>
+      </div>
+      <div style="background:#f3e8ff;border-radius:14px;padding:16px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#7C3AED;margin-bottom:10px;letter-spacing:.5px">입금 계좌 정보</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;color:#888">은행</span>
+          <span style="font-size:13px;font-weight:800;color:#333" id="pc-bank-name"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;color:#888">계좌번호</span>
+          <span style="font-size:13px;font-weight:800;color:#333" id="pc-bank-account"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:12px;color:#888">예금주</span>
+          <span style="font-size:13px;font-weight:800;color:#333" id="pc-bank-holder"></span>
+        </div>
+        <div style="border-top:1px solid #ede9fe;padding-top:10px;display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:12px;color:#888">입금 금액</span>
+          <span style="font-size:16px;font-weight:900;color:#7C3AED" id="pc-bank-amount"></span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#888;line-height:1.7;background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:14px">
+        ① 위 계좌로 정확한 금액을 이체해주세요<br>
+        ② 아래에 <b>입금자명</b>을 입력 후 알림을 보내주세요<br>
+        ③ 확인 후 <b>영업일 기준 1일 이내</b> 포인트가 지급됩니다
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px">입금자명 (통장에 표시된 이름)</div>
+        <input id="pc-depositor-name" type="text" placeholder="홍길동" maxlength="20"
+          oninput="_updateCashBtn()"
+          style="width:100%;box-sizing:border-box;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:700;outline:none">
+      </div>
+      <button id="pc-cash-submit" onclick="submitCashDeposit()" disabled
+        style="width:100%;padding:14px;border:none;border-radius:14px;background:#e0e0e0;color:#aaa;font-size:15px;font-weight:900;cursor:not-allowed;margin-bottom:4px">입금 완료 알림 보내기</button>
+    </div>
   </div>
 </div>
 
