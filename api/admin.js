@@ -38,12 +38,13 @@ module.exports = async function handler(req, res) {
   try {
     // ── 대시보드 통계 ──────────────────────────────────
     if (action === 'stats') {
-      const [workers, postings, reports, apps, moims] = await Promise.all([
+      const [workers, postings, reports, apps, moims, bizRaw] = await Promise.all([
         sb('workers?select=id', svcKey).then(r => r.json()),
         sb('job_postings?select=id&status=neq.closed', svcKey).then(r => r.json()),
         sb('reports?select=id,status', svcKey).then(r => r.json()),
         sb(`applications?select=id&created_at=gte.${new Date().toISOString().slice(0,10)}`, svcKey).then(r => r.json()),
         sb('gatherings?select=id&status=eq.open', svcKey).then(r => r.json()),
+        sb('businesses?select=id', svcKey).then(r => r.json()).catch(() => []),
       ]);
       const pending = (Array.isArray(reports) ? reports : []).filter(r => !r.status || r.status === 'pending').length;
       return res.json({
@@ -52,6 +53,7 @@ module.exports = async function handler(req, res) {
         pending_reports: pending,
         today_apps: Array.isArray(apps) ? apps.length : 0,
         moims: Array.isArray(moims) ? moims.length : 0,
+        businesses: Array.isArray(bizRaw) ? bizRaw.length : 0,
       });
     }
 

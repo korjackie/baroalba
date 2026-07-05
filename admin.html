@@ -43,7 +43,11 @@
     .stat-card {
       background:#fff; border-radius:14px; padding:18px 16px;
       box-shadow:0 1px 4px rgba(0,0,0,0.06);
+      cursor:pointer; transition:box-shadow 0.15s, transform 0.15s; user-select:none;
     }
+    .stat-card:active { transform:scale(0.97); box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+    .stat-card.no-click { cursor:default; }
+    .stat-card.no-click:active { transform:none; }
     .stat-icon { font-size:24px; margin-bottom:8px; }
     .stat-val { font-size:28px; font-weight:900; color:#1e293b; }
     .stat-label { font-size:12px; color:#94a3b8; font-weight:600; margin-top:3px; }
@@ -255,7 +259,7 @@
 
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('dashboard')">대시보드</button>
-  <button class="tab-btn" onclick="switchTab('reports')">신고관리<span id="report-badge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:0 5px;border-radius:8px;margin-left:3px;vertical-align:middle">0</span></button>
+  <button class="tab-btn" onclick="switchTab('reports')">신고관리<span id="report-badge" style="display:none;background:#EF4444;color:#fff;font-size:9px;font-weight:900;min-width:16px;height:16px;line-height:16px;padding:0 4px;border-radius:8px;margin-left:3px;vertical-align:middle;display:none;text-align:center">0</span></button>
   <button class="tab-btn" onclick="switchTab('postings')">공고관리</button>
   <button class="tab-btn" onclick="switchTab('users')">회원관리</button>
   <button class="tab-btn" onclick="switchTab('moims')">모임관리</button>
@@ -266,11 +270,12 @@
   <!-- 대시보드 -->
   <div class="tab-content active" id="tab-dashboard">
     <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="s-workers">-</div><div class="stat-label">총 알바생</div></div>
-      <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val" id="s-postings">-</div><div class="stat-label">활성 공고</div></div>
-      <div class="stat-card alert"><div class="stat-icon">🚨</div><div class="stat-val" id="s-reports">-</div><div class="stat-label">미처리 신고</div></div>
-      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-val" id="s-apps">-</div><div class="stat-label">오늘 지원</div></div>
-      <div class="stat-card"><div class="stat-icon">🤝</div><div class="stat-val" id="s-moims">-</div><div class="stat-label">활성 모임</div></div>
+      <div class="stat-card" onclick="switchTab('users')"><div class="stat-icon">👥</div><div class="stat-val" id="s-workers">-</div><div class="stat-label">총 알바생</div></div>
+      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-icon">🏢</div><div class="stat-val" id="s-businesses">-</div><div class="stat-label">등록 업주</div></div>
+      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-icon">📋</div><div class="stat-val" id="s-postings">-</div><div class="stat-label">활성 공고</div></div>
+      <div class="stat-card alert" onclick="switchTab('reports')"><div class="stat-icon">🚨</div><div class="stat-val" id="s-reports">-</div><div class="stat-label">미처리 신고</div></div>
+      <div class="stat-card no-click"><div class="stat-icon">⚡</div><div class="stat-val" id="s-apps">-</div><div class="stat-label">오늘 지원</div></div>
+      <div class="stat-card" onclick="switchTab('moims')"><div class="stat-icon">🤝</div><div class="stat-val" id="s-moims">-</div><div class="stat-label">활성 모임</div></div>
     </div>
     <div class="section-head">
       <div class="section-title">최근 신고</div>
@@ -388,16 +393,17 @@ async function adminApi(action, method = 'GET', body = null) {
 // ── 대시보드 ─────────────────────────────────────────────
 async function loadDashboard() {
   const stats = await adminApi('stats');
-  document.getElementById('s-workers').textContent = stats.workers ?? '-';
-  document.getElementById('s-postings').textContent = stats.postings ?? '-';
-  document.getElementById('s-reports').textContent = stats.pending_reports ?? '-';
-  document.getElementById('s-apps').textContent = stats.today_apps ?? '-';
-  document.getElementById('s-moims').textContent = stats.moims ?? '-';
+  document.getElementById('s-workers').textContent   = stats.workers        ?? '-';
+  document.getElementById('s-businesses').textContent = stats.businesses     ?? '-';
+  document.getElementById('s-postings').textContent  = stats.postings       ?? '-';
+  document.getElementById('s-reports').textContent   = stats.pending_reports ?? '-';
+  document.getElementById('s-apps').textContent      = stats.today_apps     ?? '-';
+  document.getElementById('s-moims').textContent     = stats.moims          ?? '-';
 
   if (stats.pending_reports > 0) {
     const badge = document.getElementById('report-badge');
     badge.textContent = stats.pending_reports;
-    badge.style.display = 'inline';
+    badge.style.display = 'inline-block';
   }
 
   const reports = await adminApi('reports');
