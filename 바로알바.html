@@ -8558,27 +8558,73 @@ async function openWorkerProfileDirect(appId) {
   const b = _STATUS_BADGE[app.status] || _STATUS_BADGE.pending;
   const wname = (w.name || '이름없음').replace(/'/g, '&#39;');
   const close = `document.getElementById('_wd-sheet').remove();`;
-  let actionBtns = `<button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💬 채팅</button>`;
-  if (!['accepted','completed'].includes(app.status))
-    actionBtns += `<button onclick="${close}updateApplication('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 합격</button>`;
-  if (!['rejected','completed'].includes(app.status))
-    actionBtns += `<button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
-  el.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 20px 40px;max-height:72vh;overflow-y:auto">
+  const total = reviews + noshow;
+  const attendRate = total > 0 ? Math.round(reviews / total * 100) : null;
+  const trustScore = calcBakalbaScore(w);
+
+  let statusActions = '';
+  if (app.status === 'pending') {
+    statusActions = `
+      <button onclick="${close}updateApplication('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">🔍 검토</button>
+      <button onclick="${close}updateApplication('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 합격</button>
+      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
+  } else if (app.status === 'reviewing') {
+    statusActions = `
+      <button onclick="${close}updateApplication('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 합격</button>
+      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
+  } else if (app.status === 'accepted') {
+    statusActions = `
+      <button onclick="${close}showRatingModal('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#3B82F6;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">🏁 근무완료</button>
+      <button onclick="${close}markNoshow('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#FEE2E2;color:#DC2626;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">😶 노쇼</button>`;
+  }
+
+  el.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 20px 40px;max-height:80vh;overflow-y:auto">
     <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 16px"></div>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-      <div style="width:52px;height:52px;border-radius:50%;background:#f4f4f4;border:2px solid #eee;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-      <div style="flex:1"><div style="font-size:18px;font-weight:900;color:#222">${w.name || '이름없음'}</div><div style="font-size:13px;color:#888;margin-top:2px">★ ${rating} · 완료 ${reviews}건 · 노쇼 ${noshow}건</div></div>
-      <span style="background:${b.bg};color:${b.color};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800">${b.label}</span>
+
+    <!-- 지원자 헤더 -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+      <div style="width:52px;height:52px;border-radius:50%;background:#FFF0F0;border:2px solid #FECACA;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">👤</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:18px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
+          <span style="font-size:12px;color:#666">★ ${rating}</span>
+          <span style="font-size:11px;color:#aaa">·</span>
+          <span style="font-size:12px;color:#666">완료 ${reviews}건</span>
+          ${noshow > 0 ? `<span style="font-size:11px;font-weight:800;color:#DC2626">⚠️ 노쇼 ${noshow}</span>` : ''}
+          ${attendRate !== null ? `<span style="font-size:11px;font-weight:700;color:${attendRate >= 80 ? '#16a34a' : '#D97706'}">출근율 ${attendRate}%</span>` : ''}
+        </div>
+        <div style="margin-top:4px;display:flex;gap:5px;flex-wrap:wrap">
+          ${total >= 2 ? `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${trustScore>=80?'#D1FAE5':trustScore>=60?'#DBEAFE':'#F3F4F6'};color:${trustScore>=80?'#065F46':trustScore>=60?'#1e40af':'#6B7280'}">신뢰 ${trustScore}점</span>` : ''}
+          ${w.age ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FFF0F0;color:#C8102E">만 ${w.age}세</span>` : ''}
+          ${w.gender ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#EFF6FF;color:#3B82F6">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
+        </div>
+      </div>
+      <span style="background:${b.bg};color:${b.color};padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;flex-shrink:0">${b.label}</span>
     </div>
-    <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;margin-bottom:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:3px">지원 공고</div><div style="font-size:14px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div></div>
-    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#FFF5F5;border-radius:10px;border-left:3px solid #C8102E;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#C8102E;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
-    ${w.skills?.length ? `<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:5px">${w.skills.map(s=>`<span style="background:#f5f5f5;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#555">${s}</span>`).join('')}</div>` : ''}
-    ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:13px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone}</a>` : ''}
-    <div style="display:flex;gap:8px;margin-bottom:10px">${actionBtns}</div>
-    <div style="display:flex;gap:8px">
-      <button onclick="${close}" style="flex:1;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
-      <button onclick="printWorkerProfile('${app.id}')" style="padding:12px 16px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">📄 출력</button>
+
+    <!-- 지원 공고 -->
+    <div style="background:#FFF5F5;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:2px">📋 지원 공고</div>
+      <div style="font-size:13px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div>
     </div>
+
+    <!-- 지원 메시지 -->
+    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#FFFBEB;border-radius:10px;border-left:3px solid #F59E0B;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#D97706;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+
+    <!-- 전화 버튼 -->
+    ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone} 전화하기</a>` : ''}
+
+    <!-- 상태별 액션 -->
+    ${statusActions ? `<div style="display:flex;gap:8px;margin-bottom:8px">${statusActions}</div>` : ''}
+
+    <!-- 채팅 + 지원서 보기 -->
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💬 채팅</button>
+      <button onclick="${close}_chatAppId='${app.id}';openWorkerProfile()" style="flex:1;padding:13px;background:#F5F3FF;color:#7C3AED;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📋 지원서 보기</button>
+    </div>
+
+    <!-- 닫기 -->
+    <button onclick="${close}" style="width:100%;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
   </div>`;
   document.body.appendChild(el);
 }
