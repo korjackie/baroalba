@@ -227,15 +227,30 @@ module.exports = async function handler(req, res) {
       ).then(r => r.json());
       const list = Array.isArray(data) ? data : [];
       const hostIds = [...new Set(list.map(m => m.host_id).filter(Boolean))];
-      const hosts = hostIds.length
-        ? await sb(`workers?id=in.(${hostIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json())
-        : [];
-      const hostMap = Object.fromEntries((Array.isArray(hosts) ? hosts : []).map(h => [h.id, h]));
+      // workers + businesses 두 테이블 모두 조회
+      const [workers, bizzes] = await Promise.all([
+        hostIds.length ? sb(`workers?id=in.(${hostIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
+        hostIds.length ? sb(`businesses?owner_id=in.(${hostIds.join(',')})&select=owner_id,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
+      ]);
+      const hostMap = {};
+      (Array.isArray(workers) ? workers : []).forEach(h => { hostMap[h.id] = { name: h.name, phone: h.phone }; });
+      (Array.isArray(bizzes) ? bizzes : []).forEach(b => { if (!hostMap[b.owner_id]) hostMap[b.owner_id] = { name: b.name, phone: b.phone }; });
       return res.json(list.map(m => ({
         ...m,
-        host_name: hostMap[m.host_id]?.name || m.host_id?.slice(0, 8) || '-',
+        host_name: hostMap[m.host_id]?.name || '(알 수 없음)',
         host_phone: hostMap[m.host_id]?.phone || '',
       })));
+    }
+
+    // ── 모임 제목/내용 수정 ───────────────────────────────────
+    if (action === 'update_moim' && req.method === 'PATCH') {
+      const { id, title } = req.body || {};
+      if (!id || !title) return res.status(400).json({ error: 'id, title required' });
+      await sb(`gatherings?id=eq.${id}`, svcKey, {
+        method: 'PATCH',
+        body: JSON.stringify({ title: title.trim() })
+      });
+      return res.json({ ok: true });
     }
 
     // ── 모임 상태 변경 (강제마감 / 재오픈) ───────────────────

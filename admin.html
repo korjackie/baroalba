@@ -782,6 +782,7 @@ function renderMoims() {
         <div class="moim-meta">${dateStr} · ${spots} · 주최 ${m.host_name || '-'}${m.host_phone ? ' (' + m.host_phone + ')' : ''}</div>
         ${m.location_name ? `<div class="moim-meta" style="margin-top:2px">📍 ${m.location_name}</div>` : ''}
         <div class="moim-actions">
+          <button class="m-btn" style="background:#EFF6FF;color:#3B82F6" onclick="editMoimTitle('${m.id}','${(m.title||'').replace(/'/g,"\\'")}')">제목수정</button>
           ${isClosed
             ? `<button class="m-btn m-btn-open" onclick="toggleMoimStatus('${m.id}','open')">재오픈</button>`
             : `<button class="m-btn m-btn-close" onclick="toggleMoimStatus('${m.id}','closed')">강제마감</button>`}
@@ -789,6 +790,16 @@ function renderMoims() {
         </div>
       </div>`;
   }).join('');
+}
+
+async function editMoimTitle(id, currentTitle) {
+  const newTitle = prompt('새 모임 제목을 입력하세요:', currentTitle);
+  if (!newTitle || newTitle.trim() === currentTitle) return;
+  await adminApi('update_moim', 'PATCH', { id, title: newTitle.trim() });
+  const m = _moims.find(m => m.id === id);
+  if (m) m.title = newTitle.trim();
+  renderMoims();
+  showToast('✅ 제목이 수정됐습니다');
 }
 
 async function toggleMoimStatus(id, status) {
