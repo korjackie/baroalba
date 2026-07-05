@@ -2626,18 +2626,22 @@
       </div>
 
       <!-- ── 통계 바 (알바생만) ── -->
-      <div id="worker-stats-grid" style="display:none;grid-template-columns:1fr 1fr 1fr;background:#fff;border-top:1px solid #f0f0f0;border-bottom:8px solid #f5f5f5">
-        <div onclick="goToMyApplications()" style="padding:16px 8px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
-          <div style="font-size:22px;font-weight:900;color:var(--red)" id="stat-apply-count">-</div>
-          <div style="font-size:11px;color:#aaa;font-weight:600;margin-top:3px">지원현황</div>
+      <div id="worker-stats-grid" style="display:none;grid-template-columns:1fr 1fr 1fr 1fr;background:#fff;border-top:1px solid #f0f0f0;border-bottom:8px solid #f5f5f5">
+        <div onclick="goToMyApplications()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
+          <div style="font-size:20px;font-weight:900;color:var(--red)" id="stat-apply-count">-</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">지원현황</div>
         </div>
-        <div onclick="goToMyApplications()" style="padding:16px 8px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
-          <div style="font-size:22px;font-weight:900;color:#16a34a" id="stat-complete-count">-</div>
-          <div style="font-size:11px;color:#aaa;font-weight:600;margin-top:3px">완료알바</div>
+        <div onclick="goToMyApplications()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
+          <div style="font-size:20px;font-weight:900;color:#16a34a" id="stat-complete-count">-</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">완료알바</div>
         </div>
-        <div onclick="showMyRatings()" style="padding:16px 8px;text-align:center;cursor:pointer">
-          <div style="font-size:22px;font-weight:900;color:#F59E0B" id="stat-rating">-</div>
-          <div style="font-size:11px;color:#aaa;font-weight:600;margin-top:3px">내 평점</div>
+        <div onclick="showMyRatings()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
+          <div style="font-size:20px;font-weight:900;color:#F59E0B" id="stat-rating">-</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">내 평점</div>
+        </div>
+        <div onclick="showRankPanel('worker')" style="padding:16px 6px;text-align:center;cursor:pointer">
+          <div style="font-size:20px;font-weight:900;color:#7C3AED" id="stat-trust-score">-</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">신뢰점수</div>
         </div>
       </div>
 
@@ -4966,6 +4970,8 @@ db.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') { window.location.href = '/login.html'; return; }
   if ((event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') && session?.access_token) {
     if (window.AndroidBridge?.saveAuthToken) window.AndroidBridge.saveAuthToken(session.access_token);
+    // 토큰 갱신 시 SW에도 전달 (인라인 답장 기능 — Supabase는 1시간마다 토큰 자동 갱신)
+    navigator.serviceWorker?.controller?.postMessage({ type: 'SET_AUTH', token: session.access_token, userId: session.user.id });
   }
 });
 
@@ -6061,8 +6067,20 @@ let _moimMapMode = false;    // 지도 모임 모드
 let _moimOverlays = [];      // 지도 모임 마커
 
 // ── 패널 열기/닫기 ────────────────────────────────────────
+async function autoCloseExpiredGatherings() {
+  if (!currentUser) return;
+  const now = new Date().toISOString();
+  await db.from('gatherings')
+    .update({ status: 'closed' })
+    .eq('status', 'open')
+    .eq('host_id', currentUser.id)
+    .not('gathering_date', 'is', null)
+    .lt('gathering_date', now);
+}
+
 function openMoimPanel(showCreate = false) {
   document.getElementById('panel-moim').classList.add('show');
+  autoCloseExpiredGatherings().catch(() => {});
   loadMoimList();
   if (showCreate) setTimeout(() => openMoimCreate(), 300);
 }
@@ -6123,10 +6141,12 @@ async function loadMoimList(cat = '') {
   const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><span style="font-size:22px">🤝</span><span style="font-size:11px;font-weight:800;color:#7C3AED">첫 모임 만들기</span></div>';
 
   try {
+    const _moimNow = new Date().toISOString();
     let q = db.from('gatherings')
       .select('*')
       .eq('is_public', true)
       .eq('status', 'open')
+      .or(`gathering_date.is.null,gathering_date.gte.${_moimNow}`)
       .order('created_at', { ascending: false });
     if (cat) q = q.eq('category', cat);
 
@@ -7299,7 +7319,7 @@ async function _renderRankPanel() {
           <div style="font-size:11px;color:#aaa;margin-top:1px">${isEmployer?sub:''} ⭐ ${(d.rating||0).toFixed(1)} <span style="color:#ddd">(${d.review_count}건)</span></div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:12px;font-weight:900;color:${isEmployer?'#b45309':'#15803d'}">${trust}</div>
+          <div style="font-size:12px;font-weight:900;color:${isEmployer?'#b45309':'#15803d'}">${trust.toFixed(2)}</div>
           <div style="font-size:10px;color:#bbb">신뢰도</div>
         </div>
       </div>`;
@@ -12252,6 +12272,8 @@ async function loadWorkerGrade() {
     document.getElementById('stat-apply-count').textContent = total;
     document.getElementById('stat-complete-count').textContent = done;
     document.getElementById('stat-rating').textContent = w?.rating ? `★${w.rating.toFixed(1)}` : '-';
+    const _ts = document.getElementById('stat-trust-score');
+    if (_ts) _ts.textContent = w ? `${calcBakalbaScore(w)}점` : '-';
     const mpApply = document.getElementById('mp-apply-val');
     if (mpApply) mpApply.textContent = total > 0 ? `${total}건` : '';
     const mpRating = document.getElementById('mp-rating-val');
