@@ -5260,6 +5260,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (_navItems[0]) setNav(_navItems[0], 'home');
   }
 
+  // 급구 배너 즉시 표시 (GPS/loadJobs 기다리지 않음)
+  _preloadHomeUrgent();
+
   await loadJobs();
   // loadJobs 완료 후 홈 job 섹션 갱신 (저장 위치 기반 초기 조회 결과 반영)
   if (!tabParam || tabParam === 'home') {
@@ -5324,15 +5327,23 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
       // SW 인라인 답장 전송 실패 시 — 앱에서 직접 전송
       if (e.data?.type === 'PENDING_REPLY' && e.data.appId && e.data.content) {
-        db.from('messages').insert({
-          application_id: e.data.appId,
-          sender_id: currentUser?.id,
-          content: e.data.content,
-          is_read: false,
-        }).then(({ error }) => {
+        (async () => {
+          // currentUser가 null이면 세션 재조회 (앱이 백그라운드였던 경우 대비)
+          let uid = currentUser?.id;
+          if (!uid) {
+            const { data: { session: _s } } = await db.auth.getSession();
+            uid = _s?.user?.id;
+          }
+          if (!uid) { showToast('답장 전송 실패 — 다시 로그인 후 시도해주세요'); return; }
+          const { error } = await db.from('messages').insert({
+            application_id: e.data.appId,
+            sender_id: uid,
+            content: e.data.content,
+            is_read: false,
+          });
           if (!error) showToast('답장을 전송했습니다 ✓');
-          else showToast('답장 전송 실패 — 채팅창에서 다시 보내주세요');
-        });
+          else showToast(`답장 전송 실패 (${error.code || error.message}) — 채팅창에서 확인해주세요`);
+        })();
       }
     });
   }
@@ -6683,17 +6694,21 @@ async function shareMoim() {
   const code = m.is_public ? _currentMoimId : m.invite_code;
   const link = `${location.origin}${location.pathname}?moim=${code}`;
 
-  // 카카오 공유 메시지 구성
+  // 공유 메시지 구성
   const dateStr = m.gathering_date
     ? new Date(m.gathering_date).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })
     : '일정 미정';
-  const feeStr = m.entry_fee < 0 ? '각자 분담' : m.entry_fee > 0 ? `참가비 ${m.entry_fee.toLocaleString()}원` : '참가비 무료';
-  const shareTitle = m.title;
-  const desc = `📅 ${dateStr} · 📍 ${m.location_name || '장소 미정'} · ${feeStr}`;
+  const feeStr = m.entry_fee < 0 ? '각자 분담' : m.entry_fee > 0 ? `${m.entry_fee.toLocaleString()}원` : '무료';
+  const locationStr = m.location_name || '장소 미정';
+  const shareTitle = `[바로모임] ${m.title}`;
+  // 줄바꿈 포맷 메시지
+  const shareText = `[바로모임] ${m.title}\n📅 ${dateStr}\n📍 ${locationStr}\n💰 참가비 ${feeStr}\n같이 참가해요!`;
+  // Kakao description용 단행 요약
+  const descLine = `📅 ${dateStr}  📍 ${locationStr}  💰 ${feeStr}`;
 
-  // Android: AndroidBridge 네이티브 공유 시트
+  // Android: AndroidBridge 네이티브 공유 시트 (줄바꿈 지원)
   if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
-    window.AndroidBridge.share(shareTitle, `바로모임\n${desc}\n같이 참가해요!`, link);
+    window.AndroidBridge.share(shareTitle, shareText, link);
     return;
   }
 
@@ -6704,7 +6719,7 @@ async function shareMoim() {
         objectType: 'feed',
         content: {
           title: shareTitle,
-          description: `🤝 바로모임 · ${desc}`,
+          description: descLine,
           imageUrl: `${location.origin}/icons/og-share.png`,
           link: { mobileWebUrl: link, webUrl: link }
         },
@@ -6716,7 +6731,7 @@ async function shareMoim() {
 
   // Web Share API (iOS Safari 등)
   if (navigator.share) {
-    navigator.share({ title: shareTitle, text: `🤝 바로모임\n${desc}`, url: link }).catch(() => {});
+    navigator.share({ title: shareTitle, text: shareText, url: link }).catch(() => {});
     return;
   }
 
@@ -6983,6 +6998,33 @@ function _homeJobCard(job) {
       </div>
     </div>
   </div>`;
+}
+
+async function _preloadHomeUrgent() {
+  const section = document.getElementById('home-urgent-section');
+  if (!section || section.style.display !== 'none') return; // 이미 표시 중이면 스킵
+  const { data } = await db.from('job_postings')
+    .select('id, title, category, current_wage, status, biz_name, wage_type')
+    .eq('status', 'urgent')
+    .limit(8);
+  if (!data?.length) return;
+  if (section.style.display !== 'none') return; // loadJobs가 먼저 완료된 경우 스킵
+  const samples = data.slice(0, 2);
+  section.style.display = 'flex';
+  section.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+      <div style="font-size:16px;font-weight:900;color:#fff;line-height:1">급구 <span style="color:#ff6677">${data.length}건</span></div>
+      <div style="font-size:9px;font-weight:900;letter-spacing:1.5px;color:rgba(210,120,130,.85)">URGENT NOW</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      ${samples.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="flex:1;background:rgba(255,255,255,.07);border-radius:10px;padding:9px 10px;cursor:pointer;border:1px solid rgba(255,255,255,.08)">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.title||j.category}</div>
+        <div style="font-size:14px;font-weight:900;color:#fff;display:flex;align-items:baseline;gap:4px">${j.current_wage>0?`${j.current_wage.toLocaleString('ko-KR')}원<span style="font-size:10px;font-weight:800;opacity:.75">${_wageLabel(j)}</span>`:'협의'}</div>
+      </div>`).join('')}
+    </div>
+    <div onclick="event.stopPropagation();showHomeUrgentList()" style="display:inline-flex;align-items:center;gap:3px;background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;margin-top:9px;cursor:pointer;width:fit-content">전체보기 →</div>
+  `;
+  section.onclick = () => showHomeUrgentList();
 }
 
 function _renderHomeUrgent() {

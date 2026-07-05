@@ -487,34 +487,41 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('admin-email').textContent = authEmail;
   loadDashboard();
 
-  // 키보드 가림 방지: 초기 높이 기준으로 키보드 높이 계산 (Android/iOS 모두 대응)
-  const _initVPH = window.innerHeight;
+  // 키보드 가림 방지: visualViewport.height 기준으로 키보드 높이 계산
+  // offsetTop은 제외 (Android에서 오히려 kbH를 줄여 조건 미충족 야기)
+  let _maxVPH = window.innerHeight; // 키보드 없을 때 최대 높이 추적
   if (window.visualViewport) {
     let _vpTimer;
     const _adjustPanels = () => {
       clearTimeout(_vpTimer);
       _vpTimer = setTimeout(() => {
-        // Android: innerHeight도 같이 줄어들므로 초기값과 비교
-        const kbH = Math.max(0, _initVPH - window.visualViewport.height - window.visualViewport.offsetTop);
         const vpH = window.visualViewport.height;
+        // 키보드 없을 때 최대 높이 업데이트
+        const activeTag = document.activeElement?.tagName;
+        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+          _maxVPH = Math.max(_maxVPH, window.innerHeight, vpH);
+        }
+        const kbH = Math.max(0, _maxVPH - vpH);
         document.querySelectorAll('.detail-overlay.show').forEach(overlay => {
           const panel = overlay.querySelector('.detail-panel');
-          if (kbH > 80) {
+          if (kbH > 100) {
             overlay.style.setProperty('padding-bottom', kbH + 'px', 'important');
-            if (panel) panel.style.maxHeight = (vpH - 40) + 'px';
-            // 포커스된 입력창을 패널 내에서 스크롤
-            const f = document.activeElement;
-            if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA') && panel) {
+            if (panel) {
+              panel.style.maxHeight = (vpH - 40) + 'px';
+              // 포커스된 입력창 패널 내 스크롤 (키보드 완전 올라온 후)
               setTimeout(() => {
-                f.scrollIntoView({ block: 'center', behavior: 'smooth' });
-              }, 100);
+                const f = document.activeElement;
+                if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA') && panel.contains(f)) {
+                  f.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+              }, 150);
             }
           } else {
             overlay.style.paddingBottom = '';
             if (panel) panel.style.maxHeight = '';
           }
         });
-      }, 50);
+      }, 100);
     };
     window.visualViewport.addEventListener('resize', _adjustPanels);
     window.visualViewport.addEventListener('scroll', _adjustPanels);
