@@ -15033,6 +15033,24 @@ const _STATUS_BADGE = {
   noshow:    { bg:'#F5F5F5', color:'#888',    label:'노쇼' },
 };
 
+function calcBakalbaScore(w) {
+  const rating  = parseFloat(w?.rating) || 3.0;
+  const noshow  = Math.min(parseInt(w?.noshow_count) || 0, 10);
+  const reviews = Math.min(parseInt(w?.review_count) || 0, 20);
+  const score = Math.round(
+    60 +
+    (rating / 5) * 25 +
+    Math.min(reviews, 10) * 0.5 -
+    noshow * 7
+  );
+  return Math.max(0, Math.min(99, score));
+}
+function trustBadgeHtml(w) {
+  const s = calcBakalbaScore(w);
+  const cls = s >= 80 ? 'trust-high' : s >= 60 ? 'trust-mid' : 'trust-low';
+  return `<span class="trust-badge ${cls}">신뢰 ${s}점</span>`;
+}
+
 function makeApplicantCardHtml(a, opts = {}) {
   const { stopProp = false, isFav = false, isCmp = false, showExtras = false, lastWorked = null } = opts;
   const sp = 'event.stopPropagation();';
@@ -20481,27 +20499,6 @@ function _scOk() {
 function _scCancel() {
   document.getElementById('sc-overlay').style.display = 'none';
   _scCallback = null;
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// ── 신용점수 고도화 ─────────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════
-function calcBakalbaScore(w) {
-  const rating  = parseFloat(w?.rating) || 3.0;
-  const noshow  = Math.min(parseInt(w?.noshow_count) || 0, 10);
-  const reviews = Math.min(parseInt(w?.review_count) || 0, 20);
-  const score = Math.round(
-    60 +
-    (rating / 5) * 25 +
-    Math.min(reviews, 10) * 0.5 -
-    noshow * 7
-  );
-  return Math.max(0, Math.min(99, score));
-}
-function trustBadgeHtml(w) {
-  const s = calcBakalbaScore(w);
-  const cls = s >= 80 ? 'trust-high' : s >= 60 ? 'trust-mid' : 'trust-low';
-  return `<span class="trust-badge ${cls}">신뢰 ${s}점</span>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════
