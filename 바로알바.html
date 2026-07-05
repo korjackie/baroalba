@@ -19300,6 +19300,13 @@ async function renderAdminSection() {
       <input id="admin-cat-name" placeholder="카테고리명" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;font-family:inherit">
       <button onclick="addCategory()" style="padding:9px 14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">+ 추가</button>
     </div>`;
+
+  ['new-admin-email', 'admin-cat-name'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('focus', () => {
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+    });
+  });
 }
 
 function renderAdminCatList() {
