@@ -5269,6 +5269,37 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupMessageNotifications();
   if (currentUser) initOwnerFeatures().catch(console.error);
 
+  // 키보드 가림 방지: 슬라이드업 패널을 키보드 위로 올리고 높이 축소
+  if (window.visualViewport) {
+    let _vpT;
+    const _adjKb = () => {
+      clearTimeout(_vpT);
+      _vpT = setTimeout(() => {
+        const kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+        // 슬라이드업 오버레이 계열 모두 처리
+        document.querySelectorAll('.overlay-panel.show, .full-panel.show, [id$="-overlay"].open, [id$="-overlay"].show').forEach(el => {
+          const panel = el.classList.contains('detail-panel') ? el : el.querySelector('.detail-panel, [style*="border-radius:20px"]');
+          if (kbH > 80) {
+            el.style.paddingBottom = kbH + 'px';
+            if (panel) {
+              panel.style.maxHeight = (window.visualViewport.height - 60) + 'px';
+              const f = document.activeElement;
+              if (f && f.matches('input,textarea')) {
+                const fRect = f.getBoundingClientRect();
+                const vis = window.visualViewport.height - 16;
+                if (fRect.bottom > vis) panel.scrollTop += fRect.bottom - vis + 16;
+              }
+            }
+          } else {
+            el.style.paddingBottom = '';
+            if (panel) panel.style.maxHeight = '';
+          }
+        });
+      }, 50);
+    };
+    window.visualViewport.addEventListener('resize', _adjKb);
+  }
+
   // 서비스워커 메시지: 알림 탭 → 이미 열린 앱 창에 채팅 바로 열기
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', e => {
@@ -6822,6 +6853,7 @@ function _wageStr(j, color) {
   return `<span style="font-weight:900;color:${c}">${amt}</span><span style="font-size:10px;font-weight:800;background:rgba(200,16,46,0.08);color:${c};padding:2px 6px;border-radius:5px;margin-left:5px">${lbl}</span>`;
 }
 
+let _homeJobRetryTimer = null;
 function loadHomePanel() {
   // 외국인 프로필이면 외국인환영 섹션 표시
   const _myNat = currentUser?.user_metadata?.nationality;
@@ -6838,6 +6870,21 @@ function loadHomePanel() {
   _renderHomeLessonHot().catch(() => {}); // 레슨/과외 HOT
   // 바로모임 미리보기
   loadMoimList('').catch(() => {});
+
+  // 공고가 없으면 2초 후 GPS 확보 시점에 재조회 (위치 미확보 대응)
+  clearTimeout(_homeJobRetryTimer);
+  if (!jobs || jobs.length === 0) {
+    _homeJobRetryTimer = setTimeout(async () => {
+      await loadJobs();
+      if (document.getElementById('panel-home')?.classList.contains('show')) {
+        _renderHomeUrgent();
+        _renderHomeAI();
+        _renderHomeSameDay();
+        _renderHomeRecent();
+        _renderHomeForeigner();
+      }
+    }, 2000);
+  }
 
   // 지도에 주변알바 플로팅 버튼 상태 복원 (지도 탭 진입 시 표시)
   const floatBtn = document.getElementById('map-swipe-float');

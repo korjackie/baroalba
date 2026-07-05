@@ -485,25 +485,34 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('admin-email').textContent = authEmail;
   loadDashboard();
 
-  // 키보드 가림 방지: visualViewport로 패널 높이를 실시간 조정
+  // 키보드 가림 방지: overlay를 키보드 위로 올리고 패널 높이 축소
   if (window.visualViewport) {
     let _vpTimer;
     const _adjustPanels = () => {
       clearTimeout(_vpTimer);
       _vpTimer = setTimeout(() => {
-        const kbH = window.innerHeight - window.visualViewport.height;
-        document.querySelectorAll('.detail-overlay.show .detail-panel').forEach(panel => {
-          if (kbH > 100) {
-            panel.style.maxHeight = (window.visualViewport.height - 16) + 'px';
+        const kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+        document.querySelectorAll('.detail-overlay.show').forEach(overlay => {
+          const panel = overlay.querySelector('.detail-panel');
+          if (kbH > 80) {
+            // overlay에 padding-bottom 줘서 패널이 키보드 위로 올라오게 함
+            overlay.style.paddingBottom = kbH + 'px';
+            if (panel) panel.style.maxHeight = (window.visualViewport.height - 60) + 'px';
+            // 포커스된 입력창을 패널 내에서 스크롤
             const f = document.activeElement;
-            if (f && f.matches('input, textarea')) {
-              f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (f && f.matches('input, textarea') && panel) {
+              const fRect = f.getBoundingClientRect();
+              const visBottom = window.visualViewport.height - 16;
+              if (fRect.bottom > visBottom) {
+                panel.scrollTop += fRect.bottom - visBottom + 16;
+              }
             }
           } else {
-            panel.style.maxHeight = '';
+            overlay.style.paddingBottom = '';
+            if (panel) panel.style.maxHeight = '';
           }
         });
-      }, 60);
+      }, 50);
     };
     window.visualViewport.addEventListener('resize', _adjustPanels);
     window.visualViewport.addEventListener('scroll', _adjustPanels);
