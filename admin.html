@@ -405,18 +405,43 @@
           </select>
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 날짜/시간</label>
-          <input id="me-date" type="datetime-local" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 날짜</label>
+          <input id="me-date" type="date" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 시간</label>
+          <input id="me-time" type="time" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">장소명</label>
           <input id="me-location" type="text" placeholder="예: 강남역 스타벅스" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
         <div>
+          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 내용</label>
+          <textarea id="me-description" rows="4" placeholder="모임 목적, 분위기, 주의사항 등" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;resize:none;font-family:inherit;line-height:1.5"></textarea>
+        </div>
+        <div>
           <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">최대 인원</label>
           <input id="me-maxcount" type="number" min="2" max="100" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 0">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">참가비</label>
+          <select id="me-entryfee-type" onchange="_meFeeToggle()" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;background:#fff;margin-bottom:8px">
+            <option value="0">무료</option>
+            <option value="-1">각자 분담 (N분의1)</option>
+            <option value="custom">금액 직접 입력</option>
+          </select>
+          <input id="me-entryfee-amount" type="number" min="0" placeholder="참가비 금액 (원)" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;display:none">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">성별 조건</label>
+          <select id="me-gender" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;background:#fff">
+            <option value="any">성별 무관</option>
+            <option value="male_only">남성만</option>
+            <option value="female_only">여성만</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
           <input id="me-public" type="checkbox" style="width:18px;height:18px;cursor:pointer">
           <label for="me-public" style="font-size:14px;font-weight:700;color:#1e293b;cursor:pointer">공개 모임</label>
         </div>
@@ -887,22 +912,45 @@ function renderMoims() {
   }).join('');
 }
 
+function _meFeeToggle() {
+  const v = document.getElementById('me-entryfee-type').value;
+  document.getElementById('me-entryfee-amount').style.display = v === 'custom' ? 'block' : 'none';
+}
+
 function editMoim(id) {
   _editingMoimId = id;
   const m = _moims.find(m => m.id === id);
   if (!m) return;
   document.getElementById('me-title').value = m.title || '';
   document.getElementById('me-category').value = m.category || 'social';
+
+  // 날짜·시간 분리
   if (m.gathering_date) {
     const dt = new Date(m.gathering_date);
-    const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    document.getElementById('me-date').value = local;
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('me-date').value =
+      `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+    document.getElementById('me-time').value =
+      `${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
   } else {
     document.getElementById('me-date').value = '';
+    document.getElementById('me-time').value = '';
   }
+
   document.getElementById('me-location').value = m.location_name || '';
+  document.getElementById('me-description').value = m.description || '';
   document.getElementById('me-maxcount').value = m.max_count || 10;
+  document.getElementById('me-gender').value = m.gender_req || 'any';
   document.getElementById('me-public').checked = !!m.is_public;
+
+  // 참가비
+  const fee = m.entry_fee ?? 0;
+  const feeType = document.getElementById('me-entryfee-type');
+  const feeAmt = document.getElementById('me-entryfee-amount');
+  if (fee === -1) { feeType.value = '-1'; feeAmt.style.display = 'none'; }
+  else if (fee > 0) { feeType.value = 'custom'; feeAmt.style.display = 'block'; feeAmt.value = fee; }
+  else { feeType.value = '0'; feeAmt.style.display = 'none'; }
+
   document.getElementById('moim-edit-overlay').classList.add('show');
 }
 
@@ -915,13 +963,28 @@ async function saveMoimEdit() {
   if (!_editingMoimId) return;
   const title = document.getElementById('me-title').value.trim();
   if (!title) { showToast('제목을 입력해주세요'); return; }
+
+  // 날짜·시간 합치기
+  const dateVal = document.getElementById('me-date').value;
+  const timeVal = document.getElementById('me-time').value || '00:00';
+  const gathering_date = dateVal ? new Date(`${dateVal}T${timeVal}`).toISOString() : null;
+
+  // 참가비
+  const feeType = document.getElementById('me-entryfee-type').value;
+  const entry_fee = feeType === '-1' ? -1
+    : feeType === 'custom' ? (parseInt(document.getElementById('me-entryfee-amount').value) || 0)
+    : 0;
+
   const updates = {
     id: _editingMoimId,
     title,
     category: document.getElementById('me-category').value,
-    gathering_date: document.getElementById('me-date').value || null,
+    gathering_date,
     location_name: document.getElementById('me-location').value.trim(),
+    description: document.getElementById('me-description').value.trim() || null,
     max_count: parseInt(document.getElementById('me-maxcount').value) || 10,
+    entry_fee,
+    gender_req: document.getElementById('me-gender').value,
     is_public: document.getElementById('me-public').checked,
   };
   await adminApi('update_moim', 'PATCH', updates);

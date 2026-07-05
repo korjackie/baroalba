@@ -239,7 +239,7 @@ module.exports = async function handler(req, res) {
     // ── 모임 목록 ──────────────────────────────────────────────
     if (action === 'moims') {
       const data = await sb(
-        'gatherings?select=id,title,category,gathering_date,host_id,current_count,max_count,status,is_public,location_name,created_at&order=created_at.desc&limit=200',
+        'gatherings?select=id,title,category,sub_category,description,gathering_date,host_id,current_count,max_count,status,is_public,location_name,location_address,entry_fee,skill_level,skill_desc,gender_req,created_at&order=created_at.desc&limit=200',
         svcKey
       ).then(r => r.json());
       const list = Array.isArray(data) ? data : [];
@@ -261,7 +261,7 @@ module.exports = async function handler(req, res) {
 
     // ── 모임 제목/내용 수정 ───────────────────────────────────
     if (action === 'update_moim' && req.method === 'PATCH') {
-      const { id, title, category, gathering_date, location_name, max_count, is_public } = req.body || {};
+      const { id, title, category, gathering_date, location_name, max_count, is_public, description, entry_fee, gender_req } = req.body || {};
       if (!id) return res.status(400).json({ error: 'id required' });
       const updates = {};
       if (title !== undefined) updates.title = title.trim();
@@ -270,6 +270,9 @@ module.exports = async function handler(req, res) {
       if (location_name !== undefined) updates.location_name = location_name;
       if (max_count !== undefined) updates.max_count = parseInt(max_count) || 10;
       if (is_public !== undefined) updates.is_public = is_public;
+      if (description !== undefined) updates.description = description || null;
+      if (entry_fee !== undefined) updates.entry_fee = parseInt(entry_fee) || 0;
+      if (gender_req !== undefined) updates.gender_req = gender_req;
       if (!Object.keys(updates).length) return res.status(400).json({ error: 'no fields to update' });
       await sb(`gatherings?id=eq.${id}`, svcKey, {
         method: 'PATCH',
