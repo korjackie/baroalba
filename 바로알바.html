@@ -5174,6 +5174,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
     if (window.AndroidBridge?.saveAuthToken) window.AndroidBridge.saveAuthToken(session.access_token);
+    // SW에 인증 토큰 저장 (알림 인라인 답장 기능용)
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SET_AUTH', token: session.access_token, userId: session.user.id });
+    }
     // 어드민 여부 로드 (app_admins 테이블) — Naver 등 일부 OAuth는 email이 user_metadata에만 존재
     const _authEmail = session.user.email || session.user.user_metadata?.email || '';
     db.from('app_admins').select('email').eq('email', _authEmail).maybeSingle()
@@ -5311,6 +5315,18 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (e.data?.type === 'OPEN_CHAT' && e.data.appId) {
         if (e.data.view === 'worker') openWChat(e.data.appId, '업주');
         else openChat(e.data.appId, '채팅');
+      }
+      // SW 인라인 답장 전송 실패 시 — 앱에서 직접 전송
+      if (e.data?.type === 'PENDING_REPLY' && e.data.appId && e.data.content) {
+        db.from('messages').insert({
+          application_id: e.data.appId,
+          sender_id: currentUser?.id,
+          content: e.data.content,
+          is_read: false,
+        }).then(({ error }) => {
+          if (!error) showToast('답장을 전송했습니다 ✓');
+          else showToast('답장 전송 실패 — 채팅창에서 다시 보내주세요');
+        });
       }
     });
   }
