@@ -2385,7 +2385,7 @@
           <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">💫</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:900;color:#fff">바로만남</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:1px">바로스팟 · 바로점심 — 새로운 인연 만들기</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:1px">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
           </div>
           <span style="font-size:9px;font-weight:900;background:rgba(255,255,255,0.25);color:#fff;padding:2px 8px;border-radius:10px;flex-shrink:0">NEW</span>
           <span style="color:rgba(255,255,255,0.7);font-size:18px;flex-shrink:0">›</span>
@@ -5219,7 +5219,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '362';
+  const _APP_V = '363';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -22202,26 +22202,51 @@ function renderWorkerLocMap(containerId, lat, lng) {
         <div style="background:#fce7f3;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#db2777">💎 500P</div>
       </div>
     </div>
-    <!-- 바로점심 -->
+    <!-- 바로미팅 -->
     <div style="background:#fff;border:1.5px solid #fce7f3;border-radius:16px;padding:18px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-        <div style="width:44px;height:44px;background:linear-gradient(135deg,#ec4899,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🍱</div>
+        <div style="width:44px;height:44px;background:linear-gradient(135deg,#ec4899,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🤝</div>
         <div>
-          <div style="font-size:16px;font-weight:900;color:#111">바로점심</div>
-          <div style="font-size:11px;color:#888;margin-top:1px">4:4 소셜 점심 만남 · 매칭 기반</div>
+          <div style="font-size:16px;font-weight:900;color:#111">바로미팅</div>
+          <div style="font-size:11px;color:#888;margin-top:1px">4:4 소셜 만남 · 매칭 기반</div>
         </div>
       </div>
-      <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:12px">4명씩 팀을 이뤄 점심을 함께해요.<br>직장인·알바생·프리랜서 누구나 참여 가능.<br>포인트로 신청하면 자동 매칭 후 장소 안내.</div>
+      <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:12px">4명씩 팀을 이뤄 함께 만나요.<br>직장인·알바생·프리랜서 누구나 참여 가능.<br>포인트로 신청하면 자동 매칭 후 장소 안내.</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <div style="background:#f3e8ff;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#7C3AED">👥 4:4 매칭</div>
-        <div style="background:#f3e8ff;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#7C3AED">🍱 점심 테마</div>
+        <div style="background:#f3e8ff;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#7C3AED">🤝 소셜 미팅</div>
         <div style="background:#f3e8ff;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#7C3AED">💎 2,000P</div>
       </div>
+    </div>
+    <!-- 번개모임 -->
+    <div style="background:linear-gradient(160deg,#fff7ed,#fffbf5);border:1.5px solid #fed7aa;border-radius:16px;padding:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;font-size:9px;font-weight:900;padding:3px 9px;border-radius:8px;letter-spacing:0.5px">COMING</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="width:44px;height:44px;background:linear-gradient(135deg,#f97316,#ef4444);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⚡</div>
+        <div>
+          <div style="font-size:16px;font-weight:900;color:#111">번개모임</div>
+          <div style="font-size:11px;color:#888;margin-top:1px">개설 후 3시간 자동 폭파 · 타임어택 참여</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:12px">"지금 당장 같이 뭐 할 사람?"<br>번개처럼 모이고, 3시간이 지나면 자동 소멸해요.<br>지도 위 🔥 불타는 핀을 찾아 즉흥 합류!</div>
+      <div style="background:#fff3e8;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">🔥</span>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:900;color:#c2410c">타이머 폭파 시스템</div>
+          <div style="font-size:10px;color:#92400e;margin-top:2px">남은 시간: <span style="font-weight:900;color:#ef4444">02:59:43</span> — 핀이 사라지기 전에 합류하세요</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="background:#ffedd5;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#c2410c">⚡ 타임어택</div>
+        <div style="background:#ffedd5;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#c2410c">🔥 3시간 폭파</div>
+        <div style="background:#ffedd5;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#c2410c">🗺️ 지도 핀</div>
+      </div>
+      <button onclick="showToast('번개모임은 곧 오픈 예정이에요! ⚡🔥')" style="width:100%;padding:13px;background:linear-gradient(135deg,#f97316,#ef4444);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:900;cursor:pointer;opacity:0.9">⚡ 오픈 알림 신청하기 (준비중)</button>
     </div>
     <!-- 포인트 안내 -->
     <div style="background:#f9f9f9;border-radius:14px;padding:16px">
       <div style="font-size:12px;font-weight:900;color:#555;margin-bottom:8px">💎 포인트 안내</div>
-      <div style="font-size:11px;color:#888;line-height:1.9">• 1P = 1원 · 토스페이먼츠 안전결제<br>• 바로스팟 연락처 확인: 500P<br>• 바로점심 신청: 2,000P<br>• 유효기간 없음 · 환불 정책 별도 고지</div>
+      <div style="font-size:11px;color:#888;line-height:1.9">• 1P = 1원 · 토스페이먼츠 안전결제<br>• 바로스팟 연락처 확인: 500P<br>• 바로미팅 신청: 2,000P<br>• 번개모임: 추후 공지<br>• 유효기간 없음 · 환불 정책 별도 고지</div>
     </div>
     <button onclick="closeMannnamPanel();openPointCharge()" style="width:100%;padding:16px;background:linear-gradient(135deg,#f43f5e,#ec4899);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:900;cursor:pointer">💎 포인트 충전하고 시작하기</button>
     <div style="font-size:10px;color:#bbb;text-align:center;padding-bottom:20px">서비스 정식 오픈 시 먼저 알려드려요 ✨</div>
