@@ -333,8 +333,8 @@
 
 <!-- 관리자 설정 전체화면 패널 -->
 <div id="settings-fullpage" style="display:none;position:fixed;inset:0;background:#f8fafc;z-index:700;flex-direction:column">
-  <!-- 헤더 -->
-  <div style="background:#1e293b;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+  <!-- 헤더 (safe area inset 포함) -->
+  <div style="background:#1e293b;padding:14px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;align-items:center;gap:12px;flex-shrink:0">
     <button onclick="closeSettings()" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;padding:0 4px 0 0">‹</button>
     <span style="font-size:16px;font-weight:800;color:#fff;flex:1">⚙️ 관리자 설정</span>
   </div>
@@ -1107,14 +1107,43 @@ async function deleteMoimById(id) {
 }
 
 // ── 관리자 설정 전체화면 패널 ─────────────────────────────
+function _syncSettingsVP() {
+  const panel = document.getElementById('settings-fullpage');
+  if (!panel || panel.style.display === 'none') return;
+  const vp = window.visualViewport;
+  if (!vp) return;
+  panel.style.top    = vp.offsetTop + 'px';
+  panel.style.height = vp.height + 'px';
+  // 키보드가 올라온 경우 포커스된 입력창 스크롤
+  setTimeout(() => {
+    const f = document.activeElement;
+    if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA') && panel.contains(f)) {
+      f.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, 80);
+}
+
 function openSettings() {
   const el = document.getElementById('settings-fullpage');
   el.style.display = 'flex';
+  el.style.top = '';
+  el.style.height = '';
   switchSettingsTab('admins');
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', _syncSettingsVP);
+    window.visualViewport.addEventListener('scroll', _syncSettingsVP);
+  }
 }
 
 function closeSettings() {
-  document.getElementById('settings-fullpage').style.display = 'none';
+  const el = document.getElementById('settings-fullpage');
+  el.style.display = 'none';
+  el.style.top = '';
+  el.style.height = '';
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', _syncSettingsVP);
+    window.visualViewport.removeEventListener('scroll', _syncSettingsVP);
+  }
 }
 
 function switchSettingsTab(name) {

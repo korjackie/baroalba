@@ -717,13 +717,12 @@ function tWorkType(code) {
   return (WORK_TYPE_LABELS[currentLang] || WORK_TYPE_LABELS.ko)[code] || code;
 }
 
-// ── 언어 선택 → 즉시 저장 ────────────────────────────────────
+// ── 언어 선택 → pending만, 저장 안함 ──────────────────────────
 function selectLang(lang) {
   _pendingLang = lang;
-  currentLang = lang;
-  localStorage.setItem('baroalba_lang', lang);
   const RED = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#C8102E';
-  _LANGS.forEach(l => {
+  const _allLangs = ['ko','en','zh','ja','vi','ru','mn','np'];
+  _allLangs.forEach(l => {
     const isSel = l === lang;
     const b1 = document.getElementById('lang-' + l + '-btn');
     if (b1) { b1.style.background = isSel ? RED : '#f0f0f0'; b1.style.color = isSel ? '#fff' : '#666'; }
@@ -734,16 +733,35 @@ function selectLang(lang) {
     const el = document.getElementById(id);
     if (el) el.textContent = (TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc;
   });
-  applyLang();
-  if (typeof showToast === 'function') showToast('✅ ' + ((TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc || lang));
 }
 
-// ── 언어 저장 ─────────────────────────────────────────────────
+// ── 언어 저장 (저장 버튼 클릭 시) ───────────────────────────────
 function saveLang() {
   currentLang = _pendingLang;
   localStorage.setItem('baroalba_lang', currentLang);
   applyLang();
-  if (typeof showToast === 'function') showToast('✅ 언어가 저장됐습니다');
+  const names = { ko:'한국어', en:'English', zh:'中文', ja:'日本語', vi:'Tiếng Việt', ru:'Русский', mn:'Монгол', np:'नेपाली' };
+  ['mp-lang-val','owner-mp-lang-val'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = names[currentLang] || currentLang;
+  });
+  if (typeof showToast === 'function') showToast('✅ ' + (t('lang_desc') || currentLang));
+  if (typeof closeMpSub === 'function') closeMpSub('lang');
+}
+
+// ── 언어 취소 (취소 버튼 클릭 시) ───────────────────────────────
+function cancelLang() {
+  _pendingLang = currentLang;
+  const RED = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#C8102E';
+  const _allLangs = ['ko','en','zh','ja','vi','ru','mn','np'];
+  _allLangs.forEach(l => {
+    const isSel = l === currentLang;
+    const b1 = document.getElementById('lang-' + l + '-btn');
+    if (b1) { b1.style.background = isSel ? RED : '#f0f0f0'; b1.style.color = isSel ? '#fff' : '#666'; }
+    const b2 = document.getElementById('owner-lang-' + l);
+    if (b2) { b2.style.background = isSel ? RED : '#f0f0f0'; b2.style.color = isSel ? '#fff' : '#666'; }
+  });
+  if (typeof closeMpSub === 'function') closeMpSub('lang');
 }
 
 // ── 전체 UI 번역 적용 (두 앱 공통 ID 모두 처리) ──────────────
