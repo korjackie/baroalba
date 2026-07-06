@@ -2357,13 +2357,16 @@
       </div>
 
       <!-- ③ 주변 알바 공고 -->
-      <div id="home-recent-section" style="padding:7px 12px 0;display:none">
+      <div id="home-recent-section" style="padding:7px 12px 0">
         <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;overflow:hidden">
           <div style="padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between">
             <div style="font-size:13px;font-weight:900;color:#111">📋 주변 알바 공고</div>
             <button onclick="showAllJobs()" style="font-size:11px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer">전체보기 ›</button>
           </div>
-          <div id="home-recent-list" style="display:flex;gap:8px;overflow-x:auto;padding:0 14px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+          <div id="home-recent-list" style="display:flex;gap:8px;overflow-x:auto;padding:0 14px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+            <div style="width:150px;height:90px;border-radius:10px;flex-shrink:0;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div>
+            <div style="width:150px;height:90px;border-radius:10px;flex-shrink:0;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s 0.3s infinite"></div>
+          </div>
         </div>
       </div>
 
@@ -5247,7 +5250,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '367';
+  const _APP_V = '368';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -7568,8 +7571,10 @@ function _renderHomeRecent() {
   const list = document.getElementById('home-recent-list');
   if (!section || !list) return;
   const available = (jobs || []).filter(j => j.status === 'open' || j.status === 'urgent').slice(0, 10);
-  if (!available.length) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
+  if (!available.length) {
+    list.innerHTML = '<div style="color:#bbb;font-size:12px;padding:4px 0 8px;white-space:nowrap">주변 공고가 없어요</div>';
+    return;
+  }
   list.innerHTML = available.map(j => _homeJobCard(j)).join('');
 }
 
