@@ -40,11 +40,11 @@
   <!-- 렌더 전 즉시 숨김 → WebView 디스크캐시 flash 완전 차단 -->
   <script>
   document.documentElement.style.visibility='hidden';
-  // 3초 후 안전 공개 (JS 실패 대비)
-  setTimeout(function(){document.documentElement.style.visibility='';},3000);
+  // 10초 안전 공개 — DOMContentLoaded가 loadJobs 완료 후 직접 취소/공개함
+  window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='379',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='380',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -5287,8 +5287,10 @@ window.addEventListener('popstate', () => {
 
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
+  if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '379';
+  const _APP_V = '380';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -20907,34 +20909,136 @@ function openMannnamPanel() {
   const p = document.getElementById('mannnam-panel');
   if (!p) return;
   p.style.display = 'flex';
-  switchMannnamTab('spot');
+  switchMannnamTab('meeting');
+  _loadBaromeetList();
 }
 function closeMannnamPanel() {
   const p = document.getElementById('mannnam-panel');
   if (p) p.style.display = 'none';
 }
 function switchMannnamTab(tab) {
-  const isSpot = tab === 'spot';
-  document.getElementById('mnm-content-spot').style.display = isSpot ? 'block' : 'none';
-  document.getElementById('mnm-content-meeting').style.display = isSpot ? 'none' : 'block';
-  const tSpot = document.getElementById('mnm-tab-spot');
+  const isMeet = tab === 'meeting';
+  document.getElementById('mnm-content-meeting').style.display = isMeet ? 'block' : 'none';
+  document.getElementById('mnm-content-spot').style.display = isMeet ? 'none' : 'block';
   const tMeet = document.getElementById('mnm-tab-meeting');
-  if (tSpot) {
-    tSpot.style.borderBottomColor = isSpot ? '#f43f5e' : 'transparent';
-    tSpot.style.color = isSpot ? '#f43f5e' : '#aaa';
-    tSpot.style.fontWeight = isSpot ? '800' : '700';
-  }
-  if (tMeet) {
-    tMeet.style.borderBottomColor = isSpot ? 'transparent' : '#7C3AED';
-    tMeet.style.color = isSpot ? '#aaa' : '#7C3AED';
-    tMeet.style.fontWeight = isSpot ? '700' : '800';
+  const tSpot = document.getElementById('mnm-tab-spot');
+  if (tMeet) { tMeet.style.borderBottomColor = isMeet ? '#7C3AED' : 'transparent'; tMeet.style.color = isMeet ? '#7C3AED' : '#aaa'; tMeet.style.fontWeight = isMeet ? '800' : '700'; }
+  if (tSpot) { tSpot.style.borderBottomColor = isMeet ? 'transparent' : '#f43f5e'; tSpot.style.color = isMeet ? '#aaa' : '#f43f5e'; tSpot.style.fontWeight = isMeet ? '700' : '800'; }
+  if (!isMeet) _loadBarospotList();
+}
+
+// 바로미팅 목록 로드
+async function _loadBaromeetList() {
+  const el = document.getElementById('mnm-meeting-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+  try {
+    // 현재 위치 기반 필터 (gatherings 테이블, category='baromeeting')
+    let q = db.from('gatherings')
+      .select('id,title,location_name,address,gathering_date,max_members,current_members,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
+      .eq('status','open')
+      .eq('category','baromeeting')
+      .order('gathering_date',{ascending:true})
+      .limit(20);
+    const { data, error } = await q;
+    if (error || !data?.length) {
+      el.innerHTML = `<div style="text-align:center;padding:44px 20px">
+        <div style="font-size:40px;margin-bottom:10px">🤝</div>
+        <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 바로미팅</div>
+        <div style="font-size:12px;color:#bbb;line-height:1.65">현재 반경 5km 내 진행 중인 미팅이 없어요<br>곧 새 미팅이 오픈될 예정이에요</div>
+      </div>`;
+      return;
+    }
+    el.innerHTML = data.map(m => _renderBaromeetCard(m)).join('');
+    document.getElementById('mnm-meet-loctext').textContent = `${data.length}개 미팅 모집 중`;
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:44px 20px;color:#bbb;font-size:13px">불러오기 실패<br>잠시 후 다시 시도해주세요</div>';
   }
 }
-function startBarospot() {
-  showToast('GPS 기반 탐색은 정식 오픈 시 활성화됩니다');
+function _renderBaromeetCard(m) {
+  const maleMax = m.baromeeting_male_max || 4;
+  const femaleMax = m.baromeeting_female_max || 4;
+  const maleCur = m.baromeeting_male_cur || 0;
+  const femaleCur = m.baromeeting_female_cur || 0;
+  const maleLeft = maleMax - maleCur;
+  const femaleLeft = femaleMax - femaleCur;
+  const isFull = maleLeft <= 0 && femaleLeft <= 0;
+  const dtStr = m.gathering_date ? (() => {
+    const d = new Date(m.gathering_date);
+    const days = ['일','월','화','수','목','금','토'];
+    return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${d.getHours()<12?'오전':'오후'} ${((d.getHours()-1)%12)+1}:${String(d.getMinutes()).padStart(2,'0')}`;
+  })() : '날짜 미정';
+  const tags = Array.isArray(m.tags) ? m.tags : [];
+  const _maleSlots = Array.from({length:maleMax}).map((_,i)=>i<maleCur?'<span style="color:#3b82f6;font-size:14px">●</span>':'<span style="color:#ddd;font-size:14px">○</span>').join('');
+  const _femaleSlots = Array.from({length:femaleMax}).map((_,i)=>i<femaleCur?'<span style="color:#f43f5e;font-size:14px">●</span>':'<span style="color:#ddd;font-size:14px">○</span>').join('');
+  return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #f0f0f0">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${m.title||'바로미팅'}</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#888">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 12-8 12S4 15.25 4 10a8 8 0 0 1 8-8z"/></svg>${m.location_name||m.address||'장소 확인 후 안내'}
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">🕐 ${dtStr}</div>
+      </div>
+      <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;flex-shrink:0;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:#7C3AED'}">${isFull?'마감':'자리있음'}</span>
+    </div>
+    <!-- 모집현황 -->
+    <div style="display:flex;gap:10px;background:#fafafa;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:10px;color:#f43f5e;font-weight:800;margin-bottom:4px">여성 ${femaleCur}/${femaleMax}명</div>
+        <div style="letter-spacing:1px">${_femaleSlots}</div>
+        <div style="font-size:10px;color:#bbb;margin-top:2px">${femaleLeft>0?femaleLeft+'자리 남음':'마감'}</div>
+      </div>
+      <div style="width:1px;background:#eee"></div>
+      <div style="flex:1;text-align:center">
+        <div style="font-size:10px;color:#3b82f6;font-weight:800;margin-bottom:4px">남성 ${maleCur}/${maleMax}명</div>
+        <div style="letter-spacing:1px">${_maleSlots}</div>
+        <div style="font-size:10px;color:#bbb;margin-top:2px">${maleLeft>0?maleLeft+'자리 남음':'마감'}</div>
+      </div>
+    </div>
+    ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:#f5f5f5;color:#666;padding:3px 8px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
+    <button onclick="applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>
+      ${isFull?'모집 마감':'참가 신청하기 · 2,000P →'}
+    </button>
+  </div>`;
 }
-function createBaromeet() {
-  showToast('바로미팅 개설은 정식 오픈 시 활성화됩니다');
+async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
+  if (!currentUser || isGuest) { showLoginPrompt('로그인 후 신청할 수 있어요','바로미팅 참가는 로그인이 필요합니다.'); return; }
+  // 성별 선택 후 포인트 차감
+  showCustomConfirm({
+    icon:'🤝', title:'바로미팅 참가 신청',
+    msg:`참가 신청 시 2,000P가 차감됩니다.\n현재 잔액이 부족하면 충전 화면으로 이동합니다.`,
+    okLabel:'2,000P 차감하고 신청', okColor:'#7C3AED',
+    onOk: async () => {
+      const pts = await loadUserPoints();
+      if (pts < 2000) { closeMannnamPanel(); openPointCharge(); showToast('포인트가 부족해요. 충전 후 신청해주세요'); return; }
+      showToast('신청이 접수됐어요! 확정 후 안내드려요');
+    }
+  });
+}
+
+// 바로스팟 목록 로드
+let _spotActive = false;
+async function _loadBarospotList() {
+  const el = document.getElementById('mnm-spot-list');
+  const cntEl = document.getElementById('mnm-spot-count');
+  if (!el) return;
+  el.innerHTML = `<div style="text-align:center;padding:44px 20px">
+    <div style="font-size:40px;margin-bottom:10px">📍</div>
+    <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">주변 스팟 회원</div>
+    <div style="font-size:12px;color:#bbb;line-height:1.65">현재 주변에 스팟 활성화 회원이 없어요<br>내 스팟을 켜면 발견될 수 있어요</div>
+  </div>`;
+  if (cntEl) cntEl.textContent = '0';
+}
+function toggleMySpot() {
+  _spotActive = !_spotActive;
+  const toggle = document.getElementById('mnm-spot-toggle');
+  const dot = document.getElementById('mnm-spot-dot');
+  const desc = document.getElementById('mnm-spot-toggle-desc');
+  if (toggle) toggle.style.background = _spotActive ? '#f43f5e' : '#e5e7eb';
+  if (dot) dot.style.left = _spotActive ? '23px' : '3px';
+  if (desc) desc.textContent = _spotActive ? 'ON · 주변 회원에게 내가 보여요' : 'OFF 상태 · 켜면 주변 회원에게도 내가 표시돼요';
+  if (_spotActive) showToast('스팟 모드가 켜졌어요. 주변 회원을 탐색합니다');
 }
 
 // ── 포인트 시스템 ──────────────────────────────────────────
@@ -22416,54 +22520,83 @@ function renderWorkerLocMap(containerId, lat, lng) {
 
 <!-- ── 바로만남 패널 ── -->
 <div id="mannnam-panel" style="display:none;position:fixed;inset:0;z-index:510;background:#f8f8f8;flex-direction:column;overflow:hidden">
-  <!-- 헤더 -->
-  <div style="background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0;padding-top:env(safe-area-inset-top,0px)">
-    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
-      <button onclick="closeMannnamPanel()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center">
+  <!-- 헤더 — var(--sat) 사용으로 상태표시줄 가림 방지 -->
+  <div style="background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--sat,0px) + 14px) 16px 14px">
+      <button onclick="closeMannnamPanel()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div style="font-size:16px;font-weight:900;color:#111;flex:1">바로만남</div>
-      <span style="font-size:9px;font-weight:900;background:#f43f5e;color:#fff;padding:3px 10px;border-radius:10px;letter-spacing:0.3px">BETA</span>
+      <span style="font-size:9px;font-weight:900;background:#f43f5e;color:#fff;padding:3px 10px;border-radius:10px;letter-spacing:0.3px;flex-shrink:0">BETA</span>
     </div>
-    <!-- 탭 -->
-    <div style="display:flex;border-top:1px solid #f5f5f5">
-      <button id="mnm-tab-spot" onclick="switchMannnamTab('spot')" style="flex:1;padding:12px;background:none;border:none;border-bottom:2.5px solid #f43f5e;font-size:14px;font-weight:800;color:#f43f5e;cursor:pointer">📍 바로스팟</button>
-      <button id="mnm-tab-meeting" onclick="switchMannnamTab('meeting')" style="flex:1;padding:12px;background:none;border:none;border-bottom:2.5px solid transparent;font-size:14px;font-weight:700;color:#aaa;cursor:pointer">🤝 바로미팅</button>
+    <!-- 탭: 바로미팅(좌) | 바로스팟(우) -->
+    <div style="display:flex">
+      <button id="mnm-tab-meeting" onclick="switchMannnamTab('meeting')" style="flex:1;padding:11px 0;background:none;border:none;border-bottom:2.5px solid #7C3AED;font-size:14px;font-weight:800;color:#7C3AED;cursor:pointer">🤝 바로미팅</button>
+      <button id="mnm-tab-spot" onclick="switchMannnamTab('spot')" style="flex:1;padding:11px 0;background:none;border:none;border-bottom:2.5px solid transparent;font-size:14px;font-weight:700;color:#aaa;cursor:pointer">📍 바로스팟</button>
     </div>
   </div>
   <!-- 탭 컨텐츠 -->
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
-    <!-- 바로스팟 탭 -->
-    <div id="mnm-content-spot" style="padding:16px">
-      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #fce7f3">
-        <div style="font-size:13px;font-weight:900;color:#f43f5e;margin-bottom:4px">📍 바로스팟이란?</div>
-        <div style="font-size:12px;color:#666;line-height:1.75">GPS 반경 1km 내 회원을 자유롭게 탐색하세요.<br>마음에 드는 상대의 연락처 확인 시에만 <b>500P</b>가 차감됩니다.</div>
-      </div>
-      <div id="mnm-spot-list" style="margin-bottom:16px">
-        <div style="text-align:center;padding:48px 20px;color:#bbb">
-          <div style="font-size:36px;margin-bottom:10px">📍</div>
-          <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">주변 바로스팟 회원</div>
-          <div style="font-size:12px;color:#bbb;line-height:1.6">위치를 켜면 반경 1km 내<br>회원들이 여기에 표시돼요</div>
+
+    <!-- ① 바로미팅 탭 (default) -->
+    <div id="mnm-content-meeting" style="padding:14px 14px 40px">
+      <!-- 설명 -->
+      <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid #ede9fe;display:flex;align-items:flex-start;gap:12px">
+        <div style="width:38px;height:38px;background:#ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🤝</div>
+        <div>
+          <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:3px">바로미팅</div>
+          <div style="font-size:11px;color:#777;line-height:1.65">반경 5km 내 소셜 만남에 참여하세요.<br>목록 탐색은 <b>무료</b> · 신청 시에만 2,000P 차감</div>
         </div>
       </div>
-      <button onclick="startBarospot()" style="width:100%;padding:15px;background:#f43f5e;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:900;cursor:pointer">📍 위치 켜고 탐색 시작</button>
-      <div style="font-size:10px;color:#bbb;text-align:center;margin-top:10px">연락처 확인 시에만 500P 차감 · 탐색은 무료</div>
-    </div>
-    <!-- 바로미팅 탭 -->
-    <div id="mnm-content-meeting" style="display:none;padding:16px">
-      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #ede9fe">
-        <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:4px">🤝 바로미팅이란?</div>
-        <div style="font-size:12px;color:#666;line-height:1.75">4:4 소셜 만남에 자유롭게 참여하세요.<br>목록 탐색은 무료, 참가 신청 시에만 <b>2,000P</b>가 차감됩니다.</div>
+      <!-- 위치 상태 -->
+      <div id="mnm-meet-locbar" style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:14px;border:1px solid #f0f0f0;font-size:12px;color:#888">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 12-8 12S4 15.25 4 10a8 8 0 0 1 8-8z"/></svg>
+        <span id="mnm-meet-loctext">위치를 확인해 반경 5km 내 모임을 찾고 있어요…</span>
       </div>
-      <button onclick="createBaromeet()" style="width:100%;padding:13px;background:#fff;color:#7C3AED;border:2px solid #7C3AED;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:14px">+ 미팅 만들기</button>
+      <!-- 미팅 목록 -->
       <div id="mnm-meeting-list">
-        <div style="text-align:center;padding:48px 20px;color:#bbb">
-          <div style="font-size:36px;margin-bottom:10px">🤝</div>
-          <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">예정된 바로미팅</div>
-          <div style="font-size:12px;color:#bbb;line-height:1.6">현재 모집 중인 미팅이 없어요<br>직접 만들어 먼저 시작해보세요</div>
+        <div style="text-align:center;padding:44px 20px">
+          <div style="font-size:40px;margin-bottom:10px">🤝</div>
+          <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 바로미팅</div>
+          <div style="font-size:12px;color:#bbb;line-height:1.65">현재 반경 5km 내 진행 중인 미팅이 없어요<br>곧 새 미팅이 오픈될 예정이에요</div>
         </div>
       </div>
     </div>
+
+    <!-- ② 바로스팟 탭 -->
+    <div id="mnm-content-spot" style="display:none;padding:14px 14px 40px">
+      <!-- 설명 -->
+      <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid #fce7f3;display:flex;align-items:flex-start;gap:12px">
+        <div style="width:38px;height:38px;background:#fce7f3;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📍</div>
+        <div>
+          <div style="font-size:13px;font-weight:900;color:#f43f5e;margin-bottom:3px">바로스팟</div>
+          <div style="font-size:11px;color:#777;line-height:1.65">지금 이 근처에서 활동 중인 알바생을 발견하세요.<br>탐색 <b>무료</b> · 인사 보내기 시에만 500P 차감</div>
+        </div>
+      </div>
+      <!-- 내 스팟 토글 -->
+      <div id="mnm-spot-toggle-card" style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleMySpot()">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#222">내 스팟 ON</div>
+          <div id="mnm-spot-toggle-desc" style="font-size:11px;color:#aaa;margin-top:2px">OFF 상태 · 켜면 주변 회원에게도 내가 표시돼요</div>
+        </div>
+        <div id="mnm-spot-toggle" style="width:46px;height:26px;border-radius:13px;background:#e5e7eb;position:relative;transition:background 0.2s;flex-shrink:0">
+          <div id="mnm-spot-dot" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.18);transition:left 0.2s"></div>
+        </div>
+      </div>
+      <!-- 스팟 목록 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:800;color:#555">주변 활동 회원 <span id="mnm-spot-count" style="color:#f43f5e">0</span>명</div>
+        <div style="font-size:11px;color:#aaa">인사 보내기 500P</div>
+      </div>
+      <div id="mnm-spot-list">
+        <div style="text-align:center;padding:44px 20px">
+          <div style="font-size:40px;margin-bottom:10px">📍</div>
+          <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">주변 스팟 회원</div>
+          <div style="font-size:12px;color:#bbb;line-height:1.65">현재 주변에 스팟 활성화 회원이 없어요<br>내 스팟을 켜면 발견될 수 있어요</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
