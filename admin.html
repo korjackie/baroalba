@@ -39,18 +39,21 @@
     .content { padding:20px; max-width:1100px; margin:0 auto; }
 
     /* 통계 카드 */
-    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px; }
+    @media(max-width:600px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
     .stat-card {
-      background:#fff; border-radius:14px; padding:18px 16px;
+      background:#fff; border-radius:14px; padding:14px 16px;
       box-shadow:0 1px 4px rgba(0,0,0,0.06);
       cursor:pointer; transition:box-shadow 0.15s, transform 0.15s; user-select:none;
+      display:flex; align-items:center; gap:10px;
     }
     .stat-card:active { transform:scale(0.97); box-shadow:0 1px 2px rgba(0,0,0,0.04); }
     .stat-card.no-click { cursor:default; }
     .stat-card.no-click:active { transform:none; }
-    .stat-icon { font-size:24px; margin-bottom:8px; }
-    .stat-val { font-size:28px; font-weight:900; color:#1e293b; }
-    .stat-label { font-size:12px; color:#94a3b8; font-weight:600; margin-top:3px; }
+    .stat-left { flex:1; min-width:0; }
+    .stat-icon { font-size:22px; line-height:1; }
+    .stat-val { font-size:26px; font-weight:900; color:#1e293b; flex-shrink:0; }
+    .stat-label { font-size:11px; color:#94a3b8; font-weight:600; margin-top:3px; }
     .stat-card.alert .stat-val { color:#EF4444; }
 
     /* 섹션 헤더 */
@@ -271,12 +274,12 @@
   <!-- 대시보드 -->
   <div class="tab-content active" id="tab-dashboard">
     <div class="stats-grid" id="stats-grid">
-      <div class="stat-card" onclick="switchTab('users')"><div class="stat-icon">👥</div><div class="stat-val" id="s-workers">-</div><div class="stat-label">총 알바생</div></div>
-      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-icon">🏢</div><div class="stat-val" id="s-businesses">-</div><div class="stat-label">등록 업주</div></div>
-      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-icon">📋</div><div class="stat-val" id="s-postings">-</div><div class="stat-label">활성 공고</div></div>
-      <div class="stat-card alert" onclick="switchTab('reports')"><div class="stat-icon">🚨</div><div class="stat-val" id="s-reports">-</div><div class="stat-label">미처리 신고</div></div>
-      <div class="stat-card no-click"><div class="stat-icon">⚡</div><div class="stat-val" id="s-apps">-</div><div class="stat-label">오늘 지원</div></div>
-      <div class="stat-card" onclick="switchTab('moims')"><div class="stat-icon">🤝</div><div class="stat-val" id="s-moims">-</div><div class="stat-label">활성 모임</div></div>
+      <div class="stat-card" onclick="switchTab('users')"><div class="stat-left"><div class="stat-icon">👥</div><div class="stat-label">총 알바생</div></div><div class="stat-val" id="s-workers">-</div></div>
+      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-left"><div class="stat-icon">🏢</div><div class="stat-label">등록 업주</div></div><div class="stat-val" id="s-businesses">-</div></div>
+      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-left"><div class="stat-icon">📋</div><div class="stat-label">활성 공고</div></div><div class="stat-val" id="s-postings">-</div></div>
+      <div class="stat-card alert" onclick="switchTab('reports')"><div class="stat-left"><div class="stat-icon">🚨</div><div class="stat-label">미처리 신고</div></div><div class="stat-val" id="s-reports">-</div></div>
+      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">⚡</div><div class="stat-label">오늘 지원</div></div><div class="stat-val" id="s-apps">-</div></div>
+      <div class="stat-card" onclick="switchTab('moims')"><div class="stat-left"><div class="stat-icon">🤝</div><div class="stat-label">활성 모임</div></div><div class="stat-val" id="s-moims">-</div></div>
     </div>
     <div class="section-head">
       <div class="section-title">최근 신고</div>
@@ -341,7 +344,7 @@
           <input id="new-admin-email" type="email" placeholder="이메일 주소 입력"
             style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
             onkeydown="if(event.key==='Enter')addAdmin()"
-            onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
+            onfocus="scrollPanelToInput(this)">
           <button onclick="addAdmin()"
             style="padding:11px 18px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
         </div>
@@ -350,20 +353,42 @@
 
     <!-- 카테고리 탭 -->
     <div id="stab-content-categories" class="dp-body" style="display:none">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 표시되는 카테고리를 관리합니다.</div>
-      <div id="settings-cat-list"><div class="loading">로딩 중...</div></div>
-      <div style="margin-top:16px;border-top:1px solid #e2e8f0;padding-top:16px">
-        <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">카테고리 추가</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="new-cat-icon" placeholder="🍕" maxlength="4"
-            style="width:50px;text-align:center;padding:11px 6px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
-          <input id="new-cat-name" placeholder="카테고리명"
-            style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
-            onkeydown="if(event.key==='Enter')addCategory()"
-            onfocus="setTimeout(()=>this.scrollIntoView({block:'center',behavior:'smooth'}),300)">
-          <button onclick="addCategory()"
-            style="padding:11px 18px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+      <!-- 서비스별 탭 -->
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button id="svc-tab-baroalba" onclick="switchSvcCatTab('baroalba')"
+          style="flex:1;padding:7px 4px;font-size:12px;font-weight:800;border:1.5px solid #C8102E;border-radius:8px;background:#C8102E;color:#fff;cursor:pointer">⚡ 바로알바</button>
+        <button id="svc-tab-baromoim" onclick="switchSvcCatTab('baromoim')"
+          style="flex:1;padding:7px 4px;font-size:12px;font-weight:800;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;cursor:pointer">🤝 바로모임</button>
+        <button id="svc-tab-baromannam" onclick="switchSvcCatTab('baromannam')"
+          style="flex:1;padding:7px 4px;font-size:12px;font-weight:800;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;cursor:pointer">💘 바로만남</button>
+      </div>
+      <!-- 바로알바 카테고리 -->
+      <div id="svc-cat-baroalba">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 표시되는 카테고리입니다.</div>
+        <div id="settings-cat-list"><div class="loading">로딩 중...</div></div>
+        <div style="margin-top:16px;border-top:1px solid #e2e8f0;padding-top:16px">
+          <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">카테고리 추가</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="new-cat-icon" placeholder="🍕" maxlength="4"
+              style="width:50px;text-align:center;padding:11px 6px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
+            <input id="new-cat-name" placeholder="카테고리명"
+              style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
+              onkeydown="if(event.key==='Enter')addCategory()"
+              onfocus="scrollPanelToInput(this)">
+            <button onclick="addCategory()"
+              style="padding:11px 18px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+          </div>
         </div>
+      </div>
+      <!-- 바로모임 카테고리 -->
+      <div id="svc-cat-baromoim" style="display:none">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">모임 개설 시 표시되는 카테고리입니다. (기본 제공)</div>
+        <div id="settings-moim-cat-list"></div>
+      </div>
+      <!-- 바로만남 카테고리 -->
+      <div id="svc-cat-baromannam" style="display:none">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로스팟·바로미팅 서비스 카테고리입니다. (기본 제공)</div>
+        <div id="settings-mannam-cat-list"></div>
       </div>
     </div>
   </div>
@@ -527,6 +552,26 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.visualViewport.addEventListener('scroll', _adjustPanels);
   }
 });
+
+// 키보드 올라올 때 패널 내 입력창 스크롤
+function scrollPanelToInput(el) {
+  const doScroll = () => {
+    const panel = el.closest('.detail-panel');
+    if (!panel) return;
+    const elRect = el.getBoundingClientRect();
+    const vpH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    if (elRect.bottom > vpH - 30) {
+      panel.scrollTop += elRect.bottom - vpH + 80;
+    }
+  };
+  if (window.visualViewport) {
+    const handler = () => { setTimeout(doScroll, 80); window.visualViewport.removeEventListener('resize', handler); };
+    window.visualViewport.addEventListener('resize', handler);
+    setTimeout(() => window.visualViewport.removeEventListener('resize', handler), 2000);
+  } else {
+    setTimeout(doScroll, 400);
+  }
+}
 
 // ── 탭 전환 ─────────────────────────────────────────────
 function switchTab(name) {
@@ -1057,7 +1102,57 @@ function switchSettingsTab(name) {
     document.getElementById('stab-content-' + t).style.display = t === name ? 'block' : 'none';
   });
   if (name === 'admins' && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
-  if (name === 'categories' && document.getElementById('settings-cat-list').innerHTML.includes('로딩')) loadCategoryList();
+  if (name === 'categories') {
+    if (document.getElementById('settings-cat-list').innerHTML.includes('로딩')) loadCategoryList();
+    renderMoimCatList();
+    renderMannamCatList();
+  }
+}
+
+const _MOIM_CATS = [
+  { icon:'🏋️', name:'운동' }, { icon:'🎨', name:'취미' }, { icon:'📚', name:'스터디' },
+  { icon:'🎮', name:'게임' }, { icon:'🍜', name:'맛집' }, { icon:'✈️', name:'여행' },
+  { icon:'🤝', name:'소셜' },
+];
+const _MANNAM_CATS = [
+  { icon:'⚡', name:'바로스팟', desc:'GPS 반경 내 실시간 상대 발견' },
+  { icon:'🍻', name:'바로미팅', desc:'4:4 소셜 만남 매칭' },
+  { icon:'🔥', name:'번개모임', desc:'3시간 자동폭파 타임어택 모임 (출시 예정)' },
+];
+
+function renderMoimCatList() {
+  const el = document.getElementById('settings-moim-cat-list');
+  if (!el) return;
+  el.innerHTML = _MOIM_CATS.map(c => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f1f5f9">
+      <span style="font-size:20px;width:28px;text-align:center;flex-shrink:0">${c.icon}</span>
+      <span style="flex:1;font-size:14px;font-weight:700;color:#1e293b">${c.name}</span>
+      <span style="font-size:10px;background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:5px">기본</span>
+    </div>`).join('');
+}
+
+function renderMannamCatList() {
+  const el = document.getElementById('settings-mannam-cat-list');
+  if (!el) return;
+  el.innerHTML = _MANNAM_CATS.map(c => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #f1f5f9">
+      <span style="font-size:20px;width:28px;text-align:center;flex-shrink:0;margin-top:2px">${c.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:#1e293b">${c.name}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">${c.desc}</div>
+      </div>
+      <span style="font-size:10px;background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:5px;flex-shrink:0">기본</span>
+    </div>`).join('');
+}
+
+function switchSvcCatTab(name) {
+  ['baroalba','baromoim','baromannam'].forEach(t => {
+    const btn = document.getElementById('svc-tab-' + t);
+    const sec = document.getElementById('svc-cat-' + t);
+    const isActive = t === name;
+    if (btn) { btn.style.background = isActive ? '#C8102E' : '#fff'; btn.style.color = isActive ? '#fff' : '#64748b'; btn.style.borderColor = isActive ? '#C8102E' : '#e2e8f0'; }
+    if (sec) sec.style.display = isActive ? 'block' : 'none';
+  });
 }
 
 async function loadAdminList() {
