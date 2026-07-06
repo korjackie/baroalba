@@ -533,13 +533,17 @@ window.addEventListener('DOMContentLoaded', async () => {
             overlay.style.setProperty('padding-bottom', kbH + 'px', 'important');
             if (panel) {
               panel.style.maxHeight = (vpH - 40) + 'px';
-              // 포커스된 입력창 패널 내 스크롤 (키보드 완전 올라온 후)
+              // 포커스된 입력창 → 패널 scrollTop 직접 조정 (scrollIntoView는 Android WebView에서 패널 스크롤 안됨)
               setTimeout(() => {
                 const f = document.activeElement;
                 if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA') && panel.contains(f)) {
-                  f.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                  const fRect = f.getBoundingClientRect();
+                  const vpBottom = window.visualViewport ? window.visualViewport.height : vpH;
+                  if (fRect.bottom > vpBottom - 20) {
+                    panel.scrollTop += fRect.bottom - vpBottom + 80;
+                  }
                 }
-              }, 150);
+              }, 200);
             }
           } else {
             overlay.style.paddingBottom = '';

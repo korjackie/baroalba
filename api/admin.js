@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
 
   const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const adminCheck = await sb(`app_admins?email=eq.${encodeURIComponent(email)}&select=email&limit=1`, svcKey);
+  const adminCheck = await sb(`app_admins?email=ilike.${encodeURIComponent(email)}&select=email&limit=1`, svcKey);
   const adminRows = await adminCheck.json();
   if (!Array.isArray(adminRows) || adminRows.length === 0) return res.status(403).json({ error: 'Forbidden' });
   const action = req.query.action;

@@ -5090,6 +5090,7 @@ let urgentOnly = false;
 let sortByWage = false;
 let sortMode = 'dist'; // dist|wage_desc|wage_asc|date_asc|date_desc
 let jobs = [];
+let _jobsLoaded = false;
 let _myAge = null;
 let _langFilterActive = false;
 let _myLangs = [];
@@ -5250,7 +5251,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '368';
+  const _APP_V = '369';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -5809,6 +5810,7 @@ async function loadJobs() {
     }
 
     jobs = result;
+    _jobsLoaded = true;
     // 홈 패널이 표시 중이면 job 섹션 갱신 (GPS 위치 확정 후 재호출 시 반영)
     if (document.getElementById('panel-home')?.classList.contains('show')) {
       try { _renderHomeUrgent(); } catch(e) {}
@@ -7572,6 +7574,7 @@ function _renderHomeRecent() {
   if (!section || !list) return;
   const available = (jobs || []).filter(j => j.status === 'open' || j.status === 'urgent').slice(0, 10);
   if (!available.length) {
+    if (!_jobsLoaded) return; // 아직 로딩 중 → 스켈레톤 유지
     list.innerHTML = '<div style="color:#bbb;font-size:12px;padding:4px 0 8px;white-space:nowrap">주변 공고가 없어요</div>';
     return;
   }
