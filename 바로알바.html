@@ -37,6 +37,13 @@
   })();
   </script>
 
+  <!-- 버전 리다이렉트: DOM 렌더 전 동기 실행 → 홈화면 flash 제거 -->
+  <script>
+  (function(){
+    var V='373',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
+  })();
+  </script>
   <script src="./config.js"></script>
   <script src="./shared-lang.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3949,6 +3956,35 @@
       <input type="hidden" id="f-moim-public" value="true">
     </div>
 
+    <!-- 번개모임 옵션 -->
+    <div style="margin-bottom:20px">
+      <div id="quick-moim-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:14px;cursor:pointer" onclick="toggleQuickMoim()">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚡</div>
+            <div>
+              <div style="font-size:14px;font-weight:900;color:#92400e">번개모임</div>
+              <div style="font-size:11px;color:#b45309;margin-top:1px">설정 시간 후 자동 마감 · 즉흥 단발 모임</div>
+            </div>
+          </div>
+          <div id="quick-toggle" style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;position:relative;transition:background 0.2s;flex-shrink:0">
+            <div id="quick-toggle-dot" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left 0.2s"></div>
+          </div>
+        </div>
+        <div id="quick-duration-section" style="display:none;margin-top:12px;border-top:1px solid #fde68a;padding-top:10px">
+          <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px">자동 마감 시간</div>
+          <div style="display:flex;gap:6px">
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,30)"  style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #fde68a;background:#fef3c7;color:#92400e;font-size:12px;font-weight:800;cursor:pointer">30분</button>
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,60)"  style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">1시간</button>
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,120)" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">2시간</button>
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,180)" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">3시간</button>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="f-moim-is-quick" value="false">
+      <input type="hidden" id="f-moim-quick-minutes" value="30">
+    </div>
+
     <button onclick="submitMoimForm()" style="width:100%;padding:15px;background:#7C3AED;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer" id="moim-submit-btn">모임 개설하기</button>
   </div>
 </div>
@@ -5252,27 +5288,16 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '372';
-  const _savedV = localStorage.getItem('_baroV');
+  const _APP_V = '373';
   const _urlV = new URL(location.href).searchParams.get('_v');
-  if (_savedV !== _APP_V) {
-    localStorage.setItem('_baroV', _APP_V);
-    // 1) SW CacheStorage 전부 삭제
-    if ('caches' in window) {
-      await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
-    }
-    // 2) SW 등록 전부 해제 (구버전 SW가 구버전 HTML 서빙하는 문제 근본 차단)
+  // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
+  if (_urlV === _APP_V) {
+    if ('caches' in window) await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
     if (navigator.serviceWorker) {
       const regs = await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r => r.unregister()));
     }
-    // 3) URL 기반 캐시 우회: ?_v=299는 브라우저/WebView HTTP캐시에 없는 URL → 반드시 서버에서 신규 수신
-    if (_urlV !== _APP_V) {
-      window.location.replace('/바로알바.html?_v=' + _APP_V);
-      return;
-    }
   }
-  // _v 파라미터 URL에서 제거 (히스토리 정리)
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
@@ -6778,6 +6803,31 @@ function selectMoimPublic(isPublic) {
   document.getElementById('pub-btn-private').style.color       = !isPublic ? '#7C3AED' : '#555';
 }
 
+function toggleQuickMoim() {
+  const input = document.getElementById('f-moim-is-quick');
+  const toggle = document.getElementById('quick-toggle');
+  const dot = document.getElementById('quick-toggle-dot');
+  const section = document.getElementById('quick-duration-section');
+  const isNowOn = input.value !== 'true';
+  input.value = isNowOn ? 'true' : 'false';
+  toggle.style.background = isNowOn ? '#f59e0b' : '#e5e7eb';
+  dot.style.left = isNowOn ? '22px' : '2px';
+  section.style.display = isNowOn ? 'block' : 'none';
+}
+function selectQuickDuration(btn, minutes) {
+  document.getElementById('f-moim-quick-minutes').value = minutes;
+  btn.closest('div').querySelectorAll('button').forEach(b => {
+    b.style.border = '1.5px solid #e5e7eb';
+    b.style.background = '#f9fafb';
+    b.style.color = '#555';
+    b.style.fontWeight = '700';
+  });
+  btn.style.border = '1.5px solid #fde68a';
+  btn.style.background = '#fef3c7';
+  btn.style.color = '#92400e';
+  btn.style.fontWeight = '800';
+}
+
 async function submitMoimForm() {
   if (!currentUser) { showLoginPrompt('로그인 후 모임을 만들 수 있어요', ''); return; }
   const cat = document.getElementById('f-moim-cat').value;
@@ -6825,6 +6875,12 @@ async function submitMoimForm() {
     is_public:        isPublic,
     invite_code,
     status:           'open',
+    is_quick:         document.getElementById('f-moim-is-quick').value === 'true',
+    quick_expires_at: (() => {
+      if (document.getElementById('f-moim-is-quick').value !== 'true') return null;
+      const mins = parseInt(document.getElementById('f-moim-quick-minutes').value) || 30;
+      return new Date(Date.now() + mins * 60000).toISOString();
+    })(),
   };
 
   const btn = document.getElementById('moim-submit-btn');
