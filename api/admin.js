@@ -201,17 +201,28 @@ module.exports = async function handler(req, res) {
 
     // ── 카테고리 목록 ─────────────────────────────────────────
     if (action === 'categories') {
-      const data = await sb('job_categories?select=name,icon,display_order,active&order=display_order', svcKey).then(r => r.json());
+      const svcType = req.query.service_type || 'baroalba';
+      // service_type 컬럼이 없을 때를 대비해 fallback 처리
+      const filteredResp = await sb(
+        `job_categories?select=name,icon,display_order,active&service_type=eq.${encodeURIComponent(svcType)}&order=display_order`,
+        svcKey
+      );
+      if (!filteredResp.ok && svcType === 'baroalba') {
+        // DDL 미실행 상태 — service_type 없이 전체 반환
+        const data = await sb('job_categories?select=name,icon,display_order,active&order=display_order', svcKey).then(r => r.json());
+        return res.json(Array.isArray(data) ? data : []);
+      }
+      const data = await filteredResp.json();
       return res.json(Array.isArray(data) ? data : []);
     }
 
     // ── 카테고리 추가 ─────────────────────────────────────────
     if (action === 'add_category' && req.method === 'POST') {
-      const { name, icon, display_order } = req.body || {};
+      const { name, icon, display_order, service_type } = req.body || {};
       if (!name) return res.status(400).json({ error: 'name required' });
       const r = await sb('job_categories', svcKey, {
         method: 'POST',
-        body: JSON.stringify({ name, icon: icon || '📋', display_order: display_order || 99, active: true }),
+        body: JSON.stringify({ name, icon: icon || '📋', display_order: display_order || 99, active: true, service_type: service_type || 'baroalba' }),
         headers: { 'Prefer': 'return=representation' }
       });
       return res.json(await r.json());
@@ -219,12 +230,13 @@ module.exports = async function handler(req, res) {
 
     // ── 카테고리 수정 ─────────────────────────────────────────
     if (action === 'update_category' && req.method === 'PATCH') {
-      const { name, newName, icon } = req.body || {};
+      const { name, newName, icon, service_type } = req.body || {};
       if (!name) return res.status(400).json({ error: 'name required' });
+      const svc = service_type || 'baroalba';
       const updates = {};
       if (newName && newName !== name) updates.name = newName;
       if (icon !== undefined) updates.icon = icon;
-      await sb(`job_categories?name=eq.${encodeURIComponent(name)}`, svcKey, {
+      await sb(`job_categories?name=eq.${encodeURIComponent(name)}&service_type=eq.${encodeURIComponent(svc)}`, svcKey, {
         method: 'PATCH', body: JSON.stringify(updates)
       });
       return res.json({ ok: true });
@@ -232,9 +244,10 @@ module.exports = async function handler(req, res) {
 
     // ── 카테고리 삭제 (soft) ──────────────────────────────────
     if (action === 'delete_category' && req.method === 'PATCH') {
-      const { name } = req.body || {};
+      const { name, service_type } = req.body || {};
       if (!name) return res.status(400).json({ error: 'name required' });
-      await sb(`job_categories?name=eq.${encodeURIComponent(name)}`, svcKey, {
+      const svc = service_type || 'baroalba';
+      await sb(`job_categories?name=eq.${encodeURIComponent(name)}&service_type=eq.${encodeURIComponent(svc)}`, svcKey, {
         method: 'PATCH', body: JSON.stringify({ active: false })
       });
       return res.json({ ok: true });
