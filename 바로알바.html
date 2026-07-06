@@ -37,10 +37,14 @@
   })();
   </script>
 
-  <!-- 버전 리다이렉트: DOM 렌더 전 동기 실행 → 홈화면 flash 제거 -->
+  <!-- 렌더 전 즉시 숨김 → WebView 디스크캐시 flash 완전 차단 -->
   <script>
+  document.documentElement.style.visibility='hidden';
+  // 3초 후 안전 공개 (JS 실패 대비)
+  setTimeout(function(){document.documentElement.style.visibility='';},3000);
+  // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='374',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='375',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -5293,7 +5297,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '374';
+  const _APP_V = '375';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -5412,6 +5416,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 급구 배너 즉시 표시 (GPS/loadJobs 기다리지 않음)
   _preloadHomeUrgent();
+
+  // 초기 레이아웃 확정 후 공개 (WebView 캐시 flash 방지)
+  document.documentElement.style.visibility = '';
 
   await loadJobs();
   // loadJobs 완료 후 홈 job 섹션 갱신 (저장 위치 기반 초기 조회 결과 반영)
