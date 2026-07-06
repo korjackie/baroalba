@@ -3842,6 +3842,17 @@
       <textarea id="f-moim-desc" class="form-input" rows="4" placeholder="모임 목적, 분위기, 주의사항 등 자유롭게 적어주세요" style="resize:none;min-height:90px;font-family:inherit"></textarea>
     </div>
 
+    <!-- 모임 사진 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">모임 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></div>
+      <div id="moim-img-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px"></div>
+      <label id="moim-img-add-btn" style="display:flex;align-items:center;justify-content:center;height:64px;background:#fff;border:2px dashed #DDD6FE;border-radius:12px;cursor:pointer;width:100%;box-sizing:border-box">
+        <span style="font-size:26px;color:#c4b5fd;line-height:1">+</span>
+        <input type="file" id="moim-img-input" accept="image/*" multiple style="display:none" onchange="addMoimImages(this)">
+      </label>
+      <div style="font-size:11px;color:#aaa;margin-top:6px">1번 사진이 대표 이미지</div>
+    </div>
+
     <!-- 날짜/시간 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
@@ -5083,6 +5094,7 @@ let markers = [];
 let overlays = [];
 let selectedJobId = null;
 let jobImgs = []; // {src: blobUrl|existingUrl, file: File|null} - 순서 = 대표 우선
+let moimImgs = []; // 모임 사진 (jobImgs와 동일 구조)
 let _jobImgCropQueue = [];
 let _jobImgDragSrc = null;
 let myLocationOverlay = null;
@@ -5175,6 +5187,13 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 6-2. 포인트 내역 패널
+  const pointHistEl = document.getElementById('point-history-panel');
+  if (pointHistEl && pointHistEl.style.display === 'block') {
+    closePointHistory();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 7. 공고 등록/수정 폼 오버레이 (.open)
   const formEl = document.getElementById('form-overlay');
   if (formEl && formEl.classList.contains('open')) {
@@ -5228,7 +5247,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '364';
+  const _APP_V = '365';
   const _savedV = localStorage.getItem('_baroV');
   const _urlV = new URL(location.href).searchParams.get('_v');
   if (_savedV !== _APP_V) {
@@ -6400,6 +6419,9 @@ function filterMoimList(btn, cat) {
 // ── 모임 상세 ────────────────────────────────────────────
 async function openMoimDetail(moimId) {
   _currentMoimId = moimId;
+  // 로딩 전 버튼 초기화 — 이전 모임 상태 잔류 방지
+  const _apb = document.getElementById('moim-apply-btn');
+  if (_apb) { _apb.textContent = '불러오는 중...'; _apb.style.background = '#9CA3AF'; _apb.disabled = true; _apb.style.display = 'block'; }
   document.getElementById('panel-moim-detail').classList.add('show');
   document.getElementById('moim-detail-body').innerHTML = '<div style="text-align:center;padding:60px;color:#bbb">불러오는 중...</div>';
 
@@ -6495,6 +6517,7 @@ async function openMoimDetail(moimId) {
 
 async function applyMoim() {
   if (!currentUser) { showLoginPrompt('로그인 후 신청할 수 있어요', '모임 참가는 로그인이 필요합니다.'); return; }
+  if (currentUser.id === _moimDetailData?.host_id) { showToast('내가 만든 모임이에요'); return; }
   const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', _currentMoimId).eq('applicant_id', currentUser.id).limit(1);
   if (existing?.length) { showToast('이미 신청한 모임이에요'); return; }
   showConfirm('이 모임에 참가 신청할까요?\n주최자 승인 후 확정됩니다.', async () => {
@@ -6644,6 +6667,8 @@ function _resetMoimForm() {
   document.getElementById('moim-skill-section').style.display = 'none';
   document.getElementById('moim-subcat-section').style.display = 'none';
   document.getElementById('moim-subcat-btns').innerHTML = '';
+  moimImgs = [];
+  renderMoimImgPreview();
 }
 function _fillMoimForm(m) {
   document.getElementById('f-moim-id').value = m.id;
@@ -6668,6 +6693,8 @@ function _fillMoimForm(m) {
     const genderBtn = [...document.querySelectorAll('[onclick*=selectMoimGender]')].find(b => b.getAttribute('onclick').includes(`'${m.gender_req}'`));
     if (genderBtn) selectMoimGender(genderBtn, m.gender_req);
   }
+  moimImgs = (m.images || []).map(url => ({ src: url, file: null }));
+  renderMoimImgPreview();
 }
 
 const _MOIM_SUBCATS = {
@@ -6796,6 +6823,34 @@ async function submitMoimForm() {
 
   const btn = document.getElementById('moim-submit-btn');
   btn.disabled = true; btn.textContent = '처리 중...';
+
+  // 사진 업로드
+  const sess = currentSession;
+  const _uploadedMoimUrls = [];
+  if (moimImgs.some(img => img.file)) btn.textContent = '사진 업로드 중...';
+  for (const img of moimImgs) {
+    if (!img.file) {
+      _uploadedMoimUrls.push(img.src);
+    } else {
+      const path = 'moim/' + currentUser.id + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg';
+      try {
+        const r = await fetch(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/job-images/' + path, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + (sess?.access_token || ''), 'Content-Type': 'image/jpeg' },
+          body: img.file
+        });
+        if (r.ok) {
+          _uploadedMoimUrls.push(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/public/job-images/' + path);
+        } else {
+          showToast('사진 업로드 실패 — 사진 없이 저장됩니다', 5000);
+        }
+      } catch(e) {
+        showToast('사진 업로드 중 오류 — 사진 없이 저장됩니다', 5000);
+      }
+    }
+  }
+  payload.images = _uploadedMoimUrls;
+  btn.textContent = '처리 중...';
 
   let error, data;
   if (editId) {
@@ -17302,6 +17357,40 @@ function removeJobImg(idx) {
   renderJobImgPreview();
 }
 
+// ── 모임 사진 ────────────────────────────────────────────
+function addMoimImages(input) {
+  const fileList = input.files;
+  if (!fileList || !fileList.length) { showToast('선택된 파일이 없습니다'); return; }
+  const remaining = 3 - moimImgs.length;
+  if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); return; }
+  const files = Array.from(fileList).slice(0, remaining);
+  let added = 0;
+  files.forEach(f => {
+    try { moimImgs.push({ src: URL.createObjectURL(f), file: f }); added++; }
+    catch(e) { showToast('사진 오류: ' + (f.name || f.type || '알 수 없음')); }
+  });
+  setTimeout(() => { try { input.value = ''; } catch(e) {} }, 200);
+  if (added > 0) { renderMoimImgPreview(); showToast('📷 ' + added + '장 추가됨'); }
+}
+function renderMoimImgPreview() {
+  const container = document.getElementById('moim-img-preview');
+  if (!container) return;
+  container.innerHTML = moimImgs.map((img, i) => `
+    <div style="position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:${i===0?'3px solid #7C3AED':'2px solid #eee'}">
+      <img src="${img.src}" onclick="openImgViewer('${img.src}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer">
+      <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i===0?'#7C3AED':'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i+1}</div>
+      ${i===0?'<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">대표</div>':''}
+      <button onclick="event.stopPropagation();removeMoimImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
+    </div>`).join('');
+  const addBtn = document.getElementById('moim-img-add-btn');
+  if (addBtn) addBtn.style.display = moimImgs.length >= 3 ? 'none' : 'flex';
+}
+function removeMoimImg(idx) {
+  if (moimImgs[idx]?.src.startsWith('blob:')) URL.revokeObjectURL(moimImgs[idx].src);
+  moimImgs.splice(idx, 1);
+  renderMoimImgPreview();
+}
+
 // ── 급여 계산기 ────────────────────────────────────────────
 function openWageCalc(prefillWage) {
   const w = prefillWage || (jobs.find(j => j.id === selectedJobId)?.current_wage) || 10030;
@@ -19337,6 +19426,17 @@ async function addAdminEmail() {
   if (error) { showToast(error.code === '23505' ? '이미 등록된 이메일이에요' : '저장 실패: ' + error.message); return; }
   if (input) input.value = '';
   showToast('✅ 어드민 추가됐어요');
+  // 본인 이메일을 추가한 경우 즉시 어드민 권한 활성화 (재로그인 불필요)
+  const _myEmail = (currentUser?.email || '').toLowerCase();
+  if (email === _myEmail && !_isAdmin) {
+    _isAdmin = true;
+    const adminBanner = document.getElementById('admin-banner');
+    if (adminBanner) adminBanner.style.display = 'flex';
+    const ownerAdminBanner = document.getElementById('owner-admin-banner');
+    if (ownerAdminBanner) ownerAdminBanner.style.display = 'block';
+    const adminCatSec = document.getElementById('admin-cat-section');
+    if (adminCatSec) adminCatSec.style.display = 'block';
+  }
   renderAdminSection();
 }
 
@@ -21003,6 +21103,7 @@ async function openPointHistory() {
   const panel = document.getElementById('point-history-panel');
   if (!panel) return;
   panel.style.display = 'block';
+  history.pushState({ panel: null }, '');
   panel.scrollTop = 0;
   const bal = await loadUserPoints();
   const phBal = document.getElementById('ph-balance');
@@ -22155,7 +22256,7 @@ function renderWorkerLocMap(containerId, lat, lng) {
 
 <!-- ── 포인트 내역 패널 ── -->
 <div id="point-history-panel" style="display:none;position:fixed;inset:0;z-index:520;background:#f8f8f8;overflow-y:auto">
-  <div style="position:sticky;top:0;background:#fff;z-index:1;border-bottom:1px solid #f0f0f0;padding-top:env(safe-area-inset-top,0px)">
+  <div style="position:sticky;top:0;background:#fff;z-index:1;border-bottom:1px solid #f0f0f0;padding-top:var(--sat,env(safe-area-inset-top,0px))">
     <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
       <button onclick="closePointHistory()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
