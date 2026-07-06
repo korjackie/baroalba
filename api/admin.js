@@ -3,7 +3,8 @@ const SUPABASE_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
 function getEmailFromJWT(token) {
   try {
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.email || payload.user_metadata?.email || '';
+    const raw = payload.email || payload.user_metadata?.email || payload.app_metadata?.email || '';
+    return raw.toLowerCase().trim();
   } catch { return ''; }
 }
 

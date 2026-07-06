@@ -476,10 +476,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     location.href = '/login.html';
     return;
   }
-  const authEmail = session.user.email || session.user.user_metadata?.email || '';
-  const { data: adminRow } = await db.from('app_admins').select('email').eq('email', authEmail).maybeSingle();
+  const authEmail = (session.user.email || session.user.user_metadata?.email || '').toLowerCase().trim();
+  const { data: adminRow } = await db.from('app_admins').select('email').ilike('email', authEmail).maybeSingle();
   if (!adminRow) {
-    alert('관리자 권한이 없습니다.');
+    alert('관리자 권한이 없습니다. (' + authEmail + ')');
     location.href = '/login.html';
     return;
   }
@@ -553,6 +553,10 @@ async function adminApi(action, method = 'GET', body = null) {
   };
   if (body) opts.body = JSON.stringify(body);
   const r = await fetch(`/api/admin?action=${action}`, opts);
+  if (r.status === 403) {
+    console.error('[adminApi] 403 Forbidden — email mismatch or not in app_admins:', action);
+    return { _forbidden: true };
+  }
   return r.json();
 }
 
