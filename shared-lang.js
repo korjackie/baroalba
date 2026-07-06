@@ -717,9 +717,11 @@ function tWorkType(code) {
   return (WORK_TYPE_LABELS[currentLang] || WORK_TYPE_LABELS.ko)[code] || code;
 }
 
-// ── 언어 선택 (저장 전 미리보기) ────────────────────────────
+// ── 언어 선택 → 즉시 저장 ────────────────────────────────────
 function selectLang(lang) {
   _pendingLang = lang;
+  currentLang = lang;
+  localStorage.setItem('baroalba_lang', lang);
   const RED = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#C8102E';
   _LANGS.forEach(l => {
     const isSel = l === lang;
@@ -728,11 +730,12 @@ function selectLang(lang) {
     const b2 = document.getElementById('owner-lang-' + l);
     if (b2) { b2.style.background = isSel ? RED : '#f0f0f0'; b2.style.color = isSel ? '#fff' : '#666'; }
   });
-  const isSaved = lang === currentLang;
   ['lang-desc', 'owner-lang-desc'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = (TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc + (isSaved ? '' : ' (저장 전)');
+    if (el) el.textContent = (TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc;
   });
+  applyLang();
+  if (typeof showToast === 'function') showToast('✅ ' + ((TRANSLATIONS[lang] || TRANSLATIONS.ko).lang_desc || lang));
 }
 
 // ── 언어 저장 ─────────────────────────────────────────────────
