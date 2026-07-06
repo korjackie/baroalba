@@ -44,7 +44,7 @@
   setTimeout(function(){document.documentElement.style.visibility='';},3000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='376',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='377',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -5297,7 +5297,7 @@ window.addEventListener('popstate', () => {
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '376';
+  const _APP_V = '377';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -12548,8 +12548,9 @@ async function loadWorkerProfileForm() {
 
 async function loadWorkerGrade() {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers')
-    .select('rating, review_count, noshow_count, age, birth_date, is_available_now').eq('kakao_uid', currentUser.id).single();
+  const { data: w, error: _wErr } = await db.from('workers')
+    .select('rating, review_count, noshow_count, age, birth_date, is_available_now').eq('kakao_uid', currentUser.id).maybeSingle();
+  if (_wErr) console.warn('loadWorkerGrade workers query:', _wErr.code, _wErr.message);
 
   // 바로출근 토글
   const avSec = document.getElementById('available-now-section');
@@ -21854,7 +21855,10 @@ async function loadWageHistory() {
       .eq('worker_id', wid)
       .in('status', ['done', 'completed'])
       .order('created_at', { ascending: false });
-    if (appErr) throw appErr;
+    if (appErr) {
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">불러오기 실패<br><span style="font-size:10px;color:#f87171">${appErr.code || ''}: ${appErr.message || ''}</span></div>`;
+      return;
+    }
     if (!apps?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
 
     // job 상세 별도 조회 (nested join 대신)
