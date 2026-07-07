@@ -28,11 +28,12 @@
     .logout-btn { font-size:11px; color:#94a3b8; background:none; border:none; cursor:pointer; padding:6px 8px; white-space:nowrap; }
     .logout-btn:hover { color:#fff; }
 
-    .tabs { background:#fff; border-bottom:1px solid #e2e8f0; display:flex; }
+    .tabs { background:#fff; border-bottom:1px solid #e2e8f0; display:flex; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; position:sticky; top:54px; z-index:90; }
+    .tabs::-webkit-scrollbar { display:none; }
     .tab-btn {
-      flex:1; padding:11px 4px; font-size:12px; font-weight:700; color:#94a3b8;
+      flex-shrink:0; padding:11px 14px; font-size:12px; font-weight:700; color:#94a3b8;
       border:none; background:none; cursor:pointer; border-bottom:2.5px solid transparent;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center;
+      white-space:nowrap; text-align:center;
     }
     .tab-btn.active { color:#C8102E; border-bottom-color:#C8102E; }
 
@@ -265,16 +266,20 @@
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <span class="header-user" id="admin-email">-</span>
-    <button onclick="openSettings()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0" title="관리자 설정">⚙️</button>
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('dashboard')">대시보드</button>
-  <button class="tab-btn" onclick="switchTab('reports')">신고관리<span id="report-badge" style="display:none;background:#EF4444;color:#fff;font-size:9px;font-weight:900;min-width:16px;height:16px;line-height:16px;padding:0 4px;border-radius:8px;margin-left:3px;vertical-align:middle;display:none;text-align:center">0</span></button>
-  <button class="tab-btn" onclick="switchTab('postings')">공고관리</button>
-  <button class="tab-btn" onclick="switchTab('users')">회원관리</button>
-  <button class="tab-btn" onclick="switchTab('moims')">모임관리</button>
+<div class="tabs" id="main-tabs">
+  <button class="tab-btn active" id="tbtn-dashboard" onclick="switchTab('dashboard')">대시보드</button>
+  <button class="tab-btn" id="tbtn-reports" onclick="switchTab('reports')">신고관리<span id="report-badge" style="display:none;background:#EF4444;color:#fff;font-size:9px;font-weight:900;min-width:16px;height:16px;line-height:16px;padding:0 4px;border-radius:8px;margin-left:3px;vertical-align:middle;text-align:center">0</span></button>
+  <button class="tab-btn" id="tbtn-postings" onclick="switchTab('postings')">공고관리</button>
+  <button class="tab-btn" id="tbtn-users" onclick="switchTab('users')">회원관리</button>
+  <button class="tab-btn" id="tbtn-moims" onclick="switchTab('moims')">모임관리</button>
+  <button class="tab-btn" id="tbtn-admins" onclick="switchTab('admins')">🛡️ 관리자</button>
+  <button class="tab-btn" id="tbtn-baroalba" onclick="switchTab('baroalba')">⚡ 바로알바</button>
+  <button class="tab-btn" id="tbtn-baromoim" onclick="switchTab('baromoim')">🤝 바로모임</button>
+  <button class="tab-btn" id="tbtn-lesson" onclick="switchTab('lesson')">📚 레슨/과외</button>
+  <button class="tab-btn" id="tbtn-mannnam" onclick="switchTab('mannnam')">💜 바로만남</button>
 </div>
 
 <div class="content">
@@ -289,11 +294,6 @@
       <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">⚡</div><div class="stat-label">오늘 지원</div></div><div class="stat-val" id="s-apps">-</div></div>
       <div class="stat-card" onclick="switchTab('moims')"><div class="stat-left"><div class="stat-icon">🤝</div><div class="stat-label">활성 모임</div></div><div class="stat-val" id="s-moims">-</div></div>
     </div>
-    <div class="section-head">
-      <div class="section-title">최근 신고</div>
-      <button onclick="switchTab('reports')" style="font-size:12px;color:#3B82F6;background:none;border:none;cursor:pointer;font-weight:700">전체 보기 →</button>
-    </div>
-    <div id="dashboard-reports"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 신고관리 -->
@@ -328,105 +328,82 @@
     <div id="moims-list"><div class="loading">로딩 중...</div></div>
   </div>
 
-</div>
-
-<!-- 관리자 설정 전체화면 패널 -->
-<div id="settings-fullpage" style="display:none;position:fixed;inset:0;background:#f8fafc;z-index:700;flex-direction:column">
-  <!-- 헤더 (safe area inset 포함) -->
-  <div style="background:#1e293b;padding:14px 16px;padding-top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;align-items:center;gap:12px;flex-shrink:0">
-    <button onclick="closeSettings()" style="background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;padding:0 4px 0 0">‹</button>
-    <span style="font-size:16px;font-weight:800;color:#fff;flex:1">⚙️ 관리자 설정</span>
+  <!-- 관리자 계정 탭 -->
+  <div class="tab-content" id="tab-admins">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">admin.html 접근이 허용된 관리자 이메일 목록입니다.</div>
+    <div id="settings-admin-list"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">관리자 추가</div>
+      <div style="display:flex;gap:8px">
+        <input id="new-admin-email" type="email" placeholder="이메일 주소 입력"
+          style="flex:1;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
+          onkeydown="if(event.key==='Enter')addAdmin()">
+        <button onclick="addAdmin()"
+          style="padding:12px 18px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+      </div>
+    </div>
   </div>
-  <!-- 탭 바 -->
-  <div style="background:#fff;border-bottom:2px solid #f1f5f9;display:flex;overflow-x:auto;flex-shrink:0;scrollbar-width:none">
-    <button class="settings-ftab active" id="stab-admins" onclick="switchSettingsTab('admins')">🛡️ 관리자</button>
-    <button class="settings-ftab" id="stab-baroalba" onclick="switchSettingsTab('baroalba')">⚡ 바로알바</button>
-    <button class="settings-ftab" id="stab-baromoim" onclick="switchSettingsTab('baromoim')">🤝 바로모임</button>
-    <button class="settings-ftab" id="stab-lesson" onclick="switchSettingsTab('lesson')">📚 레슨/과외</button>
-    <button class="settings-ftab" id="stab-mannnam" onclick="switchSettingsTab('mannnam')">💜 바로만남</button>
+
+  <!-- 바로알바 카테고리 탭 -->
+  <div class="tab-content" id="tab-baroalba">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 선택하는 업종 카테고리입니다. (앱 공고 작성 화면에 반영)</div>
+    <div id="cat-list-baroalba"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:13px;font-weight:800;color:#C8102E;margin-bottom:10px">카테고리 추가</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="new-cat-icon-baroalba" placeholder="🍕" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
+        <input id="new-cat-name-baroalba" placeholder="예: 카페, 편의점, 물류" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baroalba')">
+        <button onclick="addCategory('baroalba')" style="padding:11px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+      </div>
+    </div>
   </div>
-  <!-- 스크롤 컨텐츠 -->
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
-    <!-- 관리자 계정 탭 -->
-    <div id="stab-content-admins" style="padding:16px">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">admin.html 접근이 허용된 관리자 이메일 목록입니다.</div>
-      <div id="settings-admin-list"><div class="loading">로딩 중...</div></div>
-      <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">관리자 추가</div>
-        <div style="display:flex;gap:8px">
-          <input id="new-admin-email" type="email" placeholder="이메일 주소 입력"
-            style="flex:1;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
-            onkeydown="if(event.key==='Enter')addAdmin()">
-          <button onclick="addAdmin()"
-            style="padding:12px 18px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
-        </div>
+  <!-- 바로모임 카테고리 탭 -->
+  <div class="tab-content" id="tab-baromoim">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">모임 개설 시 선택하는 메인 카테고리입니다.</div>
+    <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ 아래 DDL 실행 후 사용 가능: ALTER TABLE job_categories ADD COLUMN IF NOT EXISTS service_type TEXT NOT NULL DEFAULT 'baroalba';</div>
+    <div id="cat-list-baromoim"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">모임 카테고리 추가</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="new-cat-icon-baromoim" placeholder="🤝" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
+        <input id="new-cat-name-baromoim" placeholder="예: 스포츠, 취미, 친목" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baromoim')">
+        <button onclick="addCategory('baromoim')" style="padding:11px 16px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
-
-    <!-- 바로알바 카테고리 탭 -->
-    <div id="stab-content-baroalba" style="display:none;padding:16px">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 선택하는 업종 카테고리입니다. (앱 공고 작성 화면에 반영)</div>
-      <div id="cat-list-baroalba"><div class="loading">로딩 중...</div></div>
-      <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <div style="font-size:13px;font-weight:800;color:#C8102E;margin-bottom:10px">카테고리 추가</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="new-cat-icon-baroalba" placeholder="🍕" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
-          <input id="new-cat-name-baroalba" placeholder="예: 카페, 편의점, 물류" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baroalba')">
-          <button onclick="addCategory('baroalba')" style="padding:11px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 바로모임 카테고리 탭 -->
-    <div id="stab-content-baromoim" style="display:none;padding:16px">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">모임 개설 시 선택하는 메인 카테고리입니다.</div>
-      <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ 아래 DDL 실행 후 사용 가능: ALTER TABLE job_categories ADD COLUMN IF NOT EXISTS service_type TEXT NOT NULL DEFAULT 'baroalba';</div>
-      <div id="cat-list-baromoim"><div class="loading">로딩 중...</div></div>
-      <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">모임 카테고리 추가</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="new-cat-icon-baromoim" placeholder="🤝" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
-          <input id="new-cat-name-baromoim" placeholder="예: 스포츠, 취미, 친목" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baromoim')">
-          <button onclick="addCategory('baromoim')" style="padding:11px 16px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 레슨/과외 카테고리 탭 -->
-    <div id="stab-content-lesson" style="display:none;padding:16px">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">레슨·과외 프로필 등록 시 선택하는 과목 카테고리입니다.</div>
-      <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ DDL 실행 후 사용 가능 (위 바로모임과 동일)</div>
-      <div id="cat-list-lesson"><div class="loading">로딩 중...</div></div>
-      <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <div style="font-size:13px;font-weight:800;color:#0EA5E9;margin-bottom:10px">레슨 카테고리 추가</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="new-cat-icon-lesson" placeholder="📚" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
-          <input id="new-cat-name-lesson" placeholder="예: 수학, 영어, 코딩" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('lesson')">
-          <button onclick="addCategory('lesson')" style="padding:11px 16px;background:#0EA5E9;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
-        </div>
-      </div>
-      <div style="height:60px"></div>
-    </div>
-
-    <!-- 바로만남 매니저 탭 -->
-    <div id="stab-content-mannnam" style="display:none;padding:16px">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저로 지정된 업주는 mannnam.html에서 식당·이벤트·신청자를 관리할 수 있습니다.</div>
-      <div id="mannnam-mgr-list"><div class="loading">로딩 중...</div></div>
-      <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">매니저 지정</div>
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">업주 계정 이메일 또는 사업자명을 검색하세요</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <input id="mannnam-mgr-search" type="text" placeholder="이메일 또는 사업자명"
-            style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
-            oninput="searchBizForMannnam(this.value)">
-        </div>
-        <div id="mannnam-biz-search-result" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:10px"></div>
-      </div>
-      <div style="height:60px"></div>
-    </div>
-
   </div>
+
+  <!-- 레슨/과외 카테고리 탭 -->
+  <div class="tab-content" id="tab-lesson">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">레슨·과외 프로필 등록 시 선택하는 과목 카테고리입니다.</div>
+    <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ DDL 실행 후 사용 가능 (바로모임과 동일)</div>
+    <div id="cat-list-lesson"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:13px;font-weight:800;color:#0EA5E9;margin-bottom:10px">레슨 카테고리 추가</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="new-cat-icon-lesson" placeholder="📚" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
+        <input id="new-cat-name-lesson" placeholder="예: 수학, 영어, 코딩" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('lesson')">
+        <button onclick="addCategory('lesson')" style="padding:11px 16px;background:#0EA5E9;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 바로만남 매니저 탭 -->
+  <div class="tab-content" id="tab-mannnam">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저로 지정된 업주는 mannnam.html에서 식당·이벤트·신청자를 관리할 수 있습니다.</div>
+    <div id="mannnam-mgr-list"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">매니저 지정</div>
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">업주 계정 이메일 또는 사업자명을 검색하세요</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="mannnam-mgr-search" type="text" placeholder="이메일 또는 사업자명"
+          style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
+          oninput="searchBizForMannnam(this.value)">
+      </div>
+      <div id="mannnam-biz-search-result" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:10px"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- 회원 상세 패널 -->
@@ -613,17 +590,26 @@ function scrollPanelToInput(el) {
 }
 
 // ── 탭 전환 ─────────────────────────────────────────────
+const ALL_TABS = ['dashboard','reports','postings','users','moims','admins','baroalba','baromoim','lesson','mannnam'];
+
 function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    const names = ['dashboard','reports','postings','users','moims'];
-    b.classList.toggle('active', names[i] === name);
+  ALL_TABS.forEach(t => {
+    const btn = document.getElementById('tbtn-' + t);
+    if (btn) btn.classList.toggle('active', t === name);
+    const pane = document.getElementById('tab-' + t);
+    if (pane) pane.classList.toggle('active', t === name);
   });
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'reports' && document.getElementById('reports-list').innerHTML.includes('로딩')) loadReports();
+  // 탭 버튼 스크롤 into view
+  const activeBtn = document.getElementById('tbtn-' + name);
+  if (activeBtn) activeBtn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+
+  if (name === 'reports'  && document.getElementById('reports-list').innerHTML.includes('로딩')) loadReports();
   if (name === 'postings' && document.getElementById('postings-list').innerHTML.includes('로딩')) loadPostings();
-  if (name === 'users' && document.getElementById('users-list').innerHTML.includes('로딩')) loadUsers();
-  if (name === 'moims' && document.getElementById('moims-list').innerHTML.includes('로딩')) loadMoims();
+  if (name === 'users'    && document.getElementById('users-list').innerHTML.includes('로딩')) loadUsers();
+  if (name === 'moims'    && document.getElementById('moims-list').innerHTML.includes('로딩')) loadMoims();
+  if (name === 'admins'   && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
+  if (name === 'baroalba' || name === 'baromoim' || name === 'lesson') loadCategoryList(name);
+  if (name === 'mannnam') loadMannnamManagers();
 }
 
 // ── API 호출 ─────────────────────────────────────────────
@@ -661,12 +647,6 @@ async function loadDashboard() {
     badge.style.display = 'inline-block';
   }
 
-  const reports = await adminApi('reports');
-  _reports = Array.isArray(reports) ? reports : [];
-  const recent = _reports.slice(0, 3);
-  document.getElementById('dashboard-reports').innerHTML = recent.length
-    ? recent.map(r => reportCardHtml(r, true)).join('')
-    : '<div class="empty">신고 없음</div>';
 }
 
 // ── 신고 관리 ─────────────────────────────────────────────
@@ -1123,10 +1103,9 @@ async function deleteMoimById(id) {
   showToast('모임이 삭제됐습니다');
 }
 
-// ── 관리자 설정 전체화면 패널 ─────────────────────────────
+// ── (settings panel removed — tabs merged into main tab bar) ─
 function _syncSettingsVP() {
-  const panel = document.getElementById('settings-fullpage');
-  if (!panel || panel.style.display === 'none') return;
+  // deprecated
   const vp = window.visualViewport;
   if (!vp) return;
   panel.style.top    = vp.offsetTop + 'px';
@@ -1140,44 +1119,10 @@ function _syncSettingsVP() {
   }, 80);
 }
 
-function openSettings() {
-  const el = document.getElementById('settings-fullpage');
-  el.style.display = 'flex';
-  el.style.top = '';
-  el.style.height = '';
-  switchSettingsTab('admins');
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', _syncSettingsVP);
-    window.visualViewport.addEventListener('scroll', _syncSettingsVP);
-  }
-}
+function openSettings() { switchTab('admins'); }
+function closeSettings() { switchTab('dashboard'); }
 
-function closeSettings() {
-  const el = document.getElementById('settings-fullpage');
-  el.style.display = 'none';
-  el.style.top = '';
-  el.style.height = '';
-  if (window.visualViewport) {
-    window.visualViewport.removeEventListener('resize', _syncSettingsVP);
-    window.visualViewport.removeEventListener('scroll', _syncSettingsVP);
-  }
-}
-
-function switchSettingsTab(name) {
-  ['admins', 'baroalba', 'baromoim', 'lesson', 'mannnam'].forEach(t => {
-    const btn = document.getElementById('stab-' + t);
-    const content = document.getElementById('stab-content-' + t);
-    if (btn) btn.classList.toggle('active', t === name);
-    if (content) content.style.display = t === name ? 'block' : 'none';
-  });
-  if (name === 'admins') {
-    if (document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
-  } else if (name === 'mannnam') {
-    loadMannnamManagers();
-  } else {
-    loadCategoryList(name);
-  }
-}
+function switchSettingsTab(name) { switchTab(name); }
 
 // ── 바로만남 매니저 관리 ─────────────────────────────────
 async function loadMannnamManagers() {
@@ -1293,18 +1238,25 @@ async function addAdmin() {
   input.value = '';
   loadAdminList();
   showToast('✅ 관리자가 추가됐습니다');
-  // 알림 발송 (이름 없이 이메일만) — push는 user_id 없어 생략
-  // 바로알바 workers/businesses에서 이름 조회 시도
-  let name = '';
+  // businesses/workers에서 이름·user_id 조회 후 알림 발송
   const [{ data: w }, { data: b }] = await Promise.all([
-    db.from('workers').select('name').ilike('email', email).maybeSingle(),
-    db.from('businesses').select('name').ilike('email', email).maybeSingle(),
+    db.from('workers').select('name, user_id').ilike('email', email).maybeSingle(),
+    db.from('businesses').select('name, user_id').ilike('email', email).maybeSingle(),
   ]);
-  name = w?.name || b?.name || '';
+  const name = w?.name || b?.name || '';
+  const uid = w?.user_id || b?.user_id || null;
+  // app_admins에 user_id 저장 (컬럼 있을 경우)
+  if (uid) db.from('app_admins').update({ user_id: uid }).eq('email', email).then(() => {});
+  let pushSubs = [];
+  if (uid) {
+    const { data: subs } = await db.from('push_subscriptions')
+      .select('endpoint, p256dh, auth, fcm_token').eq('user_id', uid).limit(3);
+    pushSubs = subs || [];
+  }
   fetch('/api/role-notify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'admin', email, name, pushSubs: [] }),
+    body: JSON.stringify({ role: 'admin', email, name, pushSubs }),
   }).catch(() => {});
 }
 
