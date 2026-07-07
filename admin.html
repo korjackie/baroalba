@@ -1227,12 +1227,27 @@ async function searchBizForMannnam(query) {
 }
 
 async function assignMannnamManager(bizId) {
+  const { data: biz, error: be } = await db.from('businesses')
+    .select('id, name, email, user_id').eq('id', bizId).single();
+  if (be) { alert('오류: ' + be.message); return; }
   const { error } = await db.from('businesses').update({ mannnam_role: 'manager' }).eq('id', bizId);
   if (error) { alert('오류: ' + error.message); return; }
   document.getElementById('mannnam-mgr-search').value = '';
   document.getElementById('mannnam-biz-search-result').style.display = 'none';
   showToast('바로만남 매니저로 지정되었습니다');
   loadMannnamManagers();
+  // 알림 발송
+  let pushSubs = [];
+  if (biz.user_id) {
+    const { data: subs } = await db.from('push_subscriptions')
+      .select('endpoint, p256dh, auth, fcm_token').eq('user_id', biz.user_id).limit(3);
+    pushSubs = subs || [];
+  }
+  fetch('/api/role-notify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'mannnam_manager', email: biz.email, name: biz.name, pushSubs }),
+  }).catch(() => {});
 }
 
 async function removeMannnamManager(bizId) {
@@ -1278,6 +1293,19 @@ async function addAdmin() {
   input.value = '';
   loadAdminList();
   showToast('✅ 관리자가 추가됐습니다');
+  // 알림 발송 (이름 없이 이메일만) — push는 user_id 없어 생략
+  // 바로알바 workers/businesses에서 이름 조회 시도
+  let name = '';
+  const [{ data: w }, { data: b }] = await Promise.all([
+    db.from('workers').select('name').ilike('email', email).maybeSingle(),
+    db.from('businesses').select('name').ilike('email', email).maybeSingle(),
+  ]);
+  name = w?.name || b?.name || '';
+  fetch('/api/role-notify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'admin', email, name, pushSubs: [] }),
+  }).catch(() => {});
 }
 
 // ── 카테고리 관리 (서비스별) ──────────────────────────────
