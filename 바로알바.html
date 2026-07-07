@@ -22474,6 +22474,25 @@ async function loadNotiHistory() {
   el.innerHTML = '<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">로딩 중...</div>';
   const items = [];
   try {
+    // 0. 시스템 알림 (notifications 테이블) — 전체 사용자 공통
+    if (currentUser?.id) {
+      const { data: notiRows } = await db.from('notifications')
+        .select('id, title, body, type, is_read, created_at')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false }).limit(20);
+      notiRows?.forEach(n => {
+        const typeMap = {
+          admin:            { icon: '🛡️', badge: '관리자', badgeColor: '#C8102E', badgeBg: '#fff5f5' },
+          mannnam_manager:  { icon: '💜', badge: '매니저',  badgeColor: '#7C3AED', badgeBg: '#f5f3ff' },
+          system:           { icon: '🔔', badge: '알림',    badgeColor: '#3b82f6', badgeBg: '#eff6ff' },
+        };
+        const t = typeMap[n.type] || typeMap.system;
+        items.push({ icon: t.icon, title: n.title, sub: n.body || '', badge: t.badge, badgeColor: t.badgeColor, badgeBg: t.badgeBg, ts: n.created_at, unread: !n.is_read, id: n.id });
+      });
+      // 읽음 처리 (백그라운드)
+      const unreadIds = (notiRows || []).filter(n => !n.is_read).map(n => n.id);
+      if (unreadIds.length) db.from('notifications').update({ is_read: true }).in('id', unreadIds).then(() => {});
+    }
     if (workerRecord?.id) {
       // 1. 합격/거절 결과 알림
       const { data: apps } = await db.from('applications')
@@ -22534,14 +22553,14 @@ async function loadNotiHistory() {
       return;
     }
     el.innerHTML = items.map(item => `
-      <div style="background:#fff;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:#fff;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;${item.unread ? 'border-left:3px solid #7C3AED;' : ''}">
         <span style="font-size:20px;margin-top:2px;flex-shrink:0">${item.icon}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.title}</div>
+          <div style="font-size:13px;font-weight:${item.unread ? '800' : '700'};color:#111;margin-bottom:2px">${item.title}</div>
           <div style="font-size:12px;color:#888;margin-bottom:4px">${item.sub}</div>
           <div style="font-size:11px;color:#bbb">${formatRelativeDate(item.ts)}</div>
         </div>
-        <span style="font-size:11px;font-weight:800;color:${item.badgeColor};background:${item.badgeBg};padding:3px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0">${item.badge}</span>
+        <span style="font-size:11px;font-weight:800;color:${item.badgeColor};background:${item.badgeBg};padding:3px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0">${item.badge}${item.unread ? ' 🆕' : ''}</span>
       </div>`).join('');
   } catch (e) {
     el.innerHTML = '<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">불러오기 실패</div>';

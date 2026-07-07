@@ -1,4 +1,6 @@
-// 관리자·매니저 지정 시 이메일 + 앱 푸시 알림 발송
+// 관리자·매니저 지정 시 이메일 + 앱 푸시 + 인앱 알림 발송
+const SB_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -6,7 +8,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { role, email, name, pushSubs } = req.body || {};
+  const { role, email, name, pushSubs, userId } = req.body || {};
   // role: 'admin' | 'mannnam_manager'
   if (!email || !role) return res.status(400).json({ error: 'email and role required' });
 
@@ -137,6 +139,30 @@ module.exports = async function handler(req, res) {
     results.push = pushResults.map(r => r.status === 'fulfilled' ? r.value : r.reason?.message);
   } else {
     results.push = 'skip: no pushSubs';
+  }
+
+  // ── 인앱 알림 (notifications 테이블) ────────────────────
+  const SVC_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (userId && SVC_KEY) {
+    const notiTitle = `🎉 ${roleLabel} 권한이 부여되었습니다`;
+    const notiBody  = `${displayName}님, 바로알바 ${roleLabel}로 지정되셨습니다. ${isAdmin ? 'admin.html' : 'mannnam.html'}에서 관리 기능을 이용하세요.`;
+    try {
+      const r = await fetch(`${SB_URL}/rest/v1/notifications`, {
+        method: 'POST',
+        headers: {
+          'apikey': SVC_KEY,
+          'Authorization': `Bearer ${SVC_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({ user_id: userId, title: notiTitle, body: notiBody, type: role }),
+      });
+      results.inapp = r.ok ? 'ok' : await r.text();
+    } catch (e) {
+      results.inapp = 'error: ' + e.message;
+    }
+  } else {
+    results.inapp = userId ? 'skip: no SVC_KEY' : 'skip: no userId';
   }
 
   return res.status(200).json({ ok: true, results });

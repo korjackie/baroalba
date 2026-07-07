@@ -1191,7 +1191,7 @@ async function assignMannnamManager(bizId) {
   fetch('/api/role-notify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'mannnam_manager', email: biz.email, name: biz.name, pushSubs }),
+    body: JSON.stringify({ role: 'mannnam_manager', email: biz.email, name: biz.name, pushSubs, userId: biz.user_id }),
   }).catch(() => {});
 }
 
@@ -1256,7 +1256,7 @@ async function addAdmin() {
   fetch('/api/role-notify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'admin', email, name, pushSubs }),
+    body: JSON.stringify({ role: 'admin', email, name, pushSubs, userId: uid }),
   }).catch(() => {});
 }
 
