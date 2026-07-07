@@ -21046,7 +21046,7 @@ async function _loadBarospotList() {
   show('mnm-spot-init');
 
   // workers 테이블에서 gender 조회
-  const { data: wRow } = await db.from('workers').select('gender').eq('user_id', currentUser.id).maybeSingle();
+  const { data: wRow } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
   _spotGender = wRow?.gender || null;
   if (!_spotGender) { show('mnm-spot-gender-prompt'); return; }
 
@@ -21070,7 +21070,7 @@ async function _loadBarospotList() {
 
 async function setSpotGender(gender) {
   if (!currentUser) return;
-  const { error } = await db.from('workers').update({ gender }).eq('user_id', currentUser.id);
+  const { error } = await db.from('workers').update({ gender }).eq('kakao_uid', currentUser.id);
   if (error) { showToast('성별 저장 실패: ' + error.message); return; }
   _spotGender = gender;
   showToast('성별이 저장되었습니다');
