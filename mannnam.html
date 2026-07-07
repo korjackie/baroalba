@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>바로만남 매니저</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#111;min-height:100dvh}
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+.hdr{background:#fff;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:100}
+.hdr-inner{padding:calc(var(--sat) + 14px) 16px 14px;display:flex;align-items:center;gap:12px}
+.tab-bar{display:flex;border-bottom:1px solid #f0f0f0;background:#fff}
+.tab-btn{flex:1;padding:13px 4px;font-size:13px;font-weight:700;color:#aaa;border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s}
+.tab-btn.active{color:#7C3AED;border-bottom-color:#7C3AED}
+.content{padding:14px;padding-bottom:calc(14px + var(--sab))}
+.card{background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:16px;margin-bottom:12px}
+.btn-primary{width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer}
+.btn-secondary{padding:8px 16px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-danger{padding:8px 16px;background:#fee2e2;color:#ef4444;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-success{padding:8px 16px;background:#d1fae5;color:#059669;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+.status-badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:700}
+input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:11px;font-size:14px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:#7C3AED}
+label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;margin-top:12px}
+label:first-child{margin-top:0}
+.spinner{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px">
+  <div style="font-size:28px;font-weight:900;color:#7C3AED;margin-bottom:8px">바로만남</div>
+  <div style="font-size:14px;color:#888;margin-bottom:40px">매니저 관리 시스템</div>
+  <div style="width:100%;max-width:360px">
+    <label>이메일</label>
+    <input type="email" id="login-email" placeholder="매니저 이메일" autocomplete="email">
+    <label>비밀번호</label>
+    <input type="password" id="login-pw" placeholder="비밀번호" autocomplete="current-password">
+    <div id="login-error" style="color:#ef4444;font-size:12px;margin-top:8px;display:none"></div>
+    <button onclick="doLogin()" style="margin-top:20px" class="btn-primary">로그인</button>
+  </div>
+</div>
+
+<!-- 메인 앱 -->
+<div id="app-screen" style="display:none">
+  <div class="hdr">
+    <div class="hdr-inner">
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:900;color:#111">바로만남 매니저</div>
+        <div id="mgr-name" style="font-size:11px;color:#aaa;margin-top:1px"></div>
+      </div>
+      <button onclick="doLogout()" style="padding:7px 14px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">로그아웃</button>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('restaurants')" id="tab-restaurants">🏪 식당</button>
+      <button class="tab-btn" onclick="switchTab('events')" id="tab-events">📅 이벤트</button>
+      <button class="tab-btn" onclick="switchTab('female-apps')" id="tab-female-apps">👩 여성신청</button>
+      <button class="tab-btn" onclick="switchTab('male-apps')" id="tab-male-apps">👨 남성신청</button>
+    </div>
+  </div>
+
+  <!-- 식당 관리 -->
+  <div id="pane-restaurants" class="content">
+    <button onclick="openRestaurantForm()" class="btn-primary" style="margin-bottom:14px">+ 식당 등록</button>
+    <div id="restaurant-list"><div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div></div>
+  </div>
+
+  <!-- 이벤트 관리 -->
+  <div id="pane-events" class="content" style="display:none">
+    <button onclick="openEventForm()" class="btn-primary" style="margin-bottom:14px">+ 이벤트 개설</button>
+    <div id="event-list"><div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div></div>
+  </div>
+
+  <!-- 여성 신청자 -->
+  <div id="pane-female-apps" class="content" style="display:none">
+    <div id="female-app-list"><div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div></div>
+  </div>
+
+  <!-- 남성 신청자 -->
+  <div id="pane-male-apps" class="content" style="display:none">
+    <div id="male-app-list"><div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div></div>
+  </div>
+</div>
+
+<!-- 식당 등록/수정 모달 -->
+<div id="restaurant-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);overflow-y:auto">
+  <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:60px;padding:20px 16px 24px;position:relative;max-width:600px;margin-left:auto;margin-right:auto">
+    <div style="font-size:16px;font-weight:900;margin-bottom:16px" id="restaurant-modal-title">식당 등록</div>
+    <label>식당명</label><input type="text" id="r-name" placeholder="예) 스시진">
+    <label>주소</label><input type="text" id="r-address" placeholder="예) 서울시 강남구 ...">
+    <label>전화번호</label><input type="tel" id="r-phone" placeholder="예) 02-1234-5678">
+    <label>메뉴 설명</label><textarea id="r-menu" rows="3" placeholder="예) 오마카세 런치 코스 (9가지)"></textarea>
+    <label>여성 식사비 (원)</label><input type="number" id="r-female-price" placeholder="예) 18000">
+    <label>남성 식사비 (원)</label><input type="number" id="r-male-price" placeholder="예) 30000">
+    <label>할인율 (%)</label><input type="number" id="r-discount" placeholder="예) 5" value="5">
+    <input type="hidden" id="r-id">
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="closeModal('restaurant-modal')" class="btn-secondary" style="flex:1">취소</button>
+      <button onclick="saveRestaurant()" class="btn-primary" style="flex:2">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 이벤트 등록/수정 모달 -->
+<div id="event-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);overflow-y:auto">
+  <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:60px;padding:20px 16px 24px;max-width:600px;margin-left:auto;margin-right:auto">
+    <div style="font-size:16px;font-weight:900;margin-bottom:16px" id="event-modal-title">이벤트 개설</div>
+    <label>제휴 식당</label>
+    <select id="e-restaurant"><option value="">선택하세요</option></select>
+    <label>이벤트 날짜</label><input type="date" id="e-date">
+    <label>시간</label><input type="time" id="e-time">
+    <label>여성 슬롯 수</label><input type="number" id="e-female-slots" value="3" min="1">
+    <label>남성 슬롯 수</label><input type="number" id="e-male-slots" value="3" min="1">
+    <label>메뉴 설명</label><textarea id="e-menu" rows="2" placeholder="이벤트용 특별 메뉴"></textarea>
+    <label>남성 결제 금액 (원)</label><input type="number" id="e-male-price" placeholder="식사비 1.5배 기준">
+    <input type="hidden" id="e-id">
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="closeModal('event-modal')" class="btn-secondary" style="flex:1">취소</button>
+      <button onclick="saveEvent()" class="btn-primary" style="flex:2">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 여성 배정 모달 -->
+<div id="assign-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5)">
+  <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:auto;padding:20px 16px 24px;position:absolute;bottom:0;left:0;right:0;max-width:600px;margin-left:auto;margin-right:auto">
+    <div style="font-size:15px;font-weight:900;margin-bottom:14px">식당·이벤트 배정</div>
+    <label>배정할 이벤트</label>
+    <select id="assign-event-id"><option value="">선택하세요</option></select>
+    <input type="hidden" id="assign-app-id">
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="closeModal('assign-modal')" class="btn-secondary" style="flex:1">취소</button>
+      <button onclick="confirmAssign()" class="btn-primary" style="flex:2">배정 확정</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SB_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ud3ZibWxscHljZ3N3Znp5d2p2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDMyNzksImV4cCI6MjA5NTc3OTI3OX0.CbwhyfqCZp_jjMbHUESVzbPDAZLNV2lpniUkouqLLmQ';
+const db = supabase.createClient(SB_URL, SB_ANON);
+
+let currentUser = null;
+let currentBiz = null;
+
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  const { data, error } = await db.auth.signInWithPassword({ email, password: pw });
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  currentUser = data.user;
+  await checkManagerAccess();
+}
+
+async function checkManagerAccess() {
+  if (!currentUser) return;
+  const { data: biz } = await db.from('businesses')
+    .select('id, name, mannnam_role').eq('user_id', currentUser.id).maybeSingle();
+  if (!biz || biz.mannnam_role !== 'manager') {
+    await db.auth.signOut();
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '바로만남 매니저 권한이 없는 계정입니다';
+    errEl.style.display = 'block';
+    return;
+  }
+  currentBiz = biz;
+  document.getElementById('mgr-name').textContent = biz.name;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  loadRestaurants();
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  currentUser = null; currentBiz = null;
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function switchTab(tab) {
+  ['restaurants','events','female-apps','male-apps'].forEach(t => {
+    document.getElementById('pane-'+t).style.display = t===tab ? 'block' : 'none';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab === 'restaurants') loadRestaurants();
+  if (tab === 'events') loadEvents();
+  if (tab === 'female-apps') loadFemaleApps();
+  if (tab === 'male-apps') loadMaleApps();
+}
+
+// ── 식당 관리 ────────────────────────────────────────────
+async function loadRestaurants() {
+  const el = document.getElementById('restaurant-list');
+  const { data, error } = await db.from('barospot_restaurants')
+    .select('*').order('created_at', { ascending: false });
+  if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">등록된 식당이 없어요</div>'; return; }
+  el.innerHTML = data.map(r => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:900;color:#111">${r.name}</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">${r.address||''}</div>
+        </div>
+        <span class="status-badge" style="background:${r.is_active?'#d1fae5':'#f3f4f6'};color:${r.is_active?'#059669':'#9ca3af'}">${r.is_active?'운영중':'비활성'}</span>
+      </div>
+      <div style="font-size:12px;color:#666;margin-bottom:10px">${r.menu_description||''}</div>
+      <div style="display:flex;gap:6px;font-size:12px;color:#888;margin-bottom:12px">
+        <span>여성 ${r.female_price?.toLocaleString()}원</span>
+        <span>·</span>
+        <span>남성 ${r.male_price?.toLocaleString()}원</span>
+        <span>·</span>
+        <span>할인 ${r.discount_pct||0}%</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="toggleRestaurant('${r.id}',${r.is_active})" class="${r.is_active?'btn-danger':'btn-success'}">${r.is_active?'비활성화':'활성화'}</button>
+        <button onclick="openRestaurantForm('${r.id}')" class="btn-secondary">수정</button>
+      </div>
+    </div>`).join('');
+}
+
+function openRestaurantForm(id) {
+  document.getElementById('restaurant-modal-title').textContent = id ? '식당 수정' : '식당 등록';
+  ['r-name','r-address','r-phone','r-menu','r-female-price','r-male-price'].forEach(k => document.getElementById(k).value = '');
+  document.getElementById('r-discount').value = '5';
+  document.getElementById('r-id').value = id || '';
+  if (id) {
+    db.from('barospot_restaurants').select('*').eq('id', id).single().then(({ data: r }) => {
+      if (!r) return;
+      document.getElementById('r-name').value = r.name || '';
+      document.getElementById('r-address').value = r.address || '';
+      document.getElementById('r-phone').value = r.phone || '';
+      document.getElementById('r-menu').value = r.menu_description || '';
+      document.getElementById('r-female-price').value = r.female_price || '';
+      document.getElementById('r-male-price').value = r.male_price || '';
+      document.getElementById('r-discount').value = r.discount_pct || 5;
+    });
+  }
+  document.getElementById('restaurant-modal').style.display = 'block';
+}
+
+async function saveRestaurant() {
+  const id = document.getElementById('r-id').value;
+  const payload = {
+    name: document.getElementById('r-name').value.trim(),
+    address: document.getElementById('r-address').value.trim(),
+    phone: document.getElementById('r-phone').value.trim(),
+    menu_description: document.getElementById('r-menu').value.trim(),
+    female_price: parseInt(document.getElementById('r-female-price').value) || 0,
+    male_price: parseInt(document.getElementById('r-male-price').value) || 0,
+    discount_pct: parseInt(document.getElementById('r-discount').value) || 5,
+    is_active: true,
+  };
+  if (!payload.name) { showToast('식당명을 입력하세요'); return; }
+  let err;
+  if (id) {
+    ({ error: err } = await db.from('barospot_restaurants').update(payload).eq('id', id));
+  } else {
+    ({ error: err } = await db.from('barospot_restaurants').insert(payload));
+  }
+  if (err) { showToast('저장 오류: '+err.message); return; }
+  closeModal('restaurant-modal');
+  showToast(id ? '식당 정보 수정 완료' : '식당 등록 완료');
+  loadRestaurants();
+}
+
+async function toggleRestaurant(id, current) {
+  const { error } = await db.from('barospot_restaurants').update({ is_active: !current }).eq('id', id);
+  if (error) { showToast('오류: '+error.message); return; }
+  showToast(current ? '비활성화 완료' : '활성화 완료');
+  loadRestaurants();
+}
+
+// ── 이벤트 관리 ──────────────────────────────────────────
+async function loadEvents() {
+  const el = document.getElementById('event-list');
+  const { data, error } = await db.from('barospot_events')
+    .select('*, barospot_restaurants(name)').order('event_date', { ascending: false }).limit(50);
+  if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">이벤트가 없어요</div>'; return; }
+  const statusLabel = { open:'모집중', full:'마감', confirmed:'확정', cancelled:'취소' };
+  const statusColor = { open:'#10b981', full:'#f59e0b', confirmed:'#7C3AED', cancelled:'#9ca3af' };
+  el.innerHTML = data.map(ev => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div>
+          <div style="font-size:15px;font-weight:900">${ev.barospot_restaurants?.name||'식당 미지정'}</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">${ev.event_date} ${ev.event_time}</div>
+        </div>
+        <span class="status-badge" style="background:${statusColor[ev.status]||'#ccc'}22;color:${statusColor[ev.status]||'#ccc'}">${statusLabel[ev.status]||ev.status}</span>
+      </div>
+      <div style="display:flex;gap:12px;font-size:12px;color:#666;margin-bottom:12px">
+        <span>여성 ${ev.female_remaining}/${ev.female_slots}</span>
+        <span>남성 ${ev.male_remaining}/${ev.male_slots}</span>
+        <span>남성결제 ${ev.male_price?.toLocaleString()}원</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${ev.status === 'open' ? `<button onclick="changeEventStatus('${ev.id}','confirmed')" class="btn-success">확정</button><button onclick="changeEventStatus('${ev.id}','cancelled')" class="btn-danger">취소</button>` : ''}
+        <button onclick="openEventForm('${ev.id}')" class="btn-secondary">수정</button>
+      </div>
+    </div>`).join('');
+}
+
+async function openEventForm(id) {
+  const { data: restaurants } = await db.from('barospot_restaurants').select('id,name').eq('is_active',true);
+  const rSel = document.getElementById('e-restaurant');
+  rSel.innerHTML = '<option value="">식당 선택</option>' + (restaurants||[]).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+  document.getElementById('event-modal-title').textContent = id ? '이벤트 수정' : '이벤트 개설';
+  ['e-date','e-time','e-menu','e-male-price'].forEach(k => document.getElementById(k).value = '');
+  document.getElementById('e-female-slots').value = '3';
+  document.getElementById('e-male-slots').value = '3';
+  document.getElementById('e-id').value = id || '';
+  if (id) {
+    const { data: ev } = await db.from('barospot_events').select('*').eq('id',id).single();
+    if (ev) {
+      rSel.value = ev.restaurant_id || '';
+      document.getElementById('e-date').value = ev.event_date || '';
+      document.getElementById('e-time').value = ev.event_time || '';
+      document.getElementById('e-female-slots').value = ev.female_slots || 3;
+      document.getElementById('e-male-slots').value = ev.male_slots || 3;
+      document.getElementById('e-menu').value = ev.menu_description || '';
+      document.getElementById('e-male-price').value = ev.male_price || '';
+    }
+  }
+  document.getElementById('event-modal').style.display = 'block';
+}
+
+async function saveEvent() {
+  const id = document.getElementById('e-id').value;
+  const payload = {
+    restaurant_id: document.getElementById('e-restaurant').value || null,
+    event_date: document.getElementById('e-date').value,
+    event_time: document.getElementById('e-time').value,
+    female_slots: parseInt(document.getElementById('e-female-slots').value) || 3,
+    male_slots: parseInt(document.getElementById('e-male-slots').value) || 3,
+    menu_description: document.getElementById('e-menu').value.trim(),
+    male_price: parseInt(document.getElementById('e-male-price').value) || 0,
+    status: 'open',
+  };
+  if (!payload.event_date) { showToast('날짜를 선택하세요'); return; }
+  if (!id) {
+    payload.female_remaining = payload.female_slots;
+    payload.male_remaining = payload.male_slots;
+  }
+  let err;
+  if (id) {
+    ({ error: err } = await db.from('barospot_events').update(payload).eq('id', id));
+  } else {
+    ({ error: err } = await db.from('barospot_events').insert(payload));
+  }
+  if (err) { showToast('저장 오류: '+err.message); return; }
+  closeModal('event-modal');
+  showToast(id ? '이벤트 수정 완료' : '이벤트 개설 완료');
+  loadEvents();
+}
+
+async function changeEventStatus(id, status) {
+  const { error } = await db.from('barospot_events').update({ status }).eq('id', id);
+  if (error) { showToast('오류: '+error.message); return; }
+  showToast('상태 변경 완료');
+  loadEvents();
+}
+
+// ── 여성 신청자 관리 ─────────────────────────────────────
+async function loadFemaleApps() {
+  const el = document.getElementById('female-app-list');
+  const { data, error } = await db.from('barospot_applications')
+    .select('*, workers(name, phone), barospot_events(event_date, event_time, barospot_restaurants(name))')
+    .eq('gender', 'female')
+    .order('created_at', { ascending: false }).limit(50);
+  if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">여성 신청자가 없어요</div>'; return; }
+  const statusLabel = { pending:'검토중', matched:'배정완료', confirmed:'확정', cancelled:'취소', rejected:'거절' };
+  const statusColor = { pending:'#f59e0b', matched:'#8b5cf6', confirmed:'#10b981', cancelled:'#9ca3af', rejected:'#ef4444' };
+  el.innerHTML = data.map(a => {
+    const w = a.workers;
+    const ev = a.barospot_events;
+    const rest = ev?.barospot_restaurants;
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:900">${w?.name||'이름없음'}</div>
+          <div style="font-size:12px;color:#888">${w?.phone||''}</div>
+        </div>
+        <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>
+      </div>
+      ${ev ? `<div style="font-size:12px;color:#666;margin-bottom:10px">배정: ${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${a.status === 'pending' ? `<button onclick="openAssignModal('${a.id}')" class="btn-success">식당 배정</button><button onclick="updateAppStatus('${a.id}','rejected','female')" class="btn-danger">거절</button>` : ''}
+        ${a.status === 'matched' ? `<button onclick="updateAppStatus('${a.id}','confirmed','female')" class="btn-success">확정</button><button onclick="updateAppStatus('${a.id}','cancelled','female')" class="btn-danger">취소</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function openAssignModal(appId) {
+  document.getElementById('assign-app-id').value = appId;
+  const { data: events } = await db.from('barospot_events')
+    .select('id, event_date, event_time, female_remaining, barospot_restaurants(name)')
+    .eq('status', 'open').gt('female_remaining', 0);
+  const sel = document.getElementById('assign-event-id');
+  sel.innerHTML = '<option value="">이벤트 선택</option>' +
+    (events||[]).map(ev => `<option value="${ev.id}">${ev.barospot_restaurants?.name} · ${ev.event_date} ${ev.event_time} (잔여${ev.female_remaining})</option>`).join('');
+  document.getElementById('assign-modal').style.display = 'block';
+}
+
+async function confirmAssign() {
+  const appId = document.getElementById('assign-app-id').value;
+  const eventId = document.getElementById('assign-event-id').value;
+  if (!eventId) { showToast('이벤트를 선택하세요'); return; }
+  const { error: ae } = await db.from('barospot_applications').update({ event_id: eventId, status: 'matched' }).eq('id', appId);
+  if (ae) { showToast('오류: '+ae.message); return; }
+  const { data: ev } = await db.from('barospot_events').select('female_remaining').eq('id', eventId).single();
+  if (ev) await db.from('barospot_events').update({ female_remaining: Math.max(0, ev.female_remaining - 1) }).eq('id', eventId);
+  closeModal('assign-modal');
+  showToast('배정 완료');
+  loadFemaleApps();
+}
+
+// ── 남성 신청자 관리 ─────────────────────────────────────
+async function loadMaleApps() {
+  const el = document.getElementById('male-app-list');
+  const { data, error } = await db.from('barospot_applications')
+    .select('*, workers(name, phone), barospot_events(event_date, event_time, barospot_restaurants(name))')
+    .eq('gender', 'male')
+    .order('created_at', { ascending: false }).limit(50);
+  if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">남성 신청자가 없어요</div>'; return; }
+  const statusLabel = { pending:'검토중', confirmed:'확정', cancelled:'취소', rejected:'거절' };
+  const statusColor = { pending:'#f59e0b', confirmed:'#10b981', cancelled:'#9ca3af', rejected:'#ef4444' };
+  el.innerHTML = data.map(a => {
+    const w = a.workers;
+    const ev = a.barospot_events;
+    const rest = ev?.barospot_restaurants;
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:900">${w?.name||'이름없음'}</div>
+          <div style="font-size:12px;color:#888">${w?.phone||''}</div>
+        </div>
+        <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>
+      </div>
+      ${ev ? `<div style="font-size:12px;color:#666;margin-bottom:10px">${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${a.status === 'pending' ? `<button onclick="updateAppStatus('${a.id}','confirmed','male')" class="btn-success">확정</button><button onclick="updateAppStatus('${a.id}','rejected','male')" class="btn-danger">거절</button>` : ''}
+        ${a.status === 'confirmed' ? `<button onclick="updateAppStatus('${a.id}','cancelled','male')" class="btn-danger">취소</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function updateAppStatus(appId, status, gender) {
+  const { error } = await db.from('barospot_applications').update({ status }).eq('id', appId);
+  if (error) { showToast('오류: '+error.message); return; }
+  showToast('상태 변경 완료');
+  if (gender === 'female') loadFemaleApps(); else loadMaleApps();
+}
+
+// ── 초기화 ───────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (session?.user) { currentUser = session.user; await checkManagerAccess(); }
+})();
+</script>
+</body>
+</html>
