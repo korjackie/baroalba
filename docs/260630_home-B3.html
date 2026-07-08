@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 홈 시안 B3</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { background:#f0f0f0; font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; display:flex; flex-direction:column; align-items:center; padding:40px 20px; gap:24px; }
+  .label { font-size:13px; font-weight:700; color:#888; text-align:center; }
+
+  .phone { width:375px; background:#f7f7f7; border-radius:40px; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.18); }
+  .statusbar { background:#C8102E; padding:12px 24px 6px; display:flex; justify-content:space-between; }
+  .statusbar .time { font-size:14px; font-weight:700; color:#fff; }
+  .statusbar .icons { font-size:12px; color:#fff; font-weight:600; }
+  .header { background:#fff; padding:10px 16px 8px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f5f5f5; }
+  .logo { font-size:20px; font-weight:900; color:#C8102E; }
+  .bell { font-size:18px; }
+
+  .scroll { overflow-y:auto; max-height:780px; }
+
+  /* ① 검색바 */
+  .searchbar { margin:10px 12px 0; background:#fff; border:1.5px solid #e8e8e8; border-radius:12px; padding:9px 12px; display:flex; align-items:center; gap:8px; }
+  .searchbar input { border:none; background:none; font-size:13px; color:#aaa; flex:1; outline:none; }
+  .search-btn { width:28px; height:28px; background:#C8102E; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+
+  /* ② 메인 슬라이더 */
+  .slider-wrap { padding:10px 12px 0; }
+  .slide { background:linear-gradient(135deg,#0f0f0f,#1e1e1e); border-radius:18px; padding:18px; min-height:144px; display:flex; flex-direction:column; justify-content:space-between; }
+  .slide-chip { font-size:9px; font-weight:900; letter-spacing:1.5px; color:rgba(255,255,255,.45); margin-bottom:7px; }
+  .slide-title { font-size:20px; font-weight:900; color:#fff; line-height:1.25; }
+  .slide-bottom { display:flex; align-items:flex-end; justify-content:space-between; margin-top:10px; }
+  .slide-meta { font-size:11px; color:rgba(255,255,255,.4); margin-bottom:3px; }
+  .slide-value { font-size:15px; font-weight:900; color:#fff; }
+  .slide-cta { background:#C8102E; color:#fff; font-size:11px; font-weight:800; padding:7px 14px; border-radius:20px; }
+  .slider-dots { display:flex; justify-content:center; gap:5px; padding:7px 0 2px; }
+  .dot { width:5px; height:5px; border-radius:50%; background:#ddd; }
+  .dot.active { width:16px; border-radius:3px; background:#C8102E; }
+
+  /* ③ 숏컷 아이콘 4개 */
+  .icon-bar { background:#fff; padding:14px 16px; display:flex; justify-content:space-around; border-bottom:1px solid #f5f5f5; }
+  .icon-item { display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .icon-circle { width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:22px; position:relative; }
+  .ic-badge { position:absolute; top:-4px; right:-4px; background:#C8102E; color:#fff; font-size:8px; font-weight:900; padding:1px 5px; border-radius:8px; }
+  .icon-label { font-size:11px; font-weight:700; color:#333; }
+
+  /* ④ 주변 알바 공고 */
+  .section-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 8px; }
+  .section-title { font-size:14px; font-weight:900; color:#111; }
+  .section-more { font-size:11px; color:#C8102E; font-weight:700; }
+  .job-scroll { display:flex; gap:8px; overflow-x:auto; padding:0 12px 14px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .job-card { flex-shrink:0; width:142px; background:#fff; border-radius:14px; padding:12px; border:1px solid #f0f0f0; }
+  .jc-cat { font-size:9px; color:#aaa; font-weight:700; margin-bottom:4px; }
+  .jc-title { font-size:12px; font-weight:800; color:#111; line-height:1.3; margin-bottom:2px; }
+  .jc-biz { font-size:10px; color:#bbb; margin-bottom:7px; }
+  .jc-wage { font-size:14px; font-weight:900; color:#C8102E; }
+  .jc-unit { font-size:10px; font-weight:800; }
+  .jc-tags { display:flex; gap:3px; margin-top:5px; flex-wrap:wrap; }
+  .tag { font-size:9px; font-weight:700; padding:2px 5px; border-radius:5px; }
+  .tag.red { background:#fff0f2; color:#C8102E; }
+  .tag.green { background:#f0fdf4; color:#15803d; }
+  .tag.blue { background:#eff6ff; color:#1d4ed8; }
+  .tag.gray { background:#f5f5f5; color:#888; }
+
+  /* ⑤ 바로모임 */
+  .moim-wrap { margin:0 12px 0; background:#fff; border:1.5px solid #ede9fe; border-radius:15px; overflow:hidden; }
+  .moim-head { padding:11px 14px; display:flex; align-items:center; gap:9px; border-bottom:1px solid #f5f3ff; }
+  .moim-icon { width:30px; height:30px; background:#7C3AED; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+  .moim-info { flex:1; }
+  .moim-title { font-size:14px; font-weight:900; color:#5B21B6; }
+  .moim-sub { font-size:10px; color:#a78bfa; margin-top:1px; }
+  .moim-new { font-size:9px; font-weight:900; background:#7C3AED; color:#fff; padding:2px 8px; border-radius:10px; }
+  .moim-more { font-size:12px; color:#7C3AED; font-weight:700; margin-left:6px; }
+  .moim-scroll { display:flex; gap:8px; overflow-x:auto; padding:10px 14px 12px; scrollbar-width:none; }
+  .moim-card { flex-shrink:0; background:#f5f0ff; border-radius:12px; padding:10px 12px; min-width:120px; }
+  .mc-emoji { font-size:18px; margin-bottom:4px; }
+  .mc-title { font-size:12px; font-weight:800; color:#5B21B6; line-height:1.3; }
+  .mc-count { font-size:10px; color:#a78bfa; margin-top:3px; font-weight:600; }
+
+  /* ⑥ FEATURED */
+  .featured-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 8px; }
+  .featured-label { font-size:11px; font-weight:900; color:#aaa; letter-spacing:.5px; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:7px; padding:0 12px 0; }
+  .fc { background:#fff; border-radius:14px; padding:13px; border:1.5px solid #f0f0f0; display:flex; flex-direction:column; }
+  .fc-chip { font-size:9px; font-weight:900; letter-spacing:.5px; margin-bottom:5px; }
+  .fc-title { font-size:12px; font-weight:800; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fc-sub { font-size:10px; color:#bbb; margin:2px 0; }
+  .fc-wage { font-size:15px; font-weight:900; margin-top:auto; padding-top:8px; }
+  .fc-unit { font-size:10px; font-weight:900; padding:2px 5px; border-radius:5px; margin-left:3px; }
+  .ai-body { font-size:11px; color:#bbb; line-height:1.6; margin-top:4px; flex:1; }
+  .ai-foot { font-size:10px; color:#e0e0e0; font-weight:700; margin-top:auto; padding-top:8px; }
+
+  /* ⑦ RANK 진입점 */
+  .rank-entry { margin:10px 12px 14px; background:linear-gradient(135deg,#92400e,#b45309); border-radius:16px; padding:16px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; }
+  .rank-icon { width:44px; height:44px; background:rgba(255,255,255,.15); border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .rank-body { flex:1; }
+  .rank-chip { font-size:9px; font-weight:900; letter-spacing:1px; color:rgba(255,255,255,.5); margin-bottom:4px; }
+  .rank-title { font-size:16px; font-weight:900; color:#fff; line-height:1.25; }
+  .rank-sub { font-size:11px; color:rgba(255,255,255,.55); margin-top:3px; }
+  .rank-arrow { font-size:20px; color:rgba(255,255,255,.6); flex-shrink:0; }
+
+  /* 하단 탭 */
+  .nav { background:#fff; border-top:1px solid #f0f0f0; display:flex; padding:8px 0 16px; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .nav-icon { font-size:20px; }
+  .nav-label { font-size:10px; font-weight:700; color:#bbb; }
+  .nav-center-wrap { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .nav-center { width:52px; height:52px; background:#C8102E; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-top:-16px; box-shadow:0 4px 16px rgba(200,16,46,.35); }
+
+  /* 설명 */
+  .desc-box { background:#fff; border-radius:16px; padding:20px; max-width:375px; }
+  .desc-title { font-size:15px; font-weight:900; color:#111; margin-bottom:10px; }
+  .desc-row { display:flex; align-items:flex-start; gap:8px; margin-bottom:7px; }
+  .desc-num { font-size:11px; font-weight:900; color:#fff; background:#C8102E; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+  .desc-text { font-size:13px; color:#555; line-height:1.5; }
+  .desc-text b { color:#111; }
+</style>
+</head>
+<body>
+
+<div class="label">시안 B3 — B 기반 최종 레이아웃</div>
+
+<div class="phone">
+  <div class="statusbar">
+    <span class="time">3:06</span>
+    <span class="icons">●●● 5G 🔋</span>
+  </div>
+  <div class="header">
+    <div class="logo">바로알바</div>
+    <div class="bell">🔔</div>
+  </div>
+
+  <div class="scroll">
+
+    <!-- ① 검색바 -->
+    <div class="searchbar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="업종, 지역, 공고명 검색" readonly>
+      <div class="search-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+    </div>
+
+    <!-- ② 메인 슬라이더 (급구) -->
+    <div class="slider-wrap">
+      <div class="slide">
+        <div>
+          <div class="slide-chip">URGENT NOW</div>
+          <div class="slide-title">급구 <span style="color:#ff6677">2건</span><br><span style="font-size:14px;font-weight:700;opacity:.5">지금 당장 필요해요</span></div>
+        </div>
+        <div class="slide-bottom">
+          <div>
+            <div class="slide-meta">홀서빙 · 물류 상하차</div>
+            <div class="slide-value">15,000 ~ 18,000원</div>
+          </div>
+          <div class="slide-cta">지원하기 →</div>
+        </div>
+      </div>
+      <div class="slider-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- ③ 숏컷 아이콘 4개 -->
+    <div class="icon-bar">
+      <div class="icon-item">
+        <div class="icon-circle" style="background:#fff0f2">💰</div>
+        <div class="icon-label">높은시급</div>
+      </div>
+      <div class="icon-item">
+        <div class="icon-circle" style="background:#eff6ff">🤖</div>
+        <div class="icon-label">AI추천</div>
+      </div>
+      <div class="icon-item">
+        <div class="icon-circle" style="background:#f0fdf4;position:relative">
+          🌏
+          <div class="ic-badge">23</div>
+        </div>
+        <div class="icon-label">외국인환영</div>
+      </div>
+      <div class="icon-item">
+        <div class="icon-circle" style="background:#eff6ff">📚</div>
+        <div class="icon-label">레슨/과외</div>
+      </div>
+    </div>
+
+    <!-- ④ 주변 알바 공고 -->
+    <div class="section-head">
+      <div class="section-title">📋 주변 알바 공고</div>
+      <div class="section-more">전체보기 ›</div>
+    </div>
+    <div class="job-scroll">
+      <div class="job-card">
+        <div class="jc-cat">F&B</div>
+        <div class="jc-title">홀 서빙 알바</div>
+        <div class="jc-biz">돌쇠총무</div>
+        <div class="jc-wage">15,000원<span class="jc-unit"> 시급</span></div>
+        <div class="jc-tags"><span class="tag red">급구</span><span class="tag green">당일</span></div>
+      </div>
+      <div class="job-card">
+        <div class="jc-cat">물류</div>
+        <div class="jc-title">물류 상하차 야간</div>
+        <div class="jc-biz">CJ대한통운</div>
+        <div class="jc-wage">18,000원<span class="jc-unit"> 시급</span></div>
+        <div class="jc-tags"><span class="tag green">🌏 외국인</span></div>
+      </div>
+      <div class="job-card">
+        <div class="jc-cat">청소</div>
+        <div class="jc-title">광진구 고시원 청소</div>
+        <div class="jc-biz">Jackie Park</div>
+        <div class="jc-wage">350,000원<span class="jc-unit"> 일급</span></div>
+        <div class="jc-tags"><span class="tag blue">🌏 외국인</span></div>
+      </div>
+      <div class="job-card">
+        <div class="jc-cat">판매</div>
+        <div class="jc-title">패션 디자이너</div>
+        <div class="jc-biz">돌쇠총무</div>
+        <div class="jc-wage">15,000원<span class="jc-unit"> 시급</span></div>
+        <div class="jc-tags"><span class="tag gray">정기</span></div>
+      </div>
+    </div>
+
+    <!-- ⑤ 바로모임 -->
+    <div style="padding:0 12px 0">
+      <div class="moim-wrap">
+        <div class="moim-head">
+          <div class="moim-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="moim-info">
+            <div class="moim-title">바로모임</div>
+            <div class="moim-sub">스포츠 · 취미 · 친목 모임</div>
+          </div>
+          <span class="moim-new">NEW</span>
+          <span class="moim-more">전체 ›</span>
+        </div>
+        <div class="moim-scroll">
+          <div class="moim-card">
+            <div class="mc-emoji">⚽</div>
+            <div class="mc-title">강남 풋살<br>팀원 모집</div>
+            <div class="mc-count">4/8명</div>
+          </div>
+          <div class="moim-card">
+            <div class="mc-emoji">🎾</div>
+            <div class="mc-title">테니스<br>초보 환영</div>
+            <div class="mc-count">2/6명</div>
+          </div>
+          <div class="moim-card">
+            <div class="mc-emoji">📸</div>
+            <div class="mc-title">사진 모임<br>주말 출사</div>
+            <div class="mc-count">3/10명</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑥ FEATURED (전광판) -->
+    <div class="featured-head">
+      <div class="featured-label">FEATURED</div>
+    </div>
+    <div class="two-col">
+      <div class="fc" style="border-color:#fecdd3;background:#fff5f5">
+        <div class="fc-chip" style="color:#C8102E">높은 시급</div>
+        <div class="fc-title">살충 해주실분 빈대</div>
+        <div class="fc-sub">F&B</div>
+        <div class="fc-wage" style="color:#C8102E">19,500원<span class="fc-unit" style="background:#fff0f2;color:#C8102E">시급</span></div>
+      </div>
+      <div class="fc">
+        <div class="fc-chip" style="color:#888">AI PICKS</div>
+        <div class="ai-body">공고를 둘러볼수록 맞춤 추천이 시작돼요</div>
+        <div class="ai-foot">🤖 AI 학습 중...</div>
+      </div>
+    </div>
+
+    <!-- ⑦ RANK 진입점 -->
+    <div class="rank-entry" style="margin-top:10px">
+      <div class="rank-icon">🏆</div>
+      <div class="rank-body">
+        <div class="rank-chip">TRUST RANK</div>
+        <div class="rank-title">업체 · 알바생<br>신뢰도 순위</div>
+        <div class="rank-sub">업종별 1위가 누구인지 확인하세요</div>
+      </div>
+      <div class="rank-arrow">›</div>
+    </div>
+
+  </div>
+
+  <!-- 하단 탭 -->
+  <div class="nav">
+    <div class="nav-item">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label" style="color:#C8102E">홈</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">지도</div>
+    </div>
+    <div class="nav-center-wrap">
+      <div class="nav-center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </div>
+      <div class="nav-label" style="margin-top:4px">바로알바</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">💬</div>
+      <div class="nav-label">채팅</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">마이페이지</div>
+    </div>
+  </div>
+</div>
+
+<div class="desc-box">
+  <div class="desc-title">시안 B3 — 레이아웃 구조</div>
+  <div class="desc-row"><div class="desc-num">1</div><div class="desc-text"><b>검색바</b> — 항상 최상단</div></div>
+  <div class="desc-row"><div class="desc-num">2</div><div class="desc-text"><b>메인 슬라이더</b> — 급구 배너 (좌우 스와이프로 추가 슬라이드)</div></div>
+  <div class="desc-row"><div class="desc-num">3</div><div class="desc-text"><b>숏컷 4개</b> — 높은시급 / AI추천 / 외국인환영 / 레슨·과외 (바로가기)</div></div>
+  <div class="desc-row"><div class="desc-num">4</div><div class="desc-text"><b>주변 알바 공고</b> — 핵심 피드</div></div>
+  <div class="desc-row"><div class="desc-num">5</div><div class="desc-text"><b>바로모임</b> — 알바 아래로 이동</div></div>
+  <div class="desc-row"><div class="desc-num">6</div><div class="desc-text"><b>FEATURED</b> — 실제 데이터 전광판 (높은시급 공고 + AI PICKS)</div></div>
+  <div class="desc-row"><div class="desc-num">7</div><div class="desc-text"><b>RANK 진입점</b> — 업체·알바생 신뢰도 순위로 이동</div></div>
+</div>
+
+</body>
+</html>

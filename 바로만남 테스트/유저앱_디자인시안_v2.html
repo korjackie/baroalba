@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>바로알바 앱 - 디자인 시안 V2</title>
+  <style>
+    /* ── RESET & BASE ── */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+    /* ── MOBILE FRAME ── */
+    .mobile-frame {
+      width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
+      background-color: #f8fafc; position: relative; display: flex; flex-direction: column;
+      overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    @media (min-width: 450px) {
+      .mobile-frame { height: 90vh; border-radius: 40px; border: 8px solid #0f172a; }
+    }
+
+    /* ── APP HEADER ── */
+    .header {
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+      padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; z-index: 50;
+    }
+    .header-logo { font-size: 20px; font-weight: 900; color: #e11d48; letter-spacing: -0.5px; }
+    .header-icons { display: flex; gap: 16px; font-size: 20px; color: #0f172a; cursor: pointer; }
+
+    /* ── CONTENT AREA ── */
+    .content-area { flex: 1; overflow-y: auto; padding-bottom: 90px; background: #f8fafc; }
+    .tab-content { display: none; animation: fadeIn 0.2s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── HOME: SEARCH BAR ── */
+    .search-bar-wrap { padding: 16px 20px 8px; background: white; }
+    .search-bar {
+      background: #f1f5f9; border-radius: 12px; padding: 12px 16px;
+      display: flex; align-items: center; gap: 12px; color: #94a3b8; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+
+    /* ── HOME: BENTO GRID (당일 급구) ── */
+    .bento-section { padding: 12px 20px; background: white; }
+    .bento-banner {
+      background: #0f172a; border-radius: 20px; padding: 24px; color: white;
+      display: flex; flex-direction: column; position: relative; overflow: hidden; cursor: pointer;
+    }
+    .bento-tag { background: #e11d48; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; align-self: flex-start; margin-bottom: 12px; }
+    .bento-title { font-size: 22px; font-weight: 900; line-height: 1.3; margin-bottom: 4px; }
+    .bento-desc { font-size: 13px; color: #94a3b8; }
+    .bento-bg-icon { position: absolute; right: -10px; bottom: -20px; font-size: 100px; opacity: 0.1; transform: rotate(-15deg); }
+
+    /* ── HOME: MOIM CARDS ── */
+    .section-title { font-size: 18px; font-weight: 800; color: #0f172a; padding: 24px 20px 12px; background: #f8fafc; }
+    .moim-list { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+    .moim-card {
+      background: white; border-radius: 16px; padding: 16px; border: 1px solid #f1f5f9;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px; cursor: pointer;
+    }
+    .moim-tier-pro { border: 2px solid #7c3aed; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.15); }
+    .moim-tier-basic { border-left: 4px solid #3b82f6; }
+    
+    .tier-badge { align-self: flex-start; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; }
+    .tier-pro-badge { background: linear-gradient(135deg, #9333ea, #7c3aed); color: white; }
+    .tier-basic-badge { background: #eff6ff; color: #3b82f6; }
+    
+    .moim-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+    .moim-meta { display: flex; gap: 12px; font-size: 12px; color: #64748b; font-weight: 600; }
+
+    /* ── MY PAGE ── */
+    .profile-header { background: white; padding: 32px 20px 24px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #f1f5f9; }
+    .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #e11d48, #be123c); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: #64748b; }
+    
+    .mypage-stats { display: flex; background: white; padding: 20px; border-bottom: 1px solid #f1f5f9; margin-bottom: 12px; }
+    .mp-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; border-right: 1px solid #f1f5f9; }
+    .mp-stat:last-child { border: none; }
+    .mp-val { font-size: 20px; font-weight: 900; color: #0f172a; }
+    .mp-label { font-size: 11px; font-weight: 700; color: #94a3b8; }
+
+    /* ── MY PAGE MENU LIST ── */
+    .menu-group { background: white; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; margin-bottom: 12px; }
+    .menu-item { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-title { font-size: 15px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+    .menu-arrow { color: #cbd5e1; font-weight: 700; font-size: 14px; }
+    
+    /* Highlighted Menu Item */
+    .menu-item.highlight .menu-title { color: #7c3aed; font-weight: 800; }
+    .menu-item.highlight { background: #faf5ff; }
+
+    /* ── BOTTOM SHEET (COUPON MODAL) ── */
+    .overlay { position: absolute; inset: 0; background: rgba(15,23,42,0.6); z-index: 200; display: none; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+    .bottom-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0; background: white;
+      border-radius: 24px 24px 0 0; padding: 24px 20px; z-index: 201;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+    .bottom-sheet.show { transform: translateY(0); }
+    .bs-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 0 auto 8px; }
+    
+    .coupon-title { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .coupon-desc { font-size: 13px; color: #64748b; line-height: 1.4; }
+    
+    .coupon-input-wrap { display: flex; gap: 8px; }
+    .coupon-input { flex: 1; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; font-size: 15px; outline: none; transition: 0.2s; }
+    .coupon-input:focus { border-color: #7c3aed; background: white; }
+    .coupon-btn { background: #7c3aed; color: white; border: none; border-radius: 12px; padding: 0 20px; font-size: 15px; font-weight: 800; cursor: pointer; }
+    
+    .ticket-card { background: linear-gradient(135deg, #f5f3ff, #faf5ff); border: 1px solid #ede9fe; border-radius: 16px; padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .ticket-info { display: flex; flex-direction: column; gap: 4px; }
+    .ticket-name { font-size: 15px; font-weight: 800; color: #0f172a; }
+    .ticket-count { font-size: 28px; font-weight: 900; color: #7c3aed; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px); border-top: 1px solid #f1f5f9;
+      display: flex; justify-content: space-between; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 100;
+    }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; color: #94a3b8; }
+    .nav-icon { font-size: 22px; filter: grayscale(100%) opacity(0.5); transition: 0.2s; }
+    .nav-label { font-size: 10px; font-weight: 800; transition: 0.2s; }
+    .nav-btn.active { color: #e11d48; }
+    .nav-btn.active .nav-icon { filter: grayscale(0%) opacity(1); transform: scale(1.1); }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-logo">바로알바</div>
+      <div class="header-icons"><span>🔍</span><span>🔔</span></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area">
+      
+      <!-- 1. HOME 탭 -->
+      <div id="tab-home" class="tab-content active">
+        <!-- 검색창 -->
+        <div class="search-bar-wrap">
+          <div class="search-bar"><span>🔍</span> 어떤 알바/모임을 찾으시나요?</div>
+        </div>
+
+        <!-- 벤토 배너 -->
+        <div class="bento-section">
+          <div class="bento-banner">
+            <span class="bento-bg-icon">🏃</span>
+            <span class="bento-tag">당일 지급</span>
+            <div class="bento-title">지금 당장 출근하고<br>오늘 바로 일당받기</div>
+            <div class="bento-desc">급하게 일손이 필요한 사장님들이 기다리고 있어요!</div>
+          </div>
+        </div>
+
+        <!-- 모임 섹션 -->
+        <div class="section-title">지금 핫한 바로모임 🔥</div>
+        <div class="moim-list">
+          <div class="moim-card moim-tier-pro">
+            <span class="tier-badge tier-pro-badge">PRO</span>
+            <div class="moim-title">강남역 직장인 영어 스터디 (원어민 참석)</div>
+            <div class="moim-meta"><span>📅 토요일 오후 2시</span><span>👥 4/8명</span></div>
+          </div>
+          <div class="moim-card moim-tier-basic">
+            <span class="tier-badge tier-basic-badge">BASIC</span>
+            <div class="moim-title">한강 러닝 크루 초보자 환영🏃‍♂️</div>
+            <div class="moim-meta"><span>📅 오늘 저녁 8시</span><span>👥 12/20명</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. MY PAGE 탭 -->
+      <div id="tab-mypage" class="tab-content">
+        
+        <div class="profile-header">
+          <div class="profile-avatar">테</div>
+          <div class="profile-info">
+            <div class="profile-name">테스터(시안확인용)</div>
+            <div class="profile-email">test@baro.com</div>
+          </div>
+        </div>
+        
+        <div class="mypage-stats">
+          <div class="mp-stat"><div class="mp-val">0</div><div class="mp-label">지원현황</div></div>
+          <div class="mp-stat"><div class="mp-val">3</div><div class="mp-label">관심알바</div></div>
+          <div class="mp-stat"><div class="mp-val">120</div><div class="mp-label">매너점수</div></div>
+        </div>
+
+        <!-- 메뉴 그룹 1 -->
+        <div class="menu-group">
+          <div class="menu-item">
+            <div class="menu-title">💰 수입 현황</div><div class="menu-arrow">›</div>
+          </div>
+          <div class="menu-item">
+            <div class="menu-title">💳 급여 수령 확인</div><div class="menu-arrow">›</div>
+          </div>
+          <div class="menu-item">
+            <div class="menu-title">🪙 포인트 잔액</div><div class="menu-arrow">›</div>
+          </div>
+        </div>
+
+        <!-- 메뉴 그룹 2 (만남 메뉴 분리) -->
+        <div class="menu-group">
+          <div class="menu-item highlight" onclick="openCouponSheet()">
+            <div class="menu-title">🎫 프로모션 쿠폰 등록 / 내 티켓</div><div class="menu-arrow">›</div>
+          </div>
+          <div class="menu-item">
+            <div class="menu-title">💜 내 만남 예약 내역</div><div class="menu-arrow">›</div>
+          </div>
+        </div>
+        
+        <!-- 메뉴 그룹 3 -->
+        <div class="menu-group">
+          <div class="menu-item">
+            <div class="menu-title">⚙️ 앱 설정</div><div class="menu-arrow">›</div>
+          </div>
+          <div class="menu-item">
+            <div class="menu-title">🎧 고객센터</div><div class="menu-arrow">›</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <button class="nav-btn active" onclick="switchTab('home', this)">
+        <span class="nav-icon">🏠</span><span class="nav-label">홈</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">📍</span><span class="nav-label">지도</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">⚡</span><span class="nav-label">바로알바</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">💬</span><span class="nav-label">채팅</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('mypage', this)">
+        <span class="nav-icon">👤</span><span class="nav-label">마이페이지</span>
+      </button>
+    </div>
+
+    <!-- COUPON BOTTOM SHEET -->
+    <div class="overlay" id="couponOverlay" onclick="closeCouponSheet()"></div>
+    <div class="bottom-sheet" id="couponSheet">
+      <div class="bs-handle"></div>
+      
+      <div>
+        <div class="coupon-title">💜 프로모션 쿠폰 & 티켓</div>
+        <div class="coupon-desc" style="margin-top: 4px;">베타테스터 코드를 입력하고 제휴 매장 식사권을 받으세요!</div>
+      </div>
+      
+      <div class="coupon-input-wrap">
+        <input type="text" class="coupon-input" placeholder="쿠폰 코드 입력 (예: BARO2026)">
+        <button class="coupon-btn" onclick="alert('쿠폰 등록 로직은 본 개발 시 반영됩니다.');">등록</button>
+      </div>
+      
+      <div class="ticket-card">
+        <div class="ticket-info">
+          <div class="ticket-name">내 바로만남 이용권</div>
+          <div style="font-size:12px; color:#64748b;">제휴 매장에서 QR 스캔으로 사용</div>
+        </div>
+        <div class="ticket-count">0장</div>
+      </div>
+      
+      <div style="height: 10px;"></div> <!-- Bottom padding -->
+    </div>
+
+  </div>
+
+  <script>
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function openCouponSheet() {
+      document.getElementById('couponOverlay').classList.add('show');
+      setTimeout(() => {
+        document.getElementById('couponSheet').classList.add('show');
+      }, 10);
+    }
+
+    function closeCouponSheet() {
+      document.getElementById('couponSheet').classList.remove('show');
+      setTimeout(() => {
+        document.getElementById('couponOverlay').classList.remove('show');
+      }, 300);
+    }
+  </script>
+</body>
+</html>

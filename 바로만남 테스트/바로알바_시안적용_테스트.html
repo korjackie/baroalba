@@ -1,0 +1,2722 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="virtual-keyboard" content="overlays-content">
+  <meta name="theme-color" content="#C8102E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="바로알바">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>바로알바</title>
+  <meta property="og:title" content="바로알바 — 실시간 알바 매칭">
+  <meta property="og:description" content="지도에서 바로 찾고, 바로 지원하는 초단기 알바 매칭">
+  <meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share.png">
+  <meta property="og:type" content="website">
+
+  <!-- 카카오톡 인앱브라우저 → Chrome 자동 탈출 (딥링크 파라미터 보존) -->
+  
+
+  <!-- 렌더 전 즉시 숨김 → WebView 디스크캐시 flash 완전 차단 -->
+  
+  
+  
+  
+  <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
+  
+  <!-- 카카오 공유 SDK (Kakao.Share) — 지도 SDK(kakao.maps)와 별도 네임스페이스 -->
+  
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+  
+  
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    :root {
+      --red: #C8102E;
+      --urgent: #C8102E;
+      --open: #3B82F6;
+      --fnb: #F59E0B;
+      --logistics: #8B5CF6;
+      --sales: #10B981;
+      --cleaning: #6B7280;
+      --event: #EC4899;
+      --nav-h: 64px;
+      --header-h: 50px;
+      --sheet-peek: 56px;
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sat-safe: max(var(--sat), env(safe-area-inset-top, 0px));
+      --sab-safe: max(var(--sab), env(safe-area-inset-bottom, 0px));
+    }
+    html, body { height: 100%; overflow: hidden; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f5f5f5; }
+
+    /* ── 앱 헤더 ── */
+    .app-header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: calc(var(--header-h) + var(--sat-safe));
+      padding-top: var(--sat-safe);
+      background: linear-gradient(to bottom, #C8102E var(--sat-safe), #fff var(--sat-safe)); z-index: 300;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-left: 14px; padding-right: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .app-header-logo {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; text-decoration: none;
+    }
+    .app-header-logo span {
+      font-size: 18px; font-weight: 900; color: var(--red); letter-spacing: -0.5px;
+    }
+
+    /* ── 지도 ── */
+    #map { position: fixed; top: calc(var(--header-h) + var(--sat-safe)); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab-safe)); }
+
+    /* ── 상단 검색바 ── */
+    .top-bar {
+      position: fixed;
+      top: calc(var(--header-h) + var(--sat-safe)); left: 0; right: 0;
+      z-index: 200;
+      padding: 12px 14px 0;
+      pointer-events: none;
+    }
+    .search-row {
+      display: flex;
+      gap: 8px;
+      pointer-events: all;
+    }
+    .search-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 10px 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: #222;
+      background: transparent;
+    }
+    .search-box input::placeholder { color: #bbb; }
+    .search-icon { font-size: 16px; color: #999; }
+    .location-btn {
+      width: 44px; height: 44px;
+      background: #fff;
+      border: none;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    /* ── 카테고리 필터 칩 ── */
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 0 4px;
+      pointer-events: all;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+
+    /* ── 드롭다운 필터 바 ── */
+    .filter-bar-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 7px 0 5px;
+      pointer-events: all;
+    }
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex: 1;
+      min-width: 0;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-bar-actions {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+      padding-left: 6px;
+    }
+    .filter-drop-btn {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      color: #444;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      transition: all 0.15s;
+    }
+    .filter-drop-btn.open,
+    .filter-drop-btn.sel { background: #111; border-color: #111; color: #fff; }
+    .filter-sheet {
+      display: none;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      margin-top: 4px;
+      padding: 10px 12px 12px;
+      flex-wrap: wrap;
+      gap: 6px;
+      pointer-events: all;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .filter-sheet.open { display: flex; }
+
+    .chip {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border-radius: 7px;
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      white-space: nowrap;
+    }
+    .chip.active { background: #111; border-color: #111; color: #fff; font-weight: 700; }
+
+    .edu-chip { padding: 7px 13px; border-radius: 8px; border: 1.5px solid #e5e7eb; background: #f8f8f8; color: #555; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .edu-chip.active { background: #FFF0F0; border-color: #FFAAAA; color: var(--red); font-weight: 700; }
+    .v-chip, .s-chip, .l-chip {
+      padding: 7px 13px; border-radius: 8px; border: 1.5px solid #e5e7eb;
+      background: #f8f8f8; color: #555; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .v-chip.active { background: #EFF6FF; border-color: #3B82F6; color: #3B82F6; font-weight: 700; }
+    .s-chip.active { background: #fff0f0; border-color: #FFAAAA; color: var(--red); font-weight: 700; }
+    .l-chip.active, .l-chip.l-chip-on { background: #F0FDF4; border-color: #16a34a; color: #16a34a; font-weight: 700; }
+    .lang-level-btn { padding:5px 10px; border-radius:6px; border:1.5px solid #e5e7eb; background:#f8f8f8; color:#666; font-size:12px; font-weight:600; cursor:pointer; }
+    .lang-level-btn.active { background:#F0FDF4; border-color:#16a34a; color:#16a34a; font-weight:700; }
+
+    /* ── 홈 필터 칩 ── */
+    .home-filter-chip {
+      padding: 7px 13px; border-radius: 20px; border: 1.5px solid #e5e7eb;
+      background: #f8f8f8; color: #555; font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    .home-filter-chip.active { background: #FFF0F0; border-color: #C8102E; color: #C8102E; font-weight: 800; }
+    .hfc-chip { padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; background:#f5f5f5; color:#555; cursor:pointer; border:none; }
+    .hfc-chip.active { background:#fff0f2; color:#C8102E; font-weight:800; }
+    .hfc-toggle { width:42px; height:24px; background:#e0e0e0; border-radius:12px; position:relative; transition:background .2s; flex-shrink:0; }
+    .hfc-toggle::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:left .2s; }
+    .hfc-toggle.on { background:#C8102E; }
+    .hfc-toggle.on::after { left:21px; }
+    .home-sort-btn { padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700; border:1.5px solid #e5e5e5; background:#fff; color:#777; cursor:pointer; white-space:nowrap; }
+    .home-sort-btn.active { border-color:#C8102E; background:#fff0f2; color:#C8102E; font-weight:800; }
+    /* ── 반경 표시 ── */
+    .radius-badge {
+      position: fixed;
+      bottom: calc(var(--nav-h) + var(--sheet-peek) + 16px + 48px + 10px);
+      right: 16px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #555;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 200;
+      cursor: pointer;
+    }
+
+    /* ── 카카오 마커 커스텀 ── */
+    .marker-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+    }
+    .marker-bubble {
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px 11px 5px;
+      border: 2px solid var(--red);
+      white-space: nowrap;
+      line-height: 1.3;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .marker-bubble.mk-asap    { background: var(--red); border-color: var(--red); }
+    .marker-bubble.mk-asap .mk-top  { color: rgba(255,255,255,0.9); }
+    .marker-bubble.mk-asap .mk-wage { color: #fff; }
+    .marker-bubble.mk-regular { border-color: #16a34a; }
+    .marker-bubble.mk-regular .mk-wage { color: #16a34a; }
+    .marker-bubble.mk-short   { border-color: var(--open); }
+    .marker-bubble.mk-short .mk-wage { color: var(--open); }
+    .marker-bubble.mk-errand  { background: #7C3AED; border-color: #7C3AED; }
+    .marker-bubble.mk-errand .mk-top  { color: rgba(255,255,255,0.88); }
+    .marker-bubble.mk-errand .mk-wage { color: #fff; }
+    .mk-top  { font-size: 10px; font-weight: 700; color: #777; display: block; }
+    .mk-wage { font-size: 14px; font-weight: 900; color: var(--red); display: block; }
+    .mk-unit { font-size: 9px; font-weight: 700; }
+    .marker-tail {
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid var(--red);
+      margin-top: -1px;
+    }
+    .marker-tail.mk-regular { border-top-color: #16a34a; }
+    .marker-tail.mk-short   { border-top-color: var(--open); }
+    .marker-tail.mk-errand  { border-top-color: #7C3AED; }
+    /* 마커 타입배지/D-day */
+    .mk-row1 { display:flex; align-items:center; gap:3px; margin-bottom:2px; justify-content:center; }
+    .mk-type  { font-size:8px; font-weight:900; color:#fff; padding:1px 5px; border-radius:3px; flex-shrink:0; }
+    .mk-type.mt-reg   { background:#16a34a; }
+    .mk-type.mt-short { background:var(--open); }
+    .mk-type.mt-spot  { background:#EA580C; }
+    .mk-type.mt-errnd { background:#7C3AED; }
+    .mk-cat  { font-size:10px; font-weight:700; color:#555; max-width:50px; overflow:hidden; text-overflow:ellipsis; }
+    .mk-dday { font-size:8px; font-weight:900; flex-shrink:0; }
+    .mk-dday.dd-today { color:var(--red); }
+    .mk-dday.dd-soon  { color:#EA580C; }
+    .mk-dday.dd-later { color:#aaa; }
+    .marker-bubble.mk-asap .mk-cat, .marker-bubble.mk-errand .mk-cat { color:rgba(255,255,255,0.88); }
+    .marker-bubble.mk-asap .mk-dday, .marker-bubble.mk-errand .mk-dday { color:rgba(255,255,255,0.72); }
+    .marker-bubble.mk-asap .mk-type, .marker-bubble.mk-errand .mk-type { background:rgba(255,255,255,0.22); }
+    .surge-badge {
+      position: absolute;
+      top: -8px; right: -8px;
+      background: #FF9500;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 8px;
+      border: 1.5px solid #fff;
+    }
+
+    /* ── 검색 오버레이 ── */
+    #search-overlay {
+      position: fixed; inset: 0; z-index: 700;
+      background: #f5f5f5;
+      display: flex; flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #search-overlay.show { transform: translateY(0); }
+    .srch-header {
+      background: #fff;
+      padding: 12px 14px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .srch-back-btn {
+      width: 36px; height: 36px; border: none; background: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border-radius: 50%; color: #333; flex-shrink: 0;
+    }
+    .srch-input-box {
+      flex: 1; display: flex; align-items: center; gap: 8px;
+      background: #f5f5f5; border-radius: 10px; padding: 9px 12px;
+    }
+    .srch-input-box input { flex: 1; border: none; background: transparent; font-size: 14px; outline: none; color: #222; }
+    .srch-input-box input::placeholder { color: #bbb; }
+    .srch-go-btn-top {
+      padding: 9px 16px; background: var(--red); color: #fff;
+      border: none; border-radius: 10px; font-size: 13px; font-weight: 800;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .srch-body { flex: 1; overflow-y: auto; padding: 16px 14px 40px; }
+    .srch-section { margin-bottom: 20px; }
+    .srch-section-title { font-size: 12px; font-weight: 800; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .srch-region-row { display: flex; gap: 8px; }
+    .srch-select {
+      flex: 1; padding: 10px 12px; border: 1.5px solid #e5e5e5; border-radius: 10px;
+      background: #fff; font-size: 13px; color: #333; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 28px; cursor: pointer;
+    }
+    .srch-type-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .srch-type-btn {
+      padding: 8px 14px; border-radius: 8px; border: 1.5px solid #e5e5e5;
+      background: #fff; font-size: 13px; font-weight: 600; color: #555;
+      cursor: pointer;
+    }
+    .srch-type-btn.active { background: #111; border-color: #111; color: #fff; font-weight: 700; }
+    .srch-type-btn.asap.active { background: var(--red); border-color: var(--red); }
+    .srch-cat-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .srch-cat-btn {
+      padding: 7px 13px; border-radius: 8px; border: 1.5px solid #e5e5e5;
+      background: #fff; font-size: 12px; font-weight: 600; color: #555; cursor: pointer;
+    }
+    .srch-cat-btn.active { background: #fff0f0; border-color: #FFAAAA; color: var(--red); font-weight: 700; }
+    .srch-go-bottom {
+      width: 100%; padding: 15px; background: var(--red); color: #fff;
+      border: none; border-radius: 14px; font-size: 15px; font-weight: 800;
+      cursor: pointer; margin-top: 8px;
+    }
+    .srch-result-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: #fff; border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .srch-result-reset {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: #555; background: none;
+      border: none; cursor: pointer; padding: 0;
+    }
+    .srch-result-count { font-size: 13px; font-weight: 700; color: #111; }
+    .srch-result-list { flex: 1; overflow-y: auto; padding: 10px 14px 40px; }
+    .srch-card {
+      background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+      cursor: pointer;
+    }
+    .srch-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .srch-card-badges { display: flex; gap: 5px; }
+    .srch-card-dist { font-size: 11px; color: #bbb; font-weight: 600; }
+    .srch-card-title { font-size: 15px; font-weight: 800; color: #111; margin-bottom: 2px; }
+    .srch-card-biz   { font-size: 12px; color: #999; margin-bottom: 10px; }
+    .srch-card-wage-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
+    .srch-card-wage { font-size: 20px; font-weight: 900; color: var(--red); letter-spacing: -0.5px; }
+    .srch-card-wage-unit { font-size: 12px; color: #bbb; font-weight: 600; }
+    .srch-card-info { display: flex; gap: 5px; flex-wrap: wrap; }
+    .srch-card-chip { font-size: 11px; color: #666; background: #f7f7f7; padding: 4px 9px; border-radius: 20px; font-weight: 600; }
+    .srch-empty { text-align: center; padding: 60px 20px; color: #bbb; }
+    .srch-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .srch-empty-txt { font-size: 14px; font-weight: 600; line-height: 1.6; }
+
+    /* ── 하단 시트 ── */
+    .bottom-sheet {
+      position: fixed;
+      left: 0; right: 0;
+      bottom: var(--nav-h);
+      z-index: 300;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sheet-peek   { transform: translateY(calc(100% - var(--sheet-peek))); }
+    .sheet-half   { transform: translateY(15%); }
+    .sheet-full   { transform: translateY(0); }
+
+    .sheet-handle-area {
+      padding: 8px 0 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    .sheet-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; }
+    .sheet-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px 10px;
+    }
+    .sheet-count { font-size: 15px; font-weight: 800; color: #222; }
+    .sheet-count span { color: var(--red); }
+    .sheet-sort { font-size: 12px; color: #888; cursor: pointer; }
+
+    .job-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 14px 100px;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
+    }
+
+    /* ── 공고 카드 ── */
+    .job-card {
+      background: #fff;
+      border: 1.5px solid #f0f0f0;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .job-card:hover  { box-shadow:0 4px 18px rgba(0,0,0,0.10); transform:translateY(-2px); }
+    .job-card:active { transform: scale(0.98); background: #fafafa; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+    .job-card.urgent-card { border-color: #FFE0E0; background: #FFFAFA; }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .card-left { flex: 1; }
+    .card-biz { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 3px; }
+    .card-title { font-size: 15px; font-weight: 800; color: #222; line-height: 1.3; }
+    .card-right { text-align: right; flex-shrink: 0; margin-left: 10px; }
+    .card-wage { font-size: 17px; font-weight: 900; color: var(--red); }
+    .wage-delta {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #FF9500;
+      background: #FFF3E0;
+      padding: 1px 5px;
+      border-radius: 6px;
+      margin-top: 2px;
+    }
+
+    .card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 8px;
+      background: #f5f5f5;
+      color: #666;
+    }
+    .tag.urgent-tag { background: #FFF0F0; color: var(--red); }
+    .tag.fnb-tag     { background: #FFF8E1; color: #F59E0B; }
+    .tag.logistics-tag { background: #F3F0FF; color: #8B5CF6; }
+    .tag.sales-tag   { background: #E6FBF4; color: #10B981; }
+    .tag.cleaning-tag { background: #F3F4F6; color: #6B7280; }
+    .tag.event-tag   { background: #FDF2F8; color: #EC4899; }
+
+    .card-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 11px;
+      color: #aaa;
+      font-weight: 600;
+    }
+    .card-meta span { display: flex; align-items: center; gap: 3px; }
+
+    .card-star { color: #F59E0B; font-size: 11px; }
+
+    /* ── 공통 모달 오버레이 ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+    }
+    .modal-overlay.open { display: flex; }
+
+    /* ── 키보드 오버레이 대응 (Virtual Keyboard API CSS) ── */
+    #wchat-overlay, #chat-overlay {
+      padding-bottom: env(keyboard-inset-height, 0px);
+    }
+
+    /* ── 공고 상세 모달 ── */
+    .detail-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 500;
+      align-items: flex-end;
+    }
+    .detail-overlay.open { display: flex; }
+    .detail-sheet {
+      background: #fff;
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+      padding-bottom: 24px;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.detail-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 16px; }
+    /* ── 마이페이지 리디자인 ── */
+    .mp-section { margin-bottom:8px; }
+    .mp-section-title { padding:18px 20px 6px; font-size:11px; font-weight:800; color:#aaa; letter-spacing:0.8px; }
+    .mp-rows { background:#fff; }
+    .mp-row { display:flex; align-items:center; justify-content:space-between; padding:15px 20px; border-bottom:1px solid #f5f5f5; cursor:pointer; -webkit-tap-highlight-color:rgba(0,0,0,0.04); }
+    .mp-row:last-child { border-bottom:none; }
+    .mp-row:active { background:#f8f8f8; }
+    .mp-row-left { display:flex; align-items:center; gap:13px; font-size:15px; font-weight:600; color:#222; }
+    .mp-row-icon { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
+    .mp-row-right { display:flex; align-items:center; gap:5px; }
+    .mp-row-arrow { font-size:18px; color:#ccc; line-height:1; }
+    /* ── 전자계약서 모달 ── */
+    #contract-modal { align-items:center; justify-content:center; }
+    .contract-wrap { background:#fff; border-radius:20px; width:92%; max-width:500px; max-height:88vh; overflow-y:auto; padding:28px 24px; box-shadow:0 12px 40px rgba(0,0,0,0.18); }
+    /* ── 신뢰점수 뱃지 ── */
+    .trust-badge { display:inline-flex; align-items:center; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; margin-left:5px; }
+    .trust-high { color:#16a34a; background:#f0fdf4; }
+    .trust-mid  { color:#d97706; background:#fff7ed; }
+    .trust-low  { color:#ef4444; background:#fef2f2; }
+    /* ── 위치공유 버튼 ── */
+    .loc-share-btn { display:flex; align-items:center; gap:6px; width:100%; margin-top:8px; padding:10px 14px; border-radius:10px; border:1.5px solid #e0e7ff; background:#f0f4ff; color:#3b82f6; font-size:13px; font-weight:700; cursor:pointer; }
+    .loc-share-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
+    /* ── Staff 관리 ── */
+    .staff-summary { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 14px 0 }
+    .staff-stat { background:#fff;border-radius:12px;padding:12px 8px;border:1px solid #f0f0f0;text-align:center }
+    .staff-stat-val { font-size:20px;font-weight:900;color:#C8102E }
+    .staff-stat-lbl { font-size:10px;color:#aaa;font-weight:600;margin-top:2px;line-height:1.3 }
+    .staff-filter { display:flex;gap:6px;padding:12px 14px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none }
+    .staff-filter::-webkit-scrollbar { display:none }
+    .staff-chip { padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap;flex-shrink:0 }
+    .staff-chip.active { background:#C8102E;border-color:#C8102E;color:#fff }
+    .staff-list { padding:0 14px 80px }
+    .staff-card { background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #f0f0f0;box-shadow:0 1px 4px rgba(0,0,0,0.04) }
+    .staff-card-top { display:flex;align-items:center;gap:10px;margin-bottom:10px }
+    .staff-avatar { width:36px;height:36px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0 }
+    .staff-name { font-size:14px;font-weight:800;color:#111 }
+    .staff-meta { font-size:11px;color:#aaa;margin-top:1px }
+    .staff-visa-badge { display:inline-flex;align-items:center;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;background:#EFF6FF;color:#1e40af;margin-left:4px }
+    .staff-rows { border-top:1px solid #f5f5f5;padding-top:10px;display:flex;flex-direction:column;gap:6px }
+    .staff-row { display:flex;align-items:center;justify-content:space-between;font-size:12px }
+    .staff-row-label { color:#888;font-weight:600;min-width:64px }
+    .staff-row-val { color:#111;font-weight:700;text-align:right;flex:1 }
+    .wage-paid-btn { padding:4px 12px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s }
+    .wage-paid-btn.paid { background:#D1FAE5;color:#065F46 }
+    .wage-paid-btn.unpaid { background:#FEE2E2;color:#991B1B }
+    .staff-actions { display:flex;gap:6px;margin-top:10px;border-top:1px solid #f5f5f5;padding-top:10px }
+    .staff-act-btn { flex:1;padding:8px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#f5f5f5;color:#444 }
+    /* ── 외국인 특화 ── */
+    .visa-eligible-tag { display:inline-block;padding:3px 8px;border-radius:8px;background:#EFF6FF;color:#1e40af;font-size:11px;font-weight:700;margin:2px }
+    .visa-eligible-tag.warn { background:#FFF7ED;color:#c2410c }
+    .job-type-chip { padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s }
+    .job-type-chip.selected { background:#C8102E;border-color:#C8102E;color:#fff }
+    .rights-card { background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;padding:16px;color:#fff;margin-top:12px }
+    .mpsub-panel { position:fixed; inset:0; background:#f5f5f5; z-index:360; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
+    .mpsub-panel.show { transform:translateX(0); }
+    .mpsub-hdr { display:flex; align-items:center; gap:8px; padding:calc(var(--sat,0px) + 14px) 16px 14px; background:#fff; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
+    .mpsub-back { background:none; border:none; font-size:26px; color:#333; cursor:pointer; padding:0 10px 0 0; line-height:1; }
+    .mpsub-ttl { font-size:17px; font-weight:900; color:#222; }
+
+    .detail-header { padding: 0 20px 16px; border-bottom: 1px solid #f0f0f0; }
+    .detail-status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .detail-status {
+      font-size: 11px; font-weight: 800;
+      padding: 3px 8px; border-radius: 8px;
+    }
+    .status-urgent { background: #FFF0F0; color: var(--red); }
+    .status-open   { background: #EFF6FF; color: var(--open); }
+    .detail-cat    { font-size: 11px; font-weight: 700; color: #888; }
+    .detail-title  { font-size: 20px; font-weight: 900; color: #222; margin-bottom: 4px; }
+    .detail-biz    { font-size: 13px; color: #888; display: flex; align-items: center; gap: 4px; }
+    .detail-rating { color: #F59E0B; font-weight: 700; }
+
+    .detail-wage-box {
+      margin: 16px 20px;
+      background: linear-gradient(135deg, #FFF5F5, #fff);
+      border: 1.5px solid #FFE0E0;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .detail-wage-label { font-size: 11px; font-weight: 700; color: #999; margin-bottom: 4px; }
+    .detail-wage-val   { font-size: 28px; font-weight: 900; color: var(--red); }
+    .detail-wage-surge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #FFF3E0;
+      color: #FF9500;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 8px;
+      margin-top: 6px;
+    }
+    .detail-wage-base { font-size: 11px; color: #bbb; margin-top: 4px; }
+
+    .detail-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 0 20px 16px;
+    }
+    .info-item {
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .info-label { font-size: 10px; font-weight: 700; color: #aaa; margin-bottom: 4px; }
+    .info-val   { font-size: 14px; font-weight: 800; color: #222; }
+
+    .detail-desc {
+      margin: 0 20px 16px;
+      font-size: 14px;
+      color: #555;
+      line-height: 1.7;
+    }
+
+    .detail-apply-btn {
+      margin: 0 20px;
+      width: calc(100% - 40px);
+      padding: 16px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      animation: pulse-ring 2s infinite;
+    }
+    .detail-apply-btn:active   { transform: scale(0.98); animation: none; }
+    .detail-apply-btn:hover    { background: #e03333; }
+    .detail-apply-btn:disabled { animation: none; }
+
+    /* ── 하단 내비게이션 ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + var(--sab-safe));
+      padding-bottom: var(--sab-safe);
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      z-index: 400;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+    .nav-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+    .nav-icon svg { width: 22px; height: 22px; }
+    .nav-icon svg path, .nav-icon svg circle, .nav-icon svg line,
+    .nav-icon svg polyline, .nav-icon svg rect, .nav-icon svg polygon {
+      stroke: #d4d4d4; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .nav-label { font-size: 10px; font-weight: 500; color: #d4d4d4; }
+    .nav-item.active .nav-label { color: var(--red); font-weight: 800; }
+    .nav-post-btn { margin-top: -10px; }
+    .nav-post-btn .nav-label { color: #C8102E !important; font-weight: 800 !important; }
+    /* 가운데 FAB 탭 */
+    .nav-fab { position: relative; top: -10px; }
+    .nav-fab .nav-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg,#E8102E,#C8102E);
+      box-shadow: 0 4px 16px rgba(200,16,46,0.45);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+    }
+    .nav-fab .nav-icon svg { width: 26px; height: 26px; }
+    .nav-fab .nav-icon svg path, .nav-fab .nav-icon svg circle,
+    .nav-fab .nav-icon svg rect, .nav-fab .nav-icon svg polygon,
+    .nav-fab .nav-icon svg line, .nav-fab .nav-icon svg polyline { stroke: #fff; }
+    .nav-fab .nav-label { color: #C8102E !important; font-weight: 800 !important; font-size: 10px; }
+    .nav-fab.active::before { display: none; }
+    .nav-fab.active .nav-icon { box-shadow: 0 6px 20px rgba(200,16,46,0.6); }
+    .nav-item.active .nav-icon svg path,
+    .nav-item.active .nav-icon svg circle,
+    .nav-item.active .nav-icon svg line,
+    .nav-item.active .nav-icon svg polyline,
+    .nav-item.active .nav-icon svg rect,
+    .nav-item.active .nav-icon svg polygon { stroke: var(--red); }
+    .nav-item.active::before {
+      content: ''; position: absolute; top: 0; left: 25%; right: 25%;
+      height: 2px; background: var(--red); border-radius: 0 0 2px 2px;
+    }
+    .nav-item { position: relative; }
+    .nav-badge {
+      position: absolute; top: 4px; right: calc(50% - 18px);
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: var(--red); color: #fff; border-radius: 8px;
+      font-size: 10px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+
+    /* ── 내지원 / 채팅 패널 ── */
+    .full-panel {
+      position: fixed; top: var(--sat-safe); left: 0; right: 0; bottom: calc(var(--nav-h) + var(--sab-safe));
+      background: #f5f5f5; z-index: 300; display: none;
+      flex-direction: column; overflow-y: auto;
+    }
+    .full-panel.show { display: flex; }
+    .panel-header {
+      background: #fff; padding: 16px 20px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 18px; font-weight: 900; color: #222;
+      position: sticky; top: 0; z-index: 1; flex-shrink: 0;
+    }
+
+    /* ── 온보딩 ── */
+    .ob-dot { width:7px;height:7px;border-radius:50%;background:#e5e7eb;transition:all 0.3s;flex-shrink:0; }
+    .ob-dot.active { background:#C8102E;width:20px;border-radius:4px; }
+    /* ── 희망직종/스케줄 칩 ── */
+    .pref-cat-chip { padding:7px 13px;border:1.5px solid #eee;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555;transition:all 0.15s; }
+    .pref-cat-chip.on { background:#C8102E;color:#fff;border-color:#C8102E; }
+    .avail-day-btn { width:38px;height:38px;border:1.5px solid #eee;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555;transition:all 0.15s; }
+    .avail-day-btn.on { background:#C8102E;color:#fff;border-color:#C8102E; }
+    /* ── 로딩 ── */
+    .map-loading {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 16px;
+      transition: opacity 0.4s;
+    }
+    .map-loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #eee; border-top-color: var(--red); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes locPulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.2); opacity: 0; } }
+    .loading-txt { font-size: 14px; font-weight: 700; color: #666; }
+
+    /* ── 토스트 ── */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + 20px);
+      left: 50%; transform: translateX(-50%);
+      background: #222; color: #fff;
+      font-size: 13px; font-weight: 700;
+      padding: 10px 18px; border-radius: 20px;
+      z-index: 1000; white-space: pre-line;
+      max-width: 80vw; text-align: center;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.hidden { opacity: 0; }
+
+    /* ── 반경 조절 팝업 ── */
+    .radius-popup {
+      position: fixed;
+      bottom: calc(var(--nav-h) + var(--sheet-peek) + 16px + 48px + 10px + 42px + 8px);
+      right: 14px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      z-index: 250;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      width: 180px;
+    }
+    .radius-popup.open { display: flex; }
+    .radius-opt {
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 700; color: #444;
+      cursor: pointer; text-align: center;
+      transition: background 0.1s;
+    }
+    .radius-opt:hover, .radius-opt.selected { background: #FFF0F0; color: var(--red); }
+
+    /* ── 게스트 배너 ── */
+    .guest-banner {
+      position: fixed;
+      top: 108px; left: 14px; right: 14px;
+      background: #222;
+      color: #fff;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 200;
+      display: none;
+    }
+    .guest-banner.show { display: flex; }
+    .guest-login-btn {
+      background: var(--red); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 5px 10px; font-size: 11px; font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* ── 빈 상태 ── */
+    /* ── 번개 타이머 ── */
+    .surge-timer {
+      display:flex; align-items:center; justify-content:space-between;
+      background:linear-gradient(90deg,#FFF3E0,#FFF8F0);
+      border:1px solid #FFE082; border-radius:10px;
+      padding:7px 12px; margin-bottom:8px; font-size:12px;
+    }
+    .surge-timer-label { font-weight:700; color:#E65100; }
+    .surge-timer-bar-wrap { flex:1; height:5px; background:#eee; border-radius:3px; margin:0 10px; overflow:hidden; }
+    .surge-timer-bar { height:100%; background:linear-gradient(90deg,#FF9500,#FFB300); border-radius:3px; transition:width 1s linear; }
+    .surge-timer-count { font-weight:900; color:#FF6F00; font-size:13px; min-width:45px; text-align:right; }
+
+    .empty-state { text-align:center; padding:32px 20px; color:#bbb; }
+    .empty-icon { font-size:48px; margin-bottom:12px; display:inline-block; animation:emptyFloat 2.5s ease-in-out infinite; }
+    .empty-txt  { font-size:14px; font-weight:600; }
+    @keyframes emptyFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    @keyframes swipe-float-pulse { 0%,100%{box-shadow:0 4px 18px rgba(200,16,46,0.45)} 50%{box-shadow:0 6px 28px rgba(200,16,46,0.75)} }
+
+    /* ── antigravity 이식 애니메이션 ── */
+    @keyframes pulse-ring {
+      0%   { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0.65); }
+      70%  { transform:scale(1);    box-shadow:0 0 0 10px rgba(200,16,46,0); }
+      100% { transform:scale(0.97); box-shadow:0 0 0 0 rgba(200,16,46,0); }
+    }
+    @keyframes marker-bounce {
+      0%,100% { transform:translateY(0); }
+      50%     { transform:translateY(-8px); }
+    }
+    @keyframes marker-wave-kf {
+      0%   { transform:scale(0.5); opacity:0.8; }
+      100% { transform:scale(2.2); opacity:0; }
+    }
+    .pulse-ring       { animation:pulse-ring 2s infinite; }
+    .marker-pin-anim  { animation:marker-bounce 2s ease-in-out infinite; }
+    .marker-wave-anim { animation:marker-wave-kf 2s cubic-bezier(0,0.5,0.5,1) infinite; }
+    /* 폼 입력 포커스 — 브랜드 레드 링 */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+    textarea:focus,
+    select:focus {
+      outline:none;
+      border-color:#C8102E !important;
+      box-shadow:0 0 0 3px rgba(200,16,46,0.12) !important;
+      transition:border-color 0.15s, box-shadow 0.15s;
+    }
+
+    /* ══ 바로모임 ══ */
+    .moim-card {
+      background:#fff; border-radius:18px; overflow:hidden;
+      box-shadow:0 2px 12px rgba(0,0,0,0.09); border:1.5px solid #f0f0f0; cursor:pointer;
+      transition:box-shadow 0.18s, transform 0.18s;
+    }
+    .moim-card:hover  { box-shadow:0 6px 20px rgba(0,0,0,0.13); transform:translateY(-2px); }
+    .moim-card:active { opacity:0.85; transform:scale(0.98); }
+    .moim-cat-chip {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:6px 14px; border-radius:20px; border:1.5px solid #e5e7eb;
+      background:#f8f8f8; color:#555; font-size:12px; font-weight:600;
+      cursor:pointer; white-space:nowrap; flex-shrink:0;
+    }
+    .moim-cat-chip.active { background:#EDE9FE; border-color:#7C3AED; color:#7C3AED; font-weight:800; }
+    .map-mode-toggle {
+      position:fixed;
+      bottom: calc(var(--nav-h) + var(--sheet-peek) + 16px + 48px + 10px);
+      left: 16px;
+      background:#fff; border-radius:22px; padding:0; overflow:hidden;
+      box-shadow:0 2px 8px rgba(0,0,0,0.12); z-index:200;
+      display:flex; border:1.5px solid #e5e7eb;
+    }
+    .map-mode-btn {
+      padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer;
+      border:none; background:none; color:#999;
+    }
+    .map-mode-btn.active { background:#7C3AED; color:#fff; border-radius:20px; }
+    #map-mode-toggle { display:none; }
+    .moim-marker-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+    .moim-marker-bubble {
+      background:#7C3AED; color:#fff; border-radius:12px; padding:6px 10px;
+      font-size:12px; font-weight:800; white-space:normal; max-width:140px;
+      box-shadow:0 2px 8px rgba(124,58,237,0.4); line-height:1.3;
+    }
+    .moim-marker-tail { width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #7C3AED; }
+    @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .sk-card { background:#fff;border-radius:16px;padding:16px;margin:8px 0;box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+    .sk-line { background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px; }
+  
+
+  /* ── owner panel CSS (병합) ── */
+
+    
+    
+
+
+    /* ── 헤더 ── */
+    .header {
+      position: sticky; top:0; z-index:100;
+      background: linear-gradient(to bottom, #C8102E var(--sat-safe), #fff var(--sat-safe)); padding:calc(14px + var(--sat-safe)) 16px 12px;
+      border-bottom:1px solid #f0f0f0;
+      box-shadow:0 1px 8px rgba(0,0,0,0.06);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .header-left { display:flex; align-items:center; gap:10px; }
+    .header-logo { font-size:20px; font-weight:900; color:var(--red); letter-spacing:-0.5px; }
+    .header-badge { font-size:11px; font-weight:700; background:#FFF0F0; color:var(--red); padding:3px 8px; border-radius:8px; }
+    .header-biz { font-size:13px; color:#555; font-weight:600; }
+    .logout-btn { font-size:12px; color:#aaa; background:none; border:none; cursor:pointer; padding:6px; }
+
+    /* ── 탭 ── */
+    .tabs { display:flex; background:#fff; border-bottom:1px solid #f0f0f0; }
+    .tab-btn {
+      flex:1; padding:14px 0; font-size:14px; font-weight:700; color:#bbb;
+      border:none; background:none; cursor:pointer; border-bottom:2.5px solid transparent;
+      transition:all 0.2s;
+    }
+    .tab-btn.active { color:var(--red); border-bottom-color:var(--red); }
+
+    /* ── 컨텐츠 ── */
+    .tab-content { display:none; padding:16px; padding-bottom:calc(var(--nav-h) + 80px); }
+    .tab-content.active { display:block; }
+
+    /* ── 통계 카드 ── */
+    .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+    .stat-card { background:#fff; border-radius:14px; padding:14px; text-align:center; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+    .stat-val { font-size:22px; font-weight:900; color:var(--red); }
+    .stat-label { font-size:11px; color:#aaa; font-weight:600; margin-top:2px; }
+
+    /* ── 섹션 헤더 ── */
+    .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .section-title { font-size:15px; font-weight:800; color:#222; }
+
+    /* ── 공고 카드 ── */
+    .posting-card {
+      background:#fff; border-radius:16px; padding:16px;
+      margin-bottom:12px; box-shadow:0 1px 6px rgba(0,0,0,0.06);
+      position:relative;
+      border-left:4px solid #22c55e; cursor:pointer;
+    }
+    .posting-card.urgent-card { border-left-color:var(--red); }
+    .posting-card.closed-card { border-left-color:#d1d5db; opacity:0.65; }
+
+    .posting-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .posting-title { font-size:16px; font-weight:800; color:#222; margin-bottom:3px; }
+    .posting-cat { font-size:11px; color:#aaa; font-weight:600; }
+    .posting-wage { text-align:right; }
+    .wage-val { font-size:18px; font-weight:900; color:var(--red); }
+    .wage-base { font-size:10px; color:#ccc; }
+
+    .posting-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .meta-chip {
+      font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px;
+      background:#f5f5f5; color:#666;
+    }
+    .meta-chip.urgent { background:#FFF0F0; color:var(--red); }
+    .meta-chip.open { background:#EFF6FF; color:#3B82F6; }
+    .meta-chip.closed { background:#f0f0f0; color:#aaa; }
+
+    .posting-actions { display:flex; gap:8px; }
+    .surge-btn {
+      flex:1; padding:10px; background:linear-gradient(135deg,#FF9500,#FFB800);
+      color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:800;
+      cursor:pointer; transition:transform 0.1s;
+    }
+    .surge-btn:active { transform:scale(0.97); }
+    .surge-btn:disabled { background:#e0e0e0; color:#aaa; cursor:default; }
+    .edit-btn {
+      padding:10px 14px; background:#f5f5f5; color:#555;
+      border:none; border-radius:12px; font-size:13px; font-weight:700;
+      cursor:pointer;
+    }
+    .toggle-btn {
+      padding:10px 14px; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer;
+    }
+    .toggle-btn.open  { background:#EFF6FF; color:#3B82F6; }
+    .toggle-btn.close { background:#f0f0f0; color:#888; }
+
+    .applicant-count {
+      display:flex; align-items:center; gap:4px;
+      font-size:12px; font-weight:700; color:#555; margin-bottom:8px;
+      cursor:pointer;
+    }
+    .applicant-count .count-badge {
+      background:var(--red); color:#fff; font-size:10px; font-weight:800;
+      padding:1px 6px; border-radius:10px;
+    }
+
+    /* ── FAB ── */
+    .fab {
+      position:fixed; right:16px; bottom:calc(var(--nav-h) + 16px);
+      height:48px; border-radius:28px; padding:0 18px; gap:6px;
+      background:var(--red); color:#fff; border:none;
+      cursor:pointer;
+      box-shadow:0 4px 16px rgba(200,16,46,0.4);
+      display:flex; align-items:center; justify-content:center;
+      z-index:520; transition:transform 0.2s;
+    }
+    .fab:active { transform:scale(0.96); }
+
+    /* ── 공고 등록 바텀시트 + 공용 모달 오버레이 ── */
+    .sheet-overlay, .modal-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end; justify-content:center;
+    }
+    .sheet-overlay.open, .modal-overlay.open { display:flex; }
+    .sheet-overlay > div, .modal-overlay > div { max-width:600px; width:100%; }
+    .form-sheet {
+      background:#fff; border-radius:24px 24px 0 0; width:100%;
+      max-height:90vh; overflow-y:auto; padding:0 0 40px;
+      animation:slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .sheet-head {
+      padding:14px 20px 12px; border-bottom:1px solid #f0f0f0;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; background:#fff; z-index:1;
+    }
+    .sheet-title { font-size:17px; font-weight:800; color:#222; }
+    .sheet-close { font-size:22px; color:#aaa; background:none; border:none; cursor:pointer; }
+
+    .form-body { padding:20px; display:flex; flex-direction:column; gap:16px; }
+    .form-row { display:flex; gap:10px; }
+    .form-row .form-group { flex:1; }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-label { font-size:12px; font-weight:700; color:#888; }
+    .form-input, .form-select, .form-textarea {
+      width:100%; box-sizing:border-box;
+      padding:12px 14px; border:1.5px solid #eee; border-radius:12px;
+      font-size:14px; color:#222; outline:none; background:#fafafa;
+      transition:border-color 0.2s; font-family:inherit;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color:var(--red); background:#fff;
+    }
+    .form-textarea { resize:none; height:80px; line-height:1.5; }
+
+    /* 위치 검색 */
+    .location-search { display:flex; gap:8px; }
+    .location-search .form-input { flex:1; }
+    .search-addr-btn {
+      padding:12px 16px; background:var(--red); color:#fff;
+      border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
+    }
+    #mini-map { width:100%; height:160px; border-radius:12px; margin-top:8px; display:none; }
+    .location-result {
+      font-size:12px; color:#3B82F6; font-weight:700; padding:6px 0; display:none;
+    }
+
+    .submit-btn {
+      width:100%; padding:16px; background:var(--red); color:#fff;
+      border:none; border-radius:14px; font-size:16px; font-weight:900; cursor:pointer;
+      margin-top:4px; transition:background 0.15s;
+      animation:pulse-ring 2s infinite;
+    }
+    .submit-btn:hover    { background:#e03333; }
+    .submit-btn:disabled { background:#ddd; cursor:default; animation:none; }
+
+    /* ── 지원자 카드 ── */
+    .applicant-card {
+      background:#fff; border-radius:14px; margin-bottom:10px;
+      box-shadow:0 1px 8px rgba(0,0,0,0.07); border-left:4px solid #e5e7eb; overflow:hidden;
+    }
+    .applicant-card.s-pending   { border-left-color:#C8102E; }
+    .applicant-card.s-reviewing { border-left-color:#C8102E; }
+    .applicant-card.s-accepted  { border-left-color:#C8102E; }
+    .applicant-card.s-rejected  { border-left-color:#e0e0e0; }
+    .applicant-card.s-cancelled { border-left-color:#e0e0e0; }
+    .applicant-card.s-completed { border-left-color:#bbb; }
+    .applicant-card.s-noshow    { border-left-color:#e0e0e0; }
+    .applicant-card.cmp-selected { box-shadow:0 0 0 2px #3B82F6; }
+    .ac-top { display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer; }
+    .applicant-avatar {
+      width:44px; height:44px; border-radius:50%;
+      background:linear-gradient(135deg,#FFE4E4,#FFCACA);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .ac-info { flex:1; min-width:0; }
+    .ac-name { font-size:14px; font-weight:800; color:#111; }
+    .ac-meta { font-size:11px; color:#aaa; font-weight:600; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ac-actions { display:flex; align-items:center; gap:6px; padding:0 14px 12px; }
+    .ac-btn { flex:1; padding:8px 4px; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center; white-space:nowrap; transition:opacity 0.1s; }
+    .ac-btn:active { opacity:0.75; }
+    .ac-chat  { background:#f5f5f5; color:#555; }
+    .ac-pass  { background:#FFF0F0; color:#C8102E; font-weight:800; }
+    .ac-fail  { background:#f5f5f5; color:#888; }
+    .ac-done  { background:#C8102E; color:#fff; font-weight:800; }
+    .ac-sub   { background:#f5f5f5; color:#888; font-size:11px; }
+    .ac-rec   { background:#f5f5f5; color:#555; }
+    .ac-blk   { background:#f5f5f5; color:#888; }
+
+    /* ── 공고 토글 스위치 ── */
+    .posting-toggle { width:44px;height:24px;border-radius:12px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0 }
+    .posting-toggle-knob { position:absolute;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:left 0.2s;pointer-events:none }
+
+    /* ── 공고 재등록/CTA 버튼 ── */
+    .posting-relist-btn { font-size:12px;font-weight:800;background:#EEF2FF;color:#4F46E5;border:none;border-radius:20px;padding:5px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0 }
+    .posting-new-cta { border:2px dashed #ddd;border-radius:16px;padding:20px;text-align:center;cursor:pointer;margin:4px 0;transition:background 0.15s }
+    .posting-new-cta:active { background:#f9f9f9 }
+
+    /* ── 지원자 필터 칩 ── */
+    .filter-chips { display:flex;gap:6px;padding:10px 16px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none }
+    .filter-chips::-webkit-scrollbar { display:none }
+    .filter-chip { flex-shrink:0;padding:6px 14px;border-radius:20px;border:1.5px solid #e8e8e8;background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.15s }
+    .filter-chip.active { background:#C8102E;color:#fff;border-color:#C8102E }
+
+    /* ── 추천/차단 숏컷 ── */
+    .worker-shortcut { flex:1;background:#fff;border-radius:16px;padding:16px;border:1.5px solid #f0f0f0;text-align:center;cursor:pointer;transition:background 0.15s }
+    .worker-shortcut:active { background:#f9f9f9 }
+
+    /* ── 빈 상태 ── */
+    .empty { text-align:center; padding:48px 20px; color:#ccc; }
+    .empty-icon { font-size:48px; margin-bottom:12px; }
+    .empty-txt { font-size:14px; font-weight:600; }
+
+    /* ── 로딩 ── */
+    .spinner { width:32px; height:32px; border:3px solid #eee; border-top-color:var(--red); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── 토스트 ── */
+    .toast { position:fixed; bottom:calc(var(--nav-h)+20px); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:700; padding:10px 18px; border-radius:20px; z-index:20000; white-space:nowrap; transition:opacity 0.3s; pointer-events:none; }
+    .toast.hidden { opacity:0; }
+
+    /* ── 당일정산 토글 ── */
+    @keyframes payday-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0.35);} 50%{box-shadow:0 0 0 5px rgba(22,163,74,0);} }
+    .payday-tag { background:#DCFCE7!important; color:#15803d!important; font-weight:900!important; border:1.5px solid #86EFAC; animation:payday-pulse 2.2s ease-in-out infinite; }
+    .same-day-wrap { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#F0FDF4; border:1.5px solid #BBF7D0; border-radius:14px; cursor:pointer; }
+    .same-day-track { width:44px; height:24px; background:#ddd; border-radius:12px; position:relative; transition:background 0.2s; flex-shrink:0; }
+    .same-day-knob  { position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:left 0.2s; }
+    /* ── 노쇼 보증금 ── */
+    .deposit-wrap { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#FFF1F2; border:1.5px solid #FECDD3; border-radius:14px; cursor:pointer; }
+    .deposit-track { width:44px; height:24px; background:#ddd; border-radius:12px; position:relative; transition:background 0.2s; flex-shrink:0; }
+    .deposit-knob  { position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:left 0.2s; }
+    .remote-wrap  { display:flex; align-items:center; justify-content:space-between; padding:14px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:14px; cursor:pointer; }
+    .remote-track { width:44px; height:24px; background:#ddd; border-radius:12px; position:relative; transition:background 0.2s; flex-shrink:0; }
+    .remote-knob  { position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.2); transition:left 0.2s; }
+    .deposit-amt-btn { padding:7px 14px; background:#fff; border:1.5px solid #ddd; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; color:#555; transition:all 0.15s; }
+    .deposit-amt-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
+    /* ── 채팅 스와이프 나가기 ── */
+    .chat-swipe-wrap { position:relative; overflow:hidden; border-radius:16px; margin-bottom:8px; }
+    .chat-swipe-inner { position:relative; z-index:1; background:#fff; border-radius:16px; padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:transform 0.25s ease; box-shadow:0 1px 6px rgba(0,0,0,0.05); touch-action:pan-y; user-select:none; -webkit-user-select:none; }
+    .chat-swipe-inner.revealed { transform:translateX(-126px); border-radius:16px 0 0 16px; }
+    .chat-fav-btn { position:absolute; right:72px; top:0; bottom:0; width:54px; background:#FEF9C3; color:#F59E0B; border:none; font-size:20px; cursor:pointer; z-index:0; display:flex; align-items:center; justify-content:center; }
+    .chat-leave-btn { position:absolute; right:0; top:0; bottom:0; width:72px; background:#ef4444; color:#fff; border:none; font-size:13px; font-weight:800; cursor:pointer; border-radius:0 16px 16px 0; z-index:0; }
+
+    /* ── 하단 내비 ── */
+    .owner-nav-badge { position:absolute; top:4px; right:calc(50% - 18px); min-width:16px; height:16px; padding:0 4px; background:var(--red); color:#fff; border-radius:8px; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; line-height:1; }
+
+    /* ── PC: 팝업/모달만 적당한 너비로 제한 (전체 레이아웃은 그대로) ── */
+    @media (min-width: 600px) {
+      /* 폼 시트: 바텀시트 → 중앙 팝업 */
+      .sheet-overlay { align-items:center; justify-content:center; }
+      .form-sheet { width:480px; max-width:90vw; border-radius:20px; animation:none; }
+
+      /* 지원자 프로필 / 채팅 모달 */
+      #worker-profile-overlay { align-items:center; justify-content:center; }
+      #worker-profile-overlay > div { border-radius:20px; width:480px; max-width:90vw; max-height:85vh; overflow-y:auto; }
+      /* chat-overlay는 모바일과 동일하게 전체화면 유지 */
+
+      /* 공유 모달 */
+      #share-overlay > div { width:480px; max-width:90vw; }
+    }
+    /* ── 업주 지도 필터 칩 ── */
+    .om-chip { background:#fff; border:none; border-radius:20px; padding:6px 13px; font-size:12px; font-weight:700; color:#555; cursor:pointer; white-space:nowrap; box-shadow:0 1px 6px rgba(0,0,0,0.13); }
+    .om-chip.active { background:#222; color:#fff; }
+    /* ── 지도 마커 (알바생 앱과 동일) ── */
+    .marker-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25)); }
+    /* 알바생 맵과 동일한 마커 스타일 */
+    .marker-bubble { background:#fff; border-radius:10px; padding:6px 11px 5px; border:2px solid var(--red); white-space:nowrap; line-height:1.3; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+    .marker-bubble.mk-asap { background:var(--red); border-color:var(--red); }
+    .marker-bubble.mk-asap .mk-top { color:rgba(255,255,255,0.9); }
+    .marker-bubble.mk-asap .mk-wage { color:#fff; }
+    .marker-bubble.mk-regular { border-color:#16a34a; }
+    .marker-bubble.mk-regular .mk-wage { color:#16a34a; }
+    .marker-bubble.mk-short { border-color:#3B82F6; }
+    .marker-bubble.mk-short .mk-wage { color:#3B82F6; }
+    .marker-bubble.mk-errand { background:#7C3AED; border-color:#7C3AED; }
+    .marker-bubble.mk-errand .mk-top { color:rgba(255,255,255,0.88); }
+    .marker-bubble.mk-errand .mk-wage { color:#fff; }
+    .mk-top { font-size:10px; font-weight:700; color:#777; display:block; }
+    .mk-wage { font-size:14px; font-weight:900; color:var(--red); display:block; }
+    .mk-unit { font-size:9px; font-weight:700; }
+    .marker-tail { width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid var(--red); margin-top:-1px; }
+    .marker-tail.mk-regular { border-top-color:#16a34a; }
+    .marker-tail.mk-short { border-top-color:#3B82F6; }
+    .marker-tail.mk-errand { border-top-color:#7C3AED; }
+    /* 마커 타입배지/D-day */
+    .mk-row1 { display:flex; align-items:center; gap:3px; margin-bottom:2px; justify-content:center; }
+    .mk-type  { font-size:8px; font-weight:900; color:#fff; padding:1px 5px; border-radius:3px; flex-shrink:0; }
+    .mk-type.mt-reg   { background:#16a34a; }
+    .mk-type.mt-short { background:#3B82F6; }
+    .mk-type.mt-spot  { background:#EA580C; }
+    .mk-type.mt-errnd { background:#7C3AED; }
+    .mk-cat  { font-size:10px; font-weight:700; color:#555; max-width:50px; overflow:hidden; text-overflow:ellipsis; }
+    .mk-dday { font-size:8px; font-weight:900; flex-shrink:0; }
+    .mk-dday.dd-today { color:var(--red); }
+    .mk-dday.dd-soon  { color:#EA580C; }
+    .mk-dday.dd-later { color:#aaa; }
+    .marker-bubble.mk-asap .mk-cat, .marker-bubble.mk-errand .mk-cat { color:rgba(255,255,255,0.88); }
+    .marker-bubble.mk-asap .mk-dday, .marker-bubble.mk-errand .mk-dday { color:rgba(255,255,255,0.72); }
+    .marker-bubble.mk-asap .mk-type, .marker-bubble.mk-errand .mk-type { background:rgba(255,255,255,0.22); }
+    .om-bubble { background:#fff; border-radius:14px; padding:9px 16px 8px; border:3px solid #C8102E; white-space:nowrap; line-height:1.2; min-width:100px; text-align:center; }
+    .om-bubble.urgent  { background:#C8102E; border-color:#C8102E; }
+    .om-bubble.urgent  .om-wage { color:#fff; }
+    .om-bubble.urgent  .om-sub  { color:rgba(255,255,255,0.85); }
+    .om-bubble.open    { border-color:#22c55e; }
+    .om-bubble.open    .om-wage { color:#16a34a; }
+    .om-bubble.open    .om-sub  { color:#888; }
+    .om-bubble.errand  { background:#7C3AED; border-color:#7C3AED; }
+    .om-bubble.errand  .om-wage { color:#fff; }
+    .om-bubble.errand  .om-sub  { color:rgba(255,255,255,0.85); }
+    .om-wage { font-size:16px; font-weight:900; color:#C8102E; display:block; }
+    .om-sub  { font-size:11px; font-weight:700; color:#888; display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
+    .om-tail { width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:11px solid #C8102E; margin-top:-1px; }
+    .om-tail.open   { border-top-color:#22c55e; }
+    .om-tail.errand { border-top-color:#7C3AED; }
+    /* ── 업주 지도 바텀시트 (워커 맵 동일 구조) ── */
+    #owner-bottom-sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 75%;
+      display: flex;
+      flex-direction: column;
+      z-index: 15;
+      transform: translateY(calc(100% - 56px));
+    }
+    #owner-sheet-handle-area {
+      padding: 8px 0 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    #owner-sheet-handle-bar { width:36px; height:4px; background:#e0e0e0; border-radius:2px; }
+    #owner-sheet-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px 10px;
+      width: 100%;
+    }
+    #owner-sheet-count { font-size:15px; font-weight:800; color:#222; }
+    #owner-sheet-count span { color:var(--red); }
+
+    /* ── 레슨 모달 기본 ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; align-items:flex-end; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:24px 24px 0 0; width:100%; max-width:600px; padding:0 20px 32px; box-sizing:border-box; }
+    .modal-handle { width:40px; height:4px; background:#e2e8f0; border-radius:4px; margin:12px auto 16px; }
+    .modal-title { font-size:18px; font-weight:900; color:#222; margin-bottom:6px; }
+    .modal-sub { font-size:13px; color:#888; margin-bottom:18px; }
+
+    /* ── 레슨 기능 ── */
+    .lesson-card { background:#fff; border-radius:16px; padding:16px; margin-bottom:10px; border:1px solid #f0f0f0; cursor:pointer; active:background:#f9f9f9; }
+    .lesson-card:active { background:#fafafa; }
+    .lesson-subject-tag { display:inline-block; background:#f0f4ff; color:#3b82f6; font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; }
+    .lesson-name { font-size:15px; font-weight:800; color:#222; margin-bottom:2px; }
+    .lesson-price { font-size:14px; font-weight:700; color:#C8102E; }
+    .lesson-meta { font-size:12px; color:#aaa; font-weight:500; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lesson-cat-btn { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid #e8e8e8; background:#fff; color:#666; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .lesson-cat-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
+    .lesson-form-label { font-size:12px; font-weight:700; color:#555; margin-bottom:6px; display:block; }
+    .lesson-form-input { width:100%; padding:12px 14px; border:1.5px solid #eee; border-radius:12px; font-size:14px; color:#222; outline:none; background:#fafafa; margin-bottom:12px; }
+    .lesson-form-input:focus { border-color:#3b82f6; background:#fff; }
+    .booking-day-btn { flex:1; padding:8px 4px; border-radius:10px; border:1.5px solid #eee; background:#fff; font-size:13px; font-weight:600; color:#555; cursor:pointer; text-align:center; }
+    .booking-day-btn.active { background:#C8102E; color:#fff; border-color:#C8102E; }
+
+</style>
+  
+<style>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --red: #C8102E;
+  --red2: #E8102E;
+  --purple: #7C3AED;
+}
+body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#111; color:#111; }
+
+/* ── 탭 ── */
+.compare-nav { position:fixed; top:0; left:0; right:0; z-index:999; background:#111; display:flex; overflow-x:auto; scrollbar-width:none; border-bottom:1px solid #2a2a2a; }
+.compare-nav::-webkit-scrollbar { display:none; }
+.compare-tab { padding:14px 22px; font-size:13px; font-weight:700; color:#666; cursor:pointer; border:none; background:none; white-space:nowrap; border-bottom:2.5px solid transparent; flex-shrink:0; }
+.compare-tab.active { color:#fff; border-bottom-color:var(--red); }
+.tab-section { display:none; padding-top:50px; }
+.tab-section.active { display:block; }
+
+/* ── 앱 헤더 ── */
+.app-hdr { background:#fff; padding:14px 16px 10px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f2f2f2; flex-shrink:0; }
+.app-logo { font-size:21px; font-weight:900; color:var(--red); display:flex; align-items:center; gap:8px; }
+.logo-box { width:30px; height:30px; background:var(--red); border-radius:9px; display:flex; align-items:center; justify-content:center; }
+.app-bell { width:36px; height:36px; border-radius:50%; background:#f5f5f5; display:flex; align-items:center; justify-content:center; }
+
+/* ── 검색바 ── */
+.search-bar { margin:10px 16px; background:#f5f5f5; border-radius:14px; padding:11px 14px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+.search-bar-txt { font-size:13px; color:#bbb; flex:1; }
+.search-icon-btn { width:34px; height:34px; background:var(--red); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* ── Bento Grid ── */
+.bento { padding:12px 12px 8px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.bc { border-radius:18px; overflow:hidden; cursor:pointer; }
+.bc-full { grid-column:1/-1; }
+.bc-inner { padding:16px; display:flex; flex-direction:column; height:100%; }
+
+/* 급구 — 다크 히어로 (A+D 하이브리드) */
+.bc-urgent { background:linear-gradient(145deg,#0d0003 0%,#2a0008 55%,#580015 100%); min-height:128px; }
+.bc-urgent .tag { font-size:9px; font-weight:900; letter-spacing:1.8px; color:rgba(255,120,120,.85); margin-bottom:8px; }
+.bc-urgent .title { font-size:19px; font-weight:900; color:#fff; line-height:1.2; }
+.bc-urgent .title em { color:#ff4d6a; font-style:normal; }
+.bc-urgent .sub-row { display:flex; gap:8px; margin-top:12px; }
+.bc-urgent .sub-card { flex:1; background:rgba(255,255,255,.08); border-radius:10px; padding:8px 10px; border:1px solid rgba(255,255,255,.06); }
+.bc-urgent .sub-card .sub-loc { font-size:10px; color:rgba(255,255,255,.4); margin-bottom:2px; }
+.bc-urgent .sub-card .sub-wage { font-size:14px; font-weight:900; color:#fff; }
+.bc-urgent .cta { display:inline-flex; align-items:center; gap:4px; background:var(--red); color:#fff; font-size:11px; font-weight:800; padding:7px 14px; border-radius:20px; margin-top:12px; width:fit-content; }
+
+/* AI 추천 */
+.bc-ai { background:#fff; border:1.5px solid #efefef; min-height:104px; }
+.bc-ai .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:var(--red); margin-bottom:6px; }
+.bc-ai .name { font-size:14px; font-weight:900; color:#111; line-height:1.3; }
+.bc-ai .loc { font-size:11px; color:#bbb; margin-top:3px; }
+.bc-ai .wage { font-size:16px; font-weight:900; color:var(--red); margin-top:auto; padding-top:8px; }
+
+/* 당일정산 */
+.bc-sd { background:linear-gradient(135deg,#fff9f0,#fff3e0); border:1.5px solid #ffd699; min-height:104px; }
+.bc-sd .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:#b45309; margin-bottom:6px; }
+.bc-sd .name { font-size:14px; font-weight:900; color:#111; line-height:1.3; }
+.bc-sd .wage { font-size:16px; font-weight:900; color:#b45309; margin-top:auto; padding-top:8px; }
+
+/* 외국인 환영 */
+.bc-foreign { background:linear-gradient(135deg,#f0fdf5,#dcfce7); border:1.5px solid #a7f3d0; }
+.bc-foreign .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:#15803d; margin-bottom:5px; }
+.bc-foreign .name { font-size:13px; font-weight:900; color:#111; }
+.bc-foreign .chips { display:flex; gap:5px; margin-top:8px; flex-wrap:wrap; }
+.bc-foreign-chip { font-size:10px; font-weight:700; background:#15803d; color:#fff; padding:3px 8px; border-radius:7px; }
+
+/* 모범 파트너 */
+.bc-partner { background:#1a1a1a; min-height:104px; }
+.bc-partner .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:#555; margin-bottom:6px; }
+.bc-partner .name { font-size:14px; font-weight:900; color:#fff; }
+.bc-partner .stars { font-size:12px; color:#f59e0b; margin-top:4px; }
+.bc-partner .score { font-size:11px; font-weight:700; color:var(--red); margin-top:3px; }
+
+/* ── 바로모임 스페셜 섹션 ── */
+.moim-section { margin:4px 12px 8px; }
+.moim-header { display:flex; align-items:center; gap:10px; padding:14px 16px 12px; background:#fff; border-radius:18px 18px 0 0; border:1.5px solid #ede9fe; border-bottom:none; }
+.moim-logo-box { width:36px; height:36px; background:linear-gradient(135deg,#7C3AED,#9333ea); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.moim-logo-box svg { width:18px; height:18px; stroke:#fff; fill:none; }
+.moim-title-group { flex:1; }
+.moim-brand { font-size:16px; font-weight:900; color:#5b21b6; letter-spacing:-.3px; }
+.moim-tagline { font-size:11px; color:#a78bfa; margin-top:1px; font-weight:600; }
+.moim-new-badge { font-size:9px; font-weight:900; background:var(--purple); color:#fff; padding:3px 8px; border-radius:20px; }
+
+/* 모임 카드 슬라이더 */
+.moim-cards-wrap { background:#fff; border:1.5px solid #ede9fe; border-top:1px solid #f5f3ff; border-radius:0 0 18px 18px; padding:0 0 14px; }
+.moim-cards-scroll { display:flex; gap:10px; overflow-x:auto; padding:10px 16px 4px; scrollbar-width:none; }
+.moim-cards-scroll::-webkit-scrollbar { display:none; }
+.moim-card { flex-shrink:0; width:160px; border-radius:14px; overflow:hidden; border:1.5px solid #ede9fe; cursor:pointer; }
+
+/* 유료 플랜 모임카드 (프로/베이직 - 이미지+뱃지) */
+.mc-paid { background:linear-gradient(145deg,#2e1065,#4c1d95); }
+.mc-paid .mc-badge { font-size:8px; font-weight:900; background:rgba(255,255,255,.18); color:rgba(255,255,255,.9); padding:3px 8px; border-radius:6px; display:inline-block; margin:10px 10px 0; letter-spacing:.5px; }
+.mc-paid .mc-body { padding:8px 10px 12px; }
+.mc-paid .mc-cat { font-size:10px; color:rgba(255,255,255,.5); margin-bottom:3px; }
+.mc-paid .mc-name { font-size:13px; font-weight:900; color:#fff; line-height:1.3; }
+.mc-paid .mc-meta { font-size:11px; color:rgba(255,255,255,.6); margin-top:4px; }
+.mc-paid .mc-spot { font-size:11px; font-weight:800; color:#c4b5fd; margin-top:3px; }
+
+/* 무료 플랜 모임카드 */
+.mc-free { background:#faf5ff; }
+.mc-free .mc-body { padding:12px 10px; }
+.mc-free .mc-cat { font-size:10px; color:#a78bfa; margin-bottom:3px; font-weight:700; }
+.mc-free .mc-name { font-size:13px; font-weight:800; color:#4c1d95; line-height:1.3; }
+.mc-free .mc-meta { font-size:11px; color:#9ca3af; margin-top:4px; }
+.mc-free .mc-spot { font-size:11px; font-weight:700; color:var(--purple); margin-top:3px; }
+
+.moim-more { text-align:center; padding:6px 16px 2px; font-size:12px; color:#a78bfa; font-weight:700; cursor:pointer; }
+
+/* ── 하단 내비 ── */
+.app-nav { background:#fff; border-top:1px solid #f0f0f0; display:flex; padding:8px 0 14px; margin-top:auto; flex-shrink:0; }
+.nav-it { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; }
+.nav-it svg { width:22px; height:22px; stroke:#d0d0d0; fill:none; stroke-width:2; }
+.nav-it span { font-size:10px; font-weight:700; color:#d0d0d0; }
+.nav-it.on svg { stroke:var(--red); }
+.nav-it.on span { color:var(--red); }
+.nav-fab-wrap { flex:1; display:flex; align-items:center; justify-content:center; }
+.nav-fab { width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg,var(--red2),#900020); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(200,16,46,.45); margin-top:-16px; }
+.nav-fab svg { width:22px; height:22px; stroke:#fff; fill:none; stroke-width:2.5; }
+
+/* ── 필터 패널 (오버레이) ── */
+.filter-overlay { position:absolute; inset:0; background:rgba(0,0,0,.5); z-index:20; display:flex; flex-direction:column; }
+.filter-panel { background:#fff; margin-top:auto; border-radius:24px 24px 0 0; max-height:88%; overflow-y:auto; scrollbar-width:none; }
+.filter-panel::-webkit-scrollbar { display:none; }
+.filter-handle { width:36px; height:4px; background:#e5e5e5; border-radius:2px; margin:12px auto 0; }
+.filter-title { font-size:16px; font-weight:900; color:#111; padding:16px 20px 12px; border-bottom:1px solid #f5f5f5; display:flex; align-items:center; justify-content:space-between; }
+.filter-close { font-size:20px; color:#bbb; cursor:pointer; line-height:1; }
+.filter-row { display:flex; align-items:center; padding:15px 20px; border-bottom:1px solid #f5f5f5; cursor:pointer; }
+.filter-row-label { font-size:14px; font-weight:700; color:#111; flex:1; }
+.filter-row-value { font-size:13px; color:#bbb; }
+.filter-row-chevron { width:16px; height:16px; stroke:#ccc; fill:none; margin-left:8px; }
+.filter-row-value.set { color:var(--red); font-weight:700; }
+.filter-toggle-row { display:flex; align-items:center; padding:14px 20px; border-bottom:1px solid #f5f5f5; }
+.filter-toggle-row label { font-size:14px; font-weight:700; color:#111; flex:1; }
+.toggle-pill { width:44px; height:26px; background:#e5e5e5; border-radius:13px; position:relative; cursor:pointer; transition:background .2s; }
+.toggle-pill.on { background:var(--red); }
+.toggle-pill::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,.2); transition:left .2s; }
+.toggle-pill.on::after { left:21px; }
+.filter-chip-row { padding:12px 20px 14px; display:flex; gap:8px; flex-wrap:wrap; }
+.filter-chip { padding:7px 14px; border-radius:20px; font-size:13px; font-weight:700; background:#f5f5f5; color:#555; cursor:pointer; }
+.filter-chip.on { background:var(--red); color:#fff; }
+.filter-bot { padding:14px 16px; border-top:1px solid #f0f0f0; display:flex; gap:10px; }
+.filter-reset { flex:1; padding:14px; border:1.5px solid #e5e5e5; border-radius:14px; font-size:14px; font-weight:800; color:#555; background:#fff; cursor:pointer; }
+.filter-apply { flex:2.5; padding:14px; background:var(--red); border-radius:14px; font-size:14px; font-weight:900; color:#fff; cursor:pointer; text-align:center; }
+
+/* ── 설명 패널 ── */
+.desc { max-width:340px; padding-top:64px; color:#888; }
+.desc h2 { font-size:22px; font-weight:900; color:#fff; margin-bottom:12px; }
+.desc p { font-size:14px; line-height:1.75; margin-bottom:20px; }
+.pro { font-size:13px; color:#6ee7b7; margin-bottom:6px; display:flex; gap:8px; }
+.con { font-size:13px; color:#fca5a5; margin-bottom:6px; display:flex; gap:8px; }
+.opinion-box { background:#1e1e1e; border-radius:14px; padding:18px; margin-top:24px; border:1px solid #333; }
+.opinion-box h4 { font-size:14px; font-weight:800; color:#c4b5fd; margin-bottom:10px; }
+.opinion-box p { font-size:13px; color:#999; line-height:1.7; }
+
+/* ── 필터 패널 탭 ── */
+.filter-section-label { font-size:11px; font-weight:900; letter-spacing:1px; color:#bbb; padding:14px 20px 6px; }
+
+/* 폰 wrap에 relative 필요 */
+.phone-screen { position:relative; }
+
+@media(max-width:780px) {
+  .scene { gap:24px; padding:24px 4%; }
+  .phone { width:100%; max-width:360px; }
+  .phone-screen { width:100%; max-width:360px; }
+  .desc { padding-top:0; max-width:100%; }
+}
+
+</style>
+
+<style>
+#loading-spinner {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+</style>
+</head>
+<body>
+
+
+<!-- 앱 헤더 -->
+<div class="app-header">
+  <div class="app-header-logo" onclick="setNav(document.querySelector('.nav-item'),null);setNav(document.querySelectorAll('.nav-item')[1],'map')">
+    <div style="width:28px;height:28px;border-radius:7px;overflow:hidden;flex-shrink:0">
+      <img src="./icons/바로알바 최종로고.png" style="width:28px;height:auto;object-fit:cover">
+    </div>
+    <span>바로알바</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <!-- 브라우저 접속 시 앱 설치 유도 버튼 (standalone/네이티브 앱에서는 숨김) -->
+    <button id="header-install-btn" onclick="headerInstallClick()" class="pulse-ring"
+      style="display:none;background:#C8102E;color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:800;padding:6px 13px;cursor:pointer;white-space:nowrap;letter-spacing:-0.2px">
+      앱 설치
+    </button>
+    <button id="noti-bell-btn" onclick="openNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1;display:none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span id="noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:1">0</span>
+    </button>
+  </div>
+</div>
+
+<!-- 로딩 -->
+<div class="map-loading" id="map-loading">
+  <div class="spinner"></div>
+  <div class="loading-txt">지도 불러오는 중...</div>
+</div>
+
+<!-- 지도 컨테이너 -->
+<div id="map"></div>
+<div id="map-remote-banner" style="display:none;position:fixed;top:calc(var(--header-h) + var(--sat-safe));left:0;right:0;bottom:calc(var(--nav-h) + var(--sab-safe));z-index:200;align-items:center;justify-content:center;pointer-events:none">
+  <div style="background:rgba(255,255,255,0.94);backdrop-filter:blur(8px);border-radius:18px;padding:22px 32px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="font-size:34px;line-height:1">🖥️</div>
+    <div style="font-size:14px;font-weight:900;color:#0369A1">비대면 공고 모아보기</div>
+    <div style="font-size:12px;color:#888;line-height:1.6">비대면 공고는 위치 정보가 없어<br>지도에 표시되지 않아요.<br>아래 목록에서 확인하세요!</div>
+  </div>
+</div>
+
+<!-- 상단 바 -->
+<div class="top-bar">
+  <div class="search-row">
+    <div class="search-box">
+      <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="search-input" type="text" placeholder="지역, 업종 검색" readonly onfocus="this.blur();openSearchOverlay()">
+    </div>
+  </div>
+  <!-- 단일 필터 바 -->
+  <div class="filter-bar-wrapper">
+    <div class="filter-bar">
+      <button class="filter-drop-btn" id="flt-cat-btn" onclick="toggleFilterSheet('cat')" style="flex-shrink:0" data-i18n-btn="filter_cat">카테고리 ▾</button>
+      <button class="filter-drop-btn" id="flt-type-btn" onclick="toggleFilterSheet('type')" style="flex-shrink:0" data-i18n-btn="filter_work_type">근무타입 ▾</button>
+      <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)" style="flex-shrink:0">급구</div>
+      <button class="filter-drop-btn" id="flt-lang-btn" onclick="toggleLangFilter()" style="flex-shrink:0;display:none">&#127760; 내 언어</button>
+      <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0" data-i18n-btn="filter_lesson">레슨/과외 ▾</button>
+      <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0" data-i18n-btn="filter_technical">전문기술 ▾</button>
+    </div>
+    <div class="filter-bar-actions">
+      <div class="chip" id="chip-remote" onclick="toggleRemoteFilter(this)" style="flex-shrink:0;font-size:11px;padding:6px 9px">🖥️ 비대면</div>
+      <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px">필터</div>
+    </div>
+  </div>
+  <!-- 카테고리 드롭다운 시트 -->
+  <div class="filter-sheet" id="filter-sheet-cat">
+    <div id="filter-row" style="display:contents">
+      <div class="chip active" data-cat="" onclick="toggleCategoryChip(this,'')">전체</div>
+      <div class="chip" data-cat="F&B"         onclick="toggleCategoryChip(this,'F&B')">F&B</div>
+      <div class="chip" data-cat="물류"         onclick="toggleCategoryChip(this,'물류')">운송/물류</div>
+      <div class="chip" data-cat="판매"         onclick="toggleCategoryChip(this,'판매')">판매</div>
+      <div class="chip" data-cat="청소"         onclick="toggleCategoryChip(this,'청소')">청소</div>
+      <div class="chip" data-cat="이벤트"       onclick="toggleCategoryChip(this,'이벤트')">이벤트</div>
+      <div class="chip" data-cat="커플알바"     onclick="toggleCategoryChip(this,'커플알바')">커플알바</div>
+      <div class="chip" data-cat="컨텐츠"       onclick="toggleCategoryChip(this,'컨텐츠')">촬영/컨텐츠</div>
+      <div class="chip" data-cat="챌린지"       onclick="toggleCategoryChip(this,'챌린지')">챌린지</div>
+      <div class="chip" data-cat="이사도우미"   onclick="toggleCategoryChip(this,'이사도우미')">🚚이사</div>
+      <div class="chip" data-cat="운반/짐 이동" onclick="toggleCategoryChip(this,'운반/짐 이동')">📦운반</div>
+      <div class="chip" data-cat="퀵배달"       onclick="toggleCategoryChip(this,'퀵배달')">🛵퀵</div>
+      <div class="chip" data-cat="청소 대행"    onclick="toggleCategoryChip(this,'청소 대행')">🧹청소대행</div>
+      <div class="chip" data-cat="__errand__"   onclick="toggleCategoryChip(this,'__errand__')">심부름</div>
+    </div>
+  </div>
+  <!-- 근무타입 드롭다운 시트 (복수 선택) -->
+  <div class="filter-sheet" id="filter-sheet-type">
+    <div class="chip" data-cat="__regular__" onclick="toggleWorkTypeChip(this,'__regular__')">정기</div>
+    <div class="chip" data-cat="__short__"   onclick="toggleWorkTypeChip(this,'__short__')">단기</div>
+    <div class="chip" data-cat="__spot__"    onclick="toggleWorkTypeChip(this,'__spot__')">스팟</div>
+  </div>
+  <!-- 전문기술 드롭다운 시트 (중간카테고리 복수선택) -->
+  <div class="filter-sheet" id="filter-sheet-technical">
+    <div class="chip active" data-tmid="" onclick="toggleTechnicalChip(this,'')">전체</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 현장·시설 —</div>
+    <div class="chip" data-tmid="설비·수리"  onclick="toggleTechnicalChip(this,'설비·수리')">🔧 설비·수리</div>
+    <div class="chip" data-tmid="전기·전자"  onclick="toggleTechnicalChip(this,'전기·전자')">⚡ 전기·전자</div>
+    <div class="chip" data-tmid="인테리어"   onclick="toggleTechnicalChip(this,'인테리어')">🏠 인테리어</div>
+    <div class="chip" data-tmid="청소·방역"  onclick="toggleTechnicalChip(this,'청소·방역')">🧹 청소·방역</div>
+    <div class="chip" data-tmid="이사·운반"  onclick="toggleTechnicalChip(this,'이사·운반')">🚚 이사·운반</div>
+    <div class="chip" data-tmid="조경·정원"  onclick="toggleTechnicalChip(this,'조경·정원')">🌿 조경·정원</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 크리에이티브 —</div>
+    <div class="chip" data-tmid="사진 촬영"      onclick="toggleTechnicalChip(this,'사진 촬영')">📸 사진 촬영</div>
+    <div class="chip" data-tmid="영상 촬영·편집" onclick="toggleTechnicalChip(this,'영상 촬영·편집')">🎬 영상 촬영·편집</div>
+    <div class="chip" data-tmid="그래픽·디자인"  onclick="toggleTechnicalChip(this,'그래픽·디자인')">🎨 그래픽·디자인</div>
+    <div class="chip" data-tmid="웹디자인·UI"    onclick="toggleTechnicalChip(this,'웹디자인·UI')">💻 웹디자인·UI</div>
+    <div class="chip" data-tmid="SNS·마케팅"     onclick="toggleTechnicalChip(this,'SNS·마케팅')">📱 SNS·마케팅</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— IT·개발 —</div>
+    <div class="chip" data-tmid="웹·앱 개발"      onclick="toggleTechnicalChip(this,'웹·앱 개발')">⌨️ 웹·앱 개발</div>
+    <div class="chip" data-tmid="데이터 분석"     onclick="toggleTechnicalChip(this,'데이터 분석')">📊 데이터 분석</div>
+    <div class="chip" data-tmid="자동화·스크립트" onclick="toggleTechnicalChip(this,'자동화·스크립트')">🤖 자동화·스크립트</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 뷰티·케어 —</div>
+    <div class="chip" data-tmid="헤어"          onclick="toggleTechnicalChip(this,'헤어')">💇 헤어</div>
+    <div class="chip" data-tmid="메이크업·네일" onclick="toggleTechnicalChip(this,'메이크업·네일')">💅 메이크업·네일</div>
+    <div class="chip" data-tmid="피부 관리"     onclick="toggleTechnicalChip(this,'피부 관리')">✨ 피부 관리</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 언어·기타 —</div>
+    <div class="chip" data-tmid="번역·통역"     onclick="toggleTechnicalChip(this,'번역·통역')">🌐 번역·통역</div>
+    <div class="chip" data-tmid="행사·MC"       onclick="toggleTechnicalChip(this,'행사·MC')">🎤 행사·MC</div>
+    <div class="chip" data-tmid="음식·케이터링" onclick="toggleTechnicalChip(this,'음식·케이터링')">🍽️ 음식·케이터링</div>
+    <div class="chip" data-tmid="기타 전문"     onclick="toggleTechnicalChip(this,'기타 전문')">⭐ 기타 전문</div>
+  </div>
+  <!-- 레슨/과외 드롭다운 시트 (중간카테고리 복수선택) -->
+  <div class="filter-sheet" id="filter-sheet-lesson">
+    <div class="chip active" data-lmain="" data-lmid="" onclick="toggleLessonChip(this,'','')">전체</div>
+    <div class="chip" data-lmain="레슨" data-lmid="" onclick="toggleLessonChip(this,'레슨','')">🎾 레슨</div>
+    <div class="chip" data-lmain="과외" data-lmid="" onclick="toggleLessonChip(this,'과외','')">📚 과외</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 레슨 —</div>
+    <div class="chip" data-lmain="레슨" data-lmid="스포츠"   onclick="toggleLessonChip(this,'레슨','스포츠')">⚽ 스포츠</div>
+    <div class="chip" data-lmain="레슨" data-lmid="음악"     onclick="toggleLessonChip(this,'레슨','음악')">🎵 음악</div>
+    <div class="chip" data-lmain="레슨" data-lmid="댄스"     onclick="toggleLessonChip(this,'레슨','댄스')">💃 댄스</div>
+    <div class="chip" data-lmain="레슨" data-lmid="미술"     onclick="toggleLessonChip(this,'레슨','미술')">🎨 미술</div>
+    <div class="chip" data-lmain="레슨" data-lmid="기타" onclick="toggleLessonChip(this,'레슨','기타')">기타</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 과외 —</div>
+    <div class="chip" data-lmain="과외" data-lmid="어학"      onclick="toggleLessonChip(this,'과외','어학')">🌍 어학</div>
+    <div class="chip" data-lmain="과외" data-lmid="수학/과학"  onclick="toggleLessonChip(this,'과외','수학/과학')">📐 수학/과학</div>
+    <div class="chip" data-lmain="과외" data-lmid="국어/인문"  onclick="toggleLessonChip(this,'과외','국어/인문')">📝 국어/인문</div>
+    <div class="chip" data-lmain="과외" data-lmid="기타(과외)" onclick="toggleLessonChip(this,'과외','기타(과외)')">기타</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="" onclick="toggleLessonChip(this,'전문기술','')">🔧 전문기술</div>
+    <div style="font-size:10px;font-weight:800;color:#bbb;padding:4px 2px 0;align-self:center;white-space:nowrap">— 전문기술 —</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="현장·시설"   onclick="toggleLessonChip(this,'전문기술','현장·시설')">🔧 현장·시설</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="크리에이티브" onclick="toggleLessonChip(this,'전문기술','크리에이티브')">🎨 크리에이티브</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="IT·개발"     onclick="toggleLessonChip(this,'전문기술','IT·개발')">💻 IT·개발</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="뷰티·케어"   onclick="toggleLessonChip(this,'전문기술','뷰티·케어')">💄 뷰티·케어</div>
+    <div class="chip" data-lmain="전문기술" data-lmid="언어·기타"   onclick="toggleLessonChip(this,'전문기술','언어·기타')">🌐 언어·기타</div>
+  </div>
+</div>
+
+<!-- 검색 오버레이 -->
+<div id="search-overlay">
+  <!-- 헤더 -->
+  <div class="srch-header">
+    <button class="srch-back-btn" onclick="closeSearchOverlay()" aria-label="뒤로">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="srch-input-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="srch-text" type="text" placeholder="업체명, 업무 검색" onkeydown="if(event.key==='Enter')runSearch()">
+    </div>
+    <button class="srch-go-btn-top" onclick="runSearch()">검색</button>
+  </div>
+
+  <!-- 필터 패널 -->
+  <div id="srch-filter-panel" class="srch-body">
+    <!-- 지역 -->
+    <div class="srch-section">
+      <div class="srch-section-title">지역</div>
+      <div class="srch-region-row">
+        <select id="srch-si" class="srch-select" onchange="updateGuList(this.value)">
+          <option value="">시/도 전체</option>
+          <option>서울특별시</option>
+          <option>경기도</option>
+          <option>인천광역시</option>
+          <option>부산광역시</option>
+          <option>대구광역시</option>
+          <option>대전광역시</option>
+          <option>광주광역시</option>
+          <option>울산광역시</option>
+          <option>세종특별자치시</option>
+          <option>강원도</option>
+          <option>충청북도</option>
+          <option>충청남도</option>
+          <option>전라북도</option>
+          <option>전라남도</option>
+          <option>경상북도</option>
+          <option>경상남도</option>
+          <option>제주특별자치도</option>
+        </select>
+        <select id="srch-gu" class="srch-select">
+          <option value="">구/시 전체</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 공고 유형 -->
+    <div class="srch-section">
+      <div class="srch-section-title">공고 유형</div>
+      <div class="srch-type-row">
+        <button class="srch-type-btn active" data-type="" onclick="setSrchType(this,'')">전체</button>
+        <button class="srch-type-btn asap" data-type="urgent" onclick="setSrchType(this,'urgent')">⚡ ASAP</button>
+        <button class="srch-type-btn" data-type="spot" onclick="setSrchType(this,'spot')">스팟</button>
+        <button class="srch-type-btn" data-type="short" onclick="setSrchType(this,'short')">단기</button>
+        <button class="srch-type-btn" data-type="regular" onclick="setSrchType(this,'regular')">정기</button>
+      </div>
+    </div>
+
+    <!-- 업무 종류 -->
+    <div class="srch-section">
+      <div class="srch-section-title">업무 종류</div>
+      <div class="srch-cat-row">
+        <button class="srch-cat-btn active" data-cat="" onclick="setSrchCat(this,'')">전체</button>
+        <button class="srch-cat-btn" data-cat="F&B" onclick="setSrchCat(this,'F&B')">주방/F&B</button>
+        <button class="srch-cat-btn" data-cat="물류" onclick="setSrchCat(this,'물류')">운송/물류</button>
+        <button class="srch-cat-btn" data-cat="판매" onclick="setSrchCat(this,'판매')">판매</button>
+        <button class="srch-cat-btn" data-cat="청소" onclick="setSrchCat(this,'청소')">청소</button>
+        <button class="srch-cat-btn" data-cat="이벤트" onclick="setSrchCat(this,'이벤트')">이벤트</button>
+        <button class="srch-cat-btn" data-cat="의류/패션" onclick="setSrchCat(this,'의류/패션')">의류/패션</button>
+        <button class="srch-cat-btn" data-cat="의료/병원" onclick="setSrchCat(this,'의료/병원')">의료/병원</button>
+        <button class="srch-cat-btn" data-cat="숙박/호텔" onclick="setSrchCat(this,'숙박/호텔')">숙박/호텔</button>
+        <button class="srch-cat-btn" data-cat="교육/과외" onclick="setSrchCat(this,'교육/과외')">교육/과외</button>
+        <button class="srch-cat-btn" data-cat="스포츠/레저" onclick="setSrchCat(this,'스포츠/레저')">스포츠/레저</button>
+        <button class="srch-cat-btn" data-cat="뷰티/헤어" onclick="setSrchCat(this,'뷰티/헤어')">뷰티/헤어</button>
+        <button class="srch-cat-btn" data-cat="커플알바" onclick="setSrchCat(this,'커플알바')">커플알바</button>
+        <button class="srch-cat-btn" data-cat="컨텐츠" onclick="setSrchCat(this,'컨텐츠')">촬영/컨텐츠</button>
+        <button class="srch-cat-btn" data-cat="유튜브/틱톡" onclick="setSrchCat(this,'유튜브/틱톡')">유튜브/틱톡</button>
+        <button class="srch-cat-btn" data-cat="모델/촬영" onclick="setSrchCat(this,'모델/촬영')">모델/촬영</button>
+        <button class="srch-cat-btn" data-cat="챌린지" onclick="setSrchCat(this,'챌린지')">챌린지</button>
+        <button class="srch-cat-btn" data-cat="이사도우미" onclick="setSrchCat(this,'이사도우미')">🚚이사</button>
+        <button class="srch-cat-btn" data-cat="운반/짐 이동" onclick="setSrchCat(this,'운반/짐 이동')">📦운반</button>
+        <button class="srch-cat-btn" data-cat="퀵배달" onclick="setSrchCat(this,'퀵배달')">🛵퀵배달</button>
+        <button class="srch-cat-btn" data-cat="청소 대행" onclick="setSrchCat(this,'청소 대행')">🧹청소</button>
+        <button class="srch-cat-btn" data-cat="반려동물 산책" onclick="setSrchCat(this,'반려동물 산책')">펫 돌봄</button>
+        <button class="srch-cat-btn" data-cat="__errand__" onclick="setSrchCat(this,'__errand__')">심부름/대행</button>
+        <button class="srch-cat-btn" data-cat="기타" onclick="setSrchCat(this,'기타')">기타</button>
+      </div>
+    </div>
+
+    <button class="srch-go-bottom" onclick="runSearch()">검색하기</button>
+  </div>
+
+  <!-- 결과 패널 -->
+  <div id="srch-result-panel" style="display:none;flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="srch-result-header">
+      <button class="srch-result-reset" onclick="resetSearchToFilter()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        필터 수정
+      </button>
+      <div class="srch-result-count"><span id="srch-count">0</span>건</div>
+    </div>
+    <div id="srch-result-list" class="srch-result-list"></div>
+  </div>
+</div>
+
+<!-- 고급 필터 시트 -->
+<div id="adv-filter-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:600" onclick="if(event.target===this)closeAdvFilter()">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:20px 20px 40px;max-height:70vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:900">고급 필터</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="resetAdvFilter()" style="padding:7px 14px;background:#f0f0f0;color:#888;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">초기화</button>
+        <button onclick="closeAdvFilter()" style="padding:7px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">적용</button>
+      </div>
+    </div>
+
+    <!-- 시급 범위 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:10px">최소 시급</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" id="wage-slider" min="10000" max="30000" step="1000" value="10000"
+          oninput="document.getElementById('wage-val').textContent=parseInt(this.value).toLocaleString()+'원'"
+          style="flex:1;accent-color:var(--red)">
+        <div style="font-size:14px;font-weight:900;color:var(--red);white-space:nowrap;min-width:70px;text-align:right"><span id="wage-val">10,000원</span></div>
+      </div>
+    </div>
+
+    <!-- 날짜 필터 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">날짜</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="flt-chip" id="flt-date-any"   onclick="setDateFilter('')"      style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">전체</button>
+        <button class="flt-chip" id="flt-date-today" onclick="setDateFilter('today')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">오늘</button>
+        <button class="flt-chip" id="flt-date-tmr"   onclick="setDateFilter('tmr')"   style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">내일</button>
+        <button class="flt-chip" id="flt-date-wknd"  onclick="setDateFilter('wknd')"  style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">이번 주말</button>
+      </div>
+    </div>
+
+    <!-- 시간대 필터 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">시간대</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="flt-chip" id="flt-time-any"  onclick="setTimeFilter('')"       style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--red);color:#fff">전체</button>
+        <button class="flt-chip" id="flt-time-am"   onclick="setTimeFilter('am')"     style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">&#127749; 오전(6~12시)</button>
+        <button class="flt-chip" id="flt-time-pm"   onclick="setTimeFilter('pm')"     style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">☀️ 오후(12~18시)</button>
+        <button class="flt-chip" id="flt-time-eve"  onclick="setTimeFilter('eve')"    style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#f0f0f0;color:#555">&#127769; 야간(18시~)</button>
+      </div>
+    </div>
+
+    <!-- 최근 검색어 -->
+    <div id="recent-search-section" style="display:none">
+      <div style="font-size:13px;font-weight:800;color:#333;margin-bottom:8px">최근 검색어</div>
+      <div id="recent-search-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 공유 모달 (알바생) -->
+<div id="worker-share-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1200" onclick="if(event.target===this)closeWorkerShare()">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:20px 20px 40px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:17px;font-weight:800;color:#222">공고 공유하기</div>
+      <button onclick="closeWorkerShare()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:12px 14px;background:#f8f8f8;border-radius:12px;font-size:12px;color:#555;word-break:break-all;margin-bottom:10px" id="worker-share-url">-</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="copyWorkerShareUrl()" style="flex:1;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>링크 복사</button>
+      <button onclick="shareJobKakao()" style="flex:1;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>카카오톡</button>
+    </div>
+    <button id="worker-share-native-btn" onclick="shareJobNative()" style="display:none;width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">↗ 더 보내기 (SNS/문자)</button>
+  </div>
+</div>
+
+<!-- 내 위치 플로팅 버튼 -->
+<button id="map-loc-btn" onclick="moveToMyLocation()" title="내 위치로"
+  style="position:fixed;right:16px;bottom:calc(var(--nav-h) + var(--sheet-peek) + 16px);width:48px;height:48px;background:#FFAAAA;border:none;border-radius:50%;box-shadow:0 3px 14px rgba(255,170,170,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:400;-webkit-tap-highlight-color:transparent">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+    <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/>
+  </svg>
+</button>
+
+<!-- 주변알바 스와이프 플로팅 버튼 -->
+<div id="map-swipe-float" onclick="openNearbySwipe()"
+  style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + var(--sheet-peek) + 14px);z-index:399;
+         background:linear-gradient(135deg,#C8102E,#9B1C2E);color:#fff;border-radius:24px;padding:10px 20px;
+         box-shadow:0 4px 18px rgba(200,16,46,0.45);cursor:pointer;white-space:nowrap;
+         font-size:13px;font-weight:800;animation:swipe-float-pulse 2s ease-in-out infinite;
+         align-items:center;gap:8px;display:none">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+  <span id="map-swipe-float-txt">주변알바 스와이프로 보기</span>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+</div>
+
+<!-- 지도 모드 토글 (알바|모임) -->
+<div class="map-mode-toggle" id="map-mode-toggle">
+  <button class="map-mode-btn active" id="mapmode-job"  onclick="setMapMode('job')">💼 알바</button>
+  <button class="map-mode-btn"        id="mapmode-moim" onclick="setMapMode('moim')">🤝 모임</button>
+</div>
+
+<!-- 반경 배지 -->
+<div class="radius-badge" id="radius-badge" onclick="toggleRadiusPopup()">
+  &#128225; <span id="radius-txt">10km</span>
+</div>
+
+<!-- 반경 팝업 -->
+<div class="radius-popup" id="radius-popup">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+    <div style="font-size:11px;font-weight:800;color:#888;letter-spacing:0.3px">반경</div>
+    <div id="radius-slider-val" style="font-size:14px;font-weight:900;color:var(--red)">10km</div>
+  </div>
+  <input type="range" id="radius-slider" min="1" max="30" step="1" value="10"
+    oninput="document.getElementById('radius-slider-val').textContent=this.value+'km'"
+    onchange="setRadiusSlider(parseInt(this.value)*1000)"
+    style="width:100%;accent-color:var(--red);cursor:pointer">
+  <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;font-weight:700;margin-top:-4px">
+    <span>1km</span><span>30km</span>
+  </div>
+</div>
+
+<!-- 게스트 배너 -->
+<div class="guest-banner" id="guest-banner">
+  <span>로그인하면 바로 지원할 수 있어요</span>
+  <button class="guest-login-btn" onclick="goToLogin()">로그인</button>
+</div>
+
+<!-- 게스트 로그인 유도 모달 -->
+<div id="guest-login-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeGuestLoginModal()">
+  <div style="background:#fff;border-radius:24px 24px 0 0;padding:32px 24px calc(32px + var(--sab-safe));width:100%;max-width:480px;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">🔐</div>
+    <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:8px" id="guest-modal-title">로그인이 필요해요</div>
+    <div style="font-size:14px;color:#666;line-height:1.7;margin-bottom:28px" id="guest-modal-desc">지원하려면 로그인이 필요합니다.<br>30초면 가입 완료!</div>
+    <button onclick="goToLogin()" style="width:100%;padding:16px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer;margin-bottom:10px">로그인 / 회원가입</button>
+    <button onclick="closeGuestLoginModal()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">나중에</button>
+  </div>
+</div>
+
+<!-- 업주 지도 열람 모드 배너 -->
+<div id="owner-browse-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#C8102E;color:#fff;padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px">
+  <span style="font-size:13px;font-weight:700">&#128506; 지도 열람 중</span>
+  <button onclick="openOwnerPanel('postings')" style="padding:7px 14px;background:#fff;color:#C8102E;border:none;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">← 공고 관리</button>
+</div>
+
+<!-- PWA 설치 배너 -->
+<div id="install-banner" style="display:none;position:fixed;top:var(--header-h);left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;align-items:center;gap:12px;z-index:300;box-shadow:0 2px 8px rgba(0,0,0,0.25)">
+  <span style="font-size:20px">⚡</span>
+  <div style="flex:1">
+    <div style="font-size:13px;font-weight:800">앱으로 설치하기</div>
+    <div style="font-size:11px;color:#aaa;margin-top:1px">홈 화면에 추가하면 더 빠르게 이용할 수 있어요</div>
+  </div>
+  <button id="install-btn" onclick="triggerInstall()" style="padding:7px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">설치</button>
+  <button onclick="dismissInstall()" style="padding:6px;background:none;border:none;color:#888;font-size:18px;cursor:pointer;line-height:1">✕</button>
+</div>
+
+<!-- 하단 시트 -->
+<div class="bottom-sheet sheet-peek" id="bottom-sheet">
+  <div class="sheet-handle-area" id="sheet-handle">
+    <div class="sheet-handle"></div>
+  </div>
+  <div class="sheet-summary">
+    <div class="sheet-count">주변 공고 <span id="job-count">0</span>개</div>
+    <div class="sheet-sort" onclick="toggleSort()">↕ <span id="sort-label">거리순</span></div>
+  </div>
+  <!-- 공고 키워드 검색 (고정) -->
+  <div style="padding:0 14px 10px;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:12px;padding:9px 12px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="job-search-input" type="text" placeholder="공고명, 업체명, 업종 검색"
+        style="flex:1;border:none;background:transparent;outline:none;font-size:13px;color:#222;font-family:inherit"
+        oninput="filterJobsByKeyword(this.value)" onkeydown="if(event.key==='Enter'){saveRecentSearch(this.value);this.blur()}">
+      <button onclick="document.getElementById('job-search-input').value='';filterJobsByKeyword('')" style="background:none;border:none;color:#bbb;font-size:14px;cursor:pointer;padding:0;line-height:1">✕</button>
+    </div>
+  </div>
+  <!-- 날짜 슬라이더 -->
+  <div id="date-slider-wrap" style="display:flex;gap:5px;padding:6px 14px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0"></div>
+  <!-- 구별 공고수 필터 칩 -->
+  <div id="district-filter-wrap" style="display:none;gap:5px;padding:0 14px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0"></div>
+  <!-- 통합 스크롤 영역: 급구 + 맞춤 + 일반공고 모두 한 번에 스크롤 -->
+  <div class="job-list" id="job-list">
+    <!-- 알림 허용 배너 -->
+    <div id="push-banner" style="display:none;margin:0 0 10px;background:linear-gradient(135deg,#fff5f5,#fff);border:1.5px solid #fde0e0;border-radius:16px;padding:14px 16px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="font-size:28px;line-height:1;flex-shrink:0">🔔</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:3px">알림을 허용해주세요</div>
+          <div style="font-size:12px;color:#888;line-height:1.5">새 공고·채팅 메시지를<br>앱이 꺼져있어도 바로 받을 수 있어요</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button onclick="allowPushFromBanner()" style="flex:1;padding:9px 0;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">허용하기</button>
+            <button onclick="dismissPushBanner()" style="padding:9px 16px;background:#f5f5f5;color:#aaa;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">나중에</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 오늘의 급구 피드 -->
+    <div id="urgent-feed-section" style="padding:0 0 4px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div id="urgent-feed-title" style="font-size:13px;font-weight:900;color:#222">🔥 오늘의 급구</div>
+        <button onclick="document.getElementById('urgent-feed-section').style.display='none'" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer">접기</button>
+      </div>
+      <div id="urgent-feed-list" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none"></div>
+    </div>
+    <!-- AI 맞춤 추천 섹션 -->
+    <div id="ai-rec-section" style="display:none;background:#F8F9FA;border-radius:16px;margin-bottom:10px"></div>
+    <!-- 일반 공고 카드 목록 -->
+    <div id="job-cards-container">
+      <div class="empty-state">
+        <div class="empty-icon">&#128506;</div>
+        <div class="empty-txt">주변 공고를 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 공고 상세 모달 -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-sheet" id="detail-sheet">
+    <div id="detail-drag-handle" style="touch-action:none;padding:12px 0 8px;cursor:grab;text-align:center">
+      <div class="detail-handle" style="margin:0 auto"></div>
+    </div>
+    <div class="detail-header">
+      <div class="detail-status-row" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="detail-status" id="d-status"></span>
+          <span class="detail-cat" id="d-cat"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="openReportModal('job', selectedJobId)" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:2px 0;font-weight:600;line-height:1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            신고하기
+          </button>
+          <button onclick="document.getElementById('detail-overlay').classList.remove('open');selectedJobId=null" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;padding:0 2px;line-height:1;font-weight:300">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span id="d-type-badge"></span>
+        <div class="detail-title" id="d-title" style="margin:0"></div>
+      </div>
+      <div class="detail-biz" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div id="d-biz-avatar" onclick="_showDetailBizProfileById()" style="cursor:pointer;flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span id="d-biz" style="cursor:pointer" onclick="_showDetailBizProfileById()"></span>
+            <span>·</span>
+            <span class="detail-rating" id="d-rating"></span>
+          </div>
+          <div id="d-follow-wrap" style="display:none;margin-top:4px">
+            <button id="d-follow-btn" style="padding:4px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:#555">...</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-wage-box" style="position:relative">
+      <div class="detail-wage-label" id="d-wage-label">시급</div>
+      <div class="detail-wage-val" id="d-wage"></div>
+      <div class="detail-wage-surge" id="d-surge" style="display:none">
+        ⬆ 시급 인상 <span id="d-surge-amt"></span>
+      </div>
+      <div class="detail-wage-base" id="d-base-wage"></div>
+      <button onclick="openWageCalc()" style="position:absolute;top:12px;right:14px;background:#F3F4F6;border:none;border-radius:10px;padding:6px 11px;font-size:11px;font-weight:700;color:#6B7280;cursor:pointer;display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>급여 계산</button>
+    </div>
+
+    <!-- 주휴수당 안내 (주 15시간 이상 정기/단기 공고 시 표시) -->
+    <div id="d-juhu-box" style="display:none;margin:0 20px 8px;background:#F0FDF4;border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:8px">
+      <div>
+        <div style="font-size:11px;color:#166534;font-weight:800">📅 주휴수당 포함 예상 주급</div>
+        <div style="font-size:10px;color:#4ade80;margin-top:1px">주 15시간 이상 · 법정 주휴수당 자동 포함</div>
+      </div>
+      <div id="d-juhu-val" style="font-size:16px;font-weight:900;color:#16a34a;white-space:nowrap"></div>
+    </div>
+
+    <div class="detail-info-grid">
+      <div class="info-item">
+        <div class="info-label">시작 시간</div>
+        <div class="info-val" id="d-time"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">근무 시간</div>
+        <div class="info-val" id="d-duration"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">필요 인원</div>
+        <div class="info-val" id="d-needed"></div>
+      </div>
+      <div class="info-item" id="d-dist-item">
+        <div class="info-label" id="d-dist-label">거리</div>
+        <div class="info-val" id="d-dist"></div>
+      </div>
+    </div>
+
+    <div class="detail-desc" id="d-desc"></div>
+
+    <!-- 비대면 배지 -->
+    <div id="d-remote-badge" style="display:none;margin:0 20px 12px">
+      <div style="display:flex;align-items:center;gap:12px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:14px;padding:12px 16px">
+        <span style="font-size:24px;flex-shrink:0">🖥️</span>
+        <div>
+          <div style="font-size:14px;font-weight:900;color:#0369A1">비대면 근무</div>
+          <div style="font-size:11px;color:#0284c7;margin-top:2px">재택·PC 작업 · 전국 어디서나 지원 가능</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 위치 섹션 -->
+    <div id="d-location-section" style="display:none;margin:0 20px 16px">
+      <div style="font-size:11px;font-weight:900;color:#aaa;letter-spacing:0.5px;margin-bottom:8px">📍 근무 위치</div>
+      <div style="background:#f8f9fa;border-radius:14px;overflow:hidden">
+        <!-- 미니 지도 -->
+        <div id="d-mini-map" style="width:100%;height:160px;background:#e5e7eb"></div>
+        <!-- 주소 + 버튼 -->
+        <div style="padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div id="d-address-text" style="font-size:13px;color:#333;font-weight:600;line-height:1.4;flex:1"></div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button id="d-addr-copy-btn" onclick="copyDetailAddress()" style="display:none;padding:6px 11px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;font-size:11px;font-weight:700;color:#555;cursor:pointer">복사</button>
+            <button onclick="openKakaoMapApp()" style="padding:6px 11px;background:#FEE500;border:none;border-radius:8px;font-size:11px;font-weight:700;color:#3C1E1E;cursor:pointer">지도 앱</button>
+          </div>
+        </div>
+        <!-- 지하철 정보 -->
+        <div id="d-subway-info" style="display:none;padding:0 14px 12px"></div>
+      </div>
+    </div>
+
+    <!-- 공고 사진 -->
+    <div id="d-images" style="display:none;margin-bottom:4px"></div>
+
+    <!-- 당일정산 배지 -->
+    <div id="d-same-day" style="display:none;margin:0 20px 12px">
+      <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#dcfce7,#f0fdf4);border:1.5px solid #86EFAC;border-radius:14px;padding:12px 16px;box-shadow:0 2px 8px rgba(22,163,74,0.1)">
+        <span style="font-size:24px;flex-shrink:0">💰</span>
+        <div>
+          <div style="font-size:14px;font-weight:900;color:#15803d">당일정산</div>
+          <div style="font-size:11px;color:#16a34a;margin-top:2px">근무 당일 현금으로 바로 지급</div>
+        </div>
+      </div>
+    </div>
+    <!-- 노쇼 보증금 배지 -->
+    <div id="d-deposit" style="display:none;margin:0 20px 12px">
+      <div style="display:flex;align-items:center;gap:12px;background:#FFF1F2;border:1.5px solid #FECDD3;border-radius:14px;padding:12px 16px">
+        <span style="font-size:24px;flex-shrink:0">🛡️</span>
+        <div>
+          <div style="font-size:14px;font-weight:900;color:#9f1239">노쇼 보증금 <span id="d-deposit-amount"></span></div>
+          <div style="font-size:11px;color:#C8102E;margin-top:2px">지원 시 동의 · 무단 불참 시 차감</div>
+        </div>
+      </div>
+    </div>
+    <!-- 팀 모집 현황 -->
+    <div id="d-team-job" style="display:none;margin:0 20px 12px;background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:16px;padding:14px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:14px;font-weight:900;color:#7C3AED">👥 팀 모집 현황</span>
+        <span id="d-team-remain" style="font-size:13px;font-weight:800;color:#C8102E"></span>
+      </div>
+      <div style="height:8px;background:#EDE9FE;border-radius:4px;overflow:hidden;margin-bottom:8px">
+        <div id="d-team-bar" style="height:100%;width:0%;background:#7C3AED;border-radius:4px;transition:width 0.5s"></div>
+      </div>
+      <div id="d-team-desc" style="font-size:12px;color:#6D28D9;line-height:1.6;display:none"></div>
+    </div>
+    <!-- 국적 조건 배지 -->
+    <div id="d-natreq" style="display:none;margin:0 20px 8px">
+      <span id="d-natreq-badge" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px"></span>
+    </div>
+    <!-- 픽업 장소 배지 -->
+    <div id="d-pickup" style="display:none;margin:0 20px 12px">
+      <div style="display:flex;align-items:flex-start;gap:10px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:14px;padding:12px 14px">
+        <span style="font-size:20px;flex-shrink:0">🚌</span>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:#1e40af;margin-bottom:2px">집합(픽업) 장소</div>
+          <div id="d-pickup-text" style="font-size:14px;font-weight:700;color:#1e3a8a;line-height:1.5"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 초보/식사 배지 -->
+    <div id="d-badges-row" style="display:none;margin:0 20px 8px;display:flex;gap:8px;flex-wrap:wrap">
+      <span id="d-beginner-badge" style="display:none;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px"></span>
+      <span id="d-meal-badge" style="display:none;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;font-size:13px;font-weight:800;padding:8px 14px;border-radius:12px">🍱 식사/음료 제공</span>
+    </div>
+
+    <div style="display:flex;gap:10px;margin:0 20px">
+      <button class="detail-apply-btn" id="d-apply-btn" onclick="applyJob()" style="flex:1;margin:0">⚡ 바로 지원하기</button>
+      <button id="d-bookmark-btn" onclick="toggleBookmark(selectedJobId)" title="북마크"
+        style="width:52px;height:52px;flex-shrink:0;background:#f5f5f5;border:none;border-radius:16px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">&#128278;</button>
+      <button onclick="shareJob()" title="공유"
+        style="width:52px;height:52px;flex-shrink:0;background:#FEE500;border:none;border-radius:16px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3C1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+    </div>
+    <!-- 근무완료 후 업주 평점 -->
+    <div id="d-rate-row" style="display:none;margin:8px 20px 0">
+      <button id="d-rate-btn" onclick="openBizRatingModal()" style="width:100%;padding:13px;background:#FEF3C7;border:none;border-radius:14px;font-size:14px;font-weight:800;color:#D97706;cursor:pointer">⭐ 업주 평점 남기기</button>
+    </div>
+    <!-- 업주 전용: QR 공고 출력 -->
+    <div id="d-qr-row" style="display:none;margin:8px 20px 12px">
+      <button onclick="openQRModal()" style="width:100%;padding:13px;background:#1a1a1a;border:none;border-radius:14px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4m-4-4v4m-3-7h1"/></svg>
+        QR 공고 출력
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 온보딩 튜토리얼 -->
+<div id="onboarding-overlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:3000;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:0">
+  <!-- 상단 헤더 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:calc(var(--sat,0) + 16px) 20px 16px;flex-shrink:0">
+    <button id="ob-back-btn" onclick="obPrev()" style="background:none;border:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%;visibility:hidden">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div id="ob-dots" style="display:flex;gap:6px">
+      <div class="ob-dot active" onclick="obGoTo(0)" style="cursor:pointer"></div>
+      <div class="ob-dot" onclick="obGoTo(1)" style="cursor:pointer"></div>
+      <div class="ob-dot" onclick="obGoTo(2)" style="cursor:pointer"></div>
+      <div class="ob-dot" onclick="obGoTo(3)" style="cursor:pointer"></div>
+      <div class="ob-dot" onclick="obGoTo(4)" style="cursor:pointer"></div>
+    </div>
+    <button onclick="closeOnboarding()" style="background:none;border:none;font-size:13px;color:#bbb;font-weight:600;cursor:pointer;padding:6px 4px">건너뛰기</button>
+  </div>
+  <!-- 일러스트 영역 -->
+  <div id="ob-illus" style="flex-shrink:0;height:220px;display:flex;align-items:center;justify-content:center;margin:0 24px;border-radius:24px;overflow:hidden"></div>
+  <!-- 텍스트 영역 -->
+  <div style="flex:1;display:flex;flex-direction:column;padding:28px 28px 0;box-sizing:border-box;text-align:center;align-items:center">
+    <div id="ob-title" style="font-size:22px;font-weight:900;color:#111;margin-bottom:10px;line-height:1.3;letter-spacing:-0.3px"></div>
+    <div id="ob-desc" style="font-size:15px;color:#666;font-weight:500;line-height:1.65;white-space:pre-line"></div>
+    <div id="ob-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;justify-content:center"></div>
+  </div>
+  <!-- 하단 버튼 -->
+  <div style="padding:20px 24px calc(var(--sab,0) + 24px);flex-shrink:0;box-sizing:border-box">
+    <button id="ob-next-btn" onclick="obNext()" style="width:100%;padding:17px;background:#C8102E;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:-0.3px">다음</button>
+  </div>
+</div>
+
+<!-- QR 공고 출력 모달 -->
+<div class="modal-overlay" id="qr-modal" onclick="if(event.target===this)closeQRModal()" style="z-index:700;align-items:center;justify-content:center;display:none;padding:20px">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:380px;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:800;color:#222">QR 공고 출력</div>
+      <button onclick="closeQRModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div id="qr-print-area" style="padding:20px 20px 8px">
+      <div style="text-align:center;margin-bottom:14px">
+        <canvas id="qr-code-canvas" style="border:1px solid #f0f0f0;border-radius:12px;width:200px;height:200px"></canvas>
+      </div>
+      <div id="qr-job-info" style="background:#f8f9fa;border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.8;color:#333"></div>
+    </div>
+    <div style="padding:12px 20px;display:flex;gap:10px">
+      <button onclick="closeQRModal()" style="flex:1;padding:12px;background:#f5f5f5;border:none;border-radius:12px;font-size:14px;font-weight:700;color:#555;cursor:pointer">닫기</button>
+      <button onclick="printQR()" style="flex:2;padding:12px;background:#1a1a1a;border:none;border-radius:12px;font-size:14px;font-weight:800;color:#fff;cursor:pointer">🖨️ 인쇄하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 사진 크롭 모달 -->
+<div class="modal-overlay" id="crop-modal" style="z-index:2000;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:360px;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:800;color:#222">사진 편집</div>
+      <button onclick="closeCropModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:16px">
+      <div style="width:100%;background:#000;border-radius:12px;overflow:hidden;max-height:300px">
+        <img id="crop-source" style="display:block;max-width:100%">
+      </div>
+      <div style="font-size:12px;color:#aaa;text-align:center;margin:10px 0 14px">드래그로 이동, 핀치로 확대/축소</div>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeCropModal()" style="flex:1;padding:13px;background:#f5f5f5;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:#555">취소</button>
+        <button onclick="applyCrop()" style="flex:2;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 급여 계산기 모달 -->
+<div class="modal-overlay" id="wage-calc-modal" onclick="if(event.target===this)closeWageCalc()" style="z-index:1200;align-items:flex-end;display:none">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 36px;animation:slideUp 0.3s ease;max-height:92vh;overflow-y:auto">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1">
+      <div style="font-size:17px;font-weight:800;color:#222">🧮 급여 계산기</div>
+      <button onclick="closeWageCalc()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px">
+      <!-- 입력 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">시급 (원)</div>
+          <input id="wc-wage" type="number" value="10030" oninput="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:700;box-sizing:border-box;outline:none">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">하루 근무시간</div>
+          <input id="wc-hours" type="number" value="8" min="1" max="12" step="0.5" oninput="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:700;box-sizing:border-box;outline:none">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">주당 근무일수</div>
+          <input id="wc-days" type="number" value="5" min="1" max="7" oninput="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:15px;font-weight:700;box-sizing:border-box;outline:none">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">공제 방식</div>
+          <select id="wc-tax" onchange="calcWage()" style="width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;font-weight:700;box-sizing:border-box;outline:none;background:#fff">
+            <option value="0.033">3.3% (프리랜서)</option>
+            <option value="0.094">9.4% (4대보험)</option>
+            <option value="0">공제 없음</option>
+          </select>
+        </div>
+      </div>
+      <!-- 결과 -->
+      <div style="background:#f8fafc;border-radius:16px;padding:16px 18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#888;font-weight:600">일급</span>
+          <span id="wc-daily" style="font-size:15px;font-weight:800;color:#222"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#888;font-weight:600">주급</span>
+          <span id="wc-weekly" style="font-size:15px;font-weight:800;color:#222"></span>
+        </div>
+        <div id="wc-holiday-row" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#16a34a;font-weight:700">+ 주휴수당</span>
+          <span id="wc-holiday" style="font-size:15px;font-weight:800;color:#16a34a"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee">
+          <span style="font-size:13px;color:#888;font-weight:600">월급 (세전)</span>
+          <span id="wc-monthly" style="font-size:15px;font-weight:800;color:#222"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0">
+          <span style="font-size:14px;color:#C8102E;font-weight:800">실수령액 (월)</span>
+          <span id="wc-net" style="font-size:18px;font-weight:900;color:#C8102E"></span>
+        </div>
+      </div>
+      <div id="wc-holiday-notice" style="margin-top:10px;font-size:11px;color:#aaa;line-height:1.5"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 업주 평점 모달 -->
+<div class="modal-overlay" id="biz-rating-modal" onclick="if(event.target===this)closeBizRatingModal()" style="z-index:1200;align-items:flex-end;display:none">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 36px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">업주 평점 남기기</div>
+      <button onclick="closeBizRatingModal()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px 20px 0">
+      <div id="biz-rating-biz-name" style="font-size:15px;font-weight:700;color:#555;margin-bottom:20px;text-align:center"></div>
+      <!-- 별점 -->
+      <div style="text-align:center;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:700;color:#888;margin-bottom:10px">전반적인 만족도</div>
+        <div id="biz-star-row" style="display:flex;justify-content:center;gap:8px;margin-bottom:4px">
+          <span data-v="1" onclick="setBizStar(1)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="2" onclick="setBizStar(2)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="3" onclick="setBizStar(3)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="4" onclick="setBizStar(4)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+          <span data-v="5" onclick="setBizStar(5)" style="font-size:38px;cursor:pointer;transition:transform 0.1s">☆</span>
+        </div>
+        <div id="biz-star-label" style="font-size:13px;font-weight:700;color:#F59E0B;min-height:18px"></div>
+      </div>
+      <input type="hidden" id="biz-rating-val" value="0">
+      <input type="hidden" id="biz-rating-app-id" value="">
+      <!-- 리뷰 텍스트 -->
+      <textarea id="biz-review-text" placeholder="근무 환경, 업주 태도 등 솔직한 후기를 남겨주세요 (선택)" style="width:100%;margin-top:16px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;resize:none;height:90px;font-family:inherit;box-sizing:border-box;outline:none"></textarea>
+      <button onclick="submitBizRating()" style="width:100%;margin-top:12px;padding:15px;background:var(--red);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer" id="biz-rating-submit-btn">평점 등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 지원 메시지 모달 -->
+<div class="modal-overlay" id="apply-msg-modal" onclick="if(event.target===this)closeApplyMsg()" style="z-index:1200;align-items:flex-end;display:none">
+  <div id="apply-msg-inner" style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 36px;animation:slideUp 0.3s ease;overflow-y:auto;box-sizing:border-box">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">지원 메시지</div>
+      <button onclick="closeApplyMsg()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px 20px 0">
+      <div id="apply-msg-job-title" style="font-size:13px;font-weight:700;color:#888;margin-bottom:14px"></div>
+      <div style="position:relative">
+        <textarea id="apply-msg-text" maxlength="200" placeholder="업주에게 간단히 자신을 소개해보세요&#10;예) 성실하고 시간 약속 철저히 지킵니다. 잘 부탁드립니다!" style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;resize:none;height:110px;font-family:inherit;box-sizing:border-box;outline:none;line-height:1.6" oninput="document.getElementById('apply-msg-count').textContent=this.value.length+'/200'"></textarea>
+        <span id="apply-msg-count" style="position:absolute;bottom:10px;right:12px;font-size:11px;color:#bbb;pointer-events:none">0/200</span>
+      </div>
+      <button onclick="submitApplyWithMsg()" id="apply-msg-submit-btn" style="width:100%;margin-top:12px;padding:15px;background:var(--red);color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer">&#9889; 지원하기</button>
+      <button onclick="submitApplyWithMsg(true)" style="width:100%;margin-top:8px;padding:12px;background:none;border:none;font-size:13px;color:#bbb;cursor:pointer;font-weight:600">메시지 없이 지원</button>
+    </div>
+  </div>
+</div>
+
+<!-- 신고 모달 -->
+<div class="modal-overlay" id="report-modal" onclick="if(event.target===this)closeReportModal()" style="z-index:1100;align-items:flex-end">
+  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">신고하기</div>
+      <button onclick="closeReportModal()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px">
+      <div id="report-reason-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <textarea id="report-detail" placeholder="추가 내용을 입력해주세요 (선택)" rows="3"
+        style="width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box"></textarea>
+      <button onclick="submitReport()" style="width:100%;margin-top:12px;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">신고 제출</button>
+      <div style="font-size:11px;color:#bbb;text-align:center;margin-top:10px;line-height:1.7">허위 신고 시 이용이 제한될 수 있습니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 스와이프 모드 ── -->
+<div id="swipe-screen" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);background:#f0f0f5;z-index:250;flex-direction:column;align-items:center;justify-content:center;">
+
+  <div style="width:100%;padding:14px 20px 6px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="swipe-back-btn" onclick="closeSwipeBackToMap()" style="display:none;background:none;border:none;padding:6px 2px;cursor:pointer;color:#888;font-size:13px;font-weight:700;display:none;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>지도
+      </button>
+      <div>
+        <div style="font-size:20px;font-weight:900;color:#111;letter-spacing:-0.5px">바로지원</div>
+        <div style="font-size:11px;color:#ccc;font-weight:600;margin-top:2px">← 패스 &nbsp;·&nbsp; ↑ 번개지원 &nbsp;·&nbsp; → 지원</div>
+      </div>
+    </div>
+    <div id="swipe-counter" style="font-size:13px;color:#aaa;font-weight:700"></div>
+  </div>
+
+  <!-- 카드 스택 -->
+  <div id="swipe-stack" style="position:relative;width:calc(100% - 32px);flex:1;max-height:68vh;"></div>
+
+  <!-- 액션 버튼 -->
+  <div style="display:flex;gap:28px;align-items:flex-end;justify-content:center;padding:14px 0 22px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <button onclick="swipeAction('left')" style="width:60px;height:60px;border-radius:50%;background:#fff;border:2.5px solid #FFD0D0;cursor:pointer;box-shadow:0 4px 16px rgba(200,16,46,0.15);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <span style="font-size:10px;font-weight:700;color:#C8102E;letter-spacing:-0.3px">패스</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <button onclick="swipeAction('up')" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#FFF8E8,#FFE0B2);border:2.5px solid #FFCB6B;cursor:pointer;box-shadow:0 4px 16px rgba(255,149,0,0.2);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#FF9500"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </button>
+      <span style="font-size:10px;font-weight:700;color:#FF9500;letter-spacing:-0.3px">번개</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <button onclick="swipeAction('right')" style="width:60px;height:60px;border-radius:50%;background:var(--red);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(200,16,46,0.4);display:flex;align-items:center;justify-content:center;transition:transform 0.1s;-webkit-tap-highlight-color:transparent" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform=''">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <span style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:-0.3px">지원</span>
+    </div>
+  </div>
+</div>
+
+<!-- 하단 내비게이션 -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="setNav(this, 'home')">
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="nav-label">홈</div>
+  </button>
+  <button class="nav-item" onclick="setNav(this, 'map')">
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+    <div class="nav-label">지도</div>
+  </button>
+  <button class="nav-item nav-fab" onclick="setNav(this, 'dashboard')">
+    <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+    <div class="nav-label">바로알바</div>
+  </button>
+  <button class="nav-item" onclick="setNav(this, 'chats')">
+    <div class="nav-icon" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="chat-unread-badge" style="display:none;position:absolute;top:-5px;right:-6px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:15px;text-align:center">0</span></div>
+    <div class="nav-label">채팅</div>
+  </button>
+  <button class="nav-item" onclick="setNav(this, 'profile')">
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+    <div class="nav-label">마이페이지</div>
+  </button>
+</div>
+
+<!-- 지원 공고 상세 패널 -->
+<div class="full-panel" id="panel-app-job-detail" style="z-index:350">
+  <div class="panel-header" style="display:flex;align-items:center;gap:10px">
+    <button onclick="document.getElementById('panel-app-job-detail').classList.remove('show')" style="background:none;border:none;cursor:pointer;line-height:1;color:#555;padding:0 4px 0 0;display:flex;align-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <span>공고 상세</span>
+  </div>
+  <div style="overflow-y:auto;flex:1;padding-bottom:24px" id="ajd-body">
+    <div style="text-align:center;padding:48px"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- 바로알바 대시보드 패널 -->
+<!-- ═══ 홈 패널 ═══ -->
+
+<div class="full-panel" id="panel-home" style="background:#111; display:flex; flex-direction:column; z-index: 10;">
+  <div style="flex:1; overflow-y:auto; padding-bottom:80px;">
+    
+
+          <!-- 헤더 -->
+          <div class="app-hdr">
+            <div class="app-logo">
+              <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+              바로알바
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:11px;font-weight:700;color:#bbb">서울 마포구</div>
+              <div class="app-bell"><svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+            </div>
+          </div>
+
+          <!-- 검색바 (엔카 스타일) -->
+          <div class="search-bar" onclick="">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="search-bar-txt">업종, 업체명, 지역 검색</span>
+            <div class="search-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+          </div>
+
+          <!-- Bento Grid -->
+          <div class="bento">
+            <!-- 급구 히어로 (A 비율 + D 다크 그래디언트) -->
+            <div class="bc bc-full bc-urgent">
+              <div class="bc-inner">
+                <div class="tag">URGENT NOW</div>
+                <div class="title">오늘 <em>급구</em> 7건 — 지금 바로 지원</div>
+                <div class="sub-row">
+                  <div class="sub-card"><div class="sub-loc">강남구 · 서빙</div><div class="sub-wage">12,000원</div></div>
+                  <div class="sub-card"><div class="sub-loc">마포구 · 청소</div><div class="sub-wage">11,500원</div></div>
+                </div>
+                <div class="cta">전체보기 <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+            </div>
+
+            <!-- AI 추천 -->
+            <div class="bc bc-ai">
+              <div class="bc-inner">
+                <div class="eyebrow">AI PICKS</div>
+                <div class="name">행동 기반<br>맞춤 추천</div>
+                <div class="loc">청소 · 마포구</div>
+                <div class="wage">15,000원</div>
+              </div>
+            </div>
+
+            <!-- 당일정산 -->
+            <div class="bc bc-sd">
+              <div class="bc-inner">
+                <div class="eyebrow">SAME DAY</div>
+                <div class="name">당일정산<br>특가 알바</div>
+                <div class="wage">11,000원~</div>
+              </div>
+            </div>
+
+            <!-- 외국인 환영 -->
+            <div class="bc bc-foreign bc-full">
+              <div class="bc-inner">
+                <div class="eyebrow">WELCOME ALL</div>
+                <div class="name">외국인 지원 가능 공고</div>
+                <div class="chips">
+                  <div class="bc-foreign-chip">픽업 제공</div>
+                  <div class="bc-foreign-chip">식사 포함</div>
+                  <div class="bc-foreign-chip">초보 환영</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 모범 파트너 -->
+            <div class="bc bc-partner bc-full">
+              <div class="bc-inner" style="flex-direction:row;align-items:center;gap:14px">
+                <div>
+                  <div class="eyebrow">TOP PARTNER</div>
+                  <div class="name">김알바</div>
+                  <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                  <div class="score">신뢰점수 97</div>
+                </div>
+                <div style="margin-left:auto;text-align:right">
+                  <div style="font-size:11px;color:#555;margin-bottom:4px">이번달 완료</div>
+                  <div style="font-size:20px;font-weight:900;color:#fff">12건</div>
+                  <div style="font-size:10px;color:#555;margin-top:2px">노쇼 0회</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 바로모임 스페셜 섹션 -->
+          <div class="moim-section">
+            <div class="moim-header">
+              <div class="moim-logo-box">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              </div>
+              <div class="moim-title-group">
+                <div class="moim-brand">바로모임</div>
+                <div class="moim-tagline">취미·스포츠·소셜 모임을 즉시 개설</div>
+              </div>
+              <div class="moim-new-badge">NEW</div>
+            </div>
+            <div class="moim-cards-wrap">
+              <div class="moim-cards-scroll">
+
+                <!-- 유료 플랜 모임 (보라 다크 카드) -->
+                <div class="moim-card mc-paid">
+                  <div class="mc-badge">PRO FEATURED</div>
+                  <div class="mc-body">
+                    <div class="mc-cat">스포츠 · 테니스</div>
+                    <div class="mc-name">테니스 2:2 파트너 구합니다</div>
+                    <div class="mc-meta">오늘 오후 4시 · 마포</div>
+                    <div class="mc-spot">2자리 남음</div>
+                  </div>
+                </div>
+
+                <!-- 유료 플랜 모임 -->
+                <div class="moim-card mc-paid" style="background:linear-gradient(145deg,#0f2027,#1a3a4a)">
+                  <div class="mc-badge">BASIC FEATURED</div>
+                  <div class="mc-body">
+                    <div class="mc-cat">소셜 · 네트워킹</div>
+                    <div class="mc-name">외국인 친구 사귀기 소셜 모임</div>
+                    <div class="mc-meta">내일 오전 11시 · 강남</div>
+                    <div class="mc-spot">5자리 남음</div>
+                  </div>
+                </div>
+
+                <!-- 무료 플랜 모임 (텍스트 카드) -->
+                <div class="moim-card mc-free">
+                  <div class="mc-body">
+                    <div class="mc-cat">취미 · 보드게임</div>
+                    <div class="mc-name">주말 보드게임 같이 하실 분</div>
+                    <div class="mc-meta">토요일 오후 · 홍대</div>
+                    <div class="mc-spot">3자리 남음</div>
+                  </div>
+                </div>
+
+                <!-- 무료 플랜 모임 -->
+                <div class="moim-card mc-free">
+                  <div class="mc-body">
+                    <div class="mc-cat">카풀 · 강남방향</div>
+                    <div class="mc-name">매주 월~금 카풀 구해요</div>
+                    <div class="mc-meta">평일 오전 8시 · 마포</div>
+                    <div class="mc-spot">1자리 남음</div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="moim-more">전체 모임 보기 ›</div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <!-- 하단 내비 -->
+          <div class="app-nav">
+            <div class="nav-it on">
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <span>홈</span>
+            </div>
+            <div class="nav-it">
+              <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              <span>지도</span>
+            </div>
+            <div class="nav-fab-wrap">
+              <div class="nav-fab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+            </div>
+            <div class="nav-it">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <span>채팅</span>
+            </div>
+            <div class="nav-it">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>마이</span>
+            </div>
+          </div>
+
+        
+  </div>
+  <div id="encar-filter-wrapper" style="display:none; position:fixed; z-index:99999; inset:0;">
+          <div class="filter-overlay">
+            <div class="filter-panel">
+              <div class="filter-handle"></div>
+              <div class="filter-title">
+                공고 필터
+                <span class="filter-close">&#215;</span>
+              </div>
+
+              <!-- 업종 칩 -->
+              <div class="filter-section-label">업종</div>
+              <div class="filter-chip-row">
+                <div class="filter-chip on">전체</div>
+                <div class="filter-chip">F&amp;B</div>
+                <div class="filter-chip">청소</div>
+                <div class="filter-chip">물류</div>
+                <div class="filter-chip">판매</div>
+                <div class="filter-chip">IT·사무</div>
+                <div class="filter-chip">기타</div>
+              </div>
+
+              <!-- 지역 -->
+              <div class="filter-row">
+                <span class="filter-row-label">지역</span>
+                <span class="filter-row-value set">마포구</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 날짜·시간 -->
+              <div class="filter-row">
+                <span class="filter-row-label">날짜 / 시간</span>
+                <span class="filter-row-value">선택 안 함</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 시급 -->
+              <div class="filter-row">
+                <span class="filter-row-label">시급</span>
+                <span class="filter-row-value set">10,000원 이상</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 경력 -->
+              <div class="filter-row">
+                <span class="filter-row-label">경력</span>
+                <span class="filter-row-value">무관</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 토글들 -->
+              <div class="filter-section-label" style="margin-top:4px">조건</div>
+              <div class="filter-toggle-row">
+                <label>당일정산</label>
+                <div class="toggle-pill on"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>외국인 환영</label>
+                <div class="toggle-pill"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>픽업 제공</label>
+                <div class="toggle-pill"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>식사 포함</label>
+                <div class="toggle-pill on"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>팀모집</label>
+                <div class="toggle-pill"></div>
+              </div>
+
+              <div style="height:8px"></div>
+
+              <div class="filter-bot">
+                <div class="filter-reset">초기화</div>
+                <div class="filter-apply">공고보기 22개</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="desc">
+      <h2>상세 필터 패널</h2>
+      <p>검색창(또는 돋보기 버튼) 클릭 시 엔카 스타일 바텀 시트가 올라옴. 홈 화면에서 필터 칩 없애는 대신 여기에 모든 필터 집중.</p>
+      <div class="pro">✓ 홈이 훨씬 깔끔해짐 (필터 칩 제거)</div>
+      <div class="pro">✓ 필터 옵션은 오히려 더 강력해짐</div>
+      <div class="pro">✓ 엔카 UI처럼 "공고보기 N개" 숫자 실시간 업데이트</div>
+      <div class="pro">✓ 토글 조건들 한눈에 설정</div>
+      <div class="con">– 한 번 더 탭해야 필터 접근 가능</div>
+      <div class="opinion-box">
+        <h4>구현 방법</h4>
+        <p>검색바 클릭 시 `openSearchFilter()` 호출 → 기존 모달 패턴으로 패널 슬라이드업. 하단 "공고보기 N개" 숫자는 필터 변경 시마다 Supabase `count` 쿼리로 실시간 업데이트.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>바로알바 관리자 - 모바일 시안</title>
+  <style>
+    /* ── RESET & BASE ── */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+    /* ── MOBILE DEVICE SIMULATOR ── */
+    .mobile-frame {
+      width: 100%;
+      max-width: 430px; /* iPhone 14 Pro Max width */
+      height: 100vh;
+      max-height: 932px;
+      background-color: #f8fafc;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    @media (min-width: 450px) {
+      .mobile-frame { height: 90vh; border-radius: 40px; border: 8px solid #0f172a; }
+    }
+
+    /* ── TOP HEADER ── */
+    .header {
+      background: #ffffff;
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .logo-text { font-size: 18px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
+    .badge-admin { background: #e11d48; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; letter-spacing: 0.5px; }
+    .header-user { width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #e2e8f0; }
+
+    /* ── MAIN CONTENT (SCROLLABLE) ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 20px 100px 20px; /* padding-bottom to clear bottom nav */
+    }
+
+    /* ── DASHBOARD GRID ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .stat-card {
+      background: white; border-radius: 20px; padding: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;
+      display: flex; flex-direction: column; gap: 8px; position: relative;
+    }
+    .stat-card.alert { border-color: #ffe4e6; background: #fff1f2; }
+    .stat-icon { font-size: 20px; }
+    .stat-val { font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
+    .stat-card.alert .stat-val { color: #e11d48; }
+    .stat-label { font-size: 12px; font-weight: 700; color: #64748b; }
+
+    /* ── QUICK SETTINGS LIST ── */
+    .section-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 12px; margin-top: 8px; }
+    .settings-list { display: flex; flex-direction: column; gap: 10px; }
+    .setting-item {
+      background: white; border-radius: 16px; padding: 16px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid #f1f5f9;
+    }
+    .setting-icon-box {
+      width: 42px; height: 42px; border-radius: 12px; background: #f8fafc;
+      display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .setting-text { flex: 1; }
+    .s-title { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+    .s-desc { font-size: 11px; color: #94a3b8; }
+    
+    .setting-item.special { background: linear-gradient(to right, #ffffff, #faf5ff); border-color: #ede9fe; }
+    .setting-item.special .setting-icon-box { background: #f3e8ff; color: #9333ea; }
+    .setting-item.special .s-title { color: #7c3aed; }
+
+    /* ── BOTTOM NAVIGATION ── */
+    .bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-top: 1px solid #f1f5f9;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      z-index: 100;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: none; border: none; cursor: pointer; position: relative;
+      color: #94a3b8; text-decoration: none; -webkit-tap-highlight-color: transparent;
+    }
+    .nav-btn.active { color: #e11d48; }
+    .nav-icon { font-size: 22px; filter: grayscale(100%) opacity(0.5); transition: all 0.2s; }
+    .nav-btn.active .nav-icon { filter: grayscale(0%) opacity(1); transform: scale(1.1); }
+    .nav-label { font-size: 10px; font-weight: 800; transition: all 0.2s; }
+    
+    .badge {
+      position: absolute; top: -4px; right: 15%;
+      background: #e11d48; color: white; font-size: 9px; font-weight: 900;
+      min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; border: 2px solid white; padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame">
+    
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <span class="logo-text">바로알바</span>
+        <span class="badge-admin">ADMIN</span>
+      </div>
+      <div class="header-user">👨‍💼</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card alert">
+          <div class="stat-icon">🚨</div>
+          <div class="stat-val">5건</div>
+          <div class="stat-label">미처리 신고</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-val">142</div>
+          <div class="stat-label">오늘 신규 지원</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-val">3,892</div>
+          <div class="stat-label">총 알바생</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-val">845</div>
+          <div class="stat-label">활성 공고</div>
+        </div>
+      </div>
+
+      <!-- QUICK SETTINGS -->
+      <div class="section-title">⚙️ 시스템 설정</div>
+      <div class="settings-list">
+        <div class="setting-item">
+          <div class="setting-icon-box">⚡</div>
+          <div class="setting-text">
+            <div class="s-title">바로알바 카테고리</div>
+            <div class="s-desc">업종 카테고리 추가/삭제</div>
+          </div>
+          <div style="color:#cbd5e1;">›</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-icon-box">🤝</div>
+          <div class="setting-text">
+            <div class="s-title">바로모임 카테고리</div>
+            <div class="s-desc">모임 분야 설정</div>
+          </div>
+          <div style="color:#cbd5e1;">›</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-icon-box">📚</div>
+          <div class="setting-text">
+            <div class="s-title">레슨/과외 카테고리</div>
+            <div class="s-desc">과목 설정</div>
+          </div>
+          <div style="color:#cbd5e1;">›</div>
+        </div>
+        <div class="setting-item special">
+          <div class="setting-icon-box">💜</div>
+          <div class="setting-text">
+            <div class="s-title">만남 매니저 권한 관리</div>
+            <div class="s-desc">매니저 지정 및 해제</div>
+          </div>
+          <div style="color:#c084fc;">›</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-icon-box">🛡️</div>
+          <div class="setting-text">
+            <div class="s-title">관리자 권한 관리</div>
+            <div class="s-desc">admin 계정 관리</div>
+          </div>
+          <div style="color:#cbd5e1;">›</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAVIGATION (Fixed exactly 5 items for mobile optimization) -->
+    <div class="bottom-nav">
+      <button class="nav-btn active">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">대시보드</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">🚨</span>
+        <span class="nav-label">신고</span>
+        <span class="badge">5</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">공고</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">회원</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">🤝</span>
+        <span class="nav-label">모임</span>
+      </button>
+    </div>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 홈 시안 B — 메인 피처 슬라이더형</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { background:#f0f0f0; font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; display:flex; flex-direction:column; align-items:center; padding:40px 20px; gap:32px; }
+  .label { font-size:13px; font-weight:700; color:#888; text-align:center; }
+  .phone { width:375px; background:#fff; border-radius:40px; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.18); position:relative; }
+  .statusbar { background:#C8102E; padding:12px 24px 6px; display:flex; justify-content:space-between; }
+  .statusbar .time { font-size:14px; font-weight:700; color:#fff; }
+  .statusbar .icons { font-size:12px; color:#fff; font-weight:600; }
+  .header { background:#fff; padding:10px 16px 8px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f5f5f5; }
+  .logo { font-size:20px; font-weight:900; color:#C8102E; letter-spacing:-0.5px; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .bell { font-size:18px; }
+  .avatar { width:28px; height:28px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; }
+
+  .scroll { overflow-y:auto; max-height:720px; background:#f7f7f7; }
+
+  /* 검색바 */
+  .searchbar { margin:10px 12px 0; background:#fff; border:1.5px solid #efefef; border-radius:12px; padding:9px 12px; display:flex; align-items:center; gap:8px; box-shadow:0 1px 6px rgba(0,0,0,0.04); }
+  .searchbar input { border:none; background:none; font-size:13px; color:#aaa; flex:1; outline:none; }
+  .search-btn { width:28px; height:28px; background:#C8102E; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+
+  /* 메인 피처 슬라이더 */
+  .featured-wrap { padding:10px 12px 0; }
+  .featured-slider { display:flex; gap:0; overflow:hidden; border-radius:18px; position:relative; }
+  .featured-card { flex-shrink:0; width:100%; border-radius:18px; padding:20px; min-height:150px; display:flex; flex-direction:column; justify-content:space-between; }
+  .fc-urgent { background:linear-gradient(135deg,#0f0f0f,#1c1c1c); }
+  .fc-label { font-size:9px; font-weight:900; letter-spacing:1.5px; margin-bottom:8px; }
+  .fc-title { font-size:20px; font-weight:900; line-height:1.25; }
+  .fc-sub { font-size:12px; margin-top:5px; opacity:.7; }
+  .fc-bottom { display:flex; align-items:center; justify-content:space-between; }
+  .fc-cta { background:#C8102E; color:#fff; font-size:11px; font-weight:800; padding:6px 14px; border-radius:20px; }
+  .slider-dots { display:flex; justify-content:center; gap:5px; padding:8px 0 4px; }
+  .dot { width:5px; height:5px; border-radius:50%; background:#ddd; }
+  .dot.active { width:16px; border-radius:3px; background:#C8102E; }
+
+  /* 기능 아이콘 숏컷 바 */
+  .icon-bar { background:#fff; margin:0 0; padding:14px 16px; display:flex; justify-content:space-around; border-bottom:1px solid #f5f5f5; }
+  .icon-item { display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .icon-circle { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; position:relative; }
+  .icon-circle .badge { position:absolute; top:-4px; right:-4px; background:#C8102E; color:#fff; font-size:8px; font-weight:900; padding:1px 4px; border-radius:8px; min-width:16px; text-align:center; }
+  .icon-circle.red { background:#fff0f2; }
+  .icon-circle.blue { background:#eff6ff; }
+  .icon-circle.green { background:#f0fdf4; }
+  .icon-circle.purple { background:#f5f0ff; }
+  .icon-circle.amber { background:#fffbf0; }
+  .icon-label { font-size:10px; font-weight:700; color:#444; }
+
+  /* 높은시급 + AI 2컬럼 */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:7px; padding:10px 12px 0; }
+  .mini-card { background:#fff; border-radius:14px; padding:13px; border:1.5px solid #f0f0f0; }
+  .mini-label { font-size:9px; font-weight:900; letter-spacing:.5px; color:#C8102E; margin-bottom:5px; }
+  .mini-title { font-size:12px; font-weight:800; color:#111; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mini-sub { font-size:10px; color:#bbb; margin:2px 0; }
+  .mini-wage { font-size:15px; font-weight:900; color:#C8102E; margin-top:5px; }
+  .mini-wage span { font-size:10px; font-weight:800; background:#fff0f2; color:#C8102E; padding:2px 5px; border-radius:5px; margin-left:3px; }
+  .ai-placeholder { display:flex; flex-direction:column; justify-content:space-between; height:100%; }
+  .ai-msg { font-size:11px; color:#bbb; line-height:1.6; }
+  .ai-footer { font-size:10px; color:#e0e0e0; font-weight:700; }
+
+  /* 공고 피드 */
+  .section-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px 6px; }
+  .section-head-title { font-size:14px; font-weight:900; color:#111; }
+  .section-head-more { font-size:11px; color:#C8102E; font-weight:700; }
+  .job-scroll { display:flex; gap:8px; overflow-x:auto; padding:0 12px 12px; scrollbar-width:none; }
+  .job-card { flex-shrink:0; width:140px; background:#fff; border-radius:14px; padding:12px; border:1px solid #f0f0f0; }
+  .job-cat { font-size:9px; color:#aaa; font-weight:700; margin-bottom:4px; }
+  .job-title { font-size:12px; font-weight:800; color:#111; line-height:1.3; margin-bottom:3px; }
+  .job-biz { font-size:10px; color:#bbb; margin-bottom:6px; }
+  .job-wage { font-size:14px; font-weight:900; color:#C8102E; }
+  .job-wage span { font-size:10px; font-weight:800; }
+  .job-tags { display:flex; gap:3px; margin-top:5px; flex-wrap:wrap; }
+  .tag { font-size:9px; font-weight:700; padding:2px 5px; border-radius:5px; }
+  .tag.red { background:#fff0f2; color:#C8102E; }
+  .tag.green { background:#f0fdf4; color:#15803d; }
+  .tag.gray { background:#f5f5f5; color:#888; }
+
+  /* 하단 탭 */
+  .nav { background:#fff; border-top:1px solid #f0f0f0; display:flex; padding:8px 0 16px; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .nav-icon { font-size:20px; }
+  .nav-label { font-size:10px; font-weight:700; color:#bbb; }
+  .nav-center-wrap { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .nav-center { width:52px; height:52px; background:#C8102E; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-top:-16px; box-shadow:0 4px 16px rgba(200,16,46,0.35); }
+
+  .desc-box { background:#fff; border-radius:16px; padding:20px; max-width:375px; }
+  .desc-title { font-size:16px; font-weight:900; color:#111; margin-bottom:8px; }
+  .desc-body { font-size:13px; color:#666; line-height:1.7; }
+  .pros { color:#16a34a; font-weight:700; }
+  .cons { color:#C8102E; font-weight:700; }
+</style>
+</head>
+<body>
+
+<div class="label">시안 B — 메인 피처 슬라이더형</div>
+
+<div class="phone">
+  <div class="statusbar">
+    <span class="time">3:06</span>
+    <span class="icons">●●● 5G 🔋</span>
+  </div>
+  <div class="header">
+    <div class="logo">바로알바</div>
+    <div class="header-right">
+      <div class="bell">🔔</div>
+      <div class="avatar">👤</div>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <!-- 검색바 -->
+    <div class="searchbar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="업종, 지역, 공고명 검색" readonly>
+      <div class="search-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+    </div>
+
+    <!-- 메인 피처 슬라이더 (급구 슬라이드 표시) -->
+    <div class="featured-wrap">
+      <div class="featured-slider">
+        <div class="featured-card fc-urgent">
+          <div>
+            <div class="fc-label" style="color:#ff6677">URGENT NOW</div>
+            <div class="fc-title" style="color:#fff">급구 <span style="color:#ff6677">2건</span><br><span style="font-size:14px;font-weight:700;opacity:.6">지금 당장 필요해요</span></div>
+          </div>
+          <div class="fc-bottom">
+            <div>
+              <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:2px">홀서빙 · 물류 상하차</div>
+              <div style="font-size:15px;font-weight:900;color:#fff">15,000 ~ 18,000원</div>
+            </div>
+            <div class="fc-cta">지원하기 →</div>
+          </div>
+        </div>
+      </div>
+      <div class="slider-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div style="font-size:9px;color:#bbb;text-align:center;margin-top:-2px">← 밀어서 더 보기: 높은시급 · 외국인환영 · AI PICKS →</div>
+    </div>
+
+    <!-- 기능 아이콘 숏컷 바 -->
+    <div class="icon-bar">
+      <div class="icon-item">
+        <div class="icon-circle red">💰</div>
+        <div class="icon-label">높은시급</div>
+      </div>
+      <div class="icon-item">
+        <div class="icon-circle blue">🤖</div>
+        <div class="icon-label">AI추천</div>
+      </div>
+      <div class="icon-item">
+        <div class="icon-circle green" style="position:relative">
+          🌏
+          <div class="badge">23</div>
+        </div>
+        <div class="icon-label">외국인환영</div>
+      </div>
+      <div class="icon-item">
+        <div class="icon-circle purple">👥</div>
+        <div class="icon-label">바로모임</div>
+      </div>
+      <div class="icon-item">
+        <div class="icon-circle amber">📚</div>
+        <div class="icon-label">레슨/과외</div>
+      </div>
+    </div>
+
+    <!-- 주변 알바 -->
+    <div class="section-head">
+      <div class="section-head-title">📋 주변 알바 공고</div>
+      <div class="section-head-more">전체보기 ›</div>
+    </div>
+    <div class="job-scroll">
+      <div class="job-card">
+        <div class="job-cat">F&B</div>
+        <div class="job-title">홀 서빙 알바</div>
+        <div class="job-biz">돌쇠총무</div>
+        <div class="job-wage">15,000원<span> 시급</span></div>
+        <div class="job-tags"><span class="tag red">급구</span><span class="tag green">당일</span></div>
+      </div>
+      <div class="job-card">
+        <div class="job-cat">물류</div>
+        <div class="job-title">물류 상하차 야간</div>
+        <div class="job-biz">CJ대한통운</div>
+        <div class="job-wage">18,000원<span> 시급</span></div>
+        <div class="job-tags"><span class="tag green">🌏 외국인</span></div>
+      </div>
+      <div class="job-card">
+        <div class="job-cat">판매</div>
+        <div class="job-title">패션 디자이너</div>
+        <div class="job-biz">돌쇠총무</div>
+        <div class="job-wage">15,000원<span> 시급</span></div>
+        <div class="job-tags"><span class="tag gray">정기</span></div>
+      </div>
+    </div>
+
+    <!-- 2컬럼: 높은시급 + AI -->
+    <div style="padding:0 12px 12px">
+      <div style="font-size:11px;font-weight:800;color:#aaa;letter-spacing:.5px;padding:4px 0 8px">FEATURED</div>
+      <div class="two-col">
+        <div class="mini-card">
+          <div class="mini-label">높은 시급</div>
+          <div class="mini-title">살충 해주실분</div>
+          <div class="mini-sub">F&B</div>
+          <div class="mini-wage">19,500원<span>시급</span></div>
+        </div>
+        <div class="mini-card" style="border-color:#f0f0f0">
+          <div class="mini-label" style="color:#888">AI PICKS</div>
+          <div class="ai-msg">공고를 둘러볼수록 맞춤 추천이 시작돼요</div>
+          <div class="ai-footer">🤖 AI 학습 중...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 탭 -->
+  <div class="nav">
+    <div class="nav-item">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label" style="color:#C8102E">홈</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">지도</div>
+    </div>
+    <div class="nav-center-wrap">
+      <div class="nav-center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </div>
+      <div class="nav-label" style="margin-top:4px">바로알바</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">💬</div>
+      <div class="nav-label">채팅</div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">마이페이지</div>
+    </div>
+  </div>
+</div>
+
+<div class="desc-box">
+  <div class="desc-title">시안 B — 메인 슬라이더형</div>
+  <div class="desc-body">
+    <span class="pros">장점:</span> 상단 큰 슬라이더가 급구·높은시급·외국인환영·AI PICKS를 순서대로 전광판처럼 표현. 아이콘 숏컷 바가 카카오뱅크처럼 직관적. 스크롤 없이 상단에서 모든 진입점 파악.<br><br>
+    <span class="cons">단점:</span> 슬라이더는 실제로 사용자가 밀지 않으면 한 장만 봄. 자동 슬라이드 구현 필요.
+  </div>
+</div>
+
+</body>
+</html>

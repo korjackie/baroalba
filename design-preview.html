@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 홈 UI — A+D 시안</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --red: #C8102E;
+  --red2: #E8102E;
+  --purple: #7C3AED;
+}
+body { font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#111; color:#111; }
+
+/* ── 탭 ── */
+.compare-nav { position:fixed; top:0; left:0; right:0; z-index:999; background:#111; display:flex; overflow-x:auto; scrollbar-width:none; border-bottom:1px solid #2a2a2a; }
+.compare-nav::-webkit-scrollbar { display:none; }
+.compare-tab { padding:14px 22px; font-size:13px; font-weight:700; color:#666; cursor:pointer; border:none; background:none; white-space:nowrap; border-bottom:2.5px solid transparent; flex-shrink:0; }
+.compare-tab.active { color:#fff; border-bottom-color:var(--red); }
+.tab-section { display:none; padding-top:50px; }
+.tab-section.active { display:block; }
+
+/* ── 폰 프레임 ── */
+.scene { display:flex; gap:40px; padding:36px 5%; justify-content:center; flex-wrap:wrap; align-items:flex-start; min-height:100vh; }
+.phone { width:360px; flex-shrink:0; }
+.phone-label { text-align:center; font-size:12px; font-weight:700; color:#666; margin-bottom:10px; letter-spacing:.5px; text-transform:uppercase; }
+.phone-screen { width:360px; height:740px; border-radius:40px; overflow:hidden; background:#f5f5f5; box-shadow:0 32px 80px rgba(0,0,0,.7); border:2px solid #2a2a2a; }
+.phone-screen-inner { height:100%; overflow-y:auto; scrollbar-width:none; display:flex; flex-direction:column; }
+.phone-screen-inner::-webkit-scrollbar { display:none; }
+
+/* ── 앱 헤더 ── */
+.app-hdr { background:#fff; padding:14px 16px 10px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f2f2f2; flex-shrink:0; }
+.app-logo { font-size:21px; font-weight:900; color:var(--red); display:flex; align-items:center; gap:8px; }
+.logo-box { width:30px; height:30px; background:var(--red); border-radius:9px; display:flex; align-items:center; justify-content:center; }
+.app-bell { width:36px; height:36px; border-radius:50%; background:#f5f5f5; display:flex; align-items:center; justify-content:center; }
+
+/* ── 검색바 ── */
+.search-bar { margin:10px 16px; background:#f5f5f5; border-radius:14px; padding:11px 14px; display:flex; align-items:center; gap:10px; cursor:pointer; }
+.search-bar-txt { font-size:13px; color:#bbb; flex:1; }
+.search-icon-btn { width:34px; height:34px; background:var(--red); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* ── Bento Grid ── */
+.bento { padding:12px 12px 8px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.bc { border-radius:18px; overflow:hidden; cursor:pointer; }
+.bc-full { grid-column:1/-1; }
+.bc-inner { padding:16px; display:flex; flex-direction:column; height:100%; }
+
+/* 급구 — 다크 히어로 (A+D 하이브리드) */
+.bc-urgent { background:linear-gradient(145deg,#0d0003 0%,#2a0008 55%,#580015 100%); min-height:128px; }
+.bc-urgent .tag { font-size:9px; font-weight:900; letter-spacing:1.8px; color:rgba(255,120,120,.85); margin-bottom:8px; }
+.bc-urgent .title { font-size:19px; font-weight:900; color:#fff; line-height:1.2; }
+.bc-urgent .title em { color:#ff4d6a; font-style:normal; }
+.bc-urgent .sub-row { display:flex; gap:8px; margin-top:12px; }
+.bc-urgent .sub-card { flex:1; background:rgba(255,255,255,.08); border-radius:10px; padding:8px 10px; border:1px solid rgba(255,255,255,.06); }
+.bc-urgent .sub-card .sub-loc { font-size:10px; color:rgba(255,255,255,.4); margin-bottom:2px; }
+.bc-urgent .sub-card .sub-wage { font-size:14px; font-weight:900; color:#fff; }
+.bc-urgent .cta { display:inline-flex; align-items:center; gap:4px; background:var(--red); color:#fff; font-size:11px; font-weight:800; padding:7px 14px; border-radius:20px; margin-top:12px; width:fit-content; }
+
+/* AI 추천 */
+.bc-ai { background:#fff; border:1.5px solid #efefef; min-height:104px; }
+.bc-ai .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:var(--red); margin-bottom:6px; }
+.bc-ai .name { font-size:14px; font-weight:900; color:#111; line-height:1.3; }
+.bc-ai .loc { font-size:11px; color:#bbb; margin-top:3px; }
+.bc-ai .wage { font-size:16px; font-weight:900; color:var(--red); margin-top:auto; padding-top:8px; }
+
+/* 당일정산 */
+.bc-sd { background:linear-gradient(135deg,#fff9f0,#fff3e0); border:1.5px solid #ffd699; min-height:104px; }
+.bc-sd .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:#b45309; margin-bottom:6px; }
+.bc-sd .name { font-size:14px; font-weight:900; color:#111; line-height:1.3; }
+.bc-sd .wage { font-size:16px; font-weight:900; color:#b45309; margin-top:auto; padding-top:8px; }
+
+/* 외국인 환영 */
+.bc-foreign { background:linear-gradient(135deg,#f0fdf5,#dcfce7); border:1.5px solid #a7f3d0; }
+.bc-foreign .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:#15803d; margin-bottom:5px; }
+.bc-foreign .name { font-size:13px; font-weight:900; color:#111; }
+.bc-foreign .chips { display:flex; gap:5px; margin-top:8px; flex-wrap:wrap; }
+.bc-foreign-chip { font-size:10px; font-weight:700; background:#15803d; color:#fff; padding:3px 8px; border-radius:7px; }
+
+/* 모범 파트너 */
+.bc-partner { background:#1a1a1a; min-height:104px; }
+.bc-partner .eyebrow { font-size:9px; font-weight:900; letter-spacing:1px; color:#555; margin-bottom:6px; }
+.bc-partner .name { font-size:14px; font-weight:900; color:#fff; }
+.bc-partner .stars { font-size:12px; color:#f59e0b; margin-top:4px; }
+.bc-partner .score { font-size:11px; font-weight:700; color:var(--red); margin-top:3px; }
+
+/* ── 바로모임 스페셜 섹션 ── */
+.moim-section { margin:4px 12px 8px; }
+.moim-header { display:flex; align-items:center; gap:10px; padding:14px 16px 12px; background:#fff; border-radius:18px 18px 0 0; border:1.5px solid #ede9fe; border-bottom:none; }
+.moim-logo-box { width:36px; height:36px; background:linear-gradient(135deg,#7C3AED,#9333ea); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.moim-logo-box svg { width:18px; height:18px; stroke:#fff; fill:none; }
+.moim-title-group { flex:1; }
+.moim-brand { font-size:16px; font-weight:900; color:#5b21b6; letter-spacing:-.3px; }
+.moim-tagline { font-size:11px; color:#a78bfa; margin-top:1px; font-weight:600; }
+.moim-new-badge { font-size:9px; font-weight:900; background:var(--purple); color:#fff; padding:3px 8px; border-radius:20px; }
+
+/* 모임 카드 슬라이더 */
+.moim-cards-wrap { background:#fff; border:1.5px solid #ede9fe; border-top:1px solid #f5f3ff; border-radius:0 0 18px 18px; padding:0 0 14px; }
+.moim-cards-scroll { display:flex; gap:10px; overflow-x:auto; padding:10px 16px 4px; scrollbar-width:none; }
+.moim-cards-scroll::-webkit-scrollbar { display:none; }
+.moim-card { flex-shrink:0; width:160px; border-radius:14px; overflow:hidden; border:1.5px solid #ede9fe; cursor:pointer; }
+
+/* 유료 플랜 모임카드 (프로/베이직 - 이미지+뱃지) */
+.mc-paid { background:linear-gradient(145deg,#2e1065,#4c1d95); }
+.mc-paid .mc-badge { font-size:8px; font-weight:900; background:rgba(255,255,255,.18); color:rgba(255,255,255,.9); padding:3px 8px; border-radius:6px; display:inline-block; margin:10px 10px 0; letter-spacing:.5px; }
+.mc-paid .mc-body { padding:8px 10px 12px; }
+.mc-paid .mc-cat { font-size:10px; color:rgba(255,255,255,.5); margin-bottom:3px; }
+.mc-paid .mc-name { font-size:13px; font-weight:900; color:#fff; line-height:1.3; }
+.mc-paid .mc-meta { font-size:11px; color:rgba(255,255,255,.6); margin-top:4px; }
+.mc-paid .mc-spot { font-size:11px; font-weight:800; color:#c4b5fd; margin-top:3px; }
+
+/* 무료 플랜 모임카드 */
+.mc-free { background:#faf5ff; }
+.mc-free .mc-body { padding:12px 10px; }
+.mc-free .mc-cat { font-size:10px; color:#a78bfa; margin-bottom:3px; font-weight:700; }
+.mc-free .mc-name { font-size:13px; font-weight:800; color:#4c1d95; line-height:1.3; }
+.mc-free .mc-meta { font-size:11px; color:#9ca3af; margin-top:4px; }
+.mc-free .mc-spot { font-size:11px; font-weight:700; color:var(--purple); margin-top:3px; }
+
+.moim-more { text-align:center; padding:6px 16px 2px; font-size:12px; color:#a78bfa; font-weight:700; cursor:pointer; }
+
+/* ── 하단 내비 ── */
+.app-nav { background:#fff; border-top:1px solid #f0f0f0; display:flex; padding:8px 0 14px; margin-top:auto; flex-shrink:0; }
+.nav-it { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; }
+.nav-it svg { width:22px; height:22px; stroke:#d0d0d0; fill:none; stroke-width:2; }
+.nav-it span { font-size:10px; font-weight:700; color:#d0d0d0; }
+.nav-it.on svg { stroke:var(--red); }
+.nav-it.on span { color:var(--red); }
+.nav-fab-wrap { flex:1; display:flex; align-items:center; justify-content:center; }
+.nav-fab { width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg,var(--red2),#900020); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(200,16,46,.45); margin-top:-16px; }
+.nav-fab svg { width:22px; height:22px; stroke:#fff; fill:none; stroke-width:2.5; }
+
+/* ── 필터 패널 (오버레이) ── */
+.filter-overlay { position:absolute; inset:0; background:rgba(0,0,0,.5); z-index:20; display:flex; flex-direction:column; }
+.filter-panel { background:#fff; margin-top:auto; border-radius:24px 24px 0 0; max-height:88%; overflow-y:auto; scrollbar-width:none; }
+.filter-panel::-webkit-scrollbar { display:none; }
+.filter-handle { width:36px; height:4px; background:#e5e5e5; border-radius:2px; margin:12px auto 0; }
+.filter-title { font-size:16px; font-weight:900; color:#111; padding:16px 20px 12px; border-bottom:1px solid #f5f5f5; display:flex; align-items:center; justify-content:space-between; }
+.filter-close { font-size:20px; color:#bbb; cursor:pointer; line-height:1; }
+.filter-row { display:flex; align-items:center; padding:15px 20px; border-bottom:1px solid #f5f5f5; cursor:pointer; }
+.filter-row-label { font-size:14px; font-weight:700; color:#111; flex:1; }
+.filter-row-value { font-size:13px; color:#bbb; }
+.filter-row-chevron { width:16px; height:16px; stroke:#ccc; fill:none; margin-left:8px; }
+.filter-row-value.set { color:var(--red); font-weight:700; }
+.filter-toggle-row { display:flex; align-items:center; padding:14px 20px; border-bottom:1px solid #f5f5f5; }
+.filter-toggle-row label { font-size:14px; font-weight:700; color:#111; flex:1; }
+.toggle-pill { width:44px; height:26px; background:#e5e5e5; border-radius:13px; position:relative; cursor:pointer; transition:background .2s; }
+.toggle-pill.on { background:var(--red); }
+.toggle-pill::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,.2); transition:left .2s; }
+.toggle-pill.on::after { left:21px; }
+.filter-chip-row { padding:12px 20px 14px; display:flex; gap:8px; flex-wrap:wrap; }
+.filter-chip { padding:7px 14px; border-radius:20px; font-size:13px; font-weight:700; background:#f5f5f5; color:#555; cursor:pointer; }
+.filter-chip.on { background:var(--red); color:#fff; }
+.filter-bot { padding:14px 16px; border-top:1px solid #f0f0f0; display:flex; gap:10px; }
+.filter-reset { flex:1; padding:14px; border:1.5px solid #e5e5e5; border-radius:14px; font-size:14px; font-weight:800; color:#555; background:#fff; cursor:pointer; }
+.filter-apply { flex:2.5; padding:14px; background:var(--red); border-radius:14px; font-size:14px; font-weight:900; color:#fff; cursor:pointer; text-align:center; }
+
+/* ── 설명 패널 ── */
+.desc { max-width:340px; padding-top:64px; color:#888; }
+.desc h2 { font-size:22px; font-weight:900; color:#fff; margin-bottom:12px; }
+.desc p { font-size:14px; line-height:1.75; margin-bottom:20px; }
+.pro { font-size:13px; color:#6ee7b7; margin-bottom:6px; display:flex; gap:8px; }
+.con { font-size:13px; color:#fca5a5; margin-bottom:6px; display:flex; gap:8px; }
+.opinion-box { background:#1e1e1e; border-radius:14px; padding:18px; margin-top:24px; border:1px solid #333; }
+.opinion-box h4 { font-size:14px; font-weight:800; color:#c4b5fd; margin-bottom:10px; }
+.opinion-box p { font-size:13px; color:#999; line-height:1.7; }
+
+/* ── 필터 패널 탭 ── */
+.filter-section-label { font-size:11px; font-weight:900; letter-spacing:1px; color:#bbb; padding:14px 20px 6px; }
+
+/* 폰 wrap에 relative 필요 */
+.phone-screen { position:relative; }
+
+@media(max-width:780px) {
+  .scene { gap:24px; padding:24px 4%; }
+  .phone { width:100%; max-width:360px; }
+  .phone-screen { width:100%; max-width:360px; }
+  .desc { padding-top:0; max-width:100%; }
+}
+</style>
+</head>
+<body>
+
+<nav class="compare-nav">
+  <button class="compare-tab active" onclick="showTab(0)">홈 (기본)</button>
+  <button class="compare-tab" onclick="showTab(1)">홈 (필터 열린 상태)</button>
+  <button class="compare-tab" onclick="showTab(2)">바로모임 섹션 확대</button>
+  <button class="compare-tab" onclick="showTab(3)">설계 메모</button>
+</nav>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB 0: 홈 기본 상태                   -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-section active" id="tab-0">
+  <div class="scene" style="background:#111">
+    <div class="phone">
+      <div class="phone-label">A + D 조합 홈 (기본)</div>
+      <div class="phone-screen">
+        <div class="phone-screen-inner">
+
+          <!-- 헤더 -->
+          <div class="app-hdr">
+            <div class="app-logo">
+              <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+              바로알바
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:11px;font-weight:700;color:#bbb">서울 마포구</div>
+              <div class="app-bell"><svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+            </div>
+          </div>
+
+          <!-- 검색바 (엔카 스타일) -->
+          <div class="search-bar" onclick="">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="search-bar-txt">업종, 업체명, 지역 검색</span>
+            <div class="search-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+          </div>
+
+          <!-- Bento Grid -->
+          <div class="bento">
+            <!-- 급구 히어로 (A 비율 + D 다크 그래디언트) -->
+            <div class="bc bc-full bc-urgent">
+              <div class="bc-inner">
+                <div class="tag">URGENT NOW</div>
+                <div class="title">오늘 <em>급구</em> 7건 — 지금 바로 지원</div>
+                <div class="sub-row">
+                  <div class="sub-card"><div class="sub-loc">강남구 · 서빙</div><div class="sub-wage">12,000원</div></div>
+                  <div class="sub-card"><div class="sub-loc">마포구 · 청소</div><div class="sub-wage">11,500원</div></div>
+                </div>
+                <div class="cta">전체보기 <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+            </div>
+
+            <!-- AI 추천 -->
+            <div class="bc bc-ai">
+              <div class="bc-inner">
+                <div class="eyebrow">AI PICKS</div>
+                <div class="name">행동 기반<br>맞춤 추천</div>
+                <div class="loc">청소 · 마포구</div>
+                <div class="wage">15,000원</div>
+              </div>
+            </div>
+
+            <!-- 당일정산 -->
+            <div class="bc bc-sd">
+              <div class="bc-inner">
+                <div class="eyebrow">SAME DAY</div>
+                <div class="name">당일정산<br>특가 알바</div>
+                <div class="wage">11,000원~</div>
+              </div>
+            </div>
+
+            <!-- 외국인 환영 -->
+            <div class="bc bc-foreign bc-full">
+              <div class="bc-inner">
+                <div class="eyebrow">WELCOME ALL</div>
+                <div class="name">외국인 지원 가능 공고</div>
+                <div class="chips">
+                  <div class="bc-foreign-chip">픽업 제공</div>
+                  <div class="bc-foreign-chip">식사 포함</div>
+                  <div class="bc-foreign-chip">초보 환영</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 모범 파트너 -->
+            <div class="bc bc-partner bc-full">
+              <div class="bc-inner" style="flex-direction:row;align-items:center;gap:14px">
+                <div>
+                  <div class="eyebrow">TOP PARTNER</div>
+                  <div class="name">김알바</div>
+                  <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                  <div class="score">신뢰점수 97</div>
+                </div>
+                <div style="margin-left:auto;text-align:right">
+                  <div style="font-size:11px;color:#555;margin-bottom:4px">이번달 완료</div>
+                  <div style="font-size:20px;font-weight:900;color:#fff">12건</div>
+                  <div style="font-size:10px;color:#555;margin-top:2px">노쇼 0회</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 바로모임 스페셜 섹션 -->
+          <div class="moim-section">
+            <div class="moim-header">
+              <div class="moim-logo-box">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              </div>
+              <div class="moim-title-group">
+                <div class="moim-brand">바로모임</div>
+                <div class="moim-tagline">취미·스포츠·소셜 모임을 즉시 개설</div>
+              </div>
+              <div class="moim-new-badge">NEW</div>
+            </div>
+            <div class="moim-cards-wrap">
+              <div class="moim-cards-scroll">
+
+                <!-- 유료 플랜 모임 (보라 다크 카드) -->
+                <div class="moim-card mc-paid">
+                  <div class="mc-badge">PRO FEATURED</div>
+                  <div class="mc-body">
+                    <div class="mc-cat">스포츠 · 테니스</div>
+                    <div class="mc-name">테니스 2:2 파트너 구합니다</div>
+                    <div class="mc-meta">오늘 오후 4시 · 마포</div>
+                    <div class="mc-spot">2자리 남음</div>
+                  </div>
+                </div>
+
+                <!-- 유료 플랜 모임 -->
+                <div class="moim-card mc-paid" style="background:linear-gradient(145deg,#0f2027,#1a3a4a)">
+                  <div class="mc-badge">BASIC FEATURED</div>
+                  <div class="mc-body">
+                    <div class="mc-cat">소셜 · 네트워킹</div>
+                    <div class="mc-name">외국인 친구 사귀기 소셜 모임</div>
+                    <div class="mc-meta">내일 오전 11시 · 강남</div>
+                    <div class="mc-spot">5자리 남음</div>
+                  </div>
+                </div>
+
+                <!-- 무료 플랜 모임 (텍스트 카드) -->
+                <div class="moim-card mc-free">
+                  <div class="mc-body">
+                    <div class="mc-cat">취미 · 보드게임</div>
+                    <div class="mc-name">주말 보드게임 같이 하실 분</div>
+                    <div class="mc-meta">토요일 오후 · 홍대</div>
+                    <div class="mc-spot">3자리 남음</div>
+                  </div>
+                </div>
+
+                <!-- 무료 플랜 모임 -->
+                <div class="moim-card mc-free">
+                  <div class="mc-body">
+                    <div class="mc-cat">카풀 · 강남방향</div>
+                    <div class="mc-name">매주 월~금 카풀 구해요</div>
+                    <div class="mc-meta">평일 오전 8시 · 마포</div>
+                    <div class="mc-spot">1자리 남음</div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="moim-more">전체 모임 보기 ›</div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <!-- 하단 내비 -->
+          <div class="app-nav">
+            <div class="nav-it on">
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <span>홈</span>
+            </div>
+            <div class="nav-it">
+              <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              <span>지도</span>
+            </div>
+            <div class="nav-fab-wrap">
+              <div class="nav-fab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+            </div>
+            <div class="nav-it">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <span>채팅</span>
+            </div>
+            <div class="nav-it">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>마이</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="desc">
+      <h2>A+D 조합 홈</h2>
+      <p>A의 Bento 레이아웃에 D의 다크 그래디언트 히어로를 급구 타일에 적용. 필터 칩 제거, 검색창 우측에 돋보기 버튼.</p>
+      <div class="pro">✓ 급구 타일이 히어로처럼 강조됨</div>
+      <div class="pro">✓ 바로모임이 완전히 독립 서비스처럼 보임</div>
+      <div class="pro">✓ 유료/무료 모임 카드 차별화로 업그레이드 동기 유발</div>
+      <div class="pro">✓ 검색창 돋보기 버튼으로 필터 진입점 명확</div>
+      <div class="con">– 스크롤이 길어짐 (바로모임 섹션 때문)</div>
+      <div class="opinion-box">
+        <h4>바로모임 광고 모델 설계</h4>
+        <p>유료 플랜(베이직/프로) 모임은 <strong style="color:#c4b5fd">진한 다크 카드 + "FEATURED" 뱃지</strong>로 노출. 무료 플랜은 밝은 텍스트 카드. 카드 순서: 프로 → 베이직 → 무료. 자연스럽게 프리미엄 느낌 차이를 인지시켜 업그레이드 전환 유도.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB 1: 필터 패널 열린 상태            -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-section" id="tab-1">
+  <div class="scene" style="background:#111">
+    <div class="phone">
+      <div class="phone-label">검색 클릭 → 상세 필터 패널</div>
+      <div class="phone-screen">
+        <div class="phone-screen-inner">
+
+          <div class="app-hdr">
+            <div class="app-logo">
+              <div class="logo-box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+              바로알바
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:11px;font-weight:700;color:#bbb">서울 마포구</div>
+              <div class="app-bell"><svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+            </div>
+          </div>
+
+          <!-- 검색창 (활성) -->
+          <div class="search-bar" style="border:2px solid var(--red);background:#fff">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="search-bar-txt" style="color:#999">업종, 업체명, 지역 검색</span>
+            <div class="search-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+          </div>
+
+          <!-- 배경 (흐릿하게 Bento 일부) -->
+          <div style="padding:12px;opacity:.25">
+            <div style="height:100px;background:linear-gradient(145deg,#0d0003,#2a0008);border-radius:16px;margin-bottom:8px"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="height:80px;background:#fff;border-radius:16px;border:1px solid #eee"></div>
+              <div style="height:80px;background:#fff9f0;border-radius:16px;border:1px solid #ffd699"></div>
+            </div>
+          </div>
+
+          <!-- 필터 오버레이 -->
+          <div class="filter-overlay">
+            <div class="filter-panel">
+              <div class="filter-handle"></div>
+              <div class="filter-title">
+                공고 필터
+                <span class="filter-close">&#215;</span>
+              </div>
+
+              <!-- 업종 칩 -->
+              <div class="filter-section-label">업종</div>
+              <div class="filter-chip-row">
+                <div class="filter-chip on">전체</div>
+                <div class="filter-chip">F&amp;B</div>
+                <div class="filter-chip">청소</div>
+                <div class="filter-chip">물류</div>
+                <div class="filter-chip">판매</div>
+                <div class="filter-chip">IT·사무</div>
+                <div class="filter-chip">기타</div>
+              </div>
+
+              <!-- 지역 -->
+              <div class="filter-row">
+                <span class="filter-row-label">지역</span>
+                <span class="filter-row-value set">마포구</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 날짜·시간 -->
+              <div class="filter-row">
+                <span class="filter-row-label">날짜 / 시간</span>
+                <span class="filter-row-value">선택 안 함</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 시급 -->
+              <div class="filter-row">
+                <span class="filter-row-label">시급</span>
+                <span class="filter-row-value set">10,000원 이상</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 경력 -->
+              <div class="filter-row">
+                <span class="filter-row-label">경력</span>
+                <span class="filter-row-value">무관</span>
+                <svg class="filter-row-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+
+              <!-- 토글들 -->
+              <div class="filter-section-label" style="margin-top:4px">조건</div>
+              <div class="filter-toggle-row">
+                <label>당일정산</label>
+                <div class="toggle-pill on"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>외국인 환영</label>
+                <div class="toggle-pill"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>픽업 제공</label>
+                <div class="toggle-pill"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>식사 포함</label>
+                <div class="toggle-pill on"></div>
+              </div>
+              <div class="filter-toggle-row">
+                <label>팀모집</label>
+                <div class="toggle-pill"></div>
+              </div>
+
+              <div style="height:8px"></div>
+
+              <div class="filter-bot">
+                <div class="filter-reset">초기화</div>
+                <div class="filter-apply">공고보기 22개</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="desc">
+      <h2>상세 필터 패널</h2>
+      <p>검색창(또는 돋보기 버튼) 클릭 시 엔카 스타일 바텀 시트가 올라옴. 홈 화면에서 필터 칩 없애는 대신 여기에 모든 필터 집중.</p>
+      <div class="pro">✓ 홈이 훨씬 깔끔해짐 (필터 칩 제거)</div>
+      <div class="pro">✓ 필터 옵션은 오히려 더 강력해짐</div>
+      <div class="pro">✓ 엔카 UI처럼 "공고보기 N개" 숫자 실시간 업데이트</div>
+      <div class="pro">✓ 토글 조건들 한눈에 설정</div>
+      <div class="con">– 한 번 더 탭해야 필터 접근 가능</div>
+      <div class="opinion-box">
+        <h4>구현 방법</h4>
+        <p>검색바 클릭 시 `openSearchFilter()` 호출 → 기존 모달 패턴으로 패널 슬라이드업. 하단 "공고보기 N개" 숫자는 필터 변경 시마다 Supabase `count` 쿼리로 실시간 업데이트.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB 2: 바로모임 섹션 확대             -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-section" id="tab-2">
+  <div class="scene" style="background:#111">
+    <div class="phone">
+      <div class="phone-label">바로모임 섹션 — 플랜별 차별화</div>
+      <div class="phone-screen">
+        <div class="phone-screen-inner" style="background:#f8f4ff">
+
+          <!-- 바로모임 풀 페이지 뷰 -->
+          <div style="background:linear-gradient(145deg,#3b0764,#5b21b6);padding:20px 16px 24px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <div style="width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              </div>
+              <div>
+                <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-.3px">바로모임</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:1px">취미·스포츠·소셜 모임 즉시 개설</div>
+              </div>
+              <div style="margin-left:auto;font-size:9px;font-weight:900;background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:20px;letter-spacing:.5px">NEW</div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px">
+                <div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px">지금 열린 모임</div>
+                <div style="font-size:20px;font-weight:900;color:#fff">24개</div>
+              </div>
+              <div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px">
+                <div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px">이번 주 신규</div>
+                <div style="font-size:20px;font-weight:900;color:#fff">8개</div>
+              </div>
+              <div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 12px">
+                <div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px">내 근처</div>
+                <div style="font-size:20px;font-weight:900;color:#fff">5개</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 프로 피처드 -->
+          <div style="padding:14px 16px 6px">
+            <div style="font-size:10px;font-weight:900;letter-spacing:1.5px;color:#9333ea;margin-bottom:8px">PRO FEATURED</div>
+            <div style="background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start;border:1.5px solid #4338ca">
+              <div style="width:44px;height:44px;background:rgba(255,255,255,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎾</div>
+              <div style="flex:1">
+                <div style="font-size:15px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:4px">테니스 2:2 파트너 구합니다</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.5)">오늘 오후 4시 · 마포구 망원</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+                  <span style="font-size:11px;font-weight:800;background:#7c3aed;color:#fff;padding:3px 8px;border-radius:6px">2자리 남음</span>
+                  <span style="font-size:11px;color:rgba(255,255,255,.35)">스포츠 · 무료</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 베이직 피처드 -->
+          <div style="padding:6px 16px 6px">
+            <div style="font-size:10px;font-weight:900;letter-spacing:1.5px;color:#0891b2;margin-bottom:8px">BASIC FEATURED</div>
+            <div style="background:linear-gradient(135deg,#0c1a2e,#0f2b44);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start;border:1.5px solid #0e4f6e">
+              <div style="width:44px;height:44px;background:rgba(255,255,255,.08);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🤝</div>
+              <div style="flex:1">
+                <div style="font-size:15px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:4px">외국인 친구 사귀기 소셜 모임</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.5)">내일 오전 11시 · 강남구 역삼</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+                  <span style="font-size:11px;font-weight:800;background:#0891b2;color:#fff;padding:3px 8px;border-radius:6px">5자리 남음</span>
+                  <span style="font-size:11px;color:rgba(255,255,255,.35)">소셜 · 무료</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 무료 플랜 목록 -->
+          <div style="padding:10px 16px 6px">
+            <div style="font-size:10px;font-weight:900;letter-spacing:1.5px;color:#aaa;margin-bottom:8px">전체 모임</div>
+            <div style="background:#fff;border-radius:16px;overflow:hidden;border:1.5px solid #ede9fe">
+              <div style="padding:13px 14px;border-bottom:1px solid #f5f3ff;display:flex;gap:10px;align-items:center">
+                <div style="width:36px;height:36px;background:#f5f3ff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎲</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">주말 보드게임 같이 하실 분</div>
+                  <div style="font-size:11px;color:#aaa;margin-top:2px">토요일 오후 · 홍대</div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0">3자리</div>
+              </div>
+              <div style="padding:13px 14px;border-bottom:1px solid #f5f3ff;display:flex;gap:10px;align-items:center">
+                <div style="width:36px;height:36px;background:#f5f3ff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🚗</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">매주 월~금 카풀 강남 방향</div>
+                  <div style="font-size:11px;color:#aaa;margin-top:2px">평일 오전 8시 · 마포</div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0">1자리</div>
+              </div>
+              <div style="padding:13px 14px;display:flex;gap:10px;align-items:center">
+                <div style="width:36px;height:36px;background:#f5f3ff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🍷</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">와인 클래스 초보 환영</div>
+                  <div style="font-size:11px;color:#aaa;margin-top:2px">다음주 금요일 · 서초</div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0">6자리</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 모임 개설 CTA -->
+          <div style="padding:12px 16px 20px">
+            <div style="background:linear-gradient(135deg,#7c3aed,#9333ea);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:900;color:#fff">내 모임 만들기</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">무료 플랜 월 1개 · 베이직 월 10개</div>
+              </div>
+              <div style="background:rgba(255,255,255,.2);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:900;color:#fff">시작</div>
+            </div>
+          </div>
+
+          <div class="app-nav" style="margin-top:auto">
+            <div class="nav-it"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>홈</span></div>
+            <div class="nav-it"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span>지도</span></div>
+            <div class="nav-fab-wrap"><div class="nav-fab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div></div>
+            <div class="nav-it on"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span style="color:var(--purple)">모임</span></div>
+            <div class="nav-it"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>마이</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="desc">
+      <h2>바로모임 섹션 전개</h2>
+      <p>홈에서는 헤더 + 카드 슬라이더로 궁금증 유발. 클릭 시 전용 패널 열림. 플랜별 노출 방식이 확연히 다름.</p>
+      <div class="pro">✓ PRO FEATURED: 진한 다크 카드 + 대형 노출</div>
+      <div class="pro">✓ BASIC FEATURED: 다른 색 다크 카드 + 중형 노출</div>
+      <div class="pro">✓ 무료: 흰색 리스트 (클릭은 가능, 시각적 차별)</div>
+      <div class="pro">✓ "내 모임 만들기" CTA로 전환 유도</div>
+      <div class="opinion-box">
+        <h4>홈 슬라이더 vs 전용 패널</h4>
+        <p>홈 Bento 아래 가로 스크롤 슬라이더는 <strong style="color:#c4b5fd">"티저"</strong>. 실제 상세는 바로모임 전용 패널에서. 슬라이더 카드를 탭하면 바로 해당 모임 상세 오픈. 이 구조면 홈이 너무 길어지지 않고 바로모임 섹션은 충분히 강조됩니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB 3: 설계 메모                      -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-section" id="tab-3">
+  <div style="max-width:800px;margin:0 auto;padding:48px 24px;color:#ccc">
+    <h2 style="font-size:28px;font-weight:900;color:#fff;margin-bottom:8px">설계 메모</h2>
+    <p style="font-size:14px;color:#666;margin-bottom:40px">구현 시 참고할 결정 사항</p>
+
+    <div style="display:flex;flex-direction:column;gap:24px">
+
+      <div style="background:#1e1e1e;border-radius:16px;padding:24px;border:1px solid #2a2a2a">
+        <h3 style="font-size:15px;font-weight:800;color:#fff;margin-bottom:12px">1. 검색 + 필터 진입점</h3>
+        <ul style="display:flex;flex-direction:column;gap:8px;padding-left:0;list-style:none">
+          <li style="font-size:13px;line-height:1.7">· 검색창 클릭 시 키보드가 아니라 <strong style="color:#fbbf24">필터 패널 바텀시트</strong>가 열림</li>
+          <li style="font-size:13px;line-height:1.7">· 검색창 안에 텍스트 입력 → 자동완성 (업체명/업종/지역 fuzzy search)</li>
+          <li style="font-size:13px;line-height:1.7">· 우측 돋보기 버튼은 항상 필터 패널 열기</li>
+          <li style="font-size:13px;line-height:1.7">· "공고보기 N개" 카운트는 Supabase count 쿼리 (head:true) 실시간 반영</li>
+        </ul>
+      </div>
+
+      <div style="background:#1e1e1e;border-radius:16px;padding:24px;border:1px solid #2a2a2a">
+        <h3 style="font-size:15px;font-weight:800;color:#fff;margin-bottom:12px">2. Bento Grid 데이터 소스</h3>
+        <ul style="display:flex;flex-direction:column;gap:8px;padding-left:0;list-style:none">
+          <li style="font-size:13px;line-height:1.7">· <strong style="color:#fbbf24">급구 타일</strong>: deadline = 오늘인 공고 count + 상위 2개 샘플</li>
+          <li style="font-size:13px;line-height:1.7">· <strong style="color:#fbbf24">AI PICKS</strong>: 기존 AI 추천 로직 그대로 상위 1개</li>
+          <li style="font-size:13px;line-height:1.7">· <strong style="color:#fbbf24">당일정산</strong>: wage_paid=false + same_day_settlement=true 상위 1개</li>
+          <li style="font-size:13px;line-height:1.7">· <strong style="color:#fbbf24">외국인 환영</strong>: nationality_requirement='any' 카운트 표시</li>
+          <li style="font-size:13px;line-height:1.7">· <strong style="color:#fbbf24">모범파트너</strong>: 이번달 완료 건수 상위 1명 (workers 테이블)</li>
+        </ul>
+      </div>
+
+      <div style="background:#1e1e1e;border-radius:16px;padding:24px;border:1px solid #7c3aed44">
+        <h3 style="font-size:15px;font-weight:800;color:#c4b5fd;margin-bottom:12px">3. 바로모임 광고 로직</h3>
+        <ul style="display:flex;flex-direction:column;gap:8px;padding-left:0;list-style:none">
+          <li style="font-size:13px;line-height:1.7">· gatherings 조회 시 host의 플랜 join → 정렬: pro → basic → free</li>
+          <li style="font-size:13px;line-height:1.7">· 홈 슬라이더: 최대 6개 (pro 우선, 마감 임박순)</li>
+          <li style="font-size:13px;line-height:1.7">· PRO 카드: 다크 보라 배경 + "PRO FEATURED" 뱃지</li>
+          <li style="font-size:13px;line-height:1.7">· BASIC 카드: 다크 네이비 배경 + "BASIC FEATURED" 뱃지</li>
+          <li style="font-size:13px;line-height:1.7">· FREE 카드: 밝은 연보라 배경 + 뱃지 없음</li>
+          <li style="font-size:13px;line-height:1.7">· <strong style="color:#c4b5fd">추가 수익 모델</strong>: 별도 "모임 부스트" 유료 기능 (건당 3,900원으로 3일 최상위 노출) — 장기 계획</li>
+        </ul>
+      </div>
+
+      <div style="background:#1e1e1e;border-radius:16px;padding:24px;border:1px solid #2a2a2a">
+        <h3 style="font-size:15px;font-weight:800;color:#fff;margin-bottom:12px">4. 구현 순서 (권장)</h3>
+        <ol style="display:flex;flex-direction:column;gap:10px;padding-left:20px">
+          <li style="font-size:13px;line-height:1.7">홈 Bento 레이아웃 교체 (필터 칩 제거, 급구 다크 타일)</li>
+          <li style="font-size:13px;line-height:1.7">검색 필터 패널 바텀시트 구현</li>
+          <li style="font-size:13px;line-height:1.7">바로모임 홈 슬라이더 섹션 + 플랜별 카드 스타일</li>
+          <li style="font-size:13px;line-height:1.7">각 Bento 타일 실데이터 연결</li>
+        </ol>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(idx) {
+  document.querySelectorAll('.tab-section').forEach((s,i) => s.classList.toggle('active', i===idx));
+  document.querySelectorAll('.compare-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

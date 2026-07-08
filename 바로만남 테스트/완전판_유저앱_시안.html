@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>바로알바 유저앱 - 완전판 시안</title>
+  <style>
+    /* ── RESET & BASE ── */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+    /* ── MOBILE FRAME ── */
+    .mobile-frame {
+      width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
+      background-color: #f8fafc; position: relative; display: flex; flex-direction: column;
+      overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    @media (min-width: 450px) {
+      .mobile-frame { height: 90vh; border-radius: 40px; border: 8px solid #0f172a; }
+    }
+
+    /* ── APP HEADER (Screenshot matched) ── */
+    .header {
+      background: white; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-logo-icon { width: 24px; height: 24px; background: #e11d48; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 14px; }
+    .header-logo-text { font-size: 18px; font-weight: 900; color: #0f172a; }
+    .header-icons { display: flex; gap: 16px; font-size: 20px; color: #64748b; }
+
+    /* ── CONTENT AREA ── */
+    .content-area { flex: 1; overflow-y: auto; padding-bottom: 90px; background: #f8fafc; }
+    .tab-content { display: none; animation: fadeIn 0.15s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── HOME TAB ── */
+    .search-bar-wrap { padding: 16px 20px 12px; background: white; }
+    .search-bar { background: #f1f5f9; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; color: #94a3b8; font-size: 14px; }
+    .search-icon { background: #e11d48; color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+    /* [디자인 개선점] 당일 급구 벤토 배너 */
+    .bento-section { padding: 0 20px 20px; background: white; }
+    .bento-banner {
+      background: #111827; border-radius: 20px; padding: 24px; color: white;
+      display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+    .bento-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .bento-tag { background: #e11d48; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 900; }
+    .bento-urgent { color: #f43f5e; font-size: 11px; font-weight: 800; letter-spacing: 1px; }
+    .bento-title { font-size: 20px; font-weight: 900; line-height: 1.3; margin-bottom: 6px; }
+    .bento-desc { font-size: 13px; color: #9ca3af; }
+    .bento-btn { margin-top: 16px; background: #e11d48; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; align-self: flex-start; }
+
+    /* 4 Icons (Screenshot matched) */
+    .four-icons { display: flex; justify-content: space-around; padding: 20px; background: white; border-bottom: 8px solid #f1f5f9; }
+    .icon-item { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+    .icon-circle { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .icon-circle.c1 { background: #fce7f3; color: #db2777; }
+    .icon-circle.c2 { background: #eff6ff; color: #2563eb; }
+    .icon-circle.c3 { background: #dcfce7; color: #16a34a; }
+    .icon-circle.c4 { background: #e0f2fe; color: #0284c7; }
+    .icon-label { font-size: 12px; font-weight: 700; color: #0f172a; }
+    .icon-badge { position: absolute; top: 0; right: 0; background: #e11d48; color: white; font-size: 10px; font-weight: 900; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    /* 주변 알바 공고 (Screenshot matched) */
+    .job-section { padding: 24px 20px; background: white; border-bottom: 8px solid #f1f5f9; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .section-title { font-size: 16px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+    .section-more { font-size: 12px; font-weight: 700; color: #e11d48; }
+    
+    .job-card { border: 1px solid #f1f5f9; border-radius: 16px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    .job-cat { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    .job-title { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+    .job-loc { font-size: 12px; color: #94a3b8; margin-bottom: 12px; }
+    .job-wage { font-size: 18px; font-weight: 900; color: #e11d48; margin-bottom: 8px; }
+    .job-tags { display: flex; gap: 6px; }
+    .j-tag { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; background: #fff1f2; color: #e11d48; }
+
+    /* 바로모임 (Screenshot matched + PRO/BASIC UI 개선) */
+    .moim-section { padding: 24px 20px; background: white; border-bottom: 8px solid #f1f5f9; }
+    .moim-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .moim-logo { display: flex; align-items: center; gap: 8px; }
+    .m-icon { width: 32px; height: 32px; background: #7c3aed; border-radius: 10px; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .m-title { font-size: 16px; font-weight: 900; color: #7c3aed; }
+    .m-desc { font-size: 11px; color: #94a3b8; margin-bottom: 16px; margin-left: 40px; }
+    .m-actions { display: flex; gap: 8px; align-items: center; }
+    .m-btn-new { background: #7c3aed; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; }
+    
+    .moim-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+    .moim-card { min-width: 160px; border: 1px solid #f1f5f9; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    
+    /* [디자인 개선점] PRO / BASIC 티어 적용 */
+    .moim-card.pro { border: 2px solid #7c3aed; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.1); }
+    .moim-card.basic { border-left: 4px solid #3b82f6; }
+    .tier-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; margin-bottom: 6px; }
+    .tier-pro { background: linear-gradient(135deg, #9333ea, #7c3aed); color: white; }
+    .tier-basic { background: #eff6ff; color: #3b82f6; }
+
+    .mc-cat { font-size: 11px; font-weight: 800; color: #0ea5e9; margin-bottom: 4px; }
+    .mc-title { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 12px; line-height: 1.3; }
+    .mc-date { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
+    .mc-slots { font-size: 11px; font-weight: 800; color: #0ea5e9; margin-bottom: 2px; }
+    .mc-fee { font-size: 11px; font-weight: 700; color: #d97706; }
+
+    /* 바로만남 배너 (Screenshot matched) */
+    .mannam-banner { margin: 20px; background: linear-gradient(135deg, #f43f5e, #e11d48); border-radius: 16px; padding: 16px 20px; color: white; display: flex; justify-content: space-between; align-items: center; }
+    .mb-left { display: flex; align-items: center; gap: 12px; }
+    .mb-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .mb-title { font-size: 16px; font-weight: 900; margin-bottom: 2px; }
+    .mb-desc { font-size: 11px; opacity: 0.8; }
+    .mb-new { background: rgba(255,255,255,0.3); padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 900; }
+
+    /* ── MY PAGE TAB (Screenshot matched) ── */
+    .profile-header { background: white; padding: 24px 20px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #f1f5f9; }
+    .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; position: relative; }
+    .profile-edit { position: absolute; bottom: 0; right: 0; background: #e11d48; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; border: 2px solid white; }
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: #64748b; margin-bottom: 6px; }
+    .profile-google { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; color: #64748b; }
+    
+    .mypage-stats { display: flex; background: white; padding: 16px 0; border-bottom: 8px solid #f1f5f9; }
+    .mp-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; border-right: 1px solid #f1f5f9; }
+    .mp-stat:last-child { border: none; }
+    .mp-val { font-size: 20px; font-weight: 900; }
+    .mp-label { font-size: 11px; font-weight: 700; color: #94a3b8; }
+    
+    /* 지금 출근 가능 토글 */
+    .work-toggle { background: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
+    .wt-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .wt-desc { font-size: 11px; color: #94a3b8; }
+    .toggle-switch { width: 44px; height: 24px; background: #e2e8f0; border-radius: 12px; position: relative; }
+    .toggle-knob { width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+    /* 관리자 페이지 배너 */
+    .admin-banner { background: #334155; margin: 16px 20px; border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 12px; color: white; }
+    .ab-icon { width: 32px; height: 32px; background: #e11d48; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .ab-title { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+    .ab-desc { font-size: 11px; color: #94a3b8; }
+
+    /* 리스트 메뉴 */
+    .menu-group { background: white; margin-bottom: 8px; }
+    .menu-header { padding: 16px 20px 8px; font-size: 11px; font-weight: 800; color: #94a3b8; }
+    .menu-item { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-title { font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 12px; }
+    .menu-arrow { color: #cbd5e1; font-weight: 700; font-size: 14px; }
+    
+    /* [디자인 개선점] 쿠폰 메뉴 1줄 삽입 */
+    .menu-item.coupon-menu { background: #faf5ff; }
+    .menu-item.coupon-menu .menu-title { color: #7c3aed; }
+
+    /* ── BOTTOM NAV (Screenshot matched) ── */
+    .bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0; background: white;
+      border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between;
+      padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px)); z-index: 100;
+    }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; color: #94a3b8; }
+    .nav-icon { font-size: 22px; filter: grayscale(100%) opacity(0.4); transition: 0.2s; }
+    .nav-label { font-size: 10px; font-weight: 800; transition: 0.2s; }
+    .nav-btn.active { color: #e11d48; }
+    .nav-btn.active .nav-icon { filter: grayscale(0%) opacity(1); transform: scale(1.1); }
+    
+    /* 중앙 강조 버튼 (바로알바) */
+    .nav-btn.center-btn .nav-icon { background: #e11d48; color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; filter: none; box-shadow: 0 4px 10px rgba(225,29,72,0.3); transform: translateY(-8px); }
+    .nav-btn.center-btn.active .nav-icon { transform: translateY(-8px) scale(1.05); }
+
+    /* ── BOTTOM SHEET (COUPON MODAL) ── */
+    .overlay { position: absolute; inset: 0; background: rgba(15,23,42,0.6); z-index: 200; display: none; opacity: 0; transition: opacity 0.3s; }
+    .overlay.show { display: block; opacity: 1; }
+    .bottom-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0; background: white;
+      border-radius: 24px 24px 0 0; padding: 24px 20px; z-index: 201;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      display: flex; flex-direction: column; gap: 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+    .bottom-sheet.show { transform: translateY(0); }
+    .bs-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 0 auto 8px; }
+    .coupon-modal-title { font-size: 18px; font-weight: 900; color: #0f172a; }
+    .coupon-input-wrap { display: flex; gap: 8px; }
+    .coupon-input { flex: 1; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; font-size: 15px; outline: none; transition: 0.2s; }
+    .coupon-input:focus { border-color: #7c3aed; background: white; }
+    .coupon-btn { background: #7c3aed; color: white; border: none; border-radius: 12px; padding: 0 20px; font-size: 15px; font-weight: 800; }
+    .ticket-card { background: linear-gradient(135deg, #f5f3ff, #faf5ff); border: 1px solid #ede9fe; border-radius: 16px; padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .ticket-count { font-size: 28px; font-weight: 900; color: #7c3aed; }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="header-logo-icon">◎</div>
+        <div class="header-logo-text">바로알바</div>
+      </div>
+      <div class="header-icons"><span>🔔</span></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area">
+      
+      <!-- 1. HOME 탭 (Screenshot 1 Matched + 디자인 개선 적용) -->
+      <div id="tab-home" class="tab-content active">
+        
+        <div class="search-bar-wrap">
+          <div class="search-bar">
+            <span>🔍 업종, 지역, 공고명 검색</span>
+            <div class="search-icon">Q</div>
+          </div>
+        </div>
+
+        <!-- [디자인 개선] 당일 급구 벤토 배너 -->
+        <div class="bento-section">
+          <div class="bento-banner">
+            <div class="bento-top">
+              <span class="bento-tag">당일 지급</span>
+              <span class="bento-urgent">URGENT NOW</span>
+            </div>
+            <div class="bento-title">지금 당장 출근하고<br>오늘 바로 일당받기</div>
+            <div class="bento-desc">급하게 일손이 필요한 사장님들이 기다리고 있어요!</div>
+            <div class="bento-btn">전체보기 ➔</div>
+          </div>
+        </div>
+
+        <!-- 4 Icons -->
+        <div class="four-icons">
+          <div class="icon-item"><div class="icon-circle c1">$</div><div class="icon-label">높은시급</div></div>
+          <div class="icon-item"><div class="icon-circle c2">☆</div><div class="icon-label">AI추천</div></div>
+          <div class="icon-item"><div class="icon-circle c3">🌐</div><div class="icon-label">외국인환영</div><div class="icon-badge">1</div></div>
+          <div class="icon-item"><div class="icon-circle c4">📖</div><div class="icon-label">레슨/과외</div></div>
+        </div>
+
+        <!-- 주변 알바 공고 -->
+        <div class="job-section">
+          <div class="section-header">
+            <div class="section-title">📋 주변 알바 공고</div>
+            <div class="section-more">전체보기 ›</div>
+          </div>
+          <div class="job-card">
+            <div class="job-cat">카페/음료</div>
+            <div class="job-title">가발 연습</div>
+            <div class="job-loc">흰색</div>
+            <div class="job-wage">203,000원</div>
+            <div class="job-tags"><span class="j-tag">시급</span><span class="j-tag" style="background:#dcfce7; color:#16a34a">당일</span><span class="j-tag">급구</span></div>
+          </div>
+        </div>
+
+        <!-- 바로모임 -->
+        <div class="moim-section">
+          <div class="moim-header">
+            <div class="moim-logo">
+              <div class="m-icon">👥</div>
+              <div class="m-title">바로모임</div>
+            </div>
+            <div class="m-actions">
+              <span class="m-btn-new">NEW</span>
+              <span class="m-btn-new">+ 만들기</span>
+              <span style="font-size:12px; font-weight:700; color:#7c3aed;">전체 ›</span>
+            </div>
+          </div>
+          <div class="m-desc">스포츠 · 취미 · 친목 모임</div>
+          
+          <div class="moim-list">
+            <!-- [디자인 개선] 티어 뱃지와 테두리 적용 -->
+            <div class="moim-card pro">
+              <span class="tier-badge tier-pro">PRO</span>
+              <div class="mc-cat">친목</div>
+              <div class="mc-title">커피지아 모임</div>
+              <div class="mc-date">7월 11일 (토)</div>
+              <div class="mc-slots">6자리 남음</div>
+              <div class="mc-fee">각자 분담</div>
+            </div>
+            <div class="moim-card basic">
+              <span class="tier-badge tier-basic">BASIC</span>
+              <div class="mc-cat">친목</div>
+              <div class="mc-title">을지로 와인 모임 10:10</div>
+              <div class="mc-date">7월 19일 (일)</div>
+              <div class="mc-slots">20자리 남음</div>
+              <div class="mc-fee" style="color:#16a34a">무료</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 바로만남 -->
+        <div class="mannam-banner">
+          <div class="mb-left">
+            <div class="mb-icon">💫</div>
+            <div>
+              <div class="mb-title">바로만남</div>
+              <div class="mb-desc">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="mb-new">NEW</span> <span>›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. MY PAGE 탭 (Screenshot 2 Matched + 쿠폰 메뉴 1줄 삽입) -->
+      <div id="tab-mypage" class="tab-content">
+        
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <div class="profile-edit">✎</div>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name">Jackie Park</div>
+            <div class="profile-email">jackie@multimove.co.kr</div>
+            <div class="profile-google">G Google</div>
+          </div>
+        </div>
+        
+        <div class="mypage-stats">
+          <div class="mp-stat"><div class="mp-val" style="color:#e11d48">0</div><div class="mp-label">지원현황</div></div>
+          <div class="mp-stat"><div class="mp-val" style="color:#16a34a">0</div><div class="mp-label">완료알바</div></div>
+          <div class="mp-stat"><div class="mp-val" style="color:#d97706">-</div><div class="mp-label">내 평점</div></div>
+          <div class="mp-stat"><div class="mp-val" style="color:#7c3aed">-</div><div class="mp-label">신뢰점수</div></div>
+        </div>
+
+        <div class="work-toggle">
+          <div>
+            <div class="wt-title">지금 출근 가능</div>
+            <div class="wt-desc">ON시 업주에게 우선 노출돼요</div>
+          </div>
+          <div class="toggle-switch"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="admin-banner">
+          <div class="ab-icon">⚙️</div>
+          <div style="flex:1;">
+            <div class="ab-title">관리자 페이지</div>
+            <div class="ab-desc">신고관리 · 공고관리 · 회원관리</div>
+          </div>
+          <div>›</div>
+        </div>
+
+        <div class="menu-group">
+          <div class="menu-header">내 활동</div>
+          <div class="menu-item"><div class="menu-title">📋 지원 현황</div><div class="menu-arrow">›</div></div>
+          <div class="menu-item"><div class="menu-title">💵 수입 현황</div><div class="menu-arrow">›</div></div>
+          <div class="menu-item"><div class="menu-title">💼 급여 수령 확인</div><div class="menu-arrow">›</div></div>
+          
+          <!-- [디자인 개선] 뜬금없던 큰 박스 대신 자연스러운 메뉴 한 줄 삽입 -->
+          <div class="menu-item coupon-menu" onclick="openCouponSheet()">
+            <div class="menu-title">🎫 프로모션 쿠폰 등록 / 티켓 조회</div><div class="menu-arrow">›</div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-title">💎 포인트 잔액</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:14px; font-weight:800; color:#7c3aed;">0P</span>
+              <span style="background:#7c3aed; color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:800;">충전</span>
+              <span class="menu-arrow">›</span>
+            </div>
+          </div>
+          <div class="menu-item"><div class="menu-title">⭐ 내 평점</div><div class="menu-arrow">›</div></div>
+          <div class="menu-item"><div class="menu-title">📊 대시보드</div><div class="menu-arrow">›</div></div>
+        </div>
+
+        <div class="menu-group">
+          <div class="menu-header">내 프로필</div>
+          <div style="padding:16px 20px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span style="font-size:12px; font-weight:800; color:#64748b;">프로필 완성도</span>
+              <span style="font-size:12px; font-weight:800; color:#e11d48;">0%</span>
+            </div>
+            <div style="height:4px; background:#f1f5f9; border-radius:2px; margin-bottom:12px;"></div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span style="background:#f8fafc; border:1px solid #e2e8f0; padding:4px 10px; border-radius:12px; font-size:11px; color:#94a3b8;">+생년월일</span>
+              <span style="background:#f8fafc; border:1px solid #e2e8f0; padding:4px 10px; border-radius:12px; font-size:11px; color:#94a3b8;">+연락처</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Nav (Screenshot matched) -->
+    <div class="bottom-nav">
+      <button class="nav-btn active" onclick="switchTab('home', this)">
+        <span class="nav-icon">🏠</span><span class="nav-label">홈</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">📍</span><span class="nav-label">지도</span>
+      </button>
+      <button class="nav-btn center-btn">
+        <span class="nav-icon">⚏</span><span class="nav-label">바로알바</span>
+      </button>
+      <button class="nav-btn">
+        <span class="nav-icon">💬</span><span class="nav-label">채팅</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('mypage', this)">
+        <span class="nav-icon">👤</span><span class="nav-label">마이페이지</span>
+      </button>
+    </div>
+
+    <!-- COUPON BOTTOM SHEET -->
+    <div class="overlay" id="couponOverlay" onclick="closeCouponSheet()"></div>
+    <div class="bottom-sheet" id="couponSheet">
+      <div class="bs-handle"></div>
+      <div>
+        <div class="coupon-modal-title">💜 바로만남 쿠폰 & 티켓</div>
+        <div style="font-size: 13px; color: #64748b; margin-top: 4px;">베타테스터 코드를 입력하고 식사권을 받으세요!</div>
+      </div>
+      <div class="coupon-input-wrap">
+        <input type="text" class="coupon-input" placeholder="쿠폰 코드 (예: BARO2026)">
+        <button class="coupon-btn">등록</button>
+      </div>
+      <div class="ticket-card">
+        <div>
+          <div style="font-size: 15px; font-weight: 800; color: #0f172a;">내 바로만남 이용권</div>
+          <div style="font-size: 12px; color: #64748b;">제휴 매장에서 QR 스캔으로 사용</div>
+        </div>
+        <div class="ticket-count">0장</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function openCouponSheet() {
+      document.getElementById('couponOverlay').classList.add('show');
+      setTimeout(() => { document.getElementById('couponSheet').classList.add('show'); }, 10);
+    }
+    function closeCouponSheet() {
+      document.getElementById('couponSheet').classList.remove('show');
+      setTimeout(() => { document.getElementById('couponOverlay').classList.remove('show'); }, 300);
+    }
+  </script>
+</body>
+</html>

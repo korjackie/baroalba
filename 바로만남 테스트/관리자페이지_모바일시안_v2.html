@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>바로알바 관리자 - 모바일 시안 V2</title>
+  <style>
+    /* ── RESET & BASE ── */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+    /* ── MOBILE FRAME ── */
+    .mobile-frame {
+      width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
+      background-color: #f8fafc; position: relative; display: flex; flex-direction: column;
+      overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    @media (min-width: 450px) {
+      .mobile-frame { height: 90vh; border-radius: 40px; border: 8px solid #0f172a; }
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #ffffff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .logo-text { font-size: 18px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
+    .badge-admin { background: #e11d48; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; letter-spacing: 0.5px; }
+
+    /* ── CONTENT AREA ── */
+    .content-area { flex: 1; overflow-y: auto; padding-bottom: 90px; }
+    .tab-content { display: none; padding: 20px; animation: fadeIn 0.2s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .page-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 20px; }
+    .section-title { font-size: 14px; font-weight: 800; color: #64748b; margin-top: 24px; margin-bottom: 12px; }
+
+    /* ── STATS CARDS ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-card {
+      background: white; border-radius: 16px; padding: 16px; border: 1px solid #f1f5f9;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-icon { font-size: 20px; }
+    .stat-val { font-size: 22px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
+    .stat-label { font-size: 12px; font-weight: 700; color: #64748b; }
+
+    /* ── LIST ITEMS (Settings, Menus) ── */
+    .list-group { background: white; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.02); overflow: hidden; }
+    .list-item {
+      display: flex; align-items: center; gap: 14px; padding: 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-icon { width: 36px; height: 36px; border-radius: 10px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .list-text { flex: 1; }
+    .list-title { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+    .list-desc { font-size: 11px; color: #94a3b8; }
+    .list-arrow { color: #cbd5e1; font-weight: 700; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0;
+      display: flex; justify-content: space-between; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 100;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: none; border: none; cursor: pointer; color: #94a3b8;
+    }
+    .nav-icon { font-size: 22px; filter: grayscale(100%) opacity(0.5); transition: 0.2s; }
+    .nav-label { font-size: 10px; font-weight: 800; transition: 0.2s; }
+    .nav-btn.active { color: #0f172a; }
+    .nav-btn.active .nav-icon { filter: grayscale(0%) opacity(1); transform: scale(1.1); }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left"><span class="logo-text">바로알바</span><span class="badge-admin">ADMIN</span></div>
+      <div style="font-size: 20px;">🔔</div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area">
+      
+      <!-- 1. 대시보드 탭 -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="page-title">통합 대시보드</div>
+        
+        <div class="section-title">🚨 전체 알림 현황</div>
+        <div class="stats-grid" style="grid-template-columns: 1fr;">
+          <div class="stat-card" style="border-color:#ffe4e6; background:#fff1f2; flex-direction:row; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="stat-icon">🚨</div><div class="stat-label" style="color:#e11d48">미처리 전체 신고</div>
+            </div>
+            <div class="stat-val" style="color:#e11d48">12건 ›</div>
+          </div>
+        </div>
+
+        <div class="section-title">⚡ 바로알바 현황</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val">845</div><div class="stat-label">진행중 공고</div></div>
+          <div class="stat-card"><div class="stat-icon">🏃</div><div class="stat-val">142</div><div class="stat-label">오늘 신규 지원</div></div>
+        </div>
+
+        <div class="section-title">🤝 바로모임 현황</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">🏕️</div><div class="stat-val">32</div><div class="stat-label">오늘 개설 모임</div></div>
+          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-val">850</div><div class="stat-label">누적 모임 참가</div></div>
+        </div>
+
+        <div class="section-title">💜 바로만남 현황</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">🍷</div><div class="stat-val">15</div><div class="stat-label">오늘 예약 건수</div></div>
+          <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-val">340</div><div class="stat-label">쿠폰 사용량</div></div>
+        </div>
+      </div>
+
+      <!-- 2. 바로알바 탭 -->
+      <div id="tab-alba" class="tab-content">
+        <div class="page-title">⚡ 바로알바 관리</div>
+        <div class="list-group">
+          <div class="list-item"><div class="list-icon">📋</div><div class="list-text"><div class="list-title">알바 공고 관리</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">👥</div><div class="list-text"><div class="list-title">알바생/업주 회원 관리</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">🚨</div><div class="list-text"><div class="list-title">알바 관련 신고 처리</div></div><div class="list-arrow">›</div></div>
+        </div>
+      </div>
+
+      <!-- 3. 바로모임 탭 -->
+      <div id="tab-moim" class="tab-content">
+        <div class="page-title">🤝 바로모임 관리</div>
+        <div class="list-group">
+          <div class="list-item"><div class="list-icon">🏕️</div><div class="list-text"><div class="list-title">개설된 모임 관리</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">👥</div><div class="list-text"><div class="list-title">모임 유저 관리</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">🚨</div><div class="list-text"><div class="list-title">모임 관련 신고 처리</div></div><div class="list-arrow">›</div></div>
+        </div>
+      </div>
+
+      <!-- 4. 바로만남 탭 -->
+      <div id="tab-mannam" class="tab-content">
+        <div class="page-title">💜 바로만남 관리</div>
+        <div class="list-group">
+          <div class="list-item"><div class="list-icon">🍷</div><div class="list-text"><div class="list-title">제휴 매장 현황</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">👨‍💼</div><div class="list-text"><div class="list-title">만남 매니저 권한 관리</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">🎫</div><div class="list-text"><div class="list-title">프로모션 쿠폰 관리</div></div><div class="list-arrow">›</div></div>
+        </div>
+      </div>
+
+      <!-- 5. 설정 탭 -->
+      <div id="tab-settings" class="tab-content">
+        <div class="page-title">⚙️ 시스템 설정</div>
+        
+        <div class="section-title">카테고리 마스터 데이터</div>
+        <div class="list-group">
+          <div class="list-item"><div class="list-icon">⚡</div><div class="list-text"><div class="list-title">바로알바 업종 설정</div><div class="list-desc">카페, 식당 등 추가/수정</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">🤝</div><div class="list-text"><div class="list-title">바로모임 분야 설정</div><div class="list-desc">스포츠, 취미 등 추가/수정</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">📚</div><div class="list-text"><div class="list-title">레슨/과외 과목 설정</div><div class="list-desc">수학, 영어 등 추가/수정</div></div><div class="list-arrow">›</div></div>
+        </div>
+
+        <div class="section-title">보안 및 권한</div>
+        <div class="list-group">
+          <div class="list-item"><div class="list-icon">🛡️</div><div class="list-text"><div class="list-title">최고 관리자 계정 관리</div><div class="list-desc">admin 접근 권한 제어</div></div><div class="list-arrow">›</div></div>
+          <div class="list-item"><div class="list-icon">💾</div><div class="list-text"><div class="list-title">데이터 백업/로그</div><div class="list-desc">시스템 로그 확인</div></div><div class="list-arrow">›</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <button class="nav-btn active" onclick="switchTab('dashboard', this)">
+        <span class="nav-icon">📊</span><span class="nav-label">대시보드</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('alba', this)">
+        <span class="nav-icon">⚡</span><span class="nav-label">바로알바</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('moim', this)">
+        <span class="nav-icon">🤝</span><span class="nav-label">바로모임</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('mannam', this)">
+        <span class="nav-icon">💜</span><span class="nav-label">바로만남</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('settings', this)">
+        <span class="nav-icon">⚙️</span><span class="nav-label">설정</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId, btn) {
+      // 탭 콘텐츠 변경
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      
+      // 버튼 디자인 변경
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>
