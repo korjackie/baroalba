@@ -45,6 +45,16 @@
 
     .content { padding:20px; padding-bottom:calc(76px + var(--sab)); max-width:1100px; margin:0 auto; }
 
+    /* 대시보드 - 제목(좌) + 현황(우) 한 줄 카드 */
+    .dash-row { display:flex; align-items:center; gap:10px; background:#fff; border-radius:14px; padding:12px 16px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+    .dash-row-label { font-size:12.5px; font-weight:800; color:#475569; width:64px; flex-shrink:0; line-height:1.3; }
+    .dash-row-stats { flex:1; display:flex; }
+    .dash-stat { flex:1; text-align:center; cursor:pointer; user-select:none; padding:2px 4px; }
+    .dash-stat.no-click { cursor:default; }
+    .dash-stat-val { font-size:17px; font-weight:900; color:#1e293b; }
+    .dash-stat-val.alert { color:#EF4444; }
+    .dash-stat-label { font-size:9.5px; color:#94a3b8; font-weight:600; margin-top:1px; }
+
     /* 메뉴 리스트 (그룹 탭 안의 하위 메뉴) */
     .list-group { background:#fff; border-radius:14px; box-shadow:0 1px 4px rgba(0,0,0,0.06); overflow:hidden; margin-bottom:16px; }
     .list-item { display:flex; align-items:center; gap:12px; padding:14px; border-bottom:1px solid #f1f5f9; cursor:pointer; }
@@ -309,35 +319,46 @@
 
   <!-- 대시보드 -->
   <div class="tab-content active" id="tab-dashboard">
-    <div class="stats-grid" style="grid-template-columns:1fr 1fr">
-      <div class="stat-card alert" onclick="navTo('alba','reports')"><div class="stat-left"><div class="stat-icon">🚨</div><div class="stat-label">미처리 신고</div></div><div class="stat-val" id="s-reports">-</div></div>
-      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">✅</div><div class="stat-label">오늘 가입 회원</div></div><div class="stat-val" id="s-signups-today">-</div></div>
+    <div class="dash-row">
+      <div class="dash-row-label">🚨 신고</div>
+      <div class="dash-row-stats">
+        <div class="dash-stat" onclick="navTo('alba','reports')"><div class="dash-stat-val alert" id="s-reports">-</div><div class="dash-stat-label">미처리 신고</div></div>
+        <div class="dash-stat no-click"><div class="dash-stat-val" id="s-signups-today">-</div><div class="dash-stat-label">오늘 가입 회원</div></div>
+      </div>
     </div>
 
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">👥 회원 현황</div>
-    <div class="stats-grid">
-      <div class="stat-card" onclick="navTo('alba','users')"><div class="stat-left"><div class="stat-icon">👥</div><div class="stat-label">총 알바생</div></div><div class="stat-val" id="s-workers">-</div></div>
-      <div class="stat-card" onclick="navTo('alba','users')"><div class="stat-left"><div class="stat-icon">🏢</div><div class="stat-label">총 업주</div></div><div class="stat-val" id="s-businesses">-</div></div>
-      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">📈</div><div class="stat-label">누적 가입자</div></div><div class="stat-val" id="s-total-users">-</div></div>
+    <div class="dash-row">
+      <div class="dash-row-label">👥 회원</div>
+      <div class="dash-row-stats">
+        <div class="dash-stat" onclick="navTo('alba','users')"><div class="dash-stat-val" id="s-workers">-</div><div class="dash-stat-label">총 알바생</div></div>
+        <div class="dash-stat" onclick="navTo('alba','users')"><div class="dash-stat-val" id="s-businesses">-</div><div class="dash-stat-label">총 업주</div></div>
+        <div class="dash-stat no-click"><div class="dash-stat-val" id="s-total-users">-</div><div class="dash-stat-label">누적 가입자</div></div>
+      </div>
     </div>
 
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">⚡ 바로알바 현황</div>
-    <div class="stats-grid" style="grid-template-columns:1fr 1fr">
-      <div class="stat-card" onclick="navTo('alba','postings')"><div class="stat-left"><div class="stat-icon">📋</div><div class="stat-label">진행중 공고</div></div><div class="stat-val" id="s-postings">-</div></div>
-      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">⚡</div><div class="stat-label">오늘 신규 지원</div></div><div class="stat-val" id="s-apps">-</div></div>
+    <div class="dash-row">
+      <div class="dash-row-label">⚡ 바로알바</div>
+      <div class="dash-row-stats">
+        <div class="dash-stat" onclick="navTo('alba','postings')"><div class="dash-stat-val" id="s-postings">-</div><div class="dash-stat-label">진행중 공고</div></div>
+        <div class="dash-stat no-click"><div class="dash-stat-val" id="s-apps">-</div><div class="dash-stat-label">오늘 신규 지원</div></div>
+      </div>
     </div>
 
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">🤝 바로모임 현황</div>
-    <div class="stats-grid" style="grid-template-columns:1fr 1fr">
-      <div class="stat-card" onclick="navTo('moim','moims')"><div class="stat-left"><div class="stat-icon">🏕️</div><div class="stat-label">오늘 개설된 모임</div></div><div class="stat-val" id="s-moims-today">-</div></div>
-      <div class="stat-card" onclick="navTo('moim','moims')"><div class="stat-left"><div class="stat-icon">👥</div><div class="stat-label">누적 참가자 수</div></div><div class="stat-val" id="s-moim-participants">-</div></div>
+    <div class="dash-row">
+      <div class="dash-row-label">🤝 바로모임</div>
+      <div class="dash-row-stats">
+        <div class="dash-stat" onclick="navTo('moim','moims')"><div class="dash-stat-val" id="s-moims-today">-</div><div class="dash-stat-label">오늘 개설</div></div>
+        <div class="dash-stat" onclick="navTo('moim','moims')"><div class="dash-stat-val" id="s-moim-participants">-</div><div class="dash-stat-label">누적 참가자</div></div>
+      </div>
     </div>
 
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">💜 바로만남 현황</div>
-    <div class="stats-grid">
-      <div class="stat-card" onclick="navTo('mannam','restaurants')"><div class="stat-left"><div class="stat-icon">🍷</div><div class="stat-label">진행중 제휴점</div></div><div class="stat-val" id="s-mannnam-restaurants">-</div></div>
-      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">📅</div><div class="stat-label">오늘 예약</div></div><div class="stat-val" id="s-mannnam-today">-</div></div>
-      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">📊</div><div class="stat-label">누적 예약</div></div><div class="stat-val" id="s-mannnam-total">-</div></div>
+    <div class="dash-row">
+      <div class="dash-row-label">💜 바로만남</div>
+      <div class="dash-row-stats">
+        <div class="dash-stat" onclick="navTo('mannam','restaurants')"><div class="dash-stat-val" id="s-mannnam-restaurants">-</div><div class="dash-stat-label">진행중 제휴점</div></div>
+        <div class="dash-stat no-click"><div class="dash-stat-val" id="s-mannnam-today">-</div><div class="dash-stat-label">오늘 예약</div></div>
+        <div class="dash-stat no-click"><div class="dash-stat-val" id="s-mannnam-total">-</div><div class="dash-stat-label">누적 예약</div></div>
+      </div>
     </div>
   </div>
 
@@ -425,8 +446,27 @@
   <!-- 제휴 매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) -->
   <div class="tab-content" id="tab-restaurants">
     <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">제휴 매장 등록/수정은 mannnam.html에서 매니저가 진행합니다. 여기서는 현황만 확인합니다.</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저와 동일한 제휴 매장 데이터입니다. 여기서 등록·수정하면 mannnam.html에도 바로 반영됩니다.</div>
     <div id="restaurants-list"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div id="restaurant-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">제휴 매장 등록</div>
+      <input type="hidden" id="r-id">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="r-name" type="text" placeholder="식당명" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <input id="r-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <input id="r-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <textarea id="r-menu" placeholder="메뉴 설명" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
+        <div style="display:flex;gap:8px">
+          <input id="r-female-price" type="number" min="0" placeholder="여성 가격" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-male-price" type="number" min="0" placeholder="남성 가격" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-discount" type="number" min="0" max="100" value="5" placeholder="할인율%" style="width:80px;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="saveRestaurant()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
+          <button onclick="resetRestaurantForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 프로모션 쿠폰 관리 -->
@@ -1373,21 +1413,76 @@ async function removeMannnamManager(bizId) {
 }
 
 // ── 바로만남 제휴 매장 현황 (읽기전용) ───────────────────
+let _restaurants = [];
 async function loadRestaurants() {
   const el = document.getElementById('restaurants-list');
   el.innerHTML = '<div class="loading">로딩 중...</div>';
   const data = await adminApi('barospot_restaurants');
-  const list = Array.isArray(data) ? data : [];
-  el.innerHTML = list.length
-    ? list.map(r => `
-        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <div style="min-width:0">
-            <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '이름없음'}</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.address || ''}</div>
+  _restaurants = Array.isArray(data) ? data : [];
+  el.innerHTML = _restaurants.length
+    ? _restaurants.map(r => `
+        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
+            <div style="min-width:0">
+              <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '이름없음'}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px">${r.address || ''}</div>
+            </div>
+            <span class="status-badge ${r.is_active ? 'sb-done' : 'sb-dismissed'}" style="flex-shrink:0">${r.is_active ? '운영중' : '비활성'}</span>
           </div>
-          <span class="status-badge ${r.is_active ? 'sb-done' : 'sb-dismissed'}" style="flex-shrink:0">${r.is_active ? '운영중' : '비활성'}</span>
+          <div style="display:flex;gap:6px">
+            <button class="r-btn r-btn-reviewing" onclick="editRestaurant('${r.id}')">수정</button>
+            <button class="r-btn ${r.is_active ? 'r-btn-dismiss' : 'r-btn-done'}" onclick="toggleRestaurant('${r.id}', ${!r.is_active})">${r.is_active ? '비활성화' : '활성화'}</button>
+          </div>
         </div>`).join('')
     : '<div class="empty">등록된 제휴 매장이 없습니다</div>';
+}
+
+function resetRestaurantForm() {
+  document.getElementById('r-id').value = '';
+  ['r-name','r-address','r-phone','r-menu','r-female-price','r-male-price'].forEach(k => document.getElementById(k).value = '');
+  document.getElementById('r-discount').value = '5';
+  document.getElementById('restaurant-form-title').textContent = '제휴 매장 등록';
+}
+
+function editRestaurant(id) {
+  const r = _restaurants.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('r-id').value = r.id;
+  document.getElementById('r-name').value = r.name || '';
+  document.getElementById('r-address').value = r.address || '';
+  document.getElementById('r-phone').value = r.phone || '';
+  document.getElementById('r-menu').value = r.menu_description || '';
+  document.getElementById('r-female-price').value = r.female_price || '';
+  document.getElementById('r-male-price').value = r.male_price || '';
+  document.getElementById('r-discount').value = r.discount_pct || 5;
+  document.getElementById('restaurant-form-title').textContent = '제휴 매장 수정';
+}
+
+async function saveRestaurant() {
+  const id = document.getElementById('r-id').value;
+  const payload = {
+    id: id || undefined,
+    name: document.getElementById('r-name').value.trim(),
+    address: document.getElementById('r-address').value.trim(),
+    phone: document.getElementById('r-phone').value.trim(),
+    menu_description: document.getElementById('r-menu').value.trim(),
+    female_price: document.getElementById('r-female-price').value,
+    male_price: document.getElementById('r-male-price').value,
+    discount_pct: document.getElementById('r-discount').value,
+  };
+  if (!payload.name) { showToast('식당명을 입력해주세요'); return; }
+  const result = await adminApi('save_restaurant', id ? 'PATCH' : 'POST', payload);
+  if (result?.error) { showToast('저장 실패: ' + result.error); return; }
+  showToast(id ? '식당 정보가 수정됐습니다' : '식당이 등록됐습니다');
+  resetRestaurantForm();
+  loadRestaurants();
+}
+
+async function toggleRestaurant(id, nextActive) {
+  const result = await adminApi('toggle_restaurant', 'PATCH', { id, is_active: nextActive });
+  if (result?.error) { showToast('변경 실패: ' + result.error); return; }
+  showToast(nextActive ? '활성화됐습니다' : '비활성화됐습니다');
+  loadRestaurants();
 }
 
 // ── 프로모션 쿠폰 관리 ────────────────────────────────────

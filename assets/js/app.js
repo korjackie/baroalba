@@ -9015,6 +9015,19 @@ function deleteUserAccount() {
       await db.from('job_postings').delete().eq('business_id', biz.id);
       await db.from('businesses').delete().eq('id', biz.id);
     }
+    // 탈퇴 후에도 workers 테이블에 이름/전화번호/사진 등 개인정보가 그대로 남아있던 문제 수정 -
+    // 지원이력(applications) 등 다른 테이블이 worker_id를 참조하므로 행 자체는 삭제하지 않고
+    // 개인식별 정보만 익명화한다 (delete_user_account RPC는 auth 계정 삭제만 담당)
+    await db.from('workers').update({
+      name: '탈퇴한 사용자',
+      phone: null,
+      photo_url: null,
+      birth_date: null,
+      age: null,
+      gender: null,
+      region: null,
+      bio: null,
+    }).eq('kakao_uid', uid);
     const { error } = await db.rpc('delete_user_account', { uid });
     if (error) { showToast('탈퇴 실패: ' + error.message); return; }
     await db.auth.signOut();
@@ -11843,8 +11856,9 @@ function relistPosting(jobId) {
   const p = postings.find(x => x.id === jobId);
   if (!p) return;
   showConfirm('기존 지원자 데이터가 초기화되고\n새로 모집을 시작합니다.', async () => {
-    // 기존 지원자 삭제 (재공고 시 새 라운드)
-    await db.from('applications').delete().eq('job_posting_id', jobId);
+    // 기존 지원자를 cancelled로 전환 (재공고 시 새 라운드) - hard delete는 RLS상
+    // 업주 권한으로 조용히 0건 처리될 수 있어, 재지원이 이미 가능한 cancelled 상태로 통일
+    await db.from('applications').update({ status: 'cancelled' }).eq('job_posting_id', jobId);
     // 공고 초기화: 상태·임금 복원, 충원수 리셋, 마감일 제거
     const { error } = await db.from('job_postings').update({
       status: 'open',

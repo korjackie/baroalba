@@ -80,13 +80,48 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // ── 바로만남 제휴매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) ──
+    // ── 바로만남 제휴매장 (관리자도 매니저와 동일하게 등록/수정 가능) ──
     if (action === 'barospot_restaurants') {
       const data = await sb(
-        'barospot_restaurants?select=id,name,address,is_active,created_at&order=created_at.desc&limit=100',
+        'barospot_restaurants?select=*&order=created_at.desc&limit=100',
         svcKey
       ).then(r => r.json());
       return res.json(Array.isArray(data) ? data : []);
+    }
+
+    // ── 제휴매장 등록/수정 ──────────────────────────────
+    if (action === 'save_restaurant' && (req.method === 'POST' || req.method === 'PATCH')) {
+      const { id, name, address, phone, menu_description, female_price, male_price, discount_pct } = req.body || {};
+      if (!name || !name.trim()) return res.status(400).json({ error: '식당명을 입력해주세요' });
+      const payload = {
+        name: name.trim(),
+        address: (address || '').trim(),
+        phone: (phone || '').trim(),
+        menu_description: (menu_description || '').trim(),
+        female_price: parseInt(female_price) || 0,
+        male_price: parseInt(male_price) || 0,
+        discount_pct: parseInt(discount_pct) || 5,
+      };
+      let r;
+      if (id) {
+        r = await sb(`barospot_restaurants?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify(payload) });
+      } else {
+        payload.is_active = true;
+        r = await sb('barospot_restaurants', svcKey, { method: 'POST', body: JSON.stringify(payload) });
+      }
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 제휴매장 활성/비활성 토글 ───────────────────────
+    if (action === 'toggle_restaurant' && req.method === 'PATCH') {
+      const { id, is_active } = req.body || {};
+      if (!id || is_active === undefined) return res.status(400).json({ error: 'id, is_active required' });
+      const r = await sb(`barospot_restaurants?id=eq.${id}`, svcKey, {
+        method: 'PATCH', body: JSON.stringify({ is_active: !!is_active })
+      });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
     }
 
     // ── 쿠폰 목록 ──────────────────────────────────────
