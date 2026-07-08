@@ -272,7 +272,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '381';
+  const _APP_V = '382';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -285,7 +285,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=345').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=382').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16055,17 +16055,56 @@ function _renderBaromeetCard(m) {
 }
 async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   if (!currentUser || isGuest) { showLoginPrompt('로그인 후 신청할 수 있어요','바로미팅 참가는 로그인이 필요합니다.'); return; }
-  // 성별 선택 후 포인트 차감
-  showCustomConfirm({
-    icon:'🤝', title:'바로미팅 참가 신청',
-    msg:`참가 신청 시 2,000P가 차감됩니다.\n현재 잔액이 부족하면 충전 화면으로 이동합니다.`,
-    okLabel:'2,000P 차감하고 신청', okColor:'#7C3AED',
-    onOk: async () => {
-      const pts = await loadUserPoints();
-      if (pts < 2000) { closeMannnamPanel(); openPointCharge(); showToast('포인트가 부족해요. 충전 후 신청해주세요'); return; }
-      showToast('신청이 접수됐어요! 확정 후 안내드려요');
+
+  const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', meetingId).eq('applicant_id', currentUser.id).limit(1);
+  if (existing?.length) { showToast('이미 신청한 바로미팅이에요'); return; }
+
+  // 이용권(바로스팟/바로미팅 공용)이 있으면 이용권으로, 없으면 포인트로 결제
+  const { data: wRow } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
+  const gender = wRow?.gender;
+  let passRow = null;
+  if (gender) {
+    const { data } = await db.from('barospot_passes')
+      .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', gender).eq('status', 'active').maybeSingle();
+    passRow = data;
+  }
+
+  if (passRow && passRow.remaining_count >= 1) {
+    showConfirm('이용권 1회가 차감됩니다.\n신청하시겠어요?', async () => {
+      const { error: pe } = await db.from('barospot_passes')
+        .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
+      if (pe) { showToast('오류: ' + pe.message); return; }
+      const { error: ae } = await db.from('gathering_applications')
+        .insert({ gathering_id: meetingId, applicant_id: currentUser.id, status: 'pending' });
+      if (ae) {
+        // 신청 실패 시 차감된 이용권 롤백
+        await db.from('barospot_passes').update({ remaining_count: passRow.remaining_count }).eq('id', passRow.id);
+        showToast('신청 중 오류가 발생했어요');
+        return;
+      }
+      showToast('✅ 이용권으로 신청 완료! 확정 후 안내드려요');
+      await _loadBarospotList();
+    }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:'이용권 사용하고 신청' });
+    return;
+  }
+
+  showConfirm('이용권이 없어 포인트로 결제합니다.\n참가 신청 시 2,000P가 차감됩니다.', async () => {
+    const pts = await loadUserPoints();
+    if (pts < 2000) { closeMannnamPanel(); openPointCharge(); showToast('포인트가 부족해요. 충전 후 신청해주세요'); return; }
+    const { data: acct } = await db.from('point_accounts').select('id, balance').eq('user_id', currentUser.id).single();
+    if (!acct || acct.balance < 2000) { showToast('포인트가 부족해요'); return; }
+    const { error: pe } = await db.from('point_accounts').update({ balance: acct.balance - 2000 }).eq('id', acct.id);
+    if (pe) { showToast('포인트 차감 실패: ' + pe.message); return; }
+    const { error: ae } = await db.from('gathering_applications')
+      .insert({ gathering_id: meetingId, applicant_id: currentUser.id, status: 'pending' });
+    if (ae) {
+      await db.from('point_accounts').update({ balance: acct.balance }).eq('id', acct.id); // 롤백
+      showToast('신청 중 오류가 발생했어요');
+      return;
     }
-  });
+    showToast('✅ 2,000P 차감 후 신청 완료! 확정 후 안내드려요');
+    await loadUserPoints();
+  }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:'2,000P 차감하고 신청' });
 }
 
 // ── 바로스팟 ────────────────────────────────────────────────
@@ -16200,7 +16239,7 @@ async function applyBarospot() {
     openSpotPassSheet('female');
     return;
   }
-  const confirmed = await showCustomConfirm('바로스팟 신청', '이용권 1회가 차감됩니다.\n매니저가 제휴 식당과 일정을 배정해드립니다.\n신청하시겠어요?', '신청하기', '취소');
+  const confirmed = await showConfirmDialog('바로스팟 신청', '이용권 1회가 차감됩니다.\n매니저가 제휴 식당과 일정을 배정해드립니다.\n신청하시겠어요?', '신청하기', '취소');
   if (!confirmed) return;
   const { data: passRow } = await db.from('barospot_passes')
     .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'female').eq('status', 'active').maybeSingle();
@@ -16283,7 +16322,7 @@ async function applySpotEvent(eventId) {
     openSpotPassSheet('male');
     return;
   }
-  const confirmed = await showCustomConfirm('바로스팟 참가', '이용권 1회가 차감됩니다.\n참가 신청 후 매니저가 최종 확정합니다.\n신청하시겠어요?', '신청하기', '취소');
+  const confirmed = await showConfirmDialog('바로스팟 참가', '이용권 1회가 차감됩니다.\n참가 신청 후 매니저가 최종 확정합니다.\n신청하시겠어요?', '신청하기', '취소');
   if (!confirmed) return;
   const { data: passRow } = await db.from('barospot_passes')
     .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'male').eq('status', 'active').maybeSingle();
