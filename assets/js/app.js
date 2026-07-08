@@ -7079,18 +7079,28 @@ function bindSwipeDrag(card) {
   window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientX, e.clientY); });
 }
 
+function _restoreCard(card, overlaySelector) {
+  card.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  card.style.transform = '';
+  const ov = card.querySelector(overlaySelector);
+  if (ov) ov.style.opacity = '0';
+  setTimeout(() => { card.style.transition = ''; }, 400);
+}
+
 async function flyCard(card, dir) {
+  const job = swipeJobs[swipeIdx];
+
   // 번개지원: 카드 날리기 전 자격 검사 (카드가 사라지면 복구 불가)
   if (dir === 'up') {
     const eligible = await checkQuickApplyEligible();
-    if (!eligible) {
-      card.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
-      card.style.transform = '';
-      const ovUp = card.querySelector('.sw-overlay-up');
-      if (ovUp) ovUp.style.opacity = '0';
-      setTimeout(() => { card.style.transition = ''; }, 400);
-      return;
-    }
+    if (!eligible) { _restoreCard(card, '.sw-overlay-up'); return; }
+  }
+
+  // 일반/번개 지원 모두: 연령제한 공고면 카드를 날리기 전에 막아서
+  // "지원된 것처럼" 보이지 않게 한다 (차단 안내가 먼저 뜨고 카드는 그대로 남음)
+  if ((dir === 'right' || dir === 'up') && job) {
+    const ageOk = await checkSwipeAgeGate(job);
+    if (!ageOk) { _restoreCard(card, dir === 'up' ? '.sw-overlay-up' : '.sw-overlay-right'); return; }
   }
 
   if (navigator.vibrate) navigator.vibrate(dir === 'right' ? 50 : dir === 'up' ? [30,20,30] : 20);
@@ -7099,7 +7109,6 @@ async function flyCard(card, dir) {
   card.style.transform = `translate(${tx}px,${ty}px) rotate(${rot})`;
   card.style.opacity = '0';
 
-  const job = swipeJobs[swipeIdx];
   if (dir === 'right') {
     applySwipeJob(job, false).then(ok => { if (ok) showToast('✅ 지원됐습니다!'); });
     if (job?.category) aiRecordSignal(job.category, job.current_wage, 2);
@@ -7190,23 +7199,27 @@ function showQuickGradeModal(type, data = {}) {
   document.body.appendChild(overlay);
 }
 
+// 18세 미만 차단 (나이 미확인 시 차단) - flyCard의 사전검사와 applySwipeJob의 최종검사 양쪽에서 재사용
+async function checkSwipeAgeGate(job) {
+  if (!job?.age_limit) return true;
+  if (_myAge === null) {
+    const { data: w } = await db.from('workers').select('age, birth_date').eq('kakao_uid', currentUser.id).maybeSingle();
+    _myAge = w?.age || (w?.birth_date ? calcAgeFromBirth(w.birth_date) : null);
+  }
+  if (_myAge === null) {
+    showToast('\u{1F51E} 만 18세 이상 지원 가능. 마이페이지에서 생년월일을 등록해주세요');
+    return false;
+  }
+  if (_myAge < 18) {
+    showToast('\u{1F51E} 만 18세 이상만 지원 가능한 공고입니다');
+    return false;
+  }
+  return true;
+}
+
 async function applySwipeJob(job, isQuick = false) {
   if (isGuest || !currentUser) return false;
-  // 18세 미만 차단 (나이 미확인 시 차단)
-  if (job.age_limit) {
-    if (_myAge === null) {
-      const { data: w } = await db.from('workers').select('age, birth_date').eq('kakao_uid', currentUser.id).maybeSingle();
-      _myAge = w?.age || (w?.birth_date ? calcAgeFromBirth(w.birth_date) : null);
-    }
-    if (_myAge === null) {
-      showToast('\u{1F51E} 만 18세 이상 지원 가능. 마이페이지에서 생년월일을 등록해주세요');
-      return false;
-    }
-    if (_myAge < 18) {
-      showToast('\u{1F51E} 만 18세 이상만 지원 가능한 공고입니다');
-      return false;
-    }
-  }
+  if (!(await checkSwipeAgeGate(job))) return false;
   appliedSwipeIds.add(job.id);
   let wid = await _getWorkerId();
   if (!wid) {
