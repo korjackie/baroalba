@@ -16069,20 +16069,20 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
 }
 
 // ── 바로스팟 ────────────────────────────────────────────────
-const BAROSPOT_PASS_PRODUCTS = {
-  female: [
-    { id:'f1',  qty:1,  price:7900,  label:'1회권',  discount:0 },
-    { id:'f3',  qty:3,  price:19900, label:'3회권',  discount:16 },
-    { id:'f10', qty:10, price:55000, label:'10회권', discount:31 },
-    { id:'f30', qty:30, price:137000,label:'30회권', discount:42 },
-  ],
-  male: [
-    { id:'m1',  qty:1,  price:9900,  label:'1회권',  discount:0 },
-    { id:'m3',  qty:3,  price:24900, label:'3회권',  discount:16 },
-    { id:'m10', qty:10, price:68000, label:'10회권', discount:31 },
-    { id:'m30', qty:30, price:171000,label:'30회권', discount:42 },
-  ],
-};
+// 이용권 가격표 - 관리자페이지(설정 > 바로스팟 이용권 가격)에서 관리, DB에서 조회
+let _barospotPassProducts = null; // { female:[...], male:[...] }
+async function loadBarospotPassProducts(force = false) {
+  if (_barospotPassProducts && !force) return _barospotPassProducts;
+  const { data } = await db.from('barospot_pass_products')
+    .select('id,gender,qty,price,label,discount_pct')
+    .eq('is_active', true).order('display_order');
+  const grouped = { female: [], male: [] };
+  (data || []).forEach(p => {
+    if (grouped[p.gender]) grouped[p.gender].push({ id: p.id, qty: p.qty, price: p.price, label: p.label, discount: p.discount_pct });
+  });
+  _barospotPassProducts = grouped;
+  return grouped;
+}
 
 let _spotGender = null;
 let _spotPassCount = 0;
@@ -16128,8 +16128,9 @@ async function setSpotGender(gender) {
   await _loadBarospotList();
 }
 
-function openSpotPassSheet(gender) {
-  const products = BAROSPOT_PASS_PRODUCTS[gender] || [];
+async function openSpotPassSheet(gender) {
+  const all = await loadBarospotPassProducts();
+  const products = all[gender] || [];
   const color = gender === 'female' ? '#f43f5e' : '#3b82f6';
   const bgColor = gender === 'female' ? '#fff0f4' : '#eff6ff';
   let html = `<div style="padding:20px 16px 0">
@@ -16167,7 +16168,8 @@ function selectSpotPass(id) {
 
 async function buySpotPass(gender) {
   if (!_selectedSpotPass || !currentUser) return;
-  const allProducts = [...BAROSPOT_PASS_PRODUCTS.female, ...BAROSPOT_PASS_PRODUCTS.male];
+  const all = await loadBarospotPassProducts();
+  const allProducts = [...all.female, ...all.male];
   const prod = allProducts.find(p => p.id === _selectedSpotPass);
   if (!prod) return;
   closeBottomSheet();

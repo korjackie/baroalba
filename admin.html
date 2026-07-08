@@ -401,10 +401,43 @@
       <div class="list-item" onclick="navTo('settings','baromoim')"><div class="list-icon">🤝</div><div class="list-text"><div class="list-title">바로모임 분야 설정</div><div class="list-desc">스포츠, 취미 등 추가/수정</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('settings','lesson')"><div class="list-icon">📚</div><div class="list-text"><div class="list-title">레슨/과외 과목 설정</div><div class="list-desc">수학, 영어 등 추가/수정</div></div><div class="list-arrow">›</div></div>
     </div>
+    <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">가격 설정</div>
+    <div class="list-group">
+      <div class="list-item" onclick="navTo('settings','pass-pricing')"><div class="list-icon">🎟️</div><div class="list-text"><div class="list-title">바로스팟 이용권 가격</div><div class="list-desc">성별·횟수별 이용권 가격 추가/수정</div></div><div class="list-arrow">›</div></div>
+    </div>
     <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">보안 및 권한</div>
     <div class="list-group">
       <div class="list-item" onclick="navTo('settings','admins')"><div class="list-icon">🛡️</div><div class="list-text"><div class="list-title">최고 관리자 계정 관리</div><div class="list-desc">admin 접근 권한 제어</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="cleanupWithdrawnWorkers()"><div class="list-icon">🧹</div><div class="list-text"><div class="list-title">탈퇴자 개인정보 일괄 정리</div><div class="list-desc">인증 계정이 삭제된 탈퇴자의 이름·전화번호·사진을 익명화</div></div><div class="list-arrow">›</div></div>
+    </div>
+  </div>
+
+  <!-- 바로스팟 이용권 가격 관리 -->
+  <div class="tab-content" id="tab-pass-pricing">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 바로스팟 이용권 가격입니다. 여기서 수정하면 이용권 구매 화면에 바로 반영됩니다.</div>
+    <div id="pass-pricing-list"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div id="pass-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">이용권 등록</div>
+      <input type="hidden" id="pp-id">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <select id="pp-gender" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
+          <option value="female">여성</option>
+          <option value="male">남성</option>
+        </select>
+        <input id="pp-label" type="text" placeholder="이용권 이름 (예: 1회권)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <div style="display:flex;gap:8px">
+          <input id="pp-qty" type="number" min="1" placeholder="횟수" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="pp-price" type="number" min="0" placeholder="가격(원)" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        </div>
+        <div style="display:flex;gap:8px">
+          <input id="pp-discount" type="number" min="0" max="100" value="0" placeholder="할인율%" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="pp-order" type="number" min="0" value="0" placeholder="정렬순서" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="savePassProduct()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
+          <button onclick="resetPassProductForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -759,7 +792,7 @@ function scrollPanelToInput(el) {
 const ALL_TABS = [
   'dashboard','alba','moim','mannam','settings',
   'reports','postings','users','moims',
-  'admins','baroalba','baromoim','lesson','mannnam','restaurants','coupons',
+  'admins','baroalba','baromoim','lesson','mannnam','restaurants','coupons','pass-pricing',
 ];
 const NAV_GROUPS = ['dashboard','alba','moim','mannam','settings'];
 const GROUP_OF = {
@@ -767,7 +800,7 @@ const GROUP_OF = {
   alba:'alba', postings:'alba', users:'alba', reports:'alba',
   moim:'moim', moims:'moim',
   mannam:'mannam', mannnam:'mannam', restaurants:'mannam', coupons:'mannam',
-  settings:'settings', admins:'settings', baroalba:'settings', baromoim:'settings', lesson:'settings',
+  settings:'settings', admins:'settings', baroalba:'settings', baromoim:'settings', lesson:'settings', 'pass-pricing':'settings',
 };
 
 // 그룹 메뉴에서 하위 페이지로 진입 (뒤로가기는 헤더의 goBackSmart()가 GROUP_OF로 알아서 처리)
@@ -795,6 +828,7 @@ function switchTab(name) {
   if (name === 'mannnam')    loadMannnamManagers();
   if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
   if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
+  if (name === 'pass-pricing' && document.getElementById('pass-pricing-list').innerHTML.includes('로딩')) loadPassPricing();
 
   // 하드웨어 뒤로가기 대응용 가상 히스토리 (popstate 처리 중 재호출된 경우엔 다시 쌓지 않음)
   if (!_fromPopState) history.pushState({ adminTab: name }, '');
@@ -1581,6 +1615,92 @@ async function deleteCouponById(id) {
   if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
   showToast('쿠폰이 삭제됐습니다');
   loadCoupons();
+}
+
+// ── 바로스팟 이용권 가격 관리 ─────────────────────────────
+let _passProducts = [];
+async function loadPassPricing() {
+  const el = document.getElementById('pass-pricing-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('barospot_pass_products');
+  _passProducts = Array.isArray(data) ? data : [];
+  const genderLabel = { female: '여성', male: '남성' };
+  el.innerHTML = _passProducts.length
+    ? _passProducts.map(p => `
+        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+            <span style="font-size:14px;font-weight:900;color:#1e293b">${genderLabel[p.gender] || p.gender} · ${p.label}</span>
+            <span class="status-badge ${p.is_active ? 'sb-done' : 'sb-dismissed'}">${p.is_active ? '판매중' : '비활성'}</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px">
+            ${p.qty}회 · ${p.price.toLocaleString()}원 (회당 ${Math.round(p.price / p.qty).toLocaleString()}원)${p.discount_pct ? ' · ' + p.discount_pct + '% 할인 표시' : ''}
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="r-btn r-btn-reviewing" onclick="editPassProduct('${p.id}')">수정</button>
+            <button class="r-btn ${p.is_active ? 'r-btn-dismiss' : 'r-btn-done'}" onclick="togglePassProduct('${p.id}', ${!p.is_active})">${p.is_active ? '비활성화' : '활성화'}</button>
+            <button class="r-btn r-btn-close" onclick="deletePassProduct('${p.id}')">삭제</button>
+          </div>
+        </div>`).join('')
+    : '<div class="empty">등록된 이용권이 없습니다</div>';
+}
+
+function resetPassProductForm() {
+  document.getElementById('pp-id').value = '';
+  document.getElementById('pp-gender').value = 'female';
+  document.getElementById('pp-label').value = '';
+  document.getElementById('pp-qty').value = '';
+  document.getElementById('pp-price').value = '';
+  document.getElementById('pp-discount').value = '0';
+  document.getElementById('pp-order').value = '0';
+  document.getElementById('pass-form-title').textContent = '이용권 등록';
+}
+
+function editPassProduct(id) {
+  const p = _passProducts.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('pp-id').value = p.id;
+  document.getElementById('pp-gender').value = p.gender;
+  document.getElementById('pp-label').value = p.label || '';
+  document.getElementById('pp-qty').value = p.qty;
+  document.getElementById('pp-price').value = p.price;
+  document.getElementById('pp-discount').value = p.discount_pct || 0;
+  document.getElementById('pp-order').value = p.display_order || 0;
+  document.getElementById('pass-form-title').textContent = '이용권 수정';
+}
+
+async function savePassProduct() {
+  const id = document.getElementById('pp-id').value;
+  const payload = {
+    id: id || undefined,
+    gender: document.getElementById('pp-gender').value,
+    label: document.getElementById('pp-label').value.trim(),
+    qty: document.getElementById('pp-qty').value,
+    price: document.getElementById('pp-price').value,
+    discount_pct: document.getElementById('pp-discount').value,
+    display_order: document.getElementById('pp-order').value,
+  };
+  if (!payload.label) { showToast('이용권 이름을 입력해주세요'); return; }
+  if (!payload.qty || !payload.price) { showToast('횟수와 가격을 입력해주세요'); return; }
+  const result = await adminApi('save_pass_product', id ? 'PATCH' : 'POST', payload);
+  if (result?.error) { showToast('저장 실패: ' + result.error); return; }
+  showToast(id ? '이용권 정보가 수정됐습니다' : '이용권이 등록됐습니다');
+  resetPassProductForm();
+  loadPassPricing();
+}
+
+async function togglePassProduct(id, nextActive) {
+  const result = await adminApi('toggle_pass_product', 'PATCH', { id, is_active: nextActive });
+  if (result?.error) { showToast('변경 실패: ' + result.error); return; }
+  showToast(nextActive ? '활성화됐습니다' : '비활성화됐습니다');
+  loadPassPricing();
+}
+
+async function deletePassProduct(id) {
+  if (!confirm('이 이용권을 삭제하시겠습니까?')) return;
+  const result = await adminApi('delete_pass_product', 'DELETE', { id });
+  if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
+  showToast('이용권이 삭제됐습니다');
+  loadPassPricing();
 }
 
 async function cleanupWithdrawnWorkers() {

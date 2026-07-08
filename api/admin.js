@@ -171,6 +171,55 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // ── 바로스팟 이용권 가격표 ───────────────────────────
+    if (action === 'barospot_pass_products') {
+      const data = await sb(
+        'barospot_pass_products?select=*&order=gender.asc,display_order.asc',
+        svcKey
+      ).then(r => r.json());
+      return res.json(Array.isArray(data) ? data : []);
+    }
+
+    if (action === 'save_pass_product' && (req.method === 'POST' || req.method === 'PATCH')) {
+      const { id, gender, qty, price, label, discount_pct, display_order } = req.body || {};
+      if (!gender || !['female', 'male'].includes(gender)) return res.status(400).json({ error: 'gender(female/male) required' });
+      if (!label || !label.trim()) return res.status(400).json({ error: '이용권 이름을 입력해주세요' });
+      const payload = {
+        gender,
+        qty: parseInt(qty) || 1,
+        price: parseInt(price) || 0,
+        label: label.trim(),
+        discount_pct: parseInt(discount_pct) || 0,
+        display_order: parseInt(display_order) || 0,
+      };
+      let r;
+      if (id) {
+        r = await sb(`barospot_pass_products?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify(payload) });
+      } else {
+        payload.is_active = true;
+        r = await sb('barospot_pass_products', svcKey, { method: 'POST', body: JSON.stringify(payload) });
+      }
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    if (action === 'toggle_pass_product' && req.method === 'PATCH') {
+      const { id, is_active } = req.body || {};
+      if (!id || is_active === undefined) return res.status(400).json({ error: 'id, is_active required' });
+      const r = await sb(`barospot_pass_products?id=eq.${id}`, svcKey, {
+        method: 'PATCH', body: JSON.stringify({ is_active: !!is_active })
+      });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    if (action === 'delete_pass_product' && req.method === 'DELETE') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      await sb(`barospot_pass_products?id=eq.${id}`, svcKey, { method: 'DELETE' });
+      return res.json({ ok: true });
+    }
+
     // ── 신고 목록 ──────────────────────────────────────
     if (action === 'reports') {
       const reports = await sb('reports?select=*&order=created_at.desc&limit=100', svcKey).then(r => r.json());
