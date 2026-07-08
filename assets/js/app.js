@@ -10001,6 +10001,11 @@ async function initOwnerFeatures() {
     bizRecord = biz;
   }
 
+  // 결제 직후에만 메모리에 반영되고 새로고침하면 항상 'free'로 리셋되던 문제 수정 -
+  // 로그인 시 실제 businesses.plan 값을 읽어와 플랜 상태를 복원한다
+  _currentPlan = bizRecord.plan || 'free';
+  renderPlanUI();
+
   autoCloseExpiredPostings();
   checkSurgeSchedules();
   checkSurgeIntervals();
