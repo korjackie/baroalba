@@ -76,6 +76,60 @@ const _PANEL_CLOSE_MAP = {
   'panel-moim-detail':   () => closeMoimDetail(),
   'panel-moim-chat':     () => closeMoimChat(),
 };
+// ── 바텀시트 핸들바 드래그로 닫기 (공용) ───────────────────
+// handleEl: 핸들바 요소, panelEl: 드래그에 따라 움직일 패널, closeFn: 임계값 이상 당겼을 때 호출할 닫기 함수
+function bindSheetDragClose(handleEl, panelEl, closeFn) {
+  if (!handleEl || !panelEl || handleEl.dataset.dragBound) return;
+  handleEl.dataset.dragBound = '1';
+  handleEl.style.touchAction = 'none';
+  handleEl.style.cursor = 'grab';
+  let startY = 0, dragging = false;
+  const move = y => {
+    if (!dragging) return;
+    const dy = Math.max(0, y - startY);
+    panelEl.style.transform = `translateY(${dy}px)`;
+  };
+  const end = y => {
+    if (!dragging) return;
+    dragging = false;
+    const dy = Math.max(0, y - startY);
+    panelEl.style.transition = 'transform 0.25s ease';
+    if (dy > 80) {
+      panelEl.style.transform = 'translateY(100%)';
+      setTimeout(() => { panelEl.style.transition = ''; panelEl.style.transform = ''; closeFn(); }, 200);
+    } else {
+      panelEl.style.transform = '';
+      setTimeout(() => { panelEl.style.transition = ''; }, 250);
+    }
+  };
+  handleEl.addEventListener('touchstart', e => { startY = e.touches[0].clientY; dragging = true; panelEl.style.transition = 'none'; }, { passive: true });
+  handleEl.addEventListener('touchmove',  e => move(e.touches[0].clientY), { passive: true });
+  handleEl.addEventListener('touchend',   e => end(e.changedTouches[0].clientY), { passive: true });
+  handleEl.addEventListener('mousedown', e => {
+    startY = e.clientY; dragging = true; panelEl.style.transition = 'none';
+    const mv = ev => move(ev.clientY);
+    const up = ev => { end(ev.clientY); window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); };
+    window.addEventListener('mousemove', mv);
+    window.addEventListener('mouseup', up);
+  });
+}
+
+// ── 범용 바텀시트 (openBottomSheet(html)로 임의 내용 삽입) ──
+function openBottomSheet(html) {
+  const overlay = document.getElementById('generic-bottom-sheet-overlay');
+  const panel   = document.getElementById('generic-bottom-sheet-panel');
+  const handle  = document.getElementById('generic-bottom-sheet-handle');
+  const body    = document.getElementById('generic-bottom-sheet-body');
+  if (!overlay || !panel || !body) return;
+  body.innerHTML = html;
+  overlay.style.display = 'block';
+  bindSheetDragClose(handle, panel, closeBottomSheet);
+}
+function closeBottomSheet() {
+  const overlay = document.getElementById('generic-bottom-sheet-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
 history.pushState({ panel: null }, ''); // 초기 기준점
 window.addEventListener('popstate', () => {
   // 1. 공고 상세 (detail-overlay .open)
@@ -139,6 +193,27 @@ window.addEventListener('popstate', () => {
   const pointHistEl = document.getElementById('point-history-panel');
   if (pointHistEl && pointHistEl.style.display === 'block') {
     closePointHistory();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 6-3. 포인트 충전 바텀시트
+  const pointChargeEl = document.getElementById('point-charge-overlay');
+  if (pointChargeEl && pointChargeEl.style.display === 'flex') {
+    closePointCharge();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 6-4. 쿠폰 바텀시트
+  const couponEl = document.getElementById('couponSheet');
+  if (couponEl && couponEl.classList.contains('show')) {
+    closeCouponSheet();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 6-5. 범용 바텀시트 (바로스팟 이용권 구매 등)
+  const genericSheetEl = document.getElementById('generic-bottom-sheet-overlay');
+  if (genericSheetEl && genericSheetEl.style.display === 'block') {
+    closeBottomSheet();
     history.pushState({ panel: null }, '');
     return;
   }
@@ -6646,6 +6721,10 @@ function setNav(el, tab) {
     const _homeFab = document.getElementById('posting-fab');
     if (_homeFab) _homeFab.style.display = 'none';
     panelHome?.classList.add('show');
+    // 다른 탭에 갔다가 돌아왔을 때 이전에 적용된 필터(외국인환영 등)로 인해
+    // 검색결과 화면에 갇힌 채 기본 홈 화면이 안 보이던 문제 방지
+    const _homeSR = document.getElementById('home-search-results');
+    if (_homeSR && _homeSR.style.display !== 'none') clearHomeFilter();
     loadHomePanel();
   } else if (tab === 'swipe') {
     topBar.style.display      = 'none';
@@ -6686,6 +6765,9 @@ function setNav(el, tab) {
     if (tab === 'map') {
       setSheetState('peek');
       if (kakaoMap) setTimeout(() => { try { kakaoMap.relayout(); } catch(e) {} }, 50);
+      // 지도 탭에 들어올 때마다 내 위치 마커를 자동으로 표시 (버튼을 눌러야만 보이던 문제 수정) -
+      // setNav()가 다른 탭으로 나갈 때 stopLocationWatch()로 마커를 지우기 때문에 재진입 시 다시 켜줘야 함
+      moveToMyLocation(true);
       // 지도 모드 토글 표시 (알바|모임)
       const _modeToggle = document.getElementById('map-mode-toggle');
       if (_modeToggle) _modeToggle.style.display = 'flex';
@@ -16239,6 +16321,7 @@ function openPointCharge() {
   _pcGoToStep('method');
   const overlay = document.getElementById('point-charge-overlay');
   if (overlay) { overlay.style.display = 'flex'; overlay.style.alignItems = 'flex-end'; }
+  bindSheetDragClose(document.getElementById('point-charge-handle'), document.getElementById('point-charge-panel'), closePointCharge);
 }
 
 function closePointCharge() {

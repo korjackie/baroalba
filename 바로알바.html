@@ -1453,6 +1453,10 @@
               <span class="mp-row-arrow">›</span>
             </div>
           </div>
+          <div class="mp-row" onclick="openCouponSheet()">
+            <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span>프로모션 쿠폰 등록 / 이용권 조회</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
           <div class="mp-row" onclick="showMyRatings()">
             <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span>내 평점</span></div>
             <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
@@ -3878,8 +3882,8 @@
 
 <!-- ── 금지행위 동의 바텀시트 ── -->
 <div id="banned-agree-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:7100;align-items:flex-end">
-  <div style="background:#fff;border-radius:28px 28px 0 0;width:100%;padding:28px 24px 40px;animation:slideUp 0.3s ease;max-height:85dvh;overflow-y:auto">
-    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
+  <div id="banned-agree-panel" style="background:#fff;border-radius:28px 28px 0 0;width:100%;padding:28px 24px 40px;animation:slideUp 0.3s ease;max-height:85dvh;overflow-y:auto">
+    <div id="banned-agree-handle" style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
     <div style="font-size:20px;font-weight:800;color:#222;text-align:center;margin-bottom:6px">알바생 활동 전 필수 동의</div>
     <div style="font-size:13px;color:#888;text-align:center;margin-bottom:20px">아래 금지 행위를 확인하고 동의해주세요</div>
     <div style="background:#FFF5F5;border:1.5px solid #FECACA;border-radius:14px;padding:16px;margin-bottom:16px">
@@ -3901,8 +3905,8 @@
 
 <!-- ── 프로필 사진 TIP 바텀시트 ── -->
 <div id="photo-tip-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:7100;align-items:flex-end">
-  <div style="background:#fff;border-radius:28px 28px 0 0;width:100%;padding:28px 24px 40px;animation:slideUp 0.3s ease">
-    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
+  <div id="photo-tip-panel" style="background:#fff;border-radius:28px 28px 0 0;width:100%;padding:28px 24px 40px;animation:slideUp 0.3s ease">
+    <div id="photo-tip-handle" style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
     <div style="font-size:20px;font-weight:800;color:#222;text-align:center;margin-bottom:6px">사진 등록 TIP</div>
     <div style="font-size:13px;color:#888;text-align:center;margin-bottom:20px">좋은 사진 한 장이 채용 확률을 높여줘요!</div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
@@ -3937,8 +3941,8 @@
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
-  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;padding:0 20px 36px;box-sizing:border-box">
-    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 20px;cursor:pointer" onclick="closeWageTransferModal()"></div>
+  <div id="wage-transfer-panel" style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;padding:0 20px 36px;box-sizing:border-box">
+    <div id="wage-transfer-handle" style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 20px;cursor:pointer" onclick="closeWageTransferModal()"></div>
     <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">💸 급여 송금</div>
     <div id="wt-worker-name" style="font-size:13px;color:#888;margin-bottom:20px"></div>
     <div style="background:#FFF8F8;border:1.5px solid #FEE2E2;border-radius:16px;padding:16px;margin-bottom:20px;text-align:center">
@@ -3978,8 +3982,8 @@
 
 <!-- ── 포인트 충전 모달 (3단계: 수단선택 → 금액선택 → 계좌이체) ── -->
 <div id="point-charge-overlay" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.5)" onclick="if(event.target===this)closePointCharge()">
-  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:0 20px;padding-bottom:max(20px,env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto">
-    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 18px"></div>
+  <div id="point-charge-panel" style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:0 20px;padding-bottom:max(20px,env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto">
+    <div id="point-charge-handle" style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:14px auto 18px"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <div style="font-size:17px;font-weight:900;color:#111">💎 포인트 충전</div>
       <button onclick="closePointCharge()" style="background:none;border:none;font-size:26px;color:#bbb;cursor:pointer;line-height:1;padding:0">×</button>
@@ -4211,10 +4215,18 @@
   </div>
 </div>
 
+<!-- 범용 바텀시트 (openBottomSheet(html)로 동적 내용 삽입 - 바로스팟 이용권 구매 등) -->
+<div id="generic-bottom-sheet-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:8500" onclick="if(event.target===this)closeBottomSheet()">
+  <div id="generic-bottom-sheet-panel" style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0px)">
+    <div id="generic-bottom-sheet-handle" style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 4px"></div>
+    <div id="generic-bottom-sheet-body"></div>
+  </div>
+</div>
+
 <!-- COUPON BOTTOM SHEET -->
 <div class="overlay" id="couponOverlay" onclick="closeCouponSheet()"></div>
 <div class="bottom-sheet" id="couponSheet">
-  <div class="bs-handle"></div>
+  <div class="bs-handle" id="couponSheetHandle"></div>
   <div>
     <div class="coupon-modal-title">💜 바로만남 쿠폰 & 티켓</div>
     <div style="font-size: 13px; color: #64748b; margin-top: 4px;">베타테스터 코드를 입력하고 식사권을 받으세요!</div>
@@ -4236,6 +4248,7 @@
     document.getElementById('couponOverlay').classList.add('show');
     setTimeout(() => { document.getElementById('couponSheet').classList.add('show'); }, 10);
     refreshTicketCount();
+    bindSheetDragClose(document.getElementById('couponSheetHandle'), document.getElementById('couponSheet'), closeCouponSheet);
   }
   function closeCouponSheet() {
     document.getElementById('couponSheet').classList.remove('show');

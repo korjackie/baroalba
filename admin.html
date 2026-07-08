@@ -738,6 +738,8 @@ const GROUP_OF = {
 // 그룹 메뉴에서 하위 페이지로 진입 - '‹ 뒤로' 버튼이 돌아갈 그룹을 기억해둔다
 function navTo(group, sub) { _navFrom = group; switchTab(sub); }
 
+let _fromPopState = false;
+
 function switchTab(name) {
   ALL_TABS.forEach(t => {
     const pane = document.getElementById('tab-' + t);
@@ -758,7 +760,22 @@ function switchTab(name) {
   if (name === 'mannnam')    loadMannnamManagers();
   if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
   if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
+
+  // 하드웨어 뒤로가기 대응용 가상 히스토리 (popstate 처리 중 재호출된 경우엔 다시 쌓지 않음)
+  if (!_fromPopState) history.pushState({ adminTab: name }, '');
 }
+
+// ── 하드웨어 뒤로가기: 서브페이지 → 그룹 메뉴 → 대시보드 순으로 한 단계씩 복귀 ──
+// (대시보드에서 뒤로가기를 누르면 그대로 admin.html을 벗어나게 둔다 - 정상 종료 지점)
+history.pushState({ adminTab: 'dashboard' }, '');
+window.addEventListener('popstate', () => {
+  const cur = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
+  if (cur === 'dashboard') return;
+  _fromPopState = true;
+  const group = GROUP_OF[cur] || cur;
+  switchTab(cur === group ? 'dashboard' : group);
+  _fromPopState = false;
+});
 
 // ── API 호출 ─────────────────────────────────────────────
 async function adminApi(action, method = 'GET', body = null, extraParams = {}) {

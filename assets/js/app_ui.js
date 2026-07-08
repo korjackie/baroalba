@@ -5,6 +5,7 @@ function checkBannedAgree(callback) {
   if (localStorage.getItem('baro_banned_agreed')) { callback(); return; }
   _bannedAgreeCallback = callback;
   document.getElementById('banned-agree-overlay').style.display = 'flex';
+  bindSheetDragClose(document.getElementById('banned-agree-handle'), document.getElementById('banned-agree-panel'), closeBannedAgreeSheet);
 }
 function confirmBannedAgree() {
   localStorage.setItem('baro_banned_agreed', '1');
@@ -21,6 +22,7 @@ function showPhotoTip(e) {
   if (localStorage.getItem('baro_photo_tip_seen')) return;
   e.preventDefault();
   document.getElementById('photo-tip-overlay').style.display = 'flex';
+  bindSheetDragClose(document.getElementById('photo-tip-handle'), document.getElementById('photo-tip-panel'), () => document.getElementById('photo-tip-overlay').style.display = 'none');
 }
 function openPhotoPickerAndCloseTip() {
   localStorage.setItem('baro_photo_tip_seen', '1');
@@ -252,6 +254,7 @@ function openWageTransferModal(appId, workerName, phone, wage) {
     phoneRow.style.display = 'none';
   }
   document.getElementById('wage-transfer-modal').style.display = 'flex';
+  bindSheetDragClose(document.getElementById('wage-transfer-handle'), document.getElementById('wage-transfer-panel'), closeWageTransferModal);
 }
 function closeWageTransferModal() {
   document.getElementById('wage-transfer-modal').style.display = 'none';
