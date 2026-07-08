@@ -268,6 +268,39 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // ── 기존 탈퇴자 개인정보 일괄 정리 ───────────────────
+    // 인증 계정(auth.users)은 이미 삭제됐지만 workers 테이블에 이름/전화번호/사진 등이
+    // 그대로 남아있던 기존 탈퇴자들을 찾아 개인식별 정보만 익명화한다 (행/이력은 유지)
+    if (action === 'cleanup_withdrawn_workers' && req.method === 'POST') {
+      const workers = await sb(
+        'workers?select=id,kakao_uid,name,phone,photo_url,birth_date,age,gender,region,bio&kakao_uid=not.is.null',
+        svcKey
+      ).then(r => r.json());
+      const list = Array.isArray(workers) ? workers : [];
+      const alreadyClean = w => w.name === '탈퇴한 사용자' && !w.phone && !w.photo_url && !w.birth_date && !w.gender;
+      const targets = list.filter(w => !alreadyClean(w));
+
+      const withdrawn = [];
+      for (const w of targets) {
+        const authRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${w.kakao_uid}`, {
+          headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` }
+        });
+        if (!authRes.ok) withdrawn.push(w.id); // 404 등 = 인증 계정이 이미 삭제된 탈퇴자
+      }
+
+      if (withdrawn.length) {
+        const r = await sb(`workers?id=in.(${withdrawn.join(',')})`, svcKey, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            name: '탈퇴한 사용자', phone: null, photo_url: null,
+            birth_date: null, age: null, gender: null, region: null, bio: null,
+          })
+        });
+        if (!r.ok) return res.status(502).json({ error: await r.text() });
+      }
+      return res.json({ ok: true, checked: targets.length, cleaned: withdrawn.length });
+    }
+
     // ── 회원 상세 ──────────────────────────────────────────────
     if (action === 'user_detail') {
       const { id } = req.query;

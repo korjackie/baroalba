@@ -404,6 +404,7 @@
     <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">보안 및 권한</div>
     <div class="list-group">
       <div class="list-item" onclick="navTo('settings','admins')"><div class="list-icon">🛡️</div><div class="list-text"><div class="list-title">최고 관리자 계정 관리</div><div class="list-desc">admin 접근 권한 제어</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="cleanupWithdrawnWorkers()"><div class="list-icon">🧹</div><div class="list-text"><div class="list-title">탈퇴자 개인정보 일괄 정리</div><div class="list-desc">인증 계정이 삭제된 탈퇴자의 이름·전화번호·사진을 익명화</div></div><div class="list-arrow">›</div></div>
     </div>
   </div>
 
@@ -1541,6 +1542,14 @@ async function deleteCouponById(id) {
   if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
   showToast('쿠폰이 삭제됐습니다');
   loadCoupons();
+}
+
+async function cleanupWithdrawnWorkers() {
+  if (!confirm('인증 계정이 이미 삭제된 탈퇴자를 찾아 이름/전화번호/사진 등을 익명화합니다. 계속할까요?')) return;
+  showToast('탈퇴자 확인 중... (인원에 따라 시간이 걸릴 수 있어요)');
+  const result = await adminApi('cleanup_withdrawn_workers', 'POST');
+  if (result?.error) { showToast('정리 실패: ' + result.error); return; }
+  showToast(`✅ ${result.checked}명 확인, ${result.cleaned}명 정리 완료`);
 }
 
 async function loadAdminList() {
