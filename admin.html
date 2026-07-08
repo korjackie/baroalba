@@ -287,7 +287,7 @@
 
 <div class="header">
   <div class="header-left">
-    <button onclick="history.back()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;padding:0 6px 0 0;line-height:1">‹</button>
+    <button onclick="goBackSmart()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;padding:0 6px 0 0;line-height:1">‹</button>
     <span class="header-logo">바로알바</span>
     <span class="header-badge">ADMIN</span>
   </div>
@@ -410,7 +410,6 @@
 
   <!-- 신고관리 -->
   <div class="tab-content" id="tab-reports">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterReports('all', this)">전체</button>
       <button class="filter-btn" onclick="filterReports('pending', this)">🟡 대기</button>
@@ -423,19 +422,16 @@
 
   <!-- 공고관리 -->
   <div class="tab-content" id="tab-postings">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div id="postings-list"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 회원관리 -->
   <div class="tab-content" id="tab-users">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div id="users-list"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 모임관리 -->
   <div class="tab-content" id="tab-moims">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterMoims('all', this)">전체</button>
       <button class="filter-btn" onclick="filterMoims('open', this)">🟢 진행중</button>
@@ -446,13 +442,18 @@
 
   <!-- 제휴 매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) -->
   <div class="tab-content" id="tab-restaurants">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저와 동일한 제휴 매장 데이터입니다. 여기서 등록·수정하면 mannnam.html에도 바로 반영됩니다.</div>
     <div id="restaurants-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div id="restaurant-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">제휴 매장 등록</div>
       <input type="hidden" id="r-id">
       <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px">
+          <input id="r-place-query" type="text" placeholder="네이버 플레이스 검색 (예: 강남 스타벅스)" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchRestaurantPlace();}">
+          <button onclick="searchRestaurantPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+        </div>
+        <div id="r-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden"></div>
+        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">검색 결과를 선택하면 아래 식당명·주소·연락처가 자동으로 채워집니다. 필요하면 직접 수정할 수도 있어요.</div>
         <input id="r-name" type="text" placeholder="식당명" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
@@ -472,7 +473,6 @@
 
   <!-- 프로모션 쿠폰 관리 -->
   <div class="tab-content" id="tab-coupons">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div id="coupons-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">쿠폰 생성</div>
@@ -495,7 +495,6 @@
 
   <!-- 관리자 계정 탭 -->
   <div class="tab-content" id="tab-admins">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">admin.html 접근이 허용된 관리자 이메일 목록입니다.</div>
     <div id="settings-admin-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
@@ -512,7 +511,6 @@
 
   <!-- 바로알바 카테고리 탭 -->
   <div class="tab-content" id="tab-baroalba">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 선택하는 업종 카테고리입니다. (앱 공고 작성 화면에 반영)</div>
     <div id="cat-list-baroalba"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
@@ -527,7 +525,6 @@
 
   <!-- 바로모임 카테고리 탭 -->
   <div class="tab-content" id="tab-baromoim">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">모임 개설 시 선택하는 메인 카테고리입니다.</div>
     <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ 아래 DDL 실행 후 사용 가능: ALTER TABLE job_categories ADD COLUMN IF NOT EXISTS service_type TEXT NOT NULL DEFAULT 'baroalba';</div>
     <div id="cat-list-baromoim"><div class="loading">로딩 중...</div></div>
@@ -543,7 +540,6 @@
 
   <!-- 레슨/과외 카테고리 탭 -->
   <div class="tab-content" id="tab-lesson">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">레슨·과외 프로필 등록 시 선택하는 과목 카테고리입니다.</div>
     <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ DDL 실행 후 사용 가능 (바로모임과 동일)</div>
     <div id="cat-list-lesson"><div class="loading">로딩 중...</div></div>
@@ -559,7 +555,6 @@
 
   <!-- 바로만남 매니저 탭 -->
   <div class="tab-content" id="tab-mannnam">
-    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저로 지정된 업주는 mannnam.html에서 식당·이벤트·신청자를 관리할 수 있습니다.</div>
     <div id="mannnam-mgr-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
@@ -674,7 +669,6 @@ let _reportFilter = 'all';
 let _moims = [];
 let _moimFilter = 'all';
 let _editingMoimId = null;
-let _navFrom = 'dashboard'; // 하위 페이지에서 '‹ 뒤로' 눌렀을 때 돌아갈 그룹 탭
 
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
@@ -776,8 +770,8 @@ const GROUP_OF = {
   settings:'settings', admins:'settings', baroalba:'settings', baromoim:'settings', lesson:'settings',
 };
 
-// 그룹 메뉴에서 하위 페이지로 진입 - '‹ 뒤로' 버튼이 돌아갈 그룹을 기억해둔다
-function navTo(group, sub) { _navFrom = group; switchTab(sub); }
+// 그룹 메뉴에서 하위 페이지로 진입 (뒤로가기는 헤더의 goBackSmart()가 GROUP_OF로 알아서 처리)
+function navTo(group, sub) { switchTab(sub); }
 
 let _fromPopState = false;
 
@@ -806,15 +800,22 @@ function switchTab(name) {
   if (!_fromPopState) history.pushState({ adminTab: name }, '');
 }
 
-// ── 하드웨어 뒤로가기: 서브페이지 → 그룹 메뉴 → 대시보드 순으로 한 단계씩 복귀 ──
-// (대시보드에서 뒤로가기를 누르면 그대로 admin.html을 벗어나게 둔다 - 정상 종료 지점)
+// ── 뒤로가기: 서브페이지 → 그룹 메뉴 → 대시보드 순으로 한 단계씩 복귀 ──
+// 헤더의 '‹' 버튼과 하드웨어 뒤로가기(popstate) 양쪽에서 공용으로 사용
+// (대시보드에서 누르면 그대로 admin.html을 벗어나게 둔다 - 정상 종료 지점)
+function goBackSmart() {
+  const cur = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
+  if (cur === 'dashboard') { history.back(); return; }
+  const group = GROUP_OF[cur] || cur;
+  switchTab(cur === group ? 'dashboard' : group);
+}
+
 history.pushState({ adminTab: 'dashboard' }, '');
 window.addEventListener('popstate', () => {
   const cur = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
   if (cur === 'dashboard') return;
   _fromPopState = true;
-  const group = GROUP_OF[cur] || cur;
-  switchTab(cur === group ? 'dashboard' : group);
+  goBackSmart();
   _fromPopState = false;
 });
 
@@ -1443,6 +1444,44 @@ function resetRestaurantForm() {
   ['r-name','r-address','r-phone','r-menu','r-female-price','r-male-price'].forEach(k => document.getElementById(k).value = '');
   document.getElementById('r-discount').value = '5';
   document.getElementById('restaurant-form-title').textContent = '제휴 매장 등록';
+  document.getElementById('r-place-query').value = '';
+  document.getElementById('r-place-results').style.display = 'none';
+}
+
+// ── 네이버 플레이스 검색 (제휴 매장 등록용) ──────────────
+let _restaurantPlaceItems = [];
+async function searchRestaurantPlace() {
+  const query = document.getElementById('r-place-query').value.trim();
+  if (!query) { showToast('식당명이나 지역+식당명을 입력해주세요\n예: 강남 스타벅스'); return; }
+  const box = document.getElementById('r-place-results');
+  box.style.display = 'block';
+  box.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 중...</div>';
+  try {
+    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    if (!res.ok || !data.items?.length) {
+      box.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 결과가 없어요. 지역명+식당명으로 검색해보세요</div>';
+      return;
+    }
+    _restaurantPlaceItems = data.items;
+    box.innerHTML = data.items.map((item, i) => `
+      <div onclick="selectRestaurantPlace(${i})" style="padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer">
+        <div style="font-size:13px;font-weight:800;color:#1e293b">${item.title}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">${item.roadAddress || item.address || ''}${item.telephone ? ' · ' + item.telephone : ''}</div>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 중 오류가 발생했어요</div>';
+  }
+}
+
+function selectRestaurantPlace(idx) {
+  const item = _restaurantPlaceItems[idx];
+  if (!item) return;
+  document.getElementById('r-name').value = item.title || '';
+  document.getElementById('r-address').value = item.roadAddress || item.address || '';
+  document.getElementById('r-phone').value = item.telephone || '';
+  document.getElementById('r-place-results').style.display = 'none';
+  document.getElementById('r-place-query').value = '';
 }
 
 function editRestaurant(id) {
@@ -1500,7 +1539,7 @@ async function loadCoupons() {
             <span class="status-badge ${c.is_active ? 'sb-done' : 'sb-dismissed'}">${c.is_active ? '활성' : '비활성'}</span>
           </div>
           <div style="font-size:12px;color:#64748b;margin-bottom:10px">
-            이용권 ${c.ticket_count}장 지급 · 사용 ${c.used_count || 0}${c.max_uses ? ' / ' + c.max_uses : ''}회
+            이용권 ${c.ticket_count ?? 1}장 지급 · 사용 ${c.used_count || 0}${c.max_uses ? ' / ' + c.max_uses : ''}회
             ${c.expires_at ? ' · ~' + c.expires_at.slice(0,10) : ''}
           </div>
           <div style="display:flex;gap:6px">
