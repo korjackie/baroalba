@@ -1165,7 +1165,7 @@ function renderTodayPick() {}
 // ══════════════════════════════════════════════════════════
 
 const MOIM_CAT_EMOJI = { 스포츠:'🏃', 취미:'🎨', 친목:'🤝', 기타:'💡' };
-const MOIM_PLAN_LIMITS = { free: 1, standard: 10, pro: Infinity };
+const MOIM_PLAN_LIMITS = { free: 1, basic: 10, pro: Infinity };
 
 let _currentMoimId = null;   // 상세 보고 있는 모임 id
 let _moimDetailData = null; // openMoimDetail에서 로드된 원본 객체
@@ -3604,10 +3604,25 @@ async function submitApplyWithMsg(skipMsg) {
     const { data: appData, error } = await db.from('applications').insert(payload).select('id').single();
 
     if (error?.code === '23505') {
+      // 기존 지원 기록이 있음 - 취소된 건이면 재지원으로 되살리고, 아니면 이미 지원한 것으로 안내
       const { data: existing } = await db.from('applications')
-        .select('id').eq('job_posting_id', selectedJobId).eq('worker_id', wid).single();
-      if (existing) showAppliedState(existing.id);
-      showToast('이미 지원한 공고입니다');
+        .select('id, status').eq('job_posting_id', selectedJobId).eq('worker_id', wid).single();
+      if (existing?.status === 'cancelled') {
+        const { data: revived, error: reviveErr } = await db.from('applications')
+          .update({ status: 'pending', apply_message: msg || null, cancel_deadline: null })
+          .eq('id', existing.id).select('id').single();
+        if (reviveErr) {
+          showToast('재지원 처리 중 오류가 발생했습니다');
+          btn.textContent = '⚡ 바로 지원하기'; btn.disabled = false;
+        } else {
+          showToast('✅ 지원 완료!');
+          showAppliedState(revived.id);
+          _notifyOwnerNewApplicant(selectedJobId);
+        }
+      } else {
+        if (existing) showAppliedState(existing.id);
+        showToast('이미 지원한 공고입니다');
+      }
     } else if (error) {
       showToast('오류가 발생했습니다: ' + error.message);
       btn.textContent = '⚡ 바로 지원하기'; btn.disabled = false;
@@ -5731,7 +5746,8 @@ async function checkAlreadyApplied(jobId) {
     const { data: app, error: ae } = await db.from('applications')
       .select('id, status, biz_rating').eq('job_posting_id', jobId).eq('worker_id', wid).single();
     if (ae && ae.code !== 'PGRST116') console.error('checkAlreadyApplied: 지원 조회 실패', ae);
-    if (app) {
+    // 취소된 지원은 "이미 지원한 상태"로 취급하지 않음 - 재지원 가능해야 함
+    if (app && app.status !== 'cancelled') {
       showAppliedState(app.id);
       // 근무 완료 + 아직 평점 없으면 평점 버튼 표시
       const rateRow = document.getElementById('d-rate-row');
@@ -6860,7 +6876,7 @@ function renderSwipeStack() {
       </div>
       <div style="font-size:18px;font-weight:900;color:#222">주변 알바 다 봤어요!</div>
       <div style="font-size:13px;color:#aaa;line-height:1.6">반경을 넓히거나<br>내일 다시 확인해보세요</div>
-      <button onclick="swipeIdx=0;renderSwipeStack()" style="margin-top:12px;padding:13px 32px;background:var(--red);color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:-0.3px">다시 보기</button>
+      <button onclick="initSwipe()" style="margin-top:12px;padding:13px 32px;background:var(--red);color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:-0.3px">다시 보기</button>
     </div>`;
     return;
   }
@@ -7085,12 +7101,10 @@ async function flyCard(card, dir) {
 
   const job = swipeJobs[swipeIdx];
   if (dir === 'right') {
-    showToast('✅ 지원됐습니다!');
-    applySwipeJob(job, false);
+    applySwipeJob(job, false).then(ok => { if (ok) showToast('✅ 지원됐습니다!'); });
     if (job?.category) aiRecordSignal(job.category, job.current_wage, 2);
   } else if (dir === 'up') {
-    showToast('⚡ 번개 지원!');
-    applySwipeJob(job, true);
+    applySwipeJob(job, true).then(ok => { if (ok) showToast('⚡ 번개 지원!'); });
     if (job?.category) aiRecordSignal(job.category, job.current_wage, 3);
   } else {
     showToast('패스');
@@ -7177,7 +7191,7 @@ function showQuickGradeModal(type, data = {}) {
 }
 
 async function applySwipeJob(job, isQuick = false) {
-  if (isGuest || !currentUser) return;
+  if (isGuest || !currentUser) return false;
   // 18세 미만 차단 (나이 미확인 시 차단)
   if (job.age_limit) {
     if (_myAge === null) {
@@ -7186,11 +7200,11 @@ async function applySwipeJob(job, isQuick = false) {
     }
     if (_myAge === null) {
       showToast('\u{1F51E} 만 18세 이상 지원 가능. 마이페이지에서 생년월일을 등록해주세요');
-      return;
+      return false;
     }
     if (_myAge < 18) {
       showToast('\u{1F51E} 만 18세 이상만 지원 가능한 공고입니다');
-      return;
+      return false;
     }
   }
   appliedSwipeIds.add(job.id);
@@ -7199,14 +7213,14 @@ async function applySwipeJob(job, isQuick = false) {
     const meta = currentUser.user_metadata || {};
     const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
     const { data: created } = await db.from('workers').insert({ kakao_uid: currentUser.id, name }).select('id').single();
-    if (!created) return;
+    if (!created) return false;
     window._myWorkerId = created.id;
     wid = created.id;
   }
   const { error } = await db.from('applications').insert({ job_posting_id: job.id, worker_id: wid });
   if (error && error.code !== '23505') {
     showToast('지원 처리 중 오류가 발생했습니다');
-    return;
+    return false;
   }
   if (isQuick) {
     const today = new Date().toISOString().slice(0, 10);
@@ -7215,6 +7229,7 @@ async function applySwipeJob(job, isQuick = false) {
   // 내 지원 탭이 열려 있으면 즉시 갱신
   const panelApps = document.getElementById('panel-applications');
   if (panelApps?.classList.contains('show')) loadMyApplications();
+  return true;
 }
 
 function openProfile() {

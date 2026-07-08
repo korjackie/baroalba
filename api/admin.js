@@ -98,10 +98,11 @@ module.exports = async function handler(req, res) {
     if (action === 'update_report' && req.method === 'PATCH') {
       const { id, status } = req.body || {};
       if (!id || !status) return res.status(400).json({ error: 'id, status required' });
-      await sb(`reports?id=eq.${id}`, svcKey, {
+      const r = await sb(`reports?id=eq.${id}`, svcKey, {
         method: 'PATCH',
         body: JSON.stringify({ status })
       });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
       return res.json({ ok: true });
     }
 
@@ -118,10 +119,11 @@ module.exports = async function handler(req, res) {
     if (action === 'close_posting' && req.method === 'PATCH') {
       const { id } = req.body || {};
       if (!id) return res.status(400).json({ error: 'id required' });
-      await sb(`job_postings?id=eq.${id}`, svcKey, {
+      const r = await sb(`job_postings?id=eq.${id}`, svcKey, {
         method: 'PATCH',
         body: JSON.stringify({ status: 'closed' })
       });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
       return res.json({ ok: true });
     }
 

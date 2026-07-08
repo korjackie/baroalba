@@ -715,7 +715,7 @@ function reportCardHtml(r, compact) {
       ${status !== 'reviewing' && status !== 'done' ? `<button class="r-btn r-btn-reviewing" onclick="updateReport('${r.id}','reviewing')">🔵 검토중</button>` : ''}
       ${status !== 'done' ? `<button class="r-btn r-btn-done" onclick="updateReport('${r.id}','done')">✅ 조치완료</button>` : ''}
       ${status !== 'dismissed' ? `<button class="r-btn r-btn-dismiss" onclick="updateReport('${r.id}','dismissed')">기각</button>` : ''}
-      ${r.target_type === 'job' ? `<button class="r-btn r-btn-close" onclick="closePostingById('${r.target_id}')">공고 강제마감</button>` : ''}
+      ${r.target_type === 'job' ? `<button class="r-btn r-btn-close" onclick="closePostingById('${r.target_id}','${r.id}')">공고 강제마감</button>` : ''}
     </div>`;
 
   return `
@@ -773,9 +773,10 @@ async function loadPostings() {
     : '<div class="empty">공고 없음</div>';
 }
 
-async function closePostingById(id) {
+async function closePostingById(id, reportId) {
   if (!confirm('이 공고를 강제 마감하시겠습니까?')) return;
-  await adminApi('close_posting', 'PATCH', { id });
+  const result = await adminApi('close_posting', 'PATCH', { id });
+  if (result?.error) { showToast('마감 실패: ' + result.error); return; }
   const row = document.getElementById('pr-' + id);
   if (row) {
     row.classList.add('closed');
@@ -783,6 +784,8 @@ async function closePostingById(id) {
     if (btn) { btn.textContent = '마감됨'; btn.disabled = true; }
   }
   showToast('공고가 강제 마감됐습니다');
+  // 신고 카드에서 호출된 경우, 해당 신고도 조치완료로 갱신
+  if (reportId) updateReport(reportId, 'done');
 }
 
 // ── 회원 관리 ─────────────────────────────────────────────

@@ -642,6 +642,13 @@ CSS ↔ JS 혼재 금지 — CSS는 <style>, JS는 <script>에서만
 | 커뮤니티 글/댓글 수정·삭제 UI | 🟡 기능 미구현 | 본인 글에 수정/삭제 버튼 추가 필요 |
 | 커뮤니티 댓글 익명 토글 | 🟡 기능 미구현 | `is_anonymous: false` 하드코딩 상태 |
 | `cancel_deadline` DDL | ✅ 완료 | 컬럼 운영 중 |
+| businesses.plan 미영속화 | 🔴 미결 (P0) | `_currentPlan`이 결제 직후에만 세팅되고 새로고침/재로그인 시 항상 'free'로 리셋됨. 로그인/앱 진입 시 businesses.plan을 조회해 초기화하는 로직 필요 |
+| 스와이프 지원 연령게이트 UX | ✅ 완료 (2026-07-08) | flyCard가 applySwipeJob 결과 대기 없이 성공 토스트를 띄우던 버그 수정 |
+| 스와이프 '다시 보기' 중복노출 | ✅ 완료 (2026-07-08) | 버튼이 swipeIdx만 리셋하고 swipeJobs를 재구성 안 하던 버그 → initSwipe() 호출로 수정 |
+| 지원취소 후 재지원 불가 | ✅ 완료 (2026-07-08) | cancelled 상태를 '이미 지원'으로 오인 + DB 유니크 충돌로 막히던 것 수정 (재지원 시 기존 행 update로 부활) |
+| MOIM_PLAN_LIMITS 키 오타 | ✅ 완료 (2026-07-08) | `standard`→`basic`. 베이직 결제자가 월 10개가 아닌 1개로 제한되던 버그 |
+| 바로모임 PRO/BASIC 뱃지 랜덤 배정 | ✅ 완료 (2026-07-08) | Math.random() → 실제 host의 businesses.plan 조회로 수정 |
+| admin 공고 강제마감 → 신고카드 미갱신 | ✅ 완료 (2026-07-08) | 신고관리 탭에서 강제마감 클릭 시 해당 report도 함께 '조치완료' 처리하도록 수정 |
 
 ### 6-2. Play Console 현황
 
@@ -690,7 +697,8 @@ CSS ↔ JS 혼재 금지 — CSS는 <style>, JS는 <script>에서만
 
 | 항목 | 현재 상태 | 개선 방향 |
 |------|-----------|-----------|
-| 단일 HTML 파일 (~450KB) | 바로알바.html 비대화 | 점진적 모듈 분리 or 번들러 도입 |
+| 단일 HTML 파일 | ✅ 1차 완료 (2026-07-08): assets/css/style.css, assets/js/app.js, assets/js/app_ui.js로 분리 | app.js가 여전히 911KB 단일 파일 — 아래 항목 참고 |
+| app.js 도메인별 재분리 (제안, 미착수) | app.js 911KB에 공고/모임/결제/채팅 로직이 전부 혼재 | 번들러 없이 `<script src>` 유지 전제로, 공고(jobs), 모임(gatherings), 결제(payment), 채팅(chat) 단위로 추가 분리 제안. 우선순위는 낮음(P2) — 실익 대비 리스크 검토 후 별도 논의 필요 |
 | SW 버전 수동 관리 | sw.js 버전 매번 수동 증가 | 빌드 스크립트 자동화 |
 | 테스트 없음 | 수동 검수 의존 | 핵심 함수 단위 테스트 도입 |
 | owner.html redirect | 잠정 구조 | 장기적으로 역할 완전 통합 |
