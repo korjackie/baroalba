@@ -4235,13 +4235,42 @@
   function openCouponSheet() {
     document.getElementById('couponOverlay').classList.add('show');
     setTimeout(() => { document.getElementById('couponSheet').classList.add('show'); }, 10);
+    refreshTicketCount();
   }
   function closeCouponSheet() {
     document.getElementById('couponSheet').classList.remove('show');
     setTimeout(() => { document.getElementById('couponOverlay').classList.remove('show'); }, 300);
   }
-  function registerCoupon() {
-    alert("쿠폰 코드가 확인되었습니다! (준비 중)");
+  async function refreshTicketCount() {
+    const disp = document.getElementById('ticketCountDisplay');
+    if (!currentSession?.access_token) { disp.textContent = '0장'; return; }
+    try {
+      const res = await fetch('/api/coupon?action=my_tickets', {
+        headers: { 'Authorization': 'Bearer ' + currentSession.access_token }
+      });
+      const data = await res.json();
+      disp.textContent = (data.tickets || 0) + '장';
+    } catch(e) { disp.textContent = '0장'; }
+  }
+  async function registerCoupon() {
+    const input = document.getElementById('couponInput');
+    const code = input.value.trim();
+    if (!code) { showToast('쿠폰 코드를 입력해주세요'); return; }
+    if (!currentSession?.access_token) { showToast('로그인이 필요합니다'); return; }
+    try {
+      const res = await fetch('/api/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentSession.access_token },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || '쿠폰 등록에 실패했습니다'); return; }
+      showToast(`✅ 이용권 ${data.granted}장이 지급됐어요!`);
+      input.value = '';
+      document.getElementById('ticketCountDisplay').textContent = data.tickets + '장';
+    } catch(e) {
+      showToast('오류가 발생했습니다: ' + e.message);
+    }
   }
 </script>
 </body>

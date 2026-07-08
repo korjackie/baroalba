@@ -13,7 +13,7 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,'Apple SD Gothic Neo',sans-serif; background:#f1f5f9; min-height:100vh; }
 
-    :root { --sat: env(safe-area-inset-top, 0px); }
+    :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
     .header {
       background:#1e293b; color:#fff;
       padding:14px 16px;
@@ -28,16 +28,33 @@
     .logout-btn { font-size:11px; color:#94a3b8; background:none; border:none; cursor:pointer; padding:6px 8px; white-space:nowrap; }
     .logout-btn:hover { color:#fff; }
 
-    .tabs { background:#fff; border-bottom:1px solid #e2e8f0; display:flex; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; position:sticky; top:54px; z-index:90; }
-    .tabs::-webkit-scrollbar { display:none; }
-    .tab-btn {
-      flex-shrink:0; padding:11px 14px; font-size:12px; font-weight:700; color:#94a3b8;
-      border:none; background:none; cursor:pointer; border-bottom:2.5px solid transparent;
-      white-space:nowrap; text-align:center;
+    /* 하단 내비게이션 (대시보드/바로알바/바로모임/바로만남/설정) */
+    .bottom-nav {
+      position:fixed; bottom:0; left:0; right:0; background:rgba(255,255,255,0.97);
+      backdrop-filter:blur(10px); border-top:1px solid #e2e8f0; display:flex;
+      padding:6px 4px calc(6px + var(--sab)); z-index:100;
     }
-    .tab-btn.active { color:#C8102E; border-bottom-color:#C8102E; }
+    .nav-btn {
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative;
+      background:none; border:none; cursor:pointer; color:#94a3b8; padding:4px 0;
+    }
+    .nav-icon { font-size:19px; filter:grayscale(100%) opacity(0.55); transition:0.15s; }
+    .nav-label { font-size:10px; font-weight:800; }
+    .nav-btn.active { color:#C8102E; }
+    .nav-btn.active .nav-icon { filter:grayscale(0%) opacity(1); }
 
-    .content { padding:20px; max-width:1100px; margin:0 auto; }
+    .content { padding:20px; padding-bottom:calc(76px + var(--sab)); max-width:1100px; margin:0 auto; }
+
+    /* 메뉴 리스트 (그룹 탭 안의 하위 메뉴) */
+    .list-group { background:#fff; border-radius:14px; box-shadow:0 1px 4px rgba(0,0,0,0.06); overflow:hidden; margin-bottom:16px; }
+    .list-item { display:flex; align-items:center; gap:12px; padding:14px; border-bottom:1px solid #f1f5f9; cursor:pointer; }
+    .list-item:last-child { border-bottom:none; }
+    .list-item:active { background:#f8fafc; }
+    .list-icon { width:34px; height:34px; border-radius:9px; background:#f8fafc; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+    .list-text { flex:1; min-width:0; }
+    .list-title { font-size:14px; font-weight:800; color:#1e293b; margin-bottom:2px; }
+    .list-desc { font-size:11px; color:#94a3b8; }
+    .list-arrow { color:#cbd5e1; font-weight:700; font-size:14px; flex-shrink:0; }
 
     /* 통계 카드 */
     .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px; }
@@ -269,62 +286,109 @@
   </div>
 </div>
 
-<div class="tabs" id="main-tabs">
-  <button class="tab-btn active" id="tbtn-dashboard" onclick="switchTab('dashboard')">대시보드</button>
-  <button class="tab-btn" id="tbtn-reports" onclick="switchTab('reports')">신고관리<span id="report-badge" style="display:none;background:#EF4444;color:#fff;font-size:9px;font-weight:900;min-width:16px;height:16px;line-height:16px;padding:0 4px;border-radius:8px;margin-left:3px;vertical-align:middle;text-align:center">0</span></button>
-  <button class="tab-btn" id="tbtn-postings" onclick="switchTab('postings')">공고관리</button>
-  <button class="tab-btn" id="tbtn-users" onclick="switchTab('users')">회원관리</button>
-  <button class="tab-btn" id="tbtn-moims" onclick="switchTab('moims')">모임관리</button>
+<div class="bottom-nav" id="main-tabs">
+  <button class="nav-btn active" id="tbtn-dashboard" onclick="switchTab('dashboard')">
+    <span class="nav-icon">📊</span><span class="nav-label">대시보드</span>
+  </button>
+  <button class="nav-btn" id="tbtn-alba" onclick="switchTab('alba')">
+    <span class="nav-icon">⚡</span><span class="nav-label">바로알바</span>
+    <span id="report-badge" style="display:none;position:absolute;top:2px;right:22%;background:#EF4444;color:#fff;font-size:9px;font-weight:900;min-width:15px;height:15px;line-height:15px;padding:0 3px;border-radius:8px;text-align:center">0</span>
+  </button>
+  <button class="nav-btn" id="tbtn-moim" onclick="switchTab('moim')">
+    <span class="nav-icon">🤝</span><span class="nav-label">바로모임</span>
+  </button>
+  <button class="nav-btn" id="tbtn-mannam" onclick="switchTab('mannam')">
+    <span class="nav-icon">💜</span><span class="nav-label">바로만남</span>
+  </button>
+  <button class="nav-btn" id="tbtn-settings" onclick="switchTab('settings')">
+    <span class="nav-icon">⚙️</span><span class="nav-label">설정</span>
+  </button>
 </div>
 
 <div class="content">
 
   <!-- 대시보드 -->
   <div class="tab-content active" id="tab-dashboard">
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card" onclick="switchTab('users')"><div class="stat-left"><div class="stat-icon">👥</div><div class="stat-label">총 알바생</div></div><div class="stat-val" id="s-workers">-</div></div>
-      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-left"><div class="stat-icon">🏢</div><div class="stat-label">등록 업주</div></div><div class="stat-val" id="s-businesses">-</div></div>
-      <div class="stat-card" onclick="switchTab('postings')"><div class="stat-left"><div class="stat-icon">📋</div><div class="stat-label">활성 공고</div></div><div class="stat-val" id="s-postings">-</div></div>
-      <div class="stat-card alert" onclick="switchTab('reports')"><div class="stat-left"><div class="stat-icon">🚨</div><div class="stat-label">미처리 신고</div></div><div class="stat-val" id="s-reports">-</div></div>
-      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">⚡</div><div class="stat-label">오늘 지원</div></div><div class="stat-val" id="s-apps">-</div></div>
-      <div class="stat-card" onclick="switchTab('moims')"><div class="stat-left"><div class="stat-icon">🤝</div><div class="stat-label">활성 모임</div></div><div class="stat-val" id="s-moims">-</div></div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+      <div class="stat-card alert" onclick="navTo('alba','reports')"><div class="stat-left"><div class="stat-icon">🚨</div><div class="stat-label">미처리 신고</div></div><div class="stat-val" id="s-reports">-</div></div>
+      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">✅</div><div class="stat-label">오늘 가입 회원</div></div><div class="stat-val" id="s-signups-today">-</div></div>
     </div>
 
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:24px 0 12px">⚙️ 서비스 설정</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:20px">
-      <div onclick="switchTab('admins')" style="background:#fff;border-radius:16px;padding:20px 16px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1px solid #f1f5f9">
-        <div style="font-size:28px;margin-bottom:10px">🛡️</div>
-        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px">관리자</div>
-        <div style="font-size:11px;color:#94a3b8;line-height:1.5">admin.html 접근 권한<br>관리자 계정 추가/삭제</div>
-      </div>
-      <div onclick="switchTab('baroalba')" style="background:#fff;border-radius:16px;padding:20px 16px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1px solid #f1f5f9">
-        <div style="font-size:28px;margin-bottom:10px">⚡</div>
-        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px">바로알바</div>
-        <div style="font-size:11px;color:#94a3b8;line-height:1.5">공고 업종 카테고리<br>추가 · 수정 · 삭제</div>
-      </div>
-      <div onclick="switchTab('baromoim')" style="background:#fff;border-radius:16px;padding:20px 16px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1px solid #f1f5f9">
-        <div style="font-size:28px;margin-bottom:10px">🤝</div>
-        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px">바로모임</div>
-        <div style="font-size:11px;color:#94a3b8;line-height:1.5">모임 카테고리<br>추가 · 수정 · 삭제</div>
-      </div>
-      <div onclick="switchTab('lesson')" style="background:#fff;border-radius:16px;padding:20px 16px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.07);border:1px solid #f1f5f9">
-        <div style="font-size:28px;margin-bottom:10px">📚</div>
-        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px">레슨/과외</div>
-        <div style="font-size:11px;color:#94a3b8;line-height:1.5">과목 카테고리<br>추가 · 수정 · 삭제</div>
-      </div>
-      <div onclick="switchTab('mannnam')" style="background:linear-gradient(135deg,#f5f3ff,#fdf2ff);border-radius:16px;padding:20px 16px;cursor:pointer;box-shadow:0 1px 6px rgba(124,58,237,0.12);border:1px solid #ede9fe;grid-column:span 2;display:flex;align-items:center;gap:16px">
-        <div style="font-size:36px">💜</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:800;color:#7C3AED;margin-bottom:4px">바로만남 매니저 관리</div>
-          <div style="font-size:11px;color:#9f7aea;line-height:1.5">매니저 지정 · 해제 · mannnam.html 접근 권한 부여</div>
-        </div>
-        <div style="font-size:20px;color:#7C3AED;opacity:0.5">›</div>
-      </div>
+    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">👥 회원 현황</div>
+    <div class="stats-grid">
+      <div class="stat-card" onclick="navTo('alba','users')"><div class="stat-left"><div class="stat-icon">👥</div><div class="stat-label">총 알바생</div></div><div class="stat-val" id="s-workers">-</div></div>
+      <div class="stat-card" onclick="navTo('alba','users')"><div class="stat-left"><div class="stat-icon">🏢</div><div class="stat-label">총 업주</div></div><div class="stat-val" id="s-businesses">-</div></div>
+      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">📈</div><div class="stat-label">누적 가입자</div></div><div class="stat-val" id="s-total-users">-</div></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">⚡ 바로알바 현황</div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+      <div class="stat-card" onclick="navTo('alba','postings')"><div class="stat-left"><div class="stat-icon">📋</div><div class="stat-label">진행중 공고</div></div><div class="stat-val" id="s-postings">-</div></div>
+      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">⚡</div><div class="stat-label">오늘 신규 지원</div></div><div class="stat-val" id="s-apps">-</div></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">🤝 바로모임 현황</div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+      <div class="stat-card" onclick="navTo('moim','moims')"><div class="stat-left"><div class="stat-icon">🏕️</div><div class="stat-label">오늘 개설된 모임</div></div><div class="stat-val" id="s-moims-today">-</div></div>
+      <div class="stat-card" onclick="navTo('moim','moims')"><div class="stat-left"><div class="stat-icon">👥</div><div class="stat-label">누적 참가자 수</div></div><div class="stat-val" id="s-moim-participants">-</div></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:800;color:#94a3b8;letter-spacing:0.5px;margin:20px 0 10px">💜 바로만남 현황</div>
+    <div class="stats-grid">
+      <div class="stat-card" onclick="navTo('mannam','restaurants')"><div class="stat-left"><div class="stat-icon">🍷</div><div class="stat-label">진행중 제휴점</div></div><div class="stat-val" id="s-mannnam-restaurants">-</div></div>
+      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">📅</div><div class="stat-label">오늘 예약</div></div><div class="stat-val" id="s-mannnam-today">-</div></div>
+      <div class="stat-card no-click"><div class="stat-left"><div class="stat-icon">📊</div><div class="stat-label">누적 예약</div></div><div class="stat-val" id="s-mannnam-total">-</div></div>
+    </div>
+  </div>
+
+  <!-- 바로알바 그룹 메뉴 -->
+  <div class="tab-content" id="tab-alba">
+    <div class="section-title" style="margin-bottom:14px">⚡ 바로알바 관리</div>
+    <div class="list-group">
+      <div class="list-item" onclick="navTo('alba','postings')"><div class="list-icon">📋</div><div class="list-text"><div class="list-title">알바 공고 관리</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('alba','users')"><div class="list-icon">👥</div><div class="list-text"><div class="list-title">알바생 · 업주 회원 관리</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('alba','reports')"><div class="list-icon">🚨</div><div class="list-text"><div class="list-title">신고 처리</div></div><div class="list-arrow">›</div></div>
+    </div>
+  </div>
+
+  <!-- 바로모임 그룹 메뉴 -->
+  <div class="tab-content" id="tab-moim">
+    <div class="section-title" style="margin-bottom:14px">🤝 바로모임 관리</div>
+    <div class="list-group">
+      <div class="list-item" onclick="navTo('moim','moims')"><div class="list-icon">🏕️</div><div class="list-text"><div class="list-title">개설된 모임 관리</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('moim','users')"><div class="list-icon">👥</div><div class="list-text"><div class="list-title">모임 참여 회원 관리</div><div class="list-desc">알바생·업주 회원 목록과 동일</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('moim','reports')"><div class="list-icon">🚨</div><div class="list-text"><div class="list-title">신고 처리</div><div class="list-desc">현재는 서비스 구분 없이 전체 신고를 표시합니다</div></div><div class="list-arrow">›</div></div>
+    </div>
+  </div>
+
+  <!-- 바로만남 그룹 메뉴 -->
+  <div class="tab-content" id="tab-mannam">
+    <div class="section-title" style="margin-bottom:14px">💜 바로만남 관리</div>
+    <div class="list-group">
+      <div class="list-item" onclick="navTo('mannam','restaurants')"><div class="list-icon">🍷</div><div class="list-text"><div class="list-title">제휴 매장 현황</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('mannam','mannnam')"><div class="list-icon">👨‍💼</div><div class="list-text"><div class="list-title">만남 매니저 권한 관리</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('mannam','coupons')"><div class="list-icon">🎫</div><div class="list-text"><div class="list-title">프로모션 쿠폰 관리</div></div><div class="list-arrow">›</div></div>
+    </div>
+  </div>
+
+  <!-- 설정 그룹 메뉴 -->
+  <div class="tab-content" id="tab-settings">
+    <div class="section-title" style="margin-bottom:14px">⚙️ 시스템 설정</div>
+    <div style="font-size:12px;font-weight:800;color:#94a3b8;margin-bottom:10px">카테고리 마스터 데이터</div>
+    <div class="list-group">
+      <div class="list-item" onclick="navTo('settings','baroalba')"><div class="list-icon">⚡</div><div class="list-text"><div class="list-title">바로알바 업종 설정</div><div class="list-desc">카페, 식당 등 추가/수정</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('settings','baromoim')"><div class="list-icon">🤝</div><div class="list-text"><div class="list-title">바로모임 분야 설정</div><div class="list-desc">스포츠, 취미 등 추가/수정</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('settings','lesson')"><div class="list-icon">📚</div><div class="list-text"><div class="list-title">레슨/과외 과목 설정</div><div class="list-desc">수학, 영어 등 추가/수정</div></div><div class="list-arrow">›</div></div>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">보안 및 권한</div>
+    <div class="list-group">
+      <div class="list-item" onclick="navTo('settings','admins')"><div class="list-icon">🛡️</div><div class="list-text"><div class="list-title">최고 관리자 계정 관리</div><div class="list-desc">admin 접근 권한 제어</div></div><div class="list-arrow">›</div></div>
     </div>
   </div>
 
   <!-- 신고관리 -->
   <div class="tab-content" id="tab-reports">
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterReports('all', this)">전체</button>
       <button class="filter-btn" onclick="filterReports('pending', this)">🟡 대기</button>
@@ -337,16 +401,19 @@
 
   <!-- 공고관리 -->
   <div class="tab-content" id="tab-postings">
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div id="postings-list"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 회원관리 -->
   <div class="tab-content" id="tab-users">
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div id="users-list"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 모임관리 -->
   <div class="tab-content" id="tab-moims">
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterMoims('all', this)">전체</button>
       <button class="filter-btn" onclick="filterMoims('open', this)">🟢 진행중</button>
@@ -355,9 +422,39 @@
     <div id="moims-list"><div class="loading">로딩 중...</div></div>
   </div>
 
+  <!-- 제휴 매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) -->
+  <div class="tab-content" id="tab-restaurants">
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">제휴 매장 등록/수정은 mannnam.html에서 매니저가 진행합니다. 여기서는 현황만 확인합니다.</div>
+    <div id="restaurants-list"><div class="loading">로딩 중...</div></div>
+  </div>
+
+  <!-- 프로모션 쿠폰 관리 -->
+  <div class="tab-content" id="tab-coupons">
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
+    <div id="coupons-list"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">쿠폰 생성</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="new-coupon-code" type="text" placeholder="쿠폰 코드 (예: BARO2026)"
+          style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;text-transform:uppercase">
+        <div style="display:flex;gap:8px">
+          <input id="new-coupon-tickets" type="number" min="1" value="1" placeholder="지급 이용권 수"
+            style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="new-coupon-maxuses" type="number" min="1" placeholder="전체 한도(비우면 무제한)"
+            style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        </div>
+        <input id="new-coupon-expires" type="date"
+          style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569">
+        <button onclick="createCoupon()"
+          style="padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">쿠폰 생성</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 관리자 계정 탭 -->
   <div class="tab-content" id="tab-admins">
-    <button onclick="switchTab('dashboard')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 대시보드</button>
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">admin.html 접근이 허용된 관리자 이메일 목록입니다.</div>
     <div id="settings-admin-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
@@ -374,7 +471,7 @@
 
   <!-- 바로알바 카테고리 탭 -->
   <div class="tab-content" id="tab-baroalba">
-    <button onclick="switchTab('dashboard')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 대시보드</button>
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 선택하는 업종 카테고리입니다. (앱 공고 작성 화면에 반영)</div>
     <div id="cat-list-baroalba"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
@@ -389,7 +486,7 @@
 
   <!-- 바로모임 카테고리 탭 -->
   <div class="tab-content" id="tab-baromoim">
-    <button onclick="switchTab('dashboard')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 대시보드</button>
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">모임 개설 시 선택하는 메인 카테고리입니다.</div>
     <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ 아래 DDL 실행 후 사용 가능: ALTER TABLE job_categories ADD COLUMN IF NOT EXISTS service_type TEXT NOT NULL DEFAULT 'baroalba';</div>
     <div id="cat-list-baromoim"><div class="loading">로딩 중...</div></div>
@@ -405,7 +502,7 @@
 
   <!-- 레슨/과외 카테고리 탭 -->
   <div class="tab-content" id="tab-lesson">
-    <button onclick="switchTab('dashboard')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 대시보드</button>
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">레슨·과외 프로필 등록 시 선택하는 과목 카테고리입니다.</div>
     <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ DDL 실행 후 사용 가능 (바로모임과 동일)</div>
     <div id="cat-list-lesson"><div class="loading">로딩 중...</div></div>
@@ -421,7 +518,7 @@
 
   <!-- 바로만남 매니저 탭 -->
   <div class="tab-content" id="tab-mannnam">
-    <button onclick="switchTab('dashboard')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 대시보드</button>
+    <button onclick="switchTab(_navFrom)" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#64748b;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:16px">‹ 뒤로</button>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저로 지정된 업주는 mannnam.html에서 식당·이벤트·신청자를 관리할 수 있습니다.</div>
     <div id="mannnam-mgr-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
@@ -536,6 +633,7 @@ let _reportFilter = 'all';
 let _moims = [];
 let _moimFilter = 'all';
 let _editingMoimId = null;
+let _navFrom = 'dashboard'; // 하위 페이지에서 '‹ 뒤로' 눌렀을 때 돌아갈 그룹 탭
 
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
@@ -622,26 +720,44 @@ function scrollPanelToInput(el) {
 }
 
 // ── 탭 전환 ─────────────────────────────────────────────
-const ALL_TABS = ['dashboard','reports','postings','users','moims','admins','baroalba','baromoim','lesson','mannnam'];
+// 5개 하단 그룹(dashboard/alba/moim/mannam/settings) + 각 그룹 안의 하위 페이지
+const ALL_TABS = [
+  'dashboard','alba','moim','mannam','settings',
+  'reports','postings','users','moims',
+  'admins','baroalba','baromoim','lesson','mannnam','restaurants','coupons',
+];
+const NAV_GROUPS = ['dashboard','alba','moim','mannam','settings'];
+const GROUP_OF = {
+  dashboard:'dashboard',
+  alba:'alba', postings:'alba', users:'alba', reports:'alba',
+  moim:'moim', moims:'moim',
+  mannam:'mannam', mannnam:'mannam', restaurants:'mannam', coupons:'mannam',
+  settings:'settings', admins:'settings', baroalba:'settings', baromoim:'settings', lesson:'settings',
+};
+
+// 그룹 메뉴에서 하위 페이지로 진입 - '‹ 뒤로' 버튼이 돌아갈 그룹을 기억해둔다
+function navTo(group, sub) { _navFrom = group; switchTab(sub); }
 
 function switchTab(name) {
   ALL_TABS.forEach(t => {
-    const btn = document.getElementById('tbtn-' + t);
-    if (btn) btn.classList.toggle('active', t === name);
     const pane = document.getElementById('tab-' + t);
     if (pane) pane.classList.toggle('active', t === name);
   });
-  // 탭 버튼 스크롤 into view
-  const activeBtn = document.getElementById('tbtn-' + name);
-  if (activeBtn) activeBtn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+  const group = GROUP_OF[name] || name;
+  NAV_GROUPS.forEach(g => {
+    const btn = document.getElementById('tbtn-' + g);
+    if (btn) btn.classList.toggle('active', g === group);
+  });
 
-  if (name === 'reports'  && document.getElementById('reports-list').innerHTML.includes('로딩')) loadReports();
-  if (name === 'postings' && document.getElementById('postings-list').innerHTML.includes('로딩')) loadPostings();
-  if (name === 'users'    && document.getElementById('users-list').innerHTML.includes('로딩')) loadUsers();
-  if (name === 'moims'    && document.getElementById('moims-list').innerHTML.includes('로딩')) loadMoims();
-  if (name === 'admins'   && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
+  if (name === 'reports'     && document.getElementById('reports-list').innerHTML.includes('로딩')) loadReports();
+  if (name === 'postings'    && document.getElementById('postings-list').innerHTML.includes('로딩')) loadPostings();
+  if (name === 'users'       && document.getElementById('users-list').innerHTML.includes('로딩')) loadUsers();
+  if (name === 'moims'       && document.getElementById('moims-list').innerHTML.includes('로딩')) loadMoims();
+  if (name === 'admins'      && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
   if (name === 'baroalba' || name === 'baromoim' || name === 'lesson') loadCategoryList(name);
-  if (name === 'mannnam') loadMannnamManagers();
+  if (name === 'mannnam')    loadMannnamManagers();
+  if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
+  if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
 }
 
 // ── API 호출 ─────────────────────────────────────────────
@@ -666,19 +782,24 @@ async function adminApi(action, method = 'GET', body = null, extraParams = {}) {
 // ── 대시보드 ─────────────────────────────────────────────
 async function loadDashboard() {
   const stats = await adminApi('stats');
-  document.getElementById('s-workers').textContent   = stats.workers        ?? '-';
-  document.getElementById('s-businesses').textContent = stats.businesses     ?? '-';
-  document.getElementById('s-postings').textContent  = stats.postings       ?? '-';
-  document.getElementById('s-reports').textContent   = stats.pending_reports ?? '-';
-  document.getElementById('s-apps').textContent      = stats.today_apps     ?? '-';
-  document.getElementById('s-moims').textContent     = stats.moims          ?? '-';
+  document.getElementById('s-workers').textContent              = stats.workers            ?? '-';
+  document.getElementById('s-businesses').textContent            = stats.businesses          ?? '-';
+  document.getElementById('s-total-users').textContent            = (stats.workers ?? 0) + (stats.businesses ?? 0);
+  document.getElementById('s-signups-today').textContent          = '+' + (stats.today_signups ?? 0) + '명';
+  document.getElementById('s-postings').textContent               = stats.postings           ?? '-';
+  document.getElementById('s-reports').textContent                = stats.pending_reports     ?? '-';
+  document.getElementById('s-apps').textContent                   = stats.today_apps         ?? '-';
+  document.getElementById('s-moims-today').textContent             = stats.moims_today         ?? '-';
+  document.getElementById('s-moim-participants').textContent      = stats.moim_participants   ?? '-';
+  document.getElementById('s-mannnam-restaurants').textContent    = stats.mannnam_restaurants ?? '-';
+  document.getElementById('s-mannnam-today').textContent          = stats.mannnam_today       ?? '-';
+  document.getElementById('s-mannnam-total').textContent          = stats.mannnam_total       ?? '-';
 
   if (stats.pending_reports > 0) {
     const badge = document.getElementById('report-badge');
     badge.textContent = stats.pending_reports;
     badge.style.display = 'inline-block';
   }
-
 }
 
 // ── 신고 관리 ─────────────────────────────────────────────
@@ -1232,6 +1353,82 @@ async function removeMannnamManager(bizId) {
   if (error) { alert('오류: ' + error.message); return; }
   showToast('매니저 권한이 해제되었습니다');
   loadMannnamManagers();
+}
+
+// ── 바로만남 제휴 매장 현황 (읽기전용) ───────────────────
+async function loadRestaurants() {
+  const el = document.getElementById('restaurants-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('barospot_restaurants');
+  const list = Array.isArray(data) ? data : [];
+  el.innerHTML = list.length
+    ? list.map(r => `
+        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="min-width:0">
+            <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '이름없음'}</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.address || ''}</div>
+          </div>
+          <span class="status-badge ${r.is_active ? 'sb-done' : 'sb-dismissed'}" style="flex-shrink:0">${r.is_active ? '운영중' : '비활성'}</span>
+        </div>`).join('')
+    : '<div class="empty">등록된 제휴 매장이 없습니다</div>';
+}
+
+// ── 프로모션 쿠폰 관리 ────────────────────────────────────
+async function loadCoupons() {
+  const el = document.getElementById('coupons-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('coupons');
+  const list = Array.isArray(data) ? data : [];
+  el.innerHTML = list.length
+    ? list.map(c => `
+        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+            <span style="font-size:15px;font-weight:900;color:#1e293b;letter-spacing:0.5px">${c.code}</span>
+            <span class="status-badge ${c.is_active ? 'sb-done' : 'sb-dismissed'}">${c.is_active ? '활성' : '비활성'}</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px">
+            이용권 ${c.ticket_count}장 지급 · 사용 ${c.used_count || 0}${c.max_uses ? ' / ' + c.max_uses : ''}회
+            ${c.expires_at ? ' · ~' + c.expires_at.slice(0,10) : ''}
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="r-btn ${c.is_active ? 'r-btn-dismiss' : 'r-btn-done'}" onclick="toggleCoupon('${c.id}', ${!c.is_active})">${c.is_active ? '비활성화' : '활성화'}</button>
+            <button class="r-btn r-btn-close" onclick="deleteCouponById('${c.id}')">삭제</button>
+          </div>
+        </div>`).join('')
+    : '<div class="empty">등록된 쿠폰이 없습니다</div>';
+}
+
+async function createCoupon() {
+  const code = document.getElementById('new-coupon-code').value.trim();
+  const ticket_count = document.getElementById('new-coupon-tickets').value;
+  const max_uses = document.getElementById('new-coupon-maxuses').value;
+  const expires_at = document.getElementById('new-coupon-expires').value;
+  if (!code) { showToast('쿠폰 코드를 입력해주세요'); return; }
+  const result = await adminApi('create_coupon', 'POST', {
+    code, ticket_count, max_uses: max_uses || null, expires_at: expires_at || null,
+  });
+  if (result?.error) { showToast('생성 실패: ' + result.error); return; }
+  document.getElementById('new-coupon-code').value = '';
+  document.getElementById('new-coupon-tickets').value = '1';
+  document.getElementById('new-coupon-maxuses').value = '';
+  document.getElementById('new-coupon-expires').value = '';
+  showToast('✅ 쿠폰이 생성됐습니다');
+  loadCoupons();
+}
+
+async function toggleCoupon(id, nextActive) {
+  const result = await adminApi('toggle_coupon', 'PATCH', { id, is_active: nextActive });
+  if (result?.error) { showToast('변경 실패: ' + result.error); return; }
+  showToast(nextActive ? '쿠폰이 활성화됐습니다' : '쿠폰이 비활성화됐습니다');
+  loadCoupons();
+}
+
+async function deleteCouponById(id) {
+  if (!confirm('이 쿠폰을 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.')) return;
+  const result = await adminApi('delete_coupon', 'DELETE', { id });
+  if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
+  showToast('쿠폰이 삭제됐습니다');
+  loadCoupons();
 }
 
 async function loadAdminList() {

@@ -42,23 +42,98 @@ module.exports = async function handler(req, res) {
   try {
     // ── 대시보드 통계 ──────────────────────────────────
     if (action === 'stats') {
-      const [workers, postings, reports, apps, moims, bizRaw] = await Promise.all([
+      const today = new Date().toISOString().slice(0, 10);
+      const [
+        workers, postings, reports, apps, moims, bizRaw,
+        workersToday, bizToday, moimsToday, gatheringApps,
+        mannnamToday, mannnamTotal, restaurants,
+      ] = await Promise.all([
         sb('workers?select=id', svcKey).then(r => r.json()),
         sb('job_postings?select=id&status=neq.closed', svcKey).then(r => r.json()),
         sb('reports?select=id,status', svcKey).then(r => r.json()),
-        sb(`applications?select=id&created_at=gte.${new Date().toISOString().slice(0,10)}`, svcKey).then(r => r.json()),
+        sb(`applications?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()),
         sb('gatherings?select=id&status=eq.open', svcKey).then(r => r.json()),
         sb('businesses?select=id', svcKey).then(r => r.json()).catch(() => []),
+        sb(`workers?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()),
+        sb(`businesses?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()).catch(() => []),
+        sb(`gatherings?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()),
+        sb('gathering_applications?select=id', svcKey).then(r => r.json()).catch(() => []),
+        sb(`barospot_applications?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()).catch(() => []),
+        sb('barospot_applications?select=id', svcKey).then(r => r.json()).catch(() => []),
+        sb('barospot_restaurants?select=id&is_active=eq.true', svcKey).then(r => r.json()).catch(() => []),
       ]);
       const pending = (Array.isArray(reports) ? reports : []).filter(r => !r.status || r.status === 'pending').length;
+      const arrLen = a => Array.isArray(a) ? a.length : 0;
       return res.json({
-        workers: Array.isArray(workers) ? workers.length : 0,
-        postings: Array.isArray(postings) ? postings.length : 0,
+        workers: arrLen(workers),
+        postings: arrLen(postings),
         pending_reports: pending,
-        today_apps: Array.isArray(apps) ? apps.length : 0,
-        moims: Array.isArray(moims) ? moims.length : 0,
-        businesses: Array.isArray(bizRaw) ? bizRaw.length : 0,
+        today_apps: arrLen(apps),
+        moims: arrLen(moims),
+        businesses: arrLen(bizRaw),
+        today_signups: arrLen(workersToday) + arrLen(bizToday),
+        moims_today: arrLen(moimsToday),
+        moim_participants: arrLen(gatheringApps),
+        mannnam_today: arrLen(mannnamToday),
+        mannnam_total: arrLen(mannnamTotal),
+        mannnam_restaurants: arrLen(restaurants),
       });
+    }
+
+    // ── 바로만남 제휴매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) ──
+    if (action === 'barospot_restaurants') {
+      const data = await sb(
+        'barospot_restaurants?select=id,name,address,is_active,created_at&order=created_at.desc&limit=100',
+        svcKey
+      ).then(r => r.json());
+      return res.json(Array.isArray(data) ? data : []);
+    }
+
+    // ── 쿠폰 목록 ──────────────────────────────────────
+    if (action === 'coupons') {
+      const data = await sb(
+        'coupons?select=*&order=created_at.desc&limit=200',
+        svcKey
+      ).then(r => r.json());
+      return res.json(Array.isArray(data) ? data : []);
+    }
+
+    // ── 쿠폰 생성 ──────────────────────────────────────
+    if (action === 'create_coupon' && req.method === 'POST') {
+      const { code, ticket_count, max_uses, max_uses_per_user, expires_at } = req.body || {};
+      if (!code || !code.trim()) return res.status(400).json({ error: '쿠폰 코드를 입력해주세요' });
+      const r = await sb('coupons', svcKey, {
+        method: 'POST',
+        body: JSON.stringify({
+          code: code.trim().toUpperCase(),
+          ticket_count: parseInt(ticket_count) || 1,
+          max_uses: max_uses ? parseInt(max_uses) : null,
+          max_uses_per_user: parseInt(max_uses_per_user) || 1,
+          expires_at: expires_at || null,
+        })
+      });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 쿠폰 활성/비활성 토글 ───────────────────────────
+    if (action === 'toggle_coupon' && req.method === 'PATCH') {
+      const { id, is_active } = req.body || {};
+      if (!id || is_active === undefined) return res.status(400).json({ error: 'id, is_active required' });
+      const r = await sb(`coupons?id=eq.${id}`, svcKey, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_active: !!is_active })
+      });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 쿠폰 삭제 ──────────────────────────────────────
+    if (action === 'delete_coupon' && req.method === 'DELETE') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      await sb(`coupons?id=eq.${id}`, svcKey, { method: 'DELETE' });
+      return res.json({ ok: true });
     }
 
     // ── 신고 목록 ──────────────────────────────────────
