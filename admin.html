@@ -502,7 +502,7 @@
 
   <!-- 제휴 매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) -->
   <div class="tab-content" id="tab-restaurants">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저와 동일한 제휴 매장 데이터입니다. 여기서 등록·수정하면 mannnam.html에도 바로 반영됩니다.</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저와 동일한 제휴 매장 데이터입니다. 여기서 등록·수정하면 바로 반영됩니다.</div>
     <div id="restaurants-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div id="restaurant-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">제휴 매장 등록</div>
@@ -615,17 +615,17 @@
 
   <!-- 바로만남 매니저 탭 -->
   <div class="tab-content" id="tab-mannnam">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저로 지정된 업주는 mannnam.html에서 식당·이벤트·신청자를 관리할 수 있습니다.</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저로 지정된 업주는 식당·이벤트·신청자를 관리할 수 있습니다.</div>
     <div id="mannnam-mgr-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">매니저 지정</div>
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">업주 계정 이메일 또는 사업자명을 검색하세요</div>
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">등록된 업주 목록에서 바로 선택하거나, 사업자명으로 검색하세요</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input id="mannnam-mgr-search" type="text" placeholder="이메일 또는 사업자명"
+        <input id="mannnam-mgr-search" type="text" placeholder="사업자명으로 검색 (비워두면 전체 목록)"
           style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
           oninput="searchBizForMannnam(this.value)">
       </div>
-      <div id="mannnam-biz-search-result" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:10px"></div>
+      <div id="mannnam-biz-search-result" style="background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:10px;max-height:320px;overflow-y:auto"><div style="padding:12px 14px;font-size:12px;color:#94a3b8">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -852,7 +852,7 @@ function switchTab(name) {
   if (name === 'moims'       && document.getElementById('moims-list').innerHTML.includes('로딩')) loadMoims();
   if (name === 'admins'      && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
   if (name === 'baroalba' || name === 'baromoim' || name === 'lesson') loadCategoryList(name);
-  if (name === 'mannnam')    loadMannnamManagers();
+  if (name === 'mannnam')    { loadMannnamManagers(); searchBizForMannnam(''); }
   if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
   if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
   if (name === 'pass-pricing' && document.getElementById('pass-pricing-list').innerHTML.includes('로딩')) loadPassPricing();
@@ -1422,26 +1422,31 @@ async function loadMannnamManagers() {
 }
 
 let _mannnamSearchTimer = null;
+function _renderMannnamBizList(data) {
+  const resEl = document.getElementById('mannnam-biz-search-result');
+  if (!data?.length) { resEl.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 결과 없음</div>'; return; }
+  resEl.innerHTML = data.map(b => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #f1f5f9">
+      <div style="font-size:13px;font-weight:700;color:#1e293b">${b.name||'이름없음'}</div>
+      ${b.mannnam_role === 'manager'
+        ? '<span style="font-size:11px;background:#ede9fe;color:#7C3AED;padding:3px 9px;border-radius:8px;font-weight:700">매니저</span>'
+        : `<button onclick="assignMannnamManager('${b.id}')" style="padding:6px 13px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">지정</button>`}
+    </div>`).join('');
+}
 async function searchBizForMannnam(query) {
   clearTimeout(_mannnamSearchTimer);
   const resEl = document.getElementById('mannnam-biz-search-result');
-  if (!query.trim()) { resEl.style.display = 'none'; return; }
+  resEl.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">불러오는 중...</div>';
+  const q = (query || '').trim();
   _mannnamSearchTimer = setTimeout(async () => {
-    resEl.style.display = 'block';
-    resEl.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 중...</div>';
-    const { data } = await db.from('businesses')
+    let req = db.from('businesses')
       .select('id, name, kakao_uid, mannnam_role')
-      .ilike('name', `%${query}%`)
-      .limit(8);
-    if (!data?.length) { resEl.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 결과 없음</div>'; return; }
-    resEl.innerHTML = data.map(b => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #f1f5f9">
-        <div style="font-size:13px;font-weight:700;color:#1e293b">${b.name||'이름없음'}</div>
-        ${b.mannnam_role === 'manager'
-          ? '<span style="font-size:11px;background:#ede9fe;color:#7C3AED;padding:3px 9px;border-radius:8px;font-weight:700">매니저</span>'
-          : `<button onclick="assignMannnamManager('${b.id}')" style="padding:6px 13px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">지정</button>`}
-      </div>`).join('');
-  }, 300);
+      .order('name')
+      .limit(q ? 20 : 50);
+    if (q) req = req.ilike('name', `%${q}%`);
+    const { data } = await req;
+    _renderMannnamBizList(data);
+  }, 250);
 }
 
 async function assignMannnamManager(bizId) {
@@ -1450,10 +1455,9 @@ async function assignMannnamManager(bizId) {
   if (be) { alert('오류: ' + be.message); return; }
   const { error } = await db.from('businesses').update({ mannnam_role: 'manager' }).eq('id', bizId);
   if (error) { alert('오류: ' + error.message); return; }
-  document.getElementById('mannnam-mgr-search').value = '';
-  document.getElementById('mannnam-biz-search-result').style.display = 'none';
   showToast('바로만남 매니저로 지정되었습니다');
   loadMannnamManagers();
+  searchBizForMannnam(document.getElementById('mannnam-mgr-search').value);
   // 알림 발송 (push + 인앱, 이메일 컬럼 없으므로 생략)
   let pushSubs = [];
   if (biz.kakao_uid) {
