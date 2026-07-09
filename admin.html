@@ -386,6 +386,7 @@
   <div class="tab-content" id="tab-mannam">
     <div class="section-title" style="margin-bottom:14px">💜 바로만남 관리</div>
     <div class="list-group">
+      <div class="list-item" onclick="navTo('mannam','baromeetings')"><div class="list-icon">🤝</div><div class="list-text"><div class="list-title">바로미팅 개설·관리</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('mannam','restaurants')"><div class="list-icon">🍷</div><div class="list-text"><div class="list-title">제휴 매장 현황</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('mannam','mannnam')"><div class="list-icon">👨‍💼</div><div class="list-text"><div class="list-title">만남 매니저 권한 관리</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('mannam','coupons')"><div class="list-icon">🎫</div><div class="list-text"><div class="list-title">프로모션 쿠폰 관리</div></div><div class="list-arrow">›</div></div>
@@ -471,6 +472,32 @@
       <button class="filter-btn" onclick="filterMoims('closed', this)">⚫ 마감됨</button>
     </div>
     <div id="moims-list"><div class="loading">로딩 중...</div></div>
+  </div>
+
+  <!-- 바로미팅 개설·관리 -->
+  <div class="tab-content" id="tab-baromeetings">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">4:4 정원제 바로미팅을 등록/수정합니다. 정원이 다 차면 유저 앱에 익명 단체채팅방이 자동으로 열립니다.</div>
+    <div id="baromeetings-list"><div class="loading">로딩 중...</div></div>
+    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div id="baromeeting-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">바로미팅 개설</div>
+      <input type="hidden" id="bm-id">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="bm-title" type="text" placeholder="미팅 제목 (예: 강남역 저녁 소셜 미팅)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <textarea id="bm-desc" placeholder="소개/안내 문구" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
+        <input id="bm-location-name" type="text" placeholder="장소명 (예: 강남역 OO카페)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <input id="bm-location-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <input id="bm-datetime" type="datetime-local" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569">
+        <div style="display:flex;gap:8px">
+          <input id="bm-male-max" type="number" min="1" value="4" placeholder="남성 정원" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bm-female-max" type="number" min="1" value="4" placeholder="여성 정원" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bm-fee" type="number" min="0" value="0" placeholder="참가비(원)" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="saveBaromeeting()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
+          <button onclick="resetBaromeetingForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 제휴 매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) -->
@@ -792,14 +819,14 @@ function scrollPanelToInput(el) {
 const ALL_TABS = [
   'dashboard','alba','moim','mannam','settings',
   'reports','postings','users','moims',
-  'admins','baroalba','baromoim','lesson','mannnam','restaurants','coupons','pass-pricing',
+  'admins','baroalba','baromoim','lesson','mannnam','restaurants','coupons','pass-pricing','baromeetings',
 ];
 const NAV_GROUPS = ['dashboard','alba','moim','mannam','settings'];
 const GROUP_OF = {
   dashboard:'dashboard',
   alba:'alba', postings:'alba', users:'alba', reports:'alba',
   moim:'moim', moims:'moim',
-  mannam:'mannam', mannnam:'mannam', restaurants:'mannam', coupons:'mannam',
+  mannam:'mannam', mannnam:'mannam', restaurants:'mannam', coupons:'mannam', baromeetings:'mannam',
   settings:'settings', admins:'settings', baroalba:'settings', baromoim:'settings', lesson:'settings', 'pass-pricing':'settings',
 };
 
@@ -829,6 +856,7 @@ function switchTab(name) {
   if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
   if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
   if (name === 'pass-pricing' && document.getElementById('pass-pricing-list').innerHTML.includes('로딩')) loadPassPricing();
+  if (name === 'baromeetings' && document.getElementById('baromeetings-list').innerHTML.includes('로딩')) loadBaromeetings();
 
   // 하드웨어 뒤로가기 대응용 가상 히스토리 (popstate 처리 중 재호출된 경우엔 다시 쌓지 않음)
   if (!_fromPopState) history.pushState({ adminTab: name }, '');
@@ -1446,6 +1474,110 @@ async function removeMannnamManager(bizId) {
   if (error) { alert('오류: ' + error.message); return; }
   showToast('매니저 권한이 해제되었습니다');
   loadMannnamManagers();
+}
+
+// ── 바로미팅 개설·관리 ────────────────────────────────────
+let _baromeetings = [];
+function _fmtBmDate(iso) {
+  if (!iso) return '일시 미정';
+  const d = new Date(iso);
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+async function loadBaromeetings() {
+  const el = document.getElementById('baromeetings-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('baromeetings');
+  _baromeetings = Array.isArray(data) ? data : [];
+  el.innerHTML = _baromeetings.length
+    ? _baromeetings.map(m => {
+        const isClosed = m.status !== 'open';
+        const maleMax = m.baromeeting_male_max ?? 4, femaleMax = m.baromeeting_female_max ?? 4;
+        const maleCur = m.baromeeting_male_cur ?? 0, femaleCur = m.baromeeting_female_cur ?? 0;
+        return `
+        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
+            <div style="min-width:0">
+              <div style="font-size:14px;font-weight:800;color:#1e293b">${m.title || '(제목없음)'}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px">${_fmtBmDate(m.gathering_date)} · ${m.location_name || '장소 미정'}</div>
+            </div>
+            <span class="status-badge ${isClosed ? 'sb-dismissed' : 'sb-done'}">${isClosed ? '마감' : '모집중'}</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:10px">여성 ${femaleCur}/${femaleMax}명 · 남성 ${maleCur}/${maleMax}명${m.entry_fee ? ' · 참가비 ' + m.entry_fee.toLocaleString() + '원' : ''}</div>
+          <div style="display:flex;gap:6px">
+            <button class="r-btn r-btn-reviewing" onclick="editBaromeeting('${m.id}')">수정</button>
+            <button class="r-btn ${isClosed ? 'r-btn-done' : 'r-btn-dismiss'}" onclick="toggleBaromeeting('${m.id}', '${isClosed ? 'open' : 'closed'}')">${isClosed ? '재오픈' : '강제마감'}</button>
+            <button class="r-btn r-btn-close" onclick="deleteBaromeetingById('${m.id}')">삭제</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="empty">개설된 바로미팅이 없습니다</div>';
+}
+
+function resetBaromeetingForm() {
+  document.getElementById('bm-id').value = '';
+  ['bm-title','bm-desc','bm-location-name','bm-location-address','bm-datetime'].forEach(k => document.getElementById(k).value = '');
+  document.getElementById('bm-male-max').value = '4';
+  document.getElementById('bm-female-max').value = '4';
+  document.getElementById('bm-fee').value = '0';
+  document.getElementById('baromeeting-form-title').textContent = '바로미팅 개설';
+}
+
+function editBaromeeting(id) {
+  const m = _baromeetings.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('bm-id').value = m.id;
+  document.getElementById('bm-title').value = m.title || '';
+  document.getElementById('bm-desc').value = m.description || '';
+  document.getElementById('bm-location-name').value = m.location_name || '';
+  document.getElementById('bm-location-address').value = m.location_address || '';
+  if (m.gathering_date) {
+    const d = new Date(m.gathering_date);
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('bm-datetime').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  document.getElementById('bm-male-max').value = m.baromeeting_male_max ?? 4;
+  document.getElementById('bm-female-max').value = m.baromeeting_female_max ?? 4;
+  document.getElementById('bm-fee').value = m.entry_fee || 0;
+  document.getElementById('baromeeting-form-title').textContent = '바로미팅 수정';
+}
+
+async function saveBaromeeting() {
+  const id = document.getElementById('bm-id').value;
+  const dt = document.getElementById('bm-datetime').value;
+  const payload = {
+    id: id || undefined,
+    title: document.getElementById('bm-title').value.trim(),
+    description: document.getElementById('bm-desc').value.trim(),
+    location_name: document.getElementById('bm-location-name').value.trim(),
+    location_address: document.getElementById('bm-location-address').value.trim(),
+    gathering_date: dt ? new Date(dt).toISOString() : null,
+    entry_fee: document.getElementById('bm-fee').value,
+    male_max: document.getElementById('bm-male-max').value,
+    female_max: document.getElementById('bm-female-max').value,
+  };
+  if (!payload.title) { showToast('미팅 제목을 입력해주세요'); return; }
+  if (!payload.gathering_date) { showToast('일시를 입력해주세요'); return; }
+  const result = await adminApi('save_baromeeting', id ? 'PATCH' : 'POST', payload);
+  if (result?.error) { showToast('저장 실패: ' + result.error); return; }
+  showToast(id ? '바로미팅 정보가 수정됐습니다' : '바로미팅이 개설됐습니다');
+  resetBaromeetingForm();
+  loadBaromeetings();
+}
+
+async function toggleBaromeeting(id, nextStatus) {
+  const result = await adminApi('toggle_baromeeting', 'PATCH', { id, status: nextStatus });
+  if (result?.error) { showToast('변경 실패: ' + result.error); return; }
+  showToast(nextStatus === 'open' ? '재오픈됐습니다' : '강제마감됐습니다');
+  loadBaromeetings();
+}
+
+async function deleteBaromeetingById(id) {
+  if (!confirm('이 바로미팅을 삭제하시겠습니까? 참가 신청 이력은 남아있지만 목록에서 사라집니다.')) return;
+  const result = await adminApi('delete_baromeeting', 'DELETE', { id });
+  if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
+  showToast('바로미팅이 삭제됐습니다');
+  loadBaromeetings();
 }
 
 // ── 바로만남 제휴 매장 현황 (읽기전용) ───────────────────

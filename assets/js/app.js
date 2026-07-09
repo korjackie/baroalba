@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '385';
+  const _APP_V = '386';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=385').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=386').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16006,7 +16006,7 @@ async function _loadBaromeetList() {
   try {
     // 현재 위치 기반 필터 (gatherings 테이블, category='baromeeting')
     let q = db.from('gatherings')
-      .select('id,title,location_name,address,gathering_date,max_members,current_members,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
+      .select('id,title,location_name,location_address,gathering_date,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
       .eq('status','open')
       .eq('category','baromeeting')
       .order('gathering_date',{ascending:true})
@@ -16055,7 +16055,7 @@ function _renderBaromeetCard(m, joined) {
       <div style="flex:1">
         <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${m.title||'바로미팅'}</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#888">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 12-8 12S4 15.25 4 10a8 8 0 0 1 8-8z"/></svg>${m.location_name||m.address||'장소 확인 후 안내'}
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 12-8 12S4 15.25 4 10a8 8 0 0 1 8-8z"/></svg>${m.location_name||m.location_address||'장소 확인 후 안내'}
         </div>
         <div style="font-size:11px;color:#aaa;margin-top:2px">🕐 ${dtStr}</div>
       </div>

@@ -8,6 +8,13 @@ function getEmailFromJWT(token) {
   } catch { return ''; }
 }
 
+function getSubFromJWT(token) {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    return payload.sub || '';
+  } catch { return ''; }
+}
+
 function sb(path, svcKey, opts = {}) {
   return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...opts,
@@ -217,6 +224,64 @@ module.exports = async function handler(req, res) {
       const { id } = req.body || {};
       if (!id) return res.status(400).json({ error: 'id required' });
       await sb(`barospot_pass_products?id=eq.${id}`, svcKey, { method: 'DELETE' });
+      return res.json({ ok: true });
+    }
+
+    // ── 바로미팅 목록 (관리자 개설/관리) ─────────────────
+    if (action === 'baromeetings') {
+      const data = await sb(
+        "gatherings?select=id,title,description,location_name,location_address,gathering_date,entry_fee,status,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,created_at&category=eq.baromeeting&order=gathering_date.desc&limit=100",
+        svcKey
+      ).then(r => r.json());
+      return res.json(Array.isArray(data) ? data : []);
+    }
+
+    // ── 바로미팅 개설/수정 ────────────────────────────────
+    if (action === 'save_baromeeting' && (req.method === 'POST' || req.method === 'PATCH')) {
+      const { id, title, description, location_name, location_address, gathering_date, entry_fee, male_max, female_max } = req.body || {};
+      if (!title || !title.trim()) return res.status(400).json({ error: '미팅 제목을 입력해주세요' });
+      if (!gathering_date) return res.status(400).json({ error: '일시를 입력해주세요' });
+      const payload = {
+        title: title.trim(),
+        description: (description || '').trim() || null,
+        location_name: (location_name || '').trim() || null,
+        location_address: (location_address || '').trim() || null,
+        gathering_date,
+        entry_fee: parseInt(entry_fee) || 0,
+        baromeeting_male_max: parseInt(male_max) || 4,
+        baromeeting_female_max: parseInt(female_max) || 4,
+      };
+      let r;
+      if (id) {
+        r = await sb(`gatherings?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify(payload) });
+      } else {
+        const hostId = getSubFromJWT(token);
+        payload.host_id = hostId;
+        payload.category = 'baromeeting';
+        payload.is_public = true;
+        payload.status = 'open';
+        payload.baromeeting_male_cur = 0;
+        payload.baromeeting_female_cur = 0;
+        r = await sb('gatherings', svcKey, { method: 'POST', body: JSON.stringify(payload) });
+      }
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 바로미팅 마감/재오픈 ──────────────────────────────
+    if (action === 'toggle_baromeeting' && req.method === 'PATCH') {
+      const { id, status } = req.body || {};
+      if (!id || !status) return res.status(400).json({ error: 'id, status required' });
+      const r = await sb(`gatherings?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 바로미팅 삭제 ─────────────────────────────────────
+    if (action === 'delete_baromeeting' && req.method === 'DELETE') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      await sb(`gatherings?id=eq.${id}`, svcKey, { method: 'DELETE' });
       return res.json({ ok: true });
     }
 
