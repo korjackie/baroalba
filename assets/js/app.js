@@ -272,7 +272,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '383';
+  const _APP_V = '384';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -285,7 +285,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=383').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=384').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -1295,7 +1295,10 @@ function closeMoimChat() {
   if (_baromeetRealtimeCh) { db.removeChannel(_baromeetRealtimeCh); _baromeetRealtimeCh = null; }
   const _mcInput = document.getElementById('moim-chat-input');
   if (_mcInput) delete _mcInput.dataset.baromeet;
+  _baromeetChatId = null;
   _baromeetAnonLabel = null;
+  _baromeetShowPhoto = false;
+  _baromeetPhotoUrl = null;
   if (window.visualViewport) window.visualViewport.removeEventListener('resize', _moimChatKbResize);
   // FAB 복원 — owner 패널이 열려있을 때만
   const _mcFab = document.getElementById('posting-fab');
@@ -2063,8 +2066,11 @@ function _moimChatBubble(m) {
   const isMine = currentUser && m.sender_id === currentUser.id;
   const name = m.sender_name || '참가자';
   const time = new Date(m.sent_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+  const avatar = m.sender_photo_url
+    ? `<img src="${m.sender_photo_url}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+    : '';
   return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};margin-bottom:4px">
-    ${!isMine ? `<div style="font-size:10px;color:#999;font-weight:600;margin-bottom:2px;padding-left:4px">${name}</div>` : ''}
+    ${!isMine ? `<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;padding-left:4px">${avatar}<span style="font-size:10px;color:#999;font-weight:600">${name}</span></div>` : ''}
     <div style="display:flex;align-items:flex-end;gap:4px;flex-direction:${isMine?'row-reverse':'row'}">
       <div style="max-width:72%;padding:9px 13px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'#7C3AED':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>
       <div style="font-size:10px;color:#bbb;white-space:nowrap">${time}</div>
@@ -2078,11 +2084,13 @@ async function sendMoimChat() {
   const msg = input.value.trim();
   if (!msg || !gatheringId || !currentUser) return;
   input.value = '';
-  // 바로미팅 채팅방은 익명 - 실명 대신 입장 시 부여된 "참가자N" 라벨 사용
-  const senderName = input.dataset.baromeet === '1'
+  // 바로미팅 채팅방은 익명 - 실명 대신 본인이 설정한 익명 닉네임 사용, 사진공개 설정 시에만 사진 첨부
+  const isBaromeet = input.dataset.baromeet === '1';
+  const senderName = isBaromeet
     ? (_baromeetAnonLabel || '참가자')
     : (currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '참가자');
-  const { error: _gcErr } = await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, message: msg });
+  const senderPhotoUrl = isBaromeet ? (_baromeetPhotoUrl || null) : null;
+  const { error: _gcErr } = await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, sender_photo_url: senderPhotoUrl, message: msg });
   if (_gcErr) { showToast('전송 실패: ' + _gcErr.message); }
 }
 
@@ -16144,21 +16152,70 @@ async function _finalizeBaromeetJoin(meetingId, gender) {
 // ── 바로미팅 익명 단체채팅방 (정원이 다 찬 미팅에 확정 참가자만 입장) ──
 let _baromeetChatId = null;
 let _baromeetAnonLabel = null;
+let _baromeetShowPhoto = false;
+let _baromeetPhotoUrl = null;
 let _baromeetRealtimeCh = null;
+let _pendingBaromeetChat = null; // 닉네임 미설정 시 설정 완료 후 이어서 입장할 { gatheringId, title }
+
 async function openBaromeetChat(gatheringId, title) {
   if (!currentUser) return;
+  const { data: w } = await db.from('workers').select('baromeet_nick, baromeet_show_photo, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+  if (!w?.baromeet_nick) {
+    _pendingBaromeetChat = { gatheringId, title };
+    openBaromeetAnonSetup();
+    return;
+  }
+  await _enterBaromeetChat(gatheringId, title, w.baromeet_nick, w.baromeet_show_photo, w.photo_url);
+}
+
+function openBaromeetAnonSetup() {
+  db.from('workers').select('baromeet_nick, baromeet_show_photo').eq('kakao_uid', currentUser.id).maybeSingle().then(({ data: w }) => {
+    document.getElementById('baromeet-nick-input').value = w?.baromeet_nick || '';
+    document.getElementById('baromeet-show-photo-chk').checked = !!w?.baromeet_show_photo;
+    document.getElementById('baromeet-anon-overlay').style.display = 'flex';
+  });
+}
+function closeBaromeetAnonSetup() {
+  document.getElementById('baromeet-anon-overlay').style.display = 'none';
+  _pendingBaromeetChat = null;
+}
+
+async function saveBaromeetAnonProfile() {
+  const nick = document.getElementById('baromeet-nick-input').value.trim();
+  if (!nick) { showToast('닉네임을 입력해주세요'); return; }
+  const showPhoto = document.getElementById('baromeet-show-photo-chk').checked;
+  const { error } = await db.from('workers').update({ baromeet_nick: nick, baromeet_show_photo: showPhoto }).eq('kakao_uid', currentUser.id);
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  document.getElementById('baromeet-anon-overlay').style.display = 'none';
+  showToast('✅ 익명 프로필이 저장됐어요');
+
+  const pending = _pendingBaromeetChat;
+  _pendingBaromeetChat = null;
+  if (pending) {
+    const { data: w } = await db.from('workers').select('photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+    await _enterBaromeetChat(pending.gatheringId, pending.title, nick, showPhoto, w?.photo_url);
+  } else if (_baromeetChatId) {
+    // 이미 채팅방에 들어와 있는 상태에서 닉네임/사진 설정을 바꾼 경우 즉시 반영
+    const { data: w } = await db.from('workers').select('photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+    _baromeetAnonLabel = nick;
+    _baromeetShowPhoto = showPhoto;
+    _baromeetPhotoUrl = showPhoto ? (w?.photo_url || null) : null;
+    const memberEl = document.getElementById('moim-chat-members');
+    if (memberEl) memberEl.textContent = `나는 "${_baromeetAnonLabel}"으로 표시돼요`;
+  }
+}
+
+async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl) {
   _baromeetChatId = gatheringId;
+  _baromeetAnonLabel = nick;
+  _baromeetShowPhoto = !!showPhoto;
+  _baromeetPhotoUrl = showPhoto ? (photoUrl || null) : null;
+
   document.getElementById('panel-moim-chat').classList.add('show');
   document.getElementById('moim-chat-title').textContent = (title || '바로미팅') + ' (익명)';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
-
-  // 참가 확정 순서로 "참가자N" 익명 번호 부여
-  const { data: apps } = await db.from('gathering_applications')
-    .select('applicant_id').eq('gathering_id', gatheringId).eq('status', 'approved').order('created_at');
-  const idx = (apps || []).findIndex(a => a.applicant_id === currentUser.id);
-  _baromeetAnonLabel = '참가자' + (idx >= 0 ? idx + 1 : '?');
   const memberEl = document.getElementById('moim-chat-members');
-  if (memberEl) memberEl.textContent = `참가자 ${apps?.length || 0}명 · 나는 ${_baromeetAnonLabel}`;
+  if (memberEl) memberEl.innerHTML = `나는 "${_baromeetAnonLabel}"으로 표시돼요 · <span style="text-decoration:underline;cursor:pointer" onclick="openBaromeetAnonSetup()">닉네임/사진 변경</span>`;
 
   const { data: msgs } = await db.from('gathering_chats').select('*').eq('gathering_id', gatheringId).order('sent_at').limit(100);
   _renderMoimChatMessages(msgs || []);
