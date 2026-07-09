@@ -1292,6 +1292,10 @@ function closeMoimChat() {
   _mc.classList.remove('show');
   _mc.style.bottom = '';
   if (_moimRealtimeCh) { db.removeChannel(_moimRealtimeCh); _moimRealtimeCh = null; }
+  if (_baromeetRealtimeCh) { db.removeChannel(_baromeetRealtimeCh); _baromeetRealtimeCh = null; }
+  const _mcInput = document.getElementById('moim-chat-input');
+  if (_mcInput) delete _mcInput.dataset.baromeet;
+  _baromeetAnonLabel = null;
   if (window.visualViewport) window.visualViewport.removeEventListener('resize', _moimChatKbResize);
   // FAB 복원 — owner 패널이 열려있을 때만
   const _mcFab = document.getElementById('posting-fab');
@@ -2074,7 +2078,10 @@ async function sendMoimChat() {
   const msg = input.value.trim();
   if (!msg || !gatheringId || !currentUser) return;
   input.value = '';
-  const senderName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '참가자';
+  // 바로미팅 채팅방은 익명 - 실명 대신 입장 시 부여된 "참가자N" 라벨 사용
+  const senderName = input.dataset.baromeet === '1'
+    ? (_baromeetAnonLabel || '참가자')
+    : (currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '참가자');
   const { error: _gcErr } = await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, message: msg });
   if (_gcErr) { showToast('전송 실패: ' + _gcErr.message); }
 }
@@ -16000,13 +16007,21 @@ async function _loadBaromeetList() {
       </div>`;
       return;
     }
-    el.innerHTML = data.map(m => _renderBaromeetCard(m)).join('');
+    // 내가 이미 참가 확정된(승인된) 미팅 - 정원이 다 차면 익명 단체채팅방 입장 버튼 표시용
+    let joinedSet = new Set();
+    if (currentUser) {
+      const { data: myApps } = await db.from('gathering_applications')
+        .select('gathering_id').eq('applicant_id', currentUser.id).eq('status', 'approved')
+        .in('gathering_id', data.map(m => m.id));
+      joinedSet = new Set((myApps || []).map(a => a.gathering_id));
+    }
+    el.innerHTML = data.map(m => _renderBaromeetCard(m, joinedSet.has(m.id))).join('');
     document.getElementById('mnm-meet-loctext').textContent = `${data.length}개 미팅 모집 중`;
   } catch(e) {
     el.innerHTML = '<div style="text-align:center;padding:44px 20px;color:#bbb;font-size:13px">불러오기 실패<br>잠시 후 다시 시도해주세요</div>';
   }
 }
-function _renderBaromeetCard(m) {
+function _renderBaromeetCard(m, joined) {
   const maleMax = m.baromeeting_male_max || 4;
   const femaleMax = m.baromeeting_female_max || 4;
   const maleCur = m.baromeeting_male_cur || 0;
@@ -16048,9 +16063,9 @@ function _renderBaromeetCard(m) {
       </div>
     </div>
     ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:#f5f5f5;color:#666;padding:3px 8px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
-    <button onclick="applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>
-      ${isFull?'모집 마감':'참가 신청하기 · 2,000P →'}
-    </button>
+    ${isFull && joined
+      ? `<button onclick="openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+      : `<button onclick="applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
   </div>`;
 }
 async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
@@ -16072,16 +16087,15 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
       const { error: pe } = await db.from('barospot_passes')
         .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
       if (pe) { showToast('오류: ' + pe.message); return; }
-      const { error: ae } = await db.from('gathering_applications')
-        .insert({ gathering_id: meetingId, applicant_id: currentUser.id, status: 'pending' });
+      const ae = await _finalizeBaromeetJoin(meetingId, gender);
       if (ae) {
         // 신청 실패 시 차감된 이용권 롤백
         await db.from('barospot_passes').update({ remaining_count: passRow.remaining_count }).eq('id', passRow.id);
         showToast('신청 중 오류가 발생했어요');
         return;
       }
-      showToast('✅ 이용권으로 신청 완료! 확정 후 안내드려요');
-      await _loadBarospotList();
+      showToast('✅ 이용권으로 신청 완료! 정원이 차면 익명 단체채팅방이 열려요');
+      await _loadBaromeetList();
     }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:'이용권 사용하고 신청' });
     return;
   }
@@ -16099,16 +16113,64 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
     if (!acct || acct.balance < price) { showToast('포인트가 부족해요'); return; }
     const { error: pe } = await db.from('point_accounts').update({ balance: acct.balance - price }).eq('id', acct.id);
     if (pe) { showToast('포인트 차감 실패: ' + pe.message); return; }
-    const { error: ae } = await db.from('gathering_applications')
-      .insert({ gathering_id: meetingId, applicant_id: currentUser.id, status: 'pending' });
+    const ae = await _finalizeBaromeetJoin(meetingId, gender);
     if (ae) {
       await db.from('point_accounts').update({ balance: acct.balance }).eq('id', acct.id); // 롤백
       showToast('신청 중 오류가 발생했어요');
       return;
     }
-    showToast(`✅ ${price.toLocaleString()}P 차감 후 신청 완료! 확정 후 안내드려요`);
+    showToast(`✅ ${price.toLocaleString()}P 차감 후 신청 완료! 정원이 차면 익명 단체채팅방이 열려요`);
     await loadUserPoints();
+    await _loadBaromeetList();
   }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:`${price.toLocaleString()}P 차감하고 신청` });
+}
+
+// 신청 확정 처리: 성별 인원수 카운터 증가 + gathering_applications를 approved로 저장
+// (바로미팅은 별도 매니저 승인 단계가 없는 즉시확정 방식)
+async function _finalizeBaromeetJoin(meetingId, gender) {
+  const col = gender === 'male' ? 'baromeeting_male_cur' : 'baromeeting_female_cur';
+  const { data: g } = await db.from('gatherings').select(col).eq('id', meetingId).single();
+  const nextCur = (g?.[col] || 0) + 1;
+  await db.from('gatherings').update({ [col]: nextCur }).eq('id', meetingId);
+  const { error } = await db.from('gathering_applications')
+    .insert({ gathering_id: meetingId, applicant_id: currentUser.id, status: 'approved' });
+  if (error) {
+    // 신청 저장 실패 시 카운터도 롤백
+    await db.from('gatherings').update({ [col]: nextCur - 1 }).eq('id', meetingId);
+  }
+  return error;
+}
+
+// ── 바로미팅 익명 단체채팅방 (정원이 다 찬 미팅에 확정 참가자만 입장) ──
+let _baromeetChatId = null;
+let _baromeetAnonLabel = null;
+let _baromeetRealtimeCh = null;
+async function openBaromeetChat(gatheringId, title) {
+  if (!currentUser) return;
+  _baromeetChatId = gatheringId;
+  document.getElementById('panel-moim-chat').classList.add('show');
+  document.getElementById('moim-chat-title').textContent = (title || '바로미팅') + ' (익명)';
+  document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
+
+  // 참가 확정 순서로 "참가자N" 익명 번호 부여
+  const { data: apps } = await db.from('gathering_applications')
+    .select('applicant_id').eq('gathering_id', gatheringId).eq('status', 'approved').order('created_at');
+  const idx = (apps || []).findIndex(a => a.applicant_id === currentUser.id);
+  _baromeetAnonLabel = '참가자' + (idx >= 0 ? idx + 1 : '?');
+  const memberEl = document.getElementById('moim-chat-members');
+  if (memberEl) memberEl.textContent = `참가자 ${apps?.length || 0}명 · 나는 ${_baromeetAnonLabel}`;
+
+  const { data: msgs } = await db.from('gathering_chats').select('*').eq('gathering_id', gatheringId).order('sent_at').limit(100);
+  _renderMoimChatMessages(msgs || []);
+
+  if (_baromeetRealtimeCh) db.removeChannel(_baromeetRealtimeCh);
+  _baromeetRealtimeCh = db.channel('baromeet-chat-' + gatheringId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gathering_chats', filter: `gathering_id=eq.${gatheringId}` }, payload => {
+      _appendMoimChatMsg(payload.new);
+    }).subscribe();
+
+  document.getElementById('moim-chat-input').dataset.baromeet = '1';
+  document.getElementById('moim-chat-input').dataset.gatheringId = gatheringId;
 }
 
 // ── 바로스팟 ────────────────────────────────────────────────
