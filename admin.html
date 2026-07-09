@@ -427,12 +427,12 @@
         </select>
         <input id="pp-label" type="text" placeholder="이용권 이름 (예: 1회권)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <div style="display:flex;gap:8px">
-          <input id="pp-qty" type="number" min="1" placeholder="횟수" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="pp-price" type="number" min="0" placeholder="가격(원)" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="pp-qty" type="number" min="1" placeholder="횟수" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="pp-price" type="number" min="0" placeholder="가격(원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         </div>
         <div style="display:flex;gap:8px">
-          <input id="pp-discount" type="number" min="0" max="100" value="0" placeholder="할인율%" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="pp-order" type="number" min="0" value="0" placeholder="정렬순서" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="pp-discount" type="number" min="0" max="100" value="0" placeholder="할인율%" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="pp-order" type="number" min="0" value="0" placeholder="정렬순서" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="savePassProduct()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
@@ -488,9 +488,9 @@
         <input id="bm-location-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="bm-datetime" type="datetime-local" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569">
         <div style="display:flex;gap:8px">
-          <input id="bm-male-max" type="number" min="1" value="4" placeholder="남성 정원" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="bm-female-max" type="number" min="1" value="4" placeholder="여성 정원" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="bm-fee" type="number" min="0" value="0" placeholder="참가비(원)" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bm-male-max" type="number" min="1" value="4" placeholder="남성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bm-female-max" type="number" min="1" value="4" placeholder="여성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bm-fee" type="number" min="0" value="0" placeholder="참가비(원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="saveBaromeeting()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
@@ -509,7 +509,7 @@
       <input type="hidden" id="r-id">
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
-          <input id="r-place-query" type="text" placeholder="네이버 플레이스 검색 (예: 강남 스타벅스)" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchRestaurantPlace();}">
+          <input id="r-place-query" type="text" placeholder="네이버 플레이스 검색 (예: 강남 스타벅스)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchRestaurantPlace();}">
           <button onclick="searchRestaurantPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
         </div>
         <div id="r-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden"></div>
@@ -518,10 +518,11 @@
         <input id="r-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <textarea id="r-menu" placeholder="메뉴 설명" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
+        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">이 매장의 기본 식사비(성별)입니다. 매장 상세에 표시되는 참고 가격이며, 매장 등록과 별개 항목입니다.</div>
         <div style="display:flex;gap:8px">
-          <input id="r-female-price" type="number" min="0" placeholder="여성 가격" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="r-male-price" type="number" min="0" placeholder="남성 가격" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="r-discount" type="number" min="0" max="100" value="5" placeholder="할인율%" style="width:80px;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-female-price" type="number" min="0" placeholder="여성 식사비(원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-male-price" type="number" min="0" placeholder="남성 식사비(원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-discount" type="number" min="0" max="100" value="5" placeholder="할인율%" style="width:80px;flex-shrink:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="saveRestaurant()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
@@ -541,9 +542,9 @@
           style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;text-transform:uppercase">
         <div style="display:flex;gap:8px">
           <input id="new-coupon-tickets" type="number" min="1" value="1" placeholder="지급 이용권 수"
-            style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+            style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
           <input id="new-coupon-maxuses" type="number" min="1" placeholder="전체 한도(비우면 무제한)"
-            style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+            style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         </div>
         <input id="new-coupon-expires" type="date"
           style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569">
@@ -577,7 +578,7 @@
       <div style="font-size:13px;font-weight:800;color:#C8102E;margin-bottom:10px">카테고리 추가</div>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="new-cat-icon-baroalba" placeholder="🍕" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
-        <input id="new-cat-name-baroalba" placeholder="예: 카페, 편의점, 물류" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baroalba')">
+        <input id="new-cat-name-baroalba" placeholder="예: 카페, 편의점, 물류" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baroalba')">
         <button onclick="addCategory('baroalba')" style="padding:11px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
@@ -592,7 +593,7 @@
       <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">모임 카테고리 추가</div>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="new-cat-icon-baromoim" placeholder="🤝" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
-        <input id="new-cat-name-baromoim" placeholder="예: 스포츠, 취미, 친목" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baromoim')">
+        <input id="new-cat-name-baromoim" placeholder="예: 스포츠, 취미, 친목" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baromoim')">
         <button onclick="addCategory('baromoim')" style="padding:11px 16px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
@@ -607,7 +608,7 @@
       <div style="font-size:13px;font-weight:800;color:#0EA5E9;margin-bottom:10px">레슨 카테고리 추가</div>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="new-cat-icon-lesson" placeholder="📚" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
-        <input id="new-cat-name-lesson" placeholder="예: 수학, 영어, 코딩" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('lesson')">
+        <input id="new-cat-name-lesson" placeholder="예: 수학, 영어, 코딩" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('lesson')">
         <button onclick="addCategory('lesson')" style="padding:11px 16px;background:#0EA5E9;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
@@ -622,7 +623,7 @@
       <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">등록된 업주 목록에서 바로 선택하거나, 사업자명으로 검색하세요</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <input id="mannnam-mgr-search" type="text" placeholder="사업자명으로 검색 (비워두면 전체 목록)"
-          style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
+          style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
           oninput="searchBizForMannnam(this.value)">
       </div>
       <div id="mannnam-biz-search-result" style="background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:10px;max-height:320px;overflow-y:auto"><div style="padding:12px 14px;font-size:12px;color:#94a3b8">불러오는 중...</div></div>

@@ -438,8 +438,10 @@ module.exports = async function handler(req, res) {
             authEmail = au.email || null;
             const identity = (au.identities || [])[0];
             authProvider = identity?.provider || au.app_metadata?.provider || 'email';
+          } else {
+            console.error('[user_detail] auth admin lookup failed', worker.kakao_uid, authRes.status, await authRes.text().catch(()=>''));
           }
-        } catch {}
+        } catch (e) { console.error('[user_detail] auth admin lookup error', worker.kakao_uid, e.message); }
       }
 
       const appList = Array.isArray(apps) ? apps : [];

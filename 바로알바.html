@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='386',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='387',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -3261,7 +3261,7 @@
     <div style="margin-bottom:12px">
       <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">일반</div>
       <div style="background:#fff;border-radius:14px;border:1px solid #f0f0f0;overflow:hidden">
-        <div onclick="document.getElementById('modal-owner-lang').style.display='block';applyLang()" style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+        <div onclick="document.getElementById('modal-owner-lang').style.display='flex';applyLang()" style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">
           <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">🌐</span><span style="font-size:15px;font-weight:700;color:#222">앱 언어</span></div>
           <div style="display:flex;align-items:center;gap:6px"><span id="owner-mp-lang-val" style="font-size:13px;color:#aaa">한국어</span><span style="color:#ccc">›</span></div>
         </div>
