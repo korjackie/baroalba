@@ -265,6 +265,11 @@ window.addEventListener('popstate', () => {
     || window.navigator.standalone === true;
   if (isStandalone && sat === 0) sat = 28; // Android 비노치 기기 기본 상태표시줄 높이
   document.documentElement.style.setProperty('--status-bar-h', sat + 'px');
+  // --status-bar-h를 계산만 하고 실제 CSS 어디서도 쓰지 않던 문제 수정 -
+  // --sat/--sat-safe가 이 값을 참조하도록 --sat 자체를 덮어써서, 상태표시줄이
+  // 헤더를 가리던 모든 화면(바로만남 패널·마이페이지 서브패널 등)에 일괄 반영.
+  // 네이티브 Android 앱은 MainActivity.java가 이후 실측값으로 다시 덮어써 정확해짐.
+  if (sat > 0) document.documentElement.style.setProperty('--sat', sat + 'px');
 })();
 
 // ── 초기화 ────────────────────────────────────────────────
@@ -272,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '384';
+  const _APP_V = '385';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -285,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=384').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=385').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
