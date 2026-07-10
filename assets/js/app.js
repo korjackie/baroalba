@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '392';
+  const _APP_V = '393';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=392').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=393').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -14718,6 +14718,7 @@ async function openOwnerSettings() {
     loadBizPhotos();
     applyLang();
     initOwnerNotiToggles();
+    loadMannamSpotStatus();
 
     // 프로필 완성도 (biz_photos / places는 비동기 로드 후 업데이트)
     _updateOwnerCompletion();
@@ -15001,6 +15002,62 @@ function applyPlaceToForm(placeId) {
   document.getElementById('location-result').textContent = '\u{1F4CD} ' + p.name + (shortAddr ? ' · ' + shortAddr : '');
   document.getElementById('location-result').style.display = 'block';
   showToast(`\u{1F4CD} ${p.name} 선택됨`);
+}
+
+// ── 바로만남 미팅 스팟 셀프 등록 (업주) ──────────────────────
+async function loadMannamSpotStatus() {
+  if (!currentSession?.access_token) return;
+  const badge = document.getElementById('mannam-spot-status-badge');
+  try {
+    const res = await fetch('/api/mannam-owner?action=my_spot', {
+      headers: { 'Authorization': 'Bearer ' + currentSession.access_token }
+    });
+    const data = await res.json();
+    const spot = data?.spot;
+    if (spot) {
+      document.getElementById('mspot-name').value = spot.name || '';
+      document.getElementById('mspot-address').value = spot.address || '';
+      document.getElementById('mspot-phone').value = spot.phone || '';
+      document.getElementById('mspot-menu').value = spot.menu_description || '';
+      document.getElementById('mspot-female-price').value = spot.female_price || '';
+      document.getElementById('mspot-male-price').value = spot.male_price || '';
+      document.getElementById('mspot-discount').value = spot.discount_pct || '';
+      if (badge) {
+        badge.style.display = 'inline-block';
+        if (spot.is_active) { badge.textContent = '운영중'; badge.style.background = '#dcfce7'; badge.style.color = '#16a34a'; }
+        else { badge.textContent = '승인대기'; badge.style.background = '#fef3c7'; badge.style.color = '#d97706'; }
+      }
+    } else if (badge) {
+      badge.style.display = 'none';
+    }
+  } catch (e) { console.error('loadMannamSpotStatus:', e); }
+}
+
+async function submitMannamSpot() {
+  if (!currentSession?.access_token) { showToast('로그인이 필요합니다'); return; }
+  const name = document.getElementById('mspot-name').value.trim();
+  const address = document.getElementById('mspot-address').value.trim();
+  if (!name) { showToast('매장명을 입력해주세요'); return; }
+  if (!address) { showToast('주소를 입력해주세요'); return; }
+  const payload = {
+    name, address,
+    phone: document.getElementById('mspot-phone').value.trim(),
+    menu_description: document.getElementById('mspot-menu').value.trim(),
+    female_price: document.getElementById('mspot-female-price').value,
+    male_price: document.getElementById('mspot-male-price').value,
+    discount_pct: document.getElementById('mspot-discount').value,
+  };
+  try {
+    const res = await fetch('/api/mannam-owner?action=submit_spot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentSession.access_token },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || '등록에 실패했습니다'); return; }
+    showToast('✅ 신청 완료! 관리자 승인 후 노출됩니다');
+    loadMannamSpotStatus();
+  } catch (e) { showToast('등록 중 오류가 발생했어요'); }
 }
 
 async function loadMyPlaces() {

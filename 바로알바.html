@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='392',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='393',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -3182,6 +3182,28 @@
           <button onclick="document.getElementById('add-place-form').style.display='none'" style="flex:1;padding:11px;background:#f5f5f5;color:#888;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
           <button onclick="savePlaceToList()" style="flex:2;padding:11px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">장소 저장</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 💜 바로만남 미팅 스팟 등록 -->
+    <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:800;color:#222">💜 바로만남 미팅 스팟</div>
+        <span id="mannam-spot-status-badge" style="display:none;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px"></span>
+      </div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">우리 매장을 바로만남(바로스팟·바로미팅) 미팅 장소로 등록하세요. 관리자 승인 후 노출됩니다.</div>
+      <div id="mannam-spot-form" style="display:flex;flex-direction:column;gap:8px">
+        <input id="mspot-name" type="text" placeholder="매장명" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input id="mspot-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input id="mspot-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <textarea id="mspot-menu" placeholder="메뉴/분위기 소개" rows="2" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;resize:none;font-family:inherit;box-sizing:border-box"></textarea>
+        <div style="font-size:11px;color:#94a3b8">아래 식사비·할인율은 선택 입력입니다. 매장 상세에 참고용으로 표시됩니다.</div>
+        <div style="display:flex;gap:8px">
+          <input id="mspot-female-price" type="number" min="0" placeholder="여성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none">
+          <input id="mspot-male-price" type="number" min="0" placeholder="남성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none">
+        </div>
+        <input id="mspot-discount" type="number" min="0" max="100" placeholder="할인율%(선택)" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <button onclick="submitMannamSpot()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">저장</button>
       </div>
     </div>
 

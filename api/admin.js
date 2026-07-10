@@ -106,6 +106,9 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 바로만남 제휴매장 (관리자도 매니저와 동일하게 등록/수정 가능) ──
+    // NOTE: business_id/businesses(name) 조인은 DDL(mannam_spot_business_link_ddl.sql)
+    // 실행 후에만 안전함 - 컬럼/관계가 없으면 PostgREST가 400을 던져 목록 전체가 깨짐.
+    // DDL 실행 확인 후 select=*,businesses(name) 으로 교체 예정.
     if (action === 'barospot_restaurants') {
       const data = await sb(
         'barospot_restaurants?select=*&order=created_at.desc&limit=100',
