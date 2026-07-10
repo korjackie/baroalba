@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='390',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='391',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -98,8 +98,10 @@
 <div id="map-remote-banner" style="display:none;position:fixed;top:calc(var(--header-h) + var(--sat-safe));left:0;right:0;bottom:calc(var(--nav-h) + var(--sab-safe));z-index:200;align-items:center;justify-content:center;pointer-events:none">
   <div style="background:rgba(255,255,255,0.94);backdrop-filter:blur(8px);border-radius:18px;padding:22px 32px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;gap:8px">
     <div style="font-size:34px;line-height:1">🖥️</div>
-    <div style="font-size:14px;font-weight:900;color:#0369A1">비대면 공고 모아보기</div>
-    <div style="font-size:12px;color:#888;line-height:1.6">비대면 공고는 위치 정보가 없어<br>지도에 표시되지 않아요.<br>아래 목록에서 확인하세요!</div>
+    <div style="font-size:14px;font-weight:900;color:#0369A1" data-i18n="remote_banner_title">비대면 공고 모아보기</div>
+    <div style="font-size:12px;color:#888;line-height:1.6;white-space:pre-line" data-i18n="remote_banner_desc">비대면 공고는 위치 정보가 없어
+지도에 표시되지 않아요.
+아래 목록에서 확인하세요!</div>
   </div>
 </div>
 
@@ -122,8 +124,8 @@
       <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0" data-i18n-btn="filter_technical">전문기술 ▾</button>
     </div>
     <div class="filter-bar-actions">
-      <div class="chip" id="chip-remote" onclick="toggleRemoteFilter(this)" style="flex-shrink:0;font-size:11px;padding:6px 9px">🖥️ 비대면</div>
-      <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px">필터</div>
+      <div class="chip" id="chip-remote" onclick="toggleRemoteFilter(this)" style="flex-shrink:0;font-size:11px;padding:6px 9px">🖥️ <span data-i18n="remote_work_label">비대면</span></div>
+      <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px" data-i18n="filter_more">필터</div>
     </div>
   </div>
   <!-- 카테고리 드롭다운 시트 -->
@@ -402,8 +404,8 @@
 
 <!-- 지도 모드 토글 (알바|모임) -->
 <div class="map-mode-toggle" id="map-mode-toggle">
-  <button class="map-mode-btn active" id="mapmode-job"  onclick="setMapMode('job')">💼 알바</button>
-  <button class="map-mode-btn"        id="mapmode-moim" onclick="setMapMode('moim')">🤝 모임</button>
+  <button class="map-mode-btn active" id="mapmode-job"  onclick="setMapMode('job')">💼 <span data-i18n="map_mode_job">알바</span></button>
+  <button class="map-mode-btn"        id="mapmode-moim" onclick="setMapMode('moim')">🤝 <span data-i18n="map_mode_moim">모임</span></button>
 </div>
 
 <!-- 반경 배지 -->
@@ -1029,12 +1031,12 @@
       <div class="bento-section" onclick="clearHomeFilter(); selectHomeSort('latest'); document.getElementById('home-search-results').style.display='block';">
         <div class="bento-banner">
           <div class="bento-top">
-            <span class="bento-tag">당일 지급</span>
+            <span class="bento-tag" data-i18n="bento_tag">당일 지급</span>
             <span class="bento-urgent">URGENT NOW</span>
           </div>
-          <div class="bento-title">지금 당장 출근하고<br>오늘 바로 일당받기</div>
-          <div class="bento-desc">급하게 일손이 필요한 사장님들이 기다리고 있어요!</div>
-          <div class="bento-btn">전체보기 ➔</div>
+          <div class="bento-title" data-i18n="bento_title">지금 당장 출근하고<br>오늘 바로 일당받기</div>
+          <div class="bento-desc" data-i18n="bento_desc">급하게 일손이 필요한 사장님들이 기다리고 있어요!</div>
+          <div class="bento-btn"><span data-i18n="view_all">전체보기</span> ➔</div>
         </div>
       </div>
 
@@ -1044,26 +1046,26 @@
           <div style="width:50px;height:50px;border-radius:15px;background:#fff0f2;display:flex;align-items:center;justify-content:center">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
           </div>
-          <div style="font-size:11px;font-weight:700;color:#222">높은시급</div>
+          <div style="font-size:11px;font-weight:700;color:#222" data-i18n="shortcut_high_wage">높은시급</div>
         </div>
         <div onclick="openAIFilter()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
           <div style="width:50px;height:50px;border-radius:15px;background:#eff6ff;display:flex;align-items:center;justify-content:center">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </div>
-          <div style="font-size:11px;font-weight:700;color:#222">AI추천</div>
+          <div style="font-size:11px;font-weight:700;color:#222" data-i18n="shortcut_ai_rec">AI추천</div>
         </div>
         <div onclick="showForeignerInHome()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative">
           <div style="width:50px;height:50px;border-radius:15px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;position:relative">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
             <span id="shortcut-foreigner-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#C8102E;color:#fff;font-size:8px;font-weight:900;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center"></span>
           </div>
-          <div style="font-size:11px;font-weight:700;color:#222">외국인환영</div>
+          <div style="font-size:11px;font-weight:700;color:#222" data-i18n="shortcut_foreigner_welcome">외국인환영</div>
         </div>
         <div onclick="openLessonPanel()" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">
           <div style="width:50px;height:50px;border-radius:15px;background:#f0f9ff;display:flex;align-items:center;justify-content:center">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
           </div>
-          <div style="font-size:11px;font-weight:700;color:#222">레슨/과외</div>
+          <div style="font-size:11px;font-weight:700;color:#222" data-i18n="shortcut_lesson">레슨/과외</div>
         </div>
       </div>
 
@@ -1071,8 +1073,8 @@
       <div id="home-recent-section" style="padding:7px 12px 0">
         <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;overflow:hidden">
           <div style="padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:13px;font-weight:900;color:#111">📋 주변 알바 공고</div>
-            <button onclick="showAllJobs()" style="font-size:11px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer">전체보기 ›</button>
+            <div style="font-size:13px;font-weight:900;color:#111">📋 <span data-i18n="nearby_jobs_title">주변 알바 공고</span></div>
+            <button onclick="showAllJobs()" style="font-size:11px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer"><span data-i18n="view_all">전체보기</span> ›</button>
           </div>
           <div id="home-recent-list" style="display:flex;gap:8px;overflow-x:auto;padding:0 14px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
             <div style="width:150px;height:90px;border-radius:10px;flex-shrink:0;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div>
@@ -1090,11 +1092,11 @@
             </div>
             <div style="flex:1">
               <div style="font-size:14px;font-weight:900;color:#5B21B6">바로모임</div>
-              <div style="font-size:10px;color:#a78bfa;margin-top:1px">스포츠 · 취미 · 친목 모임</div>
+              <div style="font-size:10px;color:#a78bfa;margin-top:1px" data-i18n="moim_subtitle">스포츠 · 취미 · 친목 모임</div>
             </div>
             <span style="font-size:9px;font-weight:900;background:#7C3AED;color:#fff;padding:2px 8px;border-radius:10px">NEW</span>
-            <button onclick="event.stopPropagation();openMoimPanel(true)" style="font-size:11px;color:#fff;font-weight:800;background:#7C3AED;border:none;border-radius:10px;padding:4px 10px;cursor:pointer;flex-shrink:0">+ 만들기</button>
-            <button onclick="event.stopPropagation();openMoimPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0">전체 ›</button>
+            <button onclick="event.stopPropagation();openMoimPanel(true)" style="font-size:11px;color:#fff;font-weight:800;background:#7C3AED;border:none;border-radius:10px;padding:4px 10px;cursor:pointer;flex-shrink:0" data-i18n="moim_create_btn">+ 만들기</button>
+            <button onclick="event.stopPropagation();openMoimPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0"><span data-i18n="moim_view_all">전체</span> ›</button>
           </div>
           <div id="home-moim-list" style="display:flex;gap:8px;overflow-x:auto;padding:9px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-height:44px">
             <div style="color:#bbb;font-size:12px;padding:10px 0;flex-shrink:0"></div>
@@ -1109,7 +1111,7 @@
             <div class="mb-icon">💫</div>
             <div>
               <div class="mb-title">바로만남</div>
-              <div class="mb-desc">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
+              <div class="mb-desc" data-i18n="mannam_desc">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
@@ -1123,8 +1125,8 @@
         <div style="width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏆</div>
         <div style="flex:1">
           <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,.5);margin-bottom:4px">TRUST RANK</div>
-          <div style="font-size:15px;font-weight:900;color:#fff;line-height:1.25">업체 · 알바생 신뢰도 순위</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">업종별 1위가 누구인지 확인하세요</div>
+          <div style="font-size:15px;font-weight:900;color:#fff;line-height:1.25" data-i18n="rank_title">업체 · 알바생 신뢰도 순위</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px" data-i18n="rank_desc">업종별 1위가 누구인지 확인하세요</div>
         </div>
         <div style="font-size:20px;color:rgba(255,255,255,.6)">›</div>
       </div>
@@ -1341,12 +1343,12 @@
 
 <!-- 채팅 패널 -->
 <div class="full-panel" id="panel-chats">
-  <div class="panel-header" style="flex-shrink:0">채팅</div>
+  <div class="panel-header" style="flex-shrink:0" data-i18n="chat_title">채팅</div>
   <!-- 탭 필터 -->
   <div style="display:flex;padding:0 16px;border-bottom:1.5px solid #f0f0f0;background:#fff;flex-shrink:0">
-    <button id="chat-tab-all" onclick="setChatTab('all')" style="flex:1;padding:11px 0;font-size:13px;font-weight:800;border:none;background:none;border-bottom:2.5px solid var(--red);color:var(--red);cursor:pointer;margin-bottom:-1.5px">전체</button>
-    <button id="chat-tab-unread" onclick="setChatTab('unread')" style="flex:1;padding:11px 0;font-size:13px;font-weight:700;border:none;background:none;border-bottom:2.5px solid transparent;color:#bbb;cursor:pointer;margin-bottom:-1.5px">안읽음 <span id="chat-unread-tab-cnt" style="display:none;background:var(--red);color:#fff;border-radius:8px;font-size:10px;font-weight:900;padding:1px 5px;vertical-align:middle"></span></button>
-    <button id="chat-tab-fav" onclick="setChatTab('fav')" style="flex:1;padding:11px 0;font-size:13px;font-weight:700;border:none;background:none;border-bottom:2.5px solid transparent;color:#bbb;cursor:pointer;margin-bottom:-1.5px">⭐ 즐겨찾기</button>
+    <button id="chat-tab-all" onclick="setChatTab('all')" style="flex:1;padding:11px 0;font-size:13px;font-weight:800;border:none;background:none;border-bottom:2.5px solid var(--red);color:var(--red);cursor:pointer;margin-bottom:-1.5px" data-i18n="chat_tab_all">전체</button>
+    <button id="chat-tab-unread" onclick="setChatTab('unread')" style="flex:1;padding:11px 0;font-size:13px;font-weight:700;border:none;background:none;border-bottom:2.5px solid transparent;color:#bbb;cursor:pointer;margin-bottom:-1.5px"><span data-i18n="chat_tab_unread">안읽음</span> <span id="chat-unread-tab-cnt" style="display:none;background:var(--red);color:#fff;border-radius:8px;font-size:10px;font-weight:900;padding:1px 5px;vertical-align:middle"></span></button>
+    <button id="chat-tab-fav" onclick="setChatTab('fav')" style="flex:1;padding:11px 0;font-size:13px;font-weight:700;border:none;background:none;border-bottom:2.5px solid transparent;color:#bbb;cursor:pointer;margin-bottom:-1.5px">⭐ <span data-i18n="chat_tab_favorites">즐겨찾기</span></button>
   </div>
   <div id="my-chats-list" style="flex:1;overflow-y:auto" onclick="chatListClick(event)">
     <div style="text-align:center;padding:32px"><div class="spinner"></div></div>
@@ -2805,11 +2807,11 @@
     </div>
     <div style="padding:10px 16px;display:flex;gap:8px;align-items:center">
       <button onmousedown="event.preventDefault()" onclick="toggleMediaPanel('wchat')" id="wchat-plus-btn" style="width:36px;height:36px;flex-shrink:0;background:#f0f0f0;border:none;border-radius:50%;font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;transition:transform 0.2s">+</button>
-      <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
-        style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+      <input id="wchat-input" type="text" placeholder="메시지를 입력하세요" data-i18n-ph="chat_msg_placeholder" maxlength="500"
+        style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
         onfocus="closeMediaPanel('wchat')"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWChatMessage();}">
-      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();sendWChatMessage()" onclick="sendWChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();sendWChatMessage()" onclick="sendWChatMessage()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
 </div>
@@ -2870,11 +2872,11 @@
     </div>
     <div style="padding:10px 16px;display:flex;gap:8px;align-items:center">
       <button onclick="toggleMediaPanel('chat')" id="chat-plus-btn" style="width:36px;height:36px;flex-shrink:0;background:#f0f0f0;border:none;border-radius:50%;font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;transition:transform 0.2s">+</button>
-      <input id="chat-input" type="text" placeholder="메시지를 입력하세요" maxlength="500"
-        style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+      <input id="chat-input" type="text" placeholder="메시지를 입력하세요" data-i18n-ph="chat_msg_placeholder" maxlength="500"
+        style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
         onfocus="closeMediaPanel('chat')"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
-      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();sendChatMessage()" onclick="sendChatMessage()" style="padding:10px 18px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();sendChatMessage()" onclick="sendChatMessage()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
     </div>
   </div>
 </div>

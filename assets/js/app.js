@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '390';
+  const _APP_V = '391';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=390').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=391').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -4053,7 +4053,7 @@ async function openWChat(applicationId, bizName) {
   const name = bizName || (window._chatBizNames && window._chatBizNames[applicationId]) || '업주';
   _wchatAppId = applicationId;
   window._wchatCounterpart = { name, photoUrl: null, type: 'business' };
-  document.getElementById('wchat-title').textContent = name + '님과 채팅';
+  document.getElementById('wchat-title').textContent = t('chat_with_name').replace('{name}', name);
   document.getElementById('wchat-sub').textContent = '프로필 보기';
   _updateCpHeader('wchat', window._wchatCounterpart);
   const _wo = document.getElementById('wchat-overlay');
@@ -4066,7 +4066,7 @@ async function openWChat(applicationId, bizName) {
     const biz = _appData?.job_postings?.businesses;
     if (biz && _wchatAppId === applicationId) {
       window._wchatCounterpart = { name: biz.name || name, photoUrl: biz.photo_url || null, id: biz.id, bizType: biz.biz_type, region: biz.region, type: 'business' };
-      document.getElementById('wchat-title').textContent = window._wchatCounterpart.name + '님과 채팅';
+      document.getElementById('wchat-title').textContent = t('chat_with_name').replace('{name}', window._wchatCounterpart.name);
       _updateCpHeader('wchat', window._wchatCounterpart);
     }
   } catch(_e2) {}
@@ -6797,7 +6797,7 @@ function setNav(el, tab) {
       if (_floatBtn) {
         const _nearCount = (jobs || []).filter(j => j.status === 'open' || j.status === 'urgent').length;
         if (_nearCount > 0) {
-          document.getElementById('map-swipe-float-txt').textContent = `주변 알바 ${_nearCount}개 — 스와이프로 보기`;
+          document.getElementById('map-swipe-float-txt').textContent = t('swipe_nearby_count_txt').replace('{n}', _nearCount);
           _floatBtn.style.display = 'flex';
         }
       }
@@ -7648,32 +7648,32 @@ async function loadWorkerGrade() {
 
   const inlineBadge = document.getElementById('profile-grade-inline');
   if (isQuick) {
-    badge.innerHTML = '⚡ 번개등급';
+    badge.innerHTML = t('grade_quick_badge');
     badge.style.color = '#F59E0B';
-    progress.innerHTML = `<span style="color:#22c55e;font-weight:700">✅ 번개지원 사용 가능</span> · 하루 1회 제한`;
-    if (inlineBadge) { inlineBadge.textContent = '⚡ 번개'; inlineBadge.style.cssText += ';background:#FEF3C7;color:#D97706;display:inline-block'; }
+    progress.innerHTML = `<span style="color:#22c55e;font-weight:700">${t('grade_quick_unlock_msg')}</span> · ${t('grade_quick_daily_limit')}`;
+    if (inlineBadge) { inlineBadge.textContent = t('grade_quick_short'); inlineBadge.style.cssText += ';background:#FEF3C7;color:#D97706;display:inline-block'; }
     // 번개등급 신규 달성 감지 → 알림
     const gradeKey = `quick_grade_notified_${currentUser?.id}`;
     if (!localStorage.getItem(gradeKey)) {
       localStorage.setItem(gradeKey, '1');
-      setTimeout(() => showToast('⚡ 축하합니다! 번개등급을 달성했습니다!'), 800);
+      setTimeout(() => showToast(t('grade_congrats_toast')), 800);
     }
   } else {
-    badge.innerHTML = '\u{1FAAA} 일반등급';
+    badge.innerHTML = t('grade_normal_badge');
     badge.style.color = '#888';
     const rOk = rating >= QUICK_GRADE.minRating;
     const cOk = reviews >= QUICK_GRADE.minReviews;
     const nOk = noshows === 0;
     progress.innerHTML = `
-      <div style="font-weight:700;color:#555;margin-bottom:4px">번개등급까지 남은 조건</div>
+      <div style="font-weight:700;color:#555;margin-bottom:4px">${t('grade_progress_title')}</div>
       <div style="color:${rOk?'#22c55e':'#EF4444'}">
-        ${rOk?'✅':'❌'} 평점 ${QUICK_GRADE.minRating}이상 (현재 ${rating ? rating.toFixed(1) : '없음'})
+        ${rOk?'✅':'❌'} ${t('grade_cond_rating').replace('{n}', QUICK_GRADE.minRating).replace('{cur}', rating ? rating.toFixed(1) : t('no_data_label'))}
       </div>
       <div style="color:${cOk?'#22c55e':'#EF4444'}">
-        ${cOk?'✅':'❌'} 완료 알바 ${QUICK_GRADE.minReviews}회 이상 (현재 ${reviews}회)
+        ${cOk?'✅':'❌'} ${t('grade_cond_completed').replace('{n}', QUICK_GRADE.minReviews).replace('{cur}', reviews)}
       </div>
       <div style="color:${nOk?'#22c55e':'#EF4444'}">
-        ${nOk?'✅':'❌'} 노쇼 0회 (현재 ${noshows}회)
+        ${nOk?'✅':'❌'} ${t('grade_cond_noshow').replace('{cur}', noshows)}
       </div>`;
   }
 }
@@ -7683,32 +7683,32 @@ function showGradeInfoModal() {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px">
-      <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:20px">⚡ 번개등급 안내</div>
+      <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:20px">${t('grade_modal_title')}</div>
       <div style="background:#FFF9E6;border:1.5px solid #FCD34D;border-radius:14px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:900;color:#D97706;margin-bottom:8px">⚡ 번개등급 자격 조건</div>
+        <div style="font-size:13px;font-weight:900;color:#D97706;margin-bottom:8px">${t('grade_modal_cond_title')}</div>
         <div style="font-size:13px;color:#555;line-height:2">
-          ✅ 평점 <b>${QUICK_GRADE.minRating}점</b> 이상<br>
-          ✅ 완료된 알바 <b>${QUICK_GRADE.minReviews}회</b> 이상<br>
-          ✅ 노쇼 <b>0회</b>
+          ✅ ${t('grade_modal_cond_rating').replace('{n}', QUICK_GRADE.minRating)}<br>
+          ✅ ${t('grade_modal_cond_completed').replace('{n}', QUICK_GRADE.minReviews)}<br>
+          ✅ ${t('grade_modal_cond_noshow')}
         </div>
       </div>
       <div style="background:#FFF0F0;border-radius:14px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:900;color:#C8102E;margin-bottom:8px">⚡ 번개지원 혜택</div>
+        <div style="font-size:13px;font-weight:900;color:#C8102E;margin-bottom:8px">${t('grade_modal_benefit_title')}</div>
         <div style="font-size:13px;color:#555;line-height:2">
-          \u{1F51D} 업주 지원자 목록 <b>최상단</b> 노출<br>
-          ⚡ 번개지원 배지 표시<br>
-          \u{1F680} 하루 1회 사용 가능
+          \u{1F51D} ${t('grade_modal_benefit_1')}<br>
+          ⚡ ${t('grade_modal_benefit_2')}<br>
+          \u{1F680} ${t('grade_modal_benefit_3')}
         </div>
       </div>
       <div style="background:#F0FFF4;border-radius:14px;padding:16px;margin-bottom:20px">
-        <div style="font-size:13px;font-weight:900;color:#16a34a;margin-bottom:8px">\u{1FAAA} 일반등급</div>
+        <div style="font-size:13px;font-weight:900;color:#16a34a;margin-bottom:8px">${t('grade_modal_normal_title')}</div>
         <div style="font-size:13px;color:#555;line-height:2">
-          · 오른쪽 스와이프로 일반 지원<br>
-          · 번개등급 조건 달성 시 자동 승급
+          · ${t('grade_modal_normal_1')}<br>
+          · ${t('grade_modal_normal_2')}
         </div>
       </div>
-      <div style="font-size:11px;color:#aaa;margin-bottom:16px;text-align:center">노쇼 1회 발생 시 번개등급 즉시 박탈</div>
-      <button class="modal-close-btn" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">확인</button>
+      <div style="font-size:11px;color:#aaa;margin-bottom:16px;text-align:center">${t('grade_modal_footer')}</div>
+      <button class="modal-close-btn" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">${t('btn_confirm')}</button>
     </div>`;
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   overlay.querySelector('.modal-close-btn').addEventListener('click', () => overlay.remove());
@@ -9324,7 +9324,7 @@ async function _fetchWorkerNotifications() {
   // 등급 업 조건 달성 알림 (번개등급)
   const QUICK = { minRating: 4.3, minReviews: 3 };
   if ((w.rating || 0) >= QUICK.minRating && (w.review_count || 0) >= QUICK.minReviews && (w.noshow_count || 0) === 0) {
-    items.push({ id: 'grade_up', icon: '⚡', color: '#F59E0B', title: '번개등급 달성 조건을 충족했어요!', body: '마이페이지에서 등급을 확인하세요', time: null, isGrade: true });
+    items.push({ id: 'grade_up', icon: '⚡', color: '#F59E0B', title: t('grade_up_noti_title'), body: t('grade_up_noti_body'), time: null, isGrade: true });
   }
 
   (apps || []).forEach(app => {
@@ -11235,7 +11235,7 @@ function _openLessonChatOverlay(inquiryId, workerName, workerKakaoUid) {
   _chatInquiryId = inquiryId;
   _chatWorkerName = workerName;
   _chatWorkerUserId = workerKakaoUid;
-  document.getElementById('chat-title').textContent = workerName + ' 강사님과 상담';
+  document.getElementById('chat-title').textContent = t('chat_with_tutor').replace('{name}', workerName);
   document.getElementById('chat-sub').textContent = '레슨 관련 무료 상담';
   const _co1 = document.getElementById('chat-overlay');
   _co1.style.display = 'flex';
@@ -14107,7 +14107,7 @@ async function openChat(applicationId, workerName) {
   _chatWorkerName = workerName;
   _chatWorkerUserId = null;
   window._chatCounterpart = { name: workerName, photoUrl: null, type: 'worker' };
-  document.getElementById('chat-title').textContent = workerName + '님과 채팅';
+  document.getElementById('chat-title').textContent = t('chat_with_name').replace('{name}', workerName);
   document.getElementById('chat-sub').textContent = '프로필 보기';
   _updateCpHeader('chat', window._chatCounterpart);
   const _co2 = document.getElementById('chat-overlay');
@@ -14121,7 +14121,7 @@ async function openChat(applicationId, workerName) {
   if (app?.workers) {
     const w = app.workers;
     window._chatCounterpart = { name: w.name || workerName, photoUrl: w.photo_url || null, id: w.id, age: w.age, gender: w.gender, region: w.region, rating: w.rating, reviewCount: w.review_count, noshowCount: w.noshow_count, selfIntro: w.bio, skills: w.skills, type: 'worker' };
-    document.getElementById('chat-title').textContent = window._chatCounterpart.name + '님과 채팅';
+    document.getElementById('chat-title').textContent = t('chat_with_name').replace('{name}', window._chatCounterpart.name);
     _updateCpHeader('chat', window._chatCounterpart);
   }
   await loadChatMessages();

@@ -1316,7 +1316,7 @@
 .bento-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
 .bento-tag { background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 900; box-shadow: 0 4px 12px rgba(225,29,72,0.3); }
 .bento-urgent { color: #f43f5e; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; }
-.bento-title { font-size: 22px; font-weight: 900; line-height: 1.4; margin-bottom: 8px; letter-spacing: -0.5px; }
+.bento-title { font-size: 22px; font-weight: 900; line-height: 1.4; margin-bottom: 8px; letter-spacing: -0.5px; white-space: pre-line; }
 .bento-desc { font-size: 14px; color: #9ca3af; line-height: 1.5; }
 .bento-btn { margin-top: 20px; background: #ffffff; color: #111827; padding: 10px 20px; border-radius: 24px; font-size: 13px; font-weight: 800; align-self: flex-start; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.2s; }
 .bento-btn:active { transform: scale(0.96); }
