@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '388';
+  const _APP_V = '389';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=388').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=389').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -15998,6 +15998,124 @@ function switchMannnamTab(tab) {
   if (!isMeet) _loadBarospotList();
 }
 
+// ── 바로미팅/바로스팟 신청 완료 후 실시간 추적화면 (지도 + 드래그형 하단시트) ──
+// 배달앱의 "배달 현황" 화면 레이아웃을 벤치마킹: 지도 위에 카운트다운 + 진행 단계
+// + 드래그로 펼치면 장소·일정 상세가 나오는 하단시트
+let _trackMap = null, _trackVenueMarker = null, _trackMeMarker = null, _trackTimer = null;
+
+function bindTrackSheetDrag(handleEl, sheetEl) {
+  if (!handleEl || handleEl.dataset.trackDragBound) return;
+  handleEl.dataset.trackDragBound = '1';
+  let startY = 0, dragging = false;
+  const move = y => {
+    if (!dragging) return;
+    const dy = y - startY;
+    const follow = Math.max(-30, Math.min(30, dy * 0.3)); // 손가락을 살짝 따라가는 느낌만 주고, 실제 확장/축소는 놓을 때 결정
+    sheetEl.style.transform = `translateY(${follow}px)`;
+  };
+  const end = y => {
+    if (!dragging) return;
+    dragging = false;
+    const dy = y - startY;
+    sheetEl.style.transition = 'transform 0.25s ease';
+    sheetEl.style.transform = '';
+    setTimeout(() => { sheetEl.style.transition = ''; }, 250);
+    if (dy < -40) sheetEl.classList.add('expanded');       // 위로 드래그 → 펼쳐서 합쳐짐
+    else if (dy > 40) sheetEl.classList.remove('expanded'); // 아래로 드래그 → 다시 접힘
+    else sheetEl.classList.toggle('expanded');              // 짧게 탭한 경우 토글
+  };
+  handleEl.addEventListener('touchstart', e => { startY = e.touches[0].clientY; dragging = true; }, { passive: true });
+  handleEl.addEventListener('touchmove',  e => move(e.touches[0].clientY), { passive: true });
+  handleEl.addEventListener('touchend',   e => end(e.changedTouches[0].clientY), { passive: true });
+  handleEl.addEventListener('mousedown', e => {
+    startY = e.clientY; dragging = true;
+    const mv = ev => move(ev.clientY);
+    const up = ev => { end(ev.clientY); window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); };
+    window.addEventListener('mousemove', mv);
+    window.addEventListener('mouseup', up);
+  });
+}
+
+function _renderTrackSteps(labels, activeIdx) {
+  const el = document.getElementById('track-steps');
+  el.innerHTML = labels.map((l, i) => `
+    <div class="track-step ${i <= activeIdx ? 'done' : ''}">
+      <div class="track-step-dot"></div>
+      <div class="track-step-label">${l}</div>
+    </div>`).join('');
+}
+
+function _tickTrackCountdown(whenISO) {
+  const el = document.getElementById('track-countdown'), sub = document.getElementById('track-subtime');
+  const diffMs = whenISO ? new Date(whenISO) - new Date() : NaN;
+  if (isNaN(diffMs)) { el.textContent = '일정 확인 중'; sub.textContent = ''; return; }
+  if (diffMs <= 0) { el.textContent = '시작!'; sub.textContent = ''; return; }
+  const mins = Math.round(diffMs / 60000);
+  el.textContent = mins >= 60 ? `${Math.floor(mins/60)}시간 ${mins%60}분 남음` : `${mins}분 남음`;
+  sub.textContent = new Date(whenISO).toLocaleTimeString('ko-KR', { hour:'numeric', minute:'2-digit' });
+}
+
+function _geocodeAndShowVenue(query) {
+  if (!query || !_trackMap) return;
+  const places = new kakao.maps.services.Places();
+  places.keywordSearch(query, (result, status) => {
+    if (status !== kakao.maps.services.Status.OK || !result.length) return;
+    const r = result[0];
+    const pos = new kakao.maps.LatLng(r.y, r.x);
+    _trackMap.setCenter(pos);
+    if (_trackVenueMarker) _trackVenueMarker.setMap(null);
+    _trackVenueMarker = new kakao.maps.Marker({ position: pos, map: _trackMap });
+  });
+}
+
+function _showMyLocationOnTrackMap(hasVenue) {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+    if (_trackMeMarker) _trackMeMarker.setMap(null);
+    _trackMeMarker = new kakao.maps.Marker({ position: latlng, map: _trackMap });
+    if (!hasVenue) _trackMap.setCenter(latlng); // 표시할 장소가 아직 없으면 내 위치를 기준으로 지도 중심을 맞춘다
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 8000 });
+}
+
+// opts: { brand, title, place, addressQuery, whenISO, whenText, steps, stepIndex, chat:{gatheringId,title}|null }
+function openTrackingSheet(opts) {
+  document.getElementById('track-overlay').style.display = 'block';
+  document.getElementById('track-brand').textContent = opts.brand;
+  document.getElementById('track-desc').textContent = opts.title || '-';
+  document.getElementById('track-place').textContent = opts.place || '-';
+  document.getElementById('track-when').textContent = opts.whenText || '-';
+  document.getElementById('track-sheet').classList.remove('expanded');
+  _renderTrackSteps(opts.steps || ['신청완료','확정','진행중','종료'], opts.stepIndex ?? 0);
+  bindTrackSheetDrag(document.getElementById('track-sheet-handle'), document.getElementById('track-sheet'));
+
+  const chatBtn = document.getElementById('track-chat-btn');
+  if (opts.chat) {
+    chatBtn.style.display = 'block';
+    chatBtn.onclick = () => openBaromeetChat(opts.chat.gatheringId, opts.chat.title);
+  } else {
+    chatBtn.style.display = 'none';
+  }
+
+  if (_trackVenueMarker) { _trackVenueMarker.setMap(null); _trackVenueMarker = null; } // 이전 세션의 장소 마커 제거
+  requestAnimationFrame(() => {
+    const el = document.getElementById('track-map');
+    if (!_trackMap) _trackMap = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 5 });
+    else _trackMap.relayout();
+    _geocodeAndShowVenue(opts.addressQuery);
+    _showMyLocationOnTrackMap(!!opts.addressQuery);
+  });
+
+  if (_trackTimer) clearInterval(_trackTimer);
+  _tickTrackCountdown(opts.whenISO);
+  _trackTimer = setInterval(() => _tickTrackCountdown(opts.whenISO), 30000);
+}
+
+function closeTrackingSheet() {
+  document.getElementById('track-overlay').style.display = 'none';
+  if (_trackTimer) { clearInterval(_trackTimer); _trackTimer = null; }
+}
+
 // 바로미팅 목록 로드
 async function _loadBaromeetList() {
   const el = document.getElementById('mnm-meeting-list');
@@ -16109,6 +16227,7 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
       }
       showToast('✅ 이용권으로 신청 완료! 정원이 차면 익명 단체채팅방이 열려요');
       await _loadBaromeetList();
+      _openBaromeetTracking(meetingId);
     }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:'이용권 사용하고 신청' });
     return;
   }
@@ -16135,7 +16254,27 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
     showToast(`✅ ${price.toLocaleString()}P 차감 후 신청 완료! 정원이 차면 익명 단체채팅방이 열려요`);
     await loadUserPoints();
     await _loadBaromeetList();
+    _openBaromeetTracking(meetingId);
   }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:`${price.toLocaleString()}P 차감하고 신청` });
+}
+
+// 신청 완료 직후 모임 정보를 불러와 실시간 추적화면을 연다
+async function _openBaromeetTracking(meetingId) {
+  const { data: m } = await db.from('gatherings')
+    .select('title, location_name, location_address, gathering_date')
+    .eq('id', meetingId).single();
+  if (!m) return;
+  const whenText = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 미정';
+  openTrackingSheet({
+    brand: '🤝 바로미팅',
+    title: m.title || '바로미팅',
+    place: m.location_name || m.location_address || '-',
+    addressQuery: m.location_address || m.location_name,
+    whenISO: m.gathering_date,
+    whenText,
+    steps: ['신청완료','확정','모임 진행','종료'],
+    stepIndex: 1,
+  });
 }
 
 // 신청 확정 처리: 성별 인원수 카운터 증가 + gathering_applications를 approved로 저장
@@ -16380,6 +16519,18 @@ async function applyBarospot() {
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
   showToast('신청 완료! 매니저가 검토 후 배정을 안내해드립니다');
   await _loadBarospotList();
+  // 이 시점엔 아직 매니저가 식당/일정을 배정하기 전이라 지도에 표시할 장소가 없음 -
+  // 배정 대기 상태만 보여준다 (배정 완료 후 상세는 마이페이지 > 신청 내역에서 확인)
+  openTrackingSheet({
+    brand: '📍 바로스팟',
+    title: '매니저 배정 대기 중',
+    place: '식당 배정 후 안내됩니다',
+    addressQuery: null,
+    whenISO: null,
+    whenText: '배정 대기 중',
+    steps: ['신청완료','매니저 배정 대기','확정','종료'],
+    stepIndex: 0,
+  });
 }
 
 async function _loadFemaleApplications() {
@@ -16463,6 +16614,29 @@ async function applySpotEvent(eventId) {
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
   showToast('참가 신청 완료! 매니저가 확인 후 안내드립니다');
   await _loadSpotEvents();
+  _openSpotEventTracking(eventId);
+}
+
+// 신청 완료 직후 스팟 이벤트 정보를 불러와 실시간 추적화면을 연다
+// (바로스팟 여성 신청(applyBarospot)은 이 시점엔 매장/일정이 아직 매니저 배정 전이라
+// 추적할 대상이 없음 - 남성이 참가하는 이미 개설된 이벤트(applySpotEvent)만 해당)
+async function _openSpotEventTracking(eventId) {
+  const { data: ev } = await db.from('barospot_events')
+    .select('restaurant_name, event_date, event_time')
+    .eq('id', eventId).single();
+  if (!ev) return;
+  const whenISO = ev.event_date && ev.event_time ? `${ev.event_date}T${ev.event_time}` : null;
+  const whenText = whenISO ? new Date(whenISO).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : `${ev.event_date || ''} ${ev.event_time || ''}`.trim();
+  openTrackingSheet({
+    brand: '📍 바로스팟',
+    title: ev.restaurant_name || '바로스팟',
+    place: ev.restaurant_name || '-',
+    addressQuery: ev.restaurant_name,
+    whenISO,
+    whenText: whenText || '일정 확인 중',
+    steps: ['신청완료','매니저 확인 중','확정','종료'],
+    stepIndex: 0,
+  });
 }
 
 // ── 포인트 시스템 ──────────────────────────────────────────
