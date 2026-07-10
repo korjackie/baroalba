@@ -486,11 +486,22 @@
         <textarea id="bm-desc" placeholder="소개/안내 문구" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
         <input id="bm-location-name" type="text" placeholder="장소명 (예: 강남역 OO카페)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="bm-location-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <input id="bm-datetime" type="datetime-local" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569">
-        <div style="display:flex;gap:8px">
-          <input id="bm-male-max" type="number" min="1" value="4" placeholder="남성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="bm-female-max" type="number" min="1" value="4" placeholder="여성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="bm-fee" type="number" min="0" value="0" placeholder="참가비(원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">모임 일시</div>
+          <input id="bm-datetime" type="datetime-local" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="display:flex;gap:8px;margin-bottom:4px">
+            <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">남성 정원</div>
+            <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">여성 정원</div>
+            <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">참가비(1인, 원)</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input id="bm-male-max" type="number" min="1" value="4" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+            <input id="bm-female-max" type="number" min="1" value="4" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+            <input id="bm-fee" type="number" min="0" value="0" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px">정원이 다 차면(남성+여성) 참가자 전원에게 익명 단체채팅방이 자동으로 열립니다. 참가비는 1인당 결제 금액입니다.</div>
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="saveBaromeeting()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
