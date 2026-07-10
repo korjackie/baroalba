@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='389',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='390',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -1394,15 +1394,15 @@
         </div>
         <div onclick="goToMyApplications()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
           <div style="font-size:20px;font-weight:900;color:#16a34a" id="stat-complete-count">-</div>
-          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">완료알바</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px" data-i18n="stat_complete_jobs">완료알바</div>
         </div>
         <div onclick="showMyRatings()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
           <div style="font-size:20px;font-weight:900;color:#F59E0B" id="stat-rating">-</div>
-          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">내 평점</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px" data-i18n="my_rating_label">내 평점</div>
         </div>
         <div onclick="showRankPanel('worker')" style="padding:16px 6px;text-align:center;cursor:pointer">
           <div style="font-size:20px;font-weight:900;color:#7C3AED" id="stat-trust-score">-</div>
-          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">신뢰점수</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px" data-i18n="trust_score_label">신뢰점수</div>
         </div>
       </div>
 
@@ -1412,8 +1412,8 @@
           <div style="display:flex;align-items:center;gap:12px">
             <div id="available-now-dot" style="width:9px;height:9px;border-radius:50%;background:#ddd;flex-shrink:0"></div>
             <div>
-              <div style="font-size:15px;font-weight:700;color:#222" id="available-now-label">지금 출근 가능</div>
-              <div style="font-size:12px;color:#aaa;margin-top:1px">ON시 업주에게 우선 노출돼요</div>
+              <div style="font-size:15px;font-weight:700;color:#222" id="available-now-label" data-i18n="available_now_label">지금 출근 가능</div>
+              <div style="font-size:12px;color:#aaa;margin-top:1px" data-i18n="available_now_desc">ON시 업주에게 우선 노출돼요</div>
             </div>
           </div>
           <div id="available-now-toggle" style="width:44px;height:24px;border-radius:12px;background:#ddd;position:relative;flex-shrink:0">
@@ -1431,42 +1431,42 @@
 
       <!-- ── 내 활동 ── -->
       <div class="mp-section">
-        <div class="mp-section-title">내 활동</div>
+        <div class="mp-section-title" data-i18n="section_activity">내 활동</div>
         <div class="mp-rows">
           <div class="mp-row" onclick="goToMyApplications()">
-            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span>지원 현황</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_applications">지원 현황</span></div>
             <div class="mp-row-right"><span id="mp-apply-val" style="font-size:13px;color:#C8102E;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openMpSub('income')">
-            <div class="mp-row-left"><span class="mp-row-icon">💵</span><span>수입 현황</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">💵</span><span data-i18n="row_income">수입 현황</span></div>
             <div class="mp-row-right"><span id="mp-income-val" style="font-size:13px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openMpSub('wage-history')">
-            <div class="mp-row-left"><span class="mp-row-icon">💴</span><span>급여 수령 확인</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">💴</span><span data-i18n="row_wage_history">급여 수령 확인</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openPointHistory()">
-            <div class="mp-row-left"><span class="mp-row-icon">💎</span><span>포인트 잔액</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">💎</span><span data-i18n="row_points">포인트 잔액</span></div>
             <div class="mp-row-right">
               <span id="mp-point-val" style="font-size:13px;color:#7C3AED;font-weight:700">-</span>
-              <button onclick="event.stopPropagation();openPointCharge()" style="font-size:10px;font-weight:700;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:3px 9px;cursor:pointer;margin-left:6px;flex-shrink:0">충전</button>
+              <button onclick="event.stopPropagation();openPointCharge()" data-i18n="btn_charge" style="font-size:10px;font-weight:700;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:3px 9px;cursor:pointer;margin-left:6px;flex-shrink:0">충전</button>
               <span class="mp-row-arrow">›</span>
             </div>
           </div>
           <div class="mp-row" onclick="openCouponSheet()">
-            <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span>프로모션 쿠폰 등록 / 이용권 조회</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="row_coupon">프로모션 쿠폰 등록 / 이용권 조회</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="showMyRatings()">
-            <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span>내 평점</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span data-i18n="my_rating_label">내 평점</span></div>
             <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" id="mp-following-row" onclick="openMpSub('following')" style="display:none">
-            <div class="mp-row-left"><span class="mp-row-icon">🔔</span><span>팔로잉 업체</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🔔</span><span data-i18n="row_following">팔로잉 업체</span></div>
             <div class="mp-row-right"><span id="mp-following-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="setNav(document.querySelectorAll('.nav-item')[2],'dashboard')">
-            <div class="mp-row-left"><span class="mp-row-icon">📊</span><span>대시보드</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">📊</span><span data-i18n="row_dashboard">대시보드</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
@@ -1474,11 +1474,11 @@
 
       <!-- ── 내 프로필 (알바생만) ── -->
       <div class="mp-section" id="worker-profile-edit" style="display:none">
-        <div class="mp-section-title">내 프로필</div>
+        <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
         <!-- 완성도 게이지 compact -->
         <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-bottom:1px solid #f5f5f5">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <span style="font-size:11px;font-weight:700;color:#888">프로필 완성도</span>
+            <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
             <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
           </div>
           <div style="height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden">
@@ -1488,19 +1488,19 @@
         </div>
         <div class="mp-rows">
           <div class="mp-row" onclick="openMpSub('basic')">
-            <div class="mp-row-left"><span class="mp-row-icon">👤</span><span>기본 정보</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openMpSub('portfolio')">
-            <div class="mp-row-left"><span class="mp-row-icon">📷</span><span>포트폴리오</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">포트폴리오</span></div>
             <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openMpSub('skills')">
-            <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span>스킬 · 경력</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span data-i18n="row_skills_career">스킬 · 경력</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openMpSub('docs')">
-            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span>자격증 · 서류</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_docs">자격증 · 서류</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
@@ -1508,10 +1508,10 @@
 
       <!-- ── 등급 (알바생만) ── -->
       <div class="mp-section" id="worker-grade-section" style="display:none">
-        <div class="mp-section-title">등급</div>
+        <div class="mp-section-title" data-i18n="section_grade">등급</div>
         <div class="mp-rows">
           <div class="mp-row" onclick="showGradeInfoModal()">
-            <div class="mp-row-left"><span class="mp-row-icon">🏅</span><span>내 등급</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🏅</span><span data-i18n="row_my_grade">내 등급</span></div>
             <div class="mp-row-right"><span id="worker-grade-badge" style="font-size:14px;font-weight:800"></span><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
@@ -1520,10 +1520,10 @@
 
       <!-- ── 외국인 전용 서비스 (워커만) ── -->
       <div class="mp-section" id="foreigner-section" style="display:none">
-        <div class="mp-section-title">🌏 외국인 전용 서비스</div>
+        <div class="mp-section-title">🌏 <span data-i18n="section_foreigner">외국인 전용 서비스</span></div>
         <div class="mp-rows">
           <div class="mp-row" onclick="openMpSub('foreigner-hub')">
-            <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span>외국인 전용</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span data-i18n="row_foreigner">외국인 전용</span></div>
             <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
@@ -1531,14 +1531,14 @@
 
       <!-- ── 설정 ── -->
       <div class="mp-section">
-        <div class="mp-section-title">설정</div>
+        <div class="mp-section-title" data-i18n="section_settings">설정</div>
         <div class="mp-rows">
           <div class="mp-row" onclick="openMpSub('noti')">
-            <div class="mp-row-left"><span class="mp-row-icon">🔔</span><span>알림 설정</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🔔</span><span data-i18n="noti_section">알림 설정</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openMpSub('lang')">
-            <div class="mp-row-left"><span class="mp-row-icon">🌐</span><span>앱 언어</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🌐</span><span data-i18n="row_app_lang">앱 언어</span></div>
             <div class="mp-row-right"><span id="mp-lang-val" style="font-size:13px;color:#888;font-weight:600">한국어</span><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
@@ -1546,24 +1546,24 @@
 
       <!-- ── 계정 ── -->
       <div class="mp-section">
-        <div class="mp-section-title">계정</div>
+        <div class="mp-section-title" data-i18n="section_account">계정</div>
         <div class="mp-rows">
           <div id="owner-settings-shortcut" style="display:none">
             <div class="mp-row" onclick="openOwnerSettings()">
-              <div class="mp-row-left"><span class="mp-row-icon">🏪</span><span>업체 설정</span></div>
+              <div class="mp-row-left"><span class="mp-row-icon">🏪</span><span data-i18n="row_biz_settings">업체 설정</span></div>
               <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
             </div>
           </div>
           <div class="mp-row" onclick="openAccountInfoModal()">
-            <div class="mp-row-left"><span class="mp-row-icon">🔐</span><span>회원정보 변경</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🔐</span><span data-i18n="row_account_info">회원정보 변경</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="location.href='./terms.html'">
-            <div class="mp-row-left"><span class="mp-row-icon">📄</span><span>이용약관</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">📄</span><span data-i18n="terms">이용약관</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="localStorage.setItem('terms_tab','privacy');location.href='./terms.html'">
-            <div class="mp-row-left"><span class="mp-row-icon">🔒</span><span>개인정보처리방침</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🔒</span><span data-i18n="privacy">개인정보처리방침</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" id="worker-logout-btn" onclick="doLogout()">
@@ -1571,7 +1571,7 @@
               <span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               </span>
-              <span style="color:#C8102E;font-weight:700">로그아웃</span>
+              <span style="color:#C8102E;font-weight:700" data-i18n="logout">로그아웃</span>
             </div>
             <div class="mp-row-right"></div>
           </div>
