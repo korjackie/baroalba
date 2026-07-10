@@ -404,7 +404,7 @@
     </div>
     <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">가격 설정</div>
     <div class="list-group">
-      <div class="list-item" onclick="navTo('settings','pass-pricing')"><div class="list-icon">🎟️</div><div class="list-text"><div class="list-title">바로스팟 이용권 가격</div><div class="list-desc">성별·횟수별 이용권 가격 추가/수정</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('settings','pass-pricing')"><div class="list-icon">🎟️</div><div class="list-text"><div class="list-title">이용권 가격 (바로스팟·바로미팅 공용)</div><div class="list-desc">성별·횟수별 이용권 가격 추가/수정</div></div><div class="list-arrow">›</div></div>
     </div>
     <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">보안 및 권한</div>
     <div class="list-group">
@@ -415,7 +415,7 @@
 
   <!-- 바로스팟 이용권 가격 관리 -->
   <div class="tab-content" id="tab-pass-pricing">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 바로스팟 이용권 가격입니다. 여기서 수정하면 이용권 구매 화면에 바로 반영됩니다.</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로스팟·바로미팅이 함께 쓰는 이용권 가격입니다(성별·횟수별 이용권 하나로 두 서비스 모두 이용). 여기서 수정하면 이용권 구매 화면에 바로 반영됩니다.</div>
     <div id="pass-pricing-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div id="pass-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">이용권 등록</div>
@@ -518,11 +518,11 @@
         <input id="r-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <textarea id="r-menu" placeholder="메뉴 설명" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
-        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">이 매장의 기본 식사비(성별)입니다. 매장 상세에 표시되는 참고 가격이며, 매장 등록과 별개 항목입니다.</div>
+        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">아래 식사비·할인율은 선택 입력입니다. 비워두면 0원/기본 할인율로 저장되며, 매장 상세 화면에 참고용으로만 표시됩니다.</div>
         <div style="display:flex;gap:8px">
-          <input id="r-female-price" type="number" min="0" placeholder="여성 식사비(원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="r-male-price" type="number" min="0" placeholder="남성 식사비(원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="r-discount" type="number" min="0" max="100" value="5" placeholder="할인율%" style="width:80px;flex-shrink:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-female-price" type="number" min="0" placeholder="여성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-male-price" type="number" min="0" placeholder="남성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="r-discount" type="number" min="0" max="100" placeholder="할인율%(선택)" style="width:100px;flex-shrink:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="saveRestaurant()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
@@ -586,8 +586,7 @@
 
   <!-- 바로모임 카테고리 탭 -->
   <div class="tab-content" id="tab-baromoim">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">모임 개설 시 선택하는 메인 카테고리입니다.</div>
-    <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ 아래 DDL 실행 후 사용 가능: ALTER TABLE job_categories ADD COLUMN IF NOT EXISTS service_type TEXT NOT NULL DEFAULT 'baroalba';</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">모임 개설 시 선택하는 메인 카테고리입니다.</div>
     <div id="cat-list-baromoim"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">모임 카테고리 추가</div>
@@ -601,8 +600,7 @@
 
   <!-- 레슨/과외 카테고리 탭 -->
   <div class="tab-content" id="tab-lesson">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">레슨·과외 프로필 등록 시 선택하는 과목 카테고리입니다.</div>
-    <div style="font-size:11px;background:#FEF3C7;color:#D97706;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-weight:700">⚠️ DDL 실행 후 사용 가능 (바로모임과 동일)</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">레슨·과외 프로필 등록 시 선택하는 과목 카테고리입니다.</div>
     <div id="cat-list-lesson"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div style="font-size:13px;font-weight:800;color:#0EA5E9;margin-bottom:10px">레슨 카테고리 추가</div>
@@ -863,22 +861,23 @@ function switchTab(name) {
   if (!_fromPopState) history.pushState({ adminTab: name }, '');
 }
 
-// ── 뒤로가기: 서브페이지 → 그룹 메뉴 → 대시보드 순으로 한 단계씩 복귀 ──
-// 헤더의 '‹' 버튼과 하드웨어 뒤로가기(popstate) 양쪽에서 공용으로 사용
-// (대시보드에서 누르면 그대로 admin.html을 벗어나게 둔다 - 정상 종료 지점)
+// ── 뒤로가기: 서브페이지 → 그룹 메뉴 → 대시보드 → (실제로 admin.html 이탈) 순으로 한 단계씩 복귀 ──
+// 헤더의 '‹' 버튼은 실제 브라우저 히스토리를 한 칸 되돌리기만 하고(history.back()),
+// 실제 탭 전환은 아래 popstate 핸들러 한 곳에서만 수행한다.
+// (예전 버전은 버튼 클릭 시 switchTab()을 직접 호출했는데, switchTab()이 매번 새
+// 히스토리를 push하는 바람에 '뒤로가기'를 누를 때마다 오히려 히스토리가 계속 쌓여
+// 대시보드에서 history.back()을 호출해도 실제 admin.html을 벗어나지 못하는 버그가 있었음)
 function goBackSmart() {
-  const cur = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
-  if (cur === 'dashboard') { history.back(); return; }
-  const group = GROUP_OF[cur] || cur;
-  switchTab(cur === group ? 'dashboard' : group);
+  history.back();
 }
 
 history.pushState({ adminTab: 'dashboard' }, '');
 window.addEventListener('popstate', () => {
   const cur = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
-  if (cur === 'dashboard') return;
+  if (cur === 'dashboard') return; // 이미 대시보드 상태면 실제로 admin.html을 벗어나는 중 - 브라우저에 맡김
+  const group = GROUP_OF[cur] || cur;
   _fromPopState = true;
-  goBackSmart();
+  switchTab(cur === group ? 'dashboard' : group);
   _fromPopState = false;
 });
 
@@ -896,7 +895,12 @@ async function adminApi(action, method = 'GET', body = null, extraParams = {}) {
   const r = await fetch(`/api/admin?${qs}`, opts);
   if (r.status === 403) {
     console.error('[adminApi] 403 Forbidden — email mismatch or not in app_admins:', action);
-    return { _forbidden: true };
+    return { error: '관리자 인증 실패 (403) - 다시 로그인해주세요' };
+  }
+  if (!r.ok) {
+    const text = await r.text().catch(() => '');
+    console.error('[adminApi] request failed:', action, r.status, text);
+    return { error: text || ('요청 실패 (' + r.status + ')') };
   }
   return r.json();
 }
@@ -1454,8 +1458,8 @@ async function assignMannnamManager(bizId) {
   const { data: biz, error: be } = await db.from('businesses')
     .select('id, name, kakao_uid').eq('id', bizId).single();
   if (be) { alert('오류: ' + be.message); return; }
-  const { error } = await db.from('businesses').update({ mannnam_role: 'manager' }).eq('id', bizId);
-  if (error) { alert('오류: ' + error.message); return; }
+  const result = await adminApi('assign_mannnam_manager', 'PATCH', { biz_id: bizId });
+  if (result?.error) { alert('오류: ' + result.error); return; }
   showToast('바로만남 매니저로 지정되었습니다');
   loadMannnamManagers();
   searchBizForMannnam(document.getElementById('mannnam-mgr-search').value);
@@ -1475,8 +1479,8 @@ async function assignMannnamManager(bizId) {
 
 async function removeMannnamManager(bizId) {
   if (!confirm('매니저 권한을 해제하시겠습니까?')) return;
-  const { error } = await db.from('businesses').update({ mannnam_role: null }).eq('id', bizId);
-  if (error) { alert('오류: ' + error.message); return; }
+  const result = await adminApi('remove_mannnam_manager', 'PATCH', { biz_id: bizId });
+  if (result?.error) { alert('오류: ' + result.error); return; }
   showToast('매니저 권한이 해제되었습니다');
   loadMannnamManagers();
 }
@@ -1612,8 +1616,7 @@ async function loadRestaurants() {
 
 function resetRestaurantForm() {
   document.getElementById('r-id').value = '';
-  ['r-name','r-address','r-phone','r-menu','r-female-price','r-male-price'].forEach(k => document.getElementById(k).value = '');
-  document.getElementById('r-discount').value = '5';
+  ['r-name','r-address','r-phone','r-menu','r-female-price','r-male-price','r-discount'].forEach(k => document.getElementById(k).value = '');
   document.getElementById('restaurant-form-title').textContent = '제휴 매장 등록';
   document.getElementById('r-place-query').value = '';
   document.getElementById('r-place-results').style.display = 'none';

@@ -584,9 +584,9 @@
     .job-type-chip { padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s }
     .job-type-chip.selected { background:#C8102E;border-color:#C8102E;color:#fff }
     .rights-card { background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;padding:16px;color:#fff;margin-top:12px }
-    .mpsub-panel { position:fixed; inset:0; background:#f5f5f5; z-index:360; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
+    .mpsub-panel { position:fixed; inset:0; background:#f5f5f5; z-index:450; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
     .mpsub-panel.show { transform:translateX(0); }
-    .mpsub-hdr { display:flex; align-items:center; gap:8px; padding:calc(var(--sat,0px) + 14px) 16px 14px; background:#fff; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
+    .mpsub-hdr { display:flex; align-items:center; gap:8px; padding:calc(var(--sat-safe,0px) + 14px) 16px 14px; background:#fff; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
     .mpsub-back { background:none; border:none; font-size:26px; color:#333; cursor:pointer; padding:0 10px 0 0; line-height:1; }
     .mpsub-ttl { font-size:17px; font-weight:900; color:#222; }
 

@@ -87,6 +87,24 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    // ── 바로만남 매니저 지정/해제 (서비스 롤 키로 처리 - businesses RLS가 admin
+    // 세션의 UPDATE를 막고 있어 클라이언트에서 직접 update()하면 조용히 실패했음) ──
+    if (action === 'assign_mannnam_manager' && req.method === 'PATCH') {
+      const { biz_id } = req.body || {};
+      if (!biz_id) return res.status(400).json({ error: 'biz_id required' });
+      const r = await sb(`businesses?id=eq.${biz_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ mannnam_role: 'manager' }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      const rows = await r.json();
+      return res.json({ ok: true, biz: Array.isArray(rows) ? rows[0] : null });
+    }
+    if (action === 'remove_mannnam_manager' && req.method === 'PATCH') {
+      const { biz_id } = req.body || {};
+      if (!biz_id) return res.status(400).json({ error: 'biz_id required' });
+      const r = await sb(`businesses?id=eq.${biz_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ mannnam_role: null }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
     // ── 바로만남 제휴매장 (관리자도 매니저와 동일하게 등록/수정 가능) ──
     if (action === 'barospot_restaurants') {
       const data = await sb(

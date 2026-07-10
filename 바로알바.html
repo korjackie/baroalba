@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='387',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='388',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -3286,7 +3286,7 @@
 
 <!-- 앱 언어 (업주) -->
 <div id="modal-owner-lang" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;flex-direction:column">
-  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f0f0f0;background:#fff;flex-shrink:0">
+  <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--sat-safe,0px) + 16px) 20px 16px;border-bottom:1px solid #f0f0f0;background:#fff;flex-shrink:0">
     <button onclick="cancelLang();document.getElementById('modal-owner-lang').style.display='none'" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
