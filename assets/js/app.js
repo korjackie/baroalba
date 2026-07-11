@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '396';
+  const _APP_V = '397';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=396').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=397').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -417,6 +417,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 바로모임 딥링크 처리
   const deepMoimCode = _dParams.get('moim');
   if (deepMoimCode) setTimeout(() => handleMoimDeeplink(deepMoimCode), 800);
+  // 바로미팅 딥링크 처리
+  const deepBaromeetId = _dParams.get('baromeet');
+  if (deepBaromeetId) setTimeout(() => handleBaromeetDeeplink(deepBaromeetId), 800);
   if (deepChatId && currentUser) setTimeout(() => {
     if (deepChatView === 'worker') openWChat(deepChatId, '업주');
     else openChat(deepChatId, '채팅');
@@ -16282,7 +16285,12 @@ function _renderBaromeetCard(m, joined) {
         </div>
         <div style="font-size:11px;color:#aaa;margin-top:2px">🕐 ${dtStr}</div>
       </div>
-      <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;flex-shrink:0;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:#7C3AED'}">${isFull?'마감':'자리있음'}</span>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button onclick="shareBaromeet('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="background:#f5f5f5;border:none;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" title="공유">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+        <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:#7C3AED'}">${isFull?'마감':'자리있음'}</span>
+      </div>
     </div>
     <!-- 모집현황 -->
     <div style="display:flex;gap:10px;background:#fafafa;border-radius:10px;padding:10px 12px;margin-bottom:10px">
@@ -16304,6 +16312,54 @@ function _renderBaromeetCard(m, joined) {
       : `<button onclick="applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
   </div>`;
 }
+
+// ── 바로미팅 공유 (바로모임 shareMoim()과 동일한 패턴) ──────
+async function shareBaromeet(id, title) {
+  const { data: m } = await db.from('gatherings')
+    .select('title, location_name, location_address, gathering_date')
+    .eq('id', id).single();
+  const dateStr = m?.gathering_date
+    ? new Date(m.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' })
+    : '일정 미정';
+  const locationStr = m?.location_name || m?.location_address || '장소 미정';
+  const link = `${location.origin}${location.pathname}?baromeet=${id}`;
+  const shareTitle = `[바로미팅] ${m?.title || title}`;
+  const shareText = `[바로미팅] ${m?.title || title}\n📅 ${dateStr}\n📍 ${locationStr}\n같이 참가해요!`;
+  const descLine = `📅 ${dateStr}  📍 ${locationStr}`;
+
+  if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
+    window.AndroidBridge.share(shareTitle, shareText, link);
+    return;
+  }
+  if (window.Kakao?.isInitialized?.()) {
+    try {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: shareTitle,
+          description: descLine,
+          imageUrl: `${location.origin}/icons/og-share.png`,
+          link: { mobileWebUrl: link, webUrl: link }
+        },
+        buttons: [{ title: '바로미팅 참가하기', link: { mobileWebUrl: link, webUrl: link } }]
+      });
+      return;
+    } catch(e) {}
+  }
+  if (navigator.share) {
+    navigator.share({ title: shareTitle, text: shareText, url: link }).catch(() => {});
+    return;
+  }
+  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
+}
+
+async function handleBaromeetDeeplink(id) {
+  const { data: m } = await db.from('gatherings').select('id, status').eq('id', id).eq('category', 'baromeeting').maybeSingle();
+  if (!m) { showToast('유효하지 않은 바로미팅 링크입니다'); return; }
+  openMannnamPanel();
+  if (m.status !== 'open') showToast('이미 마감되었거나 종료된 바로미팅이에요');
+}
+
 async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   if (!currentUser || isGuest) { showLoginPrompt('로그인 후 신청할 수 있어요','바로미팅 참가는 로그인이 필요합니다.'); return; }
 
