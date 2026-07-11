@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '394';
+  const _APP_V = '395';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=394').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=395').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -4061,16 +4061,22 @@ async function openWChat(applicationId, bizName) {
   _wchatAppId = applicationId;
   window._wchatCounterpart = { name, photoUrl: null, type: 'business' };
   document.getElementById('wchat-title').textContent = t('chat_with_name').replace('{name}', name);
-  document.getElementById('wchat-sub').textContent = '프로필 보기';
+  document.getElementById('wchat-sub').textContent = '';
   _updateCpHeader('wchat', window._wchatCounterpart);
   const _wo = document.getElementById('wchat-overlay');
   _wo.style.display = 'flex';
   history.pushState({ overlay: 'wchat' }, '');
   document.getElementById('wchat-input').value = '';
   // 상대방(업주) 정보 — 메시지 로드 전에 먼저 fetch (아바타 사진 반영)
+  // 같은 상대와 여러 건 지원 시 어느 공고 얘기인지 구분되도록 공고 제목도 같이 표시
   try {
-    const { data: _appData } = await db.from('applications').select('job_postings(businesses(id,name,photo_url,biz_type,region))').eq('id', applicationId).single();
+    const { data: _appData } = await db.from('applications').select('job_postings(title,businesses(id,name,photo_url,biz_type,region))').eq('id', applicationId).single();
     const biz = _appData?.job_postings?.businesses;
+    const jobTitle = _appData?.job_postings?.title;
+    if (_wchatAppId === applicationId) {
+      const subEl = document.getElementById('wchat-sub');
+      if (subEl) subEl.textContent = jobTitle || '';
+    }
     if (biz && _wchatAppId === applicationId) {
       window._wchatCounterpart = { name: biz.name || name, photoUrl: biz.photo_url || null, id: biz.id, bizType: biz.biz_type, region: biz.region, type: 'business' };
       document.getElementById('wchat-title').textContent = t('chat_with_name').replace('{name}', window._wchatCounterpart.name);
@@ -13370,7 +13376,7 @@ async function loadOwnerChatList() {
   }
 
   const { data: apps } = await db.from('applications')
-    .select('id, status, workers(name, phone), job_postings(title)')
+    .select('id, status, workers(name, phone, photo_url), job_postings(title)')
     .in('job_posting_id', jobIds);
 
   if (!apps?.length) {
@@ -13411,9 +13417,13 @@ async function loadOwnerChatList() {
     const time = new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
     const workerName = a.workers?.name || a.job_postings?.title || '지원자';
     const wac = avatarColor(workerName);
+    const photoUrl = a.workers?.photo_url;
+    const avatarHtml = photoUrl
+      ? `<img src="${photoUrl}" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex-shrink:0">`
+      : `<div style="width:44px;height:44px;border-radius:12px;background:${wac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${wac.fg};flex-shrink:0">${workerName.charAt(0)}</div>`;
     return `
     <div onclick="openChat('${a.id}','${workerName}')" style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.05);cursor:pointer;display:flex;align-items:center;gap:12px">
-      <div style="width:44px;height:44px;border-radius:12px;background:${wac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${wac.fg};flex-shrink:0">${workerName.charAt(0)}</div>
+      ${avatarHtml}
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
           <div style="font-size:14px;font-weight:800;color:#222">${workerName}</div>
@@ -14117,15 +14127,18 @@ async function openChat(applicationId, workerName) {
   _chatWorkerUserId = null;
   window._chatCounterpart = { name: workerName, photoUrl: null, type: 'worker' };
   document.getElementById('chat-title').textContent = t('chat_with_name').replace('{name}', workerName);
-  document.getElementById('chat-sub').textContent = '프로필 보기';
+  document.getElementById('chat-sub').textContent = '';
   _updateCpHeader('chat', window._chatCounterpart);
   const _co2 = document.getElementById('chat-overlay');
   _co2.style.display = 'flex';
   history.pushState({ overlay: 'chat' }, '');
   document.getElementById('chat-input').value = '';
-  // 알바생 정보 조회 (Push 알림용 kakao_uid + 프로필)
+  // 알바생 정보 조회 (Push 알림용 kakao_uid + 프로필) - 같은 지원자와 여러 건
+  // 지원 시 어느 공고 얘기인지 구분되도록 공고 제목도 같이 표시
   const { data: app } = await db.from('applications')
-    .select('workers(id,name,photo_url,kakao_uid,age,gender,region,rating,review_count,noshow_count,bio,skills)').eq('id', applicationId).single();
+    .select('job_postings(title), workers(id,name,photo_url,kakao_uid,age,gender,region,rating,review_count,noshow_count,bio,skills)').eq('id', applicationId).single();
+  const chatSubEl = document.getElementById('chat-sub');
+  if (chatSubEl) chatSubEl.textContent = app?.job_postings?.title || '';
   if (app?.workers?.kakao_uid) _chatWorkerUserId = app.workers.kakao_uid;
   if (app?.workers) {
     const w = app.workers;
