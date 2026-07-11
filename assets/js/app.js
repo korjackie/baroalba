@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '397';
+  const _APP_V = '398';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=397').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=398').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16360,15 +16360,43 @@ async function handleBaromeetDeeplink(id) {
   if (m.status !== 'open') showToast('이미 마감되었거나 종료된 바로미팅이에요');
 }
 
+// 신규가입자 한정 무료체험 이벤트: 기간 내 + 이 기간 중 가입한 유저는 포인트/이용권 차감 없이 신청,
+// 대신 식사비는 현장에서 실비로 결제 (프로모션 종료 시 enabled만 false로 바꾸면 됨)
+const BAROMEET_TRIAL_EVENT = {
+  enabled: true,
+  start: '2026-07-11T00:00:00+09:00',
+  end: '2026-08-10T23:59:59+09:00',
+};
+function _isBaromeetTrialEligible(joinedAt) {
+  if (!BAROMEET_TRIAL_EVENT.enabled || !joinedAt) return false;
+  const now = Date.now();
+  const start = new Date(BAROMEET_TRIAL_EVENT.start).getTime();
+  const end = new Date(BAROMEET_TRIAL_EVENT.end).getTime();
+  const joined = new Date(joinedAt).getTime();
+  return now >= start && now <= end && joined >= start;
+}
+
 async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   if (!currentUser || isGuest) { showLoginPrompt('로그인 후 신청할 수 있어요','바로미팅 참가는 로그인이 필요합니다.'); return; }
 
   const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', meetingId).eq('applicant_id', currentUser.id).limit(1);
   if (existing?.length) { showToast('이미 신청한 바로미팅이에요'); return; }
 
-  const { data: wRow } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
+  const { data: wRow } = await db.from('workers').select('gender, created_at').eq('kakao_uid', currentUser.id).maybeSingle();
   const gender = wRow?.gender;
   if (!gender) { showToast('바로만남 > 바로스팟에서 성별을 먼저 등록해주세요'); return; }
+
+  // 이벤트 기간 중 가입한 신규회원은 포인트/이용권 차감 없이 무료 체험 신청 (식사비는 현장 실비 결제)
+  if (_isBaromeetTrialEligible(wRow?.created_at)) {
+    showConfirm('🎉 신규가입 이벤트로 포인트 차감 없이 무료로 신청할 수 있어요!\n(식사비는 현장에서 실비로 결제해주세요)', async () => {
+      const ae = await _finalizeBaromeetJoin(meetingId, gender);
+      if (ae) { showToast('신청 중 오류가 발생했어요'); return; }
+      showToast('✅ 무료 체험 신청 완료! 정원이 차면 익명 단체채팅방이 열려요');
+      await _loadBaromeetList();
+      _openBaromeetTracking(meetingId);
+    }, { icon:'🎉', title:'바로미팅 무료체험 신청', okLabel:'무료로 신청하기' });
+    return;
+  }
 
   // 이용권(바로스팟/바로미팅 공용)이 있으면 이용권으로, 없으면 1회권과 같은 가격의 포인트로 결제
   const { data: passRow } = await db.from('barospot_passes')
