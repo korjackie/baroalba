@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='393',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='394',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -2605,6 +2605,7 @@
           <button type="button" id="fee-btn-fixed" onclick="selectMoimFee('fixed')" style="flex:1;padding:7px 4px;border-radius:10px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:11px;font-weight:700;cursor:pointer">금액입력</button>
         </div>
         <input id="f-moim-fee-amt" class="form-input" type="number" min="1" placeholder="1인당 금액 (원)" style="display:none">
+        <div id="f-moim-fee-hint" style="font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4"></div>
         <input type="hidden" id="f-moim-fee" value="0">
       </div>
     </div>

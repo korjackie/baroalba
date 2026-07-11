@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.service.notification.StatusBarNotification;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.RemoteInput;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -16,6 +17,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     static final String CHANNEL_ID      = "baroalba_channel";
     static final String REPLY_INPUT_KEY = "CHAT_REPLY_TEXT";
+    static final String GROUP_KEY        = "baroalba_notifications";
+    static final int    SUMMARY_NOTIF_ID = 999999;
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -25,12 +28,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String appId  = null;
         String type   = null;
 
-        if (remoteMessage.getNotification() != null) {
-            if (remoteMessage.getNotification().getTitle() != null)
-                title = remoteMessage.getNotification().getTitle();
-            if (remoteMessage.getNotification().getBody() != null)
-                body = remoteMessage.getNotification().getBody();
-        }
+        // data-only 메시지 우선 (서버가 항상 이 방식으로 보냄 - 앱이 백그라운드여도
+        // onMessageReceived()가 항상 호출되어 커스텀 알림(인라인 답장 등)이 항상 붙는다).
+        // 혹시 notification 필드가 온 경우를 위한 폴백만 유지.
+        if (remoteMessage.getData().containsKey("title"))
+            title = remoteMessage.getData().get("title");
+        else if (remoteMessage.getNotification() != null && remoteMessage.getNotification().getTitle() != null)
+            title = remoteMessage.getNotification().getTitle();
+
+        if (remoteMessage.getData().containsKey("body"))
+            body = remoteMessage.getData().get("body");
+        else if (remoteMessage.getNotification() != null && remoteMessage.getNotification().getBody() != null)
+            body = remoteMessage.getNotification().getBody();
+
         if (remoteMessage.getData().containsKey("url"))
             url = remoteMessage.getData().get("url");
         if (remoteMessage.getData().containsKey("app_id"))
@@ -50,7 +60,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private void showNotification(String title, String body, String url, String appId, String type) {
         createChannel();
 
-        int notifId = (int)(System.currentTimeMillis() % 100000);
+        // 같은 대화(appId)에서 온 메시지는 새로 쌓지 않고 기존 알림을 갱신 -
+        // appId가 없는 일반 알림만 매번 새 ID 사용
+        int notifId = appId != null ? ("chat_" + appId).hashCode() : (int) (System.currentTimeMillis() % 100000);
 
         String fullUrl = url.startsWith("http") ? url : "https://baroalba.multimove.co.kr" + url;
         Intent intent = new Intent(this, MainActivity.class);
@@ -67,7 +79,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setContentText(body)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pi);
+                .setContentIntent(pi)
+                .setGroup(GROUP_KEY);
 
         // 채팅 알림에만 인라인 답장 버튼 추가
         if ("chat".equals(type) && appId != null) {
@@ -95,7 +108,35 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
         NotificationManager mgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (mgr != null) mgr.notify(notifId, builder.build());
+        if (mgr != null) {
+            mgr.notify(notifId, builder.build());
+            updateSummaryNotification(mgr);
+        }
+    }
+
+    // 알림이 2개 이상 쌓이면 "바로알바 - N개의 새 메시지" 요약 알림으로 묶어서
+    // 알림창이 개별 알림으로 어지럽혀지지 않도록 함
+    private void updateSummaryNotification(NotificationManager mgr) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+        int count = 0;
+        try {
+            StatusBarNotification[] active = mgr.getActiveNotifications();
+            for (StatusBarNotification sbn : active) {
+                if (sbn.getId() != SUMMARY_NOTIF_ID) count++;
+            }
+        } catch (Exception e) { return; }
+        if (count < 2) return;
+
+        String summaryText = count + "개의 새 메시지";
+        NotificationCompat.Builder summary = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("바로알바")
+                .setContentText(summaryText)
+                .setStyle(new NotificationCompat.InboxStyle().setSummaryText(summaryText))
+                .setGroup(GROUP_KEY)
+                .setGroupSummary(true)
+                .setAutoCancel(true);
+        mgr.notify(SUMMARY_NOTIF_ID, summary.build());
     }
 
     private void createChannel() {

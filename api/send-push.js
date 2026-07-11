@@ -16,7 +16,12 @@ async function getFCMAccessToken() {
 
 async function sendFCM(fcmToken, title, body, url, appId, type) {
   const accessToken = await getFCMAccessToken();
-  const fcmData = { url: url || '/바로알바.html' };
+  // data-only 메시지로 전송 - 최상위 notification 필드가 있으면 앱이 백그라운드/종료
+  // 상태일 때 안드로이드 시스템이 onMessageReceived()를 거치지 않고 기본 알림을
+  // 자동 표시해버려서, 인라인 답장 액션 버튼을 붙이는 커스텀 코드가 항상 스킵됨
+  // (포그라운드에서만 우연히 동작하던 버그의 원인). data-only로 보내면 앱 상태와
+  // 무관하게 항상 커스텀 코드가 실행된다.
+  const fcmData = { title: title || '바로알바', body: body || '', url: url || '/바로알바.html' };
   if (appId) fcmData.app_id = String(appId);
   if (type) fcmData.type = type;
 
@@ -31,12 +36,8 @@ async function sendFCM(fcmToken, title, body, url, appId, type) {
       body: JSON.stringify({
         message: {
           token: fcmToken,
-          notification: { title, body },
           data: fcmData,
-          android: {
-            priority: 'high',
-            notification: { sound: 'default', channel_id: 'baroalba_channel' }
-          }
+          android: { priority: 'high' }
         }
       })
     }

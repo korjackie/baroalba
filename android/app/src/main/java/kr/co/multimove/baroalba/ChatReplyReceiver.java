@@ -37,17 +37,20 @@ public class ChatReplyReceiver extends BroadcastReceiver {
         final String msgContent = replyText.toString().trim();
         if (msgContent.isEmpty()) return;
 
+        final String senderId = extractUserIdFromJwt(authToken);
+        if (senderId == null) return;
+
         // 전송 중 표시: 알림 업데이트
         showSendingNotif(context, notifId, senderTitle, msgContent);
 
         // 백그라운드 스레드에서 Supabase REST API 호출
         new Thread(() -> {
-            boolean success = insertMessage(appId, msgContent, authToken);
+            boolean success = insertMessage(appId, senderId, msgContent, authToken);
             showResultNotif(context, notifId, senderTitle, msgContent, success);
         }).start();
     }
 
-    private boolean insertMessage(String appId, String content, String authToken) {
+    private boolean insertMessage(String appId, String senderId, String content, String authToken) {
         try {
             URL url = new URL(SUPABASE_URL + "/rest/v1/messages");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -61,8 +64,9 @@ public class ChatReplyReceiver extends BroadcastReceiver {
             conn.setDoOutput(true);
 
             String safeContent = content.replace("\\", "\\\\").replace("\"", "\\\"");
-            // messages 테이블: chat_id (FK), sender_role ('worker'|'business'), content
-            String body = "{\"chat_id\":\"" + appId + "\",\"content\":\"" + safeContent + "\",\"sender_role\":\"worker\"}";
+            // messages 테이블 실제 컬럼: application_id (FK), sender_id (uuid), content, is_read
+            String body = "{\"application_id\":\"" + appId + "\",\"sender_id\":\"" + senderId
+                    + "\",\"content\":\"" + safeContent + "\",\"is_read\":false}";
 
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body.getBytes(StandardCharsets.UTF_8));

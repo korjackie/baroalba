@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '393';
+  const _APP_V = '394';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=393').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=394').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -1796,6 +1796,13 @@ function selectMoimFee(type, amount) {
   });
   const amtEl = document.getElementById('f-moim-fee-amt');
   const feeEl = document.getElementById('f-moim-fee');
+  const hintEl = document.getElementById('f-moim-fee-hint');
+  const hints = {
+    free:  '',
+    split: '금액을 미리 정하지 않아요. 모임 당일 실제 비용(식사비 등)을 참가자끼리 그 자리에서 나눠 냅니다.',
+    fixed: '호스트가 정한 금액을 참가 전 미리 안내합니다. 참가자는 이 금액을 알고 신청해요.',
+  };
+  if (hintEl) hintEl.textContent = hints[type] || '';
   if (type === 'free')  { if (amtEl) amtEl.style.display = 'none'; if (feeEl) feeEl.value = '0'; }
   if (type === 'split') { if (amtEl) amtEl.style.display = 'none'; if (feeEl) feeEl.value = '-1'; }
   if (type === 'fixed') {
