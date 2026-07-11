@@ -907,23 +907,31 @@ window.addEventListener('popstate', () => {
   _fromPopState = false;
 });
 
-// ── 모바일 키보드가 입력창/저장버튼을 가리는 문제 방지 ──────
-// focusin 시점엔 키보드가 아직 다 안 올라온 상태라 스크롤 위치 계산이
-// 부정확함 - 실제 키보드가 완전히 올라와 뷰포트가 줄어드는 시점
-// (visualViewport resize)에 맞춰 스크롤해야 정확하게 가려지지 않음
+// ── 모바일 키보드가 입력창/버튼을 가리는 문제 전면 방지 ──────
+// 근본 원인: 탭 하단부에 있는 입력창에 포커스하면 키보드가 화면 절반 가까이
+// 차지하는데, 그 아래로 스크롤할 "여유 공간"이 페이지에 없으면 scrollIntoView를
+// 아무리 호출해도 실제로 스크롤이 안 됨(더 내려갈 곳이 없으므로). 그래서
+// 키보드가 열려있는 동안 .content 하단에 키보드 높이만큼 임시 여백을 만들어준
+// 뒤에 스크롤하는 방식으로 수정 - 이렇게 해야 어느 탭의 어느 입력창이든 항상
+// 키보드 위로 올라올 수 있음
 let _kbFocusedEl = null;
+const _kbContent = document.querySelector('.content');
+function _kbScrollFocused() {
+  if (_kbFocusedEl) _kbFocusedEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
 document.addEventListener('focusin', (e) => {
   const el = e.target;
   if (el.matches && el.matches('input, textarea, select')) {
     _kbFocusedEl = el;
-    // visualViewport 미지원 브라우저 대비 폴백
-    setTimeout(() => { if (_kbFocusedEl === el) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 400);
+    setTimeout(_kbScrollFocused, 400); // visualViewport 미지원 브라우저 대비 폴백
   }
 });
-document.addEventListener('focusout', () => { _kbFocusedEl = null; });
+document.addEventListener('focusout', () => { _kbFocusedEl = null; if (_kbContent) _kbContent.style.paddingBottom = ''; });
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
-    if (_kbFocusedEl) _kbFocusedEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const kbHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
+    if (_kbContent) _kbContent.style.paddingBottom = kbHeight > 100 ? (kbHeight + 100) + 'px' : '';
+    if (kbHeight > 100) setTimeout(_kbScrollFocused, 50);
   });
 }
 
