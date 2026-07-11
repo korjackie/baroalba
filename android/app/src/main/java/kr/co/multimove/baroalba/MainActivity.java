@@ -272,10 +272,13 @@ public class MainActivity extends AppCompatActivity {
     private class AndroidBridge {
         @JavascriptInterface
         public void share(String title, String text, String url) {
+            // EXTRA_SUBJECT를 같이 넣으면 카카오톡 등 일부 공유 대상이
+            // "제목 - 본문"처럼 이어붙여서 표시하는데, text 안에 이미 제목이
+            // 첫 줄로 들어있어 내용이 중복으로 두 번 보이는 문제가 있었음.
+            // text/plain 공유는 제목이 필수가 아니므로 EXTRA_SUBJECT는 생략.
             String content = text + "\n" + url;
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);
             shareIntent.putExtra(Intent.EXTRA_TEXT, content);
             startActivity(Intent.createChooser(shareIntent, "공유하기"));
         }

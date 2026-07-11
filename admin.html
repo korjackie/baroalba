@@ -1558,7 +1558,7 @@ async function loadBaromeetings() {
         const maleMax = m.baromeeting_male_max ?? 4, femaleMax = m.baromeeting_female_max ?? 4;
         const maleCur = m.baromeeting_male_cur ?? 0, femaleCur = m.baromeeting_female_cur ?? 0;
         return `
-        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <div onclick="editBaromeeting('${m.id}')" style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
             <div style="min-width:0">
               <div style="font-size:14px;font-weight:800;color:#1e293b">${m.title || '(제목없음)'}</div>
@@ -1568,9 +1568,9 @@ async function loadBaromeetings() {
           </div>
           <div style="font-size:12px;color:#64748b;margin-bottom:10px">여성 ${femaleCur}/${femaleMax}명 · 남성 ${maleCur}/${maleMax}명${m.entry_fee ? ' · 참가비 ' + m.entry_fee.toLocaleString() + '원' : ''}</div>
           <div style="display:flex;gap:6px">
-            <button class="r-btn r-btn-reviewing" onclick="editBaromeeting('${m.id}')">수정</button>
-            <button class="r-btn ${isClosed ? 'r-btn-done' : 'r-btn-dismiss'}" onclick="toggleBaromeeting('${m.id}', '${isClosed ? 'open' : 'closed'}')">${isClosed ? '재오픈' : '강제마감'}</button>
-            <button class="r-btn r-btn-close" onclick="deleteBaromeetingById('${m.id}')">삭제</button>
+            <button class="r-btn r-btn-reviewing" onclick="event.stopPropagation();editBaromeeting('${m.id}')">수정</button>
+            <button class="r-btn ${isClosed ? 'r-btn-done' : 'r-btn-dismiss'}" onclick="event.stopPropagation();toggleBaromeeting('${m.id}', '${isClosed ? 'open' : 'closed'}')">${isClosed ? '재오픈' : '강제마감'}</button>
+            <button class="r-btn r-btn-close" onclick="event.stopPropagation();deleteBaromeetingById('${m.id}')">삭제</button>
           </div>
         </div>`;
       }).join('')
@@ -1671,6 +1671,7 @@ function editBaromeeting(id) {
   document.getElementById('bm-female-max').value = m.baromeeting_female_max ?? 4;
   document.getElementById('bm-fee').value = m.entry_fee || 0;
   document.getElementById('baromeeting-form-title').textContent = '바로미팅 수정';
+  document.getElementById('baromeeting-form-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
 async function saveBaromeeting() {
