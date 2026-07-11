@@ -476,7 +476,7 @@
 
   <!-- 바로미팅 개설·관리 -->
   <div class="tab-content" id="tab-baromeetings">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">4:4 정원제 바로미팅을 등록/수정합니다. 정원이 다 차면 유저 앱에 익명 단체채팅방이 자동으로 열립니다.</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로미팅을 등록/수정합니다. 남녀 정원은 자유롭게 설정할 수 있어요(예: 4:4, 5:5, 7:7). 정원이 다 차면 유저 앱에 익명 단체채팅방이 자동으로 열립니다.</div>
     <div id="baromeetings-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div id="baromeeting-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">바로미팅 개설</div>
@@ -484,6 +484,21 @@
       <div style="display:flex;flex-direction:column;gap:8px">
         <input id="bm-title" type="text" placeholder="미팅 제목 (예: 강남역 저녁 소셜 미팅)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <textarea id="bm-desc" placeholder="소개/안내 문구" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
+        <div style="display:flex;gap:8px">
+          <button type="button" id="bm-loc-tab-partner" onclick="setBmLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:700;cursor:pointer">제휴매장에서 선택</button>
+          <button type="button" id="bm-loc-tab-search" onclick="setBmLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">새 장소 검색</button>
+        </div>
+        <select id="bm-partner-select" onchange="selectBmPartnerRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
+          <option value="">제휴매장을 선택하세요</option>
+        </select>
+        <div id="bm-search-block" style="display:none">
+          <div style="display:flex;gap:8px">
+            <input id="bm-place-query" type="text" placeholder="장소명 검색 (예: 강남 OO카페)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBmPlace();}">
+            <button onclick="searchBmPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+          </div>
+          <div id="bm-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-top:8px"></div>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">선택하거나 검색하면 아래 장소명·주소가 자동으로 채워집니다. 필요하면 직접 수정할 수도 있어요.</div>
         <input id="bm-location-name" type="text" placeholder="장소명 (예: 강남역 OO카페)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="bm-location-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <div>
@@ -528,13 +543,9 @@
         <input id="r-name" type="text" placeholder="식당명" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <textarea id="r-menu" placeholder="메뉴 설명" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
-        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">아래 식사비·할인율은 선택 입력입니다. 비워두면 0원/기본 할인율로 저장되며, 매장 상세 화면에 참고용으로만 표시됩니다.</div>
-        <div style="display:flex;gap:8px">
-          <input id="r-female-price" type="number" min="0" placeholder="여성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="r-male-price" type="number" min="0" placeholder="남성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          <input id="r-discount" type="number" min="0" max="100" placeholder="할인율%(선택)" style="width:100px;flex-shrink:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        </div>
+        <textarea id="r-menu" placeholder="메뉴 설명 (네이버 검색으로는 자동 입력되지 않아요 - 직접 입력)" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
+        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">아래 식사비는 선택 입력입니다. 비워두면 0원으로 저장되며, 매장 상세 화면에 참고용으로만 표시됩니다.</div>
+        <input id="r-base-price" type="number" min="0" placeholder="기본 식사비(선택, 1인 원)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
         <div style="display:flex;gap:8px">
           <button onclick="saveRestaurant()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
           <button onclick="resetRestaurantForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
@@ -866,7 +877,7 @@ function switchTab(name) {
   if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
   if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
   if (name === 'pass-pricing' && document.getElementById('pass-pricing-list').innerHTML.includes('로딩')) loadPassPricing();
-  if (name === 'baromeetings' && document.getElementById('baromeetings-list').innerHTML.includes('로딩')) loadBaromeetings();
+  if (name === 'baromeetings' && document.getElementById('baromeetings-list').innerHTML.includes('로딩')) { loadBaromeetings(); loadBmPartnerOptions(); }
 
   // 하드웨어 뒤로가기 대응용 가상 히스토리 (popstate 처리 중 재호출된 경우엔 다시 쌓지 않음)
   if (!_fromPopState) history.pushState({ adminTab: name }, '');
@@ -1534,6 +1545,72 @@ async function loadBaromeetings() {
     : '<div class="empty">개설된 바로미팅이 없습니다</div>';
 }
 
+// ── 바로미팅 장소 선택: 제휴매장에서 고르거나 새로 검색 ──────
+function setBmLocationMode(mode) {
+  const active = { background:'#7C3AED', border:'#7C3AED', color:'#fff' };
+  const inactive = { background:'#fff', border:'#e2e8f0', color:'#64748b' };
+  const partnerBtn = document.getElementById('bm-loc-tab-partner');
+  const searchBtn = document.getElementById('bm-loc-tab-search');
+  const p = mode === 'partner' ? active : inactive;
+  const s = mode === 'search' ? active : inactive;
+  partnerBtn.style.background = p.background; partnerBtn.style.borderColor = p.border; partnerBtn.style.color = p.color;
+  searchBtn.style.background = s.background; searchBtn.style.borderColor = s.border; searchBtn.style.color = s.color;
+  document.getElementById('bm-partner-select').style.display = mode === 'partner' ? 'block' : 'none';
+  document.getElementById('bm-search-block').style.display = mode === 'search' ? 'block' : 'none';
+  if (mode === 'partner') loadBmPartnerOptions();
+}
+
+async function loadBmPartnerOptions() {
+  const sel = document.getElementById('bm-partner-select');
+  const data = await adminApi('barospot_restaurants');
+  const list = Array.isArray(data) ? data.filter(r => r.is_active) : [];
+  sel._list = list;
+  sel.innerHTML = '<option value="">제휴매장을 선택하세요</option>' +
+    (list.length ? list.map(r => `<option value="${r.id}">${r.name}</option>`).join('') : '<option value="" disabled>등록된 제휴매장이 없어요</option>');
+}
+
+function selectBmPartnerRestaurant() {
+  const sel = document.getElementById('bm-partner-select');
+  const r = (sel._list || []).find(x => x.id === sel.value);
+  if (!r) return;
+  document.getElementById('bm-location-name').value = r.name || '';
+  document.getElementById('bm-location-address').value = r.address || '';
+}
+
+let _bmPlaceItems = [];
+async function searchBmPlace() {
+  const query = document.getElementById('bm-place-query').value.trim();
+  if (!query) { showToast('장소명이나 지역+장소명을 입력해주세요\n예: 강남 OO카페'); return; }
+  const box = document.getElementById('bm-place-results');
+  box.style.display = 'block';
+  box.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 중...</div>';
+  try {
+    const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    if (!res.ok || !data.items?.length) {
+      box.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 결과가 없어요. 지역명+장소명으로 검색해보세요</div>';
+      return;
+    }
+    _bmPlaceItems = data.items;
+    box.innerHTML = data.items.map((item, i) => `
+      <div onclick="selectBmPlace(${i})" style="padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer">
+        <div style="font-size:13px;font-weight:800;color:#1e293b">${item.title}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">${item.roadAddress || item.address || ''}${item.telephone ? ' · ' + item.telephone : ''}</div>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 중 오류가 발생했어요</div>';
+  }
+}
+
+function selectBmPlace(idx) {
+  const item = _bmPlaceItems[idx];
+  if (!item) return;
+  document.getElementById('bm-location-name').value = item.title || '';
+  document.getElementById('bm-location-address').value = item.roadAddress || item.address || '';
+  document.getElementById('bm-place-results').style.display = 'none';
+  document.getElementById('bm-place-query').value = '';
+}
+
 function resetBaromeetingForm() {
   document.getElementById('bm-id').value = '';
   ['bm-title','bm-desc','bm-location-name','bm-location-address','bm-datetime'].forEach(k => document.getElementById(k).value = '');
@@ -1541,6 +1618,7 @@ function resetBaromeetingForm() {
   document.getElementById('bm-female-max').value = '4';
   document.getElementById('bm-fee').value = '0';
   document.getElementById('baromeeting-form-title').textContent = '바로미팅 개설';
+  setBmLocationMode('partner');
 }
 
 function editBaromeeting(id) {
@@ -1627,7 +1705,7 @@ async function loadRestaurants() {
 
 function resetRestaurantForm() {
   document.getElementById('r-id').value = '';
-  ['r-name','r-address','r-phone','r-menu','r-female-price','r-male-price','r-discount'].forEach(k => document.getElementById(k).value = '');
+  ['r-name','r-address','r-phone','r-menu','r-base-price'].forEach(k => document.getElementById(k).value = '');
   document.getElementById('restaurant-form-title').textContent = '제휴 매장 등록';
   document.getElementById('r-place-query').value = '';
   document.getElementById('r-place-results').style.display = 'none';
@@ -1665,6 +1743,10 @@ function selectRestaurantPlace(idx) {
   document.getElementById('r-name').value = item.title || '';
   document.getElementById('r-address').value = item.roadAddress || item.address || '';
   document.getElementById('r-phone').value = item.telephone || '';
+  // 네이버 지역검색 API는 메뉴 정보를 제공하지 않음 - 대신 업종 카테고리를
+  // 메뉴 설명 칸에 시작점으로 채워주고 관리자가 다듬도록 함
+  const menuEl = document.getElementById('r-menu');
+  if (item.category && !menuEl.value.trim()) menuEl.value = item.category;
   document.getElementById('r-place-results').style.display = 'none';
   document.getElementById('r-place-query').value = '';
 }
@@ -1677,9 +1759,7 @@ function editRestaurant(id) {
   document.getElementById('r-address').value = r.address || '';
   document.getElementById('r-phone').value = r.phone || '';
   document.getElementById('r-menu').value = r.menu_description || '';
-  document.getElementById('r-female-price').value = r.female_price || '';
-  document.getElementById('r-male-price').value = r.male_price || '';
-  document.getElementById('r-discount').value = r.discount_pct || 5;
+  document.getElementById('r-base-price').value = r.base_price || '';
   document.getElementById('restaurant-form-title').textContent = '제휴 매장 수정';
 }
 
@@ -1691,9 +1771,7 @@ async function saveRestaurant() {
     address: document.getElementById('r-address').value.trim(),
     phone: document.getElementById('r-phone').value.trim(),
     menu_description: document.getElementById('r-menu').value.trim(),
-    female_price: document.getElementById('r-female-price').value,
-    male_price: document.getElementById('r-male-price').value,
-    discount_pct: document.getElementById('r-discount').value,
+    base_price: document.getElementById('r-base-price').value,
   };
   if (!payload.name) { showToast('식당명을 입력해주세요'); return; }
   const result = await adminApi('save_restaurant', id ? 'PATCH' : 'POST', payload);

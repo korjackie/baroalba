@@ -118,17 +118,19 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 제휴매장 등록/수정 ──────────────────────────────
+    // 실제 barospot_restaurants 스키마: name, address, phone, menu_description,
+    // base_price(단일 가격, 성별 구분 없음), photo_url, is_active, business_id.
+    // (이전 코드는 female_price/male_price/discount_pct를 저장하려 했는데 그런
+    // 컬럼이 애초에 존재한 적이 없어 매번 PGRST204로 저장이 실패하고 있었음)
     if (action === 'save_restaurant' && (req.method === 'POST' || req.method === 'PATCH')) {
-      const { id, name, address, phone, menu_description, female_price, male_price, discount_pct } = req.body || {};
+      const { id, name, address, phone, menu_description, base_price } = req.body || {};
       if (!name || !name.trim()) return res.status(400).json({ error: '식당명을 입력해주세요' });
       const payload = {
         name: name.trim(),
         address: (address || '').trim(),
         phone: (phone || '').trim(),
         menu_description: (menu_description || '').trim(),
-        female_price: parseInt(female_price) || 0,
-        male_price: parseInt(male_price) || 0,
-        discount_pct: parseInt(discount_pct) || 5,
+        base_price: base_price ? parseInt(base_price) || 0 : 0,
       };
       let r;
       if (id) {

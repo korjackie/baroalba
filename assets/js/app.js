@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '395';
+  const _APP_V = '396';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=395').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=396').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5332,7 +5332,7 @@ function _renderChatList() {
             <div style="font-size:12px;color:${unread>0?'#333':'#aaa'};font-weight:${unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${preview}</div>
             ${unread>0?`<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>`:''}
           </div>
-          <div style="font-size:11px;color:#d0d0d0;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
+          <div style="font-size:11px;color:#7C3AED;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
         </div>
       </div>
       <button class="chat-fav-btn" onclick="_toggleChatFav('${a.id}',event)">${isFav?'⭐':'☆'}</button>
@@ -5726,65 +5726,88 @@ async function uploadChatImage(file) {
   return data.publicUrl;
 }
 
-let _pendingWChatFile = null;
-let _pendingChatFile = null;
+let _pendingWChatFiles = [];
+let _pendingChatFiles = [];
 
 function sendWChatImage(inputEl) {
-  const file = inputEl.files[0];
-  if (!file) return;
+  const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
+  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
   inputEl.value = '';
   closeMediaPanel('wchat');
-  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
-  _pendingWChatFile = file;
+  if (!files.length) return;
+  _pendingWChatFiles = files;
   const bar = document.getElementById('wchat-img-preview-bar');
   const thumb = document.getElementById('wchat-img-preview-thumb');
-  thumb.src = URL.createObjectURL(file);
+  thumb.src = URL.createObjectURL(files[0]);
+  _setImgPreviewCountBadge('wchat', files.length);
   bar.style.display = 'flex';
 }
 
 function cancelWChatImage() {
-  _pendingWChatFile = null;
+  _pendingWChatFiles = [];
   document.getElementById('wchat-img-preview-bar').style.display = 'none';
 }
 
 function sendChatImage(inputEl) {
-  const file = inputEl.files[0];
-  if (!file) return;
+  const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
+  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
   inputEl.value = '';
   closeMediaPanel('chat');
-  if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 이미지만 전송 가능합니다'); return; }
-  _pendingChatFile = file;
+  if (!files.length) return;
+  _pendingChatFiles = files;
   const bar = document.getElementById('chat-img-preview-bar');
   const thumb = document.getElementById('chat-img-preview-thumb');
-  thumb.src = URL.createObjectURL(file);
+  thumb.src = URL.createObjectURL(files[0]);
+  _setImgPreviewCountBadge('chat', files.length);
   bar.style.display = 'flex';
 }
 
 function cancelChatImage() {
-  _pendingChatFile = null;
+  _pendingChatFiles = [];
   document.getElementById('chat-img-preview-bar').style.display = 'none';
+}
+
+// 여러 장 선택 시 미리보기 썸네일 위에 "+N" 뱃지 표시 (미리보기 자체는 1장만 보여주고
+// 실제 전송은 선택한 장수만큼 순서대로 개별 메시지로 전송됨)
+function _setImgPreviewCountBadge(prefix, count) {
+  const thumbWrap = document.getElementById(prefix + '-img-preview-thumb')?.parentElement;
+  if (!thumbWrap) return;
+  let badge = document.getElementById(prefix + '-img-preview-count');
+  if (count <= 1) { if (badge) badge.remove(); return; }
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = prefix + '-img-preview-count';
+    badge.style.cssText = 'position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-size:10px;font-weight:900;border-radius:10px;padding:2px 6px;line-height:1.2';
+    thumbWrap.style.position = thumbWrap.style.position || 'relative';
+    thumbWrap.appendChild(badge);
+  }
+  badge.textContent = `+${count - 1}`;
 }
 
 async function _uploadAndSendWChatImage() {
-  const file = _pendingWChatFile;
-  _pendingWChatFile = null;
+  const files = _pendingWChatFiles;
+  _pendingWChatFiles = [];
   document.getElementById('wchat-img-preview-bar').style.display = 'none';
-  showToast('이미지 전송 중...');
-  try {
-    const url = await uploadChatImage(file);
-    await _doSendWChat('[img]' + url);
-  } catch(e) { showToast('이미지 전송 실패'); }
+  showToast(files.length > 1 ? `이미지 ${files.length}장 전송 중...` : '이미지 전송 중...');
+  for (const file of files) {
+    try {
+      const url = await uploadChatImage(file);
+      await _doSendWChat('[img]' + url);
+    } catch(e) { showToast('이미지 전송 실패'); }
+  }
 }
 
 async function _uploadAndSendChatImage() {
-  const file = _pendingChatFile;
-  _pendingChatFile = null;
+  const files = _pendingChatFiles;
+  _pendingChatFiles = [];
   document.getElementById('chat-img-preview-bar').style.display = 'none';
-  showToast('이미지 전송 중...');
-  try {
-    const url = await uploadChatImage(file);
-    await _doSendChat('[img]' + url);
-  } catch(e) { showToast('이미지 전송 실패'); }
+  showToast(files.length > 1 ? `이미지 ${files.length}장 전송 중...` : '이미지 전송 중...');
+  for (const file of files) {
+    try {
+      const url = await uploadChatImage(file);
+      await _doSendChat('[img]' + url);
+    } catch(e) { showToast('이미지 전송 실패'); }
+  }
 }
 
 async function _doSendWChat(content) {
@@ -5827,7 +5850,7 @@ function _hasBadWord(text) {
 }
 
 async function sendWChatMessage() {
-  if (_pendingWChatFile) { await _uploadAndSendWChatImage(); return; }
+  if (_pendingWChatFiles.length) { await _uploadAndSendWChatImage(); return; }
   const input = document.getElementById('wchat-input');
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
@@ -13433,7 +13456,7 @@ async function loadOwnerChatList() {
           <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content?.startsWith('[img]') ? '\u{1F4F7} 사진' : msg.content}</div>
           ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
         </div>
-        <div style="font-size:11px;color:#bbb;margin-top:2px">${a.job_postings?.title || ''}</div>
+        <div style="font-size:11px;color:#7C3AED;font-weight:600;margin-top:2px">${a.job_postings?.title || ''}</div>
       </div>
     </div>`;
   }).join('');
@@ -14252,7 +14275,7 @@ async function _doSendChat(content) {
 }
 
 async function sendChatMessage() {
-  if (_pendingChatFile) { await _uploadAndSendChatImage(); return; }
+  if (_pendingChatFiles.length) { await _uploadAndSendChatImage(); return; }
   const input = document.getElementById('chat-input');
   const content = input.value.trim();
   if (!content) return;

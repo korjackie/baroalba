@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST' && req.query.action === 'submit_spot') {
-      const { name, address, phone, menu_description, female_price, male_price, discount_pct } = req.body || {};
+      const { name, address, phone, menu_description, base_price } = req.body || {};
       if (!name || !name.trim()) return res.status(400).json({ error: '매장명을 입력해주세요' });
       if (!address || !address.trim()) return res.status(400).json({ error: '주소를 입력해주세요' });
 
@@ -57,9 +57,7 @@ module.exports = async function handler(req, res) {
         address: address.trim(),
         phone: (phone || '').trim(),
         menu_description: (menu_description || '').trim(),
-        female_price: parseInt(female_price) || 0,
-        male_price: parseInt(male_price) || 0,
-        discount_pct: parseInt(discount_pct) || 0,
+        base_price: base_price ? parseInt(base_price) || 0 : 0,
       };
 
       let r;
