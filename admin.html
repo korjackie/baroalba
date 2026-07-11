@@ -543,6 +543,7 @@
         <input id="r-name" type="text" placeholder="식당명" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="r-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+        <div id="r-phone-hint" style="display:none;font-size:11px;color:#94a3b8;margin:-4px 0 0"></div>
         <textarea id="r-menu" placeholder="메뉴 설명 (네이버 검색으로는 자동 입력되지 않아요 - 직접 입력)" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
         <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">아래 식사비는 선택 입력입니다. 비워두면 0원으로 저장되며, 매장 상세 화면에 참고용으로만 표시됩니다.</div>
         <input id="r-base-price" type="number" min="0" placeholder="기본 식사비(선택, 1인 원)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
@@ -901,6 +902,17 @@ window.addEventListener('popstate', () => {
   _fromPopState = true;
   switchTab(cur === group ? 'dashboard' : group);
   _fromPopState = false;
+});
+
+// ── 모바일 키보드가 입력창/저장버튼을 가리는 문제 방지 ──────
+// 폼이 길어지면(바로미팅 개설 등) 키보드가 올라왔을 때 포커스된 입력창이나
+// 그 아래 저장 버튼이 가려지기 쉬움 - 포커스 시 해당 요소를 화면 중앙으로
+// 스크롤해서 항상 보이게 함 (키보드가 다 올라온 뒤 스크롤하도록 약간 지연)
+document.addEventListener('focusin', (e) => {
+  const el = e.target;
+  if (el.matches && el.matches('input, textarea, select')) {
+    setTimeout(() => { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 300);
+  }
 });
 
 // ── API 호출 ─────────────────────────────────────────────
@@ -1709,6 +1721,7 @@ function resetRestaurantForm() {
   document.getElementById('restaurant-form-title').textContent = '제휴 매장 등록';
   document.getElementById('r-place-query').value = '';
   document.getElementById('r-place-results').style.display = 'none';
+  document.getElementById('r-phone-hint').style.display = 'none';
 }
 
 // ── 네이버 플레이스 검색 (제휴 매장 등록용) ──────────────
@@ -1743,6 +1756,16 @@ function selectRestaurantPlace(idx) {
   document.getElementById('r-name').value = item.title || '';
   document.getElementById('r-address').value = item.roadAddress || item.address || '';
   document.getElementById('r-phone').value = item.telephone || '';
+  // 네이버 지역검색 오픈API는 예약시스템 연동 매장 등 상당수에서 전화번호를
+  // 비워서 줌(실제 네이버 플레이스 페이지엔 있어도) - 그런 경우 검색 링크로 대체
+  const phoneHint = document.getElementById('r-phone-hint');
+  if (!item.telephone) {
+    const q = encodeURIComponent(item.title + ' ' + (item.roadAddress || item.address || ''));
+    phoneHint.innerHTML = `전화번호를 못 가져왔어요 - <a href="https://map.naver.com/v5/search/${q}" target="_blank" rel="noopener" style="color:#7C3AED;font-weight:700">네이버지도에서 찾기 ↗</a>`;
+    phoneHint.style.display = 'block';
+  } else {
+    phoneHint.style.display = 'none';
+  }
   // 네이버 지역검색 API는 메뉴 정보를 제공하지 않음 - 대신 업종 카테고리를
   // 메뉴 설명 칸에 시작점으로 채워주고 관리자가 다듬도록 함
   const menuEl = document.getElementById('r-menu');
