@@ -56,6 +56,28 @@ async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) 
   }));
 }
 
+// 승인/거절 시마다 실제 승인건수 기준으로 성별 정원 카운트를 재계산 - 수동 +1/-1 방식은
+// 과거 데이터(승인단계 도입 전 신청건 등)와 어긋나면 영구적으로 드리프트되는 문제가 있었음
+async function recomputeBaromeetCounts(gatheringId, svcKey) {
+  const appsRes = await sb(`gathering_applications?gathering_id=eq.${gatheringId}&status=eq.approved&select=applicant_id`, svcKey);
+  const apps = await appsRes.json();
+  const applicantIds = [...new Set((apps || []).map(a => a.applicant_id).filter(Boolean))];
+  let male = 0, female = 0;
+  if (applicantIds.length) {
+    const workersRes = await sb(`workers?kakao_uid=in.(${applicantIds.join(',')})&select=kakao_uid,gender`, svcKey);
+    const workers = await workersRes.json();
+    (workers || []).forEach(w => {
+      if (w.gender === 'male') male++;
+      else if (w.gender === 'female') female++;
+    });
+  }
+  await sb(`gatherings?id=eq.${gatheringId}`, svcKey, {
+    method: 'PATCH',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ baromeeting_male_cur: male, baromeeting_female_cur: female }),
+  });
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
@@ -322,6 +344,7 @@ module.exports = async function handler(req, res) {
         method: 'PATCH', body: JSON.stringify({ status: 'approved' }),
       });
       if (!r.ok) return res.status(502).json({ error: await r.text() });
+      await recomputeBaromeetCounts(app.gathering_id, svcKey);
 
       const gRows = await sb(`gatherings?id=eq.${app.gathering_id}&select=title`, svcKey).then(r => r.json());
       const meetingTitle = gRows?.[0]?.title || '바로미팅';
@@ -349,22 +372,11 @@ module.exports = async function handler(req, res) {
       const app = appRows?.[0];
       if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
 
-      const workerRows = await sb(`workers?kakao_uid=eq.${app.applicant_id}&select=gender`, svcKey).then(r => r.json());
-      const gender = workerRows?.[0]?.gender;
-      const col = gender === 'male' ? 'baromeeting_male_cur' : gender === 'female' ? 'baromeeting_female_cur' : null;
-
       const r = await sb(`gathering_applications?id=eq.${application_id}`, svcKey, {
         method: 'PATCH', body: JSON.stringify({ status: 'rejected' }),
       });
       if (!r.ok) return res.status(502).json({ error: await r.text() });
-
-      if (col && app.status !== 'rejected') {
-        const gRows = await sb(`gatherings?id=eq.${app.gathering_id}&select=${col}`, svcKey).then(r => r.json());
-        const cur = gRows?.[0]?.[col] || 0;
-        await sb(`gatherings?id=eq.${app.gathering_id}`, svcKey, {
-          method: 'PATCH', body: JSON.stringify({ [col]: Math.max(0, cur - 1) }),
-        });
-      }
+      await recomputeBaromeetCounts(app.gathering_id, svcKey);
 
       const gRows2 = await sb(`gatherings?id=eq.${app.gathering_id}&select=title`, svcKey).then(r => r.json());
       const meetingTitle = gRows2?.[0]?.title || '바로미팅';

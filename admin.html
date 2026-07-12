@@ -478,62 +478,84 @@
 
   <!-- 바로미팅 개설·관리 -->
   <div class="tab-content" id="tab-baromeetings">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로미팅을 등록/수정합니다. 남녀 정원은 자유롭게 설정할 수 있어요(예: 4:4, 5:5, 7:7). 정원이 다 차면 유저 앱에 익명 단체채팅방이 자동으로 열립니다.</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">현재 모집중/마감된 바로미팅 목록입니다. 새로 개설하려면 아래 버튼을 눌러주세요.</div>
+    <button type="button" onclick="openBmCreateChoice()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer">+ 새로 개설</button>
     <div id="baromeetings-list"><div class="loading">로딩 중...</div></div>
-    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div id="baromeeting-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">바로미팅 개설</div>
-      <div id="bm-applicants-section" style="display:none;margin-bottom:14px">
-        <button type="button" onclick="toggleBmApplicants()" style="width:100%;text-align:left;padding:10px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:10px;font-size:12.5px;font-weight:800;color:#7C3AED;cursor:pointer">👥 신청자 현황 보기 <span id="bm-applicants-toggle-arrow">▾</span></button>
-        <div id="bm-applicants-list" style="display:none;margin-top:8px"></div>
-      </div>
-      <input type="hidden" id="bm-id">
+  </div>
+
+  <!-- 바로미팅/바로스팟 개설 선택 팝업 -->
+  <div id="bm-create-choice-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px" onclick="if(event.target===this)closeBmCreateChoice()">
+    <div style="background:#fff;border-radius:16px;padding:20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
+      <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:16px">무엇을 개설할까요?</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="bm-title" type="text" placeholder="미팅 제목 (예: 강남역 저녁 소셜 미팅)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <textarea id="bm-desc" placeholder="소개/안내 문구" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
-        <div style="display:flex;gap:8px">
-          <button type="button" id="bm-loc-tab-partner" onclick="setBmLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:700;cursor:pointer">제휴매장에서 선택</button>
-          <button type="button" id="bm-loc-tab-search" onclick="setBmLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">새 장소 검색</button>
+        <button onclick="chooseBmCreate('meeting')" style="padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left">🤝 바로미팅 개설<div style="font-size:11px;font-weight:500;opacity:0.85;margin-top:2px">남녀 정원을 정해 소셜 미팅을 엽니다</div></button>
+        <button onclick="chooseBmCreate('spot')" style="padding:14px;background:#f1f5f9;color:#1e293b;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left">🍷 바로스팟(제휴매장) 등록<div style="font-size:11px;font-weight:500;color:#64748b;margin-top:2px">제휴 매장을 등록하면 바로스팟으로 열립니다</div></button>
+      </div>
+      <button onclick="closeBmCreateChoice()" style="width:100%;margin-top:12px;padding:10px;background:none;border:none;color:#94a3b8;font-size:12.5px;font-weight:700;cursor:pointer">취소</button>
+    </div>
+  </div>
+
+  <!-- 바로미팅 개설/수정 패널 -->
+  <div class="detail-overlay" id="bm-form-overlay" onclick="if(event.target===this)closeBmForm()">
+    <div class="detail-panel" onclick="event.stopPropagation()" style="max-height:93vh">
+      <div class="dp-header">
+        <button onclick="closeBmForm()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
+        <span id="baromeeting-form-title" style="font-size:16px;font-weight:800;color:#1e293b">바로미팅 개설</span>
+      </div>
+      <div class="dp-body" style="overflow-y:auto">
+        <div id="bm-applicants-section" style="display:none;margin-bottom:14px">
+          <button type="button" onclick="toggleBmApplicants()" style="width:100%;text-align:left;padding:10px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:10px;font-size:12.5px;font-weight:800;color:#7C3AED;cursor:pointer">👥 신청자 현황 보기 <span id="bm-applicants-toggle-arrow">▾</span></button>
+          <div id="bm-applicants-list" style="display:none;margin-top:8px"></div>
         </div>
-        <select id="bm-partner-select" onchange="selectBmPartnerRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
-          <option value="">제휴매장을 선택하세요</option>
-        </select>
-        <div id="bm-search-block" style="display:none">
+        <input type="hidden" id="bm-id">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input id="bm-title" type="text" placeholder="미팅 제목 (예: 강남역 저녁 소셜 미팅)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <textarea id="bm-desc" placeholder="소개/안내 문구" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
           <div style="display:flex;gap:8px">
-            <input id="bm-place-query" type="text" placeholder="장소명 검색 (예: 강남 OO카페)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBmPlace();}">
-            <button onclick="searchBmPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+            <button type="button" id="bm-loc-tab-partner" onclick="setBmLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:700;cursor:pointer">제휴매장에서 선택</button>
+            <button type="button" id="bm-loc-tab-search" onclick="setBmLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">새 장소 검색</button>
           </div>
-          <div id="bm-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-top:8px"></div>
-        </div>
-        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">선택하거나 검색하면 아래 장소명·주소가 자동으로 채워집니다. 필요하면 직접 수정할 수도 있어요.</div>
-        <input id="bm-location-name" type="text" placeholder="장소명 (예: 강남역 OO카페)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <input id="bm-location-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">모임 일시</div>
-          <div style="display:flex;gap:8px">
-            <div style="position:relative;flex:1.3;min-width:0">
-              <input id="bm-date" type="date" oninput="updateBmDateDisplay()" onchange="updateBmDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
-              <div id="bm-date-display" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#475569;box-sizing:border-box;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">날짜 선택</div>
+          <select id="bm-partner-select" onchange="selectBmPartnerRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
+            <option value="">제휴매장을 선택하세요</option>
+          </select>
+          <div id="bm-search-block" style="display:none">
+            <div style="display:flex;gap:8px">
+              <input id="bm-place-query" type="text" placeholder="장소명 검색 (예: 강남 OO카페)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBmPlace();}">
+              <button onclick="searchBmPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
             </div>
-            <input id="bm-time" type="time" step="300" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
+            <div id="bm-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-top:8px"></div>
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">선택하거나 검색하면 아래 장소명·주소가 자동으로 채워집니다. 필요하면 직접 수정할 수도 있어요.</div>
+          <input id="bm-location-name" type="text" placeholder="장소명 (예: 강남역 OO카페)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bm-location-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">모임 일시</div>
+            <div style="display:flex;gap:8px">
+              <div style="position:relative;flex:1.3;min-width:0">
+                <input id="bm-date" type="date" oninput="updateBmDateDisplay()" onchange="updateBmDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+                <div id="bm-date-display" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#475569;box-sizing:border-box;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">날짜 선택</div>
+              </div>
+              <input id="bm-time" type="time" step="300" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;gap:8px;margin-bottom:4px">
+              <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">남성 정원</div>
+              <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">여성 정원</div>
+              <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">참가비(1인, 원)</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <input id="bm-male-max" type="number" min="1" value="4" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+              <input id="bm-female-max" type="number" min="1" value="4" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+              <input id="bm-fee" type="number" min="0" value="0" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+            </div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:4px">정원이 다 차면(남성+여성) 참가자 전원에게 익명 단체채팅방이 자동으로 열립니다. 참가비는 1인당 결제 금액입니다.</div>
           </div>
         </div>
-        <div>
-          <div style="display:flex;gap:8px;margin-bottom:4px">
-            <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">남성 정원</div>
-            <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">여성 정원</div>
-            <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">참가비(1인, 원)</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <input id="bm-male-max" type="number" min="1" value="4" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-            <input id="bm-female-max" type="number" min="1" value="4" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-            <input id="bm-fee" type="number" min="0" value="0" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-          </div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:4px">정원이 다 차면(남성+여성) 참가자 전원에게 익명 단체채팅방이 자동으로 열립니다. 참가비는 1인당 결제 금액입니다.</div>
-        </div>
-        <div style="display:flex;gap:8px;position:sticky;bottom:calc(76px + var(--sab));background:#fff;padding:10px 0 2px;margin-top:4px;box-shadow:0 -8px 12px -4px rgba(255,255,255,0.9);z-index:5">
-          <button onclick="saveBaromeeting()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
-          <button onclick="resetBaromeetingForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
-        </div>
+      </div>
+      <div style="padding:16px;flex-shrink:0;border-top:1px solid #e2e8f0;display:flex;gap:8px">
+        <button onclick="saveBaromeeting()" style="flex:2;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
+        <button onclick="resetBaromeetingForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">초기화</button>
       </div>
     </div>
   </div>
@@ -1841,12 +1863,31 @@ function editBaromeeting(id) {
   document.getElementById('bm-female-max').value = m.baromeeting_female_max ?? 4;
   document.getElementById('bm-fee').value = m.entry_fee || 0;
   document.getElementById('baromeeting-form-title').textContent = '바로미팅 수정';
-  document.getElementById('baromeeting-form-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
   _bmApplicantsGatheringId = m.id;
   document.getElementById('bm-applicants-section').style.display = 'block';
   document.getElementById('bm-applicants-list').style.display = 'none';
   document.getElementById('bm-applicants-list').innerHTML = '';
   document.getElementById('bm-applicants-toggle-arrow').textContent = '▾';
+  openBmForm();
+}
+
+function openBmCreateChoice() {
+  document.getElementById('bm-create-choice-overlay').style.display = 'flex';
+}
+function closeBmCreateChoice() {
+  document.getElementById('bm-create-choice-overlay').style.display = 'none';
+}
+function chooseBmCreate(type) {
+  closeBmCreateChoice();
+  if (type === 'spot') { navTo('mannam', 'restaurants'); return; }
+  resetBaromeetingForm();
+  openBmForm();
+}
+function openBmForm() {
+  document.getElementById('bm-form-overlay').classList.add('show');
+}
+function closeBmForm() {
+  document.getElementById('bm-form-overlay').classList.remove('show');
 }
 
 async function saveBaromeeting() {
@@ -1871,6 +1912,7 @@ async function saveBaromeeting() {
   if (result?.error) { showToast('저장 실패: ' + result.error); return; }
   showToast(id ? '바로미팅 정보가 수정됐습니다' : '바로미팅이 개설됐습니다');
   resetBaromeetingForm();
+  closeBmForm();
   loadBaromeetings();
 }
 
