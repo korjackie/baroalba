@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#1e293b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -48,7 +48,8 @@
     /* 대시보드 - 제목(좌) + 현황(우) 한 줄 카드 */
     .dash-row { display:flex; align-items:center; gap:14px; background:#fff; border-radius:14px; padding:12px 16px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); max-width:520px; margin-left:auto; margin-right:auto; }
     .dash-row-label { font-size:12.5px; font-weight:800; color:#475569; width:82px; flex-shrink:0; line-height:1.3; white-space:nowrap; }
-    .dash-row-stats { flex:1; display:flex; gap:4px; }
+    .dash-row-stats { flex:1; min-width:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+    .dash-row-stats::-webkit-scrollbar { display:none; }
     .dash-stat { flex:0 0 92px; text-align:center; cursor:pointer; user-select:none; padding:2px 4px; }
     .dash-stat.no-click { cursor:default; }
     .dash-stat-val { font-size:17px; font-weight:900; color:#1e293b; }
@@ -356,6 +357,7 @@
       <div class="dash-row-label">💜 바로만남</div>
       <div class="dash-row-stats">
         <div class="dash-stat" onclick="navTo('mannam','restaurants')"><div class="dash-stat-val" id="s-mannnam-restaurants">-</div><div class="dash-stat-label">진행중 제휴점</div></div>
+        <div class="dash-stat" onclick="navTo('mannam','baromeetings')"><div class="dash-stat-val" id="s-baromeetings-open">-</div><div class="dash-stat-label">진행중 바로미팅</div></div>
         <div class="dash-stat no-click"><div class="dash-stat-val" id="s-mannnam-today">-</div><div class="dash-stat-label">오늘 예약</div></div>
         <div class="dash-stat no-click"><div class="dash-stat-val" id="s-mannnam-total">-</div><div class="dash-stat-label">누적 예약</div></div>
       </div>
@@ -508,7 +510,10 @@
         <div>
           <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">모임 일시</div>
           <div style="display:flex;gap:8px">
-            <input id="bm-date" type="date" style="flex:1.3;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
+            <div style="position:relative;flex:1.3;min-width:0">
+              <input id="bm-date" type="date" oninput="updateBmDateDisplay()" onchange="updateBmDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+              <div id="bm-date-display" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#475569;box-sizing:border-box;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">날짜 선택</div>
+            </div>
             <input id="bm-time" type="time" step="300" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
           </div>
         </div>
@@ -984,6 +989,7 @@ async function loadDashboard() {
   document.getElementById('s-moims-today').textContent             = stats.moims_today         ?? '-';
   document.getElementById('s-moim-participants').textContent      = stats.moim_participants   ?? '-';
   document.getElementById('s-mannnam-restaurants').textContent    = stats.mannnam_restaurants ?? '-';
+  document.getElementById('s-baromeetings-open').textContent      = stats.baromeetings_open   ?? '-';
   document.getElementById('s-mannnam-today').textContent          = stats.mannnam_today       ?? '-';
   document.getElementById('s-mannnam-total').textContent          = stats.mannnam_total       ?? '-';
 
@@ -1655,9 +1661,17 @@ function selectBmPlace(idx) {
   document.getElementById('bm-place-query').value = '';
 }
 
+// <input type="date">는 표시 형식이 브라우저/OS 로케일을 따라가 DD/MM/YYYY로 보이는 경우가 있어
+// (합의된 년/월/일 순서와 다름) 실제 입력값은 그대로 두고 화면에만 커스텀 포맷을 덮어 씌움
+function updateBmDateDisplay() {
+  const v = document.getElementById('bm-date').value; // 항상 YYYY-MM-DD (ISO)
+  document.getElementById('bm-date-display').textContent = v ? v.replace(/-/g, '.') : '날짜 선택';
+}
+
 function resetBaromeetingForm() {
   document.getElementById('bm-id').value = '';
   ['bm-title','bm-desc','bm-location-name','bm-location-address','bm-date','bm-time'].forEach(k => document.getElementById(k).value = '');
+  updateBmDateDisplay();
   document.getElementById('bm-male-max').value = '4';
   document.getElementById('bm-female-max').value = '4';
   document.getElementById('bm-fee').value = '0';
@@ -1740,6 +1754,7 @@ function editBaromeeting(id) {
     const d = new Date(m.gathering_date);
     const pad = n => String(n).padStart(2, '0');
     document.getElementById('bm-date').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    updateBmDateDisplay();
     document.getElementById('bm-time').value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
   document.getElementById('bm-male-max').value = m.baromeeting_male_max ?? 4;
