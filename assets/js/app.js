@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '399';
+  const _APP_V = '400';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=399').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=400').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -1307,23 +1307,11 @@ function closeMoimChat() {
   _baromeetAnonLabel = null;
   _baromeetShowPhoto = false;
   _baromeetPhotoUrl = null;
-  if (window.visualViewport) window.visualViewport.removeEventListener('resize', _moimChatKbResize);
+  _mc.style.paddingBottom = '';
   // FAB 복원 — owner 패널이 열려있을 때만
   const _mcFab = document.getElementById('posting-fab');
   const _ownerPanelEl = document.getElementById('panel-owner');
   if (_mcFab && _ownerPanelEl && _ownerPanelEl.style.display !== 'none') _mcFab.style.display = 'flex';
-}
-function _moimChatKbResize() {
-  const panel = document.getElementById('panel-moim-chat');
-  if (!panel || !panel.classList.contains('show')) return;
-  const vp = window.visualViewport;
-  if (!vp) return;
-  const kbH = Math.max(0, window.innerHeight - vp.height - (vp.offsetTop || 0));
-  panel.style.bottom = kbH > 0 ? `${kbH}px` : '';
-  if (kbH > 0) {
-    const msgs = document.getElementById('moim-chat-messages');
-    if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 80);
-  }
 }
 
 // ── 모임 목록 로드 ────────────────────────────────────────
@@ -2034,8 +2022,6 @@ async function openMoimChat(gatheringId, title) {
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지
   const _mcFab = document.getElementById('posting-fab');
   if (_mcFab) _mcFab.style.display = 'none';
-  // 키보드 올라올 때 입력창 가림 방지
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', _moimChatKbResize);
   document.getElementById('moim-chat-title').textContent = title || '모임 채팅';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
   // 날짜 부제목 — _moimDetailData에서 읽음
@@ -4180,6 +4166,17 @@ window._onFCMToken = function(token) {
         }); });
       }
     }
+    // 바로모임/바로미팅 단체채팅 (panel-moim-chat) — wchat/chat과 동일한 네이티브 IME 방식 적용
+    var mc = document.getElementById('panel-moim-chat');
+    if (mc && mc.classList.contains('show')) {
+      mc.style.paddingBottom = dp > 80 ? (dp + 16) + 'px' : '';
+      if (dp > 80) {
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
+          var mm = document.getElementById('moim-chat-messages');
+          if (mm) mm.scrollTop = mm.scrollHeight;
+        }); });
+      }
+    }
     var rm = document.getElementById('rating-modal-inner');
     if (rm) {
       rm.style.paddingBottom = dp > 80 ? (dp + 40) + 'px' : '40px';
@@ -4244,6 +4241,12 @@ window._onFCMToken = function(token) {
     if (ci && co) {
       ci.addEventListener('focus', function() { applyKbPad(co); });
       ci.addEventListener('blur',  function() { clearKbPad(co); });
+    }
+    var mi = document.getElementById('moim-chat-input');
+    var mo = document.getElementById('panel-moim-chat');
+    if (mi && mo) {
+      mi.addEventListener('focus', function() { applyKbPad(mo); });
+      mi.addEventListener('blur',  function() { clearKbPad(mo); });
     }
     window.addEventListener('popstate', function() {
       if (co && co.style.display === 'flex') { closeChat(); return; }
@@ -16549,7 +16552,6 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   // (openMoimChat과 동일한 panel-moim-chat DOM을 공유하면서도 이 등록이 빠져있던 게 원인)
   const _bcFab = document.getElementById('posting-fab');
   if (_bcFab) _bcFab.style.display = 'none';
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', _moimChatKbResize);
   document.getElementById('moim-chat-title').textContent = (title || '바로미팅') + ' (익명)';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
   const memberEl = document.getElementById('moim-chat-members');
