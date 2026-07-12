@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '421';
+  const _APP_V = '422';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=421').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=422').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -4601,7 +4601,9 @@ async function loadMyMoimPreview() {
 async function loadMyBaromeetPreview() {
   const el = document.getElementById('mp-baromeet-preview');
   if (!el || !currentUser) return;
-  const { data: apps } = await db.from('gathering_applications').select('gathering_id').eq('applicant_id', currentUser.id);
+  const { data: apps } = await db.from('gathering_applications').select('gathering_id, status').eq('applicant_id', currentUser.id);
+  const statusMap = {};
+  (apps || []).forEach(a => { statusMap[a.gathering_id] = a.status; });
   const ids = [...new Set((apps || []).map(a => a.gathering_id))];
   if (!ids.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 바로미팅이 없어요</div>'; return; }
   const { data: gatherings } = await db.from('gatherings')
@@ -4610,12 +4612,13 @@ async function loadMyBaromeetPreview() {
     .order('gathering_date', { ascending: true });
   if (!gatherings?.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 바로미팅이 없어요</div>'; return; }
   el.innerHTML = gatherings.slice(0, 5).map(g => {
-    g._joined = true; // 마이페이지에 뜬다는 것 자체가 이미 신청/참가한 미팅이라는 뜻
+    g._myStatus = statusMap[g.id] || null;
     _baromeetListCache[g.id] = g; // openBaromeetDetail()이 참조하는 캐시에 미리 채워둠 (바로만남 패널을 안 거쳐도 상세가 열리도록)
     const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+    const statusTag = g._myStatus === 'pending' ? ' · 승인대기중' : g._myStatus === 'rejected' ? ' · 거절됨' : '';
     return `<div onclick="event.stopPropagation();openBaromeetDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#fff1f2;border-radius:10px;padding:10px 12px;cursor:pointer">
       <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'바로미팅'}</div>
-      <div style="font-size:10.5px;color:#e11d48;margin-top:3px">${dateStr}</div>
+      <div style="font-size:10.5px;color:#e11d48;margin-top:3px">${dateStr}${statusTag}</div>
     </div>`;
   }).join('');
 }
@@ -5593,14 +5596,13 @@ function _renderChatList() {
       ? `<img src="${a.photoUrl}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #f0f0f0" onerror="this.outerHTML='<div style=\\'width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0\\'>${a.counterpartName.charAt(0)}</div>'">`
       : `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>`;
     const preview = msg.content?.startsWith('[img]') ? '📷 사진' : (isMine ? `나: ${msg.content}` : msg.content);
-    // 카드 배경+테두리를 종류별로 진하게 구분 - 바로알바(빨강)/바로모임(보라)/바로미팅(로즈)
-    // 옅은 tint만으로는 구분이 잘 안 된다는 피드백 반영 - 배경을 더 진하게, 왼쪽 띠도 항상 색으로 표시
+    // 바로알바(1:1 채팅)는 화이트 유지, 바로모임(퍼플)/바로미팅(로즈)만 카드 색으로 구분
     const rowBg = isGathering
       ? (a.gatheringCategory === 'baromeeting' ? '#ffe4e8' : '#e9e3ff')
-      : '#ffe3e3';
+      : '#fff';
     const rowBorder = isGathering
       ? (a.gatheringCategory === 'baromeeting' ? '#e11d48' : '#7C3AED')
-      : '#C8102E';
+      : 'transparent';
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
       <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':rowBg};border-left:3.5px solid ${unread>0?'var(--red)':rowBorder}">
         <div style="position:relative;flex-shrink:0">
@@ -16615,26 +16617,23 @@ async function _loadBaromeetList() {
       return;
     }
     // 내가 이미 신청한 미팅 - 익명 단체채팅방 입장 버튼 표시용.
-    // 바로미팅은 승인 대기 상태가 없는 즉시확정 방식이라 status 값과 무관하게 신청 이력만
-    // 있으면 참가로 간주 - 예전엔 status='approved'만 걸러서, 옛 테스트 데이터 등으로
-    // status가 다르게 남은 계정은 재신청도 막히고 채팅 입장도 안 되는 막힌 상태가 됐었음
-    // (applyBaromeet()의 중복신청 체크도 status 구분 없이 존재 여부만 보는 것과 일치시킴)
-    let joinedSet = new Set();
+    // 내 신청 상태(승인대기/확정)를 미팅별로 조회 - 관리자 승인 전에는 채팅 입장 불가
+    let statusMap = {};
     if (currentUser) {
       const { data: myApps } = await db.from('gathering_applications')
-        .select('gathering_id').eq('applicant_id', currentUser.id)
+        .select('gathering_id, status').eq('applicant_id', currentUser.id)
         .in('gathering_id', data.map(m => m.id));
-      joinedSet = new Set((myApps || []).map(a => a.gathering_id));
+      (myApps || []).forEach(a => { statusMap[a.gathering_id] = a.status; });
     }
     _baromeetListCache = {};
-    data.forEach(m => { m._joined = joinedSet.has(m.id); _baromeetListCache[m.id] = m; });
-    el.innerHTML = data.map(m => _renderBaromeetCard(m, m._joined)).join('');
+    data.forEach(m => { m._myStatus = statusMap[m.id] || null; _baromeetListCache[m.id] = m; });
+    el.innerHTML = data.map(m => _renderBaromeetCard(m, m._myStatus)).join('');
     document.getElementById('mnm-meet-loctext').textContent = `${data.length}개 미팅 모집 중`;
   } catch(e) {
     el.innerHTML = '<div style="text-align:center;padding:44px 20px;color:#bbb;font-size:13px">불러오기 실패<br>잠시 후 다시 시도해주세요</div>';
   }
 }
-function _renderBaromeetCard(m, joined) {
+function _renderBaromeetCard(m, myStatus) {
   const maleMax = m.baromeeting_male_max || 4;
   const femaleMax = m.baromeeting_female_max || 4;
   const maleCur = m.baromeeting_male_cur || 0;
@@ -16681,8 +16680,10 @@ function _renderBaromeetCard(m, joined) {
       </div>
     </div>
     ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:#f5f5f5;color:#666;padding:3px 8px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
-    ${joined
+    ${myStatus === 'approved'
       ? `<button onclick="event.stopPropagation();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+      : myStatus === 'pending'
+      ? `<button disabled style="width:100%;padding:12px;background:#f5f5f5;color:#aaa;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:default">⏳ 관리자 승인 대기중</button>`
       : `<button onclick="event.stopPropagation();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
   </div>`;
 }
@@ -16698,7 +16699,7 @@ function openBaromeetDetail(id) {
   const maleCur = m.baromeeting_male_cur || 0, femaleCur = m.baromeeting_female_cur || 0;
   const maleLeft = maleMax - maleCur, femaleLeft = femaleMax - femaleCur;
   const isFull = maleLeft <= 0 && femaleLeft <= 0;
-  const joined = !!m._joined;
+  const myStatus = m._myStatus || null;
   const dtStr = m.gathering_date ? (() => {
     const d = new Date(m.gathering_date);
     const days = ['일','월','화','수','목','금','토'];
@@ -16741,8 +16742,10 @@ function openBaromeetDetail(id) {
       </div>
     </div>
     <div style="padding:0 20px 24px">
-      ${joined
+      ${myStatus === 'approved'
         ? `<button onclick="closeBaromeetDetail();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+        : myStatus === 'pending'
+        ? `<button disabled style="width:100%;padding:14px;background:#f5f5f5;color:#aaa;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:default">⏳ 관리자 승인 대기중</button>`
         : `<button onclick="closeBaromeetDetail();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:14px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
     </div>
   `;
@@ -16840,9 +16843,8 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
     showConfirm(`🎉 첫 이용 무료체험으로 포인트 차감 없이 신청할 수 있어요!\n식사비만 아래 계좌로 입금해주세요.\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`, async () => {
       const ae = await _finalizeBaromeetJoin(meetingId, gender);
       if (ae) { showToast('신청 중 오류가 발생했어요'); return; }
-      showToast('✅ 무료 체험 신청 완료! 단체채팅방으로 이동할게요');
+      showToast('✅ 무료 체험 신청 완료! 관리자 승인 후 채팅방을 이용할 수 있어요');
       await _loadBaromeetList();
-      openBaromeetChat(meetingId, _baromeetListCache[meetingId]?.title);
     }, { icon:'🎉', title:'바로미팅 무료체험 신청', okLabel:'무료로 신청하기' });
     return;
   }
@@ -16863,9 +16865,8 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
         showToast('신청 중 오류가 발생했어요');
         return;
       }
-      showToast('✅ 이용권으로 신청 완료! 단체채팅방으로 이동할게요');
+      showToast('✅ 이용권으로 신청 완료! 관리자 승인 후 채팅방을 이용할 수 있어요');
       await _loadBaromeetList();
-      openBaromeetChat(meetingId, _baromeetListCache[meetingId]?.title);
     }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:'이용권 사용하고 신청' });
     return;
   }
@@ -16889,10 +16890,9 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
       showToast('신청 중 오류가 발생했어요');
       return;
     }
-    showToast(`✅ ${price.toLocaleString()}P 차감 후 신청 완료! 단체채팅방으로 이동할게요`);
+    showToast(`✅ ${price.toLocaleString()}P 차감 후 신청 완료! 관리자 승인 후 채팅방을 이용할 수 있어요`);
     await loadUserPoints();
     await _loadBaromeetList();
-    openBaromeetChat(meetingId, _baromeetListCache[meetingId]?.title);
   }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:`${price.toLocaleString()}P 차감하고 신청` });
 }
 
@@ -16918,13 +16918,15 @@ async function _openBaromeetTracking(meetingId) {
 
 // 신청 확정 처리: 성별 인원수 카운터 증가 + gathering_applications를 approved로 저장
 // (바로미팅은 별도 매니저 승인 단계가 없는 즉시확정 방식)
+// 신청 시점에 결제(포인트/이용권)가 이미 끝난 상태라 정원 카운트는 바로 반영(자리 선점)하되,
+// 관리자 승인 전까지는 status='pending'으로 두고 단체채팅 입장은 승인 후에만 가능하도록 함
 async function _finalizeBaromeetJoin(meetingId, gender) {
   const col = gender === 'male' ? 'baromeeting_male_cur' : 'baromeeting_female_cur';
   const { data: g } = await db.from('gatherings').select(col).eq('id', meetingId).single();
   const nextCur = (g?.[col] || 0) + 1;
   await db.from('gatherings').update({ [col]: nextCur }).eq('id', meetingId);
   const { error } = await db.from('gathering_applications')
-    .insert({ gathering_id: meetingId, applicant_id: currentUser.id, status: 'approved' });
+    .insert({ gathering_id: meetingId, applicant_id: currentUser.id, status: 'pending' });
   if (error) {
     // 신청 저장 실패 시 카운터도 롤백
     await db.from('gatherings').update({ [col]: nextCur - 1 }).eq('id', meetingId);

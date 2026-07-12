@@ -1682,9 +1682,7 @@ async function toggleBmApplicants() {
   if (data?.error) { list.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">불러오기 실패: ${data.error}</div>`; return; }
   const apps = Array.isArray(data) ? data : [];
   if (!apps.length) { list.innerHTML = '<div style="padding:12px;font-size:12px;color:#94a3b8">아직 신청자가 없어요</div>'; return; }
-  // 바로미팅은 매니저 승인 단계가 없는 즉시확정 방식이라 실제로는 항상 '확정'만 있어야 정상 -
-  // '대기'가 보인다면 즉시확정 도입 전에 만들어진 예전 테스트 데이터일 가능성이 높음
-  const statusLabel = { pending:'대기(구버전 데이터)', approved:'확정', rejected:'거절' };
+  const statusLabel = { pending:'승인 대기중', approved:'확정', rejected:'거절됨' };
   list.innerHTML = apps.map(a => {
     const w = a.worker;
     const genderLabel = w?.gender === 'female' ? '여성' : w?.gender === 'male' ? '남성' : '-';
@@ -1694,11 +1692,32 @@ async function toggleBmApplicants() {
         <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w?.phone || '연락처 미등록'} · ${new Date(a.applied_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        ${a.status === 'pending' ? `
+        <button onclick="approveBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">승인</button>
+        <button onclick="rejectBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">거절</button>
+        ` : ''}
         <button onclick="sendApplicantNotice('${a.applicant_id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#F5F3FF;color:#7C3AED;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">공지</button>
         <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
       </div>
     </div>`;
   }).join('');
+}
+
+async function approveBmApplicant(applicationId, name) {
+  if (!confirm(`${name}님의 바로미팅 참가를 승인할까요?`)) return;
+  const result = await adminApi('approve_baromeet_applicant', 'POST', { application_id: applicationId });
+  if (result?.error) { showToast('승인 실패: ' + result.error); return; }
+  showToast(`✅ ${name}님을 승인했어요`);
+  toggleBmApplicants(); toggleBmApplicants();
+}
+
+async function rejectBmApplicant(applicationId, name) {
+  if (!confirm(`${name}님의 바로미팅 참가를 거절할까요?\n(정원 자리가 반납되고 거절 안내가 발송됩니다)`)) return;
+  const result = await adminApi('reject_baromeet_applicant', 'POST', { application_id: applicationId });
+  if (result?.error) { showToast('거절 실패: ' + result.error); return; }
+  showToast(`🙏 ${name}님에게 거절 안내를 보냈어요`);
+  toggleBmApplicants(); toggleBmApplicants();
+  loadBaromeetings();
 }
 
 async function sendApplicantNotice(applicantId, name) {

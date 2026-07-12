@@ -308,6 +308,80 @@ module.exports = async function handler(req, res) {
       return res.json(merged);
     }
 
+    // ── 바로미팅 신청자 승인 ──────────────────────────────
+    if (action === 'approve_baromeet_applicant' && req.method === 'POST') {
+      const { application_id } = req.body || {};
+      if (!application_id) return res.status(400).json({ error: 'application_id required' });
+      const appRows = await sb(`gathering_applications?id=eq.${application_id}&select=id,applicant_id,gathering_id,status`, svcKey).then(r => r.json());
+      const app = appRows?.[0];
+      if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
+
+      const r = await sb(`gathering_applications?id=eq.${application_id}`, svcKey, {
+        method: 'PATCH', body: JSON.stringify({ status: 'approved' }),
+      });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+
+      const gRows = await sb(`gatherings?id=eq.${app.gathering_id}&select=title`, svcKey).then(r => r.json());
+      const meetingTitle = gRows?.[0]?.title || '바로미팅';
+      const title = '✅ 바로미팅 참가 승인';
+      const body = `"${meetingTitle}" 참가가 승인되었어요! 단체채팅방에 입장해보세요.`;
+      await sb('notifications', svcKey, {
+        method: 'POST', headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_id: app.applicant_id, title, body, type: 'baromeeting_approved' }),
+      });
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      if (host) {
+        await fetch(`https://${host}/api/send-push`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: app.applicant_id, title, body, url: '/바로알바.html', type: 'baromeeting_approved' }),
+        }).catch(() => {});
+      }
+      return res.json({ ok: true });
+    }
+
+    // ── 바로미팅 신청자 거절 (자리 반납 + 알림) ──────────────
+    if (action === 'reject_baromeet_applicant' && req.method === 'POST') {
+      const { application_id } = req.body || {};
+      if (!application_id) return res.status(400).json({ error: 'application_id required' });
+      const appRows = await sb(`gathering_applications?id=eq.${application_id}&select=id,applicant_id,gathering_id,status`, svcKey).then(r => r.json());
+      const app = appRows?.[0];
+      if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
+
+      const workerRows = await sb(`workers?kakao_uid=eq.${app.applicant_id}&select=gender`, svcKey).then(r => r.json());
+      const gender = workerRows?.[0]?.gender;
+      const col = gender === 'male' ? 'baromeeting_male_cur' : gender === 'female' ? 'baromeeting_female_cur' : null;
+
+      const r = await sb(`gathering_applications?id=eq.${application_id}`, svcKey, {
+        method: 'PATCH', body: JSON.stringify({ status: 'rejected' }),
+      });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+
+      if (col && app.status !== 'rejected') {
+        const gRows = await sb(`gatherings?id=eq.${app.gathering_id}&select=${col}`, svcKey).then(r => r.json());
+        const cur = gRows?.[0]?.[col] || 0;
+        await sb(`gatherings?id=eq.${app.gathering_id}`, svcKey, {
+          method: 'PATCH', body: JSON.stringify({ [col]: Math.max(0, cur - 1) }),
+        });
+      }
+
+      const gRows2 = await sb(`gatherings?id=eq.${app.gathering_id}&select=title`, svcKey).then(r => r.json());
+      const meetingTitle = gRows2?.[0]?.title || '바로미팅';
+      const title = '🙏 바로미팅 참가 거절 안내';
+      const body = `"${meetingTitle}" 참가 신청이 거절되었어요. 결제하신 포인트/이용권 환불은 고객센터로 문의해주세요.`;
+      await sb('notifications', svcKey, {
+        method: 'POST', headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_id: app.applicant_id, title, body, type: 'baromeeting_rejected' }),
+      });
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      if (host) {
+        await fetch(`https://${host}/api/send-push`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: app.applicant_id, title, body, url: '/바로알바.html', type: 'baromeeting_rejected' }),
+        }).catch(() => {});
+      }
+      return res.json({ ok: true });
+    }
+
     // ── 신청자 개인에게 공지 메시지 발송 (인앱 알림 + 푸시) ──
     if (action === 'notify_applicant' && req.method === 'POST') {
       const { user_id, message } = req.body || {};
