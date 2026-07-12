@@ -365,6 +365,13 @@
         <div class="dash-stat no-click"><div class="dash-stat-val" id="s-mannnam-total">-</div><div class="dash-stat-label">누적 예약</div></div>
       </div>
     </div>
+
+    <div class="dash-row">
+      <div class="dash-row-label">📮 문의접수</div>
+      <div class="dash-row-stats">
+        <div class="dash-stat" onclick="navTo('mannam','gathering-requests')"><div class="dash-stat-val alert" id="s-gathering-requests">-</div><div class="dash-stat-label">모임·만남 개설 문의</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- 바로알바 그룹 메뉴 -->
@@ -1066,6 +1073,7 @@ async function loadDashboard() {
   document.getElementById('s-baromeetings-open').textContent      = stats.baromeetings_open   ?? '-';
   document.getElementById('s-mannnam-today').textContent          = stats.mannnam_today       ?? '-';
   document.getElementById('s-mannnam-total').textContent          = stats.mannnam_total       ?? '-';
+  document.getElementById('s-gathering-requests').textContent     = stats.pending_gathering_requests ?? '-';
 
   if (stats.pending_reports > 0) {
     const badge = document.getElementById('report-badge');

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 신규 기능 & 버그수정 (2026.07.13)</title>
+<style>
+  :root{--red:#C8102E;--green:#16a34a;--blue:#3b82f6;--orange:#f59e0b;--purple:#7c3aed;--pink:#f43f5e;--radius:16px;--shadow:0 4px 20px rgba(0,0,0,0.10)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#f8f9fa;color:#111;line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:56px}
+  .nav-logo{font-size:16px;font-weight:900;color:var(--red)}
+  .nav-tag{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);padding:3px 10px;border-radius:100px}
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);padding:88px 5% 52px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(200,16,46,0.25),transparent 65%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#ff6b7a;font-size:11px;font-weight:800;padding:4px 14px;border-radius:100px;letter-spacing:1px;margin-bottom:16px}
+  .hero h1{font-size:clamp(22px,4vw,36px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
+  .hero h1 span{color:var(--red)}
+  .hero-sub{font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:32px}
+  .hero-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .hero-chip{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px}
+  .hero-chip.new{background:rgba(244,63,94,0.2);border-color:rgba(244,63,94,0.4);color:#fb7185}
+  .container{max-width:860px;margin:0 auto;padding:52px 5%}
+  .section{margin-bottom:52px}
+  .section-label{font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .section-title{font-size:clamp(18px,2.5vw,24px);font-weight:900;letter-spacing:-0.5px;margin-bottom:6px}
+  .section-desc{font-size:13px;color:#888;margin-bottom:24px}
+  .cards{display:flex;flex-direction:column;gap:16px}
+  .card{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);border:1px solid #ebebeb}
+  .card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .badge{font-size:10px;font-weight:900;padding:3px 10px;border-radius:100px}
+  .badge-feat{background:#dcfce7;color:#14532d}
+  .badge-fix{background:#fee2e2;color:#991b1b}
+  .badge-ux{background:#dbeafe;color:#1e3a8a}
+  .badge-api{background:#fef9c3;color:#713f12}
+  .badge-infra{background:#ede9fe;color:#4c1d95}
+  .badge-new{background:linear-gradient(90deg,#f43f5e,#a855f7);color:#fff}
+  .badge-warn{background:#ffedd5;color:#9a3412}
+  .badge-crit{background:linear-gradient(90deg,#ef4444,#f97316);color:#fff}
+  .card-title{font-size:16px;font-weight:900;color:#111;margin-bottom:6px}
+  .card-desc{font-size:13px;color:#666;line-height:1.7}
+  .card-desc code{font-family:'SF Mono',monospace;background:#f1f5f9;padding:1px 6px;border-radius:4px;font-size:12px;color:var(--red)}
+  .card.highlight{background:linear-gradient(135deg,#fff0f5,#fdf4ff);border:1.5px solid rgba(244,63,94,0.25)}
+  .card.highlight .card-title{color:var(--pink)}
+  .card.crit{background:linear-gradient(135deg,#fef2f2,#fff7ed);border:1.5px solid rgba(239,68,68,0.3)}
+  .card.crit .card-title{color:#dc2626}
+  .feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin:12px 0}
+  .feat-cell{background:#f8f9fa;border-radius:12px;padding:14px 16px}
+  .feat-icon{font-size:22px;margin-bottom:8px}
+  .feat-name{font-size:12px;font-weight:900;color:#333;margin-bottom:3px}
+  .feat-desc{font-size:11px;color:#888}
+  footer{text-align:center;padding:32px 5% 20px;font-size:12px;color:#aaa;border-top:1px solid #eee}
+  @media(max-width:600px){.container{padding:40px 4%}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-tag">신규기능 · 2026.07.13</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">RELEASE NOTES · v385~v444</div>
+  <h1>2026년 <span>7월 9일~13일</span> 업데이트</h1>
+  <p class="hero-sub">바로미팅 완전 가동 · 앱 구조 개편(FAB/지도/필터) · 캐시 드리프트 3연발 근본해결 · 채팅 UX 전면 통일</p>
+  <div class="hero-chips">
+    <span class="hero-chip new">🤝 바로미팅 완성</span>
+    <span class="hero-chip new">🧭 FAB·지도·필터 개편</span>
+    <span class="hero-chip">💬 채팅 UX 통일</span>
+    <span class="hero-chip">📦 캐시 드리프트 근본해결</span>
+    <span class="hero-chip">⌨️ 키보드 가림 전역수정</span>
+    <span class="hero-chip">🛠️ 관리자 신고/요청함</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ① 캐시 드리프트 -->
+  <div class="section">
+    <div class="section-label">Critical Infra</div>
+    <div class="section-title">📦 PWA 캐시 드리프트 — 3중 근본원인 발견/해결</div>
+    <div class="section-desc">"고쳤다고 했는데 왜 반영이 안 되냐"가 반복된 진짜 이유. 겹겹이 쌓인 3개의 독립적인 버전관리 구멍을 전부 찾아냈습니다.</div>
+    <div class="cards">
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">CRITICAL #1</span></div>
+        <div class="card-title">index.html — v1.4.1 시절 그대로 고정된 유령 파일</div>
+        <div class="card-desc">프로젝트 루트의 <code>index.html</code>이 4,200줄짜리 구버전(v381) 전체 사본으로 남아있었고, 자체 버전가드가 한 번만 리다이렉트하고 이후엔 계속 이 구버전을 서빙하고 있었음. 무조건 최신 <code>바로알바.html</code>로 리다이렉트하는 10줄짜리 스텁으로 전면 교체.</div>
+      </div>
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">CRITICAL #2</span></div>
+        <div class="card-title">head 스크립트 버전 상수가 app.js와 따로 놀고 있었음</div>
+        <div class="card-desc"><code>바로알바.html</code> head의 자체 버전값(V='421')이 <code>app.js</code>의 <code>_APP_V</code>와 별도로 하드코딩돼 있어서, <code>_APP_V</code>를 아무리 올려도 두 값이 영원히 안 맞아 <b>캐시 초기화 로직 자체가 세션 내내 한 번도 실행되지 않았음</b>. head 버전체크를 통째로 삭제하고 <code>localStorage._baroV</code> 하나로 판단하도록 단일화.</div>
+      </div>
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">CRITICAL #3</span></div>
+        <div class="card-title">app.js/style.css/shared-lang.js 태그에 버전 쿼리 자체가 없었음</div>
+        <div class="card-desc">위 두 가지를 고쳐도 여전히 반영이 안 됐던 진짜 마지막 원인 — 스크립트/CSS 태그에 <code>?v=</code>가 아예 없어서 Service Worker의 캐시우선 전략이 이 파일들을 영구적으로 캐시할 수 있었음. 세 태그 모두 <code>?v=444</code> 부여, 이후 배포마다 5곳(app.js _APP_V·SW등록쿼리, sw.js CACHE, HTML 3태그)을 동시에 올리는 것으로 프로세스 확정.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 바로미팅 완전가동 -->
+  <div class="section">
+    <div class="section-label">Baromeeting</div>
+    <div class="section-title">🤝 바로미팅 — 베타에서 실사용 가능 단계로</div>
+    <div class="section-desc">7/9 최초 개설관리 기능 추가부터 시작해, 신청→승인→채팅→추적까지 전 과정을 실제로 돌려보며 발견된 버그를 하나씩 완성했습니다.</div>
+    <div class="cards">
+      <div class="card highlight">
+        <div class="card-header"><span class="badge badge-crit">CRITICAL FIX</span></div>
+        <div class="card-title">익명 닉네임/아바타 저장이 처음부터 전부 실패하고 있었음</div>
+        <div class="card-desc">참가자가 닉네임을 설정해도 실제로는 저장이 안 돼서 채팅방 입장 자체가 막히는 근본 버그 발견. 저장 로직 수정 + 오픈카톡 스타일 캐릭터 아바타(12종 이모지) 선택 기능 신규 추가.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">FEAT</span></div>
+        <div class="card-title">관리자 승인 단계 + 정원 카운트 실제값 재계산</div>
+        <div class="card-desc">신청 즉시 확정되던 방식에서 관리자 승인 단계 추가. 여성/남성 정원 카운트가 승인 내역과 어긋나던 문제를, 매번 실제 <code>gathering_applications</code> 승인건수로 재계산하는 방식(멱등적)으로 근본 수정.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">FEAT</span></div>
+        <div class="card-title">실시간 추적화면 + 지도 좌표 확보 + 공유하기</div>
+        <div class="card-desc">신청 완료 후 카운트다운·단계·지도가 있는 추적화면(바로알바/바로모임과 동일 패턴) 연결. 바로미팅에 lat/lng 저장 추가로 지도 마커 표시 가능해짐. 유일하게 없었던 카카오톡 공유 기능도 추가.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">신규가입자 한정 무료체험 이벤트 (2026.07.11~08.10)</div>
+        <div class="card-desc">첫 이용자는 포인트/이용권 차감 없이 무료 체험 신청 가능 (식사비만 별도 입금). 진행방식 안내 문구도 "현장 결제" → "신청 시 이미 결제 완료"로 정정.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">단체채팅 헤더 재설계 — 참가자수/나가기/내프로필 분리</div>
+        <div class="card-desc">"나는 OO으로 표시돼요" 문구가 참가자수 표시 영역을 통째로 가려서 참가자 목록 기능이 안 보이던 문제 해결. <code>👥 N명</code>은 항상 노출, "나가기"는 옆에 작은 링크로, 내 캐릭터+닉네임은 헤더 우측 배지로 분리.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">뒤로가기를 눌렀을 뿐인데 참가취소로 처리되던 문제</div>
+        <div class="card-desc">채팅 닫기(뒤로가기/제스처)와 명시적 "나가기" 버튼이 뒤섞여 있었음. 뒤로가기는 항상 단순 닫기로, 참가취소 확인창은 오직 "나가기" 버튼을 눌렀을 때만 뜨도록 분리.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">NEW</span></div>
+        <div class="card-title">신고 기능 신규 추가</div>
+        <div class="card-desc">바로미팅 상세/바로모임 상세에 "🚨 신고하기" 버튼 추가 (기존엔 공고에만 있었음). 관리자 신고관리 화면도 바로알바/바로모임/바로만남 서비스별로 구분 조회 가능하도록 필터 추가.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 앱 구조 개편 -->
+  <div class="section">
+    <div class="section-label">App Restructure</div>
+    <div class="section-title">🧭 FAB·지도·필터 구조 개편</div>
+    <div class="section-desc">가운데 등록버튼을 조회용에서 행동(등록)용으로, 지도는 알바/모임/만남 통합 핀 + 필터패널로 단순화.</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">RESTRUCTURE</span></div>
+        <div class="card-title">가운데 FAB "바로" — 등록 액션시트로 전환</div>
+        <div class="card-desc">기존 조회용 대시보드 연결을 끊고, 누르면 바로모임 개설/공고 등록/레슨 등록/모임·만남 개설 요청 4개 옵션이 뜨는 바텀시트로 전환.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">FEAT</span></div>
+        <div class="card-title">지도 통합 핀 — 전체/알바/모임/만남 4단 모드</div>
+        <div class="card-desc">기존 알바/모임 2단 토글을 4단으로 확장. "필터보기" 버튼 하나로 카테고리·연령대·참가비 필터를 모아 넣고, 모임/만남 모드에서도 카드 목록 바텀시트 지원.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">지역 빠른이동 — 출장 중에도 원터치로 지도 이동</div>
+        <div class="card-desc">서울(종로/강남/여의도/잠실/성수/강서/목동/강북)·경기(판교/광명/용인/동탄/남양주-구리)를 그룹으로, 부산/대구/대전/광주/울산 같은 광역시는 최상위 원터치 버튼으로. 클릭 시 필터패널 자동 닫힘으로 이동 결과가 바로 보이게 개선.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">바로모임 5번째 카테고리 "챌린지" 추가</div>
+        <div class="card-desc">기존 스포츠/취미/친목/기타 4종에 챌린지 추가. 지도 카테고리 필터도 신규 지원.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">NEW</span></div>
+        <div class="card-title">모임·만남 개설 요청함</div>
+        <div class="card-desc">"이런 모임 만들어주세요" 요청이 어디로 접수되는지 안 보이던 문제 — 관리자페이지에 전용 목록 화면 신설(처리완료 표시 가능).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 채팅 UX 통일 + 키보드 -->
+  <div class="section">
+    <div class="section-label">Chat UX</div>
+    <div class="section-title">💬 채팅 UX 전면 통일 + 키보드 가림 시리즈 해결</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">바로모임/바로미팅 채팅을 1:1 채팅과 완전히 동일한 구조로</div>
+        <div class="card-desc">전체화면 레이아웃, 사진전송, 색 구분(모임=보라/만남=로즈/1:1=빨강)까지 통일. 채팅목록 스와이프 나가기도 단체채팅에 동일 적용.</div>
+      </div>
+      <div class="card highlight">
+        <div class="card-header"><span class="badge badge-crit">CRITICAL FIX</span></div>
+        <div class="card-title">단체채팅 키보드 가림 — 네이티브 IME 브릿지 방식 전면 교체</div>
+        <div class="card-desc">여러 차례 부분 수정에도 재발하던 문제의 진짜 원인: 단체채팅 패널이 <code>.full-panel/.show</code> 클래스를 쓰다가, 앱 전역의 iOS 전용 키보드 보정 로직이 이 클래스를 오인식해 안드로이드에서 방금 적용된 여백을 도로 지워버리고 있었음. 1:1 채팅과 동일한 <code>display:flex</code> 방식으로 통일해 이 오작동 경로 자체를 제거.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">NEW</span></div>
+        <div class="card-title">전역 키보드 가림 방지 로직 신규 추가</div>
+        <div class="card-desc">레슨 등록 폼 등 개별 대응이 안 됐던 입력창들 때문에, 패널 하나하나 대응하는 대신 앱 전체 <code>input/textarea/select</code>에 공통 적용되는 전역 포커스 감지 로직을 추가. 이후 새로 추가되는 입력창도 자동 대응됨.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">admin.html 전체 — 키보드가 입력창/저장버튼 가리는 문제 근본 수정</div>
+        <div class="card-desc">동적 여백 방식으로 교체, sticky 저장버튼이 하단 네비바에 가려지던 문제도 함께 해결.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ 관리자페이지 -->
+  <div class="section">
+    <div class="section-label">Admin Console</div>
+    <div class="section-title">🛠️ 관리자페이지 다중 개선</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">"모임·만남 개설 요청함" 클릭 시 빈 화면 버그</div>
+        <div class="card-desc">탭 목록 배열(<code>ALL_TABS</code>)에서 이 탭 ID가 통째로 빠져 있어서, 다른 탭은 다 숨겨지는데 이 탭만 활성화가 안 되던 문제. 배열에 추가해 해결.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">제휴 매장 메뉴명 정정</div>
+        <div class="card-desc">"바로스팟 전용"으로 잘못 표기돼 있던 것을 "제휴 매장 관리 (바로미팅·바로스팟 공용)"으로 정정 — 제휴매장 풀은 두 서비스가 공유.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">대시보드 카드 레이아웃 정리 + 뒤로가기 수정</div>
+        <div class="card-desc">라벨 줄바꿈·열 정렬 불일치 수정, 카드 폭 520px 제한, 뒤로가기 버튼이 안 움직이던 버그 수정.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ 마이페이지/기타 -->
+  <div class="section">
+    <div class="section-label">Other</div>
+    <div class="section-title">📋 마이페이지 재구성 · 번역 확대 · 기타</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">RESTRUCTURE</span></div>
+        <div class="card-title">MY 바로알바/바로모임/바로미팅 그룹 재구성</div>
+        <div class="card-desc">내 모임/바로미팅 신청 현황, 공지사항 확인 기능 신규 추가. 중복 메뉴 정리, 스킬/자격증/외국인전용 항목을 MY바로알바로 이동.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">번역 커버리지 대량 확대 (8개국어)</div>
+        <div class="card-desc">마이페이지·홈·지도·채팅·등급 화면 번역 누락 대량 보강. 로그아웃 버튼 번역 시 아이콘이 깨지던 버그도 함께 수정.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">FEAT</span></div>
+        <div class="card-title">공고 재오픈/복사 기능 통합</div>
+        <div class="card-desc">별개였던 "재오픈"과 "복사" 메뉴를 하나로 — 복사처럼 날짜/상세정보를 수정한 뒤 재오픈하는 형태로 통합.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">카카오/네이버/구글 로그인 화면 빨간배경 노출 (네이티브)</div>
+        <div class="card-desc">WebView 배경색 하드코딩이 OAuth 페이지에도 그대로 적용되던 문제. 자사 도메인 여부에 따라 배경색 전환하도록 수정, Android v1.5.3(versionCode 28) 리빌드 완료.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ 잔존 이슈 -->
+  <div class="section">
+    <div class="section-label">Known Issues</div>
+    <div class="section-title">⚠️ 잔존 이슈</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">MONITOR</span></div>
+        <div class="card-title">바로미팅 신청 동시성 (이론상 오버부킹 가능)</div>
+        <div class="card-desc">관리자 승인 카운트 재계산은 멱등적이라 안전하나, 신청 시점의 <code>_finalizeBaromeetJoin()</code>은 여전히 "읽고 +1" 방식 — 마지막 한 자리를 두 명이 동시 신청하면 이론상 오버부킹 가능. Supabase RPC 원자적 업데이트로 교체 예정 (작업계획에 메모).</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">BACKLOG</span></div>
+        <div class="card-title">카카오맵 마커 클러스터러 미적용</div>
+        <div class="card-desc">핀이 수백~수천 개로 늘어나면 필요. 지금은 핀 수가 적어 급하지 않음.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">BACKLOG</span></div>
+        <div class="card-title">app.js 도메인별 재분리 (미착수)</div>
+        <div class="card-desc">여전히 단일 대형 파일. 우선순위 낮음, 지속 모니터링 대상.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>바로알바 by MultiMOVE · 릴리즈 노트 · 2026.07.13</footer>
+</body>
+</html>

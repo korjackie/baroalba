@@ -103,7 +103,7 @@ module.exports = async function handler(req, res) {
       const [
         workers, postings, reports, apps, moims, bizRaw,
         workersToday, bizToday, moimsToday, gatheringApps,
-        mannnamToday, mannnamTotal, restaurants, baromeetings,
+        mannnamToday, mannnamTotal, restaurants, baromeetings, gatheringReqs,
       ] = await Promise.all([
         sb('workers?select=id', svcKey).then(r => r.json()),
         sb('job_postings?select=id&status=neq.closed', svcKey).then(r => r.json()),
@@ -119,8 +119,10 @@ module.exports = async function handler(req, res) {
         sb('barospot_applications?select=id', svcKey).then(r => r.json()).catch(() => []),
         sb('barospot_restaurants?select=id&is_active=eq.true', svcKey).then(r => r.json()).catch(() => []),
         sb('gatherings?select=id&category=eq.baromeeting&status=eq.open', svcKey).then(r => r.json()).catch(() => []),
+        sb('gathering_requests?select=id,status', svcKey).then(r => r.json()).catch(() => []),
       ]);
       const pending = (Array.isArray(reports) ? reports : []).filter(r => !r.status || r.status === 'pending').length;
+      const pendingReqs = (Array.isArray(gatheringReqs) ? gatheringReqs : []).filter(r => !r.status || r.status !== 'done').length;
       const arrLen = a => Array.isArray(a) ? a.length : 0;
       return res.json({
         workers: arrLen(workers),
@@ -136,6 +138,7 @@ module.exports = async function handler(req, res) {
         mannnam_total: arrLen(mannnamTotal),
         mannnam_restaurants: arrLen(restaurants),
         baromeetings_open: arrLen(baromeetings),
+        pending_gathering_requests: pendingReqs,
       });
     }
 

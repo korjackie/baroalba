@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 기술 스펙 (2026.07.13)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--orange:#f59e0b;--orange-light:#fffbeb;--purple:#7c3aed;--purple-light:#f3e8ff;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:var(--blue-light);color:var(--blue);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:860px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:2px solid #bfdbfe;border-radius:24px;padding:40px;margin-bottom:40px;text-align:center}
+  .hero-tag{display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:16px}
+  .hero h1{font-size:24px;font-weight:900;color:var(--gray-900);line-height:1.3;letter-spacing:-0.5px;margin-bottom:10px}
+  .hero p{font-size:14px;color:var(--gray-500)}
+  .section{margin-bottom:36px}
+  .section-title{font-size:13px;font-weight:800;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+  .card{background:#fff;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--gray-200)}
+  .card-title{font-size:16px;font-weight:900;color:var(--gray-900);margin-bottom:12px}
+  .card-note{font-size:12px;color:var(--gray-500);margin-bottom:12px;line-height:1.6}
+  .stack-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+  .stack-item{background:var(--gray-100);border-radius:12px;padding:12px 14px}
+  .stack-item.changed{background:var(--red-light);border:1px solid #fecdd3}
+  .stack-label{font-size:11px;font-weight:800;color:var(--gray-500);letter-spacing:0.5px;margin-bottom:4px}
+  .stack-value{font-size:13px;font-weight:700;color:var(--gray-900)}
+  .api-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-200);font-size:13px}
+  .api-row:last-child{border-bottom:none}
+  .api-row.new{background:var(--green-light);margin:0 -12px;padding:10px 12px;border-radius:8px;border-bottom:none}
+  .api-method{width:48px;padding:2px 0;text-align:center;border-radius:6px;font-size:10px;font-weight:900;flex-shrink:0}
+  .method-post{background:#dcfce7;color:#14532d}
+  .method-get{background:#dbeafe;color:#1e3a8a}
+  .api-path{font-family:'SF Mono','Fira Code',monospace;font-weight:700;color:var(--blue);margin-right:8px;flex-shrink:0}
+  .api-desc{color:var(--gray-700)}
+  .new-tag{font-size:9px;font-weight:900;background:var(--green);color:#fff;padding:1px 6px;border-radius:100px;margin-left:6px;vertical-align:middle}
+  .db-table{width:100%;border-collapse:collapse;font-size:13px}
+  .db-table th{background:var(--gray-100);padding:8px 12px;text-align:left;font-size:11px;font-weight:800;color:var(--gray-500);letter-spacing:0.5px}
+  .db-table td{padding:8px 12px;border-top:1px solid var(--gray-200);color:var(--gray-700)}
+  .db-table tr.new td{background:var(--green-light)}
+  .db-table code{font-family:'SF Mono','Fira Code',monospace;background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:11.5px;color:var(--red)}
+  .sw-timeline{list-style:none;padding:0}
+  .sw-timeline li{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--gray-200);font-size:13px}
+  .sw-timeline li:last-child{border-bottom:none}
+  .sw-timeline li.latest{background:var(--red-light);margin:0 -12px;padding:8px 12px;border-radius:8px;border-bottom:none}
+  .sw-v{width:64px;font-family:'SF Mono','Fira Code',monospace;font-weight:800;color:var(--red);flex-shrink:0}
+  footer{text-align:center;padding:40px 0 20px;font-size:13px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">기술 스펙 · 2026.07.13</div>
+</nav>
+<main>
+  <div class="hero">
+    <div class="hero-tag">Tech Stack</div>
+    <h1>바로알바 기술 스택 · 아키텍처</h1>
+    <p>2026년 7월 13일 기준 현행 기술 스펙 — 캐시 버전관리 5중 동기화 체계 확립</p>
+  </div>
+
+  <!-- 스택 -->
+  <div class="section">
+    <div class="section-title">Core Stack</div>
+    <div class="card">
+      <div class="card-note">🔴 표시된 항목이 이번 업데이트로 변경된 부분입니다.</div>
+      <div class="stack-grid">
+        <div class="stack-item">FRONTEND<br><div class="stack-value">바로알바.html + assets/css/style.css + assets/js/app.js + assets/js/app_ui.js</div></div>
+        <div class="stack-item changed"><div class="stack-label">CACHE VERSIONING</div><div class="stack-value">5곳 동시 동기화(app.js _APP_V·SW등록쿼리 / sw.js CACHE / HTML 3태그 ?v=) — v444</div></div>
+        <div class="stack-item"><div class="stack-label">FONT</div><div class="stack-value">Pretendard Variable (웹폰트 CDN)</div></div>
+        <div class="stack-item"><div class="stack-label">BACKEND DB</div><div class="stack-value">Supabase (PostgreSQL + Auth + Storage)</div></div>
+        <div class="stack-item"><div class="stack-label">HOSTING</div><div class="stack-value">Vercel (GitHub Auto Deploy)</div></div>
+        <div class="stack-item"><div class="stack-label">SERVERLESS</div><div class="stack-value">Vercel Functions (Node.js / Edge)</div></div>
+        <div class="stack-item"><div class="stack-label">MAP</div><div class="stack-value">Kakao Maps SDK (JS API v2) — 통합 핀 4모드</div></div>
+        <div class="stack-item"><div class="stack-label">AUTH</div><div class="stack-value">Kakao / Naver / Google OAuth via Supabase</div></div>
+        <div class="stack-item changed"><div class="stack-label">PUSH / PWA</div><div class="stack-value">Web Push API + Service Worker v444 — index.html 유령파일/head버전상수 문제 근본 제거</div></div>
+        <div class="stack-item"><div class="stack-label">EMAIL</div><div class="stack-value">Resend API (baroalba@multimove.co.kr)</div></div>
+        <div class="stack-item"><div class="stack-label">PAYMENT</div><div class="stack-value">Toss Payments (구독 · 포인트 충전) + 이용권/포인트 결제(바로만남)</div></div>
+        <div class="stack-item changed"><div class="stack-label">ANDROID</div><div class="stack-value">TWA · GitHub Actions 빌드 · v1.5.3(versionCode 28) — OAuth 배경색 버그 수정</div></div>
+        <div class="stack-item"><div class="stack-label">STORAGE</div><div class="stack-value">Supabase Storage (프로필 사진, 비자 서류, 공고 이미지)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vercel API -->
+  <div class="section">
+    <div class="section-title">Vercel API Endpoints</div>
+    <div class="card">
+      <div class="api-row new">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/mannam-owner<span class="new-tag">NEW</span></span>
+        <span class="api-desc">바로알바 업주 계정이 자신의 매장을 바로만남 제휴매장(바로스팟)으로 셀프 등록/조회</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/admin</span>
+        <span class="api-desc">관리자 전용 작업 — 바로미팅 승인/거절+카운트 재계산, 개설요청함, 신고(서비스 구분) 액션 대폭 확장</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method post">POST</span>
+        <span class="api-path">/api/coupon</span>
+        <span class="api-desc">프로모션 쿠폰 코드 검증/적립 + 보유 이용권 조회</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/welcome-email</span>
+        <span class="api-desc">신규 가입자 환영 이메일 발송 (Resend)</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/toss-confirm</span>
+        <span class="api-desc">구독 결제 Toss Payments 승인 처리</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/toss-points</span>
+        <span class="api-desc">포인트 충전 Toss 승인 + 보너스 계산 + DB 기록</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/send-push</span>
+        <span class="api-desc">Web Push 알림 발송 (채팅·지원·합격·바로미팅 인원/장소 변경 등)</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/report-notify</span>
+        <span class="api-desc">신고 접수 관리자 이메일 알림 (Resend)</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-get">GET</span>
+        <span class="api-path">/api/naver-search</span>
+        <span class="api-desc">네이버 지역 검색 API 프록시 — 제휴매장/바로미팅 장소 검색에 재사용</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-post">POST</span>
+        <span class="api-path">/api/naver-auth</span>
+        <span class="api-desc">네이버 OAuth 토큰 교환</span>
+      </div>
+      <div class="api-row">
+        <span class="api-method method-get">GET</span>
+        <span class="api-path">/api/surge-check</span>
+        <span class="api-desc">시급 급등(Surge) 조건 서버 검증</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 주요 DB 테이블 -->
+  <div class="section">
+    <div class="section-title">주요 Supabase 테이블</div>
+    <div class="card">
+      <table class="db-table">
+        <thead>
+          <tr><th>테이블</th><th>용도</th><th>주요 컬럼</th></tr>
+        </thead>
+        <tbody>
+          <tr class="new"><td><code>gathering_requests</code></td><td>모임·만남 개설 요청<span class="new-tag">NEW</span></td><td>requester_id, request_type, region, description, status</td></tr>
+          <tr><td><code>gatherings</code></td><td>바로모임/바로미팅 공통<span class="new-tag">확장</span></td><td>category(baromeeting/챌린지 등), lat/lng(바로미팅용 신규), target_age_range(신규), baromeeting_male/female_cur·max</td></tr>
+          <tr><td><code>gathering_applications</code></td><td>모임/미팅 참가 신청</td><td>gathering_id, applicant_id, status(pending/approved/rejected/cancelled)</td></tr>
+          <tr><td><code>gathering_chats</code></td><td>모임/미팅 채팅</td><td>gathering_id, sender_id, sender_name, sender_photo_url, message</td></tr>
+          <tr><td><code>workers</code></td><td>알바생 프로필<span class="new-tag">확장</span></td><td>kakao_uid, gender, rating, plan, baromeet_nick, baromeet_avatar(emoji:/photo)</td></tr>
+          <tr><td><code>businesses</code></td><td>업체 정보</td><td>name, plan, rating, mannnam_role, kakao_uid</td></tr>
+          <tr><td><code>barospot_restaurants</code></td><td>바로만남 제휴매장</td><td>name, address, phone, female_price, male_price, is_active</td></tr>
+          <tr><td><code>barospot_passes</code></td><td>보유 이용권 잔여수량</td><td>user_id, gender, remaining_count, status</td></tr>
+          <tr><td><code>barospot_pass_products</code></td><td>이용권 가격표</td><td>gender, qty, price, label, discount_pct, is_active</td></tr>
+          <tr><td><code>job_postings</code></td><td>공고</td><td>title, current_wage, start_time, status, age_limit</td></tr>
+          <tr><td><code>applications</code></td><td>지원 내역</td><td>worker_id, job_posting_id, status(cancelled 재지원 가능)</td></tr>
+          <tr><td><code>reports</code></td><td>신고<span class="new-tag">구분강화</span></td><td>target_type(job/user/moim/gathering), target_id, reporter_id, status</td></tr>
+          <tr><td><code>point_accounts</code></td><td>포인트 잔액</td><td>user_id, balance</td></tr>
+          <tr><td><code>app_admins</code></td><td>관리자 이메일 목록</td><td>email</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SW 버전 히스토리 -->
+  <div class="section">
+    <div class="section-title">Service Worker 버전 히스토리 (최근)</div>
+    <div class="card">
+      <ul class="sw-timeline">
+        <li class="latest"><span class="sw-v">v444</span><span>관리자 개설요청함 빈화면 버그 + 신고 서비스구분 + 전역 키보드가림 방지 (2026.07.13)</span></li>
+        <li><span class="sw-v">v441~443</span><span>캐시 드리프트 3중 근본원인(index.html/head버전/태그버전쿼리) 발견·해결 + 단체채팅 키보드 재구조화 (2026.07.13)</span></li>
+        <li><span class="sw-v">v425~440</span><span>FAB "바로+" 전환, 지도 통합핀 4모드, 필터패널, 지역빠른이동, 바텀시트 목록, 챌린지 카테고리 (2026.07.13)</span></li>
+        <li><span class="sw-v">v390~424</span><span>바로미팅 관리자 승인단계, 정원카운트 재계산, 익명 캐릭터채팅, 실시간추적화면, 채팅 UX 통일 (2026.07.10~12)</span></li>
+        <li><span class="sw-v">v385~389</span><span>바로미팅 개설·관리 기능 최초 구축 + 업주 매장 셀프등록 연동 (2026.07.09~10)</span></li>
+        <li><span class="sw-v">v384</span><span>바로미팅 익명채팅 닉네임/사진옵션 최초 도입 (2026.07.09)</span></li>
+        <li><span class="sw-v">v362</span><span>바로만남 서비스 최초 론칭 (2026.07.06)</span></li>
+        <li><span class="sw-v">v332</span><span>Google Play Store 정식 출시 (Android v1.5.0)</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 발견된 인프라 이슈 -->
+  <div class="section">
+    <div class="section-title">이번에 발견된 인프라 이슈</div>
+    <div class="card">
+      <div class="card-title">⚠️ 캐시 강제갱신이 3중으로 막혀있던 문제 — 근본 해결</div>
+      <div class="card-note">단순히 버전 번호를 안 올린 게 아니라, ① 루트의 <code>index.html</code>이 구버전 전체를 통째로 서빙 ② HTML head의 자체 버전상수가 app.js의 <code>_APP_V</code>와 따로 놀아서 캐시 초기화 로직 자체가 실행 안 됨 ③ 스크립트/CSS 태그 자체에 <code>?v=</code>가 없어 SW가 이 파일들을 영구 캐시 — 이 3가지가 겹쳐서 발생한 문제였습니다. 지금은 <code>index.html</code>을 무조건 리다이렉트 스텁으로, 버전판단을 <code>localStorage._baroV</code> 하나로, 태그에 <code>?v=444</code>를 부여해 5곳을 매 배포마다 동시에 올리는 체계로 확정했습니다.</div>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 by MultiMOVE · 2026.07.13</footer>
+</body>
+</html>
