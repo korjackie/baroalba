@@ -293,7 +293,7 @@
     #search-overlay.show { transform: translateY(0); }
     .srch-header {
       background: #fff;
-      padding: 12px 14px;
+      padding: calc(var(--sat-safe, 0px) + 12px) 14px 12px;
       display: flex; align-items: center; gap: 10px;
       border-bottom: 1px solid #f0f0f0;
       flex-shrink: 0;

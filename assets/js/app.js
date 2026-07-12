@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '430';
+  const _APP_V = '431';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=430').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=431').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2303,7 +2303,8 @@ function setMapMode(mode) {
   if (radiusBadge) radiusBadge.style.display = showJobUI ? '' : 'none';
   if (floatBtn) floatBtn.style.display = showJobUI ? '' : 'none';
   if (jobFilterBar) jobFilterBar.style.display = showJobUI ? '' : 'none';
-  if (ageFilterRow) ageFilterRow.style.display = (mode === 'baromeet' || mode === 'all') ? 'flex' : 'none';
+  // 연령대 필터는 바로만남 전용 - "전체" 모드는 알바/모임/만남을 있는 그대로 다 보여줘야 하므로 필터 없음
+  if (ageFilterRow) ageFilterRow.style.display = (mode === 'baromeet') ? 'flex' : 'none';
   // 모임 모드는 아직 전용 필터가 없어 버튼 자체를 숨김 (필터 없는 빈 패널 방지)
   if (filterToggleBtn) filterToggleBtn.style.display = mode === 'moim' ? 'none' : 'flex';
 
@@ -2425,7 +2426,8 @@ async function _renderBaromeetMarkers() {
   const { data: allMeets } = await db.from('gatherings')
     .select('id,title,location_name,location_address,gathering_date,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,target_age_range,lat,lng')
     .eq('status', 'open').eq('category', 'baromeeting').not('lat', 'is', null);
-  const meets = _bmAgeFilter ? (allMeets || []).filter(m => m.target_age_range === _bmAgeFilter) : allMeets;
+  // 연령대 필터는 "만남" 모드에서만 적용 - "전체" 모드에서는 필터 없이 전부 보여줌
+  const meets = (_bmAgeFilter && _currentMapMode === 'baromeet') ? (allMeets || []).filter(m => m.target_age_range === _bmAgeFilter) : allMeets;
   _baromeetMarkerData = meets || [];
   if (!meets?.length) return;
 
