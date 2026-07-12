@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '433';
+  const _APP_V = '434';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=433').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=434').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -1364,20 +1364,9 @@ function closeMoimCreate() {
   const _ownerPanelEl2 = document.getElementById('panel-owner');
   if (_mcFab2 && _ownerPanelEl2 && _ownerPanelEl2.style.display !== 'none') _mcFab2.style.display = 'flex';
 }
-// 바로미팅 단체채팅은 "나가기 = 참가 취소"라는 게 직관적이지 않을 수 있어
-// 나가기 전에 명확히 물어보고, 확인한 경우에만 신청을 취소하며 나감
+// 뒤로가기(헤더 화살표/기기 back 제스처)는 그냥 "닫기"일 뿐이지 "나가기"가 아님 -
+// 참가 취소는 아래 leaveBaromeetChat()처럼 명시적으로 "나가기"를 눌렀을 때만 실행
 function closeMoimChat() {
-  if (_baromeetChatId) {
-    const meetingId = _baromeetChatId;
-    showConfirm('채팅방에서 나가면 바로미팅 참가 신청이 취소돼요.\n정말 나가시겠어요?', async () => {
-      await _cancelBaromeetApplication(meetingId);
-      _actuallyCloseMoimChat();
-    });
-    return;
-  }
-  _actuallyCloseMoimChat();
-}
-function _actuallyCloseMoimChat() {
   const _mc = document.getElementById('panel-moim-chat');
   _mc.classList.remove('show');
   _mc.style.bottom = '';
@@ -1413,6 +1402,16 @@ async function _cancelBaromeetApplication(meetingId) {
     }
   }
   showToast('참가 신청이 취소됐어요');
+}
+
+// 헤더의 명시적 "나가기" 버튼 전용 - 뒤로가기와 달리 실제로 참가를 취소하고 나감
+function leaveBaromeetChat() {
+  if (!_baromeetChatId) { closeMoimChat(); return; }
+  const meetingId = _baromeetChatId;
+  showConfirm('채팅방에서 나가면 바로미팅 참가 신청이 취소돼요.\n정말 나가시겠어요?', async () => {
+    await _cancelBaromeetApplication(meetingId);
+    closeMoimChat();
+  });
 }
 
 // ── 모임 목록 로드 ────────────────────────────────────────
@@ -2471,11 +2470,27 @@ function setBmFeeFilter(el, fee) {
 
 // 출장 등으로 다른 지역 지도를 보고 싶을 때 - 반경 필터 대신 주요 지역으로 지도 중심을 바로 옮겨줌
 // (핀 자체는 현재도 반경 제한 없이 전체를 불러오므로 재조회 없이 지도만 이동하면 됨)
+const MAP_REGION_GROUPS = {
+  '서울': [['종로',37.5735,126.9788], ['강남',37.4979,127.0276], ['여의도',37.5219,126.9245]],
+  '경기': [['판교/분당',37.3947,127.1112], ['광명',37.4794,126.8646], ['용인',37.2411,127.1776], ['동탄',37.2003,127.0736]],
+  '인천': [['인천',37.4563,126.7052]],
+  '지방': [['부산',35.1796,129.0756], ['대구',35.8714,128.6014], ['대전',36.3504,127.3845], ['광주',35.1595,126.8526], ['울산',35.5384,129.3114]],
+};
+function toggleMapRegionGroup(el, group) {
+  document.querySelectorAll('#map-region-group-row .chip').forEach(c => c.classList.toggle('active', c === el));
+  const sub = document.getElementById('map-region-sub-row');
+  const list = MAP_REGION_GROUPS[group] || [];
+  sub.innerHTML = list.map(([name, lat, lng]) =>
+    `<div class="chip" onclick="jumpMapRegion(${lat},${lng},'${name}')" style="flex-shrink:0">${name}</div>`
+  ).join('');
+  sub.style.display = 'flex';
+}
 function jumpMapRegion(lat, lng, name) {
   if (!kakaoMap) return;
   kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
   kakaoMap.setLevel(6);
   showToast(`📍 ${name}(으)로 이동했어요`);
+  toggleMapFilterPanel(); // 패널을 닫아야 지도가 이동한 게 바로 보임
 }
 
 let _baromeetMarkerData = [];
@@ -4456,6 +4471,35 @@ function leaveChatItem(appId) {
   if (wrap) wrap.remove();
 }
 
+// 채팅목록에서 모임/만남 채팅방을 스와이프해서 나가는 경우 - 바로미팅은 실제 참가취소,
+// 바로모임은 1:1 채팅과 동일하게 로컬에서만 숨김(새 메시지 오면 다시 보임)
+function confirmLeaveGatheringChat(rowId, gatheringId, category, name) {
+  const wrap = document.getElementById('csw-' + rowId);
+  if (wrap) wrap.querySelector('.chat-swipe-inner')?.classList.remove('revealed');
+
+  const isBaromeet = category === 'baromeeting';
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:24px';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">${isBaromeet ? '💕' : '🤝'}</div>
+      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:8px">채팅방 나가기</div>
+      <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:24px"><b>${name}</b><br>${isBaromeet ? '나가면 참가 신청이 취소돼요.' : '채팅방을 나가시겠어요?<br><span style="font-size:12px;color:#bbb">새 메시지가 오면 자동으로 다시 표시됩니다.</span>'}</div>
+      <div style="display:flex;gap:10px">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+        <button onclick="_leaveGatheringChatConfirmed('${rowId}','${gatheringId}',${isBaromeet});this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">나가기</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+async function _leaveGatheringChatConfirmed(rowId, gatheringId, isBaromeet) {
+  if (isBaromeet) await _cancelBaromeetApplication(gatheringId);
+  else leaveChatItem(rowId);
+  const wrap = document.getElementById('csw-' + rowId);
+  if (wrap) wrap.remove();
+}
+
 async function openWChat(applicationId, bizName) {
   if (!applicationId) { showToast('채팅을 열 수 없습니다 (ID 없음)'); return; }
   const name = bizName || (window._chatBizNames && window._chatBizNames[applicationId]) || '업주';
@@ -5913,7 +5957,9 @@ function _renderChatList() {
         </div>
       </div>
       <button class="chat-fav-btn" onclick="_toggleChatFav('${a.id}',event)">${isFav?'⭐':'☆'}</button>
-      ${isGathering ? '' : `<button class="chat-leave-btn" onclick="confirmLeaveChat('${a.id}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>`}
+      ${isGathering
+        ? `<button class="chat-leave-btn" onclick="confirmLeaveGatheringChat('${a.id}','${a.gatheringId}','${a.gatheringCategory}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>`
+        : `<button class="chat-leave-btn" onclick="confirmLeaveChat('${a.id}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>`}
     </div>`;
   };
 
@@ -17383,7 +17429,7 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   document.getElementById('moim-chat-title').textContent = (title || '바로미팅') + ' (익명)';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
   const memberEl = document.getElementById('moim-chat-members-text');
-  if (memberEl) memberEl.innerHTML = `나는 "${_baromeetAnonLabel}"으로 표시돼요 · <span style="text-decoration:underline;cursor:pointer" onclick="event.stopPropagation();openBaromeetAnonSetup()">닉네임/사진 변경</span>`;
+  if (memberEl) memberEl.innerHTML = `나는 "${_baromeetAnonLabel}"으로 표시돼요 · <span style="text-decoration:underline;cursor:pointer" onclick="event.stopPropagation();openBaromeetAnonSetup()">닉네임/사진 변경</span> · <span style="text-decoration:underline;cursor:pointer;color:#e11d48" onclick="event.stopPropagation();leaveBaromeetChat()">나가기</span>`;
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';
 
