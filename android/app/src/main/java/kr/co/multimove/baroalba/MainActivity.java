@@ -128,6 +128,19 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                // 카카오/네이버/구글 로그인 페이지는 같은 WebView 안에서 그대로 로드되는데,
+                // WebView 배경색이 항상 브랜드 레드로 고정돼 있어서 그 페이지의 여백에
+                // 빨간 배경이 그대로 비쳐 보이는 문제가 있었음(로그인 자체는 정상 동작).
+                // 우리 도메인이 아닐 때만 흰색으로 바꿔주고, 우리 도메인으로 돌아오면 다시 레드로.
+                if (url != null && url.startsWith("https://baroalba.multimove.co.kr")) {
+                    view.setBackgroundColor(Color.parseColor("#C8102E"));
+                } else {
+                    view.setBackgroundColor(Color.WHITE);
+                }
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 applySafeArea();
                 // 페이지 로드 완료 후 FCM 토큰 재전달 (타이밍 문제 보완)
