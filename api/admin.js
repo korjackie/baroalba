@@ -308,6 +308,28 @@ module.exports = async function handler(req, res) {
       return res.json(merged);
     }
 
+    // ── 신청자 개인에게 공지 메시지 발송 (인앱 알림 + 푸시) ──
+    if (action === 'notify_applicant' && req.method === 'POST') {
+      const { user_id, message } = req.body || {};
+      if (!user_id || !message?.trim()) return res.status(400).json({ error: 'user_id, message required' });
+      const title = '📢 바로미팅 안내';
+      const body = message.trim();
+      await sb('notifications', svcKey, {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_id, title, body, type: 'baromeeting_notice' }),
+      });
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      if (host) {
+        await fetch(`https://${host}/api/send-push`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id, title, body, url: '/바로알바.html', type: 'baromeeting_notice' }),
+        });
+      }
+      return res.json({ ok: true });
+    }
+
     // ── 바로미팅 개설/수정 ────────────────────────────────
     if (action === 'save_baromeeting' && (req.method === 'POST' || req.method === 'PATCH')) {
       const { id, title, description, location_name, location_address, gathering_date, entry_fee, male_max, female_max } = req.body || {};
