@@ -753,6 +753,17 @@
 
 <div id="toast"></div>
 
+<!-- 네이티브 confirm() 대신 사용하는 커스텀 확인 팝업 -->
+<div id="admin-confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
+    <div id="admin-confirm-msg" style="font-size:14px;color:#1e293b;line-height:1.6;white-space:pre-line;margin-bottom:20px"></div>
+    <div style="display:flex;gap:8px">
+      <button id="admin-confirm-cancel" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
+      <button id="admin-confirm-ok" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">확인</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
@@ -1576,7 +1587,7 @@ async function loadBaromeetings() {
         const maleMax = m.baromeeting_male_max ?? 4, femaleMax = m.baromeeting_female_max ?? 4;
         const maleCur = m.baromeeting_male_cur ?? 0, femaleCur = m.baromeeting_female_cur ?? 0;
         return `
-        <div onclick="editBaromeeting('${m.id}')" style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer">
+        <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
             <div style="min-width:0">
               <div style="font-size:14px;font-weight:800;color:#1e293b">${m.title || '(제목없음)'}</div>
@@ -1586,9 +1597,9 @@ async function loadBaromeetings() {
           </div>
           <div style="font-size:12px;color:#64748b;margin-bottom:10px">여성 ${femaleCur}/${femaleMax}명 · 남성 ${maleCur}/${maleMax}명${m.entry_fee ? ' · 참가비 ' + m.entry_fee.toLocaleString() + '원' : ''}</div>
           <div style="display:flex;gap:6px">
-            <button class="r-btn r-btn-reviewing" onclick="event.stopPropagation();editBaromeeting('${m.id}')">수정</button>
-            <button class="r-btn ${isClosed ? 'r-btn-done' : 'r-btn-dismiss'}" onclick="event.stopPropagation();toggleBaromeeting('${m.id}', '${isClosed ? 'open' : 'closed'}')">${isClosed ? '재오픈' : '강제마감'}</button>
-            <button class="r-btn r-btn-close" onclick="event.stopPropagation();deleteBaromeetingById('${m.id}')">삭제</button>
+            <button class="r-btn r-btn-reviewing" onclick="editBaromeeting('${m.id}')">수정</button>
+            <button class="r-btn ${isClosed ? 'r-btn-done' : 'r-btn-dismiss'}" onclick="toggleBaromeeting('${m.id}', '${isClosed ? 'open' : 'closed'}')">${isClosed ? '재오픈' : '강제마감'}</button>
+            <button class="r-btn r-btn-close" onclick="deleteBaromeetingById('${m.id}')">삭제</button>
           </div>
         </div>`;
       }).join('')
@@ -1684,13 +1695,18 @@ function resetBaromeetingForm() {
 }
 
 let _bmApplicantsGatheringId = null;
-async function toggleBmApplicants() {
+function toggleBmApplicants() {
   const list = document.getElementById('bm-applicants-list');
   const arrow = document.getElementById('bm-applicants-toggle-arrow');
   const isOpen = list.style.display !== 'none';
   if (isOpen) { list.style.display = 'none'; arrow.textContent = '▾'; return; }
   list.style.display = 'block';
   arrow.textContent = '▴';
+  renderBmApplicantsList();
+}
+
+async function renderBmApplicantsList() {
+  const list = document.getElementById('bm-applicants-list');
   list.innerHTML = '<div class="loading">로딩 중...</div>';
   const data = await adminApi('baromeeting_applicants', 'GET', null, { gathering_id: _bmApplicantsGatheringId });
   if (data?.error) { list.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">불러오기 실패: ${data.error}</div>`; return; }
@@ -1718,19 +1734,19 @@ async function toggleBmApplicants() {
 }
 
 async function approveBmApplicant(applicationId, name) {
-  if (!confirm(`${name}님의 바로미팅 참가를 승인할까요?`)) return;
+  if (!await adminConfirm(`${name}님의 바로미팅 참가를 승인할까요?`, '승인')) return;
   const result = await adminApi('approve_baromeet_applicant', 'POST', { application_id: applicationId });
   if (result?.error) { showToast('승인 실패: ' + result.error); return; }
   showToast(`✅ ${name}님을 승인했어요`);
-  toggleBmApplicants(); toggleBmApplicants();
+  renderBmApplicantsList();
 }
 
 async function rejectBmApplicant(applicationId, name) {
-  if (!confirm(`${name}님의 바로미팅 참가를 거절할까요?\n(정원 자리가 반납되고 거절 안내가 발송됩니다)`)) return;
+  if (!await adminConfirm(`${name}님의 바로미팅 참가를 거절할까요?\n정원 자리가 반납되고 거절 안내가 발송됩니다.`, '거절')) return;
   const result = await adminApi('reject_baromeet_applicant', 'POST', { application_id: applicationId });
   if (result?.error) { showToast('거절 실패: ' + result.error); return; }
   showToast(`🙏 ${name}님에게 거절 안내를 보냈어요`);
-  toggleBmApplicants(); toggleBmApplicants();
+  renderBmApplicantsList();
   loadBaromeetings();
 }
 
@@ -2235,6 +2251,27 @@ function showToast(msg) {
   t.textContent = msg;
   t.style.display = 'block';
   setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+// 네이티브 confirm()은 "The page at ... says" 같은 브라우저 UI가 노출돼 앱과 어울리지 않아
+// 앱 스타일의 커스텀 확인 팝업으로 대체 (Promise<boolean> 반환)
+function adminConfirm(message, okLabel) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('admin-confirm-overlay');
+    const okBtn = document.getElementById('admin-confirm-cancel').nextElementSibling;
+    const cancelBtn = document.getElementById('admin-confirm-cancel');
+    document.getElementById('admin-confirm-msg').textContent = message;
+    okBtn.textContent = okLabel || '확인';
+    overlay.style.display = 'flex';
+    const cleanup = result => {
+      overlay.style.display = 'none';
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+  });
 }
 
 async function doLogout() {
