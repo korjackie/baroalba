@@ -412,7 +412,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '446';
+  const _APP_V = '447';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -428,7 +428,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=446').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=447').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -7550,7 +7550,15 @@ function setNav(el, tab) {
   panelChats.classList.remove('show');
   panelProfile.classList.remove('show');
 
-  if (tab !== 'map') stopLocationWatch();
+  if (tab !== 'map') {
+    stopLocationWatch();
+    // 지도 모드 전용 플로팅 버튼들(목록보기/스와이프로 보기) - position:fixed라 지도 탭을
+    // 벗어나도 display가 그대로 남아 다른 탭 화면 위에 계속 떠 있던 버그 방지
+    const _mlf = document.getElementById('map-list-float');
+    if (_mlf) _mlf.style.display = 'none';
+    const _msf = document.getElementById('map-swipe-float');
+    if (_msf) _msf.style.display = 'none';
+  }
 
   if (tab === 'home') {
     topBar.style.display      = 'none';
