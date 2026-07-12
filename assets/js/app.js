@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '419';
+  const _APP_V = '420';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=419').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=420').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16610,11 +16610,15 @@ async function _loadBaromeetList() {
       </div>`;
       return;
     }
-    // 내가 이미 참가 확정된(승인된) 미팅 - 정원이 다 차면 익명 단체채팅방 입장 버튼 표시용
+    // 내가 이미 신청한 미팅 - 익명 단체채팅방 입장 버튼 표시용.
+    // 바로미팅은 승인 대기 상태가 없는 즉시확정 방식이라 status 값과 무관하게 신청 이력만
+    // 있으면 참가로 간주 - 예전엔 status='approved'만 걸러서, 옛 테스트 데이터 등으로
+    // status가 다르게 남은 계정은 재신청도 막히고 채팅 입장도 안 되는 막힌 상태가 됐었음
+    // (applyBaromeet()의 중복신청 체크도 status 구분 없이 존재 여부만 보는 것과 일치시킴)
     let joinedSet = new Set();
     if (currentUser) {
       const { data: myApps } = await db.from('gathering_applications')
-        .select('gathering_id').eq('applicant_id', currentUser.id).eq('status', 'approved')
+        .select('gathering_id').eq('applicant_id', currentUser.id)
         .in('gathering_id', data.map(m => m.id));
       joinedSet = new Set((myApps || []).map(a => a.gathering_id));
     }
