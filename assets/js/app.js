@@ -345,22 +345,27 @@ window.addEventListener('popstate', () => {
 window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
-  // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
+  // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회.
+  // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
+  // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
+  // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
   const _APP_V = '435';
-  const _urlV = new URL(location.href).searchParams.get('_v');
-  // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
-  if (_urlV === _APP_V) {
+  const _lastV = localStorage.getItem('_baroV');
+  if (_lastV !== _APP_V) {
+    localStorage.setItem('_baroV', _APP_V);
     if ('caches' in window) await caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
     if (navigator.serviceWorker) {
       const regs = await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r => r.unregister()));
     }
+    // 이번 로드는 이미 구버전 리소스로 실행 중일 수 있으므로 캐시 삭제 후 한 번 새로고침해서
+    // 완전히 새로 받아옴 (localStorage를 먼저 갱신했으므로 다음 로드에선 이 블록이 재실행되지 않음)
+    location.reload();
+    return;
   }
-  if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js?v=435').catch(()=>{});
-    // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 

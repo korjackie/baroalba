@@ -42,11 +42,8 @@
   document.documentElement.style.visibility='hidden';
   // 10초 안전 공개 — DOMContentLoaded가 loadJobs 완료 후 직접 취소/공개함
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
-  // 버전 체크 → 구버전 캐시 리다이렉트
-  (function(){
-    var V='421',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
-    if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
-  })();
+  // 버전 체크/캐시 초기화는 app.js의 _APP_V 로 일원화함 (예전엔 여기 하드코딩된 V가 있었는데
+  // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
   <script src="./shared-lang.js"></script>
