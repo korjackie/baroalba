@@ -389,7 +389,6 @@
       <div class="list-item" onclick="navTo('alba','users')"><div class="list-icon">👥</div><div class="list-text"><div class="list-title">알바생 · 업주 회원 관리</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('alba','reports')"><div class="list-icon">🚨</div><div class="list-text"><div class="list-title">신고 처리</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('alba','workplace-verify')"><div class="list-icon">💼</div><div class="list-text"><div class="list-title">직장인증 심사</div><div class="list-desc">바로만남 신뢰 배지용 재직 인증 요청</div></div><div class="list-arrow">›</div></div>
-      <div class="list-item" onclick="navTo('alba','community')"><div class="list-icon">💬</div><div class="list-text"><div class="list-title">커뮤니티 게시판 관리</div><div class="list-desc">부적절한 게시글/댓글 삭제</div></div><div class="list-arrow">›</div></div>
     </div>
   </div>
 
@@ -489,7 +488,14 @@
 
   <!-- 커뮤니티 게시판 관리 -->
   <div class="tab-content" id="tab-community">
-    <div id="community-mgmt-list"><div class="loading">로딩 중...</div></div>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterCommunityMgmt('all', this)">전체</button>
+      <button class="filter-btn" onclick="filterCommunityMgmt('free', this)">자유</button>
+      <button class="filter-btn" onclick="filterCommunityMgmt('review', this)">업체후기</button>
+      <button class="filter-btn" onclick="filterCommunityMgmt('meetup', this)">모임/만남후기</button>
+      <button class="filter-btn" onclick="filterCommunityMgmt('info', this)">정보공유</button>
+    </div>
+    <div id="community-mgmt-list" style="padding-bottom:40px"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 공고관리 -->
@@ -1019,7 +1025,14 @@ function goBackSmart() {
 history.pushState({ adminTab: 'dashboard' }, '');
 window.addEventListener('popstate', () => {
   const cur = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
-  if (cur === 'dashboard') return; // 이미 대시보드 상태면 실제로 admin.html을 벗어나는 중 - 브라우저에 맡김
+  if (cur === 'dashboard') {
+    // 이전엔 여기서 아무것도 안 하고 "브라우저가 알아서 admin.html을 벗어나겠지"라고
+    // 기대했는데, 실제로는 페이지 로드 시 쌓아둔 히스토리 항목 하나를 조용히
+    // 소모하기만 하고 화면은 그대로라 사용자 입장에선 뒤로가기가 먹통처럼 보였음.
+    // goBackSmart()와 동일하게 이 시점에 바로 admin.html을 명시적으로 벗어나도록 수정
+    location.href = (document.referrer && document.referrer.includes(location.host)) ? document.referrer : '/바로알바.html';
+    return;
+  }
   const group = GROUP_OF[cur] || cur;
   _fromPopState = true;
   switchTab(cur === group ? 'dashboard' : group);
@@ -1744,15 +1757,28 @@ async function reviewWorkplaceVerify(workerId, status) {
 }
 
 // ── 커뮤니티 게시판 관리 ──────────────────────────────────
-const COMM_CAT_LABEL = { review:'업체후기', info:'정보공유', free:'자유', owner:'업주전용', worker:'알바생전용' };
+const COMM_CAT_LABEL = { review:'업체후기', meetup:'모임/만남후기', info:'정보공유', free:'자유', owner:'업주전용', worker:'알바생전용' };
+let _commMgmtFilter = 'all';
+function filterCommunityMgmt(cat, btn) {
+  _commMgmtFilter = cat;
+  btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _renderCommunityMgmtList();
+}
+let _commMgmtPosts = [];
 async function loadCommunityMgmtPosts() {
   const el = document.getElementById('community-mgmt-list');
   el.innerHTML = '<div class="loading">로딩 중...</div>';
   const data = await adminApi('community_posts');
   if (data?.error) { el.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">불러오기 실패: ${data.error}</div>`; return; }
-  const rows = Array.isArray(data) ? data : [];
+  _commMgmtPosts = Array.isArray(data) ? data : [];
   const s = document.getElementById('s-community-posts');
-  if (s) s.textContent = rows.length;
+  if (s) s.textContent = _commMgmtPosts.length;
+  _renderCommunityMgmtList();
+}
+function _renderCommunityMgmtList() {
+  const el = document.getElementById('community-mgmt-list');
+  const rows = _commMgmtFilter === 'all' ? _commMgmtPosts : _commMgmtPosts.filter(p => p.category === _commMgmtFilter);
   if (!rows.length) { el.innerHTML = '<div class="empty">게시글이 없습니다</div>'; return; }
   el.innerHTML = rows.map(p => {
     const author = p.is_anonymous ? '익명' : (p.workers?.name || p.businesses?.biz_name || '알 수 없음');
@@ -1762,12 +1788,15 @@ async function loadCommunityMgmtPosts() {
         <span class="status-badge sb-reviewing">${COMM_CAT_LABEL[p.category] || p.category}</span>
         <span style="font-size:11px;color:#94a3b8">${new Date(p.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
       </div>
-      <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px">${(p.title || '(제목없음)').replace(/</g,'&lt;')}</div>
-      <div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:8px;white-space:pre-wrap">${(p.content || '').slice(0,200).replace(/</g,'&lt;')}</div>
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">${author} · 댓글 ${p.comments_count || 0}개</div>
-      <div style="display:flex;gap:8px">
-        <button onclick="toggleCommunityMgmtComments('${p.id}', this)" style="flex:1;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">댓글 보기</button>
-        <button onclick="deleteCommunityMgmtPost('${p.id}')" style="flex:1;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">게시글 삭제</button>
+      <div id="cp-view-${p.id}">
+        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px">${(p.title || '(제목없음)').replace(/</g,'&lt;')}</div>
+        <div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:8px;white-space:pre-wrap">${(p.content || '').slice(0,200).replace(/</g,'&lt;')}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">${author} · 댓글 ${p.comments_count || 0}개</div>
+        <div style="display:flex;gap:8px">
+          <button id="cp-toggle-${p.id}" onclick="toggleCommunityMgmtComments('${p.id}', this)" style="flex:1;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">댓글 보기</button>
+          <button onclick="editCommunityMgmtPost('${p.id}')" style="flex:1;padding:9px;background:#eff6ff;color:#1e3a8a;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">수정</button>
+          <button onclick="deleteCommunityMgmtPost('${p.id}')" style="flex:1;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+        </div>
       </div>
       <div id="cp-comments-${p.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9"></div>
     </div>`;
@@ -1776,8 +1805,14 @@ async function loadCommunityMgmtPosts() {
 async function toggleCommunityMgmtComments(postId, btn) {
   const box = document.getElementById('cp-comments-' + postId);
   if (!box) return;
-  if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+  const label = document.getElementById('cp-toggle-' + postId);
+  if (box.style.display !== 'none') {
+    box.style.display = 'none';
+    if (label) label.textContent = '댓글 보기';
+    return;
+  }
   box.style.display = 'block';
+  if (label) label.textContent = '댓글 닫기';
   await _renderCommunityMgmtComments(postId);
 }
 async function _renderCommunityMgmtComments(postId) {
@@ -1787,23 +1822,28 @@ async function _renderCommunityMgmtComments(postId) {
   const data = await adminApi('community_comments', 'GET', null, { post_id: postId });
   const rows = Array.isArray(data) ? data : [];
   if (!rows.length) { box.innerHTML = '<div style="font-size:12px;color:#94a3b8;padding:6px 0">댓글이 없습니다</div>'; return; }
-  box.innerHTML = rows.map(c => {
-    const author = c.is_anonymous ? '익명' : (c.workers?.name || c.businesses?.biz_name || '알 수 없음');
-    return `
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #f8fafc">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;color:#475569;line-height:1.5">${(c.content || '').replace(/</g,'&lt;')}</div>
-        <div style="font-size:10.5px;color:#94a3b8;margin-top:3px">${author} · ${new Date(c.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+  box.innerHTML = rows.map(c => `
+    <div style="padding:8px 0;border-bottom:1px solid #f8fafc" id="cc-${c.id}">
+      <div id="cc-view-${c.id}" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;color:#475569;line-height:1.5">${(c.content || '').replace(/</g,'&lt;')}</div>
+          <div style="font-size:10.5px;color:#94a3b8;margin-top:3px">${c.is_anonymous ? '익명' : (c.workers?.name || c.businesses?.biz_name || '알 수 없음')} · ${new Date(c.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="editCommunityMgmtComment('${c.id}','${postId}')" style="padding:5px 10px;background:#eff6ff;color:#1e3a8a;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">수정</button>
+          <button onclick="deleteCommunityMgmtComment('${c.id}','${postId}')" style="padding:5px 10px;background:#fee2e2;color:#991b1b;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button>
+        </div>
       </div>
-      <button onclick="deleteCommunityMgmtComment('${c.id}','${postId}')" style="flex-shrink:0;padding:5px 10px;background:#fee2e2;color:#991b1b;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 }
 async function deleteCommunityMgmtPost(id) {
   if (!confirm('이 게시글과 모든 댓글을 삭제합니다. 계속할까요?')) return;
   const result = await adminApi('delete_community_post', 'DELETE', { id });
   if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
   showToast('게시글이 삭제됐습니다');
+  _commMgmtPosts = _commMgmtPosts.filter(p => p.id !== id);
+  const s = document.getElementById('s-community-posts');
+  if (s) s.textContent = _commMgmtPosts.length;
   document.getElementById('cp-' + id)?.remove();
 }
 async function deleteCommunityMgmtComment(id, postId) {
@@ -1811,6 +1851,53 @@ async function deleteCommunityMgmtComment(id, postId) {
   const result = await adminApi('delete_community_comment', 'DELETE', { id, post_id: postId });
   if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
   showToast('댓글이 삭제됐습니다');
+  const p = _commMgmtPosts.find(p => p.id === postId);
+  if (p) p.comments_count = Math.max(0, (p.comments_count || 1) - 1);
+  _renderCommunityMgmtComments(postId);
+}
+function editCommunityMgmtPost(id) {
+  const p = _commMgmtPosts.find(p => p.id === id);
+  const view = document.getElementById('cp-view-' + id);
+  if (!p || !view) return;
+  view.innerHTML = `
+    <input id="cp-edit-title-${id}" value="${(p.title || '').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:6px;box-sizing:border-box">
+    <textarea id="cp-edit-content-${id}" rows="4" style="width:100%;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:8px;box-sizing:border-box;resize:vertical">${(p.content || '')}</textarea>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveCommunityMgmtPost('${id}')" style="flex:1;padding:9px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">저장</button>
+      <button onclick="_renderCommunityMgmtList()" style="flex:1;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">취소</button>
+    </div>`;
+}
+async function saveCommunityMgmtPost(id) {
+  const title = document.getElementById('cp-edit-title-' + id)?.value.trim();
+  const content = document.getElementById('cp-edit-content-' + id)?.value.trim();
+  if (!title || !content) { showToast('제목/내용을 입력해주세요'); return; }
+  const result = await adminApi('edit_community_post', 'PATCH', { id, title, content });
+  if (result?.error) { showToast('저장 실패: ' + result.error); return; }
+  const p = _commMgmtPosts.find(p => p.id === id);
+  if (p) { p.title = title; p.content = content; }
+  showToast('수정됐습니다');
+  _renderCommunityMgmtList();
+}
+function editCommunityMgmtComment(id, postId) {
+  const view = document.getElementById('cc-view-' + id);
+  if (!view) return;
+  const textEl = view.querySelector('div > div');
+  const curText = textEl ? textEl.textContent : '';
+  view.innerHTML = `
+    <div style="flex:1">
+      <textarea id="cc-edit-${id}" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;margin-bottom:6px;box-sizing:border-box;resize:vertical">${curText}</textarea>
+      <div style="display:flex;gap:6px">
+        <button onclick="saveCommunityMgmtComment('${id}','${postId}')" style="flex:1;padding:7px;background:#7C3AED;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">저장</button>
+        <button onclick="_renderCommunityMgmtComments('${postId}')" style="flex:1;padding:7px;background:#f1f5f9;color:#475569;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">취소</button>
+      </div>
+    </div>`;
+}
+async function saveCommunityMgmtComment(id, postId) {
+  const content = document.getElementById('cc-edit-' + id)?.value.trim();
+  if (!content) { showToast('내용을 입력해주세요'); return; }
+  const result = await adminApi('edit_community_comment', 'PATCH', { id, content });
+  if (result?.error) { showToast('저장 실패: ' + result.error); return; }
+  showToast('수정됐습니다');
   _renderCommunityMgmtComments(postId);
 }
 

@@ -435,7 +435,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '450';
+  const _APP_V = '451';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -451,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=450').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=451').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -10558,6 +10558,7 @@ function _buildCommTabs() {
     { cat: 'all',    label: '전체' },
     { cat: 'free',   label: '자유' },
     { cat: 'review', label: '업체후기' },
+    { cat: 'meetup', label: '모임/만남후기' },
     { cat: 'info',   label: '정보공유' },
   ];
   const el = document.getElementById('community-cat-tabs');
@@ -10578,12 +10579,13 @@ function _buildCommTabs() {
 function _buildWriteCats() {
   const cats = [
     { cat: 'review', label: '업체후기' },
+    { cat: 'meetup', label: '모임/만남후기' },
     { cat: 'info',   label: '정보공유' },
     { cat: 'free',   label: '자유' },
   ];
   const el = document.getElementById('comm-write-cats');
   el.innerHTML = cats.map((c, i) => {
-    const sel = i === 2; // 자유 기본 선택
+    const sel = i === 3; // 자유 기본 선택
     return `<button onclick="selectWriteCat(this,'${c.cat}')" data-cat="${c.cat}"
       style="padding:8px 14px;border-radius:20px;border:1.5px solid ${sel?'var(--red)':'#eee'};font-size:13px;font-weight:700;background:${sel?'#FFF0F0':'#fff'};color:${sel?'var(--red)':'#888'};cursor:pointer">${c.label}</button>`;
   }).join('');
@@ -10661,6 +10663,7 @@ async function loadCommunityPosts(cat) {
 
   const CAT_INFO = {
     review:{ bg:'#FFF7ED', color:'#EA580C', label:'업체후기' },
+    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:'모임/만남후기' },
     info:  { bg:'#EFF6FF', color:'#3B82F6', label:'정보공유' },
     free:  { bg:'#F5F3FF', color:'#7C3AED', label:'자유' },
     owner: { bg:'#FEF3C7', color:'#D97706', label:'업주전용' },
@@ -10708,6 +10711,7 @@ async function openCommunityPost(postId) {
 
   const CAT_INFO = {
     review:{ bg:'#FFF7ED', color:'#EA580C', label:'업체후기' },
+    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:'모임/만남후기' },
     info:  { bg:'#EFF6FF', color:'#3B82F6', label:'정보공유' },
     free:  { bg:'#F5F3FF', color:'#7C3AED', label:'자유' },
     owner: { bg:'#FEF3C7', color:'#D97706', label:'업주전용' },

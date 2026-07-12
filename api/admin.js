@@ -435,6 +435,20 @@ module.exports = async function handler(req, res) {
       }
       return res.json({ ok: true });
     }
+    if (action === 'edit_community_post' && req.method === 'PATCH') {
+      const { id, title, content } = req.body || {};
+      if (!id || !title || !content) return res.status(400).json({ error: 'id, title, content required' });
+      const r = await sb(`community_posts?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ title, content }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+    if (action === 'edit_community_comment' && req.method === 'PATCH') {
+      const { id, content } = req.body || {};
+      if (!id || !content) return res.status(400).json({ error: 'id, content required' });
+      const r = await sb(`community_comments?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ content }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
 
     // ── 모임/만남 개설 요청함 (유저가 앱 FAB에서 남긴 요청) ──
     if (action === 'gathering_requests') {
