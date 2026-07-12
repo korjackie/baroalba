@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=451"></script>
+  <script src="./shared-lang.js?v=452"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -56,7 +56,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=451">
+  <link rel="stylesheet" href="./assets/css/style.css?v=452">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2915,7 +2915,10 @@
     <div class="detail-handle" id="comm-post-handle" style="flex-shrink:0"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 12px;flex-shrink:0">
       <div style="font-size:17px;font-weight:900;color:#222;flex:1;margin-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="comm-post-title-h">게시글</div>
-      <button onclick="closeCommunityPost()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;flex-shrink:0">✕</button>
+      <button onclick="shareCommunityPost()" style="background:none;border:none;padding:4px;cursor:pointer;flex-shrink:0;display:flex;align-items:center">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button onclick="closeCommunityPost()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;flex-shrink:0;margin-left:6px">✕</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:0 20px" id="comm-post-body"></div>
     <div style="border-top:1px solid #f0f0f0;background:#fff;flex-shrink:0">
@@ -4033,8 +4036,8 @@
 <!-- ── /owner 기능 패널 ── -->
 <div class="toast hidden" id="toast"></div>
 
-<script src="./assets/js/qrcode.min.js?v=451"></script>
-<script src="./assets/js/app.js?v=451"></script>
+<script src="./assets/js/qrcode.min.js?v=452"></script>
+<script src="./assets/js/app.js?v=452"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">

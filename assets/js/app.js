@@ -435,7 +435,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '451';
+  const _APP_V = '452';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -451,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=451').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=452').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -580,6 +580,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 바로미팅 딥링크 처리
   const deepBaromeetId = _dParams.get('baromeet');
   if (deepBaromeetId) setTimeout(() => handleBaromeetDeeplink(deepBaromeetId), 800);
+  // 커뮤니티 게시글 딥링크 처리 (공유하기로 받은 링크)
+  const deepPostId = _dParams.get('post');
+  if (deepPostId) setTimeout(() => { openCommunityPanel(); openCommunityPost(deepPostId); }, 800);
   if (deepChatId && currentUser) setTimeout(() => {
     if (deepChatView === 'worker') openWChat(deepChatId, '업주');
     else openChat(deepChatId, '채팅');
@@ -10557,13 +10560,16 @@ function _buildCommTabs() {
   const tabs = [
     { cat: 'all',    label: '전체' },
     { cat: 'free',   label: '자유' },
-    { cat: 'review', label: '업체후기' },
+    { cat: 'review', label: '알바후기' },
     { cat: 'meetup', label: '모임/만남후기' },
     { cat: 'info',   label: '정보공유' },
   ];
   const el = document.getElementById('community-cat-tabs');
-  const btnBase = 'padding:11px 4px;background:none;border:none;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0';
-  el.innerHTML = `<div style="display:flex;min-width:100%;align-items:stretch">` +
+  // flex:1과 flex-shrink:0을 같이 주면 flex-shrink가 나중에 덮어써서 각 탭이
+  // 내용 길이만큼 제각각 폭을 갖던 버그(짧은 라벨은 좁고 긴 라벨은 넓게) - 5개 탭이
+  // 스크롤 없이 균등 분할되도록 min-width:0으로 강제
+  const btnBase = 'padding:11px 2px;background:none;border:none;font-size:12.5px;cursor:pointer;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:center';
+  el.innerHTML = `<div style="display:flex;width:100%;align-items:stretch">` +
     tabs.map((t, i) => {
       const active = i === 0;
       const color = active ? 'var(--red)' : '#888';
@@ -10578,7 +10584,7 @@ function _buildCommTabs() {
 
 function _buildWriteCats() {
   const cats = [
-    { cat: 'review', label: '업체후기' },
+    { cat: 'review', label: '알바후기' },
     { cat: 'meetup', label: '모임/만남후기' },
     { cat: 'info',   label: '정보공유' },
     { cat: 'free',   label: '자유' },
@@ -10605,6 +10611,40 @@ function closeCommunityPanel() {
 
 function closeCommunityPost() {
   document.getElementById('community-post-overlay').classList.remove('open');
+}
+
+// 커뮤니티 게시글 공유하기 - shareBaromeet()과 동일한 패턴(네이티브 공유 > 카카오 > Web Share > 클립보드)
+async function shareCommunityPost() {
+  if (!_commCurrentPostId) return;
+  const title = document.getElementById('comm-post-title-h')?.textContent || '게시글';
+  const link = `${location.origin}${location.pathname}?post=${_commCurrentPostId}`;
+  const shareTitle = `[바로알바 커뮤니티] ${title}`;
+  const shareText = `${shareTitle}\n${link}`;
+
+  if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
+    window.AndroidBridge.share(shareTitle, '바로알바 커뮤니티에서 확인해보세요', link);
+    return;
+  }
+  if (window.Kakao?.isInitialized?.()) {
+    try {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: shareTitle,
+          description: '바로알바 커뮤니티에서 확인해보세요',
+          imageUrl: `${location.origin}/icons/og-share.png`,
+          link: { mobileWebUrl: link, webUrl: link }
+        },
+        buttons: [{ title: '게시글 보기', link: { mobileWebUrl: link, webUrl: link } }]
+      });
+      return;
+    } catch(e) {}
+  }
+  if (navigator.share) {
+    navigator.share({ title: shareTitle, text: shareText, url: link }).catch(() => {});
+    return;
+  }
+  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
 }
 
 function openCommunityWriteOverlay() {
@@ -10662,7 +10702,7 @@ async function loadCommunityPosts(cat) {
   }
 
   const CAT_INFO = {
-    review:{ bg:'#FFF7ED', color:'#EA580C', label:'업체후기' },
+    review:{ bg:'#FFF7ED', color:'#EA580C', label:'알바후기' },
     meetup:{ bg:'#FFF1F2', color:'#e11d48', label:'모임/만남후기' },
     info:  { bg:'#EFF6FF', color:'#3B82F6', label:'정보공유' },
     free:  { bg:'#F5F3FF', color:'#7C3AED', label:'자유' },
@@ -10710,7 +10750,7 @@ async function openCommunityPost(postId) {
   document.getElementById('comm-post-title-h').textContent = post.title;
 
   const CAT_INFO = {
-    review:{ bg:'#FFF7ED', color:'#EA580C', label:'업체후기' },
+    review:{ bg:'#FFF7ED', color:'#EA580C', label:'알바후기' },
     meetup:{ bg:'#FFF1F2', color:'#e11d48', label:'모임/만남후기' },
     info:  { bg:'#EFF6FF', color:'#3B82F6', label:'정보공유' },
     free:  { bg:'#F5F3FF', color:'#7C3AED', label:'자유' },

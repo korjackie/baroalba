@@ -491,7 +491,7 @@
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterCommunityMgmt('all', this)">전체</button>
       <button class="filter-btn" onclick="filterCommunityMgmt('free', this)">자유</button>
-      <button class="filter-btn" onclick="filterCommunityMgmt('review', this)">업체후기</button>
+      <button class="filter-btn" onclick="filterCommunityMgmt('review', this)">알바후기</button>
       <button class="filter-btn" onclick="filterCommunityMgmt('meetup', this)">모임/만남후기</button>
       <button class="filter-btn" onclick="filterCommunityMgmt('info', this)">정보공유</button>
     </div>
@@ -1757,7 +1757,7 @@ async function reviewWorkplaceVerify(workerId, status) {
 }
 
 // ── 커뮤니티 게시판 관리 ──────────────────────────────────
-const COMM_CAT_LABEL = { review:'업체후기', meetup:'모임/만남후기', info:'정보공유', free:'자유', owner:'업주전용', worker:'알바생전용' };
+const COMM_CAT_LABEL = { review:'알바후기', meetup:'모임/만남후기', info:'정보공유', free:'자유', owner:'업주전용', worker:'알바생전용' };
 let _commMgmtFilter = 'all';
 function filterCommunityMgmt(cat, btn) {
   _commMgmtFilter = cat;
@@ -1837,7 +1837,7 @@ async function _renderCommunityMgmtComments(postId) {
     </div>`).join('');
 }
 async function deleteCommunityMgmtPost(id) {
-  if (!confirm('이 게시글과 모든 댓글을 삭제합니다. 계속할까요?')) return;
+  if (!await adminConfirm('이 게시글과 모든 댓글을 삭제합니다. 계속할까요?', '삭제')) return;
   const result = await adminApi('delete_community_post', 'DELETE', { id });
   if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
   showToast('게시글이 삭제됐습니다');
@@ -1847,7 +1847,7 @@ async function deleteCommunityMgmtPost(id) {
   document.getElementById('cp-' + id)?.remove();
 }
 async function deleteCommunityMgmtComment(id, postId) {
-  if (!confirm('이 댓글을 삭제할까요?')) return;
+  if (!await adminConfirm('이 댓글을 삭제할까요?', '삭제')) return;
   const result = await adminApi('delete_community_comment', 'DELETE', { id, post_id: postId });
   if (result?.error) { showToast('삭제 실패: ' + result.error); return; }
   showToast('댓글이 삭제됐습니다');
