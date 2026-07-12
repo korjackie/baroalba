@@ -480,6 +480,10 @@
     <div id="baromeetings-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div id="baromeeting-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">바로미팅 개설</div>
+      <div id="bm-applicants-section" style="display:none;margin-bottom:14px">
+        <button type="button" onclick="toggleBmApplicants()" style="width:100%;text-align:left;padding:10px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:10px;font-size:12.5px;font-weight:800;color:#7C3AED;cursor:pointer">👥 신청자 현황 보기 <span id="bm-applicants-toggle-arrow">▾</span></button>
+        <div id="bm-applicants-list" style="display:none;margin-top:8px"></div>
+      </div>
       <input type="hidden" id="bm-id">
       <div style="display:flex;flex-direction:column;gap:8px">
         <input id="bm-title" type="text" placeholder="미팅 제목 (예: 강남역 저녁 소셜 미팅)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
@@ -1659,6 +1663,37 @@ function resetBaromeetingForm() {
   document.getElementById('bm-fee').value = '0';
   document.getElementById('baromeeting-form-title').textContent = '바로미팅 개설';
   setBmLocationMode('partner');
+  document.getElementById('bm-applicants-section').style.display = 'none';
+  document.getElementById('bm-applicants-list').style.display = 'none';
+  document.getElementById('bm-applicants-list').innerHTML = '';
+  document.getElementById('bm-applicants-toggle-arrow').textContent = '▾';
+}
+
+let _bmApplicantsGatheringId = null;
+async function toggleBmApplicants() {
+  const list = document.getElementById('bm-applicants-list');
+  const arrow = document.getElementById('bm-applicants-toggle-arrow');
+  const isOpen = list.style.display !== 'none';
+  if (isOpen) { list.style.display = 'none'; arrow.textContent = '▾'; return; }
+  list.style.display = 'block';
+  arrow.textContent = '▴';
+  list.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('baromeeting_applicants', 'GET', null, { gathering_id: _bmApplicantsGatheringId });
+  if (data?.error) { list.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">불러오기 실패: ${data.error}</div>`; return; }
+  const apps = Array.isArray(data) ? data : [];
+  if (!apps.length) { list.innerHTML = '<div style="padding:12px;font-size:12px;color:#94a3b8">아직 신청자가 없어요</div>'; return; }
+  const statusLabel = { pending:'대기', approved:'확정', rejected:'거절' };
+  list.innerHTML = apps.map(a => {
+    const w = a.worker;
+    const genderLabel = w?.gender === 'female' ? '여성' : w?.gender === 'male' ? '남성' : '-';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid #f1f5f9">
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#1e293b">${w?.name || '이름없음'} <span style="font-size:11px;font-weight:700;color:#94a3b8">${genderLabel}</span></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w?.phone || '연락처 미등록'} · ${new Date(a.applied_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}" style="flex-shrink:0">${statusLabel[a.status]||a.status}</span>
+    </div>`;
+  }).join('');
 }
 
 function editBaromeeting(id) {
@@ -1680,6 +1715,11 @@ function editBaromeeting(id) {
   document.getElementById('bm-fee').value = m.entry_fee || 0;
   document.getElementById('baromeeting-form-title').textContent = '바로미팅 수정';
   document.getElementById('baromeeting-form-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  _bmApplicantsGatheringId = m.id;
+  document.getElementById('bm-applicants-section').style.display = 'block';
+  document.getElementById('bm-applicants-list').style.display = 'none';
+  document.getElementById('bm-applicants-list').innerHTML = '';
+  document.getElementById('bm-applicants-toggle-arrow').textContent = '▾';
 }
 
 async function saveBaromeeting() {

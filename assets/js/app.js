@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '410';
+  const _APP_V = '411';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=410').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=411').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16190,17 +16190,33 @@ function _tickTrackCountdown(whenISO) {
   sub.textContent = new Date(whenISO).toLocaleTimeString('ko-KR', { hour:'numeric', minute:'2-digit' });
 }
 
-function _geocodeAndShowVenue(query) {
-  if (!query || !_trackMap) return;
-  const places = new kakao.maps.services.Places();
-  places.keywordSearch(query, (result, status) => {
-    if (status !== kakao.maps.services.Status.OK || !result.length) return;
-    const r = result[0];
-    const pos = new kakao.maps.LatLng(r.y, r.x);
-    _trackMap.setCenter(pos);
-    if (_trackVenueMarker) _trackVenueMarker.setMap(null);
-    _trackVenueMarker = new kakao.maps.Marker({ position: pos, map: _trackMap });
-  });
+function _placeVenueMarker(y, x) {
+  const pos = new kakao.maps.LatLng(y, x);
+  _trackMap.setCenter(pos);
+  if (_trackVenueMarker) _trackVenueMarker.setMap(null);
+  _trackVenueMarker = new kakao.maps.Marker({ position: pos, map: _trackMap });
+}
+
+// 주소(location_address)는 카카오 주소 검색(Geocoder)으로, 안 되면 장소명(location_name)으로
+// 키워드 검색(Places) 시도 - 네이버에서 가져온 소규모/신규 업체는 카카오 자체 장소DB에
+// 없는 경우가 많아 키워드 검색 하나만으로는 지도에 마커가 안 찍히는 경우가 있었음
+function _geocodeAndShowVenue(address, name) {
+  if (!_trackMap) return;
+  const tryKeyword = () => {
+    if (!name) { showToast('📍 정확한 위치를 찾지 못했어요'); return; }
+    new kakao.maps.services.Places().keywordSearch(name, (result, status) => {
+      if (status === kakao.maps.services.Status.OK && result.length) _placeVenueMarker(result[0].y, result[0].x);
+      else showToast('📍 정확한 위치를 찾지 못했어요');
+    });
+  };
+  if (address) {
+    new kakao.maps.services.Geocoder().addressSearch(address, (result, status) => {
+      if (status === kakao.maps.services.Status.OK && result.length) _placeVenueMarker(result[0].y, result[0].x);
+      else tryKeyword();
+    });
+  } else {
+    tryKeyword();
+  }
 }
 
 function _showMyLocationOnTrackMap(hasVenue) {
@@ -16213,7 +16229,7 @@ function _showMyLocationOnTrackMap(hasVenue) {
   }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 8000 });
 }
 
-// opts: { brand, title, place, addressQuery, whenISO, whenText, steps, stepIndex, chat:{gatheringId,title}|null }
+// opts: { brand, title, place, addressQuery, placeName, whenISO, whenText, steps, stepIndex, chat:{gatheringId,title}|null }
 function openTrackingSheet(opts) {
   try {
     document.getElementById('track-overlay').style.display = 'block';
@@ -16245,8 +16261,8 @@ function openTrackingSheet(opts) {
       const el = document.getElementById('track-map');
       if (!_trackMap) _trackMap = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 5 });
       else _trackMap.relayout();
-      _geocodeAndShowVenue(opts.addressQuery);
-      _showMyLocationOnTrackMap(!!opts.addressQuery);
+      _geocodeAndShowVenue(opts.addressQuery, opts.placeName);
+      _showMyLocationOnTrackMap(!!(opts.addressQuery || opts.placeName));
     } catch (e) {
       console.error('[openTrackingSheet] 지도 초기화 실패:', e);
     }
@@ -16603,7 +16619,8 @@ async function _openBaromeetTracking(meetingId) {
     brand: '🤝 바로미팅',
     title: m.title || '바로미팅',
     place: m.location_name || m.location_address || '-',
-    addressQuery: m.location_address || m.location_name,
+    addressQuery: m.location_address,
+    placeName: m.location_name,
     whenISO: m.gathering_date,
     whenText,
     steps: ['신청완료','확정','모임 진행','종료'],
@@ -16979,7 +16996,7 @@ async function _openSpotEventTracking(eventId) {
     brand: '📍 바로스팟',
     title: ev.restaurant_name || '바로스팟',
     place: ev.restaurant_name || '-',
-    addressQuery: ev.restaurant_name,
+    placeName: ev.restaurant_name,
     whenISO,
     whenText: whenText || '일정 확인 중',
     steps: ['신청완료','매니저 확인 중','확정','종료'],

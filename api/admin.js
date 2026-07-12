@@ -287,6 +287,27 @@ module.exports = async function handler(req, res) {
       return res.json(Array.isArray(data) ? data : []);
     }
 
+    // ── 바로미팅 신청자 현황 (이름/성별/연락처/신청상태) ──────
+    if (action === 'baromeeting_applicants') {
+      const gatheringId = req.query.gathering_id;
+      if (!gatheringId) return res.status(400).json({ error: 'gathering_id required' });
+      const apps = await sb(
+        `gathering_applications?gathering_id=eq.${gatheringId}&select=id,applicant_id,status,applied_at,fee_paid&order=applied_at.desc`,
+        svcKey
+      ).then(r => r.json());
+      const applicantIds = [...new Set((apps || []).map(a => a.applicant_id).filter(Boolean))];
+      let workerMap = {};
+      if (applicantIds.length) {
+        const workers = await sb(
+          `workers?kakao_uid=in.(${applicantIds.join(',')})&select=kakao_uid,name,gender,phone`,
+          svcKey
+        ).then(r => r.json());
+        workerMap = Object.fromEntries((workers || []).map(w => [w.kakao_uid, w]));
+      }
+      const merged = (apps || []).map(a => ({ ...a, worker: workerMap[a.applicant_id] || null }));
+      return res.json(merged);
+    }
+
     // ── 바로미팅 개설/수정 ────────────────────────────────
     if (action === 'save_baromeeting' && (req.method === 'POST' || req.method === 'PATCH')) {
       const { id, title, description, location_name, location_address, gathering_date, entry_fee, male_max, female_max } = req.body || {};
