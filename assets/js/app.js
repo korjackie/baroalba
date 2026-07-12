@@ -130,6 +130,60 @@ function closeBottomSheet() {
   if (overlay) overlay.style.display = 'none';
 }
 
+// ── 가운데 FAB("바로+") 등록 액션시트 ──────────────────────
+// 바로알바/바로모임/바로만남을 아우르는 통합 서비스가 되면서 이 버튼을
+// 조회용 대시보드가 아니라 "등록/개설" 전용 액션으로 재정의함
+function openCreateActionSheet() {
+  const row = (icon, title, desc, onclick) => `
+    <div onclick="${onclick}" style="display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer">
+      <div style="width:44px;height:44px;border-radius:12px;background:#f8f8f8;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icon}</div>
+      <div style="min-width:0">
+        <div style="font-size:15px;font-weight:800;color:#222">${title}</div>
+        <div style="font-size:12px;color:#999;margin-top:2px">${desc}</div>
+      </div>
+    </div>`;
+  openBottomSheet(`
+    <div style="padding:4px 20px 12px;font-size:17px;font-weight:900;color:#111">무엇을 등록하시겠어요?</div>
+    <div style="display:flex;flex-direction:column;padding-bottom:8px">
+      ${row('🍻', '바로모임 개설', '취미·운동·스터디 등 모임을 열어보세요', "closeBottomSheet();openMoimPanel(true)")}
+      ${row('💼', '공고 등록', '알바 공고를 올리고 지원자를 받아보세요', "closeBottomSheet();openOwnerPanel('postings')")}
+      ${row('📚', '레슨/과외 등록', '레슨·과외 공고를 등록·관리해보세요', "closeBottomSheet();openLessonManagePanel()")}
+      ${row('📢', '모임/만남 개설 요청하기', '"이런 모임 만들어주세요" 요청을 남겨보세요', "closeBottomSheet();openGatheringRequestSheet()")}
+    </div>
+  `);
+}
+
+// ── 모임/만남 개설 요청 (바로미팅/바로스팟은 관리자 큐레이션 방식이라
+// 유저가 직접 개설할 수 없어, 대신 요청만 남기고 관리자가 검토 후 개설) ──
+function openGatheringRequestSheet() {
+  if (!currentUser || isGuest) { showLoginPrompt('로그인 후 요청할 수 있어요','모임/만남 개설 요청은 로그인이 필요합니다.'); return; }
+  openBottomSheet(`
+    <div style="padding:4px 20px 4px;font-size:17px;font-weight:900;color:#111">모임/만남 개설 요청하기</div>
+    <div style="padding:0 20px 4px;font-size:12.5px;color:#999;line-height:1.5">원하는 지역과 종류를 남겨주시면 검토 후 개설해드려요.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:12px 20px 20px">
+      <select id="greq-type" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;background:#fff">
+        <option value="moim">🍻 바로모임</option>
+        <option value="baromeeting">💕 바로미팅/바로만남</option>
+      </select>
+      <input id="greq-region" type="text" placeholder="희망 지역 (예: 판교, 강남역)" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none">
+      <textarea id="greq-desc" placeholder="어떤 모임/미팅을 원하시는지 자유롭게 적어주세요" rows="3" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;font-family:inherit"></textarea>
+      <button onclick="submitGatheringRequest()" style="padding:13px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">요청 보내기</button>
+    </div>
+  `);
+}
+async function submitGatheringRequest() {
+  const region = document.getElementById('greq-region').value.trim();
+  const description = document.getElementById('greq-desc').value.trim();
+  const request_type = document.getElementById('greq-type').value;
+  if (!region) { showToast('희망 지역을 입력해주세요'); return; }
+  const { error } = await db.from('gathering_requests').insert({
+    requester_id: currentUser.id, request_type, region, description: description || null,
+  });
+  if (error) { showToast('요청 실패: ' + error.message); return; }
+  closeBottomSheet();
+  showToast('✅ 요청이 접수됐어요. 검토 후 개설해드릴게요!');
+}
+
 history.pushState({ panel: null }, ''); // 초기 기준점
 window.addEventListener('popstate', () => {
   // 1. 공고 상세 (detail-overlay .open)
@@ -292,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '424';
+  const _APP_V = '425';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=424').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=425').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
