@@ -222,6 +222,15 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 4-2. 바로모임/바로미팅 단체채팅 (display:flex) — wchat/chat과 동일한 인라인 style 방식으로
+  // 통일하면서 .full-panel.show 클래스를 더 이상 쓰지 않게 됨에 따라, 아래 9번의 범용
+  // .full-panel.show 뒤로가기 처리에서 더 이상 감지되지 않아 여기 명시적으로 추가함
+  const moimChatEl = document.getElementById('panel-moim-chat');
+  if (moimChatEl && moimChatEl.style.display === 'flex') {
+    closeMoimChat();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 5. 외국인환영 언어 패널
   const foreignerEl = document.getElementById('panel-foreigner-lang');
   if (foreignerEl && foreignerEl.style.display === 'block') {
@@ -349,7 +358,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '441';
+  const _APP_V = '442';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -365,7 +374,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=441').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=442').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -17171,7 +17180,7 @@ function openBaromeetDetail(id) {
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">2</span><span style="font-size:12.5px;color:#555;line-height:1.6">신청과 동시에 익명 단체채팅방에 바로 입장</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">3</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅에서 다른 참가자들과 미리 인사하며 정원이 찰 때까지 대화</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">4</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅으로 시간·장소를 맞춰 만나요</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">5</span><span style="font-size:12.5px;color:#555;line-height:1.6">식사비는 현장 결제가 아니라 <b>${BANK_INFO.bank} ${BANK_INFO.account}</b>(${BANK_INFO.holder})로 입금</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">5</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가비는 신청 시 이용권/포인트로 이미 결제 완료 — <b>현장 결제는 필요 없어요</b></span></div>
       </div>
     </div>
     <div style="padding:0 20px 24px">

@@ -77,7 +77,7 @@ const STRENGTH_LABELS = {
 const TRANSLATIONS = {
   ko: {
     // 내비게이션 (알바생 앱)
-    nav_home:'홈', nav_map:'지도', nav_swipe:'스와이프', nav_applications:'바로알바', nav_chats:'채팅', nav_profile:'마이페이지',
+    nav_home:'홈', nav_map:'지도', nav_swipe:'스와이프', nav_applications:'바로', nav_chats:'채팅', nav_profile:'마이페이지',
     // 서브탭
     tab_status:'지원 현황', tab_bookmarks:'🔖 북마크',
     // 지원 상태
