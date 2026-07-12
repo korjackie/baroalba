@@ -349,7 +349,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '436';
+  const _APP_V = '437';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -365,7 +365,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=436').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=437').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -4646,6 +4646,12 @@ window._onFCMToken = function(token) {
     // 업체 후기 남기기 바텀시트 (openJobReview) - review-content textarea가 키보드에 가려지던 문제
     var jr = document.getElementById('job-review-overlay');
     if (jr) jr.style.paddingBottom = dp > 80 ? dp + 'px' : '';
+    // 범용 바텀시트(openBottomSheet) - 개설요청 등 텍스트 입력이 있는 시트가 키보드에 가리던 문제
+    var gbs = document.getElementById('generic-bottom-sheet-overlay');
+    if (gbs && gbs.style.display !== 'none') {
+      var gbsPanel = document.getElementById('generic-bottom-sheet-panel');
+      if (gbsPanel) gbsPanel.style.paddingBottom = dp > 80 ? (dp + 16) + 'px' : '';
+    }
     var rm = document.getElementById('rating-modal-inner');
     if (rm) {
       rm.style.paddingBottom = dp > 80 ? (dp + 40) + 'px' : '40px';
@@ -4719,6 +4725,15 @@ window._onFCMToken = function(token) {
     if (mi && mo) {
       mi.addEventListener('focus', function() { applyKbPad(mo); });
       mi.addEventListener('blur',  function() { clearKbPad(mo); });
+    }
+    // 범용 바텀시트(openBottomSheet) 내부는 내용이 동적으로 삽입되므로 위임 방식으로 바인딩
+    // (개설요청 등 텍스트 입력 폼이 나중에 추가돼도 항상 커버되도록)
+    var gbsPanel = document.getElementById('generic-bottom-sheet-panel');
+    if (gbsPanel) {
+      gbsPanel.addEventListener('focusin', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') applyKbPad(gbsPanel);
+      });
+      gbsPanel.addEventListener('focusout', function() { clearKbPad(gbsPanel); });
     }
     window.addEventListener('popstate', function() {
       if (co && co.style.display === 'flex') { closeChat(); return; }
@@ -17439,7 +17454,11 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   document.getElementById('moim-chat-title').textContent = (title || '바로미팅') + ' (익명)';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
   const memberEl = document.getElementById('moim-chat-members-text');
-  if (memberEl) memberEl.innerHTML = `나는 "${_baromeetAnonLabel}"으로 표시돼요 · <span style="text-decoration:underline;cursor:pointer" onclick="event.stopPropagation();openBaromeetAnonSetup()">닉네임/사진 변경</span> · <span style="text-decoration:underline;cursor:pointer;color:#e11d48" onclick="event.stopPropagation();leaveBaromeetChat()">나가기</span>`;
+  // 참가자 수를 눈에 보이게 앞에 붙임 - 예전엔 이 자리를 "나는 OO으로 표시돼요"가 통째로
+  // 차지해서 참가자 목록을 볼 수 있다는 게 전혀 티가 안 났음(모임 채팅은 그냥 "참가자 N명"이라
+  // 바로 보이는데, 익명 바로미팅 채팅만 이 줄이 다른 용도로 바뀌어 있었음)
+  const { count: _bcCount } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
+  if (memberEl) memberEl.innerHTML = `👥 ${(_bcCount || 0) + 1}명 · 나는 "${_baromeetAnonLabel}" · <span style="text-decoration:underline;cursor:pointer" onclick="event.stopPropagation();openBaromeetAnonSetup()">변경</span> · <span style="text-decoration:underline;cursor:pointer;color:#e11d48" onclick="event.stopPropagation();leaveBaromeetChat()">나가기</span>`;
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';
 
