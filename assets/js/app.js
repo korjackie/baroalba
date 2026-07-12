@@ -358,7 +358,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '443';
+  const _APP_V = '444';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -374,7 +374,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=443').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=444').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -1639,6 +1639,7 @@ async function openMoimDetail(moimId) {
       ${m.description ? `<div style="background:#f9fafb;border-radius:14px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 모임 소개</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
 
       ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">💬 단체채팅방 입장</button>` : ''}
+      ${!isHost ? `<button onclick="openReportModal('moim','${m.id}')" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:6px 0;font-weight:600;margin:0 auto">🚨 이 모임 신고하기</button>` : ''}
 
       ${isHost ? `
         <div style="border-top:1px solid #f0f0f0;padding-top:16px">
@@ -4761,6 +4762,25 @@ window._onFCMToken = function(token) {
     window.addEventListener('popstate', function() {
       if (co && co.style.display === 'flex') { closeChat(); return; }
       if (wo && wo.style.display === 'flex') { closeWChat(); }
+    });
+
+    // 전역 키보드 가림 방지 - 채팅/개설폼처럼 개별 대응된 곳이 아니어도
+    // 앱 전체 모든 input/textarea/select에 공통 적용 (레슨 등록 폼 등에서
+    // 포커스한 입력창이 키보드에 가려지던 문제 - 패널마다 따로 대응하지 않고
+    // 포커스된 요소 기준으로 한 번에 처리)
+    document.addEventListener('focusin', function(e) {
+      var el = e.target;
+      if (!el || !el.matches || !el.matches('input,textarea,select')) return;
+      setTimeout(function() {
+        var vv = window.visualViewport;
+        var kbH = window._lastKbDp || (vv ? Math.max(0, window.innerHeight - vv.height) : 0);
+        if (kbH < 80) return;
+        var visibleBottom = vv ? vv.height : (window.innerHeight - kbH);
+        var rect = el.getBoundingClientRect();
+        if (rect.bottom > visibleBottom - 8) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 350);
     });
   });
 
@@ -10382,13 +10402,18 @@ let _reportTargetId = null;
 
 const REPORT_REASONS_JOB = ['허위/과장 공고', '최저임금 이하 시급', '불법/유해 업종', '개인정보 요구', '기타'];
 const REPORT_REASONS_USER = ['부적절한 언행', '허위 프로필', '개인정보 침해', '노쇼/무단이탈', '기타'];
+const REPORT_REASONS_MOIM = ['허위/과장 모임', '노쇼/무단이탈', '부적절한 언행', '안전 문제', '기타'];
+const REPORT_REASONS_GATHERING = ['허위/과장 정보', '노쇼/무단이탈', '부적절한 언행', '안전 문제', '기타'];
 
 function openReportModal(targetType, targetId) {
   if (!currentUser) { showToast('로그인 후 신고할 수 있습니다'); return; }
   if (!targetId) return;
   _reportTargetType = targetType;
   _reportTargetId = targetId;
-  const reasons = targetType === 'job' ? REPORT_REASONS_JOB : REPORT_REASONS_USER;
+  const reasons = targetType === 'job' ? REPORT_REASONS_JOB
+    : targetType === 'moim' ? REPORT_REASONS_MOIM
+    : targetType === 'gathering' ? REPORT_REASONS_GATHERING
+    : REPORT_REASONS_USER;
   document.getElementById('report-reason-list').innerHTML = reasons.map(r =>
     `<label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f8f8f8;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;color:#333">
       <input type="radio" name="report-reason" value="${r}" style="accent-color:var(--red);width:16px;height:16px">${r}
@@ -17187,12 +17212,15 @@ function openBaromeetDetail(id) {
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">5</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가비는 신청 시 이용권/포인트로 이미 결제 완료 — <b>현장 결제는 필요 없어요</b></span></div>
       </div>
     </div>
-    <div style="padding:0 20px 24px">
+    <div style="padding:0 20px 8px">
       ${myStatus === 'approved'
         ? `<button onclick="closeBaromeetDetail();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
         : myStatus === 'pending'
         ? `<button disabled style="width:100%;padding:14px;background:#f5f5f5;color:#aaa;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:default">⏳ 관리자 승인 대기중</button>`
         : `<button onclick="closeBaromeetDetail();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:14px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
+    </div>
+    <div style="padding:0 20px 24px;text-align:center">
+      <button onclick="openReportModal('gathering','${m.id}')" style="display:inline-flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:6px 0;font-weight:600">🚨 이 바로미팅 신고하기</button>
     </div>
   `;
   overlay.style.display = 'flex';
@@ -17436,15 +17464,21 @@ function setBaromeetAvatarType(type) {
 
 async function openBaromeetChat(gatheringId, title) {
   if (!currentUser) return;
-  const { data: w, error } = await db.from('workers').select('baromeet_nick, baromeet_avatar, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
-  if (error) { showToast('프로필 조회 실패: ' + error.message); return; }
-  if (!w?.baromeet_nick) {
-    _pendingBaromeetChat = { gatheringId, title };
-    openBaromeetAnonSetup();
-    return;
+  // try/catch 없이 await만 쓰면 네트워크 오류 시 예외가 조용히 묻혀서
+  // "눌러도 아무 반응 없음"으로 보이는 문제 방지 - 실패를 항상 토스트로 노출
+  try {
+    const { data: w, error } = await db.from('workers').select('baromeet_nick, baromeet_avatar, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+    if (error) { showToast('프로필 조회 실패: ' + error.message); return; }
+    if (!w?.baromeet_nick) {
+      _pendingBaromeetChat = { gatheringId, title };
+      openBaromeetAnonSetup();
+      return;
+    }
+    const avatarUrl = _resolveBaromeetAvatarUrl(w.baromeet_avatar, w.photo_url);
+    await _enterBaromeetChat(gatheringId, title, w.baromeet_nick, !!avatarUrl, avatarUrl);
+  } catch (e) {
+    showToast('채팅방 입장 실패: ' + (e?.message || '알 수 없는 오류') + ' - 다시 시도해주세요');
   }
-  const avatarUrl = _resolveBaromeetAvatarUrl(w.baromeet_avatar, w.photo_url);
-  await _enterBaromeetChat(gatheringId, title, w.baromeet_nick, !!avatarUrl, avatarUrl);
 }
 
 function openBaromeetAnonSetup() {

@@ -515,25 +515,30 @@ module.exports = async function handler(req, res) {
       const reports = await sb('reports?select=*&order=created_at.desc&limit=100', svcKey).then(r => r.json());
       if (!Array.isArray(reports)) return res.json([]);
 
-      // 대상 공고/사용자 이름 조회
+      // 대상 공고/모임/바로미팅/사용자 이름 조회
       const jobIds = [...new Set(reports.filter(r => r.target_type === 'job').map(r => r.target_id))];
       const userIds = [...new Set(reports.filter(r => r.target_type === 'user').map(r => r.target_id))];
+      const gatheringIds = [...new Set(reports.filter(r => r.target_type === 'moim' || r.target_type === 'gathering').map(r => r.target_id))];
       const reporterIds = [...new Set(reports.map(r => r.reporter_id).filter(Boolean))];
 
-      const [jobs, targets, reporters] = await Promise.all([
+      const [jobs, targets, gatherings, reporters] = await Promise.all([
         jobIds.length ? sb(`job_postings?id=in.(${jobIds.join(',')})&select=id,title,biz_name`, svcKey).then(r => r.json()) : [],
         userIds.length ? sb(`workers?id=in.(${userIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json()) : [],
+        gatheringIds.length ? sb(`gatherings?id=in.(${gatheringIds.join(',')})&select=id,title,category`, svcKey).then(r => r.json()) : [],
         reporterIds.length ? sb(`workers?id=in.(${reporterIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json()) : [],
       ]);
 
       const jobMap = Object.fromEntries((Array.isArray(jobs) ? jobs : []).map(j => [j.id, j]));
       const userMap = Object.fromEntries((Array.isArray(targets) ? targets : []).map(u => [u.id, u]));
+      const gatheringMap = Object.fromEntries((Array.isArray(gatherings) ? gatherings : []).map(g => [g.id, g]));
       const repMap = Object.fromEntries((Array.isArray(reporters) ? reporters : []).map(u => [u.id, u]));
 
       const enriched = reports.map(r => ({
         ...r,
         target_name: r.target_type === 'job'
           ? (jobMap[r.target_id]?.title || r.target_id?.slice(0,8))
+          : (r.target_type === 'moim' || r.target_type === 'gathering')
+          ? (gatheringMap[r.target_id]?.title || r.target_id?.slice(0,8))
           : (userMap[r.target_id]?.name || r.target_id?.slice(0,8)),
         target_biz: jobMap[r.target_id]?.biz_name || '',
         reporter_name: repMap[r.reporter_id]?.name || r.reporter_id?.slice(0,8),

@@ -114,6 +114,8 @@
     .report-type { font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; background:#FFF7ED; color:#F59E0B; }
     .report-type.job  { background:#EFF6FF; color:#3B82F6; }
     .report-type.user { background:#FEF3C7; color:#D97706; }
+    .report-type.moim { background:#F5F3FF; color:#7C3AED; }
+    .report-type.gathering { background:#FFF1F2; color:#e11d48; }
     .report-date { font-size:11px; color:#94a3b8; }
     .report-target { font-size:15px; font-weight:800; color:#1e293b; margin-bottom:3px; }
     .report-biz { font-size:12px; color:#94a3b8; margin-bottom:6px; }
@@ -448,6 +450,12 @@
 
   <!-- 신고관리 -->
   <div class="tab-content" id="tab-reports">
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterReportsSvc('all', this)">전체 서비스</button>
+      <button class="filter-btn" onclick="filterReportsSvc('job', this)">💼 바로알바</button>
+      <button class="filter-btn" onclick="filterReportsSvc('moim', this)">🍻 바로모임</button>
+      <button class="filter-btn" onclick="filterReportsSvc('gathering', this)">💕 바로만남</button>
+    </div>
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterReports('all', this)">전체</button>
       <button class="filter-btn" onclick="filterReports('pending', this)">🟡 대기</button>
@@ -918,6 +926,7 @@ const ALL_TABS = [
   'dashboard','alba','moim','mannam','settings',
   'reports','postings','users','moims',
   'admins','baroalba','baromoim','lesson','mannnam','restaurants','coupons','pass-pricing','baromeetings',
+  'gathering-requests',
 ];
 const NAV_GROUPS = ['dashboard','alba','moim','mannam','settings'];
 const GROUP_OF = {
@@ -1066,23 +1075,40 @@ async function loadDashboard() {
 }
 
 // ── 신고 관리 ─────────────────────────────────────────────
+let _reportSvcFilter = 'all';
+
 async function loadReports() {
   const reports = await adminApi('reports');
   _reports = Array.isArray(reports) ? reports : [];
   renderReports();
 }
 
+// 신고 대상 서비스 구분 - job은 바로알바, moim은 바로모임, gathering은 바로만남(바로미팅),
+// user(지원자/모임원 프로필)는 현재 바로알바 지원 흐름에서만 신고 버튼이 있어 바로알바로 분류
+function _reportSvcOf(targetType) {
+  if (targetType === 'moim') return 'moim';
+  if (targetType === 'gathering') return 'gathering';
+  return 'job';
+}
+
+function filterReportsSvc(svc, btn) {
+  _reportSvcFilter = svc;
+  btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReports();
+}
+
 function filterReports(filter, btn) {
   _reportFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderReports();
 }
 
 function renderReports() {
-  const list = _reportFilter === 'all'
-    ? _reports
-    : _reports.filter(r => (r.status || 'pending') === _reportFilter);
+  let list = _reports;
+  if (_reportSvcFilter !== 'all') list = list.filter(r => _reportSvcOf(r.target_type) === _reportSvcFilter);
+  if (_reportFilter !== 'all') list = list.filter(r => (r.status || 'pending') === _reportFilter);
   document.getElementById('reports-list').innerHTML = list.length
     ? list.map(r => reportCardHtml(r, false)).join('')
     : '<div class="empty">해당 신고 없음</div>';
@@ -1091,7 +1117,7 @@ function renderReports() {
 function reportCardHtml(r, compact) {
   const status = r.status || 'pending';
   const statusLabel = { pending:'대기', reviewing:'검토중', done:'조치완료', dismissed:'기각' };
-  const typeLabel = r.target_type === 'job' ? '공고' : '사용자';
+  const typeLabel = r.target_type === 'job' ? '공고' : r.target_type === 'moim' ? '바로모임' : r.target_type === 'gathering' ? '바로만남' : '사용자';
   const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
 
   const actions = compact ? '' : `
