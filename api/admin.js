@@ -193,7 +193,7 @@ module.exports = async function handler(req, res) {
       const [
         workers, postings, reports, apps, moims, bizRaw,
         workersToday, bizToday, moimsToday, gatheringApps,
-        mannnamToday, mannnamTotal, restaurants, baromeetings, gatheringReqs,
+        mannnamToday, mannnamTotal, restaurants, baromeetings, gatheringReqs, communityPosts,
       ] = await Promise.all([
         sb('workers?select=id', svcKey).then(r => r.json()),
         sb('job_postings?select=id&status=neq.closed', svcKey).then(r => r.json()),
@@ -210,6 +210,7 @@ module.exports = async function handler(req, res) {
         sb('barospot_restaurants?select=id&is_active=eq.true', svcKey).then(r => r.json()).catch(() => []),
         sb('gatherings?select=id&category=eq.baromeeting&status=eq.open', svcKey).then(r => r.json()).catch(() => []),
         sb('gathering_requests?select=id,status', svcKey).then(r => r.json()).catch(() => []),
+        sb('community_posts?select=id', svcKey).then(r => r.json()).catch(() => []),
       ]);
       const pending = (Array.isArray(reports) ? reports : []).filter(r => !r.status || r.status === 'pending').length;
       const pendingReqs = (Array.isArray(gatheringReqs) ? gatheringReqs : []).filter(r => !r.status || r.status !== 'done').length;
@@ -229,6 +230,7 @@ module.exports = async function handler(req, res) {
         mannnam_restaurants: arrLen(restaurants),
         baromeetings_open: arrLen(baromeetings),
         pending_gathering_requests: pendingReqs,
+        community_posts: arrLen(communityPosts),
       });
     }
 
@@ -392,6 +394,45 @@ module.exports = async function handler(req, res) {
       const { id } = req.body || {};
       if (!id) return res.status(400).json({ error: 'id required' });
       await sb(`barospot_pass_products?id=eq.${id}`, svcKey, { method: 'DELETE' });
+      return res.json({ ok: true });
+    }
+
+    // ── 커뮤니티 게시판 관리 (부적절한 게시글/댓글 삭제) ──────
+    if (action === 'community_posts') {
+      const rows = await sb(
+        'community_posts?select=id,category,title,content,is_anonymous,comments_count,created_at,workers(name),businesses(biz_name)&order=created_at.desc&limit=100',
+        svcKey
+      ).then(r => r.json()).catch(() => []);
+      return res.json(Array.isArray(rows) ? rows : []);
+    }
+    if (action === 'community_comments') {
+      const postId = req.query.post_id;
+      if (!postId) return res.status(400).json({ error: 'post_id required' });
+      const rows = await sb(
+        `community_comments?post_id=eq.${postId}&select=id,content,is_anonymous,created_at,workers(name),businesses(biz_name)&order=created_at.asc`,
+        svcKey
+      ).then(r => r.json()).catch(() => []);
+      return res.json(Array.isArray(rows) ? rows : []);
+    }
+    if (action === 'delete_community_post' && req.method === 'DELETE') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      await sb(`community_comments?post_id=eq.${id}`, svcKey, { method: 'DELETE' });
+      const r = await sb(`community_posts?id=eq.${id}`, svcKey, { method: 'DELETE' });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+    if (action === 'delete_community_comment' && req.method === 'DELETE') {
+      const { id, post_id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      const r = await sb(`community_comments?id=eq.${id}`, svcKey, { method: 'DELETE' });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      if (post_id) {
+        const remain = await sb(`community_comments?post_id=eq.${post_id}&select=id`, svcKey).then(r2 => r2.json());
+        await sb(`community_posts?id=eq.${post_id}`, svcKey, {
+          method: 'PATCH', body: JSON.stringify({ comments_count: Array.isArray(remain) ? remain.length : 0 })
+        });
+      }
       return res.json({ ok: true });
     }
 
