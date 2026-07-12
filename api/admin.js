@@ -28,6 +28,18 @@ function sb(path, svcKey, opts = {}) {
   });
 }
 
+function wvHtmlPage(title, message, ok) {
+  return `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${title}</title></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh">
+  <div style="max-width:360px;margin:20px;background:#fff;border-radius:20px;padding:40px 28px;text-align:center;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+    <div style="font-size:44px;margin-bottom:14px">${ok ? '✅' : '⚠️'}</div>
+    <div style="font-size:18px;font-weight:900;color:#111;margin-bottom:8px">${title}</div>
+    <div style="font-size:14px;color:#666;line-height:1.6">${message}</div>
+  </div>
+</body></html>`;
+}
+
 // 바로미팅 인원/장소 수정 시 확정 참가자 전원에게 인앱 알림 + 푸시 발송
 async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) {
   const appsRes = await sb(`gathering_applications?gathering_id=eq.${gatheringId}&status=eq.approved&select=applicant_id`, svcKey);
@@ -84,12 +96,90 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const earlyAction = req.query.action;
+
+  // ── 직장인증 이메일 링크 클릭 → 인증 완료 (관리자 인증 불필요 - 토큰 자체가 자격증명) ──
+  // Vercel Hobby 플랜의 서버리스 함수 12개 제한 때문에 별도 파일(api/workplace-verify.js)
+  // 대신 기존 admin.js에 병합함 - 그래서 아래 관리자 전용 게이트보다 먼저 처리해야 함
+  if (req.method === 'GET' && earlyAction === 'workplace_verify_confirm') {
+    const wvToken = req.query.token;
+    if (!wvToken) { res.setHeader('Content-Type', 'text/html'); return res.status(400).send(wvHtmlPage('잘못된 접근', '인증 링크가 올바르지 않아요.', false)); }
+    const rows = await sb(`workers?workplace_verify_token=eq.${wvToken}&select=id`, svcKey).then(r => r.json());
+    if (!Array.isArray(rows) || !rows.length) {
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(wvHtmlPage('이미 처리된 링크예요', '인증이 이미 완료됐거나 만료된 링크입니다.', false));
+    }
+    await sb(`workers?id=eq.${rows[0].id}`, svcKey, {
+      method: 'PATCH',
+      body: JSON.stringify({ workplace_verify_status: 'verified', workplace_verify_token: null })
+    });
+    res.setHeader('Content-Type', 'text/html');
+    return res.status(200).send(wvHtmlPage('직장인증 완료!', '바로알바 앱으로 돌아가시면<br>인증 배지가 표시됩니다.', true));
+  }
+
+  // ── 직장인증 메일 발송 (관리자 아님, 로그인한 본인 인증) ──
+  if (req.method === 'POST' && earlyAction === 'workplace_verify_send') {
+    const wvJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const userId = getSubFromJWT(wvJwt);
+    if (!userId) return res.status(401).json({ error: '로그인이 필요합니다' });
+
+    const { company, email: wvEmail, name } = req.body || {};
+    if (!company || !wvEmail) return res.status(400).json({ error: 'company, email required' });
+
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_KEY) return res.status(500).json({ error: 'RESEND_API_KEY not set' });
+
+    const verifyToken = require('crypto').randomBytes(24).toString('hex');
+    const patch = await sb(`workers?kakao_uid=eq.${userId}`, svcKey, {
+      method: 'PATCH',
+      body: JSON.stringify({ workplace_name: company, workplace_verify_token: verifyToken, workplace_verify_status: 'pending' })
+    });
+    if (!patch.ok) return res.status(502).json({ error: await patch.text() });
+
+    const confirmUrl = `https://baroalba.multimove.co.kr/api/admin?action=workplace_verify_confirm&token=${verifyToken}`;
+    const displayName = name || '회원';
+    const wvHtml = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <div style="max-width:480px;margin:20px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
+    <div style="background:#7C3AED;padding:32px 24px 28px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.5px">💼 직장인증</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px">바로만남 신뢰 배지</div>
+    </div>
+    <div style="padding:32px 24px">
+      <div style="font-size:16px;font-weight:800;color:#111;margin-bottom:10px">${displayName}님, 안녕하세요!</div>
+      <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px">
+        <b>${company}</b> 소속 직장인증을 위해 아래 버튼을 눌러주세요.<br>인증 완료 시 바로만남에서 인증 배지가 표시됩니다.
+      </div>
+      <div style="text-align:center;margin-bottom:20px">
+        <a href="${confirmUrl}" style="display:inline-block;background:#7C3AED;color:#fff;text-decoration:none;font-weight:800;font-size:15px;padding:14px 32px;border-radius:12px">인증 완료하기</a>
+      </div>
+      <div style="font-size:12px;color:#aaa;text-align:center">본인이 요청하지 않았다면 이 메일을 무시하세요.</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    try {
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: 'baroalba@multimove.co.kr', to: [wvEmail], subject: `[바로알바] 직장인증 메일을 확인해주세요`, html: wvHtml })
+      });
+      if (!r.ok) return res.status(500).json({ error: await r.text() });
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   const email = getEmailFromJWT(token);
   if (!email) return res.status(403).json({ error: 'Forbidden' });
-
-  const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   const adminCheck = await sb(`app_admins?email=ilike.${encodeURIComponent(email)}&select=email&limit=1`, svcKey);
   const adminRows = await adminCheck.json();
