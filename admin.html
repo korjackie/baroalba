@@ -894,6 +894,14 @@ function switchTab(name) {
 // 히스토리를 push하는 바람에 '뒤로가기'를 누를 때마다 오히려 히스토리가 계속 쌓여
 // 대시보드에서 history.back()을 호출해도 실제 admin.html을 벗어나지 못하는 버그가 있었음)
 function goBackSmart() {
+  const cur = document.querySelector('.tab-content.active')?.id?.replace('tab-', '') || 'dashboard';
+  if (cur === 'dashboard') {
+    // 대시보드(최상위)에서는 history.back()이 900번 줄에서 페이지 로드 시 쌓아둔
+    // synthetic dashboard 히스토리 항목 하나만 소모하고 화면은 그대로라, 버튼을
+    // 눌러도 안 움직이는 것처럼 보였음 - 이 경우엔 실제로 admin.html을 떠나야 함
+    location.href = (document.referrer && document.referrer.includes(location.host)) ? document.referrer : '/바로알바.html';
+    return;
+  }
   history.back();
 }
 
