@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '414';
+  const _APP_V = '415';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=414').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=415').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -4034,8 +4034,13 @@ function _chatItemClick(e, appId, name, side) {
     e.stopPropagation();
     return;
   }
-  // 업주 side면 owner 채팅(chat-overlay), worker side면 worker 채팅(wchat-overlay)
-  if (side === 'owner') {
+  // gathering side면 바로모임/바로미팅 단체채팅, 업주 side면 owner 채팅(chat-overlay), worker side면 worker 채팅(wchat-overlay)
+  if (side === 'gathering') {
+    const gatheringId = appId.startsWith('g_') ? appId.slice(2) : appId;
+    const item = _allChats.find(a => a.id === appId);
+    if (item?.gatheringCategory === 'baromeeting') openBaromeetChat(gatheringId, name);
+    else openMoimChat(gatheringId, name);
+  } else if (side === 'owner') {
     openChat(appId, name);
   } else {
     openWChat(appId, name);
@@ -4204,6 +4209,9 @@ window._onFCMToken = function(token) {
         }); });
       }
     }
+    // 업체 후기 남기기 바텀시트 (openJobReview) - review-content textarea가 키보드에 가려지던 문제
+    var jr = document.getElementById('job-review-overlay');
+    if (jr) jr.style.paddingBottom = dp > 80 ? dp + 'px' : '';
     var rm = document.getElementById('rating-modal-inner');
     if (rm) {
       rm.style.paddingBottom = dp > 80 ? (dp + 40) + 'px' : '40px';
@@ -4528,6 +4536,7 @@ function goToMyApplications() {
 
 function openJobReview(appId, jobTitle, bizName, existingRating, existingReview) {
   const overlay = document.createElement('div');
+  overlay.id = 'job-review-overlay'; // 키보드 가림 방지(_onNativeKbChange)에서 이 id로 찾아서 패딩 적용
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:flex;align-items:flex-end';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
@@ -4562,6 +4571,18 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
 
   document.body.appendChild(overlay);
   renderStars();
+
+  // 키보드 가림 방지 - 브라우저(visualViewport 지원) 폴백. 네이티브 앱은 _onNativeKbChange가 처리
+  const _ta0 = overlay.querySelector('#review-content');
+  const _jrKbHandler = () => {
+    if (!window.visualViewport) return;
+    const kbH = Math.max(0, window.innerHeight - window.visualViewport.height);
+    overlay.style.paddingBottom = kbH > 80 ? kbH + 'px' : '';
+  };
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', _jrKbHandler);
+  const _jrCleanup = () => { if (window.visualViewport) window.visualViewport.removeEventListener('resize', _jrKbHandler); };
+  const _origRemove = overlay.remove.bind(overlay);
+  overlay.remove = () => { _jrCleanup(); _origRemove(); };
 
   // 별점 선택 시 레이블 + 버튼 색 업데이트
   const _LABELS = ['','😢 많이 힘들었어요','😕 아쉬웠어요','😊 보통이에요','😄 좋았어요','🤩 최고였어요!'];
@@ -5403,7 +5424,10 @@ function _renderChatList() {
       : `${msgDate.getMonth()+1}/${msgDate.getDate()}`;
     const ac = avatarColor(a.counterpartName);
     const sz = 46;
-    const avatarHtml = a.photoUrl
+    const isGathering = a.side === 'gathering';
+    const avatarHtml = isGathering
+      ? `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${a.gatheringCategory==='baromeeting'?'#F5F3FF':'#EDE9FE'};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${a.gatheringCategory==='baromeeting'?'🤝':'👥'}</div>`
+      : a.photoUrl
       ? `<img src="${a.photoUrl}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #f0f0f0" onerror="this.outerHTML='<div style=\\'width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0\\'>${a.counterpartName.charAt(0)}</div>'">`
       : `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>`;
     const preview = msg.content?.startsWith('[img]') ? '📷 사진' : (isMine ? `나: ${msg.content}` : msg.content);
@@ -5426,7 +5450,7 @@ function _renderChatList() {
         </div>
       </div>
       <button class="chat-fav-btn" onclick="_toggleChatFav('${a.id}',event)">${isFav?'⭐':'☆'}</button>
-      <button class="chat-leave-btn" onclick="confirmLeaveChat('${a.id}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>
+      ${isGathering ? '' : `<button class="chat-leave-btn" onclick="confirmLeaveChat('${a.id}','${a.counterpartName.replace(/'/g,"\\'")}')">나가기</button>`}
     </div>`;
   };
 
@@ -5501,28 +5525,54 @@ async function loadMyChatList() {
     }
   }
 
-  if (!allApps.length) {
-    _allChats = []; _latestMsg = {}; _unreadCnt = {};
-    _renderChatList(); return;
+  _latestMsg = {}; _unreadCnt = {};
+
+  if (allApps.length) {
+    const { data: messages } = await db.from('messages')
+      .select('*').in('application_id', allApps.map(a => a.id))
+      .order('created_at', { ascending: false });
+    (messages || []).forEach(m => {
+      if (!_latestMsg[m.application_id]) _latestMsg[m.application_id] = m;
+      if (!m.is_read && m.sender_id !== currentUser.id)
+        _unreadCnt[m.application_id] = (_unreadCnt[m.application_id] || 0) + 1;
+    });
   }
 
-  const { data: messages } = await db.from('messages')
-    .select('*').in('application_id', allApps.map(a => a.id))
-    .order('created_at', { ascending: false });
-
-  _latestMsg = {}; _unreadCnt = {};
-  (messages || []).forEach(m => {
-    if (!_latestMsg[m.application_id]) _latestMsg[m.application_id] = m;
-    if (!m.is_read && m.sender_id !== currentUser.id)
-      _unreadCnt[m.application_id] = (_unreadCnt[m.application_id] || 0) + 1;
-  });
+  // 바로모임/바로미팅 단체채팅도 같은 목록에 포함 - "채팅 메뉴에서 못 찾겠다"는 피드백 반영.
+  // gathering_chats는 개인별 읽음여부를 저장하지 않아 안읽음 뱃지는 표시하지 않음
+  const { data: myGatherApps } = await db.from('gathering_applications')
+    .select('gathering_id').eq('applicant_id', currentUser.id).eq('status', 'approved');
+  const gatheringIds = [...new Set((myGatherApps || []).map(a => a.gathering_id))];
+  if (gatheringIds.length) {
+    const [{ data: gatherings }, { data: gMsgs }] = await Promise.all([
+      db.from('gatherings').select('id, title, category').in('id', gatheringIds),
+      db.from('gathering_chats').select('*').in('gathering_id', gatheringIds).order('sent_at', { ascending: false }),
+    ]);
+    const gLatest = {};
+    (gMsgs || []).forEach(m => { if (!gLatest[m.gathering_id]) gLatest[m.gathering_id] = m; });
+    (gatherings || []).forEach(g => {
+      const rowId = 'g_' + g.id;
+      const isBaromeeting = g.category === 'baromeeting';
+      const obj = {
+        id: rowId, gatheringId: g.id, gatheringCategory: g.category,
+        title: isBaromeeting ? '🤝 바로미팅' : '👥 바로모임',
+        counterpartName: g.title || (isBaromeeting ? '바로미팅' : '바로모임'),
+        photoUrl: null, side: 'gathering',
+      };
+      allApps.push(obj); appMap[rowId] = obj;
+      const lm = gLatest[g.id];
+      _latestMsg[rowId] = lm
+        ? { content: lm.message, created_at: lm.sent_at, sender_id: lm.sender_id }
+        : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
+    });
+  }
 
   const badge = document.getElementById('chat-unread-badge');
   if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
 
   const hiddenChats = JSON.parse(localStorage.getItem('baroalba_hidden_chats') || '[]');
-  _allChats = allApps.filter(a => _latestMsg[a.id] && !hiddenChats.includes(a.id));
-  _allChats.sort((a, b) => new Date(_latestMsg[b.id].created_at) - new Date(_latestMsg[a.id].created_at));
+  _allChats = allApps.filter(a => (a.side === 'gathering' || _latestMsg[a.id]) && !hiddenChats.includes(a.id));
+  _allChats.sort((a, b) => new Date(_latestMsg[b.id]?.created_at || 0) - new Date(_latestMsg[a.id]?.created_at || 0));
   _renderChatList();
 }
 
