@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '429';
+  const _APP_V = '430';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=429').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=430').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2307,6 +2307,17 @@ function setMapMode(mode) {
   // 모임 모드는 아직 전용 필터가 없어 버튼 자체를 숨김 (필터 없는 빈 패널 방지)
   if (filterToggleBtn) filterToggleBtn.style.display = mode === 'moim' ? 'none' : 'flex';
 
+  // 모임/만남 모드 전용 "목록 보기" 플로팅 버튼 - 알바 전용인 기존 bottom-sheet를 건드리지 않고 별도 시트로 목록 제공
+  const listFloat = document.getElementById('map-list-float');
+  if (listFloat) {
+    if (mode === 'moim' || mode === 'baromeet' || mode === 'all') {
+      listFloat.style.display = 'flex';
+      listFloat.style.background = mode === 'baromeet' ? '#e11d48' : mode === 'moim' ? '#7C3AED' : '#1e293b';
+    } else {
+      listFloat.style.display = 'none';
+    }
+  }
+
   // 알바 마커
   overlays.forEach(o => o.setMap((mode === 'job' || mode === 'all') ? kakaoMap : null));
   // 모임 마커
@@ -2325,6 +2336,7 @@ function setMapMode(mode) {
   }
 }
 
+let _moimMarkerData = [];
 async function _renderMoimMarkers() {
   _moimOverlays.forEach(o => o.setMap(null));
   _moimOverlays = [];
@@ -2332,6 +2344,7 @@ async function _renderMoimMarkers() {
 
   // 바로미팅(category='baromeeting')은 _renderBaromeetMarkers()가 별도로 그리므로 여기서는 제외
   const { data: moims } = await db.from('gatherings').select('id,title,category,gathering_date,current_count,max_count,lat,lng').eq('status','open').eq('is_public',true).neq('category','baromeeting').not('lat','is',null);
+  _moimMarkerData = moims || [];
   if (!moims?.length) return;
 
   moims.forEach(m => {
@@ -2355,6 +2368,47 @@ async function _renderMoimMarkers() {
   });
 }
 
+// 지도 모임/만남 모드에서 현재 핀으로 찍힌 항목들을 목록으로도 볼 수 있게 -
+// 알바 전용인 기존 #bottom-sheet는 건드리지 않고 범용 바텀시트를 재사용
+function _moimListRow(m) {
+  const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
+  const rem = (m.max_count || 10) - (m.current_count || 0);
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' }) : '일정 미정';
+  return `<div onclick="closeBottomSheet();openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)" style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid #f5f5f5;cursor:pointer">
+    <div style="width:38px;height:38px;border-radius:10px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${emoji}</div>
+    <div style="min-width:0;flex:1">
+      <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || '바로모임'}</div>
+      <div style="font-size:12px;color:#7C3AED;font-weight:700;margin-top:2px">${dateStr} · ${rem > 0 ? rem + '자리 남음' : '마감'}</div>
+    </div>
+  </div>`;
+}
+function _baromeetListRow(m) {
+  const maleLeft = (m.baromeeting_male_max || 4) - (m.baromeeting_male_cur || 0);
+  const femaleLeft = (m.baromeeting_female_max || 4) - (m.baromeeting_female_cur || 0);
+  const isFull = maleLeft <= 0 && femaleLeft <= 0;
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' }) : '일정 미정';
+  return `<div onclick="closeBottomSheet();openBaromeetDetail('${m.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid #f5f5f5;cursor:pointer">
+    <div style="width:38px;height:38px;border-radius:10px;background:#FFF1F2;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💕</div>
+    <div style="min-width:0;flex:1">
+      <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || '바로미팅'}</div>
+      <div style="font-size:12px;color:#e11d48;font-weight:700;margin-top:2px">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr} · ${isFull ? '마감' : '모집중'}</div>
+      <div style="font-size:11px;color:#999;margin-top:1px">${m.location_name || '장소 미정'}</div>
+    </div>
+  </div>`;
+}
+function openMapListSheet() {
+  const mode = _currentMapMode;
+  let rows = '';
+  if (mode === 'moim') rows = _moimMarkerData.map(_moimListRow).join('');
+  else if (mode === 'baromeet') rows = _baromeetMarkerData.map(_baromeetListRow).join('');
+  else rows = _moimMarkerData.map(_moimListRow).join('') + _baromeetMarkerData.map(_baromeetListRow).join('');
+  const title = mode === 'moim' ? '🤝 주변 바로모임' : mode === 'baromeet' ? '💕 주변 바로미팅' : '🗺️ 주변 모임·미팅';
+  openBottomSheet(`
+    <div style="padding:0 20px 10px;font-size:16px;font-weight:900;color:#111">${title}</div>
+    ${rows || '<div style="padding:32px 20px;text-align:center;color:#bbb;font-size:13px">이 지역엔 아직 없어요</div>'}
+  `);
+}
+
 let _bmAgeFilter = '';
 function setBmAgeFilter(el, age) {
   _bmAgeFilter = age;
@@ -2362,6 +2416,7 @@ function setBmAgeFilter(el, age) {
   _renderBaromeetMarkers();
 }
 
+let _baromeetMarkerData = [];
 async function _renderBaromeetMarkers() {
   _baromeetOverlays.forEach(o => o.setMap(null));
   _baromeetOverlays = [];
@@ -2371,6 +2426,7 @@ async function _renderBaromeetMarkers() {
     .select('id,title,location_name,location_address,gathering_date,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,target_age_range,lat,lng')
     .eq('status', 'open').eq('category', 'baromeeting').not('lat', 'is', null);
   const meets = _bmAgeFilter ? (allMeets || []).filter(m => m.target_age_range === _bmAgeFilter) : allMeets;
+  _baromeetMarkerData = meets || [];
   if (!meets?.length) return;
 
   meets.forEach(m => {

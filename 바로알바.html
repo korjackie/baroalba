@@ -415,6 +415,16 @@
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 </div>
 
+<!-- 모임/만남 지도 모드용 - 현재 지도에 찍힌 핀 목록보기 (기존 bottom-sheet는 알바 검색전용이라 침범하지 않고 별도 시트로) -->
+<div id="map-list-float" onclick="openMapListSheet()"
+  style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 14px);z-index:399;
+         color:#fff;border-radius:24px;padding:10px 20px;
+         box-shadow:0 4px 18px rgba(0,0,0,0.25);cursor:pointer;white-space:nowrap;
+         font-size:13px;font-weight:800;
+         align-items:center;gap:8px;display:none">
+  <span id="map-list-float-txt">목록 보기</span>
+</div>
+
 <!-- 지도 모드 토글 (전체|알바|모임|만남) -->
 <div class="map-mode-toggle" id="map-mode-toggle">
   <button class="map-mode-btn" id="mapmode-all" onclick="setMapMode('all')">🗺️ <span data-i18n="map_mode_all">전체</span></button>
