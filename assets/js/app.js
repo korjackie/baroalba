@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '434';
+  const _APP_V = '435';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=434').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=435').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -1316,7 +1316,7 @@ function renderTodayPick() {}
 // ── 바로모임 (Baro Moim) ────────────────────────────────────
 // ══════════════════════════════════════════════════════════
 
-const MOIM_CAT_EMOJI = { 스포츠:'🏃', 취미:'🎨', 친목:'🤝', 기타:'💡' };
+const MOIM_CAT_EMOJI = { 스포츠:'🏃', 취미:'🎨', 친목:'🤝', 챌린지:'🔥', 기타:'💡' };
 const MOIM_PLAN_LIMITS = { free: 1, basic: 10, pro: Infinity };
 
 let _currentMoimId = null;   // 상세 보고 있는 모임 id
@@ -2470,11 +2470,12 @@ function setBmFeeFilter(el, fee) {
 
 // 출장 등으로 다른 지역 지도를 보고 싶을 때 - 반경 필터 대신 주요 지역으로 지도 중심을 바로 옮겨줌
 // (핀 자체는 현재도 반경 제한 없이 전체를 불러오므로 재조회 없이 지도만 이동하면 됨)
+// 부산/대구/대전/광주/울산처럼 잘 알려진 광역시는 대분류 단계 없이 최상단에서 바로 이동,
+// 서울/경기처럼 세부지역이 여러 곳인 경우와 그 외 기타 지방 도시만 2단계(대분류→세부)로 남김
 const MAP_REGION_GROUPS = {
-  '서울': [['종로',37.5735,126.9788], ['강남',37.4979,127.0276], ['여의도',37.5219,126.9245]],
-  '경기': [['판교/분당',37.3947,127.1112], ['광명',37.4794,126.8646], ['용인',37.2411,127.1776], ['동탄',37.2003,127.0736]],
-  '인천': [['인천',37.4563,126.7052]],
-  '지방': [['부산',35.1796,129.0756], ['대구',35.8714,128.6014], ['대전',36.3504,127.3845], ['광주',35.1595,126.8526], ['울산',35.5384,129.3114]],
+  '서울': [['종로',37.5735,126.9788], ['강남',37.4979,127.0276], ['여의도',37.5219,126.9245], ['잠실',37.5133,127.1000], ['성수',37.5446,127.0557], ['강서',37.5509,126.8495], ['목동',37.5266,126.8642], ['강북',37.6396,127.0257]],
+  '경기': [['판교/분당',37.3947,127.1112], ['광명',37.4794,126.8646], ['용인',37.2411,127.1776], ['동탄',37.2003,127.0736], ['남양주/구리',37.6152,127.1731]],
+  '지방': [['세종',36.4801,127.2890], ['창원',35.2280,128.6811], ['전주',35.8242,127.1480], ['천안',36.8151,127.1139], ['제주',33.4996,126.5312]],
 };
 function toggleMapRegionGroup(el, group) {
   document.querySelectorAll('#map-region-group-row .chip').forEach(c => c.classList.toggle('active', c === el));
@@ -2485,8 +2486,12 @@ function toggleMapRegionGroup(el, group) {
   ).join('');
   sub.style.display = 'flex';
 }
-function jumpMapRegion(lat, lng, name) {
+function jumpMapRegion(lat, lng, name, el) {
   if (!kakaoMap) return;
+  if (el) {
+    document.querySelectorAll('#map-region-group-row .chip').forEach(c => c.classList.toggle('active', c === el));
+    document.getElementById('map-region-sub-row').style.display = 'none';
+  }
   kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
   kakaoMap.setLevel(6);
   showToast(`📍 ${name}(으)로 이동했어요`);
