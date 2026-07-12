@@ -46,10 +46,10 @@
     .content { padding:20px; padding-bottom:calc(76px + var(--sab)); max-width:1100px; margin:0 auto; }
 
     /* 대시보드 - 제목(좌) + 현황(우) 한 줄 카드 */
-    .dash-row { display:flex; align-items:center; gap:10px; background:#fff; border-radius:14px; padding:12px 16px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-    .dash-row-label { font-size:12.5px; font-weight:800; color:#475569; width:64px; flex-shrink:0; line-height:1.3; }
-    .dash-row-stats { flex:1; display:flex; }
-    .dash-stat { flex:1; text-align:center; cursor:pointer; user-select:none; padding:2px 4px; }
+    .dash-row { display:flex; align-items:center; gap:14px; background:#fff; border-radius:14px; padding:12px 16px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+    .dash-row-label { font-size:12.5px; font-weight:800; color:#475569; width:82px; flex-shrink:0; line-height:1.3; white-space:nowrap; }
+    .dash-row-stats { flex:1; display:flex; gap:4px; }
+    .dash-stat { flex:0 0 92px; text-align:center; cursor:pointer; user-select:none; padding:2px 4px; }
     .dash-stat.no-click { cursor:default; }
     .dash-stat-val { font-size:17px; font-weight:900; color:#1e293b; }
     .dash-stat-val.alert { color:#EF4444; }
