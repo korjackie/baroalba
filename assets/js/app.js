@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '416';
+  const _APP_V = '417';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=416').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=417').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2035,6 +2035,11 @@ async function handleMoimDeeplink(codeOrId) {
 // ── 단체 채팅 ────────────────────────────────────────────
 async function openMoimChat(gatheringId, title) {
   document.getElementById('panel-moim-chat').classList.add('show');
+  // 바로알바(빨강)/바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 전부 흰색이라 구분이 안 되던 문제
+  const _mcSafearea = document.getElementById('moim-chat-safearea');
+  if (_mcSafearea) _mcSafearea.style.background = '#7C3AED';
+  const _mcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
+  if (_mcSendBtn) _mcSendBtn.style.background = '#7C3AED';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지
   const _mcFab = document.getElementById('posting-fab');
   if (_mcFab) _mcFab.style.display = 'none';
@@ -2090,21 +2095,23 @@ function _moimChatBubble(m) {
   } else if (m.sender_photo_url) {
     avatar = `<img src="${m.sender_photo_url}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0">`;
   }
+  const isImg = m.message?.startsWith('[img]');
+  const bubbleContent = isImg
+    ? `<img src="${m.message.slice(5)}" style="max-width:220px;border-radius:12px;display:block;cursor:pointer;border:1px solid #eee" onclick="window.open('${m.message.slice(5)}','_blank')" loading="lazy">`
+    : `<div style="max-width:72%;padding:9px 13px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'#7C3AED':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>`;
   return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};margin-bottom:4px">
     ${!isMine ? `<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;padding-left:4px">${avatar}<span style="font-size:10px;color:#999;font-weight:600">${name}</span></div>` : ''}
     <div style="display:flex;align-items:flex-end;gap:4px;flex-direction:${isMine?'row-reverse':'row'}">
-      <div style="max-width:72%;padding:9px 13px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'#7C3AED':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>
+      ${bubbleContent}
       <div style="font-size:10px;color:#bbb;white-space:nowrap">${time}</div>
     </div>
   </div>`;
 }
 
-async function sendMoimChat() {
+async function _doSendMoimChat(msg) {
   const input = document.getElementById('moim-chat-input');
   const gatheringId = input.dataset.gatheringId;
-  const msg = input.value.trim();
   if (!msg || !gatheringId || !currentUser) return;
-  input.value = '';
   // 바로미팅 채팅방은 익명 - 실명 대신 본인이 설정한 익명 닉네임 사용, 사진공개 설정 시에만 사진 첨부
   const isBaromeet = input.dataset.baromeet === '1';
   const senderName = isBaromeet
@@ -2113,6 +2120,46 @@ async function sendMoimChat() {
   const senderPhotoUrl = isBaromeet ? (_baromeetPhotoUrl || null) : null;
   const { error: _gcErr } = await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, sender_photo_url: senderPhotoUrl, message: msg });
   if (_gcErr) { showToast('전송 실패: ' + _gcErr.message); }
+}
+
+async function sendMoimChat() {
+  if (_pendingMoimFiles.length) { await _uploadAndSendMoimChatImage(); return; }
+  const input = document.getElementById('moim-chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  await _doSendMoimChat(msg);
+}
+
+let _pendingMoimFiles = [];
+function sendMoimChatImage(inputEl) {
+  const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
+  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
+  inputEl.value = '';
+  closeMediaPanel('moim');
+  if (!files.length) return;
+  _pendingMoimFiles = files;
+  const bar = document.getElementById('moim-img-preview-bar');
+  const thumb = document.getElementById('moim-img-preview-thumb');
+  thumb.src = URL.createObjectURL(files[0]);
+  _setImgPreviewCountBadge('moim', files.length);
+  bar.style.display = 'flex';
+}
+function cancelMoimChatImage() {
+  _pendingMoimFiles = [];
+  document.getElementById('moim-img-preview-bar').style.display = 'none';
+}
+async function _uploadAndSendMoimChatImage() {
+  const files = _pendingMoimFiles;
+  _pendingMoimFiles = [];
+  document.getElementById('moim-img-preview-bar').style.display = 'none';
+  showToast(files.length > 1 ? `이미지 ${files.length}장 전송 중...` : '이미지 전송 중...');
+  for (const file of files) {
+    try {
+      const url = await uploadChatImage(file);
+      await _doSendMoimChat('[img]' + url);
+    } catch(e) { showToast('이미지 전송 실패'); }
+  }
 }
 
 // ── 지도 모임 모드 ────────────────────────────────────────
@@ -3972,7 +4019,7 @@ async function openWorkerProfileDirect(appId) {
       <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
   } else if (app.status === 'accepted') {
     statusActions = `
-      <button onclick="${close}showRatingModal('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#3B82F6;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">🏁 근무완료</button>
+      <button onclick="${close}showRatingModal('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">🏁 근무완료</button>
       <button onclick="${close}markNoshow('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#FEE2E2;color:#DC2626;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">😶 노쇼</button>`;
   }
 
@@ -3981,7 +4028,7 @@ async function openWorkerProfileDirect(appId) {
 
     <!-- 지원자 헤더 -->
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-      <div style="width:52px;height:52px;border-radius:50%;background:#FFF0F0;border:2px solid #FECACA;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">👤</div>
+      <div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">👤</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:18px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
@@ -3992,16 +4039,16 @@ async function openWorkerProfileDirect(appId) {
           ${attendRate !== null ? `<span style="font-size:11px;font-weight:700;color:${attendRate >= 80 ? '#16a34a' : '#D97706'}">출근율 ${attendRate}%</span>` : ''}
         </div>
         <div style="margin-top:4px;display:flex;gap:5px;flex-wrap:wrap">
-          ${total >= 2 ? `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${trustScore>=80?'#D1FAE5':trustScore>=60?'#DBEAFE':'#F3F4F6'};color:${trustScore>=80?'#065F46':trustScore>=60?'#1e40af':'#6B7280'}">신뢰 ${trustScore}점</span>` : ''}
-          ${w.age ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#FFF0F0;color:#C8102E">만 ${w.age}세</span>` : ''}
-          ${w.gender ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#EFF6FF;color:#3B82F6">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
+          ${total >= 2 ? `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${trustScore>=80?'#D1FAE5':trustScore>=60?'#E2E8F0':'#F3F4F6'};color:${trustScore>=80?'#065F46':trustScore>=60?'#475569':'#6B7280'}">신뢰 ${trustScore}점</span>` : ''}
+          ${w.age ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#f1f5f9;color:#475569">만 ${w.age}세</span>` : ''}
+          ${w.gender ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#f1f5f9;color:#475569">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
         </div>
       </div>
       <span style="background:${b.bg};color:${b.color};padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;flex-shrink:0">${b.label}</span>
     </div>
 
     <!-- 지원 공고 -->
-    <div style="background:#FFF5F5;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+    <div style="background:#f8fafc;border-radius:10px;padding:10px 12px;margin-bottom:10px">
       <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:2px">📋 지원 공고</div>
       <div style="font-size:13px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div>
     </div>
@@ -4015,7 +4062,7 @@ async function openWorkerProfileDirect(appId) {
     </div>` : ''}
 
     <!-- 지원 메시지 -->
-    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#FFFBEB;border-radius:10px;border-left:3px solid #F59E0B;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#D97706;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;border-left:3px solid #cbd5e1;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#64748b;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
 
     <!-- 전화 버튼 -->
     ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone} 전화하기</a>` : ''}
@@ -4025,8 +4072,8 @@ async function openWorkerProfileDirect(appId) {
 
     <!-- 채팅 + 지원서 보기 -->
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💬 채팅</button>
-      <button onclick="${close}_chatAppId='${app.id}';openWorkerProfile()" style="flex:1;padding:13px;background:#F5F3FF;color:#7C3AED;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📋 지원서 보기</button>
+      <button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💬 채팅</button>
+      <button onclick="${close}_chatAppId='${app.id}';openWorkerProfile()" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📋 지원서 보기</button>
     </div>
 
     <!-- 닫기 -->
@@ -4544,12 +4591,15 @@ async function loadMyBaromeetPreview() {
   const ids = [...new Set((apps || []).map(a => a.gathering_id))];
   if (!ids.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 바로미팅이 없어요</div>'; return; }
   const { data: gatherings } = await db.from('gatherings')
-    .select('id, title, gathering_date').in('id', ids).eq('category', 'baromeeting')
+    .select('id, title, description, tags, location_name, location_address, gathering_date, baromeeting_male_max, baromeeting_female_max, baromeeting_male_cur, baromeeting_female_cur')
+    .in('id', ids).eq('category', 'baromeeting')
     .order('gathering_date', { ascending: true });
   if (!gatherings?.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 바로미팅이 없어요</div>'; return; }
   el.innerHTML = gatherings.slice(0, 5).map(g => {
+    g._joined = true; // 마이페이지에 뜬다는 것 자체가 이미 신청/참가한 미팅이라는 뜻
+    _baromeetListCache[g.id] = g; // openBaromeetDetail()이 참조하는 캐시에 미리 채워둠 (바로만남 패널을 안 거쳐도 상세가 열리도록)
     const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
-    return `<div onclick="event.stopPropagation();openBaromeetChat('${g.id}','${(g.title||'바로미팅').replace(/'/g,"\\'")}')" style="flex-shrink:0;width:140px;background:#fff1f2;border-radius:10px;padding:10px 12px;cursor:pointer">
+    return `<div onclick="event.stopPropagation();openBaromeetDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#fff1f2;border-radius:10px;padding:10px 12px;cursor:pointer">
       <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'바로미팅'}</div>
       <div style="font-size:10.5px;color:#e11d48;margin-top:3px">${dateStr}</div>
     </div>`;
@@ -16987,6 +17037,11 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   _baromeetPhotoUrl = showPhoto ? (photoUrl || null) : null;
 
   document.getElementById('panel-moim-chat').classList.add('show');
+  // 바로알바(빨강)/바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 전부 흰색이라 구분이 안 되던 문제
+  const _bcSafearea = document.getElementById('moim-chat-safearea');
+  if (_bcSafearea) _bcSafearea.style.background = '#e11d48';
+  const _bcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
+  if (_bcSendBtn) _bcSendBtn.style.background = '#e11d48';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지 + 키보드 가림 방지
   // (openMoimChat과 동일한 panel-moim-chat DOM을 공유하면서도 이 등록이 빠져있던 게 원인)
   const _bcFab = document.getElementById('posting-fab');
