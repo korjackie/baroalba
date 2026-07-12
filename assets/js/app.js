@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '412';
+  const _APP_V = '413';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=412').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=413').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16656,22 +16656,23 @@ let _baromeetPhotoUrl = null;
 let _baromeetRealtimeCh = null;
 let _pendingBaromeetChat = null; // 닉네임 미설정 시 설정 완료 후 이어서 입장할 { gatheringId, title }
 
-// 오픈카톡 스타일 익명 아바타: '내 사진' / '캐릭터'(로컬 저장) / '표시안함' 중 선택
+// 오픈카톡 스타일 익명 아바타: '내 사진' / '캐릭터' / '표시안함' 중 선택
+// workers.baromeet_avatar(text)에 null(표시안함) / 'photo'(실사진) / 'emoji:🐱'(캐릭터)로 저장 -
+// 기기가 아니라 계정에 저장되므로 다른 기기에서 로그인해도 동일하게 유지됨
 const BAROMEET_AVATAR_EMOJIS = ['🐱','🐶','🐰','🦊','🐻','🐼','🐯','🐨','🦁','🐮','🐷','🐸'];
 let _baromeetAvatarType = 'none';   // 'none' | 'emoji' | 'photo'
 let _baromeetAvatarEmoji = '';
-function _loadBaromeetAvatarPref() {
-  try { return JSON.parse(localStorage.getItem('baromeet_avatar_pref')) || { type: 'none', emoji: '' }; }
-  catch(e) { return { type: 'none', emoji: '' }; }
+// UI 선택 상태(type/emoji) → DB에 저장할 baromeet_avatar 컬럼 값으로 변환
+function _baromeetAvatarToColumnValue() {
+  if (_baromeetAvatarType === 'emoji') return 'emoji:' + (_baromeetAvatarEmoji || BAROMEET_AVATAR_EMOJIS[0]);
+  if (_baromeetAvatarType === 'photo') return 'photo';
+  return null;
 }
-function _saveBaromeetAvatarPref(type, emoji) {
-  try { localStorage.setItem('baromeet_avatar_pref', JSON.stringify({ type, emoji })); } catch(e) {}
-}
-// DB의 실사진 공개여부 + 이 기기에 저장된 캐릭터 선택을 합쳐 최종 아바타 값을 결정
-function _resolveBaromeetAvatarUrl(dbShowPhoto, dbPhotoUrl) {
-  const pref = _loadBaromeetAvatarPref();
-  if (pref.type === 'emoji' && pref.emoji) return 'emoji:' + pref.emoji;
-  if (dbShowPhoto) return dbPhotoUrl || null;
+// DB의 baromeet_avatar 값 + 실사진 URL을 합쳐 채팅에 실제로 표시할 아바타 값을 결정
+function _resolveBaromeetAvatarUrl(baromeetAvatar, dbPhotoUrl) {
+  if (!baromeetAvatar) return null;
+  if (baromeetAvatar.startsWith('emoji:')) return baromeetAvatar;
+  if (baromeetAvatar === 'photo') return dbPhotoUrl || null;
   return null;
 }
 function _renderBmAvatarEmojiGrid() {
@@ -16703,22 +16704,29 @@ function setBaromeetAvatarType(type) {
 
 async function openBaromeetChat(gatheringId, title) {
   if (!currentUser) return;
-  const { data: w } = await db.from('workers').select('baromeet_nick, baromeet_show_photo, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+  const { data: w, error } = await db.from('workers').select('baromeet_nick, baromeet_avatar, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+  if (error) { showToast('프로필 조회 실패: ' + error.message); return; }
   if (!w?.baromeet_nick) {
     _pendingBaromeetChat = { gatheringId, title };
     openBaromeetAnonSetup();
     return;
   }
-  const avatarUrl = _resolveBaromeetAvatarUrl(w.baromeet_show_photo, w.photo_url);
+  const avatarUrl = _resolveBaromeetAvatarUrl(w.baromeet_avatar, w.photo_url);
   await _enterBaromeetChat(gatheringId, title, w.baromeet_nick, !!avatarUrl, avatarUrl);
 }
 
 function openBaromeetAnonSetup() {
-  db.from('workers').select('baromeet_nick').eq('kakao_uid', currentUser.id).maybeSingle().then(({ data: w }) => {
+  db.from('workers').select('baromeet_nick, baromeet_avatar').eq('kakao_uid', currentUser.id).maybeSingle().then(({ data: w }) => {
     document.getElementById('baromeet-nick-input').value = w?.baromeet_nick || '';
-    const pref = _loadBaromeetAvatarPref();
-    _baromeetAvatarEmoji = pref.emoji || BAROMEET_AVATAR_EMOJIS[0];
-    setBaromeetAvatarType(pref.type || 'none');
+    const av = w?.baromeet_avatar || '';
+    if (av.startsWith('emoji:')) {
+      _baromeetAvatarEmoji = av.slice(6) || BAROMEET_AVATAR_EMOJIS[0];
+      setBaromeetAvatarType('emoji');
+    } else if (av === 'photo') {
+      setBaromeetAvatarType('photo');
+    } else {
+      setBaromeetAvatarType('none');
+    }
     document.getElementById('baromeet-anon-overlay').style.display = 'flex';
   });
 }
@@ -16730,20 +16738,19 @@ function closeBaromeetAnonSetup() {
 async function saveBaromeetAnonProfile() {
   const nick = document.getElementById('baromeet-nick-input').value.trim();
   if (!nick) { showToast('닉네임을 입력해주세요'); return; }
-  const showPhoto = _baromeetAvatarType === 'photo';
+  const avatarValue = _baromeetAvatarToColumnValue();
   // 신규가입자는 아직 workers 행이 없을 수 있음 - update만 하면 조용히 0건 처리되던
   // 문제(설정한 성별이 저장 안 되던 버그와 동일 원인)를 여기서도 동일하게 방지
   const { data: existing } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).maybeSingle();
   let error;
   if (existing) {
-    ({ error } = await db.from('workers').update({ baromeet_nick: nick, baromeet_show_photo: showPhoto }).eq('kakao_uid', currentUser.id));
+    ({ error } = await db.from('workers').update({ baromeet_nick: nick, baromeet_avatar: avatarValue }).eq('kakao_uid', currentUser.id));
   } else {
     const meta = currentUser.user_metadata || {};
     const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
-    ({ error } = await db.from('workers').insert({ kakao_uid: currentUser.id, name, baromeet_nick: nick, baromeet_show_photo: showPhoto }));
+    ({ error } = await db.from('workers').insert({ kakao_uid: currentUser.id, name, baromeet_nick: nick, baromeet_avatar: avatarValue }));
   }
   if (error) { showToast('저장 실패: ' + error.message); return; }
-  _saveBaromeetAvatarPref(_baromeetAvatarType, _baromeetAvatarEmoji);
   document.getElementById('baromeet-anon-overlay').style.display = 'none';
   showToast('✅ 익명 프로필이 저장됐어요');
 
@@ -16751,12 +16758,12 @@ async function saveBaromeetAnonProfile() {
   _pendingBaromeetChat = null;
   if (pending) {
     const { data: w } = await db.from('workers').select('photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
-    const avatarUrl = _resolveBaromeetAvatarUrl(showPhoto, w?.photo_url);
+    const avatarUrl = _resolveBaromeetAvatarUrl(avatarValue, w?.photo_url);
     await _enterBaromeetChat(pending.gatheringId, pending.title, nick, !!avatarUrl, avatarUrl);
   } else if (_baromeetChatId) {
     // 이미 채팅방에 들어와 있는 상태에서 닉네임/아바타 설정을 바꾼 경우 즉시 반영
     const { data: w } = await db.from('workers').select('photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
-    const avatarUrl = _resolveBaromeetAvatarUrl(showPhoto, w?.photo_url);
+    const avatarUrl = _resolveBaromeetAvatarUrl(avatarValue, w?.photo_url);
     _baromeetAnonLabel = nick;
     _baromeetShowPhoto = !!avatarUrl;
     _baromeetPhotoUrl = avatarUrl;
