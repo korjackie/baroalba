@@ -358,7 +358,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '442';
+  const _APP_V = '443';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -374,7 +374,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=442').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=443').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -4653,7 +4653,7 @@ window._onFCMToken = function(token) {
     }
     // 바로모임/바로미팅 단체채팅 (panel-moim-chat) — wchat/chat과 동일한 네이티브 IME 방식 적용
     var mc = document.getElementById('panel-moim-chat');
-    if (mc && mc.classList.contains('show')) {
+    if (mc && mc.style.display === 'flex') {
       mc.style.paddingBottom = val;
       if (dp > 80) {
         requestAnimationFrame(function() { requestAnimationFrame(function() {
@@ -4736,14 +4736,22 @@ window._onFCMToken = function(token) {
       });
     }
     if (ci && co) {
-      ci.addEventListener('focus', function() { applyKbPad(co); });
-      ci.addEventListener('blur',  function() { clearKbPad(co); });
+      if (isIOS) {
+        ci.addEventListener('focus', function() { applyKbPad(co); });
+        ci.addEventListener('blur',  function() {
+          setTimeout(function() { if (document.activeElement !== ci) clearKbPad(co); }, 150);
+        });
+      }
     }
     var mi = document.getElementById('moim-chat-input');
     var mo = document.getElementById('panel-moim-chat');
     if (mi && mo) {
-      mi.addEventListener('focus', function() { applyKbPad(mo); });
-      mi.addEventListener('blur',  function() { clearKbPad(mo); });
+      if (isIOS) {
+        mi.addEventListener('focus', function() { applyKbPad(mo); });
+        mi.addEventListener('blur',  function() {
+          setTimeout(function() { if (document.activeElement !== mi) clearKbPad(mo); }, 150);
+        });
+      }
     }
     // 범용 바텀시트(openBottomSheet) 내부는 내용이 동적으로 삽입되므로 위임 방식으로 바인딩
     // (개설요청 등 텍스트 입력 폼이 나중에 추가돼도 항상 커버되도록)
