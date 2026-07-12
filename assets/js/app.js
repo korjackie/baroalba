@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '431';
+  const _APP_V = '432';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=431').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=432').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2293,6 +2293,8 @@ function setMapMode(mode) {
   const floatBtn = document.getElementById('map-swipe-float');
   const jobFilterBar = document.querySelector('#map-filter-panel-collapsible .filter-bar-wrapper');
   const ageFilterRow = document.getElementById('bm-age-filter-row');
+  const feeFilterRow = document.getElementById('bm-fee-filter-row');
+  const moimCatFilterRow = document.getElementById('moim-cat-filter-row');
   const filterToggleBtn = document.getElementById('map-filter-toggle-btn');
 
   // 알바 전용 하단시트/반경뱃지는 job 모드에서만 - 다른 모드는 지도 위 핀만 보여줌.
@@ -2303,10 +2305,12 @@ function setMapMode(mode) {
   if (radiusBadge) radiusBadge.style.display = showJobUI ? '' : 'none';
   if (floatBtn) floatBtn.style.display = showJobUI ? '' : 'none';
   if (jobFilterBar) jobFilterBar.style.display = showJobUI ? '' : 'none';
-  // 연령대 필터는 바로만남 전용 - "전체" 모드는 알바/모임/만남을 있는 그대로 다 보여줘야 하므로 필터 없음
+  // 연령대/참가비 필터는 바로만남 전용, 카테고리 필터는 바로모임 전용 - "전체" 모드는
+  // 알바/모임/만남을 있는 그대로 다 보여줘야 하므로 어느 필터도 적용하지 않음
   if (ageFilterRow) ageFilterRow.style.display = (mode === 'baromeet') ? 'flex' : 'none';
-  // 모임 모드는 아직 전용 필터가 없어 버튼 자체를 숨김 (필터 없는 빈 패널 방지)
-  if (filterToggleBtn) filterToggleBtn.style.display = mode === 'moim' ? 'none' : 'flex';
+  if (feeFilterRow) feeFilterRow.style.display = (mode === 'baromeet') ? 'flex' : 'none';
+  if (moimCatFilterRow) moimCatFilterRow.style.display = (mode === 'moim') ? 'flex' : 'none';
+  if (filterToggleBtn) filterToggleBtn.style.display = 'flex';
 
   // 모임/만남 모드 전용 "목록 보기" 플로팅 버튼 - 알바 전용인 기존 bottom-sheet를 건드리지 않고 별도 시트로 목록 제공
   const listFloat = document.getElementById('map-list-float');
@@ -2337,6 +2341,13 @@ function setMapMode(mode) {
   }
 }
 
+let _moimCatFilter = '';
+function setMoimCatFilter(el, cat) {
+  _moimCatFilter = cat;
+  document.querySelectorAll('#moim-cat-filter-row .chip').forEach(c => c.classList.toggle('active', c === el));
+  _renderMoimMarkers();
+}
+
 let _moimMarkerData = [];
 async function _renderMoimMarkers() {
   _moimOverlays.forEach(o => o.setMap(null));
@@ -2344,7 +2355,9 @@ async function _renderMoimMarkers() {
   if (!kakaoMap) return;
 
   // 바로미팅(category='baromeeting')은 _renderBaromeetMarkers()가 별도로 그리므로 여기서는 제외
-  const { data: moims } = await db.from('gatherings').select('id,title,category,gathering_date,current_count,max_count,lat,lng').eq('status','open').eq('is_public',true).neq('category','baromeeting').not('lat','is',null);
+  const { data: allMoims } = await db.from('gatherings').select('id,title,category,gathering_date,current_count,max_count,lat,lng').eq('status','open').eq('is_public',true).neq('category','baromeeting').not('lat','is',null);
+  // 카테고리 필터는 "모임" 모드에서만 적용 - "전체" 모드에서는 필터 없이 전부 보여줌
+  const moims = (_moimCatFilter && _currentMapMode === 'moim') ? (allMoims || []).filter(m => m.category === _moimCatFilter) : allMoims;
   _moimMarkerData = moims || [];
   if (!moims?.length) return;
 
@@ -2417,6 +2430,22 @@ function setBmAgeFilter(el, age) {
   _renderBaromeetMarkers();
 }
 
+let _bmFeeFilter = '';
+function setBmFeeFilter(el, fee) {
+  _bmFeeFilter = fee;
+  document.querySelectorAll('#bm-fee-filter-row .chip').forEach(c => c.classList.toggle('active', c === el));
+  _renderBaromeetMarkers();
+}
+
+// 출장 등으로 다른 지역 지도를 보고 싶을 때 - 반경 필터 대신 주요 지역으로 지도 중심을 바로 옮겨줌
+// (핀 자체는 현재도 반경 제한 없이 전체를 불러오므로 재조회 없이 지도만 이동하면 됨)
+function jumpMapRegion(lat, lng, name) {
+  if (!kakaoMap) return;
+  kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
+  kakaoMap.setLevel(6);
+  showToast(`📍 ${name}(으)로 이동했어요`);
+}
+
 let _baromeetMarkerData = [];
 async function _renderBaromeetMarkers() {
   _baromeetOverlays.forEach(o => o.setMap(null));
@@ -2426,8 +2455,11 @@ async function _renderBaromeetMarkers() {
   const { data: allMeets } = await db.from('gatherings')
     .select('id,title,location_name,location_address,gathering_date,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,target_age_range,lat,lng')
     .eq('status', 'open').eq('category', 'baromeeting').not('lat', 'is', null);
-  // 연령대 필터는 "만남" 모드에서만 적용 - "전체" 모드에서는 필터 없이 전부 보여줌
-  const meets = (_bmAgeFilter && _currentMapMode === 'baromeet') ? (allMeets || []).filter(m => m.target_age_range === _bmAgeFilter) : allMeets;
+  // 연령대/참가비 필터는 "만남" 모드에서만 적용 - "전체" 모드에서는 필터 없이 전부 보여줌
+  const applyBmFilters = _currentMapMode === 'baromeet';
+  let meets = allMeets;
+  if (applyBmFilters && _bmAgeFilter) meets = (meets || []).filter(m => m.target_age_range === _bmAgeFilter);
+  if (applyBmFilters && _bmFeeFilter) meets = (meets || []).filter(m => (m.entry_fee || 0) < parseInt(_bmFeeFilter));
   _baromeetMarkerData = meets || [];
   if (!meets?.length) return;
 

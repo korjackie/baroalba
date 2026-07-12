@@ -140,6 +140,33 @@
     <div class="chip" data-age="30대" onclick="setBmAgeFilter(this,'30대')" style="flex-shrink:0">30대</div>
     <div class="chip" data-age="40대+" onclick="setBmAgeFilter(this,'40대+')" style="flex-shrink:0">40대+</div>
   </div>
+  <!-- 바로만남 지도 모드 전용 - 참가비 필터 -->
+  <div id="bm-fee-filter-row" style="display:none;align-items:center;gap:6px;padding:0 0 5px;flex-wrap:wrap">
+    <div class="chip active" data-fee="" onclick="setBmFeeFilter(this,'')" style="flex-shrink:0">비용무관</div>
+    <div class="chip" data-fee="20000" onclick="setBmFeeFilter(this,'20000')" style="flex-shrink:0">2만원 미만</div>
+    <div class="chip" data-fee="40000" onclick="setBmFeeFilter(this,'40000')" style="flex-shrink:0">4만원 미만</div>
+  </div>
+  <!-- 바로모임 지도 모드 전용 - 카테고리 필터 (모임 개설폼과 동일한 4개 카테고리) -->
+  <div id="moim-cat-filter-row" style="display:none;align-items:center;gap:6px;padding:7px 0 5px;flex-wrap:wrap">
+    <div class="chip active" data-mcat="" onclick="setMoimCatFilter(this,'')" style="flex-shrink:0">전체</div>
+    <div class="chip" data-mcat="스포츠" onclick="setMoimCatFilter(this,'스포츠')" style="flex-shrink:0">🏃 스포츠</div>
+    <div class="chip" data-mcat="취미" onclick="setMoimCatFilter(this,'취미')" style="flex-shrink:0">🎨 취미</div>
+    <div class="chip" data-mcat="친목" onclick="setMoimCatFilter(this,'친목')" style="flex-shrink:0">🤝 친목</div>
+    <div class="chip" data-mcat="기타" onclick="setMoimCatFilter(this,'기타')" style="flex-shrink:0">💡 기타</div>
+  </div>
+  <!-- 지역 빠른이동 - 출장 등으로 다른 지역 지도를 봐야 할 때 (모든 지도 모드 공통) -->
+  <div id="map-region-jump-row" style="display:flex;align-items:center;gap:6px;padding:7px 0 5px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    <div class="chip" onclick="jumpMapRegion(37.5735,126.9788,'종로')" style="flex-shrink:0">종로</div>
+    <div class="chip" onclick="jumpMapRegion(37.4979,127.0276,'강남')" style="flex-shrink:0">강남</div>
+    <div class="chip" onclick="jumpMapRegion(37.5219,126.9245,'여의도')" style="flex-shrink:0">여의도</div>
+    <div class="chip" onclick="jumpMapRegion(37.3947,127.1112,'판교')" style="flex-shrink:0">판교</div>
+    <div class="chip" onclick="jumpMapRegion(37.4563,126.7052,'인천')" style="flex-shrink:0">인천</div>
+    <div class="chip" onclick="jumpMapRegion(35.1796,129.0756,'부산')" style="flex-shrink:0">부산</div>
+    <div class="chip" onclick="jumpMapRegion(35.8714,128.6014,'대구')" style="flex-shrink:0">대구</div>
+    <div class="chip" onclick="jumpMapRegion(36.3504,127.3845,'대전')" style="flex-shrink:0">대전</div>
+    <div class="chip" onclick="jumpMapRegion(35.1595,126.8526,'광주')" style="flex-shrink:0">광주</div>
+    <div class="chip" onclick="jumpMapRegion(35.5384,129.3114,'울산')" style="flex-shrink:0">울산</div>
+  </div>
   <!-- 카테고리 드롭다운 시트 -->
   <div class="filter-sheet" id="filter-sheet-cat">
     <div id="filter-row" style="display:contents">
