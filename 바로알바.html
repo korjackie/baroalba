@@ -154,20 +154,23 @@
     <div class="chip" data-mcat="챌린지" onclick="setMoimCatFilter(this,'챌린지')" style="flex-shrink:0">🔥 챌린지</div>
     <div class="chip" data-mcat="기타" onclick="setMoimCatFilter(this,'기타')" style="flex-shrink:0">💡 기타</div>
   </div>
-  <!-- 지역 빠른이동 - 출장 등으로 다른 지역 지도를 봐야 할 때 (모든 지도 모드 공통). 2단계: 대분류 → 세부지역 -->
-  <div style="font-size:11px;font-weight:700;color:#64748b;padding-top:4px">지역 빠른이동</div>
-  <div id="map-region-group-row" style="display:flex;align-items:center;gap:6px;padding:5px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-    <div class="chip" onclick="toggleMapRegionGroup(this,'서울')" style="flex-shrink:0">서울</div>
-    <div class="chip" onclick="toggleMapRegionGroup(this,'경기')" style="flex-shrink:0">경기</div>
-    <div class="chip" onclick="jumpMapRegion(37.4563,126.7052,'인천',this)" style="flex-shrink:0">인천</div>
-    <div class="chip" onclick="jumpMapRegion(35.1796,129.0756,'부산',this)" style="flex-shrink:0">부산</div>
-    <div class="chip" onclick="jumpMapRegion(35.8714,128.6014,'대구',this)" style="flex-shrink:0">대구</div>
-    <div class="chip" onclick="jumpMapRegion(36.3504,127.3845,'대전',this)" style="flex-shrink:0">대전</div>
-    <div class="chip" onclick="jumpMapRegion(35.1595,126.8526,'광주',this)" style="flex-shrink:0">광주</div>
-    <div class="chip" onclick="jumpMapRegion(35.5384,129.3114,'울산',this)" style="flex-shrink:0">울산</div>
-    <div class="chip" onclick="toggleMapRegionGroup(this,'지방')" style="flex-shrink:0">지방(기타)</div>
+  <!-- 지역 빠른이동 - 출장 등으로 다른 지역 지도를 봐야 할 때 (모든 지도 모드 공통). 2단계: 대분류 → 세부지역.
+       눈에 잘 띄도록 박스로 감쌈 -->
+  <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px 10px;margin-top:6px">
+    <div style="font-size:12px;font-weight:800;color:#1e293b;margin-bottom:6px">📍 지역 빠른이동</div>
+    <div id="map-region-group-row" style="display:flex;align-items:center;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      <div class="chip" onclick="toggleMapRegionGroup(this,'서울')" style="flex-shrink:0">서울</div>
+      <div class="chip" onclick="toggleMapRegionGroup(this,'경기')" style="flex-shrink:0">경기</div>
+      <div class="chip" onclick="jumpMapRegion(37.4563,126.7052,'인천',this)" style="flex-shrink:0">인천</div>
+      <div class="chip" onclick="jumpMapRegion(35.1796,129.0756,'부산',this)" style="flex-shrink:0">부산</div>
+      <div class="chip" onclick="jumpMapRegion(35.8714,128.6014,'대구',this)" style="flex-shrink:0">대구</div>
+      <div class="chip" onclick="jumpMapRegion(36.3504,127.3845,'대전',this)" style="flex-shrink:0">대전</div>
+      <div class="chip" onclick="jumpMapRegion(35.1595,126.8526,'광주',this)" style="flex-shrink:0">광주</div>
+      <div class="chip" onclick="jumpMapRegion(35.5384,129.3114,'울산',this)" style="flex-shrink:0">울산</div>
+      <div class="chip" onclick="toggleMapRegionGroup(this,'지방')" style="flex-shrink:0">지방(기타)</div>
+    </div>
+    <div id="map-region-sub-row" style="display:none;align-items:center;gap:6px;padding-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
   </div>
-  <div id="map-region-sub-row" style="display:none;align-items:center;gap:6px;padding:0 0 5px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
   <!-- 카테고리 드롭다운 시트 -->
   <div class="filter-sheet" id="filter-sheet-cat">
     <div id="filter-row" style="display:contents">
