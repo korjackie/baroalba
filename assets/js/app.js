@@ -284,7 +284,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '405';
+  const _APP_V = '406';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -297,7 +297,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=405').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=406').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16256,11 +16256,11 @@ function _baromeetHomeCard(m) {
   const femaleLeft = (m.baromeeting_female_max || 4) - (m.baromeeting_female_cur || 0);
   const isFull = maleLeft <= 0 && femaleLeft <= 0;
   const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
-  return `<div onclick="openMannnamPanel()" style="flex-shrink:0;width:160px;background:#fff;border:1px solid #f0f0f0;border-radius:12px;padding:14px;cursor:pointer">
-    <div style="font-size:10px;font-weight:800;color:#7C3AED;margin-bottom:4px">BAROMEETING</div>
+  return `<div onclick="openMannnamPanel()" style="flex-shrink:0;width:160px;background:#fff;border:1px solid #fecdd3;border-radius:12px;padding:14px;cursor:pointer">
+    <div style="font-size:10px;font-weight:800;color:#e11d48;margin-bottom:4px">BAROMEETING</div>
     <div style="font-size:13px;font-weight:900;color:#111;line-height:1.3;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${m.title||'바로미팅'}</div>
     <div style="font-size:10.5px;color:#999;margin-bottom:3px">🕐 ${dateStr}</div>
-    <div style="font-size:10.5px;font-weight:800;color:${isFull?'#bbb':'#7C3AED'}">${isFull?'마감':'자리있음'}</div>
+    <div style="font-size:10.5px;font-weight:800;color:${isFull?'#bbb':'#e11d48'}">${isFull?'마감':'자리있음'}</div>
   </div>`;
 }
 

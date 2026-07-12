@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='405',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='406',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -1104,24 +1104,9 @@
         </div>
       </div>
 
-      <!-- ④-1 바로미팅 홈 미리보기 (카드형태, 바로모임과 동일 패턴) -->
-      <div id="home-baromeet-section" style="display:none;padding:7px 12px 0">
-        <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:15px;overflow:hidden">
-          <div onclick="openMannnamPanel()" style="padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #f5f3ff;cursor:pointer">
-            <div style="width:30px;height:30px;background:#7C3AED;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">🤝</div>
-            <div style="flex:1">
-              <div style="font-size:14px;font-weight:900;color:#5B21B6">바로미팅</div>
-              <div style="font-size:10px;color:#a78bfa;margin-top:1px">직장인 소셜 만남</div>
-            </div>
-            <button onclick="event.stopPropagation();openMannnamPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0">전체 ›</button>
-          </div>
-          <div id="home-baromeet-list" style="display:flex;gap:8px;overflow-x:auto;padding:9px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-height:44px"></div>
-        </div>
-      </div>
-
-      <!-- ⑤ 프리미엄 바로만남 배너 -->
-      <div onclick="openMannnamPanel()" style="padding:7px 12px 0;">
-        <div class="mannam-banner">
+      <!-- ⑤ 프리미엄 바로만남 배너 + 바로미팅 미리보기 (한 묶음 - 바로미팅은 바로만남 소속 서비스) -->
+      <div style="padding:7px 12px 0;">
+        <div onclick="openMannnamPanel()" class="mannam-banner" style="margin-bottom:0;border-radius:20px 20px 0 0;cursor:pointer">
           <div class="mb-left">
             <div class="mb-icon">💫</div>
             <div>
@@ -1132,6 +1117,13 @@
           <div style="display:flex; align-items:center; gap:8px;">
             <span class="mb-new">NEW</span> <span style="font-size:18px; color:rgba(255,255,255,0.8)">›</span>
           </div>
+        </div>
+        <div id="home-baromeet-section" style="display:none;background:#fff1f2;border:1.5px solid #fecdd3;border-top:none;border-radius:0 0 15px 15px;overflow:hidden;padding:10px 14px 12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:800;color:#be123c">🤝 바로미팅 모집 중</div>
+            <button onclick="openMannnamPanel()" style="font-size:11px;color:#e11d48;font-weight:700;background:none;border:none;cursor:pointer">전체 ›</button>
+          </div>
+          <div id="home-baromeet-list" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
         </div>
       </div>
 
