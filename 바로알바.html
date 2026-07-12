@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='417',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='418',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -1483,63 +1483,6 @@
         </div>
       </div>
 
-      <!-- ── 내 프로필 (알바생만) ── -->
-      <div class="mp-section" id="worker-profile-edit" style="display:none">
-        <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
-        <!-- 완성도 게이지 compact -->
-        <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-bottom:1px solid #f5f5f5">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
-            <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
-          </div>
-          <div style="height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden">
-            <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s;width:0%"></div>
-          </div>
-          <div id="completion-items" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
-        </div>
-        <div class="mp-rows">
-          <div class="mp-row" onclick="openMpSub('basic')">
-            <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('portfolio')">
-            <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">포트폴리오</span></div>
-            <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('skills')">
-            <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span data-i18n="row_skills_career">스킬 · 경력</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('docs')">
-            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_docs">자격증 · 서류</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── 등급 (알바생만) ── -->
-      <div class="mp-section" id="worker-grade-section" style="display:none">
-        <div class="mp-section-title" data-i18n="section_grade">등급</div>
-        <div class="mp-rows">
-          <div class="mp-row" onclick="showGradeInfoModal()">
-            <div class="mp-row-left"><span class="mp-row-icon">🏅</span><span data-i18n="row_my_grade">내 등급</span></div>
-            <div class="mp-row-right"><span id="worker-grade-badge" style="font-size:14px;font-weight:800"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-        </div>
-        <div id="worker-grade-progress" style="padding:0 16px 12px;background:#fff;font-size:12px;color:#888;line-height:1.8"></div>
-      </div>
-
-      <!-- ── 외국인 전용 서비스 (워커만) ── -->
-      <div class="mp-section" id="foreigner-section" style="display:none">
-        <div class="mp-section-title">🌏 <span data-i18n="section_foreigner">외국인 전용 서비스</span></div>
-        <div class="mp-rows">
-          <div class="mp-row" onclick="openMpSub('foreigner-hub')">
-            <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span data-i18n="row_foreigner">외국인 전용</span></div>
-            <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-        </div>
-      </div>
-
       <!-- ── 설정 ── -->
       <div class="mp-section">
         <div class="mp-section-title" data-i18n="section_settings">설정</div>
@@ -1673,6 +1616,63 @@
       <div class="mp-row" onclick="showMyRatings()">
         <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span data-i18n="my_rating_label">내 평점</span></div>
         <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+      </div>
+    </div>
+
+    <!-- ── 내 프로필 (알바생만) ── -->
+    <div class="mp-section" id="worker-profile-edit" style="display:none">
+      <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
+      <!-- 완성도 게이지 compact -->
+      <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-bottom:1px solid #f5f5f5">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
+          <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
+        </div>
+        <div style="height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden">
+          <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s;width:0%"></div>
+        </div>
+        <div id="completion-items" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+      <div class="mp-rows">
+        <div class="mp-row" onclick="openMpSub('basic')">
+          <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
+          <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+        </div>
+        <div class="mp-row" onclick="openMpSub('portfolio')">
+          <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">포트폴리오</span></div>
+          <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
+        </div>
+        <div class="mp-row" onclick="openMpSub('skills')">
+          <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span data-i18n="row_skills_career">스킬 · 경력</span></div>
+          <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+        </div>
+        <div class="mp-row" onclick="openMpSub('docs')">
+          <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_docs">자격증 · 서류</span></div>
+          <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 등급 (알바생만) ── -->
+    <div class="mp-section" id="worker-grade-section" style="display:none">
+      <div class="mp-section-title" data-i18n="section_grade">등급</div>
+      <div class="mp-rows">
+        <div class="mp-row" onclick="showGradeInfoModal()">
+          <div class="mp-row-left"><span class="mp-row-icon">🏅</span><span data-i18n="row_my_grade">내 등급</span></div>
+          <div class="mp-row-right"><span id="worker-grade-badge" style="font-size:14px;font-weight:800"></span><span class="mp-row-arrow">›</span></div>
+        </div>
+      </div>
+      <div id="worker-grade-progress" style="padding:0 16px 12px;background:#fff;font-size:12px;color:#888;line-height:1.8"></div>
+    </div>
+
+    <!-- ── 외국인 전용 서비스 (워커만) ── -->
+    <div class="mp-section" id="foreigner-section" style="display:none">
+      <div class="mp-section-title">🌏 <span data-i18n="section_foreigner">외국인 전용 서비스</span></div>
+      <div class="mp-rows">
+        <div class="mp-row" onclick="openMpSub('foreigner-hub')">
+          <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span data-i18n="row_foreigner">외국인 전용</span></div>
+          <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2744,7 +2744,7 @@
 <!-- ④ 바로모임 단체채팅 패널 -->
 <div class="full-panel" id="panel-moim-chat" style="z-index:400;top:0;background:#fff">
   <div id="moim-chat-safearea" style="height:var(--sat-safe);background:#7C3AED;flex-shrink:0"></div>
-  <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="moim-chat-header" style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#F5F3FF">
     <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
       <button onclick="closeMoimChat()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>

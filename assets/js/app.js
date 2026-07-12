@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '417';
+  const _APP_V = '418';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=417').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=418').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2035,9 +2035,12 @@ async function handleMoimDeeplink(codeOrId) {
 // ── 단체 채팅 ────────────────────────────────────────────
 async function openMoimChat(gatheringId, title) {
   document.getElementById('panel-moim-chat').classList.add('show');
-  // 바로알바(빨강)/바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 전부 흰색이라 구분이 안 되던 문제
+  // 바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 안전영역 얇은 띠만으로는 눈에 잘 안 띄어서
+  // 헤더 배경 전체를 옅은 색으로 tint (바로알바 1:1 채팅은 기존 화이트 그대로 유지)
   const _mcSafearea = document.getElementById('moim-chat-safearea');
   if (_mcSafearea) _mcSafearea.style.background = '#7C3AED';
+  const _mcHeader = document.getElementById('moim-chat-header');
+  if (_mcHeader) _mcHeader.style.background = '#F5F3FF';
   const _mcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
   if (_mcSendBtn) _mcSendBtn.style.background = '#7C3AED';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지
@@ -4081,19 +4084,30 @@ async function openWorkerProfileDirect(appId) {
   </div>`;
   document.body.appendChild(el);
 
-  // 실시간 위치 공유 지도 구독 - 알바생이 toggleLocationShare()로 브로드캐스트하는 좌표를 받아서 표시
+  // 실시간 위치 공유 지도 구독 - 알바생이 toggleLocationShare()로 브로드캐스트하는 좌표를 받아서 표시.
+  // 실시간 신호는 알바생이 앱을 닫으면 끊기므로, 우선 DB에 저장된 마지막 위치부터 보여주고
+  // 그 위에 실시간 신호가 오면 최신 위치로 갱신함
   let _wdLocChannel = null, _wdLocMap = null, _wdLocMarker = null;
   if (app.status === 'accepted') {
-    requestAnimationFrame(() => {
+    requestAnimationFrame(async () => {
       const mapEl = document.getElementById('wd-loc-map');
       if (!mapEl || !window.kakao?.maps) return;
       _wdLocMap = new kakao.maps.Map(mapEl, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 4 });
+
+      const { data: locRow } = await db.from('applications').select('last_lat, last_lng, last_location_at').eq('id', app.id).maybeSingle();
+      const statusEl = document.getElementById('wd-loc-status');
+      if (locRow?.last_lat && locRow?.last_lng) {
+        const pos = new kakao.maps.LatLng(locRow.last_lat, locRow.last_lng);
+        _wdLocMap.setCenter(pos);
+        _wdLocMarker = new kakao.maps.Marker({ position: pos, map: _wdLocMap });
+        if (statusEl) statusEl.textContent = '🕐 마지막 확인 위치 · ' + new Date(locRow.last_location_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+      }
+
       _wdLocChannel = subscribeWorkerLocation(app.id, (payload) => {
         const pos = new kakao.maps.LatLng(payload.lat, payload.lng);
         _wdLocMap.setCenter(pos);
         if (_wdLocMarker) _wdLocMarker.setMap(null);
         _wdLocMarker = new kakao.maps.Marker({ position: pos, map: _wdLocMap });
-        const statusEl = document.getElementById('wd-loc-status');
         if (statusEl) statusEl.textContent = '🟢 실시간 위치 공유 중 · ' + new Date(payload.ts).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
       });
     });
@@ -17037,9 +17051,12 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   _baromeetPhotoUrl = showPhoto ? (photoUrl || null) : null;
 
   document.getElementById('panel-moim-chat').classList.add('show');
-  // 바로알바(빨강)/바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 전부 흰색이라 구분이 안 되던 문제
+  // 바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 헤더 배경 전체를 옅게 tint
+  // (바로알바 1:1 채팅은 기존 화이트 그대로 유지)
   const _bcSafearea = document.getElementById('moim-chat-safearea');
   if (_bcSafearea) _bcSafearea.style.background = '#e11d48';
+  const _bcHeader = document.getElementById('moim-chat-header');
+  if (_bcHeader) _bcHeader.style.background = '#FFF1F2';
   const _bcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
   if (_bcSendBtn) _bcSendBtn.style.background = '#e11d48';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지 + 키보드 가림 방지

@@ -713,12 +713,22 @@ async function toggleLocationShare(appId, btnEl) {
   _locationAppId = appId;
   _locationChannel = db.channel(`location:${appId}`);
   await _locationChannel.subscribe();
+  let _lastLocDbWrite = 0;
   _locationWatchId = navigator.geolocation.watchPosition(
     (pos) => {
       _locationChannel.send({
         type: 'broadcast', event: 'loc',
         payload: { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() }
       }).catch(() => {});
+      // 실시간 브로드캐스트는 앱을 끄면 사라지므로, 마지막 위치를 DB에도 남겨서
+      // 업주가 나중에 열어봐도 "마지막 확인 위치"를 볼 수 있게 함 (20초 간격으로 제한)
+      const now = Date.now();
+      if (now - _lastLocDbWrite > 20000) {
+        _lastLocDbWrite = now;
+        db.from('applications').update({
+          last_lat: pos.coords.latitude, last_lng: pos.coords.longitude, last_location_at: new Date().toISOString()
+        }).eq('id', appId).then(({ error }) => { if (error) console.warn('[location] 마지막 위치 저장 실패:', error.message); });
+      }
     },
     () => showToast('위치 정보를 가져올 수 없어요'),
     { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
