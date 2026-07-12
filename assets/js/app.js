@@ -182,6 +182,13 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 6-0.5. 바로미팅 상세 (바로만남 패널 위에 뜨는 오버레이 - 먼저 닫혀야 함)
+  const baromeetDetailEl = document.getElementById('baromeet-detail-overlay');
+  if (baromeetDetailEl && baromeetDetailEl.style.display === 'flex') {
+    closeBaromeetDetail();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 6-1. 바로만남 패널
   const mannnamEl = document.getElementById('mannnam-panel');
   if (mannnamEl && (mannnamEl.style.display === 'flex' || mannnamEl.style.display === 'block')) {
@@ -277,7 +284,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '401';
+  const _APP_V = '402';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +297,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=401').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=402').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2219,6 +2226,8 @@ function loadHomePanel() {
   _renderHomeLessonHot().catch(() => {}); // 레슨/과외 HOT
   // 바로모임 미리보기
   loadMoimList('').catch(() => {});
+  // 바로만남 배너에 진행 중인 바로미팅 티저 표시
+  _loadHomeMannnamTeaser().catch(() => {});
 
   // 공고가 없으면 GPS 확보 후 재조회 (홈 진입 시 watchPosition이 중단되므로 getCurrentPosition 사용)
   clearTimeout(_homeJobRetryTimer);
@@ -16228,6 +16237,24 @@ function closeTrackingSheet() {
   if (_trackTimer) { clearInterval(_trackTimer); _trackTimer = null; }
 }
 
+// 홈화면 바로만남 배너에 진행 중인 바로미팅 티저 노출 (바로모임 리스트에서 빠진 만큼 홈 노출 보강)
+async function _loadHomeMannnamTeaser() {
+  const el = document.getElementById('home-mannam-teaser');
+  if (!el) return;
+  const { data } = await db.from('gatherings')
+    .select('title,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
+    .eq('status', 'open').eq('category', 'baromeeting')
+    .order('created_at', { ascending: false }).limit(1);
+  const m = data?.[0];
+  if (!m) { el.style.display = 'none'; return; }
+  const maleLeft = (m.baromeeting_male_max || 4) - (m.baromeeting_male_cur || 0);
+  const femaleLeft = (m.baromeeting_female_max || 4) - (m.baromeeting_female_cur || 0);
+  const isFull = maleLeft <= 0 && femaleLeft <= 0;
+  el.textContent = `🤝 ${m.title || '바로미팅'} · ${isFull ? '마감' : '자리있음'}`;
+  el.style.display = 'block';
+}
+
+let _baromeetListCache = {};
 // 바로미팅 목록 로드
 async function _loadBaromeetList() {
   const el = document.getElementById('mnm-meeting-list');
@@ -16258,7 +16285,9 @@ async function _loadBaromeetList() {
         .in('gathering_id', data.map(m => m.id));
       joinedSet = new Set((myApps || []).map(a => a.gathering_id));
     }
-    el.innerHTML = data.map(m => _renderBaromeetCard(m, joinedSet.has(m.id))).join('');
+    _baromeetListCache = {};
+    data.forEach(m => { m._joined = joinedSet.has(m.id); _baromeetListCache[m.id] = m; });
+    el.innerHTML = data.map(m => _renderBaromeetCard(m, m._joined)).join('');
     document.getElementById('mnm-meet-loctext').textContent = `${data.length}개 미팅 모집 중`;
   } catch(e) {
     el.innerHTML = '<div style="text-align:center;padding:44px 20px;color:#bbb;font-size:13px">불러오기 실패<br>잠시 후 다시 시도해주세요</div>';
@@ -16280,7 +16309,7 @@ function _renderBaromeetCard(m, joined) {
   const tags = Array.isArray(m.tags) ? m.tags : [];
   const _maleSlots = Array.from({length:maleMax}).map((_,i)=>i<maleCur?'<span style="color:#3b82f6;font-size:14px">●</span>':'<span style="color:#ddd;font-size:14px">○</span>').join('');
   const _femaleSlots = Array.from({length:femaleMax}).map((_,i)=>i<femaleCur?'<span style="color:#f43f5e;font-size:14px">●</span>':'<span style="color:#ddd;font-size:14px">○</span>').join('');
-  return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #f0f0f0">
+  return `<div onclick="openBaromeetDetail('${m.id}')" style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #f0f0f0;cursor:pointer">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
       <div style="flex:1">
         <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${m.title||'바로미팅'}</div>
@@ -16290,7 +16319,7 @@ function _renderBaromeetCard(m, joined) {
         <div style="font-size:11px;color:#aaa;margin-top:2px">🕐 ${dtStr}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <button onclick="shareBaromeet('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="background:#f5f5f5;border:none;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" title="공유">
+        <button onclick="event.stopPropagation();shareBaromeet('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="background:#f5f5f5;border:none;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" title="공유">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </button>
         <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:#7C3AED'}">${isFull?'마감':'자리있음'}</span>
@@ -16312,9 +16341,69 @@ function _renderBaromeetCard(m, joined) {
     </div>
     ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:#f5f5f5;color:#666;padding:3px 8px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
     ${isFull && joined
-      ? `<button onclick="openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
-      : `<button onclick="applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
+      ? `<button onclick="event.stopPropagation();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+      : `<button onclick="event.stopPropagation();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
   </div>`;
+}
+
+// 바로미팅 상세 정보 + 진행방식 안내 (카드 클릭 시)
+function openBaromeetDetail(id) {
+  const m = _baromeetListCache[id];
+  if (!m) return;
+  const overlay = document.getElementById('baromeet-detail-overlay');
+  const body = document.getElementById('baromeet-detail-body');
+  if (!overlay || !body) return;
+  const maleMax = m.baromeeting_male_max || 4, femaleMax = m.baromeeting_female_max || 4;
+  const maleCur = m.baromeeting_male_cur || 0, femaleCur = m.baromeeting_female_cur || 0;
+  const maleLeft = maleMax - maleCur, femaleLeft = femaleMax - femaleCur;
+  const isFull = maleLeft <= 0 && femaleLeft <= 0;
+  const joined = !!m._joined;
+  const dtStr = m.gathering_date ? (() => {
+    const d = new Date(m.gathering_date);
+    const days = ['일','월','화','수','목','금','토'];
+    return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${d.getHours()<12?'오전':'오후'} ${((d.getHours()-1)%12)+1}:${String(d.getMinutes()).padStart(2,'0')}`;
+  })() : '날짜 미정';
+  const tags = Array.isArray(m.tags) ? m.tags : [];
+
+  body.innerHTML = `
+    <div style="padding:20px 20px 4px">
+      <div style="font-size:19px;font-weight:900;color:#111;margin-bottom:8px">${m.title||'바로미팅'}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-bottom:4px">📍 ${m.location_name||m.location_address||'장소 확인 후 안내'}</div>
+      <div style="font-size:13px;color:#666">🕐 ${dtStr}</div>
+    </div>
+    <div style="margin:16px 20px;display:flex;gap:10px;background:#fafafa;border-radius:12px;padding:14px">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:12px;color:#f43f5e;font-weight:800;margin-bottom:4px">여성 ${femaleCur}/${femaleMax}명</div>
+        <div style="font-size:11px;color:#bbb">${femaleLeft>0?femaleLeft+'자리 남음':'마감'}</div>
+      </div>
+      <div style="width:1px;background:#eee"></div>
+      <div style="flex:1;text-align:center">
+        <div style="font-size:12px;color:#3b82f6;font-weight:800;margin-bottom:4px">남성 ${maleCur}/${maleMax}명</div>
+        <div style="font-size:11px;color:#bbb">${maleLeft>0?maleLeft+'자리 남음':'마감'}</div>
+      </div>
+    </div>
+    ${tags.length ? `<div style="margin:0 20px 16px;display:flex;flex-wrap:wrap;gap:4px">${tags.map(t=>`<span style="font-size:11px;background:#f5f5f5;color:#666;padding:4px 9px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
+    ${m.description ? `<div style="margin:0 20px 16px;background:#f9fafb;border-radius:12px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 소개</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
+    <div style="margin:0 20px 20px;background:#F5F3FF;border-radius:12px;padding:16px">
+      <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:10px">🤝 어떻게 진행되나요?</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">1</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가 신청 (이용권 또는 포인트 차감)</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">2</span><span style="font-size:12.5px;color:#555;line-height:1.6">남녀 각 정원이 다 찰 때까지 대기</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">3</span><span style="font-size:12.5px;color:#555;line-height:1.6">정원이 차면 자동으로 익명 단체채팅방이 열려요</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">4</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅으로 시간·장소를 맞춰 현장에서 만나요 (식사비는 각자 실비)</span></div>
+      </div>
+    </div>
+    <div style="padding:0 20px 24px">
+      ${isFull && joined
+        ? `<button onclick="closeBaromeetDetail();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+        : `<button onclick="closeBaromeetDetail();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:14px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
+    </div>
+  `;
+  overlay.style.display = 'flex';
+}
+function closeBaromeetDetail() {
+  const overlay = document.getElementById('baromeet-detail-overlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 // ── 바로미팅 공유 (바로모임 shareMoim()과 동일한 패턴) ──────
@@ -16364,20 +16453,29 @@ async function handleBaromeetDeeplink(id) {
   if (m.status !== 'open') showToast('이미 마감되었거나 종료된 바로미팅이에요');
 }
 
-// 신규가입자 한정 무료체험 이벤트: 기간 내 + 이 기간 중 가입한 유저는 포인트/이용권 차감 없이 신청,
-// 대신 식사비는 현장에서 실비로 결제 (프로모션 종료 시 enabled만 false로 바꾸면 됨)
+// 첫 이용 무료체험 이벤트: 이벤트 기간 내 + 바로미팅 신청 이력이 한 번도 없는 유저는
+// 포인트/이용권 차감 없이 신청, 대신 식사비는 현장에서 실비로 결제
+// (프로모션 종료 시 enabled만 false로 바꾸면 됨)
 const BAROMEET_TRIAL_EVENT = {
   enabled: true,
   start: '2026-07-11T00:00:00+09:00',
   end: '2026-08-10T23:59:59+09:00',
 };
-function _isBaromeetTrialEligible(joinedAt) {
-  if (!BAROMEET_TRIAL_EVENT.enabled || !joinedAt) return false;
+async function _isBaromeetTrialEligible(userId) {
+  if (!BAROMEET_TRIAL_EVENT.enabled || !userId) return false;
   const now = Date.now();
   const start = new Date(BAROMEET_TRIAL_EVENT.start).getTime();
   const end = new Date(BAROMEET_TRIAL_EVENT.end).getTime();
-  const joined = new Date(joinedAt).getTime();
-  return now >= start && now <= end && joined >= start;
+  if (now < start || now > end) return false;
+  // 이 유저가 신청한 gathering_id 목록 중 바로미팅 카테고리가 하나라도 있으면 이미 이용한 것
+  const { data: myApps } = await db.from('gathering_applications').select('gathering_id').eq('applicant_id', userId);
+  const gatheringIds = (myApps || []).map(a => a.gathering_id);
+  if (!gatheringIds.length) return true; // 신청 이력 자체가 없음 = 첫 이용
+  const { count } = await db.from('gatherings')
+    .select('id', { count: 'exact', head: true })
+    .eq('category', 'baromeeting')
+    .in('id', gatheringIds);
+  return (count || 0) === 0;
 }
 
 async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
@@ -16386,12 +16484,12 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', meetingId).eq('applicant_id', currentUser.id).limit(1);
   if (existing?.length) { showToast('이미 신청한 바로미팅이에요'); return; }
 
-  const { data: wRow } = await db.from('workers').select('gender, created_at').eq('kakao_uid', currentUser.id).maybeSingle();
+  const { data: wRow } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
   const gender = wRow?.gender;
   if (!gender) { showToast('바로만남 > 바로스팟에서 성별을 먼저 등록해주세요'); return; }
 
-  // 이벤트 기간 중 가입한 신규회원은 포인트/이용권 차감 없이 무료 체험 신청 (식사비는 현장 실비 결제)
-  if (_isBaromeetTrialEligible(wRow?.created_at)) {
+  // 이벤트 기간 중 첫 이용자는 포인트/이용권 차감 없이 무료 체험 신청 (식사비는 현장 실비 결제)
+  if (await _isBaromeetTrialEligible(currentUser.id)) {
     showConfirm('🎉 신규가입 이벤트로 포인트 차감 없이 무료로 신청할 수 있어요!\n(식사비는 현장에서 실비로 결제해주세요)', async () => {
       const ae = await _finalizeBaromeetJoin(meetingId, gender);
       if (ae) { showToast('신청 중 오류가 발생했어요'); return; }
