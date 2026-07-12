@@ -435,7 +435,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '454';
+  const _APP_V = '455';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -451,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=454').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=455').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -9182,143 +9182,167 @@ const _OB_KEY = 'baroalba_ob_v2';
 let _obStep = 0;
 const _OB_SLIDES = [
   {
-    bg: 'linear-gradient(145deg,#fff1f2,#ffe4e6)',
-    illus: `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="80" cy="78" r="66" fill="#C8102E" opacity="0.07"/>
-      <circle cx="80" cy="78" r="46" fill="#C8102E" opacity="0.1"/>
-      <circle cx="80" cy="74" r="34" fill="#C8102E"/>
-      <circle cx="80" cy="74" r="27" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-      <text x="80" y="85" font-size="26" fill="white" font-weight="900" text-anchor="middle" font-family="-apple-system,Arial,sans-serif">&#8361;</text>
-      <circle cx="30" cy="60" r="13" fill="#fca5a5"/>
-      <text x="30" y="65" font-size="11" fill="#9f1239" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">&#8361;</text>
-      <circle cx="132" cy="50" r="10" fill="#fecdd3"/>
-      <text x="132" y="55" font-size="9" fill="#be123c" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">&#8361;</text>
-      <path d="M118 24 L113 38 L120 36 L115 52" stroke="#C8102E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
-      <rect x="50" y="117" width="60" height="22" rx="11" fill="#C8102E" opacity="0.9"/>
-      <text x="80" y="132" font-size="11" fill="white" font-weight="800" text-anchor="middle" font-family="-apple-system,Arial,sans-serif">&#45817;&#51068; &#51221;&#49328;</text>
-      <path d="M36 98 L36 87 M33 91 L36 87 L39 91" stroke="#C8102E" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-      <path d="M48 104 L48 96 M45 100 L48 96 L51 100" stroke="#C8102E" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-    </svg>`,
-    title: '일한 당일,\n통장에 바로 꽂힌다',
-    desc: '기다림은 없다. 일하고 집에 가는 길\n이미 입금 완료입니다',
-    chips: ['💰 당일 정산', '⚡ 즉시 매칭', '🔔 실시간 알림']
+    bg: 'linear-gradient(145deg, #fff1f2, #ffe4e6)',
+    illus: `<div style="position:relative;width:100%;height:100%">
+      <div class="ob-anim-layer">
+        <div class="ob-shape-circle" style="width:130px;height:130px;background:#C8102E;opacity:0.1;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:90px;height:90px;background:#C8102E;opacity:0.15;animation-delay:0.1s"></div>
+      </div>
+      <div class="ob-anim-layer" style="animation: obFloat 4s ease-in-out infinite">
+        <div style="font-size:42px; filter: drop-shadow(0 4px 6px rgba(200,16,46,0.2));">📍</div>
+      </div>
+      <div class="ob-anim-layer">
+        <div class="ob-card" style="position:absolute; bottom:25px; left:20px; width:100px; height:45px; padding:6px; display:flex; align-items:center; gap:6px; animation-delay:0.3s">
+          <div style="width:24px;height:24px;background:#ffe4e6;border-radius:6px"></div>
+          <div style="flex:1"><div style="height:6px;background:#fecdd3;border-radius:3px;margin-bottom:4px;width:80%"></div><div style="height:6px;background:#fecdd3;border-radius:3px;width:50%"></div></div>
+        </div>
+        <div class="ob-card" style="position:absolute; top:25px; right:15px; width:80px; height:35px; padding:6px; display:flex; align-items:center; gap:6px; animation-delay:0.5s">
+          <div style="width:16px;height:16px;background:#ffe4e6;border-radius:4px"></div>
+          <div style="flex:1"><div style="height:4px;background:#fecdd3;border-radius:2px;margin-bottom:3px;width:70%"></div><div style="height:4px;background:#fecdd3;border-radius:2px;width:40%"></div></div>
+        </div>
+      </div>
+    </div>`
   },
   {
-    bg: 'linear-gradient(145deg,#f0fdf4,#dcfce7)',
-    illus: `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="80" cy="80" r="66" fill="#16a34a" opacity="0.07"/>
-      <circle cx="80" cy="80" r="48" fill="#16a34a" opacity="0.1"/>
-      <rect x="46" y="28" width="68" height="104" rx="12" fill="white" stroke="#bbf7d0" stroke-width="2"/>
-      <rect x="52" y="34" width="56" height="82" rx="8" fill="#f0fdf4"/>
-      <line x1="52" y1="55" x2="108" y2="55" stroke="#bbf7d0" stroke-width="1"/>
-      <line x1="52" y1="76" x2="108" y2="76" stroke="#bbf7d0" stroke-width="1"/>
-      <line x1="52" y1="97" x2="108" y2="97" stroke="#bbf7d0" stroke-width="1"/>
-      <line x1="73" y1="34" x2="73" y2="116" stroke="#bbf7d0" stroke-width="1"/>
-      <line x1="94" y1="34" x2="94" y2="116" stroke="#bbf7d0" stroke-width="1"/>
-      <circle cx="78" cy="67" r="11" fill="#C8102E"/>
-      <path d="M78 72 L78 81" stroke="#C8102E" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="78" cy="64" r="4.5" fill="white"/>
-      <circle cx="95" cy="55" r="8" fill="#16a34a" opacity="0.85"/>
-      <path d="M95 59 L95 66" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="63" cy="82" r="6.5" fill="#f59e0b" opacity="0.85"/>
-      <path d="M63 87 L63 93" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="83" cy="90" r="9" fill="white" stroke="#3b82f6" stroke-width="2.5"/>
-      <circle cx="83" cy="90" r="4.5" fill="#3b82f6"/>
-      <circle cx="83" cy="90" r="14" fill="none" stroke="#3b82f6" stroke-width="1.2" opacity="0.3"/>
-    </svg>`,
-    title: '지금 내 주변\n일자리가 보인다',
-    desc: '걸어갈 수 있는 거리의 공고를\n지도에서 바로 발견하세요',
-    chips: ['📍 위치 기반', '🗺 지도 탐색', '🔍 스마트 필터']
+    bg: 'linear-gradient(145deg, #eef2ff, #e0e7ff)',
+    illus: `<div style="position:relative;width:100%;height:100%">
+      <div class="ob-anim-layer">
+        <div class="ob-shape-circle" style="width:130px;height:130px;background:#6366f1;opacity:0.1;animation-delay:0s"></div>
+      </div>
+      <div class="ob-anim-layer" style="animation: obFloat 3s ease-in-out infinite">
+        <div style="font-size:36px; filter: drop-shadow(0 4px 6px rgba(99,102,241,0.2));">🌍</div>
+      </div>
+      <div class="ob-anim-layer">
+        <div class="ob-card" style="position:absolute; top:20px; left:20px; padding:8px 12px; font-weight:800; color:#6366f1; font-size:12px; border-radius:12px 12px 12px 2px; animation-delay:0.2s">Hello! 👋</div>
+        <div class="ob-card" style="position:absolute; bottom:40px; right:15px; padding:8px 12px; font-weight:800; color:#fff; background:#6366f1; font-size:12px; border-radius:12px 12px 2px 12px; animation-delay:0.5s">안녕하세요! 😊</div>
+        <div class="ob-card" style="position:absolute; bottom:15px; left:30px; padding:6px 10px; font-weight:800; color:#6366f1; font-size:10px; border-radius:10px 10px 10px 2px; animation-delay:0.7s">こんにちは!</div>
+      </div>
+    </div>`
   },
   {
-    bg: 'linear-gradient(145deg,#eef2ff,#e0e7ff)',
-    illus: `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="80" cy="80" r="66" fill="#6366f1" opacity="0.07"/>
-      <circle cx="80" cy="80" r="48" fill="#6366f1" opacity="0.1"/>
-      <circle cx="80" cy="78" r="35" fill="#eef2ff" opacity="0.7" stroke="#c7d2fe" stroke-width="2.5"/>
-      <ellipse cx="80" cy="78" rx="17" ry="35" fill="none" stroke="#c7d2fe" stroke-width="1.5"/>
-      <line x1="45" y1="78" x2="115" y2="78" stroke="#c7d2fe" stroke-width="1.5"/>
-      <path d="M49 61 Q80 56 111 61" stroke="#c7d2fe" stroke-width="1" fill="none"/>
-      <path d="M49 95 Q80 100 111 95" stroke="#c7d2fe" stroke-width="1" fill="none"/>
-      <circle cx="80" cy="78" r="5" fill="#6366f1"/>
-      <line x1="80" y1="52" x2="80" y2="73" stroke="#6366f1" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
-      <line x1="108" y1="58" x2="84" y2="76" stroke="#6366f1" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
-      <line x1="115" y1="84" x2="85" y2="79" stroke="#6366f1" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
-      <line x1="97" y1="100" x2="82" y2="82" stroke="#6366f1" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
-      <line x1="64" y1="100" x2="78" y2="82" stroke="#6366f1" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
-      <line x1="45" y1="84" x2="75" y2="79" stroke="#6366f1" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
-      <line x1="52" y1="58" x2="76" y2="76" stroke="#6366f1" stroke-width="1" opacity="0.4" stroke-dasharray="3,2"/>
-      <circle cx="80" cy="40" r="13" fill="#C8102E"/>
-      <text x="80" y="46" font-size="9" fill="white" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">KR</text>
-      <circle cx="110" cy="54" r="12" fill="#3b82f6"/>
-      <text x="110" y="60" font-size="9" fill="white" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">EN</text>
-      <circle cx="117" cy="86" r="12" fill="#dc2626"/>
-      <text x="117" y="92" font-size="9" fill="#fde047" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">CN</text>
-      <circle cx="97" cy="112" r="12" fill="#dc2626"/>
-      <text x="97" y="118" font-size="9" fill="white" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">JA</text>
-      <circle cx="63" cy="112" r="12" fill="#dc2626"/>
-      <text x="63" y="118" font-size="9" fill="#fde047" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">VN</text>
-      <circle cx="43" cy="86" r="12" fill="#1d4ed8"/>
-      <text x="43" y="92" font-size="9" fill="white" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">MN</text>
-      <circle cx="50" cy="54" r="12" fill="#1d4ed8"/>
-      <text x="50" y="60" font-size="9" fill="white" font-weight="800" text-anchor="middle" font-family="Arial,sans-serif">RU</text>
-    </svg>`,
-    title: '7개 언어로\n누구나 바로 취업',
-    desc: '한국어·영어·중국어·일본어\n베트남어·러시아어·몽골어\n공고 검색부터 채팅까지 완벽 지원',
-    chips: ['🌍 7개국어 완벽 지원', '🤝 외국인 환영', '💬 번역 채팅']
+    bg: 'linear-gradient(145deg, #fffbeb, #fef3c7)',
+    illus: `<div style="position:relative;width:100%;height:100%">
+      <div class="ob-anim-layer">
+        <div class="ob-shape-circle" style="width:140px;height:140px;background:#f59e0b;opacity:0.08;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:100px;height:100px;background:#f59e0b;opacity:0.1;animation-delay:0.1s"></div>
+      </div>
+      <div class="ob-anim-layer">
+        <div style="position:absolute; top:35px; left:40px; font-size:28px; animation: obPop 0.5s forwards; animation-delay:0.2s; opacity:0">🍷</div>
+        <div style="position:absolute; top:45px; right:35px; font-size:32px; animation: obPop 0.5s forwards; animation-delay:0.4s; opacity:0">⚽</div>
+        <div style="position:absolute; bottom:30px; left:65px; font-size:38px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">🎉</div>
+      </div>
+      <div class="ob-anim-layer" style="animation: obPulse 2s ease-in-out infinite">
+        <div style="font-size:32px; position:absolute; top:60px; left:70px; filter: drop-shadow(0 2px 4px rgba(245,158,11,0.3));">💖</div>
+      </div>
+    </div>`
   },
   {
-    bg: 'linear-gradient(145deg,#fffbeb,#fef3c7)',
-    illus: `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="80" cy="80" r="66" fill="#f59e0b" opacity="0.08"/>
-      <circle cx="80" cy="80" r="48" fill="#f59e0b" opacity="0.1"/>
-      <circle cx="80" cy="80" r="20" fill="#fef9c3" stroke="#fbbf24" stroke-width="2.5"/>
-      <path d="M73 80 L78 85 L89 74" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="80" cy="30" r="15" fill="#fde68a" stroke="#fbbf24" stroke-width="2"/>
-      <circle cx="80" cy="26" r="7" fill="#f59e0b" opacity="0.75"/>
-      <path d="M72 36 Q80 41 88 36" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <circle cx="130" cy="80" r="15" fill="#fed7aa" stroke="#fb923c" stroke-width="2"/>
-      <circle cx="130" cy="76" r="7" fill="#f97316" opacity="0.75"/>
-      <path d="M122 86 Q130 91 138 86" stroke="#f97316" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <circle cx="80" cy="130" r="15" fill="#bbf7d0" stroke="#22c55e" stroke-width="2"/>
-      <circle cx="80" cy="126" r="7" fill="#16a34a" opacity="0.75"/>
-      <path d="M72 136 Q80 141 88 136" stroke="#16a34a" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <circle cx="30" cy="80" r="15" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
-      <circle cx="30" cy="76" r="7" fill="#2563eb" opacity="0.75"/>
-      <path d="M22 86 Q30 91 38 86" stroke="#2563eb" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <line x1="80" y1="45" x2="80" y2="60" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2"/>
-      <line x1="115" y1="80" x2="100" y2="80" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2"/>
-      <line x1="80" y1="115" x2="80" y2="100" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2"/>
-      <line x1="45" y1="80" x2="60" y2="80" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2"/>
-    </svg>`,
-    title: '같이 일할 사람\n바로 모아라',
-    desc: '팀 모집부터 스포츠·스터디까지\n바로알바에서 함께 성장하세요',
-    chips: ['🤝 팀 모집', '⚽ 스포츠 모임', '📚 스터디 그룹']
+    bg: 'linear-gradient(145deg, #f0f9ff, #e0f2fe)',
+    illus: `<div style="position:relative;width:100%;height:100%">
+      <div class="ob-anim-layer">
+        <div class="ob-shape-circle" style="width:130px;height:130px;background:#0284c7;opacity:0.1;animation-delay:0s"></div>
+      </div>
+      <div class="ob-anim-layer">
+        <div class="ob-card" style="width:80px; height:110px; border-radius:8px; border:2px solid #bae6fd; padding:10px; box-sizing:border-box; animation-delay:0.2s; position:relative; overflow:hidden">
+          <div style="width:40px; height:8px; background:#0284c7; border-radius:4px; margin-bottom:8px"></div>
+          <div style="width:100%; height:4px; background:#e0f2fe; border-radius:2px; margin-bottom:6px"></div>
+          <div style="width:80%; height:4px; background:#e0f2fe; border-radius:2px; margin-bottom:6px"></div>
+          <div style="width:90%; height:4px; background:#e0f2fe; border-radius:2px; margin-bottom:6px"></div>
+        </div>
+      </div>
+      <div class="ob-anim-layer">
+        <div style="position:absolute; top:20px; right:20px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🚀</div>
+        <div style="position:absolute; bottom:25px; right:25px; width:28px; height:28px; background:#16a34a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:14px; animation: obPop 0.5s forwards; animation-delay:0.8s; opacity:0; border:2px solid #fff">✓</div>
+        <div style="position:absolute; bottom:40px; left:15px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:1s; opacity:0">🔔</div>
+      </div>
+    </div>`
   },
   {
-    bg: 'linear-gradient(145deg,#f0f9ff,#e0f2fe)',
-    illus: `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="80" cy="80" r="66" fill="#0284c7" opacity="0.07"/>
-      <circle cx="80" cy="80" r="48" fill="#0284c7" opacity="0.1"/>
-      <rect x="40" y="26" width="70" height="94" rx="10" fill="white" stroke="#bae6fd" stroke-width="2"/>
-      <rect x="62" y="20" width="26" height="17" rx="8.5" fill="#0284c7" opacity="0.85"/>
-      <rect x="50" y="50" width="50" height="8" rx="4" fill="#bae6fd"/>
-      <rect x="50" y="64" width="38" height="6" rx="3" fill="#e0f2fe"/>
-      <rect x="50" y="76" width="44" height="6" rx="3" fill="#e0f2fe"/>
-      <rect x="50" y="88" width="32" height="6" rx="3" fill="#e0f2fe"/>
-      <rect x="50" y="100" width="42" height="6" rx="3" fill="#e0f2fe"/>
-      <circle cx="110" cy="108" r="25" fill="#16a34a"/>
-      <path d="M100 108 L107 115 L122 100" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="22" cy="80" r="11" fill="#7dd3fc"/>
-      <path d="M13 96 Q22 91 31 96" stroke="#0284c7" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="M35 80 L46 80 M42 76 L46 80 L42 84" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`,
-    title: '공고 올리면\n지원자가 알아서 온다',
-    desc: '3분이면 공고 등록 완료\n실시간 알림으로 지원자를 바로 만나세요',
-    chips: ['📋 빠른 공고 등록', '👥 지원자 관리', '💬 실시간 채팅']
+    bg: 'linear-gradient(145deg, #fdf4ff, #fae8ff)',
+    illus: `<div style="position:relative;width:100%;height:100%">
+      <div class="ob-anim-layer">
+        <div class="ob-shape-circle" style="width:140px;height:140px;background:#c026d3;opacity:0.08;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:100px;height:100px;background:#c026d3;opacity:0.1;animation-delay:0.1s"></div>
+      </div>
+      <div class="ob-anim-layer" style="animation: obFloat 3s ease-in-out infinite">
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(192,38,211,0.2));">✨</div>
+      </div>
+      <div class="ob-anim-layer">
+        <div style="position:absolute; top:20px; left:30px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:0.4s; opacity:0">🌟</div>
+        <div style="position:absolute; bottom:25px; right:35px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">👑</div>
+      </div>
+    </div>`
   }
 ];
+
 let _obTouchX = 0;
+
+function _renderObSlide() {
+  const s = _OB_SLIDES[_obStep];
+  const illus = document.getElementById('ob-illus');
+  if (illus) {
+    illus.style.opacity = '0';
+    illus.style.transition = 'opacity 0.2s';
+    setTimeout(() => {
+      illus.style.background = s.bg;
+      illus.innerHTML = s.illus;
+      illus.style.opacity = '1';
+    }, 150);
+  }
+
+  // 다국어 텍스트 매핑 (shared-lang.js의 OB_TRANS 활용)
+  // fallback: 언어 데이터가 없으면 ko 기준 출력
+  let transData = OB_TRANS['ko'][_obStep];
+  if (typeof OB_TRANS !== 'undefined' && OB_TRANS[_lang] && OB_TRANS[_lang][_obStep]) {
+    transData = OB_TRANS[_lang][_obStep];
+  }
+
+  const titleEl = document.getElementById('ob-title');
+  const descEl = document.getElementById('ob-desc');
+  if (titleEl) { 
+    titleEl.style.opacity = '0'; 
+    setTimeout(() => { 
+      titleEl.innerHTML = transData.title.replace(/\n/g, '<br>'); 
+      titleEl.style.transition = 'opacity 0.25s'; 
+      titleEl.style.opacity = '1'; 
+    }, 150); 
+  }
+  if (descEl) { 
+    descEl.style.opacity = '0'; 
+    setTimeout(() => { 
+      descEl.innerHTML = transData.desc.replace(/\n/g, '<br>'); 
+      descEl.style.transition = 'opacity 0.25s'; 
+      descEl.style.opacity = '1'; 
+    }, 150); 
+  }
+  
+  const chips = document.getElementById('ob-chips');
+  if (chips) { 
+    chips.style.opacity = '0'; 
+    setTimeout(() => { 
+      chips.innerHTML = transData.chips.map(c => `<span style="background:#f5f5f5;color:#333;font-size:13px;font-weight:700;padding:6px 14px;border-radius:20px">${c}</span>`).join(''); 
+      chips.style.transition = 'opacity 0.25s'; 
+      chips.style.opacity = '1'; 
+    }, 200); 
+  }
+
+  // 닷 인디케이터
+  document.querySelectorAll('#onboarding-overlay .ob-dot').forEach((d, i) => d.classList.toggle('active', i === _obStep));
+  
+  // 버튼들
+  const backBtn = document.getElementById('ob-back-btn');
+  if (backBtn) backBtn.style.visibility = _obStep > 0 ? 'visible' : 'hidden';
+  
+  const nextBtn = document.getElementById('ob-next-btn');
+  if (nextBtn) {
+    if (_obStep === _OB_SLIDES.length - 1) {
+      nextBtn.textContent = _lang === 'ko' ? '바로 시작하기' : 'Start Now';
+    } else {
+      nextBtn.textContent = _lang === 'ko' ? '다음' : 'Next';
+    }
+  }
+}
+
 function showOnboarding() {
   const el = document.getElementById('onboarding-overlay');
   if (!el) return;
@@ -17901,7 +17925,7 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   // (openMoimChat과 동일한 panel-moim-chat DOM을 공유하면서도 이 등록이 빠져있던 게 원인)
   const _bcFab = document.getElementById('posting-fab');
   if (_bcFab) _bcFab.style.display = 'none';
-  document.getElementById('moim-chat-title').textContent = (title || '바로미팅') + ' (익명)';
+  document.getElementById('moim-chat-title').innerHTML = `${(title || '바로미팅').replace(/</g,'&lt;')}<span style="font-size:11px;font-weight:400;color:#bbb;margin-left:4px">(익명)</span>`;
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
   const memberEl = document.getElementById('moim-chat-members-text');
   // 참가자 수를 눈에 보이게 앞에 붙임 - 예전엔 이 자리를 "나는 OO으로 표시돼요"가 통째로

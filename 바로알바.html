@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=454"></script>
+  <script src="./shared-lang.js?v=455"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -56,7 +56,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=454">
+  <link rel="stylesheet" href="./assets/css/style.css?v=455">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2849,12 +2849,12 @@
       </div>
     </div>
     <!-- 2행: 채팅방(모임/미팅) 제목 ...... 내 익명 프로필 배지 -->
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:6px;padding-left:29px">
-      <div style="font-size:17px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0" id="moim-chat-title">모임 채팅</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;padding-left:29px">
+      <div style="font-size:14px;font-weight:800;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0" id="moim-chat-title">모임 채팅</div>
       <!-- 내 익명 프로필(캐릭터/닉네임) - 바로미팅 채팅에서만 표시, 누르면 닉네임/사진 변경 -->
-      <div id="moim-chat-myprofile" onclick="openBaromeetAnonSetup()" style="display:none;align-items:center;gap:6px;cursor:pointer;flex-shrink:0">
-        <div id="moim-chat-myprofile-name" style="font-size:11px;font-weight:700;color:#7C3AED;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-        <div id="moim-chat-myprofile-avatar" style="width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;border:1.5px solid #e9d5ff;overflow:hidden;flex-shrink:0"></div>
+      <div id="moim-chat-myprofile" onclick="openBaromeetAnonSetup()" style="display:none;align-items:center;gap:8px;cursor:pointer;flex-shrink:0">
+        <div id="moim-chat-myprofile-name" style="font-size:13px;font-weight:800;color:#7C3AED;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div id="moim-chat-myprofile-avatar" style="width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;border:1.5px solid #e9d5ff;overflow:hidden;flex-shrink:0"></div>
       </div>
     </div>
   </div>
@@ -4048,8 +4048,8 @@
 <!-- ── /owner 기능 패널 ── -->
 <div class="toast hidden" id="toast"></div>
 
-<script src="./assets/js/qrcode.min.js?v=454"></script>
-<script src="./assets/js/app.js?v=454"></script>
+<script src="./assets/js/qrcode.min.js?v=455"></script>
+<script src="./assets/js/app.js?v=455"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
