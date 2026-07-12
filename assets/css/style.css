@@ -694,9 +694,9 @@
     .nav-icon svg { width: 22px; height: 22px; }
     .nav-icon svg path, .nav-icon svg circle, .nav-icon svg line,
     .nav-icon svg polyline, .nav-icon svg rect, .nav-icon svg polygon {
-      stroke: #d4d4d4; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+      stroke: #57606a; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
     }
-    .nav-label { font-size: 10px; font-weight: 500; color: #d4d4d4; }
+    .nav-label { font-size: 10px; font-weight: 600; color: #57606a; }
     .nav-item.active .nav-label { color: var(--red); font-weight: 800; }
     .nav-post-btn { margin-top: -10px; }
     .nav-post-btn .nav-label { color: #C8102E !important; font-weight: 800 !important; }
@@ -714,7 +714,7 @@
     .nav-fab .nav-icon svg line, .nav-fab .nav-icon svg polyline { stroke: #fff; }
     .nav-fab .nav-label { color: #C8102E !important; font-weight: 800 !important; font-size: 10px; }
     .nav-fab.active::before { display: none; }
-    .nav-fab.active .nav-icon { box-shadow: 0 6px 20px rgba(200,16,46,0.6); }
+    .nav-fab.active .nav-icon { box-shadow: 0 4px 16px rgba(200,16,46,0.45); }
     .nav-item.active .nav-icon svg path,
     .nav-item.active .nav-icon svg circle,
     .nav-item.active .nav-icon svg line,
