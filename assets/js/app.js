@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '422';
+  const _APP_V = '423';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=422').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=423').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2049,7 +2049,7 @@ async function openMoimChat(gatheringId, title) {
   document.getElementById('moim-chat-title').textContent = title || '모임 채팅';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
   // 날짜 부제목 — _moimDetailData에서 읽음
-  const chatSub = document.getElementById('moim-chat-members');
+  const chatSub = document.getElementById('moim-chat-members-text');
   if (_moimDetailData?.gathering_date) {
     const dStr = new Date(_moimDetailData.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' });
     chatSub.textContent = `📅 ${dStr} · 참가자 로딩 중`;
@@ -2059,7 +2059,9 @@ async function openMoimChat(gatheringId, title) {
   const { count } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
   const memberCount = (count || 0) + 1; // 주최자 포함
   const dStr2 = _moimDetailData?.gathering_date ? new Date(_moimDetailData.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' }) + ' · ' : '';
-  document.getElementById('moim-chat-members').textContent = `${dStr2}참가자 ${memberCount}명`;
+  document.getElementById('moim-chat-members-text').textContent = `${dStr2}참가자 ${memberCount}명`;
+  document.getElementById('moim-chat-participants').style.display = 'none';
+  document.getElementById('moim-chat-members-arrow').textContent = '▾';
 
   // 기존 메시지 로드 (sender_name은 insert 시 denormalize된 값)
   const { data: msgs } = await db.from('gathering_chats').select('*').eq('gathering_id', gatheringId).order('sent_at').limit(100);
@@ -2086,6 +2088,61 @@ function _appendMoimChatMsg(msg) {
   const el = document.getElementById('moim-chat-messages');
   el.insertAdjacentHTML('beforeend', _moimChatBubble(msg));
   el.scrollTop = el.scrollHeight;
+}
+
+// 참석자 목록 - 몇 명이 들어와 있는지 전혀 알 수 없다는 피드백으로 추가.
+// 바로미팅은 익명 채팅이라 닉네임/아바타만, 바로모임은 실명/사진으로 표시
+async function toggleMoimChatParticipants() {
+  const box = document.getElementById('moim-chat-participants');
+  const arrow = document.getElementById('moim-chat-members-arrow');
+  const isOpen = box.style.display !== 'none';
+  if (isOpen) { box.style.display = 'none'; arrow.textContent = '▾'; return; }
+  box.style.display = 'block';
+  arrow.textContent = '▴';
+  box.innerHTML = '<div style="text-align:center;padding:10px;color:#bbb;font-size:12px">불러오는 중...</div>';
+
+  const gatheringId = document.getElementById('moim-chat-input').dataset.gatheringId;
+  const isBaromeet = document.getElementById('moim-chat-input').dataset.baromeet === '1';
+  if (!gatheringId) { box.innerHTML = ''; return; }
+
+  const { data: apps } = await db.from('gathering_applications')
+    .select('applicant_id').eq('gathering_id', gatheringId).eq('status', 'approved');
+  const applicantIds = [...new Set((apps || []).map(a => a.applicant_id).filter(Boolean))];
+  const { data: g } = await db.from('gatherings').select('host_id').eq('id', gatheringId).maybeSingle();
+  const allIds = [...new Set([...(g?.host_id ? [g.host_id] : []), ...applicantIds])];
+  if (!allIds.length) { box.innerHTML = '<div style="text-align:center;padding:10px;color:#bbb;font-size:12px">참가자 정보가 없어요</div>'; return; }
+
+  const selectCols = isBaromeet ? 'kakao_uid, name, gender, baromeet_nick, baromeet_avatar, photo_url' : 'kakao_uid, name, photo_url';
+  const { data: workers } = await db.from('workers').select(selectCols).in('kakao_uid', allIds);
+  const workerMap = Object.fromEntries((workers || []).map(w => [w.kakao_uid, w]));
+
+  box.innerHTML = allIds.map(uid => {
+    const w = workerMap[uid];
+    const isHost = uid === g?.host_id;
+    if (isBaromeet) {
+      const nick = w?.baromeet_nick || '익명참가자';
+      const avatarUrl = _resolveBaromeetAvatarUrl(w?.baromeet_avatar, w?.photo_url);
+      const avatarHtml = avatarUrl && avatarUrl.startsWith('emoji:')
+        ? `<div style="width:32px;height:32px;border-radius:50%;background:#FFF1F2;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${avatarUrl.slice(6)}</div>`
+        : avatarUrl
+        ? `<img src="${avatarUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+        : `<div style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:15px;color:#94a3b8;flex-shrink:0">?</div>`;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px">
+        ${avatarHtml}
+        <span style="font-size:13px;font-weight:700;color:#333">${nick}</span>
+        ${isHost ? '<span style="font-size:10px;color:#e11d48;font-weight:700">주최</span>' : ''}
+      </div>`;
+    }
+    const name = w?.name || '참가자';
+    const avatarHtml = w?.photo_url
+      ? `<img src="${w.photo_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+      : `<div style="width:32px;height:32px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:15px;color:#7C3AED;flex-shrink:0">${name[0]||'?'}</div>`;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px">
+      ${avatarHtml}
+      <span style="font-size:13px;font-weight:700;color:#333">${name}</span>
+      ${isHost ? '<span style="font-size:10px;color:#7C3AED;font-weight:700">방장</span>' : ''}
+    </div>`;
+  }).join('');
 }
 function _moimChatBubble(m) {
   const isMine = currentUser && m.sender_id === currentUser.id;
@@ -4324,7 +4381,10 @@ window._onFCMToken = function(token) {
   };
 
   // 브라우저 환경 폴백 (WebView 외에서 접속 시)
+  // 네이티브 앱에서는 _onNativeKbChange가 이미 정확한 IME 높이를 적용하므로
+  // 이 폴백을 같이 실행하면 나중에 실행되는 쪽이 값을 덮어써 패딩이 과도해지는 문제가 있었음
   function applyKbPad(overlayEl) {
+    if (window.AndroidBridge) return;
     var baseH = window.innerHeight;
     var baseVV = window.visualViewport ? window.visualViewport.height : baseH;
     var attempts = 0;
@@ -17053,7 +17113,7 @@ async function saveBaromeetAnonProfile() {
     _baromeetAnonLabel = nick;
     _baromeetShowPhoto = !!avatarUrl;
     _baromeetPhotoUrl = avatarUrl;
-    const memberEl = document.getElementById('moim-chat-members');
+    const memberEl = document.getElementById('moim-chat-members-text');
     if (memberEl) memberEl.textContent = `나는 "${_baromeetAnonLabel}"으로 표시돼요`;
   }
 }
@@ -17079,8 +17139,10 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   if (_bcFab) _bcFab.style.display = 'none';
   document.getElementById('moim-chat-title').textContent = (title || '바로미팅') + ' (익명)';
   document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
-  const memberEl = document.getElementById('moim-chat-members');
-  if (memberEl) memberEl.innerHTML = `나는 "${_baromeetAnonLabel}"으로 표시돼요 · <span style="text-decoration:underline;cursor:pointer" onclick="openBaromeetAnonSetup()">닉네임/사진 변경</span>`;
+  const memberEl = document.getElementById('moim-chat-members-text');
+  if (memberEl) memberEl.innerHTML = `나는 "${_baromeetAnonLabel}"으로 표시돼요 · <span style="text-decoration:underline;cursor:pointer" onclick="event.stopPropagation();openBaromeetAnonSetup()">닉네임/사진 변경</span>`;
+  document.getElementById('moim-chat-participants').style.display = 'none';
+  document.getElementById('moim-chat-members-arrow').textContent = '▾';
 
   const { data: msgs } = await db.from('gathering_chats').select('*').eq('gathering_id', gatheringId).order('sent_at').limit(100);
   _renderMoimChatMessages(msgs || []);
