@@ -231,6 +231,14 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 7.5. 홈 검색결과 화면 (급구/외국인환영/AI추천/전체보기 등으로 진입) - 안 닫으면
+  // 뒤로가기 후에도 "외국인 환영 공고 0개" 같은 이전 필터 라벨이 홈 화면에 계속 남아있었음
+  const homeSrEl = document.getElementById('home-search-results');
+  if (homeSrEl && homeSrEl.style.display !== 'none') {
+    clearHomeFilter();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 8. 홈 필터 오버레이 (display:block)
   const filterEl = document.getElementById('home-filter-overlay');
   if (filterEl && filterEl.style.display === 'block') {
@@ -284,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '406';
+  const _APP_V = '407';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -297,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=406').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=407').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2495,7 +2503,11 @@ function openAIFilter() {
 
 function showForeignerInHome() {
   window._homeFilterApplied = true;
-  const filtered = (jobs||[]).filter(j=>(j.status==='open'||j.status==='urgent')&&j.nationality_requirement==='foreigner_welcome');
+  // 배지 숫자(_renderHomeForeigner)와 동일한 기준으로 필터링 - 이전엔 여기서
+  // nationality_requirement만 봐서, preferred_languages로 카운트된 배지 숫자와
+  // 실제 결과가 어긋나 "배지엔 1인데 눌러보면 0개"가 되는 불일치가 있었음
+  const filtered = (jobs||[]).filter(j=>(j.status==='open'||j.status==='urgent')
+    && (j.nationality_requirement==='foreigner_welcome' || j.preferred_languages?.length));
   const srEl = document.getElementById('home-search-results');
   const defEl = document.getElementById('home-default-content');
   const label = document.getElementById('home-search-result-label');
@@ -16257,7 +16269,7 @@ function _baromeetHomeCard(m) {
   const isFull = maleLeft <= 0 && femaleLeft <= 0;
   const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
   return `<div onclick="openMannnamPanel()" style="flex-shrink:0;width:160px;background:#fff;border:1px solid #fecdd3;border-radius:12px;padding:14px;cursor:pointer">
-    <div style="font-size:10px;font-weight:800;color:#e11d48;margin-bottom:4px">BAROMEETING</div>
+    <div style="font-size:10px;font-weight:800;color:#e11d48;margin-bottom:4px">바로미팅</div>
     <div style="font-size:13px;font-weight:900;color:#111;line-height:1.3;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${m.title||'바로미팅'}</div>
     <div style="font-size:10.5px;color:#999;margin-bottom:3px">🕐 ${dateStr}</div>
     <div style="font-size:10.5px;font-weight:800;color:${isFull?'#bbb':'#e11d48'}">${isFull?'마감':'자리있음'}</div>
