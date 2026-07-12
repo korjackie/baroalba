@@ -2804,7 +2804,10 @@
       </button>
       <div style="min-width:0">
         <div style="font-size:16px;font-weight:800;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="moim-chat-title">모임 채팅</div>
-        <div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:2px;cursor:pointer;display:flex;align-items:center;gap:3px" id="moim-chat-members" onclick="toggleMoimChatParticipants()"><span id="moim-chat-members-text">참가자 -명</span> <span id="moim-chat-members-arrow">▾</span></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
+          <div style="font-size:11px;color:#7C3AED;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px" id="moim-chat-members" onclick="toggleMoimChatParticipants()"><span id="moim-chat-members-text">참가자 -명</span> <span id="moim-chat-members-arrow">▾</span></div>
+          <div id="moim-chat-identity" style="display:none;align-items:center;gap:4px"></div>
+        </div>
       </div>
     </div>
   </div>

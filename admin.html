@@ -390,8 +390,9 @@
     <div class="section-title" style="margin-bottom:14px">💜 바로만남 관리</div>
     <div class="list-group">
       <div class="list-item" onclick="navTo('mannam','baromeetings')"><div class="list-icon">🤝</div><div class="list-text"><div class="list-title">바로미팅 개설·관리</div></div><div class="list-arrow">›</div></div>
-      <div class="list-item" onclick="navTo('mannam','restaurants')"><div class="list-icon">🍷</div><div class="list-text"><div class="list-title">제휴 매장 현황</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('mannam','restaurants')"><div class="list-icon">🍷</div><div class="list-text"><div class="list-title">제휴 매장 관리 (바로미팅·바로스팟 공용)</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('mannam','mannnam')"><div class="list-icon">👨‍💼</div><div class="list-text"><div class="list-title">만남 매니저 권한 관리</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('mannam','gathering-requests')"><div class="list-icon">📮</div><div class="list-text"><div class="list-title">모임·만남 개설 요청함</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('mannam','coupons')"><div class="list-icon">🎫</div><div class="list-text"><div class="list-title">프로모션 쿠폰 관리</div></div><div class="list-arrow">›</div></div>
     </div>
   </div>
@@ -572,7 +573,7 @@
 
   <!-- 제휴 매장 현황 (읽기전용 - 등록/수정은 mannnam.html에서 매니저가 처리) -->
   <div class="tab-content" id="tab-restaurants">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저와 동일한 제휴 매장 데이터입니다. 여기서 등록·수정하면 바로 반영됩니다.</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로스팟(제휴매장) 데이터입니다 - 바로만남 매니저 페이지와 동일하며, 여기서 등록·수정하면 바로 반영됩니다.</div>
     <div id="restaurants-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div id="restaurant-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">제휴 매장 등록</div>
@@ -619,6 +620,12 @@
           style="padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">쿠폰 생성</button>
       </div>
     </div>
+  </div>
+
+  <!-- 모임/만남 개설 요청함 -->
+  <div class="tab-content" id="tab-gathering-requests">
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">유저가 앱에서 "모임/만남 개설 요청하기"로 남긴 요청 목록입니다. 검토 후 바로모임/바로미팅을 직접 개설해주고, 처리 완료로 표시해주세요.</div>
+    <div id="gathering-requests-list"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 관리자 계정 탭 -->
@@ -917,7 +924,7 @@ const GROUP_OF = {
   dashboard:'dashboard',
   alba:'alba', postings:'alba', users:'alba', reports:'alba',
   moim:'moim', moims:'moim',
-  mannam:'mannam', mannnam:'mannam', restaurants:'mannam', coupons:'mannam', baromeetings:'mannam',
+  mannam:'mannam', mannnam:'mannam', restaurants:'mannam', coupons:'mannam', baromeetings:'mannam', 'gathering-requests':'mannam',
   settings:'settings', admins:'settings', baroalba:'settings', baromoim:'settings', lesson:'settings', 'pass-pricing':'settings',
 };
 
@@ -948,6 +955,7 @@ function switchTab(name) {
   if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
   if (name === 'pass-pricing' && document.getElementById('pass-pricing-list').innerHTML.includes('로딩')) loadPassPricing();
   if (name === 'baromeetings' && document.getElementById('baromeetings-list').innerHTML.includes('로딩')) { loadBaromeetings(); loadBmPartnerOptions(); }
+  if (name === 'gathering-requests') loadGatheringRequests();
 
   // 하드웨어 뒤로가기 대응용 가상 히스토리 (popstate 처리 중 재호출된 경우엔 다시 쌓지 않음)
   if (!_fromPopState) history.pushState({ adminTab: name }, '');
@@ -1622,6 +1630,34 @@ function _fmtBmDate(iso) {
   const days = ['일','월','화','수','목','금','토'];
   return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
+// ── 모임/만남 개설 요청함 ─────────────────────────────────
+async function loadGatheringRequests() {
+  const el = document.getElementById('gathering-requests-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('gathering_requests');
+  if (data?.error) { el.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">불러오기 실패: ${data.error}</div>`; return; }
+  const rows = Array.isArray(data) ? data : [];
+  if (!rows.length) { el.innerHTML = '<div class="empty">아직 요청이 없습니다</div>'; return; }
+  const typeLabel = { moim: '🍻 바로모임', baromeeting: '💕 바로만남' };
+  el.innerHTML = rows.map(r => `
+    <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);opacity:${r.status === 'done' ? 0.55 : 1}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:800;color:#1e293b">${typeLabel[r.request_type] || r.request_type} · ${r.region}</div>
+        <span class="status-badge ${r.status === 'done' ? 'sb-done' : 'sb-reviewing'}">${r.status === 'done' ? '처리완료' : '대기중'}</span>
+      </div>
+      ${r.description ? `<div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:8px">${r.description}</div>` : ''}
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:${r.status === 'done' ? '0' : '10px'}">${r.requester_name || '이름없음'} · ${new Date(r.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      ${r.status !== 'done' ? `<button onclick="markGatheringRequestDone('${r.id}')" style="width:100%;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">처리완료로 표시</button>` : ''}
+    </div>
+  `).join('');
+}
+async function markGatheringRequestDone(id) {
+  const result = await adminApi('mark_gathering_request_done', 'PATCH', { id });
+  if (result?.error) { showToast('처리 실패: ' + result.error); return; }
+  showToast('처리완료로 표시했습니다');
+  loadGatheringRequests();
+}
+
 async function loadBaromeetings() {
   const el = document.getElementById('baromeetings-list');
   el.innerHTML = '<div class="loading">로딩 중...</div>';

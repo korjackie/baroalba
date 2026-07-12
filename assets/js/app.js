@@ -349,7 +349,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '438';
+  const _APP_V = '439';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -365,7 +365,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=438').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=439').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -17458,7 +17458,17 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   // 차지해서 참가자 목록을 볼 수 있다는 게 전혀 티가 안 났음(모임 채팅은 그냥 "참가자 N명"이라
   // 바로 보이는데, 익명 바로미팅 채팅만 이 줄이 다른 용도로 바뀌어 있었음)
   const { count: _bcCount } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
-  if (memberEl) memberEl.innerHTML = `👥 ${(_bcCount || 0) + 1}명 · 나는 "${_baromeetAnonLabel}" · <span style="text-decoration:underline;cursor:pointer" onclick="event.stopPropagation();openBaromeetAnonSetup()">변경</span> · <span style="text-decoration:underline;cursor:pointer;color:#e11d48" onclick="event.stopPropagation();leaveBaromeetChat()">나가기</span>`;
+  if (memberEl) memberEl.textContent = `👥 ${(_bcCount || 0) + 1}명`;
+  // 텍스트 링크 나열 대신 알약(pill) 버튼으로 - "나는 OO · 변경 · 나가기"가 밑줄친 글자로만
+  // 나열돼있던 게 예스럽다는 피드백 반영
+  const idEl = document.getElementById('moim-chat-identity');
+  if (idEl) {
+    idEl.style.display = 'flex';
+    idEl.innerHTML = `
+      <span onclick="event.stopPropagation();openBaromeetAnonSetup()" style="background:#fff;border:1px solid #e9d5ff;color:#7C3AED;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px;cursor:pointer;white-space:nowrap">${_baromeetAnonLabel} 🖊️</span>
+      <span onclick="event.stopPropagation();leaveBaromeetChat()" style="background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px;cursor:pointer;white-space:nowrap">나가기</span>
+    `;
+  }
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';
 

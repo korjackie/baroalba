@@ -302,6 +302,26 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // ── 모임/만남 개설 요청함 (유저가 앱 FAB에서 남긴 요청) ──
+    if (action === 'gathering_requests') {
+      const reqs = await sb('gathering_requests?select=id,requester_id,request_type,region,description,status,created_at&order=created_at.desc&limit=200', svcKey).then(r => r.json());
+      const rows = Array.isArray(reqs) ? reqs : [];
+      const ids = [...new Set(rows.map(r => r.requester_id).filter(Boolean))];
+      let nameMap = {};
+      if (ids.length) {
+        const workers = await sb(`workers?kakao_uid=in.(${ids.join(',')})&select=kakao_uid,name`, svcKey).then(r => r.json());
+        nameMap = Object.fromEntries((workers || []).map(w => [w.kakao_uid, w.name]));
+      }
+      return res.json(rows.map(r => ({ ...r, requester_name: nameMap[r.requester_id] || null })));
+    }
+    if (action === 'mark_gathering_request_done' && req.method === 'PATCH') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      const r = await sb(`gathering_requests?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'done' }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
     // ── 바로미팅 목록 (관리자 개설/관리) ─────────────────
     if (action === 'baromeetings') {
       const data = await sb(
