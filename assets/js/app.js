@@ -146,7 +146,7 @@ function openCreateActionSheet() {
     <div style="padding:4px 20px 12px;font-size:17px;font-weight:900;color:#111">무엇을 등록하시겠어요?</div>
     <div style="display:flex;flex-direction:column;padding-bottom:8px">
       ${row('🍻', '바로모임 개설', '취미·운동·스터디 등 모임을 열어보세요', "closeBottomSheet();openMoimPanel(true)")}
-      ${row('💼', '공고 등록', '알바 공고를 올리고 지원자를 받아보세요', "closeBottomSheet();openOwnerPanel('postings')")}
+      ${row('💼', '공고 등록·관리', '알바 공고를 올리고 지원자를 받아보세요', "closeBottomSheet();openOwnerPanel('postings')")}
       ${row('📚', '레슨/과외 등록', '레슨·과외 공고를 등록·관리해보세요', "closeBottomSheet();openLessonManagePanel()")}
       ${row('📢', '모임/만남 개설 요청하기', '"이런 모임 만들어주세요" 요청을 남겨보세요', "closeBottomSheet();openGatheringRequestSheet()")}
     </div>
@@ -222,6 +222,27 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 3.4. 업주(공고 등록·관리) 패널 (display:block)
+  const ownerEl = document.getElementById('panel-owner');
+  if (ownerEl && ownerEl.style.display === 'block') {
+    closeOwnerPanel();
+    history.pushState({ panel: null }, '');
+    return;
+  }
+  // 3.41~3.46. 그 외 전체화면 모달들 - 이전엔 뒤로가기 케이스가 아예 없어서
+  // 히스토리 유무와 무관하게 안 닫히던 것들
+  const advFilterEl = document.getElementById('adv-filter-overlay');
+  if (advFilterEl && advFilterEl.style.display === 'block') { closeAdvFilter(); history.pushState({ panel: null }, ''); return; }
+  const acctInfoEl = document.getElementById('modal-account-info');
+  if (acctInfoEl && acctInfoEl.style.display === 'block') { closeAccountInfoModal(); history.pushState({ panel: null }, ''); return; }
+  const ownerAcctInfoEl = document.getElementById('modal-owner-account-info');
+  if (ownerAcctInfoEl && ownerAcctInfoEl.style.display === 'block') { closeOwnerAccountInfoModal(); history.pushState({ panel: null }, ''); return; }
+  const paymentEl = document.getElementById('payment-overlay');
+  if (paymentEl && paymentEl.style.display === 'block') { closePayment(); history.pushState({ panel: null }, ''); return; }
+  const trackEl = document.getElementById('track-overlay');
+  if (trackEl && trackEl.style.display === 'block') { closeTrackingSheet(); history.pushState({ panel: null }, ''); return; }
+  const workerShareEl = document.getElementById('worker-share-overlay');
+  if (workerShareEl && workerShareEl.style.display === 'block') { closeWorkerShare(); history.pushState({ panel: null }, ''); return; }
   // 3.5. 검색 오버레이 (.show)
   const searchEl = document.getElementById('search-overlay');
   if (searchEl && searchEl.classList.contains('show')) {
@@ -355,7 +376,9 @@ window.addEventListener('popstate', () => {
     'panel-lesson-manage','panel-community','panel-applications','panel-profile',
     'panel-posting-detail','panel-app-job-detail','panel-owner-settings','panel-owner-chats',
     'panel-owner-map','panel-moim','panel-moim-create','panel-moim-detail',
-    'baromeet-anon-overlay','sc-overlay','search-overlay',
+    'baromeet-anon-overlay','sc-overlay','search-overlay','panel-owner',
+    'adv-filter-overlay','modal-account-info','modal-owner-account-info',
+    'payment-overlay','track-overlay','worker-share-overlay',
   ];
   function _isModalVisible(el) {
     if (!el) return false;
@@ -412,7 +435,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '448';
+  const _APP_V = '449';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -428,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=448').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=449').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
