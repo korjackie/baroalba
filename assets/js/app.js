@@ -284,7 +284,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '402';
+  const _APP_V = '403';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -297,7 +297,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=402').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=403').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16935,17 +16935,26 @@ async function _openSpotEventTracking(eventId) {
 }
 
 // ── 포인트 시스템 ──────────────────────────────────────────
+// 충전 보너스 공식: 충전액의 10% + (2만원당 1,000P) — 커스텀 금액에도 동일 적용
+function _chargeBonusFor(amount) {
+  return Math.floor(amount * 0.10) + Math.floor(amount / 20000) * 1000;
+}
 // 충전 티어: { amount(KRW), bonus(P 추가 지급), total(최종 포인트), label }
 const CHARGE_TIERS = [
-  { amount: 5000,  bonus: 51000, total: 56000, promo: true  },  // 런칭 이벤트
-  { amount: 10000, bonus: 1000,  total: 11000, promo: false },
-  { amount: 30000, bonus: 3000,  total: 33000, promo: false },
-  { amount: 50000, bonus: 5000,  total: 55000, promo: false },
+  { amount: 5000,  bonus: 500,  total: 5500,  promo: true  },  // 런칭 이벤트
+  { amount: 10000, bonus: 1000, total: 11000, promo: false },
+  { amount: 30000, bonus: 4000, total: 34000, promo: false },
+  { amount: 50000, bonus: 7000, total: 57000, promo: false },
 ];
 const BANK_INFO = { bank: '하나은행', account: '149-910031-24204', holder: '멀티무브 주식회사' };
 
 let _selectedChargeTier = null;   // 선택된 티어 (null=기타)
 let _selectedChargeAmt  = 0;      // 최종 KRW 금액 (기타 포함)
+// 최종 충전 포인트 (티어 선택 시 total, 기타 금액이면 원금+보너스 직접 계산)
+function _currentChargeTotalPts() {
+  if (_selectedChargeTier) return _selectedChargeTier.total;
+  return _selectedChargeAmt ? _selectedChargeAmt + _chargeBonusFor(_selectedChargeAmt) : 0;
+}
 let _selectedChargeMethod = '';   // 'toss' | 'cash'
 
 async function loadUserPoints() {
@@ -16992,7 +17001,7 @@ function _pcGoToStep(step) {
   if (step === 'bank') {
     const ni = document.getElementById('pc-depositor-name');
     if (ni) ni.value = currentUser?.user_metadata?.full_name || '';
-    const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
+    const totalPts = _currentChargeTotalPts();
     const bnEl = document.getElementById('pc-bank-name');    if (bnEl) bnEl.textContent = BANK_INFO.bank;
     const baEl = document.getElementById('pc-bank-account'); if (baEl) baEl.textContent = BANK_INFO.account;
     const bhEl = document.getElementById('pc-bank-holder');  if (bhEl) bhEl.textContent = BANK_INFO.holder;
@@ -17037,9 +17046,9 @@ function _buildChargeAmtGrid() {
       ${bonusLabel}
     </button>`;
   }).join('');
-  // 기타금액 (1만원당 1천P 보너스 자동 계산)
+  // 기타금액 (10% + 2만원당 1,000P 보너스 자동 계산)
   const customHtml = `<div style="grid-column:1/-1;margin-top:4px">
-    <div style="font-size:11px;color:#aaa;margin-bottom:5px;font-weight:700">기타 금액 (최소 5,000원 · 1만원당 1,000P 보너스)</div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:5px;font-weight:700">기타 금액 (최소 5,000원 · 10% + 2만원당 1,000P 보너스)</div>
     <div style="display:flex;gap:8px;align-items:center">
       <input id="pc-custom-amt" type="number" min="5000" max="500000" step="1000" placeholder="직접 입력"
         oninput="onCustomAmtInput(this)"
@@ -17075,7 +17084,7 @@ function onCustomAmtInput(inp) {
     _selectedChargeTier = null;
     _selectedChargeAmt  = v;
     document.querySelectorAll('.pc-amt-btn').forEach(b => { b.style.borderColor = '#e0e0e0'; b.style.background = '#fff'; });
-    const bonus = Math.floor(v / 10000) * 1000;
+    const bonus = _chargeBonusFor(v);
     const total = v + bonus;
     if (preview) preview.textContent = bonus > 0
       ? `→ ${total.toLocaleString()}P (+${bonus.toLocaleString()}P 보너스)`
@@ -17109,7 +17118,7 @@ function _updateAmtProceedBtn() {
     btn.disabled = true; btn.style.background = '#e0e0e0'; btn.style.color = '#aaa'; btn.style.cursor = 'not-allowed'; btn.textContent = '금액을 선택해주세요';
     return;
   }
-  const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
+  const totalPts = _currentChargeTotalPts();
   btn.disabled = false;
   btn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer';
   btn.textContent = `💎 ${totalPts.toLocaleString()}P 충전 (₩${_selectedChargeAmt.toLocaleString()})`;
@@ -17129,7 +17138,7 @@ async function requestTossPointPayment() {
   if (typeof TossPayments === 'undefined') { showToast('결제 모듈 로드 실패. 새로고침 후 시도해주세요.'); return; }
   const btn = document.getElementById('pc-amt-proceed');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
-  const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
+  const totalPts = _currentChargeTotalPts();
   const orderId = `point-${(currentUser.id || '').slice(0,8)}-${Date.now()}`;
   const base = window.location.origin + window.location.pathname;
   try {
@@ -17196,7 +17205,7 @@ async function submitCashDeposit() {
   if (!_selectedChargeAmt) return;
   const btn = document.getElementById('pc-cash-submit');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
-  const totalPts = _selectedChargeTier ? _selectedChargeTier.total : _selectedChargeAmt;
+  const totalPts = _currentChargeTotalPts();
   try {
     const { error } = await db.from('point_charge_requests').insert({
       user_id: currentUser.id,
