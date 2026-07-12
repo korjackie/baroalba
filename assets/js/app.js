@@ -4619,7 +4619,11 @@ window._onFCMToken = function(token) {
     var wo = document.getElementById('wchat-overlay');
     var co = document.getElementById('chat-overlay');
     window._lastKbDp = dp;
-    var val = dp > 80 ? (dp + 16) + 'px' : '';
+    // 안드로이드 네이티브(WebView)에서 이미 화면(innerHeight)을 줄였다면(adjustResize 작동),
+    // 코드로 paddingBottom을 또 주면 이중 여백(Double Gap) 버그가 발생함.
+    // 화면 높이가 전체 스크린 높이보다 현저히 작다면 이미 줄어든 것으로 간주하여 패딩 생략.
+    var isNativelyResized = (window.innerHeight < window.screen.height - 200);
+    var val = (dp > 80 && !isNativelyResized) ? (dp + 16) + 'px' : '';
     if (wo && wo.style.display === 'flex') {
       wo.style.paddingBottom = val;
       if (dp > 80) {
@@ -4641,7 +4645,7 @@ window._onFCMToken = function(token) {
     // 바로모임/바로미팅 단체채팅 (panel-moim-chat) — wchat/chat과 동일한 네이티브 IME 방식 적용
     var mc = document.getElementById('panel-moim-chat');
     if (mc && mc.classList.contains('show')) {
-      mc.style.paddingBottom = dp > 80 ? (dp + 16) + 'px' : '';
+      mc.style.paddingBottom = val;
       if (dp > 80) {
         requestAnimationFrame(function() { requestAnimationFrame(function() {
           var mm = document.getElementById('moim-chat-messages');
@@ -4651,12 +4655,12 @@ window._onFCMToken = function(token) {
     }
     // 업체 후기 남기기 바텀시트 (openJobReview) - review-content textarea가 키보드에 가려지던 문제
     var jr = document.getElementById('job-review-overlay');
-    if (jr) jr.style.paddingBottom = dp > 80 ? dp + 'px' : '';
+    if (jr) jr.style.paddingBottom = (dp > 80 && !isNativelyResized) ? dp + 'px' : '';
     // 범용 바텀시트(openBottomSheet) - 개설요청 등 텍스트 입력이 있는 시트가 키보드에 가리던 문제
     var gbs = document.getElementById('generic-bottom-sheet-overlay');
     if (gbs && gbs.style.display !== 'none') {
       var gbsPanel = document.getElementById('generic-bottom-sheet-panel');
-      if (gbsPanel) gbsPanel.style.paddingBottom = dp > 80 ? (dp + 16) + 'px' : '';
+      if (gbsPanel) gbsPanel.style.paddingBottom = val;
     }
     var rm = document.getElementById('rating-modal-inner');
     if (rm) {
