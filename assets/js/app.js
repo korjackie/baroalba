@@ -222,6 +222,13 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 3.5. 검색 오버레이 (.show)
+  const searchEl = document.getElementById('search-overlay');
+  if (searchEl && searchEl.classList.contains('show')) {
+    closeSearchOverlay();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 4-2. 바로모임/바로미팅 단체채팅 (display:flex) — wchat/chat과 동일한 인라인 style 방식으로
   // 통일하면서 .full-panel.show 클래스를 더 이상 쓰지 않게 됨에 따라, 아래 9번의 범용
   // .full-panel.show 뒤로가기 처리에서 더 이상 감지되지 않아 여기 명시적으로 추가함
@@ -331,6 +338,53 @@ window.addEventListener('popstate', () => {
   history.pushState({ panel: null }, '');
 });
 
+// ── 패널 오픈 시 히스토리 자동 적립 ─────────────────────────
+// 위 popstate 리스너는 "뒤로가기가 이미 눌렸을 때" 어떤 패널을 닫을지만 판단하는데,
+// 정작 각 패널을 여는 openXXX() 함수 대부분이 열 때 history.pushState를 안 해서
+// 실제로 쌓인 히스토리 항목이 없었음 - 그 상태에서 안드로이드 하드웨어 뒤로가기를
+// 누르면 WebView.canGoBack()이 false가 되어 popstate가 발생하기도 전에
+// MainActivity.onBackPressed()가 super.onBackPressed()로 떨어져 앱이 그대로 종료되던
+// 근본 원인. 패널을 여는 모든 함수를 개별적으로 찾아 고치는 대신, 감시 대상 패널들의
+// style/class 변화를 관찰해 "뭔가 열려있는 상태"가 되는 순간 자동으로 한 칸 쌓아준다.
+(function() {
+  const WATCH_IDS = [
+    'detail-overlay','lesson-detail-modal','share-overlay','chat-overlay','wchat-overlay',
+    'panel-moim-chat','panel-foreigner-lang','panel-rank','baromeet-detail-overlay',
+    'mannnam-panel','point-history-panel','point-charge-overlay','couponSheet',
+    'generic-bottom-sheet-overlay','form-overlay','home-search-results','home-filter-overlay',
+    'panel-lesson-manage','panel-community','panel-applications','panel-profile',
+    'panel-posting-detail','panel-app-job-detail','panel-owner-settings','panel-owner-chats',
+    'panel-owner-map','panel-moim','panel-moim-create','panel-moim-detail',
+    'baromeet-anon-overlay','sc-overlay','search-overlay',
+  ];
+  function _isModalVisible(el) {
+    if (!el) return false;
+    if (el.classList.contains('show') || el.classList.contains('open')) return true;
+    const d = el.style.display;
+    return !!d && d !== 'none';
+  }
+  function _anyOpen() {
+    return WATCH_IDS.some(id => _isModalVisible(document.getElementById(id)));
+  }
+  let _histPushed = false;
+  const _check = () => {
+    const open = _anyOpen();
+    if (open && !_histPushed) {
+      _histPushed = true;
+      history.pushState({ panel: 'auto' }, '');
+    } else if (!open && _histPushed) {
+      _histPushed = false;
+    }
+  };
+  const observer = new MutationObserver(_check);
+  WATCH_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+  });
+  // popstate로 패널이 닫힌 직후에도 플래그를 재확인해 다음 오픈 때 다시 쌓이도록 함
+  window.addEventListener('popstate', () => setTimeout(_check, 0));
+})();
+
 
 // ── 상태표시줄 높이 감지 (standalone PWA에서 env(safe-area-inset-top)=0인 경우 대비) ──
 (function() {
@@ -358,7 +412,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '445';
+  const _APP_V = '446';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -374,7 +428,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=445').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=446').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -10908,6 +10962,7 @@ async function initOwnerFeatures() {
   loadPostings();
   loadApplicants();
   setTimeout(updateOwnerNotiBadge, 1500);
+  setupOwnerRealtimeChannels();
 
   // 새로고침 시 마지막 활성 탭 복원
   const savedTab = sessionStorage.getItem('ownerActiveTab');
@@ -14114,7 +14169,11 @@ async function autoCloseExpiredPostings() {
   }
 }
 
-function setupRealtime() {
+// 이름이 setupRealtime()과 중복 정의돼 있었음 - JS는 나중 정의가 이전 정의를 그냥 덮어써서
+// 워커용 시급인상 알림(wage-changes, 7300번대 줄)이 이 함수에 가려져 세션 내내 한 번도
+// 실행되지 않고 있었음. 이름을 분리하고 bizRecord/postings가 준비된 시점인
+// initOwnerFeatures() 끝에서 호출하도록 옮김
+function setupOwnerRealtimeChannels() {
   db.channel('owner-updates')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'applications' }, () => {
       showToast('\u{1F514} 새 지원자가 있습니다!');
@@ -17574,7 +17633,7 @@ async function openBaroPass() {
   const qrSvg = _renderQrSvg(qrPayload, 160);
 
   openBottomSheet(`
-    <div style="text-align:center;padding:4px 4px 8px">
+    <div style="text-align:center;padding:4px 20px 8px">
       <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:16px">🎫 바로패스</div>
       <div style="background:linear-gradient(135deg,#F5F3FF,#FFF1F2);border:1.5px solid #ede9fe;border-radius:20px;padding:24px 20px">
         ${avatarHtml}
@@ -17625,7 +17684,7 @@ async function openWorkplaceVerify() {
 
   if (status === 'verified') {
     openBottomSheet(`
-      <div style="text-align:center;padding:24px 4px">
+      <div style="text-align:center;padding:24px 20px">
         <div style="font-size:40px;margin-bottom:10px">✅</div>
         <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">직장인증 완료</div>
         <div style="font-size:13px;color:#888">${w?.workplace_name || ''}</div>
@@ -17635,27 +17694,27 @@ async function openWorkplaceVerify() {
   }
   if (status === 'pending') {
     openBottomSheet(`
-      <div style="text-align:center;padding:24px 4px">
-        <div style="font-size:40px;margin-bottom:10px">⏳</div>
-        <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">심사 중이에요</div>
-        <div style="font-size:13px;color:#888;line-height:1.6">제출하신 서류를 확인하고 있어요<br>영업일 기준 1~2일 내 완료돼요</div>
+      <div style="text-align:center;padding:24px 20px">
+        <div style="font-size:40px;margin-bottom:10px">📩</div>
+        <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">인증 메일을 확인해주세요</div>
+        <div style="font-size:13px;color:#888;line-height:1.6">보내드린 메일의 "인증 완료하기" 링크를<br>누르면 바로 인증이 완료돼요</div>
       </div>
     `);
     return;
   }
 
   openBottomSheet(`
-    <div style="padding:4px 4px 8px">
+    <div style="padding:4px 20px 8px">
       <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:6px">💼 직장인증</div>
-      <div style="font-size:12.5px;color:#888;line-height:1.6;margin-bottom:16px">재직증명서, 명함, 직장 이메일 중 하나로 인증하면 바로만남 상대방에게 인증 배지가 표시돼요.</div>
+      <div style="font-size:12.5px;color:#888;line-height:1.6;margin-bottom:16px">직장 이메일로 인증 메일을 보내드려요. 메일의 링크를 누르면 바로 인증 완료! 명함/재직증명서 사진은 참고용으로 함께 첨부할 수 있어요.</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-        <input id="wv-company" type="text" placeholder="회사명" style="width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
-        <input id="wv-email" type="email" placeholder="직장 이메일 (선택)" style="width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input id="wv-company" type="text" placeholder="회사명 *" style="width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input id="wv-email" type="email" placeholder="직장 이메일 * (인증 메일 발송)" style="width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
       </div>
-      <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">재직증명서 또는 명함 사진</div>
+      <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">재직증명서 또는 명함 사진 (선택)</div>
       <input type="file" id="wv-doc-input" accept="image/*" style="display:none" onchange="_wvFilePicked(this)">
       <button type="button" onclick="document.getElementById('wv-doc-input').click()" id="wv-doc-btn" style="width:100%;padding:14px;background:#f8f8f8;border:1.5px dashed #ddd;border-radius:12px;font-size:13px;color:#888;cursor:pointer;margin-bottom:16px">📎 사진 선택</button>
-      <button onclick="submitWorkplaceVerify()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">제출하기</button>
+      <button onclick="submitWorkplaceVerify()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">인증메일 보내기</button>
     </div>
   `);
 }
@@ -17671,7 +17730,8 @@ async function submitWorkplaceVerify() {
   const company = document.getElementById('wv-company')?.value.trim();
   const email = document.getElementById('wv-email')?.value.trim();
   if (!company) { showToast('회사명을 입력해주세요'); return; }
-  if (!_wvDocFile && !email) { showToast('서류 사진 또는 직장 이메일 중 하나는 필요해요'); return; }
+  if (!email) { showToast('직장 이메일을 입력해주세요'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('이메일 형식을 확인해주세요'); return; }
 
   let docUrl = null;
   if (_wvDocFile) {
@@ -17683,25 +17743,37 @@ async function submitWorkplaceVerify() {
     const { data: urlData } = await db.storage.from('health-certs').createSignedUrl(path, 60 * 60 * 24 * 365);
     docUrl = urlData?.signedUrl || null;
   }
+  if (docUrl) {
+    await db.from('workers').update({ workplace_verify_doc_url: docUrl, workplace_verify_method: 'business_card+email' }).eq('kakao_uid', currentUser.id);
+  }
 
-  const { error } = await db.from('workers').update({
-    workplace_name: company,
-    workplace_verify_method: _wvDocFile ? (email ? 'business_card+email' : 'business_card') : 'work_email',
-    workplace_verify_doc_url: docUrl,
-    workplace_verify_status: 'pending',
-  }).eq('kakao_uid', currentUser.id);
-  if (error) { showToast('제출 실패: ' + error.message); return; }
+  showToast('메일 발송 중...');
+  const { data: { session } } = await db.auth.getSession();
+  const meta = currentUser.user_metadata || {};
+  const name = meta.full_name || meta.name || '';
+  try {
+    const r = await fetch('/api/workplace-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || ''}` },
+      body: JSON.stringify({ company, email, name }),
+    });
+    const result = await r.json();
+    if (!r.ok || result.error) { showToast('메일 발송 실패: ' + (result.error || r.status)); return; }
+  } catch (e) {
+    showToast('메일 발송 실패: ' + e.message);
+    return;
+  }
 
   _wvDocFile = null;
   closeBottomSheet();
-  showToast('✅ 제출 완료! 심사 후 인증 배지가 표시돼요');
+  showToast(`✅ ${email}로 인증 메일을 보냈어요! 메일함을 확인해주세요`);
   loadWorkplaceVerifyBadge();
 }
 
 // ── 휴대폰 본인인증 (연령 확인용, 추후 실제 PASS/통신사 인증 연동 예정 — 지금은 진입점만) ──
 function openPhoneVerifyStub() {
   openBottomSheet(`
-    <div style="text-align:center;padding:24px 4px">
+    <div style="text-align:center;padding:24px 20px">
       <div style="font-size:40px;margin-bottom:10px">📱</div>
       <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">휴대폰 본인인증</div>
       <div style="font-size:13px;color:#888;line-height:1.7">준비 중인 기능이에요<br>추후 통신사 본인인증 연동으로<br>정확한 연령까지 확인할 수 있게 됩니다</div>

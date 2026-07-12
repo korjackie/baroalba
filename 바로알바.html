@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=445"></script>
+  <script src="./shared-lang.js?v=446"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -56,7 +56,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=445">
+  <link rel="stylesheet" href="./assets/css/style.css?v=446">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1044,9 +1044,14 @@
       </div>
       <span style="font-size:17px;font-weight:900;color:#111">바로알바</span>
     </div>
-    <button onclick="openNotifications()" style="background:none;border:none;cursor:pointer;padding:4px;line-height:1">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-    </button>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="openCommunityPanel()" style="background:none;border:none;cursor:pointer;padding:4px;line-height:1" title="커뮤니티">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      </button>
+      <button onclick="openNotifications()" style="background:none;border:none;cursor:pointer;padding:4px;line-height:1">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+    </div>
   </div>
 
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
@@ -2814,7 +2819,7 @@
 </div>
 
 <!-- ④ 바로모임 단체채팅 패널 -->
-<div id="panel-moim-chat" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column;overflow:hidden">
+<div id="panel-moim-chat" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:530;background:#fff;flex-direction:column;overflow:hidden">
   <div id="moim-chat-safearea" style="height:var(--sat-safe);background:#7C3AED;flex-shrink:0"></div>
   <div id="moim-chat-header" style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#F5F3FF">
     <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
@@ -4015,8 +4020,8 @@
 <!-- ── /owner 기능 패널 ── -->
 <div class="toast hidden" id="toast"></div>
 
-<script src="./assets/js/qrcode.min.js?v=445"></script>
-<script src="./assets/js/app.js?v=445"></script>
+<script src="./assets/js/qrcode.min.js?v=446"></script>
+<script src="./assets/js/app.js?v=446"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
