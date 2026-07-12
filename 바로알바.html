@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='407',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='408',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -1027,8 +1027,8 @@
     <!-- 기본 콘텐츠 -->
     <div id="home-default-content">
 
-      <!-- ① 당일 지급 벤토 배너 (급구 대체) -->
-      <div class="bento-section" onclick="showAllJobs()">
+      <!-- ① 당일 지급 벤토 배너 - 급구 공고가 있으면 실제 공고를 바로 표시, 없으면 마케팅 카피 -->
+      <div class="bento-section" id="home-urgent-section" onclick="showAllJobs()">
         <div class="bento-banner">
           <div class="bento-top">
             <span class="bento-tag" data-i18n="bento_tag">당일 지급</span>
@@ -1086,7 +1086,7 @@
       <!-- ④ 바로모임 -->
       <div style="padding:7px 12px 0">
         <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:15px;overflow:hidden">
-          <div onclick="openMoimPanel()" style="padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #f5f3ff;cursor:pointer">
+          <div onclick="openMoimPanel()" style="background:#F5F3FF;padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #ede9fe;cursor:pointer">
             <div style="width:30px;height:30px;background:#7C3AED;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
@@ -1107,7 +1107,7 @@
       <!-- ⑤ 바로만남 (바로미팅 미리보기 포함) - 바로모임과 동일한 헤더 톤/크기로 통일 -->
       <div style="padding:7px 12px 0">
         <div style="background:#fff;border:1.5px solid #fecdd3;border-radius:15px;overflow:hidden">
-          <div onclick="openMannnamPanel()" style="padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #fff1f2;cursor:pointer">
+          <div onclick="openMannnamPanel()" style="background:#FFF1F2;padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #fecdd3;cursor:pointer">
             <div style="width:30px;height:30px;background:#e11d48;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">💫</div>
             <div style="flex:1">
               <div style="font-size:14px;font-weight:900;color:#be123c">바로만남</div>

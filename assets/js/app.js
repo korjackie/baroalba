@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '407';
+  const _APP_V = '408';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=407').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=408').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2289,56 +2289,57 @@ function _homeJobCard(job) {
   </div>`;
 }
 
+// 급구 공고가 실제로 있으면 벤토 배너 내용을 진짜 공고로 교체, 없으면 기본 마케팅 카피 유지
+// (전엔 별도 home-urgent-section이 이 배너와 분리돼 있어서 이 배너 자체는 항상 정적 카피만 보여주고 있었음)
+const _BENTO_DEFAULT_HTML = `
+    <div class="bento-top">
+      <span class="bento-tag">당일 지급</span>
+      <span class="bento-urgent">URGENT NOW</span>
+    </div>
+    <div class="bento-title">지금 당장 출근하고<br>오늘 바로 일당받기</div>
+    <div class="bento-desc">급하게 일손이 필요한 사장님들이 기다리고 있어요!</div>
+    <div class="bento-btn">전체보기 ➔</div>
+`;
+function _applyUrgentBentoContent(urgentJobs) {
+  const section = document.getElementById('home-urgent-section');
+  const banner = section?.querySelector('.bento-banner');
+  if (!section || !banner) return;
+  if (!urgentJobs.length) {
+    banner.innerHTML = _BENTO_DEFAULT_HTML;
+    section.onclick = () => showAllJobs();
+    return;
+  }
+  const top = urgentJobs[0];
+  const wageText = top.current_wage > 0 ? `${top.current_wage.toLocaleString('ko-KR')}원 ${_wageLabel(top)}` : '협의';
+  banner.innerHTML = `
+    <div class="bento-top">
+      <span class="bento-tag">급구 ${urgentJobs.length}건</span>
+      <span class="bento-urgent">URGENT NOW</span>
+    </div>
+    <div class="bento-title" style="font-size:18px">${top.title || top.category}</div>
+    <div class="bento-desc">${wageText}${top.biz_name ? ' · ' + top.biz_name : ''}</div>
+    <div class="bento-btn">전체보기 ➔</div>
+  `;
+  section.onclick = () => showHomeUrgentList();
+}
+
 async function _preloadHomeUrgent() {
   const section = document.getElementById('home-urgent-section');
-  if (!section || section.style.display !== 'none') return; // 이미 표시 중이면 스킵
+  if (!section) return;
+  if (jobs?.length) return; // loadJobs가 먼저 끝났으면 _renderHomeUrgent가 처리
   const { data } = await db.from('job_postings')
     .select('id, title, category, current_wage, status, biz_name, wage_type')
     .eq('status', 'urgent')
     .limit(8);
-  if (!data?.length) return;
-  if (section.style.display !== 'none') return; // loadJobs가 먼저 완료된 경우 스킵
-  const samples = data.slice(0, 2);
-  section.style.display = 'flex';
-  section.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-      <div style="font-size:16px;font-weight:900;color:#fff;line-height:1">급구 <span style="color:#ff6677">${data.length}건</span></div>
-      <div style="font-size:9px;font-weight:900;letter-spacing:1.5px;color:rgba(210,120,130,.85)">URGENT NOW</div>
-    </div>
-    <div style="display:flex;gap:6px">
-      ${samples.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="flex:1;background:rgba(255,255,255,.07);border-radius:10px;padding:9px 10px;cursor:pointer;border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.title||j.category}</div>
-        <div style="font-size:14px;font-weight:900;color:#fff;display:flex;align-items:baseline;gap:4px">${j.current_wage>0?`${j.current_wage.toLocaleString('ko-KR')}원<span style="font-size:10px;font-weight:800;opacity:.75">${_wageLabel(j)}</span>`:'협의'}</div>
-      </div>`).join('')}
-    </div>
-    <div onclick="event.stopPropagation();showHomeUrgentList()" style="display:inline-flex;align-items:center;gap:3px;background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;margin-top:9px;cursor:pointer;width:fit-content">전체보기 →</div>
-  `;
-  section.onclick = () => showHomeUrgentList();
+  if (!data?.length) return; // 급구 없으면 기본 마케팅 카피 그대로 둠
+  if (jobs?.length) return; // 그 사이 loadJobs가 완료된 경우 스킵
+  _applyUrgentBentoContent(data);
 }
 
 function _renderHomeUrgent() {
   const urgentJobs = jobs.filter(j => j.status === 'urgent').slice(0, 8);
-  const section = document.getElementById('home-urgent-section');
-  if (!section) return;
-  if (!urgentJobs.length) { section.style.display = 'none'; return; }
-  section.style.display = 'flex';
-  const samples = urgentJobs.slice(0, 2);
-  section.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-      <div style="font-size:16px;font-weight:900;color:#fff;line-height:1">급구 <span style="color:#ff6677">${urgentJobs.length}건</span></div>
-      <div style="font-size:9px;font-weight:900;letter-spacing:1.5px;color:rgba(210,120,130,.85)">URGENT NOW</div>
-    </div>
-    <div style="display:flex;gap:6px">
-      ${samples.map(j=>`<div onclick="event.stopPropagation();openDetail('${j.id}')" style="flex:1;background:rgba(255,255,255,.07);border-radius:10px;padding:9px 10px;cursor:pointer;border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${j.title||j.category}</div>
-        <div style="font-size:14px;font-weight:900;color:#fff;display:flex;align-items:baseline;gap:4px">${j.current_wage>0?`${j.current_wage.toLocaleString('ko-KR')}원<span style="font-size:10px;font-weight:800;opacity:.75">${_wageLabel(j)}</span>`:'협의'}</div>
-      </div>`).join('')}
-    </div>
-    <div onclick="event.stopPropagation();showHomeUrgentList()" style="display:inline-flex;align-items:center;gap:3px;background:#C8102E;color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;margin-top:9px;cursor:pointer;width:fit-content">전체보기 →</div>
-  `;
-  section.onclick = () => showHomeUrgentList();
+  _applyUrgentBentoContent(urgentJobs);
 }
-
 function showHomeUrgentList() {
   // 급구만 필터 — 기존 필터 상태 초기화 후 직접 렌더
   _homeFilterSearch = ''; _homeFilterCat = ''; _homeFilterWage = '';
@@ -16214,31 +16215,42 @@ function _showMyLocationOnTrackMap(hasVenue) {
 
 // opts: { brand, title, place, addressQuery, whenISO, whenText, steps, stepIndex, chat:{gatheringId,title}|null }
 function openTrackingSheet(opts) {
-  document.getElementById('track-overlay').style.display = 'block';
-  document.getElementById('track-brand').textContent = opts.brand;
-  document.getElementById('track-desc').textContent = opts.title || '-';
-  document.getElementById('track-place').textContent = opts.place || '-';
-  document.getElementById('track-when').textContent = opts.whenText || '-';
-  document.getElementById('track-sheet').classList.remove('expanded');
-  _renderTrackSteps(opts.steps || ['신청완료','확정','진행중','종료'], opts.stepIndex ?? 0);
-  bindTrackSheetDrag(document.getElementById('track-sheet-handle'), document.getElementById('track-sheet'));
+  try {
+    document.getElementById('track-overlay').style.display = 'block';
+    document.getElementById('track-brand').textContent = opts.brand;
+    document.getElementById('track-desc').textContent = opts.title || '-';
+    document.getElementById('track-place').textContent = opts.place || '-';
+    document.getElementById('track-when').textContent = opts.whenText || '-';
+    document.getElementById('track-sheet').classList.remove('expanded');
+    _renderTrackSteps(opts.steps || ['신청완료','확정','진행중','종료'], opts.stepIndex ?? 0);
+    bindTrackSheetDrag(document.getElementById('track-sheet-handle'), document.getElementById('track-sheet'));
 
-  const chatBtn = document.getElementById('track-chat-btn');
-  if (opts.chat) {
-    chatBtn.style.display = 'block';
-    chatBtn.onclick = () => openBaromeetChat(opts.chat.gatheringId, opts.chat.title);
-  } else {
-    chatBtn.style.display = 'none';
+    const chatBtn = document.getElementById('track-chat-btn');
+    if (opts.chat) {
+      chatBtn.style.display = 'block';
+      chatBtn.onclick = () => openBaromeetChat(opts.chat.gatheringId, opts.chat.title);
+    } else {
+      chatBtn.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('[openTrackingSheet] 정보 표시 실패:', e);
   }
 
   if (_trackVenueMarker) { _trackVenueMarker.setMap(null); _trackVenueMarker = null; } // 이전 세션의 장소 마커 제거
-  requestAnimationFrame(() => {
-    const el = document.getElementById('track-map');
-    if (!_trackMap) _trackMap = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 5 });
-    else _trackMap.relayout();
-    _geocodeAndShowVenue(opts.addressQuery);
-    _showMyLocationOnTrackMap(!!opts.addressQuery);
-  });
+  // 컨테이너가 display:none에서 막 block으로 바뀐 직후라 즉시 relayout하면 크기 계산이
+  // 틀어질 수 있어 rAF보다 한 틱 더 늦게(50ms) 초기화 - 지도만 뜨고 시트 정보가 그려지지
+  // 않는 것처럼 보이던 증상에 대한 방어적 보강
+  setTimeout(() => {
+    try {
+      const el = document.getElementById('track-map');
+      if (!_trackMap) _trackMap = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 5 });
+      else _trackMap.relayout();
+      _geocodeAndShowVenue(opts.addressQuery);
+      _showMyLocationOnTrackMap(!!opts.addressQuery);
+    } catch (e) {
+      console.error('[openTrackingSheet] 지도 초기화 실패:', e);
+    }
+  }, 60);
 
   if (_trackTimer) clearInterval(_trackTimer);
   _tickTrackCountdown(opts.whenISO);
