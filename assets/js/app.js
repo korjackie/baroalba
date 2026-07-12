@@ -349,7 +349,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '440';
+  const _APP_V = '441';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -365,7 +365,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=440').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=441').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -505,6 +505,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 키보드 가림 방지: 슬라이드업 패널을 키보드 위로 올리고 높이 축소
   if (window.visualViewport) {
     let _vpT;
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     const _adjKb = () => {
       clearTimeout(_vpT);
       _vpT = setTimeout(() => {
@@ -512,7 +513,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         // 슬라이드업 오버레이 계열 모두 처리
         document.querySelectorAll('.overlay-panel.show, .full-panel.show, [id$="-overlay"].open, [id$="-overlay"].show').forEach(el => {
           const panel = el.classList.contains('detail-panel') ? el : el.querySelector('.detail-panel, [style*="border-radius:20px"]');
-          if (kbH > 80) {
+          if (isIOS && kbH > 80) {
             el.style.paddingBottom = kbH + 'px';
             if (panel) {
               panel.style.maxHeight = (window.visualViewport.height - 60) + 'px';
