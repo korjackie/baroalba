@@ -325,6 +325,22 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // ── 직장인증 심사 (바로만남 신뢰배지) ─────────────────
+    if (action === 'workplace_verify_requests') {
+      const rows = await sb(
+        'workers?select=id,name,workplace_name,workplace_verify_method,workplace_verify_doc_url&workplace_verify_status=eq.pending&limit=200',
+        svcKey
+      ).then(r => r.json()).catch(() => []);
+      return res.json(Array.isArray(rows) ? rows : []);
+    }
+    if (action === 'review_workplace_verify' && req.method === 'PATCH') {
+      const { worker_id, status } = req.body || {};
+      if (!worker_id || !['verified', 'rejected'].includes(status)) return res.status(400).json({ error: 'worker_id, status(verified/rejected) required' });
+      const r = await sb(`workers?id=eq.${worker_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ workplace_verify_status: status }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
     // ── 바로미팅 목록 (관리자 개설/관리) ─────────────────
     if (action === 'baromeetings') {
       const data = await sb(

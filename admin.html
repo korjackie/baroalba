@@ -381,6 +381,7 @@
       <div class="list-item" onclick="navTo('alba','postings')"><div class="list-icon">📋</div><div class="list-text"><div class="list-title">알바 공고 관리</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('alba','users')"><div class="list-icon">👥</div><div class="list-text"><div class="list-title">알바생 · 업주 회원 관리</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('alba','reports')"><div class="list-icon">🚨</div><div class="list-text"><div class="list-title">신고 처리</div></div><div class="list-arrow">›</div></div>
+      <div class="list-item" onclick="navTo('alba','workplace-verify')"><div class="list-icon">💼</div><div class="list-text"><div class="list-title">직장인증 심사</div><div class="list-desc">바로만남 신뢰 배지용 재직 인증 요청</div></div><div class="list-arrow">›</div></div>
     </div>
   </div>
 
@@ -471,6 +472,11 @@
       <button class="filter-btn" onclick="filterReports('dismissed', this)">⚪ 기각</button>
     </div>
     <div id="reports-list"><div class="loading">로딩 중...</div></div>
+  </div>
+
+  <!-- 직장인증 심사 -->
+  <div class="tab-content" id="tab-workplace-verify">
+    <div id="workplace-verify-list"><div class="loading">로딩 중...</div></div>
   </div>
 
   <!-- 공고관리 -->
@@ -933,12 +939,12 @@ const ALL_TABS = [
   'dashboard','alba','moim','mannam','settings',
   'reports','postings','users','moims',
   'admins','baroalba','baromoim','lesson','mannnam','restaurants','coupons','pass-pricing','baromeetings',
-  'gathering-requests',
+  'gathering-requests','workplace-verify',
 ];
 const NAV_GROUPS = ['dashboard','alba','moim','mannam','settings'];
 const GROUP_OF = {
   dashboard:'dashboard',
-  alba:'alba', postings:'alba', users:'alba', reports:'alba',
+  alba:'alba', postings:'alba', users:'alba', reports:'alba', 'workplace-verify':'alba',
   moim:'moim', moims:'moim',
   mannam:'mannam', mannnam:'mannam', restaurants:'mannam', coupons:'mannam', baromeetings:'mannam', 'gathering-requests':'mannam',
   settings:'settings', admins:'settings', baroalba:'settings', baromoim:'settings', lesson:'settings', 'pass-pricing':'settings',
@@ -972,6 +978,7 @@ function switchTab(name) {
   if (name === 'pass-pricing' && document.getElementById('pass-pricing-list').innerHTML.includes('로딩')) loadPassPricing();
   if (name === 'baromeetings' && document.getElementById('baromeetings-list').innerHTML.includes('로딩')) { loadBaromeetings(); loadBmPartnerOptions(); }
   if (name === 'gathering-requests') loadGatheringRequests();
+  if (name === 'workplace-verify') loadWorkplaceVerifyRequests();
 
   // 하드웨어 뒤로가기 대응용 가상 히스토리 (popstate 처리 중 재호출된 경우엔 다시 쌓지 않음)
   if (!_fromPopState) history.pushState({ adminTab: name }, '');
@@ -1690,6 +1697,35 @@ async function markGatheringRequestDone(id) {
   if (result?.error) { showToast('처리 실패: ' + result.error); return; }
   showToast('처리완료로 표시했습니다');
   loadGatheringRequests();
+}
+
+// ── 직장인증 심사 ─────────────────────────────────────────
+async function loadWorkplaceVerifyRequests() {
+  const el = document.getElementById('workplace-verify-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('workplace_verify_requests');
+  if (data?.error) { el.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">불러오기 실패: ${data.error}</div>`; return; }
+  const rows = Array.isArray(data) ? data : [];
+  if (!rows.length) { el.innerHTML = '<div class="empty">심사 대기 중인 요청이 없습니다</div>'; return; }
+  el.innerHTML = rows.map(w => `
+    <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:800;color:#1e293b">${w.name || '이름없음'} · ${w.workplace_name || '-'}</div>
+        <span class="status-badge sb-reviewing">${w.workplace_verify_method || '-'}</span>
+      </div>
+      ${w.workplace_verify_doc_url ? `<a href="${w.workplace_verify_doc_url}" target="_blank" style="display:inline-block;font-size:12px;color:#7C3AED;margin-bottom:8px">📎 제출 서류 보기</a>` : '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px">서류 없음 (직장이메일 인증)</div>'}
+      <div style="display:flex;gap:8px">
+        <button onclick="reviewWorkplaceVerify('${w.id}','verified')" style="flex:1;padding:9px;background:#dcfce7;color:#14532d;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✅ 인증 승인</button>
+        <button onclick="reviewWorkplaceVerify('${w.id}','rejected')" style="flex:1;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">반려</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function reviewWorkplaceVerify(workerId, status) {
+  const result = await adminApi('review_workplace_verify', 'PATCH', { worker_id: workerId, status });
+  if (result?.error) { showToast('처리 실패: ' + result.error); return; }
+  showToast(status === 'verified' ? '인증 승인 완료' : '반려 처리 완료');
+  loadWorkplaceVerifyRequests();
 }
 
 async function loadBaromeetings() {

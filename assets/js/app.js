@@ -358,7 +358,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '444';
+  const _APP_V = '445';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -374,7 +374,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=444').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=445').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -8406,6 +8406,7 @@ async function loadWorkerGrade() {
     loadMyAlbaPreview();
     loadMyMoimPreview();
     loadMyBaromeetPreview();
+    loadWorkplaceVerifyBadge();
   }
 
   const rating  = w?.rating      || 0;
@@ -17535,6 +17536,177 @@ async function saveBaromeetAnonProfile() {
     _baromeetPhotoUrl = avatarUrl;
     _updateBaromeetMyProfileBadge();
   }
+}
+
+// ── 바로패스 (참석 인증 QR) — 바로스팟/바로미팅 등 낯선 사람과의 만남에서
+// 신청자 본인이 맞는지 서로 보여주고 확인하는 보딩패스형 카드 ──────────
+async function openBaroPass() {
+  if (!currentUser) { showLoginPrompt('로그인 후 이용할 수 있어요','바로패스는 로그인이 필요합니다.'); return; }
+  const { data: w } = await db.from('workers')
+    .select('name, gender, baromeet_nick, baromeet_avatar, photo_url, workplace_verify_status')
+    .eq('kakao_uid', currentUser.id).maybeSingle();
+
+  // 승인된 참가 내역(바로모임/바로미팅) 중 가장 가까운 일정 하나를 골라 표시
+  const { data: apps } = await db.from('gathering_applications')
+    .select('gathering_id, status, gatherings(id, title, gathering_date, location_name, category)')
+    .eq('applicant_id', currentUser.id).eq('status', 'approved');
+  const now = Date.now();
+  const dated = (apps || [])
+    .filter(a => a.gatherings?.gathering_date)
+    .map(a => ({ g: a.gatherings, t: new Date(a.gatherings.gathering_date).getTime() }));
+  const upcoming = dated.filter(x => x.t >= now).sort((a, b) => a.t - b.t);
+  const past = dated.filter(x => x.t < now).sort((a, b) => b.t - a.t);
+  const pick = (upcoming[0] || past[0] || {}).g || null;
+
+  const nick = w?.baromeet_nick || w?.name || '알바생';
+  const avatarUrl = _resolveBaromeetAvatarUrl(w?.baromeet_avatar, w?.photo_url);
+  const avatarHtml = avatarUrl && avatarUrl.startsWith('emoji:')
+    ? `<div style="width:64px;height:64px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 10px">${avatarUrl.slice(6)}</div>`
+    : avatarUrl
+    ? `<img src="${avatarUrl}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block">`
+    : `<div style="width:64px;height:64px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px">👤</div>`;
+
+  const dateStr = pick?.gathering_date ? new Date(pick.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }) : null;
+  const genderLabel = w?.gender === 'male' ? '남성' : w?.gender === 'female' ? '여성' : null;
+  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:800;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px">✅ 직장인증완료</span>` : '';
+
+  const qrPayload = `BAROPASS|${currentUser.id}|${pick?.id || ''}|${Date.now()}`;
+  const qrSvg = _renderQrSvg(qrPayload, 160);
+
+  openBottomSheet(`
+    <div style="text-align:center;padding:4px 4px 8px">
+      <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:16px">🎫 바로패스</div>
+      <div style="background:linear-gradient(135deg,#F5F3FF,#FFF1F2);border:1.5px solid #ede9fe;border-radius:20px;padding:24px 20px">
+        ${avatarHtml}
+        <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">${nick}</div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px;flex-wrap:wrap">
+          ${genderLabel ? `<span style="font-size:11px;font-weight:700;background:#f5f5f5;color:#666;padding:3px 10px;border-radius:100px">${genderLabel}</span>` : ''}
+          ${verifiedBadge}
+        </div>
+        <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:16px">${qrSvg}</div>
+        ${pick ? `
+          <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:2px">${pick.title || '바로만남'}</div>
+          ${dateStr ? `<div style="font-size:12px;color:#888">🕐 ${dateStr}</div>` : ''}
+          ${pick.location_name ? `<div style="font-size:12px;color:#888">📍 ${pick.location_name}</div>` : ''}
+        ` : `<div style="font-size:12px;color:#aaa;line-height:1.6">현재 확정된 참석 일정이 없어요<br>바로만남에서 신청 후 승인되면 여기에 표시돼요</div>`}
+      </div>
+      <div style="font-size:11px;color:#bbb;margin-top:14px;line-height:1.6">상대방에게 이 화면을 보여주고<br>닉네임·참석 모임이 일치하는지 확인해주세요</div>
+    </div>
+  `);
+}
+
+// qrcode.min.js(kazuhikoarase, MIT) 로 SVG QR 생성 - 서버/외부 API 호출 없이 완전 클라이언트 처리
+function _renderQrSvg(text, size) {
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(text);
+    qr.make();
+    const count = qr.getModuleCount();
+    const cell = Math.floor(size / count);
+    return qr.createSvgTag(cell || 4, 0);
+  } catch (e) {
+    return '<div style="font-size:12px;color:#bbb">QR 생성 실패</div>';
+  }
+}
+
+// ── 직장인증 — 직장인 상호 신뢰를 위한 재직 확인 (재직증명서/명함/직장이메일) ──
+async function loadWorkplaceVerifyBadge() {
+  const el = document.getElementById('mp-workverify-val');
+  if (!el || !currentUser) return;
+  const { data: w } = await db.from('workers').select('workplace_verify_status').eq('kakao_uid', currentUser.id).maybeSingle();
+  const status = w?.workplace_verify_status;
+  el.textContent = status === 'verified' ? '✅ 인증완료' : status === 'pending' ? '⏳ 심사중' : status === 'rejected' ? '반려됨' : '';
+}
+
+async function openWorkplaceVerify() {
+  if (!currentUser) { showLoginPrompt('로그인 후 이용할 수 있어요','직장인증은 로그인이 필요합니다.'); return; }
+  const { data: w } = await db.from('workers').select('workplace_verify_status, workplace_name, workplace_verify_method').eq('kakao_uid', currentUser.id).maybeSingle();
+  const status = w?.workplace_verify_status || 'none';
+
+  if (status === 'verified') {
+    openBottomSheet(`
+      <div style="text-align:center;padding:24px 4px">
+        <div style="font-size:40px;margin-bottom:10px">✅</div>
+        <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">직장인증 완료</div>
+        <div style="font-size:13px;color:#888">${w?.workplace_name || ''}</div>
+      </div>
+    `);
+    return;
+  }
+  if (status === 'pending') {
+    openBottomSheet(`
+      <div style="text-align:center;padding:24px 4px">
+        <div style="font-size:40px;margin-bottom:10px">⏳</div>
+        <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">심사 중이에요</div>
+        <div style="font-size:13px;color:#888;line-height:1.6">제출하신 서류를 확인하고 있어요<br>영업일 기준 1~2일 내 완료돼요</div>
+      </div>
+    `);
+    return;
+  }
+
+  openBottomSheet(`
+    <div style="padding:4px 4px 8px">
+      <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:6px">💼 직장인증</div>
+      <div style="font-size:12.5px;color:#888;line-height:1.6;margin-bottom:16px">재직증명서, 명함, 직장 이메일 중 하나로 인증하면 바로만남 상대방에게 인증 배지가 표시돼요.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <input id="wv-company" type="text" placeholder="회사명" style="width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input id="wv-email" type="email" placeholder="직장 이메일 (선택)" style="width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">재직증명서 또는 명함 사진</div>
+      <input type="file" id="wv-doc-input" accept="image/*" style="display:none" onchange="_wvFilePicked(this)">
+      <button type="button" onclick="document.getElementById('wv-doc-input').click()" id="wv-doc-btn" style="width:100%;padding:14px;background:#f8f8f8;border:1.5px dashed #ddd;border-radius:12px;font-size:13px;color:#888;cursor:pointer;margin-bottom:16px">📎 사진 선택</button>
+      <button onclick="submitWorkplaceVerify()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">제출하기</button>
+    </div>
+  `);
+}
+
+let _wvDocFile = null;
+function _wvFilePicked(input) {
+  _wvDocFile = input.files[0] || null;
+  const btn = document.getElementById('wv-doc-btn');
+  if (btn && _wvDocFile) { btn.textContent = '✅ ' + _wvDocFile.name; btn.style.color = '#16a34a'; btn.style.borderColor = '#86efac'; }
+}
+
+async function submitWorkplaceVerify() {
+  const company = document.getElementById('wv-company')?.value.trim();
+  const email = document.getElementById('wv-email')?.value.trim();
+  if (!company) { showToast('회사명을 입력해주세요'); return; }
+  if (!_wvDocFile && !email) { showToast('서류 사진 또는 직장 이메일 중 하나는 필요해요'); return; }
+
+  let docUrl = null;
+  if (_wvDocFile) {
+    if (_wvDocFile.size > 10 * 1024 * 1024) { showToast('10MB 이하 파일만 가능합니다'); return; }
+    const ext = _wvDocFile.name.split('.').pop();
+    const path = `${currentUser.id}/workplace-verify-${Date.now()}.${ext}`;
+    const { error: upErr } = await db.storage.from('health-certs').upload(path, _wvDocFile, { upsert: true });
+    if (upErr) { showToast('업로드 실패: ' + upErr.message); return; }
+    const { data: urlData } = await db.storage.from('health-certs').createSignedUrl(path, 60 * 60 * 24 * 365);
+    docUrl = urlData?.signedUrl || null;
+  }
+
+  const { error } = await db.from('workers').update({
+    workplace_name: company,
+    workplace_verify_method: _wvDocFile ? (email ? 'business_card+email' : 'business_card') : 'work_email',
+    workplace_verify_doc_url: docUrl,
+    workplace_verify_status: 'pending',
+  }).eq('kakao_uid', currentUser.id);
+  if (error) { showToast('제출 실패: ' + error.message); return; }
+
+  _wvDocFile = null;
+  closeBottomSheet();
+  showToast('✅ 제출 완료! 심사 후 인증 배지가 표시돼요');
+  loadWorkplaceVerifyBadge();
+}
+
+// ── 휴대폰 본인인증 (연령 확인용, 추후 실제 PASS/통신사 인증 연동 예정 — 지금은 진입점만) ──
+function openPhoneVerifyStub() {
+  openBottomSheet(`
+    <div style="text-align:center;padding:24px 4px">
+      <div style="font-size:40px;margin-bottom:10px">📱</div>
+      <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">휴대폰 본인인증</div>
+      <div style="font-size:13px;color:#888;line-height:1.7">준비 중인 기능이에요<br>추후 통신사 본인인증 연동으로<br>정확한 연령까지 확인할 수 있게 됩니다</div>
+    </div>
+  `);
 }
 
 // 헤더 우측 상단의 "내 익명 프로필" 배지(캐릭터/사진 + 닉네임) 갱신
