@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '415';
+  const _APP_V = '416';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=415').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=416').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -4006,6 +4006,14 @@ async function openWorkerProfileDirect(appId) {
       <div style="font-size:13px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div>
     </div>
 
+    <!-- 실시간 위치 공유 (알바생이 공유 시작한 경우에만) -->
+    ${app.status === 'accepted' ? `
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">📍 실시간 위치</div>
+      <div id="wd-loc-map" style="width:100%;height:170px;border-radius:12px;background:#f0f0f0"></div>
+      <div id="wd-loc-status" style="font-size:11px;color:#bbb;margin-top:4px;text-align:center">위치 공유 대기 중...</div>
+    </div>` : ''}
+
     <!-- 지원 메시지 -->
     ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#FFFBEB;border-radius:10px;border-left:3px solid #F59E0B;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#D97706;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
 
@@ -4025,6 +4033,29 @@ async function openWorkerProfileDirect(appId) {
     <button onclick="${close}" style="width:100%;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
   </div>`;
   document.body.appendChild(el);
+
+  // 실시간 위치 공유 지도 구독 - 알바생이 toggleLocationShare()로 브로드캐스트하는 좌표를 받아서 표시
+  let _wdLocChannel = null, _wdLocMap = null, _wdLocMarker = null;
+  if (app.status === 'accepted') {
+    requestAnimationFrame(() => {
+      const mapEl = document.getElementById('wd-loc-map');
+      if (!mapEl || !window.kakao?.maps) return;
+      _wdLocMap = new kakao.maps.Map(mapEl, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 4 });
+      _wdLocChannel = subscribeWorkerLocation(app.id, (payload) => {
+        const pos = new kakao.maps.LatLng(payload.lat, payload.lng);
+        _wdLocMap.setCenter(pos);
+        if (_wdLocMarker) _wdLocMarker.setMap(null);
+        _wdLocMarker = new kakao.maps.Marker({ position: pos, map: _wdLocMap });
+        const statusEl = document.getElementById('wd-loc-status');
+        if (statusEl) statusEl.textContent = '🟢 실시간 위치 공유 중 · ' + new Date(payload.ts).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+      });
+    });
+  }
+  const _origWdRemove = el.remove.bind(el);
+  el.remove = () => {
+    if (_wdLocChannel) { _wdLocChannel.unsubscribe(); _wdLocChannel = null; }
+    _origWdRemove();
+  };
 }
 
 function _chatItemClick(e, appId, name, side) {
@@ -4454,6 +4485,73 @@ async function loadMyApplications() {
       ${canChat ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} 업주에게 문의하기</button>` : ''}
       ${isAccepted ? `<button id="loc-btn-${a.id}" class="loc-share-btn" onclick="event.stopPropagation();toggleLocationShare('${a.id}',this)">📍 위치 공유 시작</button>` : ''}
       ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">지원 취소</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// 마이페이지 - MY 바로알바 미리보기 (지원현황 상세는 alba-detail 서브패널로 이동)
+async function loadMyAlbaPreview() {
+  const el = document.getElementById('mp-alba-preview');
+  const badge = document.getElementById('mp-alba-badge');
+  if (!el || !currentUser) return;
+  const wid = await _getWorkerId();
+  if (!wid) { el.innerHTML = ''; if (badge) badge.textContent = ''; return; }
+  const { data: apps } = await db.from('applications')
+    .select('id, status, job_postings(title, current_wage)')
+    .eq('worker_id', wid).order('applied_at', { ascending: false }).limit(5);
+  const statusLabel = { pending:'검토중', reviewing:'검토중', accepted:'합격', rejected:'불합격', completed:'완료', canceled:'취소' };
+  const statusColor = { pending:'#F59E0B', reviewing:'#F59E0B', accepted:'#16a34a', rejected:'#94a3b8', completed:'#3b82f6', canceled:'#94a3b8' };
+  if (badge) {
+    const activeCount = (apps || []).filter(a => ['pending','reviewing','accepted'].includes(a.status)).length;
+    badge.textContent = activeCount > 0 ? `진행중 ${activeCount}건` : '';
+  }
+  if (!apps?.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 지원한 공고가 없어요</div>'; return; }
+  el.innerHTML = apps.slice(0, 2).map(a => `
+    <div onclick="event.stopPropagation();goToMyApplications()" style="display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-radius:10px;padding:9px 12px;cursor:pointer">
+      <div style="min-width:0">
+        <div style="font-size:12.5px;font-weight:800;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.job_postings?.title || '공고'}</div>
+        <div style="font-size:11px;color:#999;margin-top:1px">${a.job_postings?.current_wage ? a.job_postings.current_wage.toLocaleString()+'원' : ''}</div>
+      </div>
+      <span style="flex-shrink:0;font-size:10.5px;font-weight:800;color:${statusColor[a.status]||'#999'}">${statusLabel[a.status]||a.status}</span>
+    </div>`).join('');
+}
+
+// 마이페이지 - MY 바로모임 미리보기 (실제 참가/신청한 모임을 바로 보여줌)
+async function loadMyMoimPreview() {
+  const el = document.getElementById('mp-moim-preview');
+  if (!el || !currentUser) return;
+  const { data: apps } = await db.from('gathering_applications').select('gathering_id').eq('applicant_id', currentUser.id);
+  const ids = [...new Set((apps || []).map(a => a.gathering_id))];
+  if (!ids.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 모임이 없어요</div>'; return; }
+  const { data: gatherings } = await db.from('gatherings')
+    .select('id, title, category, gathering_date').in('id', ids).neq('category', 'baromeeting')
+    .order('gathering_date', { ascending: true });
+  if (!gatherings?.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 모임이 없어요</div>'; return; }
+  el.innerHTML = gatherings.slice(0, 5).map(g => {
+    const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+    return `<div onclick="event.stopPropagation();openMoimDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#faf5ff;border-radius:10px;padding:10px 12px;cursor:pointer">
+      <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'모임'}</div>
+      <div style="font-size:10.5px;color:#7C3AED;margin-top:3px">${dateStr}</div>
+    </div>`;
+  }).join('');
+}
+
+// 마이페이지 - MY 바로미팅 미리보기 (실제 참가/신청한 미팅을 바로 보여줌)
+async function loadMyBaromeetPreview() {
+  const el = document.getElementById('mp-baromeet-preview');
+  if (!el || !currentUser) return;
+  const { data: apps } = await db.from('gathering_applications').select('gathering_id').eq('applicant_id', currentUser.id);
+  const ids = [...new Set((apps || []).map(a => a.gathering_id))];
+  if (!ids.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 바로미팅이 없어요</div>'; return; }
+  const { data: gatherings } = await db.from('gatherings')
+    .select('id, title, gathering_date').in('id', ids).eq('category', 'baromeeting')
+    .order('gathering_date', { ascending: true });
+  if (!gatherings?.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 바로미팅이 없어요</div>'; return; }
+  el.innerHTML = gatherings.slice(0, 5).map(g => {
+    const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+    return `<div onclick="event.stopPropagation();openBaromeetChat('${g.id}','${(g.title||'바로미팅').replace(/'/g,"\\'")}')" style="flex-shrink:0;width:140px;background:#fff1f2;border-radius:10px;padding:10px 12px;cursor:pointer">
+      <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'바로미팅'}</div>
+      <div style="font-size:10.5px;color:#e11d48;margin-top:3px">${dateStr}</div>
     </div>`;
   }).join('');
 }
@@ -7814,6 +7912,9 @@ async function loadWorkerGrade() {
     if (mpRating) mpRating.textContent = w?.rating ? `★${w.rating.toFixed(1)}` : '';
     loadWorkerIncome();
     loadUserPoints();
+    loadMyAlbaPreview();
+    loadMyMoimPreview();
+    loadMyBaromeetPreview();
   }
 
   const rating  = w?.rating      || 0;

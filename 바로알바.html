@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='415',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='416',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -1437,39 +1437,41 @@
       <!-- ── 내 활동 ── -->
       <div class="mp-section">
         <div class="mp-section-title" data-i18n="section_activity">내 활동</div>
-        <div class="mp-rows">
-          <div class="mp-row" onclick="goToMyApplications()">
-            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_applications">지원 현황</span></div>
-            <div class="mp-row-right"><span id="mp-apply-val" style="font-size:13px;color:#C8102E;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('income')">
-            <div class="mp-row-left"><span class="mp-row-icon">💵</span><span data-i18n="row_income">수입 현황</span></div>
-            <div class="mp-row-right"><span id="mp-income-val" style="font-size:13px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('wage-history')">
-            <div class="mp-row-left"><span class="mp-row-icon">💴</span><span data-i18n="row_wage_history">급여 수령 확인</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openPointHistory()">
-            <div class="mp-row-left"><span class="mp-row-icon">💎</span><span data-i18n="row_points">포인트 잔액</span></div>
-            <div class="mp-row-right">
-              <span id="mp-point-val" style="font-size:13px;color:#7C3AED;font-weight:700">-</span>
-              <button onclick="event.stopPropagation();openPointCharge()" data-i18n="btn_charge" style="font-size:10px;font-weight:700;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:3px 9px;cursor:pointer;margin-left:6px;flex-shrink:0">충전</button>
+        <div style="padding:14px 16px 6px">
+          <!-- MY 바로알바 - 알바 관련 활동은 전부 여기 안(상세페이지)으로 -->
+          <div style="background:#fff;border:1.5px solid #ffe0e0;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer" onclick="openMpSub('alba-detail')">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <span style="font-size:20px">⚡</span>
+              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로알바</div>
+              <span id="mp-alba-badge" style="font-size:12px;color:#C8102E;font-weight:700"></span>
               <span class="mp-row-arrow">›</span>
             </div>
+            <div id="mp-alba-preview" style="display:flex;flex-direction:column;gap:6px"></div>
           </div>
-          <div class="mp-row" onclick="openCouponSheet()">
-            <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="row_coupon">프로모션 쿠폰 등록 / 이용권 조회</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+
+          <!-- MY 바로모임 - 실제 참가/예정 모임을 바로 미리보기 -->
+          <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:14px 16px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer" onclick="openMoimPanel()">
+              <span style="font-size:20px">👥</span>
+              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로모임</div>
+              <span onclick="event.stopPropagation();openMpSub('gatherings')" style="font-size:15px;padding:2px" title="공지사항">🔔</span>
+              <span class="mp-row-arrow">›</span>
+            </div>
+            <div id="mp-moim-preview" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch"></div>
           </div>
-          <div class="mp-row" onclick="openMpSub('gatherings')">
-            <div class="mp-row-left"><span class="mp-row-icon">🤝</span><span>내 모임·미팅 신청 현황</span></div>
-            <div class="mp-row-right"><span id="mp-gatherings-val" style="font-size:13px;color:#7C3AED;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+
+          <!-- MY 바로미팅 - 실제 참가/예정 미팅을 바로 미리보기 -->
+          <div style="background:#fff;border:1.5px solid #fecdd3;border-radius:16px;padding:14px 16px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer" onclick="openMannnamPanel()">
+              <span style="font-size:20px">🤝</span>
+              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로미팅</div>
+              <span onclick="event.stopPropagation();openMpSub('gatherings')" style="font-size:15px;padding:2px" title="공지사항">🔔</span>
+              <span class="mp-row-arrow">›</span>
+            </div>
+            <div id="mp-baromeet-preview" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch"></div>
           </div>
-          <div class="mp-row" onclick="showMyRatings()">
-            <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span data-i18n="my_rating_label">내 평점</span></div>
-            <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
-          </div>
+        </div>
+        <div class="mp-rows">
           <div class="mp-row" id="mp-following-row" onclick="openMpSub('following')" style="display:none">
             <div class="mp-row-left"><span class="mp-row-icon">🔔</span><span data-i18n="row_following">팔로잉 업체</span></div>
             <div class="mp-row-right"><span id="mp-following-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
@@ -1627,13 +1629,52 @@
 <div class="mpsub-panel" id="mpsub-gatherings">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('gatherings')">‹</button>
-    <div class="mpsub-ttl">내 모임·미팅 신청 현황</div>
+    <div class="mpsub-ttl">모임·미팅 공지사항</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
     <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">📢 공지사항</div>
     <div id="mp-gathering-notices" style="margin-bottom:20px"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px">불러오는 중...</div></div>
-    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">🤝 신청 현황</div>
+    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">🤝 전체 신청 현황</div>
     <div id="mp-gathering-list"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px">불러오는 중...</div></div>
+  </div>
+</div>
+
+<div class="mpsub-panel" id="mpsub-alba-detail">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('alba-detail')">‹</button>
+    <div class="mpsub-ttl">MY 바로알바</div>
+  </div>
+  <div style="flex:1;overflow-y:auto">
+    <div class="mp-rows">
+      <div class="mp-row" onclick="goToMyApplications()">
+        <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_applications">지원 현황</span></div>
+        <div class="mp-row-right"><span id="mp-apply-val" style="font-size:13px;color:#C8102E;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+      </div>
+      <div class="mp-row" onclick="openMpSub('income')">
+        <div class="mp-row-left"><span class="mp-row-icon">💵</span><span data-i18n="row_income">수입 현황</span></div>
+        <div class="mp-row-right"><span id="mp-income-val" style="font-size:13px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+      </div>
+      <div class="mp-row" onclick="openMpSub('wage-history')">
+        <div class="mp-row-left"><span class="mp-row-icon">💴</span><span data-i18n="row_wage_history">급여 수령 확인</span></div>
+        <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+      </div>
+      <div class="mp-row" onclick="openPointHistory()">
+        <div class="mp-row-left"><span class="mp-row-icon">💎</span><span data-i18n="row_points">포인트 잔액</span></div>
+        <div class="mp-row-right">
+          <span id="mp-point-val" style="font-size:13px;color:#7C3AED;font-weight:700">-</span>
+          <button onclick="event.stopPropagation();openPointCharge()" data-i18n="btn_charge" style="font-size:10px;font-weight:700;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:3px 9px;cursor:pointer;margin-left:6px;flex-shrink:0">충전</button>
+          <span class="mp-row-arrow">›</span>
+        </div>
+      </div>
+      <div class="mp-row" onclick="openCouponSheet()">
+        <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="row_coupon">프로모션 쿠폰 등록 / 이용권 조회</span></div>
+        <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+      </div>
+      <div class="mp-row" onclick="showMyRatings()">
+        <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span data-i18n="my_rating_label">내 평점</span></div>
+        <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+      </div>
+    </div>
   </div>
 </div>
 
