@@ -751,6 +751,20 @@
   </div>
 </div>
 
+<!-- 바로미팅 상세 조회 (읽기전용 - 카드를 눌렀을 때) -->
+<div class="detail-overlay" id="bm-detail-overlay" onclick="closeBmDetail()">
+  <div class="detail-panel" onclick="event.stopPropagation()">
+    <div class="dp-header">
+      <button onclick="closeBmDetail()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
+      <span style="font-size:16px;font-weight:800;color:#1e293b">바로미팅 상세</span>
+    </div>
+    <div class="dp-body" id="bm-detail-body"><div class="loading">로딩 중...</div></div>
+    <div class="dp-actions" style="padding:14px 16px;border-top:1px solid #e2e8f0;flex-shrink:0">
+      <button id="bm-detail-edit-btn" style="width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">수정하기</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- 네이티브 confirm() 대신 사용하는 커스텀 확인 팝업 -->
@@ -1588,14 +1602,16 @@ async function loadBaromeetings() {
         const maleCur = m.baromeeting_male_cur ?? 0, femaleCur = m.baromeeting_female_cur ?? 0;
         return `
         <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
-            <div style="min-width:0">
-              <div style="font-size:14px;font-weight:800;color:#1e293b">${m.title || '(제목없음)'}</div>
-              <div style="font-size:11px;color:#94a3b8;margin-top:2px">${_fmtBmDate(m.gathering_date)} · ${m.location_name || '장소 미정'}</div>
+          <div onclick="openBmDetail('${m.id}')" style="cursor:pointer">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
+              <div style="min-width:0">
+                <div style="font-size:14px;font-weight:800;color:#1e293b">${m.title || '(제목없음)'}</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:2px">${_fmtBmDate(m.gathering_date)} · ${m.location_name || '장소 미정'}</div>
+              </div>
+              <span class="status-badge ${isClosed ? 'sb-dismissed' : 'sb-done'}">${isClosed ? '마감' : '모집중'}</span>
             </div>
-            <span class="status-badge ${isClosed ? 'sb-dismissed' : 'sb-done'}">${isClosed ? '마감' : '모집중'}</span>
+            <div style="font-size:12px;color:#64748b;margin-bottom:10px">여성 ${femaleCur}/${femaleMax}명 · 남성 ${maleCur}/${maleMax}명${m.entry_fee ? ' · 참가비 ' + m.entry_fee.toLocaleString() + '원' : ''}</div>
           </div>
-          <div style="font-size:12px;color:#64748b;margin-bottom:10px">여성 ${femaleCur}/${femaleMax}명 · 남성 ${maleCur}/${maleMax}명${m.entry_fee ? ' · 참가비 ' + m.entry_fee.toLocaleString() + '원' : ''}</div>
           <div style="display:flex;gap:6px">
             <button class="r-btn r-btn-reviewing" onclick="editBaromeeting('${m.id}')">수정</button>
             <button class="r-btn ${isClosed ? 'r-btn-done' : 'r-btn-dismiss'}" onclick="toggleBaromeeting('${m.id}', '${isClosed ? 'open' : 'closed'}')">${isClosed ? '재오픈' : '강제마감'}</button>
@@ -1731,6 +1747,54 @@ async function renderBmApplicantsList() {
       </div>
     </div>`;
   }).join('');
+}
+
+// 카드를 눌렀을 때 - 수정화면이 아니라 조회 전용 상세 패널
+async function openBmDetail(id) {
+  const m = _baromeetings.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('bm-detail-overlay').classList.add('show');
+  document.getElementById('bm-detail-edit-btn').onclick = () => { closeBmDetail(); editBaromeeting(id); };
+  const body = document.getElementById('bm-detail-body');
+  body.innerHTML = '<div class="loading">로딩 중...</div>';
+
+  const isClosed = m.status !== 'open';
+  const maleMax = m.baromeeting_male_max ?? 4, femaleMax = m.baromeeting_female_max ?? 4;
+  const maleCur = m.baromeeting_male_cur ?? 0, femaleCur = m.baromeeting_female_cur ?? 0;
+  const statusLabel = { pending:'승인 대기중', approved:'확정', rejected:'거절됨' };
+
+  const data = await adminApi('baromeeting_applicants', 'GET', null, { gathering_id: id });
+  const apps = Array.isArray(data) ? data : [];
+
+  body.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+      <div style="font-size:17px;font-weight:900;color:#1e293b">${m.title || '(제목없음)'}</div>
+      <span class="status-badge ${isClosed ? 'sb-dismissed' : 'sb-done'}">${isClosed ? '마감' : '모집중'}</span>
+    </div>
+    ${m.description ? `<div style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:14px">${m.description}</div>` : ''}
+    <div style="background:#f8fafc;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div style="font-size:13px;color:#334155"><b>📅 일시</b> · ${_fmtBmDate(m.gathering_date)}</div>
+      <div style="font-size:13px;color:#334155"><b>📍 장소</b> · ${m.location_name || '장소 미정'}${m.location_address ? ' (' + m.location_address + ')' : ''}</div>
+      <div style="font-size:13px;color:#334155"><b>👥 정원</b> · 여성 ${femaleCur}/${femaleMax}명 · 남성 ${maleCur}/${maleMax}명</div>
+      <div style="font-size:13px;color:#334155"><b>💰 참가비</b> · ${m.entry_fee ? m.entry_fee.toLocaleString() + '원' : '무료'}</div>
+    </div>
+    <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:8px">신청자 (${apps.length}명)</div>
+    ${apps.length ? apps.map(a => {
+      const w = a.worker;
+      const genderLabel = w?.gender === 'female' ? '여성' : w?.gender === 'male' ? '남성' : '-';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9">
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:800;color:#1e293b">${w?.name || '이름없음'} <span style="font-size:11px;font-weight:700;color:#94a3b8">${genderLabel}</span></div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w?.phone || '연락처 미등록'} · ${new Date(a.applied_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
+      </div>`;
+    }).join('') : '<div style="font-size:12px;color:#94a3b8;padding:8px 0">아직 신청자가 없어요</div>'}
+  `;
+}
+
+function closeBmDetail() {
+  document.getElementById('bm-detail-overlay').classList.remove('show');
 }
 
 async function approveBmApplicant(applicationId, name) {
