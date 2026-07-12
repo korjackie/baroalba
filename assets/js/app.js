@@ -435,7 +435,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '453';
+  const _APP_V = '454';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -451,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=453').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=454').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -2222,6 +2222,8 @@ async function openMoimChat(gatheringId, title) {
   if (_mcSafearea) _mcSafearea.style.background = '#7C3AED';
   const _mcHeader = document.getElementById('moim-chat-header');
   if (_mcHeader) _mcHeader.style.background = '#F5F3FF';
+  const _mcEyebrow = document.getElementById('moim-chat-eyebrow');
+  if (_mcEyebrow) { _mcEyebrow.textContent = '🍻 바로모임 채팅방'; _mcEyebrow.style.color = '#7C3AED'; }
   const _mcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
   if (_mcSendBtn) _mcSendBtn.style.background = '#7C3AED';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지
@@ -2243,11 +2245,13 @@ async function openMoimChat(gatheringId, title) {
   document.getElementById('moim-chat-members-text').textContent = `${dStr2}참가자 ${memberCount}명`;
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';
-  // 나가기 링크/내 프로필 배지는 바로미팅 익명채팅 전용 - 일반 모임 채팅에서는 숨김
+  // 나가기 링크/내 프로필 배지/유의사항 배너는 바로미팅 익명채팅 전용 - 일반 모임 채팅에서는 숨김
   const _mcLeave = document.getElementById('moim-chat-leave-link');
   if (_mcLeave) _mcLeave.style.display = 'none';
   const _mcProfile = document.getElementById('moim-chat-myprofile');
   if (_mcProfile) _mcProfile.style.display = 'none';
+  const _mcNotice = document.getElementById('moim-chat-notice');
+  if (_mcNotice) _mcNotice.style.display = 'none';
 
   // 기존 메시지 로드 (sender_name은 insert 시 denormalize된 값)
   const { data: msgs } = await db.from('gathering_chats').select('*').eq('gathering_id', gatheringId).order('sent_at').limit(100);
@@ -17889,6 +17893,8 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   if (_bcSafearea) _bcSafearea.style.background = '#e11d48';
   const _bcHeader = document.getElementById('moim-chat-header');
   if (_bcHeader) _bcHeader.style.background = '#FFF1F2';
+  const _bcEyebrow = document.getElementById('moim-chat-eyebrow');
+  if (_bcEyebrow) { _bcEyebrow.textContent = '💕 바로만남 채팅방'; _bcEyebrow.style.color = '#e11d48'; }
   const _bcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
   if (_bcSendBtn) _bcSendBtn.style.background = '#e11d48';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지 + 키보드 가림 방지
@@ -17905,7 +17911,9 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   if (memberEl) memberEl.textContent = `👥 ${(_bcCount || 0) + 1}명`;
   // 참가자수 옆 "나가기"는 작은 텍스트링크로, 내 프로필(캐릭터+닉네임)은 헤더 우측 상단 배지로 분리
   const leaveLink = document.getElementById('moim-chat-leave-link');
-  if (leaveLink) leaveLink.style.display = 'inline';
+  if (leaveLink) leaveLink.style.display = 'inline-flex';
+  const _bcNotice = document.getElementById('moim-chat-notice');
+  if (_bcNotice) _bcNotice.style.display = 'flex';
   _updateBaromeetMyProfileBadge();
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';

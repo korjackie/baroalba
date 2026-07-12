@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=453"></script>
+  <script src="./shared-lang.js?v=454"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -56,7 +56,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=453">
+  <link rel="stylesheet" href="./assets/css/style.css?v=454">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2834,23 +2834,35 @@
 <!-- ④ 바로모임 단체채팅 패널 -->
 <div id="panel-moim-chat" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:530;background:#fff;flex-direction:column;overflow:hidden">
   <div id="moim-chat-safearea" style="height:var(--sat-safe);background:#7C3AED;flex-shrink:0"></div>
-  <div id="moim-chat-header" style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#F5F3FF">
-    <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
-      <button onclick="closeMoimChat()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div style="min-width:0">
-        <div style="font-size:16px;font-weight:800;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="moim-chat-title">모임 채팅</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
-          <div style="font-size:11px;color:#7C3AED;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px" id="moim-chat-members" onclick="toggleMoimChatParticipants()"><span id="moim-chat-members-text">참가자 -명</span> <span id="moim-chat-members-arrow">▾</span></div>
-          <span id="moim-chat-leave-link" onclick="event.stopPropagation();leaveBaromeetChat()" style="display:none;font-size:11px;font-weight:700;color:#dc2626;cursor:pointer">· 나가기</span>
-        </div>
+  <div id="moim-chat-header" style="padding:12px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0;background:#F5F3FF">
+    <!-- 1행: 뒤로가기 + 채팅방 유형 라벨 ...... 참석자수 + 나가기 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <button onclick="closeMoimChat()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span id="moim-chat-eyebrow" style="font-size:11.5px;font-weight:800;color:#7C3AED;letter-spacing:0.2px">🍻 바로모임 채팅방</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <div style="font-size:12px;color:#666;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:2px" id="moim-chat-members" onclick="toggleMoimChatParticipants()"><span id="moim-chat-members-text">👥 -명</span> <span id="moim-chat-members-arrow" style="font-size:9px">▾</span></div>
+        <button id="moim-chat-leave-link" onclick="event.stopPropagation();leaveBaromeetChat()" style="display:none;font-size:11px;font-weight:800;color:#dc2626;background:#fff;border:1.3px solid #fecdd3;border-radius:20px;padding:4px 10px;cursor:pointer">나가기</button>
       </div>
     </div>
-    <!-- 내 익명 프로필(캐릭터/닉네임) - 바로미팅 채팅에서만 표시, 누르면 닉네임/사진 변경 -->
-    <div id="moim-chat-myprofile" onclick="openBaromeetAnonSetup()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex-shrink:0;margin-left:8px">
-      <div id="moim-chat-myprofile-avatar" style="width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;border:1.5px solid #e9d5ff;overflow:hidden"></div>
-      <div id="moim-chat-myprofile-name" style="font-size:9.5px;font-weight:700;color:#7C3AED;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+    <!-- 2행: 채팅방(모임/미팅) 제목 ...... 내 익명 프로필 배지 -->
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:6px;padding-left:29px">
+      <div style="font-size:17px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0" id="moim-chat-title">모임 채팅</div>
+      <!-- 내 익명 프로필(캐릭터/닉네임) - 바로미팅 채팅에서만 표시, 누르면 닉네임/사진 변경 -->
+      <div id="moim-chat-myprofile" onclick="openBaromeetAnonSetup()" style="display:none;align-items:center;gap:6px;cursor:pointer;flex-shrink:0">
+        <div id="moim-chat-myprofile-name" style="font-size:11px;font-weight:700;color:#7C3AED;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div id="moim-chat-myprofile-avatar" style="width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;border:1.5px solid #e9d5ff;overflow:hidden;flex-shrink:0"></div>
+      </div>
+    </div>
+  </div>
+  <!-- 바로만남 익명채팅 유의사항 - 바로미팅 채팅 진입 시에만 표시 -->
+  <div id="moim-chat-notice" style="display:none;flex-shrink:0;background:#FFF7ED;border-bottom:1px solid #FDE68A;padding:10px 16px;font-size:11px;color:#92400e;line-height:1.6">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div>⚠️ 채팅 상대와의 개인정보 교환·금전 거래·실제 만남은 전적으로 참가자 본인 책임이며, 사기·범죄 등 문제 발생 시 회사(멀티무브)는 법적 책임을 지지 않습니다. 이 채팅방을 이용하면 아래 내용에 동의한 것으로 간주됩니다.</div>
+      <button onclick="document.getElementById('moim-chat-notice').style.display='none'" style="background:none;border:none;color:#92400e;font-size:16px;cursor:pointer;padding:0;flex-shrink:0;line-height:1">×</button>
     </div>
   </div>
   <div id="moim-chat-participants" style="display:none;flex-shrink:0;background:#fafafa;border-bottom:1px solid #f0f0f0;padding:10px 16px;max-height:180px;overflow-y:auto"></div>
@@ -4036,8 +4048,8 @@
 <!-- ── /owner 기능 패널 ── -->
 <div class="toast hidden" id="toast"></div>
 
-<script src="./assets/js/qrcode.min.js?v=453"></script>
-<script src="./assets/js/app.js?v=453"></script>
+<script src="./assets/js/qrcode.min.js?v=454"></script>
+<script src="./assets/js/app.js?v=454"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
