@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '409';
+  const _APP_V = '410';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=409').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=410').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16765,7 +16765,17 @@ async function _loadBarospotList() {
 
 async function setSpotGender(gender) {
   if (!currentUser) return;
-  const { error } = await db.from('workers').update({ gender }).eq('kakao_uid', currentUser.id);
+  // 신규가입자는 아직 workers 행이 없을 수 있음 - update()만 하면 매칭되는 행이 없어
+  // 조용히 0건 처리되고 성별이 저장 안 된 것처럼 보이던 버그 (행이 없으면 새로 생성)
+  const { data: existing } = await db.from('workers').select('id').eq('kakao_uid', currentUser.id).maybeSingle();
+  let error;
+  if (existing) {
+    ({ error } = await db.from('workers').update({ gender }).eq('kakao_uid', currentUser.id));
+  } else {
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
+    ({ error } = await db.from('workers').insert({ kakao_uid: currentUser.id, name, gender }));
+  }
   if (error) { showToast('성별 저장 실패: ' + error.message); return; }
   _spotGender = gender;
   showToast('성별이 저장되었습니다');
