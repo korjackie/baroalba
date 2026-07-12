@@ -112,8 +112,13 @@
       <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input id="search-input" type="text" placeholder="지역, 업종 검색" readonly onfocus="this.blur();openSearchOverlay()">
     </div>
+    <button id="map-filter-toggle-btn" onclick="toggleMapFilterPanel()" style="pointer-events:all;flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 14px;height:40px;background:#fff;border:1.5px solid #eee;border-radius:20px;font-size:13px;font-weight:800;color:#333;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.08)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      필터설정
+    </button>
   </div>
-  <!-- 단일 필터 바 -->
+  <!-- 단일 필터 바 - 화면이 어지럽지 않도록 "필터설정" 버튼을 눌러야만 펼쳐짐 -->
+  <div id="map-filter-panel-collapsible" style="display:none">
   <div class="filter-bar-wrapper">
     <div class="filter-bar">
       <button class="filter-drop-btn" id="flt-cat-btn" onclick="toggleFilterSheet('cat')" style="flex-shrink:0" data-i18n-btn="filter_cat">카테고리 ▾</button>
@@ -207,6 +212,7 @@
     <div class="chip" data-lmain="전문기술" data-lmid="뷰티·케어"   onclick="toggleLessonChip(this,'전문기술','뷰티·케어')">💄 뷰티·케어</div>
     <div class="chip" data-lmain="전문기술" data-lmid="언어·기타"   onclick="toggleLessonChip(this,'전문기술','언어·기타')">🌐 언어·기타</div>
   </div>
+  </div><!-- /#map-filter-panel-collapsible -->
 </div>
 
 <!-- 검색 오버레이 -->

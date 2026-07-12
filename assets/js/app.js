@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '426';
+  const _APP_V = '427';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=426').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=427').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -6575,6 +6575,18 @@ function toggleWorkTypeChip(el, raw) {
   else selectedWorkTypes.add(wt);
   el.classList.toggle('active', selectedWorkTypes.has(wt));
   _syncTypeBtn(); loadJobs();
+}
+
+// 지도/홈 상단 필터바가 항상 펼쳐져 있으면 화면이 복잡해 보인다는 피드백으로
+// "필터설정" 버튼을 눌러야만 기존 필터바(카테고리/근무타입/급구/레슨/전문기술 등)가 보이도록 감쌈.
+// 필터 로직 자체는 그대로 재사용 - 이 패널은 단순히 보이기/숨기기만 담당
+function toggleMapFilterPanel() {
+  const panel = document.getElementById('map-filter-panel-collapsible');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  const btn = document.getElementById('map-filter-toggle-btn');
+  if (btn) btn.style.background = isOpen ? '#fff' : '#f5f5f5';
 }
 
 let _activeFilterSheet = null;
