@@ -4736,22 +4736,18 @@ window._onFCMToken = function(token) {
       });
     }
     if (ci && co) {
-      if (isIOS) {
-        ci.addEventListener('focus', function() { applyKbPad(co); });
-        ci.addEventListener('blur',  function() {
-          setTimeout(function() { if (document.activeElement !== ci) clearKbPad(co); }, 150);
-        });
-      }
+      ci.addEventListener('focus', function() { applyKbPad(co); });
+      ci.addEventListener('blur',  function() {
+        setTimeout(function() { if (document.activeElement !== ci) clearKbPad(co); }, 150);
+      });
     }
     var mi = document.getElementById('moim-chat-input');
     var mo = document.getElementById('panel-moim-chat');
     if (mi && mo) {
-      if (isIOS) {
-        mi.addEventListener('focus', function() { applyKbPad(mo); });
-        mi.addEventListener('blur',  function() {
-          setTimeout(function() { if (document.activeElement !== mi) clearKbPad(mo); }, 150);
-        });
-      }
+      mi.addEventListener('focus', function() { applyKbPad(mo); });
+      mi.addEventListener('blur',  function() {
+        setTimeout(function() { if (document.activeElement !== mi) clearKbPad(mo); }, 150);
+      });
     }
     // 범용 바텀시트(openBottomSheet) 내부는 내용이 동적으로 삽입되므로 위임 방식으로 바인딩
     // (개설요청 등 텍스트 입력 폼이 나중에 추가돼도 항상 커버되도록)
