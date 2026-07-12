@@ -491,8 +491,8 @@
     <div class="filter-bar">
       <button class="filter-btn active" onclick="filterCommunityMgmt('all', this)">전체</button>
       <button class="filter-btn" onclick="filterCommunityMgmt('free', this)">자유</button>
-      <button class="filter-btn" onclick="filterCommunityMgmt('review', this)">알바후기</button>
-      <button class="filter-btn" onclick="filterCommunityMgmt('meetup', this)">모임/만남후기</button>
+      <button class="filter-btn" onclick="filterCommunityMgmt('review', this)">알바</button>
+      <button class="filter-btn" onclick="filterCommunityMgmt('meetup', this)">모임/만남</button>
       <button class="filter-btn" onclick="filterCommunityMgmt('info', this)">정보공유</button>
     </div>
     <div id="community-mgmt-list" style="padding-bottom:40px"><div class="loading">로딩 중...</div></div>
@@ -1757,7 +1757,7 @@ async function reviewWorkplaceVerify(workerId, status) {
 }
 
 // ── 커뮤니티 게시판 관리 ──────────────────────────────────
-const COMM_CAT_LABEL = { review:'알바후기', meetup:'모임/만남후기', info:'정보공유', free:'자유', owner:'업주전용', worker:'알바생전용' };
+const COMM_CAT_LABEL = { review:'알바', meetup:'모임/만남', info:'정보공유', free:'자유', owner:'업주전용', worker:'알바생전용' };
 let _commMgmtFilter = 'all';
 function filterCommunityMgmt(cat, btn) {
   _commMgmtFilter = cat;
