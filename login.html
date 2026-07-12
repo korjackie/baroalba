@@ -350,10 +350,10 @@
 
 <!-- ── 스플래시 ── -->
 <div id="splash">
-  <div class="splash-tagline">실시간 알바매칭 서비스</div>
+  <div class="splash-tagline">실시간 알바·모임·만남 매칭 서비스</div>
   <div class="splash-logo"><img src="./icons/바로알바 최종로고.png" alt="바로알바"></div>
   <div class="splash-name">바로알바</div>
-  <div class="splash-sub">지금 이 순간, 내 주변 알바</div>
+  <div class="splash-sub">지금 이 순간, 내 주변 사람과 기회</div>
   <div id="splash-slogan" class="splash-slogan"></div>
   <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
 </div>
@@ -363,7 +363,7 @@
   <div class="hero">
     <div class="hero-icon"><img src="./icons/바로알바 최종로고.png" style="width:72px;height:72px;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,0.2)"></div>
     <div class="hero-name">바로알바</div>
-    <div class="hero-sub">지금 당장 사람 구할 때도,<br>지금 당장 돈 벌고 싶을 때도</div>
+    <div class="hero-sub">지금 당장 사람 구할 때도,<br>지금 당장 돈 벌고 싶을 때도,<br>지금 당장 사람이 그리울 때도</div>
 
     <!-- 서비스 카테고리 뱃지 -->
     <div style="display:flex;gap:7px;margin-top:14px;width:100%;justify-content:center;flex-wrap:wrap;">
@@ -373,6 +373,8 @@
       <span style="background:rgba(255,255,255,0.93);color:#16a34a;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🛵 퀵배달</span>
       <span style="background:rgba(255,255,255,0.93);color:#0891b2;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🏃 심부름</span>
       <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🎾 레슨/과외</span>
+      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🤝 바로모임</span>
+      <span style="background:rgba(255,255,255,0.93);color:#e11d48;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">💕 바로만남</span>
     </div>
 
     <!-- 신뢰 숫자 마케팅 -->
@@ -702,7 +704,7 @@ const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY, {
 function _runSplashTypewriter() {
   const el = document.getElementById('splash-slogan');
   if (!el) return;
-  const lines = ['바로 알바가 필요하고', '바로 돈이 필요할 때'];
+  const lines = ['알바도, 모임도, 만남도', '전부 바로 여기서'];
   let li = 0, ci = 0;
   let html = '';
   el.innerHTML = '<span class="splash-slogan-line"></span><span class="type-cursor">|</span>';

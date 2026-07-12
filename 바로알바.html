@@ -969,7 +969,7 @@
   </button>
   <button class="nav-item nav-fab" onclick="openCreateActionSheet()">
     <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-    <div class="nav-label">바로+</div>
+    <div class="nav-label">바로</div>
   </button>
   <button class="nav-item" onclick="setNav(this, 'chats')">
     <div class="nav-icon" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="chat-unread-badge" style="display:none;position:absolute;top:-5px;right:-6px;min-width:15px;height:15px;background:#C8102E;border-radius:8px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;padding:0 3px;line-height:15px;text-align:center">0</span></div>
@@ -4270,9 +4270,11 @@
 
 <!-- ── 바로만남 패널 ── -->
 <div id="mannnam-panel" style="display:none;position:fixed;inset:0;z-index:510;background:#f8f8f8;flex-direction:column;overflow:hidden">
-  <!-- 헤더 — var(--sat-safe) 사용으로 상태표시줄 가림 방지 (다른 패널과 동일 변수로 통일) -->
+  <!-- 상태표시줄 영역 전용 색상 띠 - 흰 배경 위에서는 상태표시줄 아이콘(밝은색)이 안 보이는 문제가 있어
+       채팅 안전영역과 동일하게 브랜드색 띠를 따로 둠 -->
+  <div style="height:var(--sat-safe,0px);background:#e11d48;flex-shrink:0"></div>
   <div style="background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
-    <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--sat-safe,0px) + 14px) 16px 14px">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
       <button onclick="closeMannnamPanel()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -4417,7 +4419,10 @@
 <!-- 범용 바텀시트 (openBottomSheet(html)로 동적 내용 삽입 - 바로스팟 이용권 구매 등) -->
 <div id="generic-bottom-sheet-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:8500" onclick="if(event.target===this)closeBottomSheet()">
   <div id="generic-bottom-sheet-panel" style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0px)">
-    <div id="generic-bottom-sheet-handle" style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 4px"></div>
+    <div id="generic-bottom-sheet-handle" style="padding:14px 0 12px;display:flex;justify-content:center;cursor:grab">
+      <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px"></div>
+    </div>
+    <button onclick="closeBottomSheet()" style="position:absolute;top:10px;right:14px;width:30px;height:30px;border-radius:50%;background:#f5f5f5;border:none;color:#999;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1">✕</button>
     <div id="generic-bottom-sheet-body"></div>
   </div>
 </div>

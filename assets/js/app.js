@@ -163,7 +163,7 @@ function openGatheringRequestSheet() {
     <div style="display:flex;flex-direction:column;gap:8px;padding:12px 20px 20px">
       <select id="greq-type" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;background:#fff">
         <option value="moim">🍻 바로모임</option>
-        <option value="baromeeting">💕 바로미팅/바로만남</option>
+        <option value="baromeeting">💕 바로만남 (바로미팅·바로스팟)</option>
       </select>
       <input id="greq-region" type="text" placeholder="희망 지역 (예: 판교, 강남역)" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none">
       <textarea id="greq-desc" placeholder="어떤 모임/미팅을 원하시는지 자유롭게 적어주세요" rows="3" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;font-family:inherit"></textarea>
@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '428';
+  const _APP_V = '429';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=428').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=429').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
