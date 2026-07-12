@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='418',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='419',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -2742,7 +2742,7 @@
 </div>
 
 <!-- ④ 바로모임 단체채팅 패널 -->
-<div class="full-panel" id="panel-moim-chat" style="z-index:400;top:0;background:#fff">
+<div class="full-panel" id="panel-moim-chat" style="z-index:500;top:0;bottom:0;background:#fff;overflow:hidden">
   <div id="moim-chat-safearea" style="height:var(--sat-safe);background:#7C3AED;flex-shrink:0"></div>
   <div id="moim-chat-header" style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#F5F3FF">
     <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
@@ -2860,7 +2860,7 @@
 <!-- 채팅 (전체화면) -->
 <div id="wchat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:#fff;flex-direction:column">
   <div style="height:var(--sat-safe);background:#C8102E;flex-shrink:0"></div>
-  <div id="wchat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="wchat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f5d9d9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#FFF5F5">
     <div style="display:flex;align-items:center;gap:12px;cursor:pointer;flex:1;min-width:0" onclick="_showCounterpartProfile('wchat')">
       <div id="wchat-cp-avatar" style="flex-shrink:0"></div>
       <div style="min-width:0">
@@ -2926,7 +2926,7 @@
 <!-- 업주 채팅 (전체화면) -->
 <div id="chat-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:600;background:#fff;flex-direction:column">
   <div style="height:var(--sat-safe);background:#C8102E;flex-shrink:0"></div>
-  <div id="chat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff">
+  <div id="chat-header" style="padding-top:14px;padding-left:20px;padding-right:20px;padding-bottom:12px;border-bottom:1px solid #f5d9d9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#FFF5F5">
     <div style="display:flex;align-items:center;gap:12px;cursor:pointer;flex:1;min-width:0" onclick="_showCounterpartProfile('chat')">
       <div id="chat-cp-avatar" style="flex-shrink:0"></div>
       <div style="min-width:0">

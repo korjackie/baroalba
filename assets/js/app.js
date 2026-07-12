@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '418';
+  const _APP_V = '419';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=418').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=419').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -5593,8 +5593,12 @@ function _renderChatList() {
       ? `<img src="${a.photoUrl}" style="width:${sz}px;height:${sz}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #f0f0f0" onerror="this.outerHTML='<div style=\\'width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0\\'>${a.counterpartName.charAt(0)}</div>'">`
       : `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>`;
     const preview = msg.content?.startsWith('[img]') ? '📷 사진' : (isMine ? `나: ${msg.content}` : msg.content);
+    // 카드 배경을 종류별로 옅게 tint - 바로알바(빨강)/바로모임(보라)/바로미팅(로즈) 구분
+    const rowBg = isGathering
+      ? (a.gatheringCategory === 'baromeeting' ? '#fff1f2' : '#f5f3ff')
+      : '#fef6f6';
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
-      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':'#fff'};border-left:3.5px solid ${unread>0?'var(--red)':'transparent'}">
+      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':rowBg};border-left:3.5px solid ${unread>0?'var(--red)':'transparent'}">
         <div style="position:relative;flex-shrink:0">
           ${avatarHtml}
           ${unread>0?`<div style="position:absolute;bottom:0;right:0;width:12px;height:12px;background:var(--red);border-radius:50%;border:2px solid #fff"></div>`:''}
