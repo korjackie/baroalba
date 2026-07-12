@@ -28,6 +28,34 @@ function sb(path, svcKey, opts = {}) {
   });
 }
 
+// 바로미팅 인원/장소 수정 시 확정 참가자 전원에게 인앱 알림 + 푸시 발송
+async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) {
+  const appsRes = await sb(`gathering_applications?gathering_id=eq.${gatheringId}&status=eq.approved&select=applicant_id`, svcKey);
+  const apps = await appsRes.json();
+  const applicantIds = [...new Set((apps || []).map(a => a.applicant_id).filter(Boolean))];
+  if (!applicantIds.length) return;
+
+  const title = '🤝 바로미팅 정보 변경 안내';
+  const body = `"${meetingTitle}" 미팅의 인원/장소 정보가 변경되었어요. 확인해주세요!`;
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const baseUrl = host ? `https://${host}` : '';
+
+  await Promise.allSettled(applicantIds.map(async userId => {
+    await sb('notifications', svcKey, {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ user_id: userId, title, body, type: 'baromeeting_update' }),
+    });
+    if (baseUrl) {
+      await fetch(`${baseUrl}/api/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, title, body, url: '/바로알바.html', type: 'baromeeting_update' }),
+      });
+    }
+  }));
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
@@ -274,6 +302,15 @@ module.exports = async function handler(req, res) {
         baromeeting_male_max: parseInt(male_max) || 4,
         baromeeting_female_max: parseInt(female_max) || 4,
       };
+
+      // 수정인 경우 인원/장소가 실제로 바뀌었는지 미리 확인 (신청자 알림 발송 여부 판단용)
+      let prev = null;
+      if (id) {
+        const prevRes = await sb(`gatherings?id=eq.${id}&select=location_name,location_address,baromeeting_male_max,baromeeting_female_max`, svcKey);
+        const prevRows = await prevRes.json();
+        prev = prevRows?.[0] || null;
+      }
+
       let r;
       if (id) {
         r = await sb(`gatherings?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify(payload) });
@@ -288,6 +325,17 @@ module.exports = async function handler(req, res) {
         r = await sb('gatherings', svcKey, { method: 'POST', body: JSON.stringify(payload) });
       }
       if (!r.ok) return res.status(502).json({ error: await r.text() });
+
+      // 인원/장소가 바뀐 수정이면 확정 참가자 전원에게 알림 발송 (실패해도 저장 자체는 성공 처리)
+      if (id && prev && (
+        prev.location_name !== payload.location_name ||
+        prev.location_address !== payload.location_address ||
+        prev.baromeeting_male_max !== payload.baromeeting_male_max ||
+        prev.baromeeting_female_max !== payload.baromeeting_female_max
+      )) {
+        notifyBaromeetApplicants(id, payload.title, svcKey, req).catch(e => console.error('[save_baromeeting] 알림 발송 실패:', e));
+      }
+
       return res.json({ ok: true });
     }
 
