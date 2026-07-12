@@ -591,8 +591,25 @@ if (empEl) {
 □ _APP_V 버전 숫자 올렸는가?
 □ sw.js CACHE 버전 올렸는가?
 □ sw.js?v= 쿼리도 맞게 올렸는가?
+□ (2026-07-13 추가, 제일 중요) 바로알바.html의 <script src="./assets/js/app.js?v=">,
+  <script src="./shared-lang.js?v=">, <link href="./assets/css/style.css?v="> 쿼리도
+  전부 같은 번호로 올렸는가?
 □ 새 기능의 JS 함수가 HTML에서 호출되는 함수와 이름이 일치하는가?
 ```
+
+**교훈 3 (2026-07-13, 진짜 최종 원인)**: 앞의 두 버전드리프트 버그(index.html 냉동사본,
+head V='421' 하드코딩)를 다 고쳤는데도 FAB 라벨이 계속 안 바뀐다는 신고가 이어졌다.
+알고 보니 `<script src="./assets/js/app.js">`, `<script src="./shared-lang.js">`,
+`<link href="./assets/css/style.css">` 세 태그에 **쿼리 버전이 아예 없었다.** sw.js는
+문서(html)는 항상 network-first(no-store)로 가져오지만, JS/CSS 같은 일반 리소스는
+**cache-first**로 서빙한다(fetch handler 참고). 즉 새 HTML은 매번 fresh하게 받아와도,
+그 안의 `<script src="app.js">`(쿼리 없음)는 예전에 캐시된 그대로 서빙되고,
+그 예전 app.js 안의 캐시-초기화 로직 자체가 구버전이라 새 서비스워커 등록도 못 하는
+**자기 자신을 가둔 순환 고착** 상태였다. 캐시를 아무리 지워도, 그 지우는 코드 자체가
+캐시된 옛날 코드라 실행이 안 되는 구조. 이제 이 세 태그에도 `_APP_V`와 같은 번호로
+`?v=` 쿼리를 붙여서, 배포할 때마다 완전히 다른 URL이 되어 캐시가 원천적으로 안 걸리게 함.
+**이 세 줄에 버전 쿼리가 있는지는 앞으로 "왜 배포가 반영 안 되냐"는 보고를 받을 때마다
+가장 먼저 확인할 것.**
 
 ### 13-6. Android 리빌드 필요 여부
 
