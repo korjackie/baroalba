@@ -277,7 +277,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '400';
+  const _APP_V = '401';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -290,7 +290,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=400').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=401').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -1334,6 +1334,7 @@ async function loadMoimList(cat = '') {
       .select('*')
       .eq('is_public', true)
       .eq('status', 'open')
+      .neq('category', 'baromeeting') // 바로미팅은 바로만남 진입점 전용 - 바로모임 리스트에는 안 섞이게
       .or(`gathering_date.is.null,gathering_date.gte.${_moimNow}`)
       .order('created_at', { ascending: false });
     if (cat) q = q.eq('category', cat);
