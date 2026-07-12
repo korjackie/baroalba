@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '432';
+  const _APP_V = '433';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=432').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=433').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -1364,7 +1364,20 @@ function closeMoimCreate() {
   const _ownerPanelEl2 = document.getElementById('panel-owner');
   if (_mcFab2 && _ownerPanelEl2 && _ownerPanelEl2.style.display !== 'none') _mcFab2.style.display = 'flex';
 }
+// 바로미팅 단체채팅은 "나가기 = 참가 취소"라는 게 직관적이지 않을 수 있어
+// 나가기 전에 명확히 물어보고, 확인한 경우에만 신청을 취소하며 나감
 function closeMoimChat() {
+  if (_baromeetChatId) {
+    const meetingId = _baromeetChatId;
+    showConfirm('채팅방에서 나가면 바로미팅 참가 신청이 취소돼요.\n정말 나가시겠어요?', async () => {
+      await _cancelBaromeetApplication(meetingId);
+      _actuallyCloseMoimChat();
+    });
+    return;
+  }
+  _actuallyCloseMoimChat();
+}
+function _actuallyCloseMoimChat() {
   const _mc = document.getElementById('panel-moim-chat');
   _mc.classList.remove('show');
   _mc.style.bottom = '';
@@ -1381,6 +1394,25 @@ function closeMoimChat() {
   const _mcFab = document.getElementById('posting-fab');
   const _ownerPanelEl = document.getElementById('panel-owner');
   if (_mcFab && _ownerPanelEl && _ownerPanelEl.style.display !== 'none') _mcFab.style.display = 'flex';
+}
+
+async function _cancelBaromeetApplication(meetingId) {
+  if (!currentUser) return;
+  const { data: app } = await db.from('gathering_applications')
+    .select('id, status').eq('gathering_id', meetingId).eq('applicant_id', currentUser.id).maybeSingle();
+  if (!app) return;
+  const wasHoldingSeat = app.status === 'approved' || app.status === 'pending';
+  await db.from('gathering_applications').update({ status: 'cancelled' }).eq('id', app.id);
+  if (wasHoldingSeat) {
+    const { data: wRow } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
+    const col = wRow?.gender === 'male' ? 'baromeeting_male_cur' : wRow?.gender === 'female' ? 'baromeeting_female_cur' : null;
+    if (col) {
+      const { data: g } = await db.from('gatherings').select(col).eq('id', meetingId).single();
+      const cur = g?.[col] || 0;
+      await db.from('gatherings').update({ [col]: Math.max(0, cur - 1) }).eq('id', meetingId);
+    }
+  }
+  showToast('참가 신청이 취소됐어요');
 }
 
 // ── 모임 목록 로드 ────────────────────────────────────────

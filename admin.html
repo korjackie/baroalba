@@ -1761,7 +1761,7 @@ async function renderBmApplicantsList() {
   if (data?.error) { list.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">불러오기 실패: ${data.error}</div>`; return; }
   const apps = Array.isArray(data) ? data : [];
   if (!apps.length) { list.innerHTML = '<div style="padding:12px;font-size:12px;color:#94a3b8">아직 신청자가 없어요</div>'; return; }
-  const statusLabel = { pending:'승인 대기중', approved:'확정', rejected:'거절됨' };
+  const statusLabel = { pending:'승인 대기중', approved:'확정', rejected:'거절됨', cancelled:'참가자 취소' };
   list.innerHTML = apps.map(a => {
     const w = a.worker;
     const genderLabel = w?.gender === 'female' ? '여성' : w?.gender === 'male' ? '남성' : '-';
@@ -1794,7 +1794,7 @@ async function openBmDetail(id) {
   const isClosed = m.status !== 'open';
   const maleMax = m.baromeeting_male_max ?? 4, femaleMax = m.baromeeting_female_max ?? 4;
   const maleCur = m.baromeeting_male_cur ?? 0, femaleCur = m.baromeeting_female_cur ?? 0;
-  const statusLabel = { pending:'승인 대기중', approved:'확정', rejected:'거절됨' };
+  const statusLabel = { pending:'승인 대기중', approved:'확정', rejected:'거절됨', cancelled:'참가자 취소' };
 
   const data = await adminApi('baromeeting_applicants', 'GET', null, { gathering_id: id });
   const apps = Array.isArray(data) ? data : [];
