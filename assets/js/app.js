@@ -349,7 +349,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '439';
+  const _APP_V = '440';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -365,7 +365,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=439').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=440').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -2152,6 +2152,11 @@ async function openMoimChat(gatheringId, title) {
   document.getElementById('moim-chat-members-text').textContent = `${dStr2}참가자 ${memberCount}명`;
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';
+  // 나가기 링크/내 프로필 배지는 바로미팅 익명채팅 전용 - 일반 모임 채팅에서는 숨김
+  const _mcLeave = document.getElementById('moim-chat-leave-link');
+  if (_mcLeave) _mcLeave.style.display = 'none';
+  const _mcProfile = document.getElementById('moim-chat-myprofile');
+  if (_mcProfile) _mcProfile.style.display = 'none';
 
   // 기존 메시지 로드 (sender_name은 insert 시 denormalize된 값)
   const { data: msgs } = await db.from('gathering_chats').select('*').eq('gathering_id', gatheringId).order('sent_at').limit(100);
@@ -11013,7 +11018,7 @@ function openPostingDetail(jobId) {
 
   document.getElementById('pd-body').innerHTML = `
     <div style="padding:0 20px 20px">
-      ${!isOpen ? `<button onclick="toggleStatus('${p.id}','${p.status}')" style="width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">공고 재오픈</button>` : ''}
+      ${!isOpen ? `<button onclick="reopenWithEdit('${p.id}')" style="width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">공고 재오픈 (내용 수정)</button>` : ''}
       <!-- 상태/유형 -->
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;padding-top:4px">
         <span style="font-size:12px;font-weight:800;color:${statusColor};background:${statusColor}18;padding:4px 12px;border-radius:20px">${statusLabel}</span>
@@ -11106,13 +11111,12 @@ function openPostingDetail(jobId) {
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
           <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#fff;color:#333;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>수정</button>
-          <button onclick="toggleStatus('${p.id}','${p.status}')" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
+          <button onclick="${isOpen ? `toggleStatus('${p.id}','${p.status}')` : `reopenWithEdit('${p.id}')`}" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
         </div>
         <div style="display:flex;gap:8px">
           ${p.status === 'open' ? `<button onclick="setPostingUrgent('${p.id}',true)" style="flex:1;padding:10px;background:#FFF0F0;color:#C8102E;border:1.5px solid #FECACA;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">🔥 급구 설정</button>` : ''}
           ${p.status === 'urgent' ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚡ 서지(시급↑)</button>` : ''}
           <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#FEE500;color:#3C1E1E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>공유</button>
-          <button onclick="copyPosting('${p.id}')" style="flex:1;padding:10px;background:#F0F9FF;color:#0284C7;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>복사</button>
         </div>
         ${p.status === 'urgent' ? `<button onclick="setPostingUrgent('${p.id}',false)" style="background:none;border:none;color:#aaa;font-size:12px;padding:4px;cursor:pointer;width:100%;text-align:center;font-weight:600">급구 해제 → 일반 모집으로 전환</button>` : ''}
         <button onclick="deletePosting('${p.id}')" style="background:none;border:none;color:#EF4444;font-size:13px;padding:6px;cursor:pointer;width:100%;text-align:center;font-weight:600">공고 삭제</button>
@@ -13963,6 +13967,56 @@ function copyPosting(jobId) {
   document.getElementById('form-overlay').classList.add('open');
   const _fab = document.getElementById('posting-fab');
   if (_fab) _fab.style.display = 'none';
+}
+
+// ── 마감된 공고 재오픈 (날짜/상세정보 수정 후 재오픈) ──────────
+// copyPosting()과 거의 동일하되, 새 공고를 만드는 게 아니라 같은 공고를 수정하는 것이라
+// editingId를 채워서 편집모드로 열고, 주소는 지우지 않고 그대로 보여줌.
+// submitPosting()은 서지업 아닐 때 항상 status:'open'으로 저장하므로 저장하면 자동 재오픈됨.
+function reopenWithEdit(jobId) {
+  const p = postings.find(x => x.id === jobId);
+  if (!p) return;
+  editingId = jobId;
+  document.getElementById('editing-id').value = jobId;
+  document.getElementById('form-title').textContent = '공고 재오픈 (내용 수정)';
+  document.getElementById('submit-btn').textContent = '수정하고 재오픈';
+  document.getElementById('f-title').value = p.title;
+  document.getElementById('f-category').value = p.category;
+  document.getElementById('f-wage').value = p.base_wage;
+  document.getElementById('f-needed').value = p.needed_count;
+  document.getElementById('f-desc').value = p.description || '';
+  document.getElementById('f-lat').value = p.lat;
+  document.getElementById('f-lng').value = p.lng;
+  document.getElementById('f-address').value = p.address || '';
+  if (p.start_time) {
+    const s = new Date(p.start_time);
+    setTimeSelects('start', s);
+    const endMs = p.end_time ? new Date(p.end_time) : new Date(s.getTime() + (p.duration_hours || 4) * 3600000);
+    setTimeSelects('end', endMs);
+  }
+  if (p.lat && p.lng) showMiniMap(p.lat, p.lng, p.address || '');
+  surgeOn = false;
+  document.getElementById('f-surge-enabled').value = 'false';
+  document.getElementById('surge-toggle').style.background = '#ddd';
+  document.getElementById('surge-knob').style.left = '2px';
+  document.getElementById('surge-settings').style.display = 'none';
+  document.getElementById('surge-preview').textContent = '';
+  setSameDay(p.same_day_payment || false);
+  setAgeLimit(p.age_limit || false);
+  setJobLangs(p.preferred_languages || []);
+  const _rb3 = p.return_bonus || 0;
+  setReturnBonusOn(_rb3 > 0);
+  if (_rb3 > 0) setReturnBonus(_rb3);
+  const jobType = p.work_type === 'errand' ? 'errand' : 'alba';
+  setJobType(jobType);
+  if (p.work_type && p.work_type !== 'errand') setWorkType(p.work_type);
+  document.getElementById('location-result').style.display = 'none';
+  document.getElementById('naver-url-status').style.display = 'none';
+  document.getElementById('f-naver-url-input').value = '';
+  renderMyPlacesQuick();
+  document.getElementById('form-overlay').classList.add('open');
+  const _fab2 = document.getElementById('posting-fab');
+  if (_fab2) _fab2.style.display = 'none';
 }
 
 function updateSurgePreview() {
@@ -17427,8 +17481,26 @@ async function saveBaromeetAnonProfile() {
     _baromeetAnonLabel = nick;
     _baromeetShowPhoto = !!avatarUrl;
     _baromeetPhotoUrl = avatarUrl;
-    const memberEl = document.getElementById('moim-chat-members-text');
-    if (memberEl) memberEl.textContent = `나는 "${_baromeetAnonLabel}"으로 표시돼요`;
+    _updateBaromeetMyProfileBadge();
+  }
+}
+
+// 헤더 우측 상단의 "내 익명 프로필" 배지(캐릭터/사진 + 닉네임) 갱신
+function _updateBaromeetMyProfileBadge() {
+  const badge = document.getElementById('moim-chat-myprofile');
+  const avatarEl = document.getElementById('moim-chat-myprofile-avatar');
+  const nameEl = document.getElementById('moim-chat-myprofile-name');
+  if (!badge || !avatarEl || !nameEl) return;
+  badge.style.display = 'flex';
+  nameEl.textContent = _baromeetAnonLabel || '';
+  if (_baromeetPhotoUrl && _baromeetPhotoUrl.startsWith('emoji:')) {
+    avatarEl.innerHTML = '';
+    avatarEl.textContent = _baromeetPhotoUrl.slice(6);
+  } else if (_baromeetPhotoUrl) {
+    avatarEl.innerHTML = `<img src="${_baromeetPhotoUrl}" style="width:100%;height:100%;object-fit:cover">`;
+  } else {
+    avatarEl.innerHTML = '';
+    avatarEl.textContent = '👤';
   }
 }
 
@@ -17459,16 +17531,10 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   // 바로 보이는데, 익명 바로미팅 채팅만 이 줄이 다른 용도로 바뀌어 있었음)
   const { count: _bcCount } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
   if (memberEl) memberEl.textContent = `👥 ${(_bcCount || 0) + 1}명`;
-  // 텍스트 링크 나열 대신 알약(pill) 버튼으로 - "나는 OO · 변경 · 나가기"가 밑줄친 글자로만
-  // 나열돼있던 게 예스럽다는 피드백 반영
-  const idEl = document.getElementById('moim-chat-identity');
-  if (idEl) {
-    idEl.style.display = 'flex';
-    idEl.innerHTML = `
-      <span onclick="event.stopPropagation();openBaromeetAnonSetup()" style="background:#fff;border:1px solid #e9d5ff;color:#7C3AED;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px;cursor:pointer;white-space:nowrap">${_baromeetAnonLabel} 🖊️</span>
-      <span onclick="event.stopPropagation();leaveBaromeetChat()" style="background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px;cursor:pointer;white-space:nowrap">나가기</span>
-    `;
-  }
+  // 참가자수 옆 "나가기"는 작은 텍스트링크로, 내 프로필(캐릭터+닉네임)은 헤더 우측 상단 배지로 분리
+  const leaveLink = document.getElementById('moim-chat-leave-link');
+  if (leaveLink) leaveLink.style.display = 'inline';
+  _updateBaromeetMyProfileBadge();
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';
 

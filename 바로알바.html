@@ -2806,14 +2806,19 @@
         <div style="font-size:16px;font-weight:800;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="moim-chat-title">모임 채팅</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
           <div style="font-size:11px;color:#7C3AED;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px" id="moim-chat-members" onclick="toggleMoimChatParticipants()"><span id="moim-chat-members-text">참가자 -명</span> <span id="moim-chat-members-arrow">▾</span></div>
-          <div id="moim-chat-identity" style="display:none;align-items:center;gap:4px"></div>
+          <span id="moim-chat-leave-link" onclick="event.stopPropagation();leaveBaromeetChat()" style="display:none;font-size:11px;font-weight:700;color:#dc2626;cursor:pointer">· 나가기</span>
         </div>
       </div>
+    </div>
+    <!-- 내 익명 프로필(캐릭터/닉네임) - 바로미팅 채팅에서만 표시, 누르면 닉네임/사진 변경 -->
+    <div id="moim-chat-myprofile" onclick="openBaromeetAnonSetup()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex-shrink:0;margin-left:8px">
+      <div id="moim-chat-myprofile-avatar" style="width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;border:1.5px solid #e9d5ff;overflow:hidden"></div>
+      <div id="moim-chat-myprofile-name" style="font-size:9.5px;font-weight:700;color:#7C3AED;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
     </div>
   </div>
   <div id="moim-chat-participants" style="display:none;flex-shrink:0;background:#fafafa;border-bottom:1px solid #f0f0f0;padding:10px 16px;max-height:180px;overflow-y:auto"></div>
   <div id="moim-chat-scroll" style="flex:1;min-height:0;overflow-y:auto">
-    <div id="moim-chat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
+    <div id="moim-chat-messages" style="padding:16px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;min-height:100%"></div>
   </div>
   <div id="moim-chat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0">
     <!-- 미디어 패널 (1:1 채팅과 동일) -->
@@ -2928,7 +2933,7 @@
     <button onclick="closeWChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;margin-left:8px">✕</button>
   </div>
   <div id="wchat-scroll" style="flex:1;min-height:0;overflow-y:auto">
-    <div id="wchat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
+    <div id="wchat-messages" style="padding:16px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;min-height:100%"></div>
   </div>
   <div id="wchat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0">
     <!-- 미디어 패널 (카카오톡 스타일) -->
@@ -2994,7 +2999,7 @@
     <button onclick="closeChat()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;margin-left:8px">✕</button>
   </div>
   <div id="chat-scroll" style="flex:1;min-height:0;overflow-y:auto">
-    <div id="chat-messages" style="padding:16px;display:flex;flex-direction:column;gap:10px;min-height:100%"></div>
+    <div id="chat-messages" style="padding:16px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;min-height:100%"></div>
   </div>
   <div id="chat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0">
     <div id="chat-media-panel" style="display:none;padding:14px 20px 12px;border-bottom:1px solid #f5f5f5">
