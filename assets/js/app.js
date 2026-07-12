@@ -284,7 +284,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '403';
+  const _APP_V = '404';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -297,7 +297,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=403').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=404').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2226,8 +2226,8 @@ function loadHomePanel() {
   _renderHomeLessonHot().catch(() => {}); // 레슨/과외 HOT
   // 바로모임 미리보기
   loadMoimList('').catch(() => {});
-  // 바로만남 배너에 진행 중인 바로미팅 티저 표시
-  _loadHomeMannnamTeaser().catch(() => {});
+  // 바로미팅 홈 미리보기 카드 표시
+  _loadHomeBaromeetTeaser().catch(() => {});
 
   // 공고가 없으면 GPS 확보 후 재조회 (홈 진입 시 watchPosition이 중단되므로 getCurrentPosition 사용)
   clearTimeout(_homeJobRetryTimer);
@@ -15060,6 +15060,7 @@ function applyPlaceToForm(placeId) {
   const shortAddr = p.address ? p.address.split(' ').slice(0,3).join(' ') : '';
   document.getElementById('location-result').textContent = '\u{1F4CD} ' + p.name + (shortAddr ? ' · ' + shortAddr : '');
   document.getElementById('location-result').style.display = 'block';
+  renderMyPlacesQuick(); // 선택 상태(✓ 선택됨 하이라이트)를 즉시 갱신 - 이게 빠져서 클릭해도 리스트 표시가 안 바뀌던 버그
   showToast(`\u{1F4CD} ${p.name} 선택됨`);
 }
 
@@ -16237,21 +16238,30 @@ function closeTrackingSheet() {
   if (_trackTimer) { clearInterval(_trackTimer); _trackTimer = null; }
 }
 
-// 홈화면 바로만남 배너에 진행 중인 바로미팅 티저 노출 (바로모임 리스트에서 빠진 만큼 홈 노출 보강)
-async function _loadHomeMannnamTeaser() {
-  const el = document.getElementById('home-mannam-teaser');
-  if (!el) return;
+// 홈화면 바로미팅 미리보기 카드 (바로모임 카드와 동일한 형태 - 바로모임 리스트에서 빠진 만큼 홈 노출 보강)
+async function _loadHomeBaromeetTeaser() {
+  const section = document.getElementById('home-baromeet-section');
+  const list = document.getElementById('home-baromeet-list');
+  if (!section || !list) return;
   const { data } = await db.from('gatherings')
-    .select('title,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
+    .select('id,title,gathering_date,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
     .eq('status', 'open').eq('category', 'baromeeting')
-    .order('created_at', { ascending: false }).limit(1);
-  const m = data?.[0];
-  if (!m) { el.style.display = 'none'; return; }
+    .order('created_at', { ascending: false }).limit(6);
+  if (!data?.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = data.map(m => _baromeetHomeCard(m)).join('');
+}
+function _baromeetHomeCard(m) {
   const maleLeft = (m.baromeeting_male_max || 4) - (m.baromeeting_male_cur || 0);
   const femaleLeft = (m.baromeeting_female_max || 4) - (m.baromeeting_female_cur || 0);
   const isFull = maleLeft <= 0 && femaleLeft <= 0;
-  el.textContent = `🤝 ${m.title || '바로미팅'} · ${isFull ? '마감' : '자리있음'}`;
-  el.style.display = 'block';
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+  return `<div onclick="openMannnamPanel()" style="flex-shrink:0;width:160px;background:#fff;border:1px solid #f0f0f0;border-radius:12px;padding:14px;cursor:pointer">
+    <div style="font-size:10px;font-weight:800;color:#7C3AED;margin-bottom:4px">BAROMEETING</div>
+    <div style="font-size:13px;font-weight:900;color:#111;line-height:1.3;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${m.title||'바로미팅'}</div>
+    <div style="font-size:10.5px;color:#999;margin-bottom:3px">🕐 ${dateStr}</div>
+    <div style="font-size:10.5px;font-weight:800;color:${isFull?'#bbb':'#7C3AED'}">${isFull?'마감':'자리있음'}</div>
+  </div>`;
 }
 
 let _baromeetListCache = {};
@@ -16371,6 +16381,7 @@ function openBaromeetDetail(id) {
       <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-bottom:4px">📍 ${m.location_name||m.location_address||'장소 확인 후 안내'}</div>
       <div style="font-size:13px;color:#666">🕐 ${dtStr}</div>
     </div>
+    <div id="baromeet-detail-map" style="width:calc(100% - 40px);height:150px;border-radius:12px;overflow:hidden;margin:14px 20px 0;background:#f0f0f0"></div>
     <div style="margin:16px 20px;display:flex;gap:10px;background:#fafafa;border-radius:12px;padding:14px">
       <div style="flex:1;text-align:center">
         <div style="font-size:12px;color:#f43f5e;font-weight:800;margin-bottom:4px">여성 ${femaleCur}/${femaleMax}명</div>
@@ -16390,7 +16401,8 @@ function openBaromeetDetail(id) {
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">1</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가 신청 (이용권 또는 포인트 차감)</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">2</span><span style="font-size:12.5px;color:#555;line-height:1.6">남녀 각 정원이 다 찰 때까지 대기</span></div>
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">3</span><span style="font-size:12.5px;color:#555;line-height:1.6">정원이 차면 자동으로 익명 단체채팅방이 열려요</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">4</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅으로 시간·장소를 맞춰 현장에서 만나요 (식사비는 각자 실비)</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">4</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅으로 시간·장소를 맞춰 만나요</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">5</span><span style="font-size:12.5px;color:#555;line-height:1.6">식사비는 현장 결제가 아니라 <b>${BANK_INFO.bank} ${BANK_INFO.account}</b>(${BANK_INFO.holder})로 입금</span></div>
       </div>
     </div>
     <div style="padding:0 20px 24px">
@@ -16400,10 +16412,29 @@ function openBaromeetDetail(id) {
     </div>
   `;
   overlay.style.display = 'flex';
+  requestAnimationFrame(() => _showBaromeetDetailMap(m.location_name || m.location_address));
 }
 function closeBaromeetDetail() {
   const overlay = document.getElementById('baromeet-detail-overlay');
   if (overlay) overlay.style.display = 'none';
+}
+
+let _baromeetDetailMap = null, _baromeetDetailMarker = null;
+function _showBaromeetDetailMap(query) {
+  const el = document.getElementById('baromeet-detail-map');
+  if (!el || !window.kakao?.maps) return;
+  if (!_baromeetDetailMap) _baromeetDetailMap = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 4 });
+  else _baromeetDetailMap.relayout();
+  if (_baromeetDetailMarker) { _baromeetDetailMarker.setMap(null); _baromeetDetailMarker = null; }
+  if (!query) return;
+  const places = new kakao.maps.services.Places();
+  places.keywordSearch(query, (result, status) => {
+    if (status !== kakao.maps.services.Status.OK || !result.length) return;
+    const r = result[0];
+    const pos = new kakao.maps.LatLng(r.y, r.x);
+    _baromeetDetailMap.setCenter(pos);
+    _baromeetDetailMarker = new kakao.maps.Marker({ position: pos, map: _baromeetDetailMap });
+  });
 }
 
 // ── 바로미팅 공유 (바로모임 shareMoim()과 동일한 패턴) ──────
@@ -16454,7 +16485,7 @@ async function handleBaromeetDeeplink(id) {
 }
 
 // 첫 이용 무료체험 이벤트: 이벤트 기간 내 + 바로미팅 신청 이력이 한 번도 없는 유저는
-// 포인트/이용권 차감 없이 신청, 대신 식사비는 현장에서 실비로 결제
+// 포인트/이용권 차감 없이 신청, 대신 식사비는 멀티무브 계좌로 입금
 // (프로모션 종료 시 enabled만 false로 바꾸면 됨)
 const BAROMEET_TRIAL_EVENT = {
   enabled: true,
@@ -16488,9 +16519,9 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   const gender = wRow?.gender;
   if (!gender) { showToast('바로만남 > 바로스팟에서 성별을 먼저 등록해주세요'); return; }
 
-  // 이벤트 기간 중 첫 이용자는 포인트/이용권 차감 없이 무료 체험 신청 (식사비는 현장 실비 결제)
+  // 이벤트 기간 중 첫 이용자는 포인트/이용권 차감 없이 무료 체험 신청 (식사비만 멀티무브 계좌로 입금)
   if (await _isBaromeetTrialEligible(currentUser.id)) {
-    showConfirm('🎉 신규가입 이벤트로 포인트 차감 없이 무료로 신청할 수 있어요!\n(식사비는 현장에서 실비로 결제해주세요)', async () => {
+    showConfirm(`🎉 첫 이용 무료체험으로 포인트 차감 없이 신청할 수 있어요!\n식사비만 아래 계좌로 입금해주세요.\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`, async () => {
       const ae = await _finalizeBaromeetJoin(meetingId, gender);
       if (ae) { showToast('신청 중 오류가 발생했어요'); return; }
       showToast('✅ 무료 체험 신청 완료! 정원이 차면 익명 단체채팅방이 열려요');

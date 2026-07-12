@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='403',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='404',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -1104,6 +1104,21 @@
         </div>
       </div>
 
+      <!-- ④-1 바로미팅 홈 미리보기 (카드형태, 바로모임과 동일 패턴) -->
+      <div id="home-baromeet-section" style="display:none;padding:7px 12px 0">
+        <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:15px;overflow:hidden">
+          <div onclick="openMannnamPanel()" style="padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #f5f3ff;cursor:pointer">
+            <div style="width:30px;height:30px;background:#7C3AED;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">🤝</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:900;color:#5B21B6">바로미팅</div>
+              <div style="font-size:10px;color:#a78bfa;margin-top:1px">직장인 소셜 만남</div>
+            </div>
+            <button onclick="event.stopPropagation();openMannnamPanel()" style="font-size:12px;color:#7C3AED;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0">전체 ›</button>
+          </div>
+          <div id="home-baromeet-list" style="display:flex;gap:8px;overflow-x:auto;padding:9px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;min-height:44px"></div>
+        </div>
+      </div>
+
       <!-- ⑤ 프리미엄 바로만남 배너 -->
       <div onclick="openMannnamPanel()" style="padding:7px 12px 0;">
         <div class="mannam-banner">
@@ -1112,7 +1127,6 @@
             <div>
               <div class="mb-title">바로만남</div>
               <div class="mb-desc" data-i18n="mannam_desc">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
-              <div id="home-mannam-teaser" style="display:none;font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:4px"></div>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
