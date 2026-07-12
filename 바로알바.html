@@ -44,7 +44,7 @@
   window._headVizTimer=setTimeout(function(){document.documentElement.style.visibility='';},10000);
   // 버전 체크 → 구버전 캐시 리다이렉트
   (function(){
-    var V='413',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
+    var V='414',s=localStorage.getItem('_baroV'),u=new URLSearchParams(location.search).get('_v');
     if(s!==V&&u!==V){localStorage.setItem('_baroV',V);location.replace('/바로알바.html?_v='+V);}
   })();
   </script>
@@ -1462,6 +1462,10 @@
             <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="row_coupon">프로모션 쿠폰 등록 / 이용권 조회</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
+          <div class="mp-row" onclick="openMpSub('gatherings')">
+            <div class="mp-row-left"><span class="mp-row-icon">🤝</span><span>내 모임·미팅 신청 현황</span></div>
+            <div class="mp-row-right"><span id="mp-gatherings-val" style="font-size:13px;color:#7C3AED;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+          </div>
           <div class="mp-row" onclick="showMyRatings()">
             <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span data-i18n="my_rating_label">내 평점</span></div>
             <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
@@ -1620,6 +1624,19 @@
 ════════════════════════════════════════ -->
 
 <!-- 수입 현황 -->
+<div class="mpsub-panel" id="mpsub-gatherings">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('gatherings')">‹</button>
+    <div class="mpsub-ttl">내 모임·미팅 신청 현황</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">📢 공지사항</div>
+    <div id="mp-gathering-notices" style="margin-bottom:20px"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px">불러오는 중...</div></div>
+    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">🤝 신청 현황</div>
+    <div id="mp-gathering-list"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px">불러오는 중...</div></div>
+  </div>
+</div>
+
 <div class="mpsub-panel" id="mpsub-income">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('income')">‹</button>

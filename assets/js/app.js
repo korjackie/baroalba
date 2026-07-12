@@ -292,7 +292,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '413';
+  const _APP_V = '414';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -305,7 +305,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=413').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=414').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -4457,6 +4457,63 @@ function openMpSub(name) {
   if (name === 'income')        loadWorkerIncome();
   if (name === 'foreigner')     loadVisaProfile();
   if (name === 'wage-history')  loadWageHistory();
+  if (name === 'gatherings')    loadMyGatheringActivity();
+}
+
+// 마이페이지 - 내가 신청한 바로모임/바로미팅 현황 + 공지사항 (둘 다 흩어져 있어 한 곳에서 확인 불가하던 문제)
+async function loadMyGatheringActivity() {
+  const noticeEl = document.getElementById('mp-gathering-notices');
+  const listEl = document.getElementById('mp-gathering-list');
+  if (!currentUser) { noticeEl.innerHTML = ''; listEl.innerHTML = '<div style="text-align:center;padding:16px;color:#bbb;font-size:12px">로그인이 필요해요</div>'; return; }
+
+  // 공지사항
+  const { data: notices } = await db.from('notifications')
+    .select('title, body, created_at').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false }).limit(20);
+  if (!notices?.length) {
+    noticeEl.innerHTML = '<div style="text-align:center;padding:12px;color:#bbb;font-size:12px">아직 받은 공지가 없어요</div>';
+  } else {
+    noticeEl.innerHTML = notices.map(n => `
+      <div style="background:#F5F3FF;border-radius:12px;padding:12px 14px;margin-bottom:6px">
+        <div style="font-size:12.5px;font-weight:800;color:#7C3AED;margin-bottom:3px">${n.title || '공지'}</div>
+        <div style="font-size:12px;color:#555;line-height:1.5">${n.body || ''}</div>
+        <div style="font-size:10.5px;color:#bbb;margin-top:4px">${new Date(n.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`).join('');
+  }
+
+  // 신청 현황 (바로모임 + 바로미팅 공통)
+  const { data: apps } = await db.from('gathering_applications')
+    .select('gathering_id, status').eq('applicant_id', currentUser.id);
+  const gatheringIds = [...new Set((apps || []).map(a => a.gathering_id))];
+  const mpVal = document.getElementById('mp-gatherings-val');
+  if (!gatheringIds.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:12px">아직 신청한 모임/미팅이 없어요</div>';
+    if (mpVal) mpVal.textContent = '';
+    return;
+  }
+  if (mpVal) mpVal.textContent = `${gatheringIds.length}건`;
+
+  const { data: gatherings } = await db.from('gatherings')
+    .select('id, title, category, gathering_date, status').in('id', gatheringIds);
+  const gMap = Object.fromEntries((gatherings || []).map(g => [g.id, g]));
+  const statusLabel = { pending: '대기', approved: '확정', rejected: '거절' };
+  listEl.innerHTML = apps.map(a => {
+    const g = gMap[a.gathering_id];
+    if (!g) return '';
+    const catLabel = g.category === 'baromeeting' ? '🤝 바로미팅' : '👥 바로모임';
+    const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+    const openFn = g.category === 'baromeeting' ? `openBaromeetChat('${g.id}','${(g.title||'').replace(/'/g,"\\'")}')` : `openMoimDetail('${g.id}')`;
+    return `<div onclick="${openFn}" style="background:#fff;border:1px solid #f0f0f0;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="min-width:0">
+          <div style="font-size:10.5px;font-weight:800;color:#7C3AED;margin-bottom:2px">${catLabel}</div>
+          <div style="font-size:13px;font-weight:800;color:#111">${g.title || '제목 없음'}</div>
+          <div style="font-size:11px;color:#999;margin-top:2px">${dateStr}</div>
+        </div>
+        <span style="flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;background:${a.status==='approved'?'#dcfce7':a.status==='rejected'?'#fee2e2':'#f1f5f9'};color:${a.status==='approved'?'#16a34a':a.status==='rejected'?'#dc2626':'#64748b'}">${statusLabel[a.status]||a.status}</span>
+      </div>
+    </div>`;
+  }).join('') || '<div style="text-align:center;padding:24px;color:#bbb;font-size:12px">아직 신청한 모임/미팅이 없어요</div>';
 }
 function closeMpSub(name) {
   const el = document.getElementById('mpsub-' + name);
