@@ -1374,8 +1374,8 @@ function closeMoimCreate() {
 // 참가 취소는 아래 leaveBaromeetChat()처럼 명시적으로 "나가기"를 눌렀을 때만 실행
 function closeMoimChat() {
   const _mc = document.getElementById('panel-moim-chat');
-  _mc.classList.remove('show');
-  _mc.style.bottom = '';
+  _mc.style.display = 'none';
+  _mc.style.paddingBottom = '';
   if (_moimRealtimeCh) { db.removeChannel(_moimRealtimeCh); _moimRealtimeCh = null; }
   if (_baromeetRealtimeCh) { db.removeChannel(_baromeetRealtimeCh); _baromeetRealtimeCh = null; }
   const _mcInput = document.getElementById('moim-chat-input');
@@ -2125,7 +2125,7 @@ async function handleMoimDeeplink(codeOrId) {
 
 // ── 단체 채팅 ────────────────────────────────────────────
 async function openMoimChat(gatheringId, title) {
-  document.getElementById('panel-moim-chat').classList.add('show');
+  document.getElementById('panel-moim-chat').style.display = 'flex';
   // 바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 안전영역 얇은 띠만으로는 눈에 잘 안 띄어서
   // 헤더 배경 전체를 옅은 색으로 tint (바로알바 1:1 채팅은 기존 화이트 그대로 유지)
   const _mcSafearea = document.getElementById('moim-chat-safearea');
@@ -17515,7 +17515,7 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   _baromeetShowPhoto = !!showPhoto;
   _baromeetPhotoUrl = showPhoto ? (photoUrl || null) : null;
 
-  document.getElementById('panel-moim-chat').classList.add('show');
+  document.getElementById('panel-moim-chat').style.display = 'flex';
   // 바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 헤더 배경 전체를 옅게 tint
   // (바로알바 1:1 채팅은 기존 화이트 그대로 유지)
   const _bcSafearea = document.getElementById('moim-chat-safearea');
