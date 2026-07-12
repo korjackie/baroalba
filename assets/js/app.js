@@ -284,7 +284,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '404';
+  const _APP_V = '405';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -297,7 +297,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=404').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=405').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -16381,7 +16381,11 @@ function openBaromeetDetail(id) {
       <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-bottom:4px">📍 ${m.location_name||m.location_address||'장소 확인 후 안내'}</div>
       <div style="font-size:13px;color:#666">🕐 ${dtStr}</div>
     </div>
-    <div id="baromeet-detail-map" style="width:calc(100% - 40px);height:150px;border-radius:12px;overflow:hidden;margin:14px 20px 0;background:#f0f0f0"></div>
+    <button onclick="_openBaromeetTracking('${m.id}')" style="display:flex;align-items:center;gap:10px;width:calc(100% - 40px);margin:14px 20px 0;padding:12px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:12px;cursor:pointer;text-align:left">
+      <span style="font-size:18px">🗺️</span>
+      <span style="flex:1;font-size:13px;font-weight:800;color:#7C3AED">위치 · 남은 시간 실시간으로 보기</span>
+      <span style="color:#c4b5fd;font-size:16px">›</span>
+    </button>
     <div style="margin:16px 20px;display:flex;gap:10px;background:#fafafa;border-radius:12px;padding:14px">
       <div style="flex:1;text-align:center">
         <div style="font-size:12px;color:#f43f5e;font-weight:800;margin-bottom:4px">여성 ${femaleCur}/${femaleMax}명</div>
@@ -16412,29 +16416,10 @@ function openBaromeetDetail(id) {
     </div>
   `;
   overlay.style.display = 'flex';
-  requestAnimationFrame(() => _showBaromeetDetailMap(m.location_name || m.location_address));
 }
 function closeBaromeetDetail() {
   const overlay = document.getElementById('baromeet-detail-overlay');
   if (overlay) overlay.style.display = 'none';
-}
-
-let _baromeetDetailMap = null, _baromeetDetailMarker = null;
-function _showBaromeetDetailMap(query) {
-  const el = document.getElementById('baromeet-detail-map');
-  if (!el || !window.kakao?.maps) return;
-  if (!_baromeetDetailMap) _baromeetDetailMap = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 4 });
-  else _baromeetDetailMap.relayout();
-  if (_baromeetDetailMarker) { _baromeetDetailMarker.setMap(null); _baromeetDetailMarker = null; }
-  if (!query) return;
-  const places = new kakao.maps.services.Places();
-  places.keywordSearch(query, (result, status) => {
-    if (status !== kakao.maps.services.Status.OK || !result.length) return;
-    const r = result[0];
-    const pos = new kakao.maps.LatLng(r.y, r.x);
-    _baromeetDetailMap.setCenter(pos);
-    _baromeetDetailMarker = new kakao.maps.Marker({ position: pos, map: _baromeetDetailMap });
-  });
 }
 
 // ── 바로미팅 공유 (바로모임 shareMoim()과 동일한 패턴) ──────
