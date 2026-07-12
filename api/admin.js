@@ -420,7 +420,7 @@ module.exports = async function handler(req, res) {
 
     // ── 바로미팅 개설/수정 ────────────────────────────────
     if (action === 'save_baromeeting' && (req.method === 'POST' || req.method === 'PATCH')) {
-      const { id, title, description, location_name, location_address, gathering_date, entry_fee, male_max, female_max } = req.body || {};
+      const { id, title, description, location_name, location_address, gathering_date, entry_fee, male_max, female_max, lat, lng } = req.body || {};
       if (!title || !title.trim()) return res.status(400).json({ error: '미팅 제목을 입력해주세요' });
       if (!gathering_date) return res.status(400).json({ error: '일시를 입력해주세요' });
       const payload = {
@@ -432,6 +432,8 @@ module.exports = async function handler(req, res) {
         entry_fee: parseInt(entry_fee) || 0,
         baromeeting_male_max: parseInt(male_max) || 4,
         baromeeting_female_max: parseInt(female_max) || 4,
+        lat: typeof lat === 'number' ? lat : null,
+        lng: typeof lng === 'number' ? lng : null,
       };
 
       // 수정인 경우 인원/장소가 실제로 바뀌었는지 미리 확인 (신청자 알림 발송 여부 판단용)

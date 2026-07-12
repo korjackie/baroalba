@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>바로알바 관리자</title>
   <script src="./config.js"></script>
+  <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services"><\/scr'+'ipt>');</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -1890,21 +1891,50 @@ function closeBmForm() {
   document.getElementById('bm-form-overlay').classList.remove('show');
 }
 
+// 지도에 바로미팅 핀을 찍으려면 좌표가 필요한데 관리자는 주소/장소명만 입력하므로
+// 저장 시점에 카카오 지오코더로 좌표를 확보해 같이 저장 (주소 실패 시 장소명 키워드 검색으로 폴백,
+// 둘 다 실패해도 저장 자체는 막지 않음 - 워커앱의 _geocodeAndShowVenue와 동일한 폴백 패턴)
+function _geocodeBmLocation(address, name) {
+  return new Promise(resolve => {
+    if (!window.kakao?.maps?.services || (!address && !name)) { resolve({ lat: null, lng: null }); return; }
+    const done = (lat, lng) => resolve({ lat: lat ?? null, lng: lng ?? null });
+    const tryKeyword = () => {
+      if (!name) { done(null, null); return; }
+      new kakao.maps.services.Places().keywordSearch(name, (r, s) => {
+        if (s === kakao.maps.services.Status.OK && r[0]) done(parseFloat(r[0].y), parseFloat(r[0].x));
+        else done(null, null);
+      });
+    };
+    if (address) {
+      new kakao.maps.services.Geocoder().addressSearch(address, (r, s) => {
+        if (s === kakao.maps.services.Status.OK && r[0]) done(parseFloat(r[0].y), parseFloat(r[0].x));
+        else tryKeyword();
+      });
+    } else {
+      tryKeyword();
+    }
+  });
+}
+
 async function saveBaromeeting() {
   const id = document.getElementById('bm-id').value;
   const dateVal = document.getElementById('bm-date').value;
   const timeVal = document.getElementById('bm-time').value || '00:00';
   const dt = dateVal ? `${dateVal}T${timeVal}` : '';
+  const locationAddress = document.getElementById('bm-location-address').value.trim();
+  const locationName = document.getElementById('bm-location-name').value.trim();
+  const { lat, lng } = await _geocodeBmLocation(locationAddress, locationName);
   const payload = {
     id: id || undefined,
     title: document.getElementById('bm-title').value.trim(),
     description: document.getElementById('bm-desc').value.trim(),
-    location_name: document.getElementById('bm-location-name').value.trim(),
-    location_address: document.getElementById('bm-location-address').value.trim(),
+    location_name: locationName,
+    location_address: locationAddress,
     gathering_date: dt ? new Date(dt).toISOString() : null,
     entry_fee: document.getElementById('bm-fee').value,
     male_max: document.getElementById('bm-male-max').value,
     female_max: document.getElementById('bm-female-max').value,
+    lat, lng,
   };
   if (!payload.title) { showToast('미팅 제목을 입력해주세요'); return; }
   if (!payload.gathering_date) { showToast('날짜와 시간을 입력해주세요'); return; }

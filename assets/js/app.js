@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '425';
+  const _APP_V = '426';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=425').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=426').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2277,38 +2277,43 @@ async function _uploadAndSendMoimChatImage() {
 }
 
 // ── 지도 모임 모드 ────────────────────────────────────────
-let _currentMapMode = 'job'; // 'job' | 'moim'
+let _currentMapMode = 'job'; // 'all' | 'job' | 'moim' | 'baromeet'
+let _baromeetOverlays = [];
 
 function setMapMode(mode) {
   _currentMapMode = mode;
+  document.getElementById('mapmode-all').classList.toggle('active', mode === 'all');
   document.getElementById('mapmode-job').classList.toggle('active', mode === 'job');
   document.getElementById('mapmode-moim').classList.toggle('active', mode === 'moim');
+  document.getElementById('mapmode-baromeet').classList.toggle('active', mode === 'baromeet');
 
   const topBar = document.querySelector('.top-bar');
   const bottomSheet = document.getElementById('bottom-sheet');
   const radiusBadge = document.getElementById('radius-badge');
+  const floatBtn = document.getElementById('map-swipe-float');
 
-  if (mode === 'moim') {
-    // 알바 UI 숨기기
-    if (topBar) topBar.style.display = 'none';
-    if (bottomSheet) bottomSheet.style.display = 'none';
-    if (radiusBadge) radiusBadge.style.display = 'none';
-    const floatBtn = document.getElementById('map-swipe-float');
-    if (floatBtn) floatBtn.style.display = 'none';
-    // 기존 알바 마커 숨기기
-    overlays.forEach(o => o.setMap(null));
-    // 모임 마커 표시
+  // 알바 전용 UI(검색바/하단시트/반경뱃지)는 job 모드에서만 노출 - 다른 모드는 지도 위 핀만 보여줌
+  const showJobUI = mode === 'job';
+  if (topBar) topBar.style.display = showJobUI ? '' : 'none';
+  if (bottomSheet) bottomSheet.style.display = showJobUI ? '' : 'none';
+  if (radiusBadge) radiusBadge.style.display = showJobUI ? '' : 'none';
+  if (floatBtn) floatBtn.style.display = showJobUI ? '' : 'none';
+
+  // 알바 마커
+  overlays.forEach(o => o.setMap((mode === 'job' || mode === 'all') ? kakaoMap : null));
+  // 모임 마커
+  if (mode === 'moim' || mode === 'all') {
     _renderMoimMarkers();
   } else {
-    // 알바 UI 복원
-    if (topBar) topBar.style.display = '';
-    if (bottomSheet) bottomSheet.style.display = '';
-    if (radiusBadge) radiusBadge.style.display = '';
-    // 모임 마커 제거
     _moimOverlays.forEach(o => o.setMap(null));
     _moimOverlays = [];
-    // 알바 마커 복원
-    overlays.forEach(o => o.setMap(kakaoMap));
+  }
+  // 바로미팅/바로만남 마커
+  if (mode === 'baromeet' || mode === 'all') {
+    _renderBaromeetMarkers();
+  } else {
+    _baromeetOverlays.forEach(o => o.setMap(null));
+    _baromeetOverlays = [];
   }
 }
 
@@ -2317,7 +2322,8 @@ async function _renderMoimMarkers() {
   _moimOverlays = [];
   if (!kakaoMap) return;
 
-  const { data: moims } = await db.from('gatherings').select('id,title,category,gathering_date,current_count,max_count,lat,lng').eq('status','open').eq('is_public',true).not('lat','is',null);
+  // 바로미팅(category='baromeeting')은 _renderBaromeetMarkers()가 별도로 그리므로 여기서는 제외
+  const { data: moims } = await db.from('gatherings').select('id,title,category,gathering_date,current_count,max_count,lat,lng').eq('status','open').eq('is_public',true).neq('category','baromeeting').not('lat','is',null);
   if (!moims?.length) return;
 
   moims.forEach(m => {
@@ -2338,6 +2344,39 @@ async function _renderMoimMarkers() {
     const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(m.lat, m.lng), content, yAnchor: 1.1 });
     overlay.setMap(kakaoMap);
     _moimOverlays.push(overlay);
+  });
+}
+
+async function _renderBaromeetMarkers() {
+  _baromeetOverlays.forEach(o => o.setMap(null));
+  _baromeetOverlays = [];
+  if (!kakaoMap) return;
+
+  const { data: meets } = await db.from('gatherings')
+    .select('id,title,location_name,location_address,gathering_date,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,lat,lng')
+    .eq('status', 'open').eq('category', 'baromeeting').not('lat', 'is', null);
+  if (!meets?.length) return;
+
+  meets.forEach(m => {
+    if (!m.lat || !m.lng) return;
+    _baromeetListCache[m.id] = m; // openBaromeetDetail()이 이 캐시를 참조 - 목록 탭을 안 거쳐도 상세가 열리도록
+    const maleLeft = (m.baromeeting_male_max || 4) - (m.baromeeting_male_cur || 0);
+    const femaleLeft = (m.baromeeting_female_max || 4) - (m.baromeeting_female_cur || 0);
+    const isFull = maleLeft <= 0 && femaleLeft <= 0;
+    const titleShort = m.title ? (m.title.length > 11 ? m.title.slice(0, 10) + '…' : m.title) : '바로미팅';
+    const dateStr = m.gathering_date
+      ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' })
+      : '';
+    const content = `<div onclick="openBaromeetDetail('${m.id}')" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:max-content">
+      <div style="background:#e11d48;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(225,29,72,0.4);white-space:nowrap;max-width:150px">
+        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">💕 ${titleShort}</div>
+        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${dateStr ? dateStr + ' · ' : ''}${isFull ? '마감' : '모집중'}</div>
+      </div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #e11d48"></div>
+    </div>`;
+    const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(m.lat, m.lng), content, yAnchor: 1.1 });
+    overlay.setMap(kakaoMap);
+    _baromeetOverlays.push(overlay);
   });
 }
 
