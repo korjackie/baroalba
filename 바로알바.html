@@ -133,6 +133,13 @@
       <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="padding:6px 10px;font-size:13px" data-i18n="filter_more">필터</div>
     </div>
   </div>
+  <!-- 바로만남 지도 모드 전용 - 연령대 필터 -->
+  <div id="bm-age-filter-row" style="display:none;align-items:center;gap:6px;padding:7px 0 5px;flex-wrap:wrap">
+    <div class="chip active" data-age="" onclick="setBmAgeFilter(this,'')" style="flex-shrink:0">전연령</div>
+    <div class="chip" data-age="20대" onclick="setBmAgeFilter(this,'20대')" style="flex-shrink:0">20대</div>
+    <div class="chip" data-age="30대" onclick="setBmAgeFilter(this,'30대')" style="flex-shrink:0">30대</div>
+    <div class="chip" data-age="40대+" onclick="setBmAgeFilter(this,'40대+')" style="flex-shrink:0">40대+</div>
+  </div>
   <!-- 카테고리 드롭다운 시트 -->
   <div class="filter-sheet" id="filter-sheet-cat">
     <div id="filter-row" style="display:contents">

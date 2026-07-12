@@ -346,7 +346,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
   if (window._headVizTimer) { clearTimeout(window._headVizTimer); window._headVizTimer = null; }
   // 앱 버전 캐시 강제 초기화 — SW CacheStorage + HTTP캐시 모두 우회
-  const _APP_V = '427';
+  const _APP_V = '428';
   const _urlV = new URL(location.href).searchParams.get('_v');
   // redirect는 <head> 인라인 스크립트에서 처리됨 — 여기서는 캐시 정리만
   if (_urlV === _APP_V) {
@@ -359,7 +359,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_urlV) history.replaceState(null, '', '/바로알바.html');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=427').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=428').catch(()=>{});
     // 강제 reload 제거 — 버전 체크(_APP_V + location.replace)가 캐시 초기화를 담당
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
@@ -2291,13 +2291,21 @@ function setMapMode(mode) {
   const bottomSheet = document.getElementById('bottom-sheet');
   const radiusBadge = document.getElementById('radius-badge');
   const floatBtn = document.getElementById('map-swipe-float');
+  const jobFilterBar = document.querySelector('#map-filter-panel-collapsible .filter-bar-wrapper');
+  const ageFilterRow = document.getElementById('bm-age-filter-row');
+  const filterToggleBtn = document.getElementById('map-filter-toggle-btn');
 
-  // 알바 전용 UI(검색바/하단시트/반경뱃지)는 job 모드에서만 노출 - 다른 모드는 지도 위 핀만 보여줌
+  // 알바 전용 하단시트/반경뱃지는 job 모드에서만 - 다른 모드는 지도 위 핀만 보여줌.
+  // 검색바+필터버튼 자체는 모드마다 내용만 바뀌며 계속 노출(만남 모드는 연령대 필터를 씀)
   const showJobUI = mode === 'job';
-  if (topBar) topBar.style.display = showJobUI ? '' : 'none';
+  if (topBar) topBar.style.display = '';
   if (bottomSheet) bottomSheet.style.display = showJobUI ? '' : 'none';
   if (radiusBadge) radiusBadge.style.display = showJobUI ? '' : 'none';
   if (floatBtn) floatBtn.style.display = showJobUI ? '' : 'none';
+  if (jobFilterBar) jobFilterBar.style.display = showJobUI ? '' : 'none';
+  if (ageFilterRow) ageFilterRow.style.display = (mode === 'baromeet' || mode === 'all') ? 'flex' : 'none';
+  // 모임 모드는 아직 전용 필터가 없어 버튼 자체를 숨김 (필터 없는 빈 패널 방지)
+  if (filterToggleBtn) filterToggleBtn.style.display = mode === 'moim' ? 'none' : 'flex';
 
   // 알바 마커
   overlays.forEach(o => o.setMap((mode === 'job' || mode === 'all') ? kakaoMap : null));
@@ -2347,14 +2355,22 @@ async function _renderMoimMarkers() {
   });
 }
 
+let _bmAgeFilter = '';
+function setBmAgeFilter(el, age) {
+  _bmAgeFilter = age;
+  document.querySelectorAll('#bm-age-filter-row .chip').forEach(c => c.classList.toggle('active', c === el));
+  _renderBaromeetMarkers();
+}
+
 async function _renderBaromeetMarkers() {
   _baromeetOverlays.forEach(o => o.setMap(null));
   _baromeetOverlays = [];
   if (!kakaoMap) return;
 
-  const { data: meets } = await db.from('gatherings')
-    .select('id,title,location_name,location_address,gathering_date,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,lat,lng')
+  const { data: allMeets } = await db.from('gatherings')
+    .select('id,title,location_name,location_address,gathering_date,host_id,entry_fee,description,tags,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,target_age_range,lat,lng')
     .eq('status', 'open').eq('category', 'baromeeting').not('lat', 'is', null);
+  const meets = _bmAgeFilter ? (allMeets || []).filter(m => m.target_age_range === _bmAgeFilter) : allMeets;
   if (!meets?.length) return;
 
   meets.forEach(m => {
@@ -2370,7 +2386,7 @@ async function _renderBaromeetMarkers() {
     const content = `<div onclick="openBaromeetDetail('${m.id}')" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:max-content">
       <div style="background:#e11d48;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(225,29,72,0.4);white-space:nowrap;max-width:150px">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">💕 ${titleShort}</div>
-        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${dateStr ? dateStr + ' · ' : ''}${isFull ? '마감' : '모집중'}</div>
+        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr ? dateStr + ' · ' : ''}${isFull ? '마감' : '모집중'}</div>
       </div>
       <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #e11d48"></div>
     </div>`;

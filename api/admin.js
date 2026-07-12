@@ -305,7 +305,7 @@ module.exports = async function handler(req, res) {
     // ── 바로미팅 목록 (관리자 개설/관리) ─────────────────
     if (action === 'baromeetings') {
       const data = await sb(
-        "gatherings?select=id,title,description,location_name,location_address,gathering_date,entry_fee,status,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,created_at&category=eq.baromeeting&order=gathering_date.desc&limit=100",
+        "gatherings?select=id,title,description,location_name,location_address,gathering_date,entry_fee,status,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur,target_age_range,created_at&category=eq.baromeeting&order=gathering_date.desc&limit=100",
         svcKey
       ).then(r => r.json());
       return res.json(Array.isArray(data) ? data : []);
@@ -420,7 +420,7 @@ module.exports = async function handler(req, res) {
 
     // ── 바로미팅 개설/수정 ────────────────────────────────
     if (action === 'save_baromeeting' && (req.method === 'POST' || req.method === 'PATCH')) {
-      const { id, title, description, location_name, location_address, gathering_date, entry_fee, male_max, female_max, lat, lng } = req.body || {};
+      const { id, title, description, location_name, location_address, gathering_date, entry_fee, male_max, female_max, age_range, lat, lng } = req.body || {};
       if (!title || !title.trim()) return res.status(400).json({ error: '미팅 제목을 입력해주세요' });
       if (!gathering_date) return res.status(400).json({ error: '일시를 입력해주세요' });
       const payload = {
@@ -432,6 +432,7 @@ module.exports = async function handler(req, res) {
         entry_fee: parseInt(entry_fee) || 0,
         baromeeting_male_max: parseInt(male_max) || 4,
         baromeeting_female_max: parseInt(female_max) || 4,
+        target_age_range: age_range || null,
         lat: typeof lat === 'number' ? lat : null,
         lng: typeof lng === 'number' ? lng : null,
       };

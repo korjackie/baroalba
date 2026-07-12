@@ -552,6 +552,15 @@
             </div>
             <div style="font-size:11px;color:#94a3b8;margin-top:4px">정원이 다 차면(남성+여성) 참가자 전원에게 익명 단체채팅방이 자동으로 열립니다. 참가비는 1인당 결제 금액입니다.</div>
           </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">타겟 연령대 (지도 만남 필터에 사용돼요)</div>
+            <select id="bm-age-range" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
+              <option value="">전연령</option>
+              <option value="20대">20대</option>
+              <option value="30대">30대</option>
+              <option value="40대+">40대+</option>
+            </select>
+          </div>
         </div>
       </div>
       <div style="padding:16px;flex-shrink:0;border-top:1px solid #e2e8f0;display:flex;gap:8px">
@@ -1725,6 +1734,7 @@ function resetBaromeetingForm() {
   document.getElementById('bm-male-max').value = '4';
   document.getElementById('bm-female-max').value = '4';
   document.getElementById('bm-fee').value = '0';
+  document.getElementById('bm-age-range').value = '';
   document.getElementById('baromeeting-form-title').textContent = '바로미팅 개설';
   setBmLocationMode('partner');
   document.getElementById('bm-applicants-section').style.display = 'none';
@@ -1863,6 +1873,7 @@ function editBaromeeting(id) {
   document.getElementById('bm-male-max').value = m.baromeeting_male_max ?? 4;
   document.getElementById('bm-female-max').value = m.baromeeting_female_max ?? 4;
   document.getElementById('bm-fee').value = m.entry_fee || 0;
+  document.getElementById('bm-age-range').value = m.target_age_range || '';
   document.getElementById('baromeeting-form-title').textContent = '바로미팅 수정';
   _bmApplicantsGatheringId = m.id;
   document.getElementById('bm-applicants-section').style.display = 'block';
@@ -1934,6 +1945,7 @@ async function saveBaromeeting() {
     entry_fee: document.getElementById('bm-fee').value,
     male_max: document.getElementById('bm-male-max').value,
     female_max: document.getElementById('bm-female-max').value,
+    age_range: document.getElementById('bm-age-range').value || null,
     lat, lng,
   };
   if (!payload.title) { showToast('미팅 제목을 입력해주세요'); return; }
