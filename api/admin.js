@@ -330,6 +330,14 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true, credited: true, referrerUid: referrer.kakao_uid, referrerBalance: newBalance });
     }
 
+    // ── 잘못 연결된 추천 관계 해제 (오인으로 backfill_referral을 잘못 실행한 경우 되돌리기용) ──
+    if (action === 'unlink_referral' && req.method === 'PATCH') {
+      const { id: unlinkId } = req.body || {};
+      if (!unlinkId) return res.status(400).json({ error: 'id required' });
+      await sb(`workers?id=eq.${unlinkId}`, svcKey, { method: 'PATCH', body: JSON.stringify({ referred_by: null }) });
+      return res.json({ ok: true });
+    }
+
     // ── 수동 포인트 지급/보정 (CS 대응, 과거 데이터 보정용 - 서비스 롤 키로 RLS 우회) ──
     // userId는 workers.kakao_uid(=point_accounts.user_id) - 회원 상세 패널에서 이미 로드돼 있음
     if (action === 'grant_points' && req.method === 'POST') {

@@ -44,7 +44,10 @@
     .nav-btn.active { color:#C8102E; }
     .nav-btn.active .nav-icon { filter:grayscale(0%) opacity(1); }
 
-    .content { padding:20px; padding-bottom:calc(76px + var(--sab)); max-width:1100px; margin:0 auto; }
+    /* 76px는 데스크톱에서는 충분하지만(끝까지 스크롤 확인됨), 모바일 브라우저는 주소창이
+       접히고 펴지며 뷰포트 높이가 실시간으로 바뀌어 하단 고정 네비바에 마지막 항목이
+       가려지는 경우가 있어 여유 버퍼를 넉넉히 둠 */
+    .content { padding:20px; padding-bottom:calc(140px + var(--sab)); max-width:1100px; margin:0 auto; }
 
     /* 대시보드 - 제목(좌) + 현황(우) 한 줄 카드 */
     .dash-row { display:flex; align-items:center; gap:14px; background:#fff; border-radius:14px; padding:12px 16px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); max-width:520px; margin-left:auto; margin-right:auto; }
@@ -1375,7 +1378,7 @@ async function openUserDetail(id) {
   document.getElementById('dp-actions').style.display = 'none';
 
   try {
-    const data = await adminApi('user_detail&id=' + encodeURIComponent(id));
+    const data = await adminApi('user_detail', 'GET', null, { id });
     _detailData = data;
     if (data.worker) _currentUser = data.worker;
     renderUserDetail();
@@ -1486,11 +1489,22 @@ function renderUserDetail() {
   const btns = [];
   if ((u.noshow_count || 0) > 0) btns.push(`<button class="dp-action-btn da-noshow" onclick="resetNoshowFromDetail()">노쇼 ${u.noshow_count}회 초기화</button>`);
   if (u.kakao_uid) btns.push(`<button class="dp-action-btn" style="background:#EDE9FE;color:#7C3AED" onclick="openGrantPoints()">💎 포인트 지급</button>`);
+  if (u.referred_by) btns.push(`<button class="dp-action-btn" style="background:#FEF3C7;color:#B45309" onclick="unlinkReferralFromDetail()">🔗 잘못된 추천 연결 해제</button>`);
   btns.push(u.is_banned
     ? `<button class="dp-action-btn da-unban" onclick="toggleBanFromDetail(false)">정지 해제</button>`
     : `<button class="dp-action-btn da-ban" onclick="toggleBanFromDetail(true)">계정 정지</button>`);
   actionsEl.innerHTML = btns.join('');
   actionsEl.style.display = 'flex';
+}
+
+async function unlinkReferralFromDetail() {
+  if (!_currentUser?.id) return;
+  const ok = await adminConfirm('추천 연결을 해제하시겠습니까?\n(포인트가 이미 지급됐다면 별도로 회수해야 합니다)', '해제하기');
+  if (!ok) return;
+  await adminApi('unlink_referral', 'PATCH', { id: _currentUser.id });
+  _currentUser.referred_by = null;
+  showToast('추천 연결이 해제됐습니다');
+  renderUserDetail();
 }
 
 // ── 회원 포인트 수동 지급/차감 ────────────────────────────
