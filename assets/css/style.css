@@ -817,6 +817,9 @@
     .radius-opt:hover, .radius-opt.selected { background: #FFF0F0; color: var(--red); }
 
     /* ── 게스트 배너 ── */
+    /* z-index가 .full-panel(300)/.top-bar(200)보다 낮아서 홈/채팅/마이페이지 등
+       다른 탭에서는 완전히 가려지고, 지도 탭(패널로 안 덮이는 화면)에서만
+       우연히 보이던 문제 - 어느 탭에서든 항상 위에 보이도록 큰 폭으로 상향 */
     .guest-banner {
       position: fixed;
       top: 108px; left: 14px; right: 14px;
@@ -826,7 +829,8 @@
       padding: 10px 14px;
       font-size: 12px; font-weight: 700;
       display: flex; align-items: center; justify-content: space-between;
-      z-index: 200;
+      z-index: 900;
+      pointer-events: auto;
       display: none;
     }
     .guest-banner.show { display: flex; }
