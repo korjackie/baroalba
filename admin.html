@@ -505,6 +505,10 @@
 
   <!-- 회원관리 -->
   <div class="tab-content" id="tab-users">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <input id="users-search" type="text" placeholder="이름 · 전화번호로 검색" oninput="renderUsers()" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
+      <span id="users-count" style="font-size:12px;color:#94a3b8;font-weight:700;white-space:nowrap"></span>
+    </div>
     <div id="users-list"><div class="loading">로딩 중...</div></div>
   </div>
 
@@ -863,6 +867,22 @@
     <div style="display:flex;gap:8px">
       <button id="admin-confirm-cancel" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
       <button id="admin-confirm-ok" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 회원 포인트 수동 지급/차감 -->
+<div id="grant-points-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
+    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">💎 포인트 지급 / 차감</div>
+    <div id="gp-target-name" style="font-size:13px;color:#64748b;margin-bottom:16px"></div>
+    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">금액 (차감은 마이너스로 입력)</label>
+    <input id="gp-amount" type="number" placeholder="예: 3000 또는 -3000" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px">
+    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">사유</label>
+    <input id="gp-reason" type="text" placeholder="예: 추천인 포인트 보정" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:18px">
+    <div style="display:flex;gap:8px">
+      <button onclick="closeGrantPoints()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="submitGrantPoints()" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">지급하기</button>
     </div>
   </div>
 </div>
@@ -1303,8 +1323,13 @@ function userInitial(name) {
 }
 
 function renderUsers() {
-  document.getElementById('users-list').innerHTML = _users.length
-    ? _users.map(u => {
+  const q = (document.getElementById('users-search')?.value || '').trim().toLowerCase();
+  const filtered = q
+    ? _users.filter(u => (u.name || '').toLowerCase().includes(q) || (u.phone || '').includes(q))
+    : _users;
+  document.getElementById('users-count').textContent = `총 ${_users.length}명${q ? ` · 검색결과 ${filtered.length}명` : ''}`;
+  document.getElementById('users-list').innerHTML = filtered.length
+    ? filtered.map(u => {
         const banned = u.is_banned;
         const noshow = u.noshow_count || 0;
         const joinDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ko-KR', { year:'numeric', month:'numeric', day:'numeric' }) : '-';
@@ -1445,11 +1470,35 @@ function renderUserDetail() {
   const actionsEl = document.getElementById('dp-actions');
   const btns = [];
   if ((u.noshow_count || 0) > 0) btns.push(`<button class="dp-action-btn da-noshow" onclick="resetNoshowFromDetail()">노쇼 ${u.noshow_count}회 초기화</button>`);
+  if (u.kakao_uid) btns.push(`<button class="dp-action-btn" style="background:#EDE9FE;color:#7C3AED" onclick="openGrantPoints()">💎 포인트 지급</button>`);
   btns.push(u.is_banned
     ? `<button class="dp-action-btn da-unban" onclick="toggleBanFromDetail(false)">정지 해제</button>`
     : `<button class="dp-action-btn da-ban" onclick="toggleBanFromDetail(true)">계정 정지</button>`);
   actionsEl.innerHTML = btns.join('');
   actionsEl.style.display = 'flex';
+}
+
+// ── 회원 포인트 수동 지급/차감 ────────────────────────────
+function openGrantPoints() {
+  if (!_currentUser?.kakao_uid) return;
+  document.getElementById('gp-target-name').textContent = `${_currentUser.name || '회원'}님에게 지급`;
+  document.getElementById('gp-amount').value = '';
+  document.getElementById('gp-reason').value = '';
+  document.getElementById('grant-points-overlay').style.display = 'flex';
+}
+
+function closeGrantPoints() {
+  document.getElementById('grant-points-overlay').style.display = 'none';
+}
+
+async function submitGrantPoints() {
+  const amount = parseInt(document.getElementById('gp-amount').value, 10);
+  const reason = document.getElementById('gp-reason').value.trim();
+  if (!amount) { showToast('금액을 입력해주세요'); return; }
+  const result = await adminApi('grant_points', 'POST', { userId: _currentUser.kakao_uid, amount, reason: reason || undefined });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  closeGrantPoints();
+  showToast(`✅ 포인트 반영 완료 (잔액 ${result.balance.toLocaleString()}P)`);
 }
 
 function showDetailTab(name) {

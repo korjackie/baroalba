@@ -283,25 +283,25 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 수동 포인트 지급/보정 (CS 대응, 과거 데이터 보정용 - 서비스 롤 키로 RLS 우회) ──
+    // userId는 workers.kakao_uid(=point_accounts.user_id) - 회원 상세 패널에서 이미 로드돼 있음
     if (action === 'grant_points' && req.method === 'POST') {
-      const { email: grantEmail, amount, reason } = req.body || {};
-      if (!grantEmail || typeof amount !== 'number') return res.status(400).json({ error: 'email, amount required' });
-      const authRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(grantEmail)}`, {
-        headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` }
-      });
-      const authData = await authRes.json();
-      const targetUser = (authData.users || [])[0];
-      if (!targetUser) return res.status(404).json({ error: '해당 이메일의 계정을 찾을 수 없어요' });
+      const { userId: grantUid, amount, reason } = req.body || {};
+      if (!grantUid || typeof amount !== 'number' || !amount) return res.status(400).json({ error: 'userId, amount required' });
 
-      const acctRows = await sb(`point_accounts?user_id=eq.${targetUser.id}&select=id,balance`, svcKey).then(r => r.json());
+      const acctRows = await sb(`point_accounts?user_id=eq.${grantUid}&select=id,balance`, svcKey).then(r => r.json());
       const acct = Array.isArray(acctRows) ? acctRows[0] : null;
       const newBalance = (acct?.balance || 0) + amount;
       if (acct) {
         await sb(`point_accounts?id=eq.${acct.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ balance: newBalance }) });
       } else {
-        await sb('point_accounts', svcKey, { method: 'POST', body: JSON.stringify({ user_id: targetUser.id, balance: newBalance }) });
+        await sb('point_accounts', svcKey, { method: 'POST', body: JSON.stringify({ user_id: grantUid, balance: newBalance }) });
       }
-      return res.json({ ok: true, balance: newBalance, reason: reason || null });
+      await sb('point_transactions', svcKey, { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({
+        user_id: grantUid, type: amount > 0 ? 'admin_grant' : 'admin_deduct', amount, balance_after: newBalance,
+        description: reason || '관리자 포인트 지급',
+      }) }).catch(() => {}); // point_transactions는 참고용 로그 - 실패해도 지급 자체는 이미 반영됨
+
+      return res.json({ ok: true, balance: newBalance });
     }
 
     // ── 바로만남 매니저 지정/해제 (서비스 롤 키로 처리 - businesses RLS가 admin
@@ -829,9 +829,11 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 회원 목록 ──────────────────────────────────────
+    // limit=100은 회원이 늘면서 오래된/일부 회원이 목록에서 통째로 빠지는 원인이 됐음
+    // (검색 기능도 없어 "누락"처럼 보였음) - 검색 UI 추가와 함께 상한을 대폭 올림
     if (action === 'users') {
       const data = await sb(
-        'workers?select=id,name,phone,rating,review_count,noshow_count,is_banned,created_at&order=created_at.desc&limit=100',
+        'workers?select=id,name,phone,rating,review_count,noshow_count,is_banned,created_at&order=created_at.desc&limit=2000',
         svcKey
       ).then(r => r.json());
       return res.json(Array.isArray(data) ? data : []);
