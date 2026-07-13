@@ -509,6 +509,7 @@
       <input id="users-search" type="text" placeholder="이름 · 전화번호로 검색" oninput="renderUsers()" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
       <span id="users-count" style="font-size:12px;color:#94a3b8;font-weight:700;white-space:nowrap"></span>
     </div>
+    <button onclick="openBackfillReferral()" style="width:100%;padding:10px;margin-bottom:10px;background:#EDE9FE;color:#7C3AED;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">🎁 과거 추천인 가입 보정</button>
     <div id="users-list"><div class="loading">로딩 중...</div></div>
   </div>
 
@@ -883,6 +884,22 @@
     <div style="display:flex;gap:8px">
       <button onclick="closeGrantPoints()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
       <button onclick="submitGrantPoints()" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">지급하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 과거 추천인 가입 보정 (workers 행 자동생성 로직 배포 이전 가입자용) -->
+<div id="backfill-referral-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
+    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">🎁 과거 추천인 가입 보정</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">회원목록에 안 잡히는 예전 추천가입 건을 찾아 회원 행을 만들고 추천인 포인트를 지급합니다.</div>
+    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">가입한 친구의 이메일</label>
+    <input id="bf-email" type="email" placeholder="예: friend@gmail.com" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px">
+    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">추천코드</label>
+    <input id="bf-code" type="text" placeholder="예: S4TJZH" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:18px">
+    <div style="display:flex;gap:8px">
+      <button onclick="closeBackfillReferral()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="submitBackfillReferral()" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">보정하기</button>
     </div>
   </div>
 </div>
@@ -1499,6 +1516,29 @@ async function submitGrantPoints() {
   if (result?.error) { showToast('실패: ' + result.error); return; }
   closeGrantPoints();
   showToast(`✅ 포인트 반영 완료 (잔액 ${result.balance.toLocaleString()}P)`);
+}
+
+// ── 과거 추천인 가입 보정 ──────────────────────────────────
+function openBackfillReferral() {
+  document.getElementById('bf-email').value = '';
+  document.getElementById('bf-code').value = '';
+  document.getElementById('backfill-referral-overlay').style.display = 'flex';
+}
+
+function closeBackfillReferral() {
+  document.getElementById('backfill-referral-overlay').style.display = 'none';
+}
+
+async function submitBackfillReferral() {
+  const email = document.getElementById('bf-email').value.trim();
+  const code = document.getElementById('bf-code').value.trim();
+  if (!email || !code) { showToast('이메일과 추천코드를 모두 입력해주세요'); return; }
+  const result = await adminApi('backfill_referral', 'POST', { email, code });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  closeBackfillReferral();
+  if (result?.already) { showToast('이미 처리된 가입 건이에요'); return; }
+  showToast(`✅ 보정 완료! 추천인 잔액 ${result.referrerBalance?.toLocaleString()}P`);
+  loadUsers();
 }
 
 function showDetailTab(name) {
