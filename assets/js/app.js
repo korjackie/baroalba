@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '472';
+  const _APP_V = '473';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=472').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=473').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -4593,12 +4593,20 @@ async function openWorkerProfileDirect(appId) {
       <button onclick="${close}markNoshow('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#FEE2E2;color:#DC2626;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">😶 노쇼</button>`;
   }
 
-  el.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 20px 40px;max-height:80vh;overflow-y:auto">
-    <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 16px"></div>
+  // photo_url이 있으면 실제 사진을, 로드 실패/없으면 기본 아이콘을 보여줌(형제 fallback div
+  // 토글 방식 - 다른 화면들(예: 3364행 근처)과 동일한 패턴). 예전엔 항상 기본 아이콘만
+  // 하드코딩돼 있어 실제 등록 사진과 무관하게 늘 회색 실루엣만 보였음
+  const avatarHtml = `
+    <div style="position:relative;width:52px;height:52px;flex-shrink:0">
+      ${w.photo_url ? `<img src="${w.photo_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+      <div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;display:${w.photo_url ? 'none' : 'flex'};align-items:center;justify-content:center;font-size:24px;position:absolute;top:0;left:0">👤</div>
+    </div>`;
+  el.innerHTML = `<div id="wd-sheet-panel" style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 20px 40px;max-height:80vh;overflow-y:auto">
+    <div id="wd-sheet-handle" style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 16px"></div>
 
     <!-- 지원자 헤더 -->
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
-      <div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">👤</div>
+      ${avatarHtml}
       <div style="flex:1;min-width:0">
         <div style="font-size:18px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
@@ -4650,6 +4658,9 @@ async function openWorkerProfileDirect(appId) {
     <button onclick="${close}" style="width:100%;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
   </div>`;
   document.body.appendChild(el);
+  // 핸들바가 순수 장식용 div로만 있고 드래그 로직이 연결된 적이 없었음 - 다른 시트들과
+  // 동일한 bindSheetDragClose 패턴으로 아래로 드래그하면 닫히도록 연결
+  bindSheetDragClose(document.getElementById('wd-sheet-handle'), document.getElementById('wd-sheet-panel'), () => el.remove());
 
   // 실시간 위치 공유 지도 구독 - 알바생이 toggleLocationShare()로 브로드캐스트하는 좌표를 받아서 표시.
   // 실시간 신호는 알바생이 앱을 닫으면 끊기므로, 우선 DB에 저장된 마지막 위치부터 보여주고
@@ -4658,21 +4669,28 @@ async function openWorkerProfileDirect(appId) {
   if (app.status === 'accepted') {
     requestAnimationFrame(async () => {
       const mapEl = document.getElementById('wd-loc-map');
+      const statusEl = document.getElementById('wd-loc-status');
       if (!mapEl || !window.kakao?.maps) return;
-      _wdLocMap = new kakao.maps.Map(mapEl, { center: new kakao.maps.LatLng(37.5665, 126.978), level: 4 });
+
+      // 실제 좌표가 있을 때만 지도를 생성한다 - 예전엔 데이터가 없어도 항상 서울시청 좌표를
+      // 기본 중심으로 지도를 띄워놔서, 실제로는 아무 위치 정보도 없는데(부산에 있는 알바생인데도)
+      // 지도만 보고 "서울에 있다"고 오해하게 만들었음(상태 텍스트는 맞았지만 지도가 더 눈에 띔)
+      const ensureMap = (lat, lng) => {
+        if (!_wdLocMap) _wdLocMap = new kakao.maps.Map(mapEl, { center: new kakao.maps.LatLng(lat, lng), level: 4 });
+        else _wdLocMap.setCenter(new kakao.maps.LatLng(lat, lng));
+      };
 
       const { data: locRow } = await db.from('applications').select('last_lat, last_lng, last_location_at').eq('id', app.id).maybeSingle();
-      const statusEl = document.getElementById('wd-loc-status');
       if (locRow?.last_lat && locRow?.last_lng) {
+        ensureMap(locRow.last_lat, locRow.last_lng);
         const pos = new kakao.maps.LatLng(locRow.last_lat, locRow.last_lng);
-        _wdLocMap.setCenter(pos);
         _wdLocMarker = new kakao.maps.Marker({ position: pos, map: _wdLocMap });
         if (statusEl) statusEl.textContent = '🕐 마지막 확인 위치 · ' + new Date(locRow.last_location_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
       }
 
       _wdLocChannel = subscribeWorkerLocation(app.id, (payload) => {
+        ensureMap(payload.lat, payload.lng);
         const pos = new kakao.maps.LatLng(payload.lat, payload.lng);
-        _wdLocMap.setCenter(pos);
         if (_wdLocMarker) _wdLocMarker.setMap(null);
         _wdLocMarker = new kakao.maps.Marker({ position: pos, map: _wdLocMap });
         if (statusEl) statusEl.textContent = '🟢 실시간 위치 공유 중 · ' + new Date(payload.ts).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
