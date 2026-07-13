@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '459';
+  const _APP_V = '460';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=459').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=460').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -9421,8 +9421,8 @@ function _renderObSlide() {
     ? OB_TRANS['ko'][_obStep] 
     : { title: '튜토리얼', desc: '', chips: [] };
     
-  if (typeof OB_TRANS !== 'undefined' && OB_TRANS[_lang] && OB_TRANS[_lang][_obStep]) {
-    transData = OB_TRANS[_lang][_obStep];
+  if (typeof OB_TRANS !== 'undefined' && OB_TRANS[currentLang] && OB_TRANS[currentLang][_obStep]) {
+    transData = OB_TRANS[currentLang][_obStep];
   }
 
   // 방어 코드: transData가 여전히 없거나 chips가 없을 수 있음
@@ -9469,9 +9469,9 @@ function _renderObSlide() {
   const nextBtn = document.getElementById('ob-next-btn');
   if (nextBtn) {
     if (_obStep === _OB_SLIDES.length - 1) {
-      nextBtn.textContent = _lang === 'ko' ? '바로 시작하기' : 'Start Now';
+      nextBtn.textContent = currentLang === 'ko' ? '바로 시작하기' : 'Start Now';
     } else {
-      nextBtn.textContent = _lang === 'ko' ? '다음' : 'Next';
+      nextBtn.textContent = currentLang === 'ko' ? '다음' : 'Next';
     }
   }
 }
