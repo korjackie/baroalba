@@ -696,11 +696,17 @@ function printContract() {
 // ═══════════════════════════════════════════════════════════════════
 let _locationChannel = null;
 let _locationAppId   = null;
+// 지도 화면의 "내 위치로 이동"(moveToMyLocation, app.js)이 쓰는 _locationWatchId와
+// 이름이 겹쳐 있었음 - 둘 다 같은 전역 변수에 watchPosition id를 덮어써서, 지도를 한 번이라도
+// 보면(자동으로 moveToMyLocation 호출됨) 위치공유용 watch id가 유실되고, 이후 아무 코드가
+// stopLocationWatch()를 부르면 위치공유 쪽이 조용히 끊겼음(업주에게 위치가 안 보이던 원인) -
+// 서로 다른 기능이라 반드시 별도 변수를 써야 함
+let _jobLocShareWatchId = null;
 
 async function toggleLocationShare(appId, btnEl) {
-  if (_locationWatchId !== null) {
-    navigator.geolocation.clearWatch(_locationWatchId);
-    _locationWatchId = null;
+  if (_jobLocShareWatchId !== null) {
+    navigator.geolocation.clearWatch(_jobLocShareWatchId);
+    _jobLocShareWatchId = null;
     _locationChannel?.unsubscribe();
     _locationChannel = null;
     _locationAppId   = null;
@@ -714,7 +720,7 @@ async function toggleLocationShare(appId, btnEl) {
   _locationChannel = db.channel(`location:${appId}`);
   await _locationChannel.subscribe();
   let _lastLocDbWrite = 0;
-  _locationWatchId = navigator.geolocation.watchPosition(
+  _jobLocShareWatchId = navigator.geolocation.watchPosition(
     (pos) => {
       _locationChannel.send({
         type: 'broadcast', event: 'loc',

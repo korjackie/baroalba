@@ -1,4 +1,4 @@
-const CACHE = 'baroalba-v470';
+const CACHE = 'baroalba-v471';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
