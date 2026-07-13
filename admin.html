@@ -671,10 +671,7 @@
             <input id="bse-time" type="time" step="300" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
           </div>
         </div>
-        <div style="display:flex;gap:8px">
-          <input id="bse-female-max" type="number" min="0" placeholder="여성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
-          <input id="bse-male-max" type="number" min="0" placeholder="남성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
-        </div>
+        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">바로스팟은 여성 1명 + 남성 1명을 매칭하는 1:1 소개팅이라 별도 정원 입력은 없습니다. 저장하면 "남성 모집중" 상태로 열립니다.</div>
         <textarea id="bse-notes" placeholder="메모 (선택)" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
         <div style="display:flex;gap:8px;margin-top:4px">
           <button onclick="saveBarospotEvent()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
@@ -2567,23 +2564,26 @@ async function loadBarospotEvents() {
   el.innerHTML = '<div class="loading">로딩 중...</div>';
   const data = await adminApi('barospot_events');
   _barospotEvents = Array.isArray(data) ? data : [];
+  const STATUS_LABEL = { recruiting_female:'여성 모집중', recruiting_male:'남성 모집중', confirmed:'확정됨', done:'완료', cancelled:'취소됨' };
+  const STATUS_BADGE_CLS = { recruiting_female:'sb-done', recruiting_male:'sb-done', confirmed:'sb-reviewing', done:'sb-dismissed', cancelled:'sb-dismissed' };
   el.innerHTML = _barospotEvents.length
     ? _barospotEvents.map(ev => {
         const r = ev.barospot_restaurants || {};
         const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
-        const isOpen = ev.status === 'open';
+        const isActive = ev.status === 'recruiting_female' || ev.status === 'recruiting_male';
         return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
             <div style="min-width:0">
               <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '식당 미배정'}</div>
-              <div style="font-size:11px;color:#94a3b8;margin-top:2px">${whenText} · 여 ${ev.female_cur||0}/${ev.female_max||0} · 남 ${ev.male_cur||0}/${ev.male_max||0}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px">${whenText}</div>
               ${ev.address ? `<div style="font-size:11px;color:#94a3b8">${ev.address}${(ev.lat==null)?' (좌표 확보 실패 - 주소 확인 필요)':''}</div>` : ''}
             </div>
-            <span class="status-badge ${isOpen ? 'sb-done' : 'sb-dismissed'}" style="flex-shrink:0">${isOpen ? '모집중' : '마감'}</span>
+            <span class="status-badge ${STATUS_BADGE_CLS[ev.status]||'sb-dismissed'}" style="flex-shrink:0">${STATUS_LABEL[ev.status]||ev.status}</span>
           </div>
           <div style="display:flex;gap:6px">
-            <button class="r-btn r-btn-reviewing" onclick="editBarospotEvent('${ev.id}')">수정</button>
-            <button class="r-btn ${isOpen ? 'r-btn-dismiss' : 'r-btn-done'}" onclick="toggleBarospotEvent('${ev.id}', '${isOpen ? 'closed' : 'open'}')">${isOpen ? '마감' : '재오픈'}</button>
+            ${isActive ? `<button class="r-btn r-btn-reviewing" onclick="editBarospotEvent('${ev.id}')">수정</button>` : ''}
+            ${isActive ? `<button class="r-btn r-btn-dismiss" onclick="cancelBarospotEvent('${ev.id}')">취소</button>` : ''}
+            ${ev.status === 'confirmed' ? `<button class="r-btn r-btn-done" onclick="completeBarospotEvent('${ev.id}')">완료 처리</button>` : ''}
           </div>
         </div>`;
       }).join('')
@@ -2610,8 +2610,6 @@ function editBarospotEvent(id) {
     updateBseDateDisplay();
   }
   document.getElementById('bse-address').value = ev.address || '';
-  document.getElementById('bse-female-max').value = ev.female_max || '';
-  document.getElementById('bse-male-max').value = ev.male_max || '';
   document.getElementById('bse-notes').value = ev.notes || '';
   document.getElementById('bse-form-title').textContent = '바로스팟 수정';
 }
@@ -2619,7 +2617,7 @@ function editBarospotEvent(id) {
 function resetBarospotEventForm() {
   document.getElementById('bse-id').value = '';
   document.getElementById('bse-restaurant').value = '';
-  ['bse-date','bse-time','bse-location-name','bse-address','bse-female-max','bse-male-max','bse-notes'].forEach(k => document.getElementById(k).value = '');
+  ['bse-date','bse-time','bse-location-name','bse-address','bse-notes'].forEach(k => document.getElementById(k).value = '');
   updateBseDateDisplay();
   document.getElementById('bse-form-title').textContent = '바로스팟 개설';
   setBseLocationMode('partner');
@@ -2640,8 +2638,6 @@ async function saveBarospotEvent() {
     id: id || undefined,
     event_date: new Date(dt).toISOString(),
     address,
-    female_max: document.getElementById('bse-female-max').value,
-    male_max: document.getElementById('bse-male-max').value,
     notes: document.getElementById('bse-notes').value.trim(),
   };
   // 제휴매장 모드는 기존 매장 id를, 새 장소 검색 모드는 신규 매장 정보를 넘겨
@@ -2657,9 +2653,20 @@ async function saveBarospotEvent() {
   loadBarospotEvents();
 }
 
-async function toggleBarospotEvent(id, status) {
-  const result = await adminApi('toggle_barospot_event', 'PATCH', { id, status });
+async function cancelBarospotEvent(id) {
+  const ok = await adminConfirm('이 바로스팟을 취소하시겠습니까?\n연결된 신청도 함께 취소돼요.', '취소하기');
+  if (!ok) return;
+  const result = await adminApi('cancel_barospot_event', 'PATCH', { id });
   if (result?.error) { showToast('실패: ' + result.error); return; }
+  showToast('바로스팟이 취소됐습니다');
+  loadBarospotEvents();
+  loadBarospotApplications(_barospotAppsStatus);
+}
+
+async function completeBarospotEvent(id) {
+  const result = await adminApi('complete_barospot_event', 'PATCH', { id });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  showToast('완료 처리됐습니다');
   loadBarospotEvents();
 }
 
@@ -2677,16 +2684,20 @@ async function loadBarospotApplications(status) {
   el.innerHTML = '<div class="loading">로딩 중...</div>';
   const data = await adminApi('barospot_applications', 'GET', null, { status });
   const list = Array.isArray(data) ? data : [];
-  const openEvents = _barospotEvents.filter(e => e.status === 'open');
+  const openEvents = _barospotEvents.filter(e => e.status === 'recruiting_male');
   el.innerHTML = list.length
     ? list.map(a => {
         const w = a.worker || {};
         const genderLabel = a.gender === 'male' ? '남성' : '여성';
         const needsMatch = status === 'pending' && a.gender === 'female' && !a.event_id;
-        const canConfirm = (status === 'pending' && a.event_id) || status === 'matched';
+        // 1:1 매칭이라 확정은 매장이 배정된 남성 신청에서만 가능(여성은 남성이 확정되면
+        // 서버가 자동으로 함께 확정함) - 큐레이션용으로 평점/완료/노쇼 이력을 같이 보여줌
+        const canConfirm = a.gender === 'male' && a.event_id && (status === 'pending');
+        const scoreLine = (w.rating != null || w.review_count || w.noshow_count)
+          ? `<span style="font-size:11px;color:#94a3b8"> · ★${w.rating!=null?Number(w.rating).toFixed(1):'-'} 완료${w.review_count||0} ${w.noshow_count?'· 노쇼'+w.noshow_count:''}</span>` : '';
         return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-            <div style="font-size:14px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel} · ${w.phone||'-'}</span></div>
+            <div style="font-size:14px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel} · ${w.phone||'-'}</span>${scoreLine}</div>
           </div>
           ${needsMatch ? `
           <div style="display:flex;gap:6px">

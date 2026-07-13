@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '474';
+  const _APP_V = '475';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=474').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=475').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18625,11 +18625,13 @@ async function _loadSpotEvents() {
   if (!el) return;
   // 실제 barospot_events 스키마엔 restaurant_name/event_time/male_slots/male_remaining/
   // male_price/menu_description 컬럼이 없음 - 식당명·메뉴·가격은 restaurant_id로 조인한
-  // barospot_restaurants(name,menu_description,base_price)에서, 잔여좌석은 male_max-male_cur로
-  // 계산해야 함(예전 쿼리는 존재하지 않는 컬럼 select로 매번 400 에러가 나서 항상 빈 목록이었음)
+  // barospot_restaurants(name,menu_description,base_price)에서 가져와야 함(예전 쿼리는
+  // 존재하지 않는 컬럼 select로 매번 400 에러가 나서 항상 빈 목록이었음). 바로스팟은 정원제가
+  // 아니라 여성 1명+남성 1명을 매칭하는 1:1 소개팅이라 "남성 모집중(recruiting_male)" 상태인
+  // 것만 신청 가능한 목록으로 보여준다
   const { data, error } = await db.from('barospot_events')
-    .select('id, event_date, male_max, male_cur, barospot_restaurants(name, menu_description, base_price)')
-    .eq('status', 'open').order('event_date', { ascending: true });
+    .select('id, event_date, barospot_restaurants(name, menu_description, base_price)')
+    .eq('status', 'recruiting_male').order('event_date', { ascending: true });
   if (error || !data?.length) {
     if (cntEl) cntEl.textContent = '0';
     el.innerHTML = `<div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 스팟</div><div style="font-size:12px;line-height:1.65">현재 남성 참가자를 모집 중인<br>바로스팟이 없어요</div></div>`;
@@ -18639,27 +18641,21 @@ async function _loadSpotEvents() {
   el.innerHTML = data.map(ev => _renderSpotEventCard(ev)).join('');
 }
 
+// 여성 1명 + 남성 1명을 매칭하는 1:1 소개팅이라 목록 자체가 이미 "남성 모집중"
+// 상태만 필터링돼 있음 - 여러 명이 동시에 신청할 수 있고, 관리자가 그중 한 명만 확정한다
+// (확정되는 순간 이벤트 status가 바뀌어 이 목록에서 자동으로 빠짐)
 function _renderSpotEventCard(ev) {
   const r = ev.barospot_restaurants || {};
-  const maleMax = ev.male_max || 0, maleCur = ev.male_cur || 0;
-  const remaining = maleMax - maleCur;
-  const full = remaining <= 0;
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
   return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #e8eaed;overflow:hidden">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-      <div>
-        <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || '식당 정보 확인 중'}</div>
-        <div style="font-size:12px;color:#888">${whenText}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:#888;margin-bottom:2px">남성 잔여</div>
-        <div style="font-size:16px;font-weight:900;color:${full?'#ccc':'#3b82f6'}">${Math.max(0,remaining)}<span style="font-size:11px;color:#aaa">/${maleMax}</span></div>
-      </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || '식당 정보 확인 중'}</div>
+      <div style="font-size:12px;color:#888">${whenText}</div>
     </div>
     ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:13px;font-weight:800;color:#3b82f6">${(r.base_price||0).toLocaleString()}원 <span style="font-size:11px;color:#aaa;font-weight:400">식사비 포함</span></div>
-      <button onclick="applySpotEvent('${ev.id}')" ${full?'disabled':''} style="padding:9px 18px;background:${full?'#e5e7eb':'#3b82f6'};color:${full?'#aaa':'#fff'};border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:${full?'default':'pointer'}">${full?'마감':'참가하기'}</button>
+      <button onclick="applySpotEvent('${ev.id}')" style="padding:9px 18px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">신청하기</button>
     </div>
   </div>`;
 }
