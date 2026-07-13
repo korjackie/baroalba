@@ -435,7 +435,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '456';
+  const _APP_V = '457';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -451,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=456').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=457').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -11123,7 +11123,7 @@ async function initOwnerFeatures() {
   if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
 
   // 첫 로그인 온보딩 튜토리얼
-  if (!localStorage.getItem(_OB_KEY)) setTimeout(showOnboarding, 800);
+  if (!localStorage.getItem(_OB_KEY) || location.search.includes('tutorial=1')) setTimeout(showOnboarding, 800);
 
   // 업주 레코드 조회
   const { data: biz } = await db.from('businesses')

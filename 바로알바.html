@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=456"></script>
+  <script src="./shared-lang.js?v=457"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -56,7 +56,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=456">
+  <link rel="stylesheet" href="./assets/css/style.css?v=457">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1551,6 +1551,16 @@
             <div class="mp-row-right"><span id="mp-following-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
+      </div>
+
+      <!-- ── 친구 초대 (추천인 링크) ── -->
+      <div onclick="openReferralInvite()" style="margin:0 0 16px;background:linear-gradient(135deg,#C8102E,#e11d48);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:rgba(200,16,46,0.05)">
+        <div style="width:44px;height:44px;background:rgba(255,255,255,.18);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎁</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:900;color:#fff;line-height:1.25">친구 초대하고 포인트 받기</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:3px">추천코드로 가입하면 서로 포인트 지급</div>
+        </div>
+        <div style="font-size:20px;color:rgba(255,255,255,.6)">›</div>
       </div>
 
       <!-- ── 신원 인증 (바로패스) ── -->
@@ -4048,8 +4058,8 @@
 <!-- ── /owner 기능 패널 ── -->
 <div class="toast hidden" id="toast"></div>
 
-<script src="./assets/js/qrcode.min.js?v=456"></script>
-<script src="./assets/js/app.js?v=456"></script>
+<script src="./assets/js/qrcode.min.js?v=457"></script>
+<script src="./assets/js/app.js?v=457"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
