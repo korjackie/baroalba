@@ -18583,7 +18583,7 @@ async function _loadSpotEvents() {
     .eq('status', 'open').order('event_date', { ascending: true });
   if (error || !data?.length) {
     if (cntEl) cntEl.textContent = '0';
-    el.innerHTML = `<div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 스팟</div><div style="font-size:12px;line-height:1.65">현재 남성 참가자를 모집 중인<br>스팟 이벤트가 없어요</div></div>`;
+    el.innerHTML = `<div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 스팟</div><div style="font-size:12px;line-height:1.65">현재 남성 참가자를 모집 중인<br>바로스팟이 없어요</div></div>`;
     return;
   }
   if (cntEl) cntEl.textContent = data.length;
