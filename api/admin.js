@@ -287,16 +287,21 @@ module.exports = async function handler(req, res) {
     // 추천인 포인트도 RLS로 막혀 누락됐었음 - 이메일로 auth 계정을 찾아 workers
     // 행을 만들고 양쪽 포인트를 소급 지급) ──
     if (action === 'backfill_referral' && req.method === 'POST') {
-      const { email: beEmail, code: beCode } = req.body || {};
-      if (!beEmail || !beCode) return res.status(400).json({ error: 'email, code required' });
+      const { email: beEmail, uid: beUidInput, code: beCode } = req.body || {};
+      if ((!beEmail && !beUidInput) || !beCode) return res.status(400).json({ error: 'email 또는 uid, code required' });
 
-      const authRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(beEmail)}`, {
-        headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` }
-      });
-      const authData = await authRes.json();
-      const targetUser = (authData.users || [])[0];
-      if (!targetUser) return res.status(404).json({ error: '해당 이메일의 가입 계정을 찾을 수 없어요' });
-      const beUid = targetUser.id;
+      let beUid = beUidInput, targetUser = null;
+      if (!beUid) {
+        // uid를 직접 안 넘겼을 때만 이메일로 조회 - Table Editor 등에서 kakao_uid를 이미
+        // 알고 있다면 uid로 바로 넘기는 게 이메일 오인(동명이인/오타) 위험이 없어 더 안전함
+        const authRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(beEmail)}`, {
+          headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` }
+        });
+        const authData = await authRes.json();
+        targetUser = (authData.users || [])[0];
+        if (!targetUser) return res.status(404).json({ error: '해당 이메일의 가입 계정을 찾을 수 없어요' });
+        beUid = targetUser.id;
+      }
 
       const refRows = await sb(`workers?referral_code=eq.${encodeURIComponent(beCode)}&select=kakao_uid`, svcKey).then(r => r.json());
       const referrer = Array.isArray(refRows) ? refRows[0] : null;
@@ -310,6 +315,10 @@ module.exports = async function handler(req, res) {
       if (me) {
         await sb(`workers?id=eq.${me.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ referred_by: referrer.kakao_uid }) });
       } else {
+        if (!targetUser) {
+          const authRes2 = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${beUid}`, { headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` } });
+          targetUser = authRes2.ok ? await authRes2.json() : {};
+        }
         const meta = targetUser.user_metadata || {};
         const name = meta.full_name || meta.name || (targetUser.email ? targetUser.email.split('@')[0] : '알바생');
         await sb('workers', svcKey, { method: 'POST', body: JSON.stringify({ kakao_uid: beUid, name, referred_by: referrer.kakao_uid }) });
@@ -979,6 +988,13 @@ module.exports = async function handler(req, res) {
         } catch (e) { console.error('[user_detail] auth admin lookup error', worker.kakao_uid, e.message); }
       }
 
+      // 포인트 잔액 (point_accounts.user_id = workers.kakao_uid)
+      let pointBalance = null;
+      if (worker.kakao_uid) {
+        const acctRows = await sb(`point_accounts?user_id=eq.${worker.kakao_uid}&select=balance`, svcKey).then(r => r.json()).catch(() => null);
+        pointBalance = Array.isArray(acctRows) && acctRows[0] ? (acctRows[0].balance || 0) : 0;
+      }
+
       const appList = Array.isArray(apps) ? apps : [];
       const jobIds = [...new Set(appList.map(a => a.job_posting_id).filter(Boolean))];
       const jobs = jobIds.length
@@ -986,7 +1002,7 @@ module.exports = async function handler(req, res) {
         : [];
       const jobMap = Object.fromEntries((Array.isArray(jobs) ? jobs : []).map(j => [j.id, j]));
       return res.json({
-        worker: { ...worker, auth_email: authEmail, auth_provider: authProvider },
+        worker: { ...worker, auth_email: authEmail, auth_provider: authProvider, point_balance: pointBalance },
         applications: appList.map(a => ({
           ...a,
           job_title: jobMap[a.job_posting_id]?.title || '(삭제된 공고)',

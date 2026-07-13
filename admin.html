@@ -893,9 +893,11 @@
 <div id="backfill-referral-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
     <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">🎁 과거 추천인 가입 보정</div>
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">회원목록에 안 잡히는 예전 추천가입 건을 찾아 회원 행을 만들고 추천인 포인트를 지급합니다.</div>
-    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">가입한 친구의 이메일</label>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">회원목록에 안 잡히는 예전 추천가입 건을 찾아 회원 행을 만들고 추천인 포인트를 지급합니다. 회원 목록/Table Editor에서 kakao_uid를 이미 확인했다면 이메일 대신 uid를 입력하는 게 더 정확합니다.</div>
+    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">가입한 친구의 이메일 (또는 아래 uid)</label>
     <input id="bf-email" type="email" placeholder="예: friend@gmail.com" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px">
+    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">또는 kakao_uid (Table Editor에서 확인한 값)</label>
+    <input id="bf-uid" type="text" placeholder="예: c7f83921-f4a2-4553-9b6e-d090ca626f6c" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:12px">
     <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">추천코드</label>
     <input id="bf-code" type="text" placeholder="예: S4TJZH" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:18px">
     <div style="display:flex;gap:8px">
@@ -1446,6 +1448,11 @@ function renderUserDetail() {
         <div class="dp-stat-val">${apps.length}</div>
         <div class="dp-stat-label">총 지원</div>
       </div>
+      ${u.point_balance !== null && u.point_balance !== undefined ? `
+      <div class="dp-stat">
+        <div class="dp-stat-val" style="color:#7C3AED">${u.point_balance.toLocaleString()}</div>
+        <div class="dp-stat-label">포인트</div>
+      </div>` : ''}
     </div>
     <div style="font-size:12px;color:#94a3b8;text-align:center;margin-bottom:20px">가입일 ${joinDate}</div>
 
@@ -1533,6 +1540,7 @@ async function submitGrantPoints() {
 // ── 과거 추천인 가입 보정 ──────────────────────────────────
 function openBackfillReferral() {
   document.getElementById('bf-email').value = '';
+  document.getElementById('bf-uid').value = '';
   document.getElementById('bf-code').value = '';
   document.getElementById('backfill-referral-overlay').style.display = 'flex';
 }
@@ -1543,9 +1551,10 @@ function closeBackfillReferral() {
 
 async function submitBackfillReferral() {
   const email = document.getElementById('bf-email').value.trim();
+  const uid = document.getElementById('bf-uid').value.trim();
   const code = document.getElementById('bf-code').value.trim();
-  if (!email || !code) { showToast('이메일과 추천코드를 모두 입력해주세요'); return; }
-  const result = await adminApi('backfill_referral', 'POST', { email, code });
+  if ((!email && !uid) || !code) { showToast('이메일 또는 uid, 추천코드를 입력해주세요'); return; }
+  const result = await adminApi('backfill_referral', 'POST', { email: email || undefined, uid: uid || undefined, code });
   if (result?.error) { showToast('실패: ' + result.error); return; }
   closeBackfillReferral();
   if (result?.already) { showToast('이미 처리된 가입 건이에요'); return; }
