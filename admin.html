@@ -2144,6 +2144,7 @@ async function loadBaromeetings() {
 }
 
 // ── 바로미팅 장소 선택: 제휴매장에서 고르거나 새로 검색 ──────
+let _bmLocationMode = 'partner';
 function setBmLocationMode(mode) {
   const active = { background:'#7C3AED', border:'#7C3AED', color:'#fff' };
   const inactive = { background:'#fff', border:'#e2e8f0', color:'#64748b' };
@@ -2155,6 +2156,7 @@ function setBmLocationMode(mode) {
   searchBtn.style.background = s.background; searchBtn.style.borderColor = s.border; searchBtn.style.color = s.color;
   document.getElementById('bm-partner-select').style.display = mode === 'partner' ? 'block' : 'none';
   document.getElementById('bm-search-block').style.display = mode === 'search' ? 'block' : 'none';
+  _bmLocationMode = mode;
   if (mode === 'partner') loadBmPartnerOptions();
 }
 
@@ -2427,6 +2429,11 @@ async function saveBaromeeting() {
   };
   if (!payload.title) { showToast('미팅 제목을 입력해주세요'); return; }
   if (!payload.gathering_date) { showToast('날짜와 시간을 입력해주세요'); return; }
+  // 바로스팟과 동일한 로직 - 제휴목록에 없는 새 장소를 검색해서 골랐다면 다음에도
+  // 재사용할 수 있게 제휴매장으로 같이 등록해둔다(실패해도 미팅 저장 자체는 계속 진행)
+  if (_bmLocationMode === 'search' && locationName) {
+    await adminApi('save_restaurant', 'POST', { name: locationName, address: locationAddress }).catch(() => {});
+  }
   const result = await adminApi('save_baromeeting', id ? 'PATCH' : 'POST', payload);
   if (result?.error) { showToast('저장 실패: ' + result.error); return; }
   showToast(id ? '바로미팅 정보가 수정됐습니다' : '바로미팅이 개설됐습니다');
