@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '471';
+  const _APP_V = '472';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=471').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=472').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18544,8 +18544,11 @@ async function _loadFemaleApplications() {
   if (!currentUser) return;
   const el = document.getElementById('mnm-f-apps');
   if (!el) return;
+  // 실제 barospot_events 스키마엔 restaurant_name/event_time 컬럼이 없음(restaurant_id로
+  // barospot_restaurants를 조인해야 식당명이 나오고, 일시는 event_date 하나로 통합돼 있음) -
+  // 예전 쿼리는 존재하지 않는 컬럼을 select해서 매번 400 에러로 조용히 실패하고 있었음
   const { data, error } = await db.from('barospot_applications')
-    .select('id, status, created_at, barospot_events(restaurant_name, event_date, event_time)')
+    .select('id, event_id, status, created_at, barospot_events(event_date, barospot_restaurants(name))')
     .eq('user_id', currentUser.id).eq('gender', 'female')
     .order('created_at', { ascending: false }).limit(10);
   if (error || !data?.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div>'; return; }
@@ -18554,12 +18557,15 @@ async function _loadFemaleApplications() {
   el.innerHTML = data.map(a => {
     const ev = a.barospot_events;
     const st = a.status;
-    return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0">
+    const canTrack = ev && (st === 'matched' || st === 'confirmed');
+    const whenText = ev?.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0;${canTrack ? 'cursor:pointer' : ''}" ${canTrack ? `onclick="_openSpotEventTracking('${a.event_id}', ${st === 'confirmed'})"` : ''}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
         <div style="font-size:13px;font-weight:800;color:#222">신청 #${a.id.slice(-6).toUpperCase()}</div>
         <div style="font-size:11px;font-weight:700;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:3px 8px;border-radius:8px">${statusLabel[st]||st}</div>
       </div>
-      ${ev ? `<div style="font-size:12px;color:#666">${ev.restaurant_name} · ${ev.event_date} ${ev.event_time}</div>` : ''}
+      ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || '식당 정보 확인 중'} · ${whenText}</div>` : ''}
+      ${canTrack ? `<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:6px">🗺️ 눌러서 위치·거리 보기</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -18568,8 +18574,12 @@ async function _loadSpotEvents() {
   const el = document.getElementById('mnm-m-events');
   const cntEl = document.getElementById('mnm-spot-event-count');
   if (!el) return;
+  // 실제 barospot_events 스키마엔 restaurant_name/event_time/male_slots/male_remaining/
+  // male_price/menu_description 컬럼이 없음 - 식당명·메뉴·가격은 restaurant_id로 조인한
+  // barospot_restaurants(name,menu_description,base_price)에서, 잔여좌석은 male_max-male_cur로
+  // 계산해야 함(예전 쿼리는 존재하지 않는 컬럼 select로 매번 400 에러가 나서 항상 빈 목록이었음)
   const { data, error } = await db.from('barospot_events')
-    .select('id, restaurant_name, event_date, event_time, male_slots, male_remaining, menu_description, male_price')
+    .select('id, event_date, male_max, male_cur, barospot_restaurants(name, menu_description, base_price)')
     .eq('status', 'open').order('event_date', { ascending: true });
   if (error || !data?.length) {
     if (cntEl) cntEl.textContent = '0';
@@ -18581,21 +18591,25 @@ async function _loadSpotEvents() {
 }
 
 function _renderSpotEventCard(ev) {
-  const full = ev.male_remaining <= 0;
+  const r = ev.barospot_restaurants || {};
+  const maleMax = ev.male_max || 0, maleCur = ev.male_cur || 0;
+  const remaining = maleMax - maleCur;
+  const full = remaining <= 0;
+  const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
   return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #e8eaed;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
       <div>
-        <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${ev.restaurant_name}</div>
-        <div style="font-size:12px;color:#888">${ev.event_date} ${ev.event_time}</div>
+        <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || '식당 정보 확인 중'}</div>
+        <div style="font-size:12px;color:#888">${whenText}</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:11px;color:#888;margin-bottom:2px">남성 잔여</div>
-        <div style="font-size:16px;font-weight:900;color:${full?'#ccc':'#3b82f6'}">${ev.male_remaining}<span style="font-size:11px;color:#aaa">/${ev.male_slots}</span></div>
+        <div style="font-size:16px;font-weight:900;color:${full?'#ccc':'#3b82f6'}">${Math.max(0,remaining)}<span style="font-size:11px;color:#aaa">/${maleMax}</span></div>
       </div>
     </div>
-    ${ev.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${ev.menu_description}</div>` : ''}
+    ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:13px;font-weight:800;color:#3b82f6">${ev.male_price?.toLocaleString()}원 <span style="font-size:11px;color:#aaa;font-weight:400">식사비 포함</span></div>
+      <div style="font-size:13px;font-weight:800;color:#3b82f6">${(r.base_price||0).toLocaleString()}원 <span style="font-size:11px;color:#aaa;font-weight:400">식사비 포함</span></div>
       <button onclick="applySpotEvent('${ev.id}')" ${full?'disabled':''} style="padding:9px 18px;background:${full?'#e5e7eb':'#3b82f6'};color:${full?'#aaa':'#fff'};border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:${full?'default':'pointer'}">${full?'마감':'참가하기'}</button>
     </div>
   </div>`;
@@ -18621,28 +18635,30 @@ async function applySpotEvent(eventId) {
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
   showToast('참가 신청 완료! 매니저가 확인 후 안내드립니다');
   await _loadSpotEvents();
-  _openSpotEventTracking(eventId);
+  _openSpotEventTracking(eventId, false); // 신청 직후는 아직 미확정 상태라 위치공유는 확정 후에만 가능
 }
 
-// 신청 완료 직후 스팟 이벤트 정보를 불러와 실시간 추적화면을 연다
+// 신청 완료 직후(또는 마이페이지 신청내역에서) 스팟 이벤트 정보를 불러와 실시간 추적화면을 연다
 // (바로스팟 여성 신청(applyBarospot)은 이 시점엔 매장/일정이 아직 매니저 배정 전이라
-// 추적할 대상이 없음 - 남성이 참가하는 이미 개설된 이벤트(applySpotEvent)만 해당)
-async function _openSpotEventTracking(eventId) {
+// 추적할 대상이 없음 - 매칭된 이후에만 event_id로 이 함수를 호출)
+async function _openSpotEventTracking(eventId, iAmApproved) {
   const { data: ev } = await db.from('barospot_events')
-    .select('restaurant_name, event_date, event_time')
+    .select('event_date, address, lat, lng, barospot_restaurants(name, address)')
     .eq('id', eventId).single();
   if (!ev) return;
-  const whenISO = ev.event_date && ev.event_time ? `${ev.event_date}T${ev.event_time}` : null;
-  const whenText = whenISO ? new Date(whenISO).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : `${ev.event_date || ''} ${ev.event_time || ''}`.trim();
+  const r = ev.barospot_restaurants || {};
+  const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
   openTrackingSheet({
     brand: '📍 바로스팟',
-    title: ev.restaurant_name || '바로스팟',
-    place: ev.restaurant_name || '-',
-    placeName: ev.restaurant_name,
-    whenISO,
-    whenText: whenText || '일정 확인 중',
+    title: r.name || '바로스팟',
+    place: r.name || '-',
+    addressQuery: ev.address || r.address,
+    placeName: r.name,
+    whenISO: ev.event_date,
+    whenText,
     steps: ['신청완료','매니저 확인 중','확정','종료'],
     stepIndex: 0,
+    liveShare: { contextType: 'barospot', contextId: eventId, destLat: ev.lat, destLng: ev.lng, iAmApproved: !!iAmApproved },
   });
 }
 

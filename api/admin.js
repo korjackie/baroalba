@@ -92,6 +92,32 @@ async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) 
   }));
 }
 
+// 범용 인앱 알림 + 푸시 발송 (제목/본문을 직접 넘기는 단순 버전)
+async function notifyUser(userId, title, body, type, svcKey, req) {
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const baseUrl = host ? `https://${host}` : '';
+  await sb('notifications', svcKey, {
+    method: 'POST', headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ user_id: userId, title, body, type }),
+  }).catch(() => {});
+  if (baseUrl) {
+    await fetch(`${baseUrl}/api/send-push`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, title, body, url: '/바로알바.html', type }),
+    }).catch(() => {});
+  }
+}
+
+// 바로미팅의 recomputeBaromeetCounts와 동일한 이유(수동 +1/-1은 드리프트 발생) -
+// 매번 실제 confirmed 신청 건수로 재계산해 male_cur/female_cur를 덮어씀
+async function recomputeBarospotCounts(eventId, svcKey) {
+  const apps = await sb(`barospot_applications?event_id=eq.${eventId}&status=eq.confirmed&select=gender`, svcKey).then(r => r.json());
+  const list = Array.isArray(apps) ? apps : [];
+  const maleCur = list.filter(a => a.gender === 'male').length;
+  const femaleCur = list.filter(a => a.gender === 'female').length;
+  await sb(`barospot_events?id=eq.${eventId}`, svcKey, { method: 'PATCH', body: JSON.stringify({ male_cur: maleCur, female_cur: femaleCur }) });
+}
+
 // 포인트 지급/차감 시 인앱 알림 + 푸시 발송 (추천인 보상, 관리자 수동 지급 공통 사용)
 async function notifyPointsGranted(userId, amount, reason, svcKey, req) {
   const title = amount > 0 ? '🎁 포인트가 지급됐어요' : '포인트 차감 안내';
@@ -519,6 +545,113 @@ module.exports = async function handler(req, res) {
         method: 'PATCH', body: JSON.stringify({ is_active: !!is_active })
       });
       if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 바로스팟 이벤트 목록 (실제 barospot_events 스키마: restaurant_id, event_date,
+    // female_max/female_cur, male_max/male_cur, status, notes, address, lat, lng -
+    // restaurant_name/event_time/male_slots 같은 컬럼은 존재한 적이 없음) ──
+    if (action === 'barospot_events') {
+      const data = await sb(
+        'barospot_events?select=id,restaurant_id,event_date,female_max,female_cur,male_max,male_cur,status,notes,address,lat,lng,barospot_restaurants(name,menu_description,base_price)&order=event_date.desc&limit=100',
+        svcKey
+      ).then(r => r.json());
+      return res.json(Array.isArray(data) ? data : []);
+    }
+
+    // ── 바로스팟 이벤트 개설/수정 - 주소는 서버사이드로 지오코딩(카카오 로컬 API) ──
+    if (action === 'save_barospot_event' && (req.method === 'POST' || req.method === 'PATCH')) {
+      const { id, restaurant_id, event_date, female_max, male_max, status, notes, address } = req.body || {};
+      if (!restaurant_id) return res.status(400).json({ error: '제휴매장을 선택해주세요' });
+      if (!event_date) return res.status(400).json({ error: '일시를 입력해주세요' });
+      const payload = {
+        restaurant_id,
+        event_date,
+        female_max: parseInt(female_max) || 0,
+        male_max: parseInt(male_max) || 0,
+        status: status || 'open',
+        notes: (notes || '').trim() || null,
+        address: (address || '').trim() || null,
+      };
+      if (payload.address) {
+        const geo = await geocodeAddress(payload.address, null);
+        payload.lat = geo.lat; payload.lng = geo.lng;
+      }
+      let r;
+      if (id) {
+        r = await sb(`barospot_events?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify(payload) });
+      } else {
+        payload.female_cur = 0; payload.male_cur = 0;
+        r = await sb('barospot_events', svcKey, { method: 'POST', body: JSON.stringify(payload) });
+      }
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 바로스팟 이벤트 마감/재오픈 ──────────────────────
+    if (action === 'toggle_barospot_event' && req.method === 'PATCH') {
+      const { id, status } = req.body || {};
+      if (!id || !status) return res.status(400).json({ error: 'id, status required' });
+      const r = await sb(`barospot_events?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      return res.json({ ok: true });
+    }
+
+    // ── 바로스팟 신청 목록 (여성: 매장배정 대기, 남성: 확정대기 등) ──
+    if (action === 'barospot_applications') {
+      const statusFilter = req.query.status;
+      let url = 'barospot_applications?select=id,event_id,user_id,gender,status,created_at&order=created_at.desc&limit=200';
+      if (statusFilter) url += `&status=eq.${encodeURIComponent(statusFilter)}`;
+      const apps = await sb(url, svcKey).then(r => r.json());
+      const list = Array.isArray(apps) ? apps : [];
+      const userIds = [...new Set(list.map(a => a.user_id).filter(Boolean))];
+      let nameMap = {};
+      if (userIds.length) {
+        const workers = await sb(`workers?kakao_uid=in.(${userIds.join(',')})&select=kakao_uid,name,phone`, svcKey).then(r => r.json());
+        nameMap = Object.fromEntries((workers || []).map(w => [w.kakao_uid, w]));
+      }
+      return res.json(list.map(a => ({ ...a, worker: nameMap[a.user_id] || null })));
+    }
+
+    // ── 여성 신청을 특정 이벤트(매장)에 매칭 - 남성은 신청 시 이미 event_id를 직접 고르므로 대상 아님 ──
+    if (action === 'match_barospot_application' && req.method === 'POST') {
+      const { application_id, event_id } = req.body || {};
+      if (!application_id || !event_id) return res.status(400).json({ error: 'application_id, event_id required' });
+      const appRows = await sb(`barospot_applications?id=eq.${application_id}&select=id,user_id`, svcKey).then(r => r.json());
+      const app = appRows?.[0];
+      if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
+      const r = await sb(`barospot_applications?id=eq.${application_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ event_id, status: 'matched' }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      await notifyUser(app.user_id, '🍽️ 바로스팟 매장 배정 완료', '식당이 배정됐어요! 마이페이지에서 확인해보세요.', 'barospot_matched', svcKey, req);
+      return res.json({ ok: true });
+    }
+
+    // ── 신청 확정 (여성: matched→confirmed, 남성: pending→confirmed) - 확정 인원수 재계산 ──
+    if (action === 'confirm_barospot_application' && req.method === 'PATCH') {
+      const { application_id } = req.body || {};
+      if (!application_id) return res.status(400).json({ error: 'application_id required' });
+      const appRows = await sb(`barospot_applications?id=eq.${application_id}&select=id,user_id,event_id`, svcKey).then(r => r.json());
+      const app = appRows?.[0];
+      if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
+      if (!app.event_id) return res.status(400).json({ error: '아직 매장이 배정되지 않은 신청이에요' });
+      const r = await sb(`barospot_applications?id=eq.${application_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      await recomputeBarospotCounts(app.event_id, svcKey);
+      await notifyUser(app.user_id, '✅ 바로스팟 일정 확정', '참가 일정이 확정됐어요! 위치·거리 실시간 공유를 이용할 수 있어요.', 'barospot_confirmed', svcKey, req);
+      return res.json({ ok: true });
+    }
+
+    // ── 신청 취소 (환불 로직 없음 - 필요 시 별도 요청) ──
+    if (action === 'cancel_barospot_application' && req.method === 'PATCH') {
+      const { application_id } = req.body || {};
+      if (!application_id) return res.status(400).json({ error: 'application_id required' });
+      const appRows = await sb(`barospot_applications?id=eq.${application_id}&select=id,user_id,event_id`, svcKey).then(r => r.json());
+      const app = appRows?.[0];
+      if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
+      const r = await sb(`barospot_applications?id=eq.${application_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      if (app.event_id) await recomputeBarospotCounts(app.event_id, svcKey);
+      await notifyUser(app.user_id, '바로스팟 신청 취소 안내', '신청이 취소됐어요. 문의사항은 고객센터로 연락해주세요.', 'barospot_cancelled', svcKey, req);
       return res.json({ ok: true });
     }
 

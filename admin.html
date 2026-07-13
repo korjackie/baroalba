@@ -644,6 +644,44 @@
         </div>
       </div>
     </div>
+
+    <!-- 바로스팟 이벤트(구체적 일정) 개설/관리 - 제휴매장은 일반 정보, 이벤트는 특정 날짜·정원 세션 -->
+    <div style="margin-top:24px">
+      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">📍 바로스팟 이벤트 (일정 개설)</div>
+      <div id="barospot-events-list"><div class="loading">로딩 중...</div></div>
+      <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <div id="bse-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">이벤트 개설</div>
+        <input type="hidden" id="bse-id">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <select id="bse-restaurant" onchange="selectBseRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
+            <option value="">제휴매장을 선택하세요</option>
+          </select>
+          <input id="bse-datetime" type="datetime-local" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bse-address" type="text" placeholder="이벤트 장소 주소 (실시간 위치추적을 쓰려면 꼭 입력)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <div style="display:flex;gap:8px">
+            <input id="bse-female-max" type="number" min="0" placeholder="여성 정원" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+            <input id="bse-male-max" type="number" min="0" placeholder="남성 정원" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          </div>
+          <textarea id="bse-notes" placeholder="메모 (선택)" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button onclick="saveBarospotEvent()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
+            <button onclick="resetBarospotEventForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 바로스팟 신청 매칭/확정 -->
+    <div style="margin-top:24px">
+      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🙋 바로스팟 신청 관리</div>
+      <div class="filter-bar" style="margin-bottom:10px">
+        <button class="filter-btn active" onclick="filterBarospotApps('pending', this)">대기중</button>
+        <button class="filter-btn" onclick="filterBarospotApps('matched', this)">매칭됨</button>
+        <button class="filter-btn" onclick="filterBarospotApps('confirmed', this)">확정</button>
+        <button class="filter-btn" onclick="filterBarospotApps('cancelled', this)">취소</button>
+      </div>
+      <div id="barospot-apps-list"><div class="loading">로딩 중...</div></div>
+    </div>
   </div>
 
   <!-- 프로모션 쿠폰 관리 -->
@@ -1042,7 +1080,12 @@ function switchTab(name) {
   if (name === 'admins'      && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
   if (name === 'baroalba' || name === 'baromoim' || name === 'lesson') loadCategoryList(name);
   if (name === 'mannnam')    { loadMannnamManagers(); searchBizForMannnam(''); }
-  if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
+  if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) {
+    loadRestaurants();
+    loadBseRestaurantOptions();
+    loadBarospotEvents();
+    loadBarospotApplications('pending');
+  }
   if (name === 'coupons'     && document.getElementById('coupons-list').innerHTML.includes('로딩')) loadCoupons();
   if (name === 'pass-pricing' && document.getElementById('pass-pricing-list').innerHTML.includes('로딩')) loadPassPricing();
   if (name === 'baromeetings' && document.getElementById('baromeetings-list').innerHTML.includes('로딩')) { loadBaromeetings(); loadBmPartnerOptions(); }
@@ -2439,6 +2482,174 @@ function resetRestaurantForm() {
   document.getElementById('r-place-query').value = '';
   document.getElementById('r-place-results').style.display = 'none';
   document.getElementById('r-phone-hint').style.display = 'none';
+}
+
+// ── 바로스팟 이벤트(일정) 관리 ───────────────────────────
+async function loadBseRestaurantOptions() {
+  const sel = document.getElementById('bse-restaurant');
+  const data = await adminApi('barospot_restaurants');
+  const list = Array.isArray(data) ? data.filter(r => r.is_active) : [];
+  sel._list = list;
+  sel.innerHTML = '<option value="">제휴매장을 선택하세요</option>' +
+    (list.length ? list.map(r => `<option value="${r.id}">${r.name}</option>`).join('') : '<option value="" disabled>등록된 제휴매장이 없어요</option>');
+}
+
+function selectBseRestaurant() {
+  const sel = document.getElementById('bse-restaurant');
+  const r = (sel._list || []).find(x => x.id === sel.value);
+  if (!r) return;
+  if (!document.getElementById('bse-address').value) document.getElementById('bse-address').value = r.address || '';
+}
+
+let _barospotEvents = [];
+async function loadBarospotEvents() {
+  const el = document.getElementById('barospot-events-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('barospot_events');
+  _barospotEvents = Array.isArray(data) ? data : [];
+  el.innerHTML = _barospotEvents.length
+    ? _barospotEvents.map(ev => {
+        const r = ev.barospot_restaurants || {};
+        const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
+        const isOpen = ev.status === 'open';
+        return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
+            <div style="min-width:0">
+              <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '식당 미배정'}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px">${whenText} · 여 ${ev.female_cur||0}/${ev.female_max||0} · 남 ${ev.male_cur||0}/${ev.male_max||0}</div>
+              ${ev.address ? `<div style="font-size:11px;color:#94a3b8">${ev.address}${(ev.lat==null)?' (좌표 확보 실패 - 주소 확인 필요)':''}</div>` : ''}
+            </div>
+            <span class="status-badge ${isOpen ? 'sb-done' : 'sb-dismissed'}" style="flex-shrink:0">${isOpen ? '모집중' : '마감'}</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="r-btn r-btn-reviewing" onclick="editBarospotEvent('${ev.id}')">수정</button>
+            <button class="r-btn ${isOpen ? 'r-btn-dismiss' : 'r-btn-done'}" onclick="toggleBarospotEvent('${ev.id}', '${isOpen ? 'closed' : 'open'}')">${isOpen ? '마감' : '재오픈'}</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="empty">개설된 이벤트가 없습니다</div>';
+}
+
+function editBarospotEvent(id) {
+  const ev = _barospotEvents.find(e => e.id === id);
+  if (!ev) return;
+  document.getElementById('bse-id').value = ev.id;
+  document.getElementById('bse-restaurant').value = ev.restaurant_id || '';
+  if (ev.event_date) {
+    const d = new Date(ev.event_date);
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('bse-datetime').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  document.getElementById('bse-address').value = ev.address || '';
+  document.getElementById('bse-female-max').value = ev.female_max || '';
+  document.getElementById('bse-male-max').value = ev.male_max || '';
+  document.getElementById('bse-notes').value = ev.notes || '';
+  document.getElementById('bse-form-title').textContent = '이벤트 수정';
+}
+
+function resetBarospotEventForm() {
+  document.getElementById('bse-id').value = '';
+  document.getElementById('bse-restaurant').value = '';
+  ['bse-datetime','bse-address','bse-female-max','bse-male-max','bse-notes'].forEach(k => document.getElementById(k).value = '');
+  document.getElementById('bse-form-title').textContent = '이벤트 개설';
+}
+
+async function saveBarospotEvent() {
+  const id = document.getElementById('bse-id').value;
+  const restaurant_id = document.getElementById('bse-restaurant').value;
+  const dt = document.getElementById('bse-datetime').value;
+  if (!restaurant_id) { showToast('제휴매장을 선택해주세요'); return; }
+  if (!dt) { showToast('일시를 입력해주세요'); return; }
+  const payload = {
+    id: id || undefined,
+    restaurant_id,
+    event_date: new Date(dt).toISOString(),
+    address: document.getElementById('bse-address').value.trim(),
+    female_max: document.getElementById('bse-female-max').value,
+    male_max: document.getElementById('bse-male-max').value,
+    notes: document.getElementById('bse-notes').value.trim(),
+  };
+  const result = await adminApi('save_barospot_event', id ? 'PATCH' : 'POST', payload);
+  if (result?.error) { showToast('저장 실패: ' + result.error); return; }
+  showToast(id ? '이벤트가 수정됐습니다' : '이벤트가 개설됐습니다');
+  resetBarospotEventForm();
+  loadBarospotEvents();
+}
+
+async function toggleBarospotEvent(id, status) {
+  const result = await adminApi('toggle_barospot_event', 'PATCH', { id, status });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  loadBarospotEvents();
+}
+
+// ── 바로스팟 신청 매칭/확정 ───────────────────────────────
+let _barospotAppsStatus = 'pending';
+function filterBarospotApps(status, btnEl) {
+  _barospotAppsStatus = status;
+  btnEl.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btnEl.classList.add('active');
+  loadBarospotApplications(status);
+}
+
+async function loadBarospotApplications(status) {
+  const el = document.getElementById('barospot-apps-list');
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const data = await adminApi('barospot_applications', 'GET', null, { status });
+  const list = Array.isArray(data) ? data : [];
+  const openEvents = _barospotEvents.filter(e => e.status === 'open');
+  el.innerHTML = list.length
+    ? list.map(a => {
+        const w = a.worker || {};
+        const genderLabel = a.gender === 'male' ? '남성' : '여성';
+        const needsMatch = status === 'pending' && a.gender === 'female' && !a.event_id;
+        const canConfirm = (status === 'pending' && a.event_id) || status === 'matched';
+        return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+            <div style="font-size:14px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel} · ${w.phone||'-'}</span></div>
+          </div>
+          ${needsMatch ? `
+          <div style="display:flex;gap:6px">
+            <select id="bse-match-${a.id}" style="flex:1;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;background:#fff">
+              <option value="">매칭할 이벤트 선택</option>
+              ${openEvents.map(e => `<option value="${e.id}">${(e.barospot_restaurants?.name)||'식당'} · ${new Date(e.event_date).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</option>`).join('')}
+            </select>
+            <button class="r-btn r-btn-done" onclick="matchBarospotApplication('${a.id}')">매칭</button>
+          </div>` : ''}
+          <div style="display:flex;gap:6px;${needsMatch ? 'margin-top:6px' : ''}">
+            ${canConfirm ? `<button class="r-btn r-btn-done" onclick="confirmBarospotApplication('${a.id}')">확정</button>` : ''}
+            ${status !== 'cancelled' ? `<button class="r-btn r-btn-dismiss" onclick="cancelBarospotApplication('${a.id}')">취소</button>` : ''}
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="empty">해당하는 신청이 없습니다</div>';
+}
+
+async function matchBarospotApplication(applicationId) {
+  const sel = document.getElementById(`bse-match-${applicationId}`);
+  const eventId = sel?.value;
+  if (!eventId) { showToast('매칭할 이벤트를 선택해주세요'); return; }
+  const result = await adminApi('match_barospot_application', 'POST', { application_id: applicationId, event_id: eventId });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  showToast('매장이 배정됐습니다');
+  loadBarospotApplications(_barospotAppsStatus);
+}
+
+async function confirmBarospotApplication(applicationId) {
+  const result = await adminApi('confirm_barospot_application', 'PATCH', { application_id: applicationId });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  showToast('확정됐습니다');
+  loadBarospotApplications(_barospotAppsStatus);
+  loadBarospotEvents();
+}
+
+async function cancelBarospotApplication(applicationId) {
+  const ok = await adminConfirm('이 신청을 취소하시겠습니까?', '취소하기');
+  if (!ok) return;
+  const result = await adminApi('cancel_barospot_application', 'PATCH', { application_id: applicationId });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  showToast('신청이 취소됐습니다');
+  loadBarospotApplications(_barospotAppsStatus);
+  loadBarospotEvents();
 }
 
 // ── 네이버 플레이스 검색 (제휴 매장 등록용) ──────────────
