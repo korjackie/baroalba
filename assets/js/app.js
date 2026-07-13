@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '476';
+  const _APP_V = '477';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=476').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=477').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18462,6 +18462,8 @@ async function _loadBarospotList() {
     const el = document.getElementById('mnm-f-pass-count');
     if (el) el.textContent = _spotPassCount;
     await _loadFemaleApplications();
+    await _loadBarospotInterestToggle();
+    await loadNearbyBarospotOffers();
     show('mnm-spot-female');
   } else {
     const el = document.getElementById('mnm-m-pass-count');
@@ -18682,6 +18684,106 @@ async function selectBarospotCandidate(myApplicationId, candidateApplicationId) 
     closeBottomSheet();
     showToast('🎉 매칭이 확정됐어요!');
     await _loadFemaleApplications();
+  } catch (e) {
+    showToast('오류가 발생했어요');
+  }
+}
+
+// ── 바로스팟 희망 알림 (반경 5km opt-in) ───────────────────
+async function _loadBarospotInterestToggle() {
+  const { data: w } = await db.from('workers').select('barospot_interested').eq('kakao_uid', currentUser.id).maybeSingle();
+  _renderBarospotInterestToggle(!!w?.barospot_interested);
+}
+
+function _renderBarospotInterestToggle(on) {
+  const toggle = document.getElementById('mnm-spot-interest-toggle');
+  const thumb = document.getElementById('mnm-spot-interest-thumb');
+  if (!toggle || !thumb) return;
+  toggle.style.background = on ? '#f43f5e' : '#ddd';
+  thumb.style.left = on ? '22px' : '2px';
+}
+
+async function toggleBarospotInterest() {
+  const { data: w } = await db.from('workers').select('barospot_interested').eq('kakao_uid', currentUser.id).maybeSingle();
+  const turningOn = !w?.barospot_interested;
+  if (!turningOn) {
+    await db.from('workers').update({ barospot_interested: false }).eq('kakao_uid', currentUser.id);
+    _renderBarospotInterestToggle(false);
+    showToast('바로스팟 알림을 껐어요');
+    return;
+  }
+  if (!navigator.geolocation) { showToast('이 기기에서 위치 확인을 지원하지 않아요'); return; }
+  showToast('위치 확인 중...');
+  navigator.geolocation.getCurrentPosition(async pos => {
+    await db.from('workers').update({
+      barospot_interested: true,
+      last_lat: pos.coords.latitude, last_lng: pos.coords.longitude, last_location_at: new Date().toISOString(),
+    }).eq('kakao_uid', currentUser.id);
+    _renderBarospotInterestToggle(true);
+    showToast('🔔 바로스팟 알림을 켰어요');
+    await loadNearbyBarospotOffers();
+  }, () => {
+    showToast('위치 권한이 필요해요');
+  }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 });
+}
+
+// 반경 내 "여성 모집중" 상태(아직 아무도 선점 안 한) 바로스팟 목록 - 거리 계산은
+// 클라이언트에서 직접(외부 API 불필요, 실시간 위치공유 트래커와 동일한 하버사인 방식)
+async function loadNearbyBarospotOffers() {
+  const wrap = document.getElementById('mnm-spot-nearby-wrap');
+  const list = document.getElementById('mnm-spot-nearby-list');
+  if (!wrap || !list) return;
+  if (!navigator.geolocation) { wrap.style.display = 'none'; return; }
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { data, error } = await db.from('barospot_events')
+      .select('id, event_date, lat, lng, barospot_restaurants(name)')
+      .eq('status', 'recruiting_female').not('lat', 'is', null);
+    if (error || !data?.length) { wrap.style.display = 'none'; return; }
+    const NEARBY_RADIUS_KM = 5;
+    const nearby = data
+      .map(ev => ({ ...ev, distKm: _haversineM(pos.coords.latitude, pos.coords.longitude, ev.lat, ev.lng) / 1000 }))
+      .filter(ev => ev.distKm <= NEARBY_RADIUS_KM)
+      .sort((a, b) => a.distKm - b.distKm);
+    if (!nearby.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    list.innerHTML = nearby.map(ev => {
+      const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
+      return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid #fce7f3;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:800;color:#222">${ev.barospot_restaurants?.name || '식당 정보 확인 중'}</div>
+          <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · ${ev.distKm.toFixed(1)}km</div>
+        </div>
+        <button onclick="claimBarospotEvent('${ev.id}')" style="flex-shrink:0;padding:9px 14px;background:#f43f5e;color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">선점하기</button>
+      </div>`;
+    }).join('');
+  }, () => { wrap.style.display = 'none'; }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 });
+}
+
+async function claimBarospotEvent(eventId) {
+  if (_spotPassCount < 1) {
+    showToast('이용권이 없습니다. 먼저 구매해주세요');
+    openSpotPassSheet('female');
+    return;
+  }
+  const confirmed = await showConfirmDialog('바로스팟 선점', '이 바로스팟을 선점하시겠어요?\n이용권 1회가 차감돼요.', '선점하기', '취소');
+  if (!confirmed) return;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/api/admin?action=claim_barospot_event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ event_id: eventId })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('😢 ' + (data.error || '선점에 실패했어요')); await loadNearbyBarospotOffers(); return; }
+    // 선점 성공 후에만 이용권 차감 (실패했는데 먼저 깎으면 안 됨)
+    const { data: passRow } = await db.from('barospot_passes')
+      .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'female').eq('status', 'active').maybeSingle();
+    if (passRow && passRow.remaining_count > 0) {
+      await db.from('barospot_passes').update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
+    }
+    showToast('🎉 선점 완료! 남성 신청을 기다려주세요');
+    await _loadBarospotList();
   } catch (e) {
     showToast('오류가 발생했어요');
   }

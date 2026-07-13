@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=476"></script>
+  <script src="./shared-lang.js?v=477"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=476">
+  <link rel="stylesheet" href="./assets/css/style.css?v=477">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -4064,7 +4064,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=476"></script>
+<script src="./assets/js/app.js?v=477"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4458,7 +4458,22 @@
             <button onclick="openSpotPassSheet('female')" style="background:rgba(255,255,255,0.25);border:none;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:10px;cursor:pointer">이용권 구매</button>
           </div>
         </div>
-        <!-- 신청하기 -->
+        <!-- 바로스팟 희망 알림 (반경 5km 내 새 바로스팟 개설 시 푸시) -->
+        <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #fce7f3;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:2px">🔔 바로스팟 알림 받기</div>
+            <div style="font-size:11px;color:#aaa">내 주변 5km에 바로스팟이 열리면 알려드려요</div>
+          </div>
+          <div id="mnm-spot-interest-toggle" onclick="toggleBarospotInterest()" style="width:44px;height:24px;border-radius:12px;background:#ddd;position:relative;flex-shrink:0;cursor:pointer">
+            <div id="mnm-spot-interest-thumb" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></div>
+          </div>
+        </div>
+        <!-- 내 주변에 열려서 선점 가능한 바로스팟 -->
+        <div id="mnm-spot-nearby-wrap" style="display:none;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">📍 내 주변 열린 바로스팟 · 먼저 신청하면 선점돼요</div>
+          <div id="mnm-spot-nearby-list"></div>
+        </div>
+        <!-- 신청하기 (특정 바로스팟이 아직 없어도 관심 등록 - 매니저가 나중에 수동 배정 가능) -->
         <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #fce7f3">
           <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:6px">바로스팟 신청</div>
           <div style="font-size:12px;color:#777;line-height:1.7;margin-bottom:14px">신청 완료 후 매니저가 제휴 식당 · 일정을 배정합니다.<br>확정되면 앱 알림으로 안내드려요.</div>

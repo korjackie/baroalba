@@ -40,6 +40,14 @@ function wvHtmlPage(title, message, ok) {
 </body></html>`;
 }
 
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 // 주소 → 좌표 서버사이드 지오코딩 (카카오 로컬 API, 주소검색 실패 시 키워드검색 폴백)
 // 클라이언트(admin.html)도 같은 순서로 카카오 JS SDK를 이용해 시도하지만, SDK 로딩 타이밍이나
 // 상세주소 포맷 이슈로 실패할 수 있어 서버에서 한 번 더(REST API로, SDK 로딩 이슈 없이) 시도한다.
@@ -663,15 +671,56 @@ module.exports = async function handler(req, res) {
         const geo = await geocodeAddress(payload.address, null);
         payload.lat = geo.lat; payload.lng = geo.lng;
       }
-      let r;
+      let r, createdId = id;
       if (id) {
         r = await sb(`barospot_events?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify(payload) });
       } else {
-        payload.status = 'recruiting_male'; // v1: 여성 신청이 먼저 있는 흐름만 지원
+        // 관리자가 매장/일시만 먼저 정해서 열고, 반경 내 "바로스팟 희망" 여성들에게 푸시로
+        // 알려서 선착순으로 선점하게 하는 흐름 - 여성이 아직 없으니 recruiting_female로 시작
+        payload.status = 'recruiting_female';
         r = await sb('barospot_events', svcKey, { method: 'POST', body: JSON.stringify(payload) });
       }
       if (!r.ok) return res.status(502).json({ error: await r.text() });
+      const savedRows = await r.json();
+      createdId = createdId || savedRows?.[0]?.id;
+
+      // 신규 개설 + 좌표 확보 성공 시에만 반경 5km 내 opt-in 여성에게 알림 발송
+      if (!id && payload.lat != null && payload.lng != null && createdId) {
+        const BAROSPOT_PUSH_RADIUS_KM = 5;
+        const candidates = await sb(`workers?barospot_interested=eq.true&last_lat=not.is.null&last_lng=not.is.null&select=kakao_uid,last_lat,last_lng`, svcKey).then(r => r.json()).catch(() => []);
+        const nearby = (Array.isArray(candidates) ? candidates : []).filter(w => haversineKm(payload.lat, payload.lng, w.last_lat, w.last_lng) <= BAROSPOT_PUSH_RADIUS_KM);
+        for (const w of nearby) {
+          await notifyUser(w.kakao_uid, '🍽️ 근처에 바로스팟이 열렸어요!', '먼저 신청하는 분에게 선점 기회가 있어요 - 지금 확인해보세요', 'barospot_offer', svcKey, req);
+        }
+      }
       return res.json({ ok: true });
+    }
+
+    // ── 바로스팟 선점 (여성 본인, 선착순) - 두 명이 동시에 눌러도 한 명만 성공하도록
+    // "상태가 아직 recruiting_female일 때만" 조건부 UPDATE로 원자적으로 처리한다.
+    // 경쟁에서 진 요청은 이 UPDATE가 0건 반영되어 자연스럽게 걸러진다(추가 락 불필요) ──
+    if (req.method === 'POST' && earlyAction === 'claim_barospot_event') {
+      const cbJwt = (req.headers.authorization || '').replace('Bearer ', '');
+      const requesterId = getSubFromJWT(cbJwt);
+      if (!requesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+      const { event_id: claimEventId } = req.body || {};
+      if (!claimEventId) return res.status(400).json({ error: 'event_id required' });
+
+      const claimRes = await fetch(`${SUPABASE_URL}/rest/v1/barospot_events?id=eq.${claimEventId}&status=eq.recruiting_female`, {
+        method: 'PATCH',
+        headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ status: 'recruiting_male' }),
+      });
+      const claimedRows = await claimRes.json();
+      if (!claimRes.ok || !Array.isArray(claimedRows) || !claimedRows.length) {
+        return res.status(409).json({ error: '이미 다른 분이 선점했어요' });
+      }
+      const insRes = await sb('barospot_applications', svcKey, {
+        method: 'POST',
+        body: JSON.stringify({ user_id: requesterId, event_id: claimEventId, gender: 'female', status: 'matched' }),
+      });
+      if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
+      return res.json({ ok: true, event_id: claimEventId });
     }
 
     // ── 바로스팟 취소 - 이벤트와 아직 확정 안 된 연결 신청들을 함께 취소 처리 ──
@@ -720,6 +769,9 @@ module.exports = async function handler(req, res) {
       const appRows = await sb(`barospot_applications?id=eq.${application_id}&select=id,user_id`, svcKey).then(r => r.json());
       const app = appRows?.[0];
       if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
+      // 이 이벤트가 아직 recruiting_female(선점 전)이면 관리자가 수동 매칭한 것도
+      // 선점과 동일하게 recruiting_male로 전환해줘야 남성 목록에 노출된다
+      await sb(`barospot_events?id=eq.${event_id}&status=eq.recruiting_female`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'recruiting_male' }) }).catch(() => {});
       const r = await sb(`barospot_applications?id=eq.${application_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ event_id, status: 'matched' }) });
       if (!r.ok) return res.status(502).json({ error: await r.text() });
       await notifyUser(app.user_id, '🍽️ 바로스팟 매장 배정 완료', '식당이 배정됐어요! 남성 신청자가 확정되면 다시 알려드릴게요.', 'barospot_matched', svcKey, req);
