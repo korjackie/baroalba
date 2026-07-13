@@ -444,6 +444,11 @@
       </button>
     </div>
 
+    <!-- 추천인 코드 (선택) - 입력해두면 가입 완료 시 자동으로 서로 포인트가 적립됩니다 -->
+    <div class="form-group" style="margin-top:2px">
+      <input class="form-input" id="signup-ref-code" type="text" placeholder="추천인 코드가 있다면 입력해주세요 (선택)" style="text-align:center;letter-spacing:1px;text-transform:uppercase">
+    </div>
+
     <div class="divider">또는 이메일로</div>
 
     <!-- ── 에러 메시지 ── -->
@@ -923,8 +928,19 @@ window.addEventListener('DOMContentLoaded', async () => {
   _afterSplash(showLoginScreen);
 });
 
+// 회원가입 화면에 직접 입력한 추천인 코드를 pending_ref_code로 저장 -
+// 바로알바.html의 ?ref= URL 캡처와 완전히 동일한 저장소를 써서, 로그인 완료 후
+// 처리 로직(_processReferralSignup)을 그대로 재사용한다(신규가입 아니면 자동 무시됨)
+function _capturePendingRefCode() {
+  const code = document.getElementById('signup-ref-code')?.value.trim().toUpperCase();
+  if (code && !localStorage.getItem('referral_processed')) {
+    localStorage.setItem('pending_ref_code', code);
+  }
+}
+
 // ── 카카오 로그인 ──────────────────────────────────────────
 async function loginKakao() {
+  _capturePendingRefCode();
   showLoading('카카오 로그인 중...');
   const { error } = await db.auth.signInWithOAuth({
     provider: 'kakao',
@@ -969,6 +985,7 @@ async function loginGoogle() {
     showError('구글 로그인은 Chrome 브라우저에서만 가능합니다.\n우측 상단 메뉴 → Chrome으로 열기를 눌러주세요.', 'info');
     return;
   }
+  _capturePendingRefCode();
   showLoading('구글 로그인 중...');
   const { error } = await db.auth.signInWithOAuth({
     provider: 'google',
@@ -1055,6 +1072,7 @@ function loginNaver() {
   if (!naverLoginObj) { showToastMsg('네이버 로그인을 초기화 중입니다. 잠시 후 다시 시도해주세요.'); return; }
   const link = document.getElementById('naverIdLogin').querySelector('a');
   if (!link) { showToastMsg('네이버 로그인 버튼을 불러오는 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+  _capturePendingRefCode();
   link.click();
 }
 
@@ -1121,6 +1139,7 @@ async function signupEmail() {
   if (nationality !== 'KR' && !visaType) { showError('체류 비자 종류를 선택해주세요.'); return; }
   if (!document.getElementById('agree-age')?.checked) { showError('만 19세 이상인 경우에만 가입 가능합니다.'); return; }
   if (!document.getElementById('agree-banned')?.checked) { showError('금지 행위 안내에 동의하셔야 가입할 수 있습니다.'); return; }
+  _capturePendingRefCode();
   showLoading('회원가입 중...');
   const { error } = await db.auth.signUp({
     email, password: pw,
