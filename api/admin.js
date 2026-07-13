@@ -40,6 +40,30 @@ function wvHtmlPage(title, message, ok) {
 </body></html>`;
 }
 
+// 주소 → 좌표 서버사이드 지오코딩 (카카오 로컬 API, 주소검색 실패 시 키워드검색 폴백)
+// 클라이언트(admin.html)도 같은 순서로 카카오 JS SDK를 이용해 시도하지만, SDK 로딩 타이밍이나
+// 상세주소 포맷 이슈로 실패할 수 있어 서버에서 한 번 더(REST API로, SDK 로딩 이슈 없이) 시도한다.
+async function geocodeAddress(address, name) {
+  const restKey = process.env.KAKAO_REST_KEY;
+  if (!restKey || (!address && !name)) return { lat: null, lng: null };
+  const headers = { Authorization: `KakaoAK ${restKey}` };
+  try {
+    if (address) {
+      const r = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`, { headers });
+      const data = await r.json();
+      const hit = data?.documents?.[0];
+      if (hit) return { lat: parseFloat(hit.y), lng: parseFloat(hit.x) };
+    }
+    if (name) {
+      const r = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(name)}`, { headers });
+      const data = await r.json();
+      const hit = data?.documents?.[0];
+      if (hit) return { lat: parseFloat(hit.y), lng: parseFloat(hit.x) };
+    }
+  } catch (e) { console.error('[geocodeAddress] 실패:', e.message); }
+  return { lat: null, lng: null };
+}
+
 // 바로미팅 인원/장소 수정 시 확정 참가자 전원에게 인앱 알림 + 푸시 발송
 async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) {
   const appsRes = await sb(`gathering_applications?gathering_id=eq.${gatheringId}&status=eq.approved&select=applicant_id`, svcKey);
@@ -784,6 +808,13 @@ module.exports = async function handler(req, res) {
         lat: typeof lat === 'number' ? lat : null,
         lng: typeof lng === 'number' ? lng : null,
       };
+
+      // 클라이언트(카카오 JS SDK) 지오코딩이 실패했으면 서버에서 REST API로 한 번 더 시도
+      // (SDK 로딩 타이밍 문제와 무관하게 서버가 좌표 확보의 최종 책임을 짐)
+      if (payload.lat === null || payload.lng === null) {
+        const geo = await geocodeAddress(payload.location_address, payload.location_name);
+        if (geo.lat !== null) { payload.lat = geo.lat; payload.lng = geo.lng; }
+      }
 
       // 수정인 경우 인원/장소가 실제로 바뀌었는지 미리 확인 (신청자 알림 발송 여부 판단용)
       let prev = null;
