@@ -282,6 +282,54 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    // ── 과거 추천인 가입 건 일회성 보정 (workers 행 자동생성 로직이 배포되기 전에
+    // 추천링크로 가입한 사람은 workers 행 자체가 없어 회원목록에도 안 잡히고,
+    // 추천인 포인트도 RLS로 막혀 누락됐었음 - 이메일로 auth 계정을 찾아 workers
+    // 행을 만들고 양쪽 포인트를 소급 지급) ──
+    if (action === 'backfill_referral' && req.method === 'POST') {
+      const { email: beEmail, code: beCode } = req.body || {};
+      if (!beEmail || !beCode) return res.status(400).json({ error: 'email, code required' });
+
+      const authRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(beEmail)}`, {
+        headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` }
+      });
+      const authData = await authRes.json();
+      const targetUser = (authData.users || [])[0];
+      if (!targetUser) return res.status(404).json({ error: '해당 이메일의 가입 계정을 찾을 수 없어요' });
+      const beUid = targetUser.id;
+
+      const refRows = await sb(`workers?referral_code=eq.${encodeURIComponent(beCode)}&select=kakao_uid`, svcKey).then(r => r.json());
+      const referrer = Array.isArray(refRows) ? refRows[0] : null;
+      if (!referrer) return res.status(404).json({ error: '해당 추천코드를 찾을 수 없어요' });
+      if (referrer.kakao_uid === beUid) return res.status(400).json({ error: '본인 추천코드예요' });
+
+      const meRows = await sb(`workers?kakao_uid=eq.${beUid}&select=id,referred_by`, svcKey).then(r => r.json());
+      const me = Array.isArray(meRows) ? meRows[0] : null;
+      if (me?.referred_by) return res.json({ ok: true, already: true });
+
+      if (me) {
+        await sb(`workers?id=eq.${me.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ referred_by: referrer.kakao_uid }) });
+      } else {
+        const meta = targetUser.user_metadata || {};
+        const name = meta.full_name || meta.name || (targetUser.email ? targetUser.email.split('@')[0] : '알바생');
+        await sb('workers', svcKey, { method: 'POST', body: JSON.stringify({ kakao_uid: beUid, name, referred_by: referrer.kakao_uid }) });
+      }
+
+      // 피추천인(친구) 본인 몫은 예전 코드에서도 "자기 행" update라 RLS 없이 이미 지급됐을
+      // 가능성이 높음(중복지급 방지 위해 여기선 재지급하지 않음) - 실제 누락된 추천인 몫만 지급
+      const REFERRAL_REWARD_POINTS = 3000;
+      const acctRows = await sb(`point_accounts?user_id=eq.${referrer.kakao_uid}&select=id,balance`, svcKey).then(r => r.json());
+      const acct = Array.isArray(acctRows) ? acctRows[0] : null;
+      const newBalance = (acct?.balance || 0) + REFERRAL_REWARD_POINTS;
+      if (acct) {
+        await sb(`point_accounts?id=eq.${acct.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ balance: newBalance }) });
+      } else {
+        await sb('point_accounts', svcKey, { method: 'POST', body: JSON.stringify({ user_id: referrer.kakao_uid, balance: newBalance }) });
+      }
+
+      return res.json({ ok: true, credited: true, referrerUid: referrer.kakao_uid, referrerBalance: newBalance });
+    }
+
     // ── 수동 포인트 지급/보정 (CS 대응, 과거 데이터 보정용 - 서비스 롤 키로 RLS 우회) ──
     // userId는 workers.kakao_uid(=point_accounts.user_id) - 회원 상세 패널에서 이미 로드돼 있음
     if (action === 'grant_points' && req.method === 'POST') {
