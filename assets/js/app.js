@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '473';
+  const _APP_V = '474';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=473').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=474').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -17482,6 +17482,16 @@ function openTrackingSheet(opts) {
     document.getElementById('track-desc').textContent = opts.title || '-';
     document.getElementById('track-place').textContent = opts.place || '-';
     document.getElementById('track-when').textContent = opts.whenText || '-';
+    const partRow = document.getElementById('track-participants-row');
+    if (partRow) {
+      if (opts.participants) {
+        const p = opts.participants;
+        document.getElementById('track-participants').textContent = `남성 ${p.maleCur}/${p.maleMax}명 · 여성 ${p.femaleCur}/${p.femaleMax}명`;
+        partRow.style.display = 'block';
+      } else {
+        partRow.style.display = 'none';
+      }
+    }
     document.getElementById('track-sheet').classList.remove('expanded');
     _renderTrackSteps(opts.steps || ['신청완료','확정','진행중','종료'], opts.stepIndex ?? 0);
     bindTrackSheetDrag(document.getElementById('track-sheet-handle'), document.getElementById('track-sheet'));
@@ -17866,10 +17876,27 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
 // 신청 완료 직후 모임 정보를 불러와 실시간 추적화면을 연다
 async function _openBaromeetTracking(meetingId, iAmApproved) {
   const { data: m } = await db.from('gatherings')
-    .select('title, location_name, location_address, gathering_date, lat, lng')
+    .select('title, location_name, location_address, gathering_date, lat, lng, baromeeting_male_max, baromeeting_female_max, baromeeting_male_cur, baromeeting_female_cur')
     .eq('id', meetingId).single();
   if (!m) return;
   const whenText = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 미정';
+
+  // 예전엔 stepIndex가 항상 1(확정)로 고정돼 있어 실제 모임이 진행 중이거나 끝난 뒤에도
+  // 계속 "확정"에 멈춰 보였음 - 승인 여부 + 실제 시각을 기준으로 계산한다.
+  // 정원 미달이어도 별도 관리자 승인 절차 없이 예정 시각이 되면 자동으로 "진행"으로
+  // 간주(현재 baromeeting 운영 방식 - 관리자가 각 신청을 개별 승인하는 것 외에 별도
+  // "진행 확정" 게이트는 없음). 모임 시간은 넉넉히 2시간으로 가정.
+  const MEETUP_DURATION_MS = 2 * 60 * 60 * 1000;
+  let stepIndex = 0;
+  if (iAmApproved) {
+    const start = m.gathering_date ? new Date(m.gathering_date).getTime() : null;
+    const now = Date.now();
+    if (start === null) stepIndex = 1;
+    else if (now < start) stepIndex = 1;
+    else if (now < start + MEETUP_DURATION_MS) stepIndex = 2;
+    else stepIndex = 3;
+  }
+
   openTrackingSheet({
     brand: '🤝 바로미팅',
     title: m.title || '바로미팅',
@@ -17879,7 +17906,11 @@ async function _openBaromeetTracking(meetingId, iAmApproved) {
     whenISO: m.gathering_date,
     whenText,
     steps: ['신청완료','확정','모임 진행','종료'],
-    stepIndex: 1,
+    stepIndex,
+    participants: {
+      maleCur: m.baromeeting_male_cur || 0, maleMax: m.baromeeting_male_max || 0,
+      femaleCur: m.baromeeting_female_cur || 0, femaleMax: m.baromeeting_female_max || 0,
+    },
     liveShare: { contextType: 'baromeeting', contextId: meetingId, destLat: m.lat, destLng: m.lng, iAmApproved: !!iAmApproved },
   });
 }
