@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '465';
+  const _APP_V = '466';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -487,10 +487,18 @@ window.addEventListener('DOMContentLoaded', async () => {
         const ab = document.getElementById('admin-banner');
         if (ab) ab.style.display = _isAdmin ? 'flex' : 'none';
       });
-    // 나이·언어 미리 로드
-    db.from('workers').select('age, birth_date, languages').eq('kakao_uid', session.user.id).maybeSingle()
+    // 나이·언어 미리 로드 + workers 행 자동 생성
+    // (예전엔 "기본정보 저장하기"를 눌러야만 workers 행이 생겨서, 아무 것도 안 건드린
+    // 신규가입자는 게시글 작성 등에서 "프로필 등록 후 이용 가능"에 계속 막혔음 -
+    // 가입은 곧 프로필 생성이어야 하므로 로그인 시점에 없으면 바로 만들어둠)
+    db.from('workers').select('id, age, birth_date, languages').eq('kakao_uid', session.user.id).maybeSingle()
       .then(({ data: w }) => {
-        if (!w) return;
+        if (!w) {
+          const meta = session.user.user_metadata || {};
+          const name = meta.full_name || meta.name || session.user.email?.split('@')[0] || '알바생';
+          db.from('workers').insert({ kakao_uid: session.user.id, name }).then(() => {});
+          return;
+        }
         _myAge = w.age || (w.birth_date ? calcAgeFromBirth(w.birth_date) : null);
         _myLangs = Array.isArray(w.languages) ? w.languages : [];
         _updateLangFilterBtn();

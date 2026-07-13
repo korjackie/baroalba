@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=465"></script>
+  <script src="./shared-lang.js?v=466"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -1555,6 +1555,85 @@
         </div>
       </div>
 
+      <!-- ── 지갑 (포인트/쿠폰) - 특정 서비스 전용이 아니라 항상 바로 보이게 최상위로 이동 ── -->
+      <div class="mp-section">
+        <div class="mp-section-title">지갑</div>
+        <div class="mp-rows">
+          <div class="mp-row" onclick="openPointHistory()">
+            <div class="mp-row-left"><span class="mp-row-icon">💎</span><span data-i18n="row_points">포인트 잔액</span></div>
+            <div class="mp-row-right">
+              <span id="mp-point-val" style="font-size:13px;color:#7C3AED;font-weight:700">-</span>
+              <button onclick="event.stopPropagation();openPointCharge()" data-i18n="btn_charge" style="font-size:10px;font-weight:700;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:3px 9px;cursor:pointer;margin-left:6px;flex-shrink:0">충전</button>
+              <span class="mp-row-arrow">›</span>
+            </div>
+          </div>
+          <div class="mp-row" onclick="openCouponSheet()">
+            <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="row_coupon">프로모션 쿠폰 등록 / 이용권 조회</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 내 프로필 (알바생만) - 서비스 전용 활동내역이 아니라 기본 세팅이라 최상위로 이동 ── -->
+      <div class="mp-section" id="worker-profile-edit" style="display:none">
+        <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
+        <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-radius:16px 16px 0 0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+            <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
+            <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
+          </div>
+          <div style="height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden">
+            <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s;width:0%"></div>
+          </div>
+          <div id="completion-items" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+        <div class="mp-rows">
+          <div class="mp-row" onclick="openMpSub('basic')">
+            <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
+          <div class="mp-row" onclick="openMpSub('portfolio')">
+            <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">포트폴리오</span></div>
+            <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
+          </div>
+          <div class="mp-row" onclick="openMpSub('skills')">
+            <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span data-i18n="row_skills_career">스킬 · 경력</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
+          <div class="mp-row" onclick="openMpSub('docs')">
+            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_docs">자격증 · 서류</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 등급 · 평점 (알바생만) ── -->
+      <div class="mp-section" id="worker-grade-section" style="display:none">
+        <div class="mp-section-title" data-i18n="section_grade">등급</div>
+        <div class="mp-rows">
+          <div class="mp-row" onclick="showGradeInfoModal()">
+            <div class="mp-row-left"><span class="mp-row-icon">🏅</span><span data-i18n="row_my_grade">내 등급</span></div>
+            <div class="mp-row-right"><span id="worker-grade-badge" style="font-size:14px;font-weight:800"></span><span class="mp-row-arrow">›</span></div>
+          </div>
+          <div class="mp-row" onclick="showMyRatings()">
+            <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span data-i18n="my_rating_label">내 평점</span></div>
+            <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+          </div>
+        </div>
+        <div id="worker-grade-progress" style="padding:0 16px 12px;background:#fff;font-size:12px;color:#888;line-height:1.8"></div>
+      </div>
+
+      <!-- ── 외국인 전용 서비스 (워커만) ── -->
+      <div class="mp-section" id="foreigner-section" style="display:none">
+        <div class="mp-section-title">🌏 <span data-i18n="section_foreigner">외국인 전용 서비스</span></div>
+        <div class="mp-rows">
+          <div class="mp-row" onclick="openMpSub('foreigner-hub')">
+            <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span data-i18n="row_foreigner">외국인 전용</span></div>
+            <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── 친구 초대 (추천인 링크) - 다른 메뉴 행들과 폭/높이 통일 ── -->
       <div class="mp-section">
         <div class="mp-rows">
@@ -1701,79 +1780,6 @@
       <div class="mp-row" onclick="openMpSub('wage-history')">
         <div class="mp-row-left"><span class="mp-row-icon">💴</span><span data-i18n="row_wage_history">급여 수령 확인</span></div>
         <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-      </div>
-      <div class="mp-row" onclick="openPointHistory()">
-        <div class="mp-row-left"><span class="mp-row-icon">💎</span><span data-i18n="row_points">포인트 잔액</span></div>
-        <div class="mp-row-right">
-          <span id="mp-point-val" style="font-size:13px;color:#7C3AED;font-weight:700">-</span>
-          <button onclick="event.stopPropagation();openPointCharge()" data-i18n="btn_charge" style="font-size:10px;font-weight:700;background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:3px 9px;cursor:pointer;margin-left:6px;flex-shrink:0">충전</button>
-          <span class="mp-row-arrow">›</span>
-        </div>
-      </div>
-      <div class="mp-row" onclick="openCouponSheet()">
-        <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="row_coupon">프로모션 쿠폰 등록 / 이용권 조회</span></div>
-        <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-      </div>
-      <div class="mp-row" onclick="showMyRatings()">
-        <div class="mp-row-left"><span class="mp-row-icon">⭐</span><span data-i18n="my_rating_label">내 평점</span></div>
-        <div class="mp-row-right"><span id="mp-rating-val" style="font-size:13px;color:#F59E0B;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
-      </div>
-    </div>
-
-    <!-- ── 내 프로필 (알바생만) ── -->
-    <div class="mp-section" id="worker-profile-edit" style="display:none">
-      <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
-      <!-- 완성도 게이지 compact -->
-      <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-bottom:1px solid #f5f5f5">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-          <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
-          <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
-        </div>
-        <div style="height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden">
-          <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s;width:0%"></div>
-        </div>
-        <div id="completion-items" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
-      </div>
-      <div class="mp-rows">
-        <div class="mp-row" onclick="openMpSub('basic')">
-          <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
-          <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-        </div>
-        <div class="mp-row" onclick="openMpSub('portfolio')">
-          <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">포트폴리오</span></div>
-          <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
-        </div>
-        <div class="mp-row" onclick="openMpSub('skills')">
-          <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span data-i18n="row_skills_career">스킬 · 경력</span></div>
-          <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-        </div>
-        <div class="mp-row" onclick="openMpSub('docs')">
-          <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_docs">자격증 · 서류</span></div>
-          <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── 등급 (알바생만) ── -->
-    <div class="mp-section" id="worker-grade-section" style="display:none">
-      <div class="mp-section-title" data-i18n="section_grade">등급</div>
-      <div class="mp-rows">
-        <div class="mp-row" onclick="showGradeInfoModal()">
-          <div class="mp-row-left"><span class="mp-row-icon">🏅</span><span data-i18n="row_my_grade">내 등급</span></div>
-          <div class="mp-row-right"><span id="worker-grade-badge" style="font-size:14px;font-weight:800"></span><span class="mp-row-arrow">›</span></div>
-        </div>
-      </div>
-      <div id="worker-grade-progress" style="padding:0 16px 12px;background:#fff;font-size:12px;color:#888;line-height:1.8"></div>
-    </div>
-
-    <!-- ── 외국인 전용 서비스 (워커만) ── -->
-    <div class="mp-section" id="foreigner-section" style="display:none">
-      <div class="mp-section-title">🌏 <span data-i18n="section_foreigner">외국인 전용 서비스</span></div>
-      <div class="mp-rows">
-        <div class="mp-row" onclick="openMpSub('foreigner-hub')">
-          <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span data-i18n="row_foreigner">외국인 전용</span></div>
-          <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
-        </div>
       </div>
     </div>
   </div>
@@ -2307,14 +2313,15 @@
 </div>
 
 <!-- 회원정보 변경 오버레이 (알바생) -->
-<div id="modal-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;overflow-y:auto">
-  <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--sat-safe,0px) + 16px) 20px 16px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
+<div id="modal-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;flex-direction:column;overflow:hidden">
+  <div style="height:var(--sat-safe,0px);background:#C8102E;flex-shrink:0"></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #f0f0f0;background:#fff;flex-shrink:0">
     <button onclick="closeAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div style="font-size:17px;font-weight:900;color:#222">회원정보 변경</div>
   </div>
-  <div style="padding:20px">
+  <div style="flex:1;overflow-y:auto;padding:20px">
     <div id="profile-pw-section" style="display:none;margin-bottom:24px">
       <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">비밀번호 변경</div>
       <div id="profile-pw-form" style="background:#fff;border-radius:14px;padding:16px">
@@ -3555,14 +3562,15 @@
 </div>
 
 <!-- 회원정보 변경 오버레이 (업주) -->
-<div id="modal-owner-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;overflow-y:auto">
-  <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--sat-safe,0px) + 16px) 20px 16px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
+<div id="modal-owner-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;flex-direction:column;overflow:hidden">
+  <div style="height:var(--sat-safe,0px);background:#C8102E;flex-shrink:0"></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #f0f0f0;background:#fff;flex-shrink:0">
     <button onclick="closeOwnerAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div style="font-size:17px;font-weight:900;color:#222">회원정보 변경</div>
   </div>
-  <div style="padding:20px">
+  <div style="flex:1;overflow-y:auto;padding:20px">
     <div style="margin-bottom:24px">
       <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">비밀번호 변경</div>
       <div style="background:#fff;border-radius:14px;padding:16px">
@@ -4062,7 +4070,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=465"></script>
+<script src="./assets/js/app.js?v=466"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
