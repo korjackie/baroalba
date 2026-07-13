@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '467';
+  const _APP_V = '468';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=467').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=468').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -750,11 +750,15 @@ function _genReferralCode() {
 }
 
 // 내 추천코드 조회 - 없으면 생성(충돌 시 재시도)해서 저장 후 반환
+// DB에 UNIQUE 제약이 걸려있는지 여부와 무관하게 동작하도록, 저장 전에 직접 중복
+// 여부를 조회해서 걸러낸다(계정마다 서로 다른 코드가 되도록 보장하는 안전장치)
 async function _getMyReferralCode() {
   const { data: w } = await db.from('workers').select('referral_code').eq('kakao_uid', currentUser.id).maybeSingle();
   if (w?.referral_code) return w.referral_code;
   for (let i = 0; i < 5; i++) {
     const code = _genReferralCode();
+    const { data: dup } = await db.from('workers').select('id').eq('referral_code', code).maybeSingle();
+    if (dup) continue; // 이미 다른 계정이 쓰는 코드 - 다시 생성
     const { error } = await db.from('workers').update({ referral_code: code }).eq('kakao_uid', currentUser.id);
     if (!error) return code;
   }
