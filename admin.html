@@ -528,20 +528,8 @@
   <!-- 바로미팅 개설·관리 -->
   <div class="tab-content" id="tab-baromeetings">
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">현재 모집중/마감된 바로미팅 목록입니다. 새로 개설하려면 아래 버튼을 눌러주세요.</div>
-    <button type="button" onclick="openBmCreateChoice()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer">+ 새로 개설</button>
+    <button type="button" onclick="resetBaromeetingForm();openBmForm()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer">+ 새로 개설</button>
     <div id="baromeetings-list"><div class="loading">로딩 중...</div></div>
-  </div>
-
-  <!-- 바로미팅/바로스팟 개설 선택 팝업 -->
-  <div id="bm-create-choice-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px" onclick="if(event.target===this)closeBmCreateChoice()">
-    <div style="background:#fff;border-radius:16px;padding:20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
-      <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:16px">무엇을 개설할까요?</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button onclick="chooseBmCreate('meeting')" style="padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left">🤝 바로미팅 개설<div style="font-size:11px;font-weight:500;opacity:0.85;margin-top:2px">남녀 정원을 정해 소셜 미팅을 엽니다</div></button>
-        <button onclick="chooseBmCreate('spot')" style="padding:14px;background:#f1f5f9;color:#1e293b;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer;text-align:left">📍 바로스팟 개설<div style="font-size:11px;font-weight:500;color:#64748b;margin-top:2px">제휴매장을 골라 특정 일정으로 바로스팟을 엽니다</div></button>
-      </div>
-      <button onclick="closeBmCreateChoice()" style="width:100%;margin-top:12px;padding:10px;background:none;border:none;color:#94a3b8;font-size:12.5px;font-weight:700;cursor:pointer">취소</button>
-    </div>
   </div>
 
   <!-- 바로미팅 개설/수정 패널 -->
@@ -673,8 +661,16 @@
         <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">검색해서 고르면 새 제휴매장으로 자동 등록되며 바로 이 바로스팟에 연결됩니다. 필요하면 아래 매장명·주소를 직접 수정할 수도 있어요.</div>
         <input id="bse-location-name" type="text" placeholder="매장명 (예: 강남역 OO식당)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         <input id="bse-address" type="text" placeholder="주소 (실시간 위치추적을 쓰려면 꼭 입력)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <label style="font-size:11px;color:#94a3b8;font-weight:700">진행 일시</label>
-        <input id="bse-datetime" type="datetime-local" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;margin-top:-4px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">진행 일시</div>
+          <div style="display:flex;gap:8px">
+            <div style="position:relative;flex:1.3;min-width:0">
+              <input id="bse-date" type="date" oninput="updateBseDateDisplay()" onchange="updateBseDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+              <div id="bse-date-display" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#475569;box-sizing:border-box;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">날짜 선택</div>
+            </div>
+            <input id="bse-time" type="time" step="300" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
+          </div>
+        </div>
         <div style="display:flex;gap:8px">
           <input id="bse-female-max" type="number" min="0" placeholder="여성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
           <input id="bse-male-max" type="number" min="0" placeholder="남성 정원" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
@@ -2376,18 +2372,6 @@ function editBaromeeting(id) {
   openBmForm();
 }
 
-function openBmCreateChoice() {
-  document.getElementById('bm-create-choice-overlay').style.display = 'flex';
-}
-function closeBmCreateChoice() {
-  document.getElementById('bm-create-choice-overlay').style.display = 'none';
-}
-function chooseBmCreate(type) {
-  closeBmCreateChoice();
-  if (type === 'spot') { navTo('mannam', 'barospot'); return; }
-  resetBaromeetingForm();
-  openBmForm();
-}
 function openBmForm() {
   document.getElementById('bm-form-overlay').classList.add('show');
 }
@@ -2599,6 +2583,11 @@ async function loadBarospotEvents() {
     : '<div class="empty">개설된 바로스팟이 없습니다</div>';
 }
 
+function updateBseDateDisplay() {
+  const v = document.getElementById('bse-date').value; // 항상 YYYY-MM-DD (ISO)
+  document.getElementById('bse-date-display').textContent = v ? v.replace(/-/g, '.') : '날짜 선택';
+}
+
 function editBarospotEvent(id) {
   const ev = _barospotEvents.find(e => e.id === id);
   if (!ev) return;
@@ -2609,7 +2598,9 @@ function editBarospotEvent(id) {
   if (ev.event_date) {
     const d = new Date(ev.event_date);
     const pad = n => String(n).padStart(2, '0');
-    document.getElementById('bse-datetime').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    document.getElementById('bse-date').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    document.getElementById('bse-time').value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    updateBseDateDisplay();
   }
   document.getElementById('bse-address').value = ev.address || '';
   document.getElementById('bse-female-max').value = ev.female_max || '';
@@ -2621,7 +2612,8 @@ function editBarospotEvent(id) {
 function resetBarospotEventForm() {
   document.getElementById('bse-id').value = '';
   document.getElementById('bse-restaurant').value = '';
-  ['bse-datetime','bse-location-name','bse-address','bse-female-max','bse-male-max','bse-notes'].forEach(k => document.getElementById(k).value = '');
+  ['bse-date','bse-time','bse-location-name','bse-address','bse-female-max','bse-male-max','bse-notes'].forEach(k => document.getElementById(k).value = '');
+  updateBseDateDisplay();
   document.getElementById('bse-form-title').textContent = '바로스팟 개설';
   setBseLocationMode('partner');
 }
@@ -2631,10 +2623,12 @@ async function saveBarospotEvent() {
   const restaurant_id = document.getElementById('bse-restaurant').value;
   const locationName = document.getElementById('bse-location-name').value.trim();
   const address = document.getElementById('bse-address').value.trim();
-  const dt = document.getElementById('bse-datetime').value;
+  const dateVal = document.getElementById('bse-date').value;
+  const timeVal = document.getElementById('bse-time').value || '00:00';
+  const dt = dateVal ? `${dateVal}T${timeVal}` : '';
   if (_bseLocationMode === 'partner' && !restaurant_id) { showToast('제휴매장을 선택해주세요'); return; }
   if (_bseLocationMode === 'search' && !locationName) { showToast('매장명을 입력해주세요'); return; }
-  if (!dt) { showToast('일시를 입력해주세요'); return; }
+  if (!dt) { showToast('날짜와 시간을 입력해주세요'); return; }
   const payload = {
     id: id || undefined,
     event_date: new Date(dt).toISOString(),
