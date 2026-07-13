@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '461';
+  const _APP_V = '462';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=461').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=462').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -786,10 +786,10 @@ async function openReferralInvite() {
 
 async function shareReferralLink(code) {
   const link = `${location.origin}${location.pathname}?ref=${code}`;
-  // 그냥 포인트 지급 안내만 하지 말고 실제 슬로건("지금 바로, 돈 벌고 싶을 때도" -
-  // login.html의 hero-sub와 동일한 톤)으로 서비스 자체를 먼저 어필하고, 포인트는
-  // 뒤따르는 혜택으로 붙인다
-  const shareTitle = '지금 바로 가입하고, 돈 필요할 때 바로 알바 시작하세요!';
+  // 포인트 지급 안내만 하지 말고 3개 서비스(알바/모임/만남)를 간략히 소개 -
+  // login.html 스플래시 타이핑 문구("알바도, 모임도, 만남도 / 전부 바로 여기서")와
+  // 동일한 톤으로 서비스 자체를 먼저 어필하고, 포인트는 뒤따르는 혜택으로 붙인다
+  const shareTitle = '알바도, 모임도, 만남도 — 전부 바로 여기서!';
   const shareDesc = `제 추천코드로 가입하면 서로 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받아요 🎁`;
   const shareText = `${shareTitle}\n${shareDesc}\n${link}`;
 
@@ -9314,75 +9314,71 @@ const _OB_SLIDES = [
     bg: 'linear-gradient(145deg, #fff1f2, #ffe4e6)',
     illus: `<div style="position:relative;width:100%;height:100%">
       <div class="ob-anim-layer">
-        <div class="ob-shape-circle" style="width:130px;height:130px;background:#C8102E;opacity:0.1;animation-delay:0s"></div>
-        <div class="ob-shape-circle" style="width:90px;height:90px;background:#C8102E;opacity:0.15;animation-delay:0.1s"></div>
-      </div>
-      <div class="ob-anim-layer" style="animation: obFloat 4s ease-in-out infinite">
-        <div style="font-size:42px; filter: drop-shadow(0 4px 6px rgba(200,16,46,0.2));">📍</div>
-      </div>
-      <div class="ob-anim-layer">
-        <div class="ob-card" style="position:absolute; bottom:25px; left:20px; width:100px; height:45px; padding:6px; display:flex; align-items:center; gap:6px; animation-delay:0.3s">
-          <div style="width:24px;height:24px;background:#ffe4e6;border-radius:6px"></div>
-          <div style="flex:1"><div style="height:6px;background:#fecdd3;border-radius:3px;margin-bottom:4px;width:80%"></div><div style="height:6px;background:#fecdd3;border-radius:3px;width:50%"></div></div>
-        </div>
-        <div class="ob-card" style="position:absolute; top:25px; right:15px; width:80px; height:35px; padding:6px; display:flex; align-items:center; gap:6px; animation-delay:0.5s">
-          <div style="width:16px;height:16px;background:#ffe4e6;border-radius:4px"></div>
-          <div style="flex:1"><div style="height:4px;background:#fecdd3;border-radius:2px;margin-bottom:3px;width:70%"></div><div style="height:4px;background:#fecdd3;border-radius:2px;width:40%"></div></div>
-        </div>
-      </div>
-    </div>`
-  },
-  {
-    bg: 'linear-gradient(145deg, #eef2ff, #e0e7ff)',
-    illus: `<div style="position:relative;width:100%;height:100%">
-      <div class="ob-anim-layer">
-        <div class="ob-shape-circle" style="width:130px;height:130px;background:#6366f1;opacity:0.1;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:140px;height:140px;background:#C8102E;opacity:0.08;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:100px;height:100px;background:#C8102E;opacity:0.1;animation-delay:0.1s"></div>
       </div>
       <div class="ob-anim-layer" style="animation: obFloat 3s ease-in-out infinite">
-        <div style="font-size:36px; filter: drop-shadow(0 4px 6px rgba(99,102,241,0.2));">🌍</div>
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(200,16,46,0.3));">💼</div>
       </div>
       <div class="ob-anim-layer">
-        <div class="ob-card" style="position:absolute; top:20px; left:20px; padding:8px 12px; font-weight:800; color:#6366f1; font-size:12px; border-radius:12px 12px 12px 2px; animation-delay:0.2s">Hello! 👋</div>
-        <div class="ob-card" style="position:absolute; bottom:40px; right:15px; padding:8px 12px; font-weight:800; color:#fff; background:#6366f1; font-size:12px; border-radius:12px 12px 2px 12px; animation-delay:0.5s">안녕하세요! 😊</div>
-        <div class="ob-card" style="position:absolute; bottom:15px; left:30px; padding:6px 10px; font-weight:800; color:#6366f1; font-size:10px; border-radius:10px 10px 10px 2px; animation-delay:0.7s">こんにちは!</div>
+        <div style="position:absolute; top:20px; left:20px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.3s; opacity:0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🇰🇷</div>
+        <div style="position:absolute; top:35px; right:20px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:0.5s; opacity:0">🇺🇸</div>
+        <div style="position:absolute; bottom:25px; left:30px; font-size:22px; animation: obPop 0.5s forwards; animation-delay:0.7s; opacity:0">🇻🇳</div>
+        <div style="position:absolute; bottom:40px; right:25px; font-size:26px; animation: obPop 0.5s forwards; animation-delay:0.9s; opacity:0">🌍</div>
       </div>
     </div>`
   },
   {
-    bg: 'linear-gradient(145deg, #fffbeb, #fef3c7)',
+    bg: 'linear-gradient(145deg, #f3e8ff, #e9d5ff)',
     illus: `<div style="position:relative;width:100%;height:100%">
       <div class="ob-anim-layer">
-        <div class="ob-shape-circle" style="width:140px;height:140px;background:#f59e0b;opacity:0.08;animation-delay:0s"></div>
-        <div class="ob-shape-circle" style="width:100px;height:100px;background:#f59e0b;opacity:0.1;animation-delay:0.1s"></div>
+        <div class="ob-shape-circle" style="width:140px;height:140px;background:#7e22ce;opacity:0.08;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:100px;height:100px;background:#7e22ce;opacity:0.1;animation-delay:0.1s"></div>
+      </div>
+      <div class="ob-anim-layer" style="animation: obFloat 3.5s ease-in-out infinite">
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(126,34,206,0.3));">🎉</div>
       </div>
       <div class="ob-anim-layer">
-        <div style="position:absolute; top:35px; left:40px; font-size:28px; animation: obPop 0.5s forwards; animation-delay:0.2s; opacity:0">🍷</div>
-        <div style="position:absolute; top:45px; right:35px; font-size:32px; animation: obPop 0.5s forwards; animation-delay:0.4s; opacity:0">⚽</div>
-        <div style="position:absolute; bottom:30px; left:65px; font-size:38px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">🎉</div>
+        <div style="position:absolute; top:35px; left:30px; font-size:28px; animation: obPop 0.5s forwards; animation-delay:0.2s; opacity:0">🍷</div>
+        <div style="position:absolute; top:20px; right:40px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.4s; opacity:0">⚽</div>
+        <div style="position:absolute; bottom:25px; right:30px; font-size:32px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">🎸</div>
+        <div style="position:absolute; bottom:40px; left:20px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:0.8s; opacity:0">💬</div>
+      </div>
+    </div>`
+  },
+  {
+    bg: 'linear-gradient(145deg, #fce7f3, #fbcfe8)',
+    illus: `<div style="position:relative;width:100%;height:100%">
+      <div class="ob-anim-layer">
+        <div class="ob-shape-circle" style="width:140px;height:140px;background:#db2777;opacity:0.08;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:100px;height:100px;background:#db2777;opacity:0.1;animation-delay:0.1s"></div>
       </div>
       <div class="ob-anim-layer" style="animation: obPulse 2s ease-in-out infinite">
-        <div style="font-size:32px; position:absolute; top:60px; left:70px; filter: drop-shadow(0 2px 4px rgba(245,158,11,0.3));">💖</div>
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(219,39,119,0.3));">💖</div>
+      </div>
+      <div class="ob-anim-layer">
+        <div style="position:absolute; top:20px; right:30px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.4s; opacity:0">✨</div>
+        <div style="position:absolute; bottom:30px; left:25px; font-size:28px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">💌</div>
+        <div class="ob-card" style="position:absolute; top:35px; left:15px; width:40px; height:40px; border-radius:50%; background:#fdf2f8; display:flex; align-items:center; justify-content:center; animation: obPop 0.5s forwards; animation-delay:0.8s; opacity:0; box-shadow:0 4px 10px rgba(0,0,0,0.1)">👩</div>
+        <div class="ob-card" style="position:absolute; bottom:25px; right:20px; width:40px; height:40px; border-radius:50%; background:#fdf2f8; display:flex; align-items:center; justify-content:center; animation: obPop 0.5s forwards; animation-delay:1s; opacity:0; box-shadow:0 4px 10px rgba(0,0,0,0.1)">👨</div>
       </div>
     </div>`
   },
   {
-    bg: 'linear-gradient(145deg, #f0f9ff, #e0f2fe)',
+    bg: 'linear-gradient(145deg, #ffedd5, #fed7aa)',
     illus: `<div style="position:relative;width:100%;height:100%">
       <div class="ob-anim-layer">
-        <div class="ob-shape-circle" style="width:130px;height:130px;background:#0284c7;opacity:0.1;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:140px;height:140px;background:#ea580c;opacity:0.08;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:100px;height:100px;background:#ea580c;opacity:0.1;animation-delay:0.1s"></div>
+      </div>
+      <div class="ob-anim-layer" style="animation: obFloat 2.5s ease-in-out infinite">
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(234,88,12,0.3));">📍</div>
       </div>
       <div class="ob-anim-layer">
-        <div class="ob-card" style="width:80px; height:110px; border-radius:8px; border:2px solid #bae6fd; padding:10px; box-sizing:border-box; animation-delay:0.2s; position:relative; overflow:hidden">
-          <div style="width:40px; height:8px; background:#0284c7; border-radius:4px; margin-bottom:8px"></div>
-          <div style="width:100%; height:4px; background:#e0f2fe; border-radius:2px; margin-bottom:6px"></div>
-          <div style="width:80%; height:4px; background:#e0f2fe; border-radius:2px; margin-bottom:6px"></div>
-          <div style="width:90%; height:4px; background:#e0f2fe; border-radius:2px; margin-bottom:6px"></div>
-        </div>
-      </div>
-      <div class="ob-anim-layer">
-        <div style="position:absolute; top:20px; right:20px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🚀</div>
-        <div style="position:absolute; bottom:25px; right:25px; width:28px; height:28px; background:#16a34a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:14px; animation: obPop 0.5s forwards; animation-delay:0.8s; opacity:0; border:2px solid #fff">✓</div>
-        <div style="position:absolute; bottom:40px; left:15px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:1s; opacity:0">🔔</div>
+        <div style="position:absolute; top:25px; left:35px; font-size:28px; animation: obPop 0.5s forwards; animation-delay:0.3s; opacity:0">🍻</div>
+        <div style="position:absolute; bottom:20px; right:40px; font-size:32px; animation: obPop 0.5s forwards; animation-delay:0.5s; opacity:0">🔥</div>
+        <div class="ob-card" style="position:absolute; top:25px; right:15px; width:50px; height:25px; background:#fff; border-radius:12px; display:flex; align-items:center; justify-content:center; animation: obPop 0.5s forwards; animation-delay:0.7s; opacity:0; box-shadow:0 2px 6px rgba(0,0,0,0.1); font-size:12px; font-weight:bold; color:#ea580c">HOT</div>
+        <div style="position:absolute; bottom:35px; left:20px; font-size:22px; animation: obPop 0.5s forwards; animation-delay:0.9s; opacity:0">🕺</div>
       </div>
     </div>`
   },
@@ -9394,11 +9390,13 @@ const _OB_SLIDES = [
         <div class="ob-shape-circle" style="width:100px;height:100px;background:#c026d3;opacity:0.1;animation-delay:0.1s"></div>
       </div>
       <div class="ob-anim-layer" style="animation: obFloat 3s ease-in-out infinite">
-        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(192,38,211,0.2));">✨</div>
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(192,38,211,0.2));">👑</div>
       </div>
       <div class="ob-anim-layer">
         <div style="position:absolute; top:20px; left:30px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:0.4s; opacity:0">🌟</div>
-        <div style="position:absolute; bottom:25px; right:35px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">👑</div>
+        <div style="position:absolute; bottom:25px; right:35px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">✨</div>
+        <div style="position:absolute; top:40px; right:20px; font-size:18px; animation: obPop 0.5s forwards; animation-delay:0.8s; opacity:0">🎊</div>
+        <div style="position:absolute; bottom:40px; left:25px; font-size:22px; animation: obPop 0.5s forwards; animation-delay:1s; opacity:0">🎈</div>
       </div>
     </div>`
   }
