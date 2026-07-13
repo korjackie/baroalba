@@ -231,6 +231,8 @@ window.addEventListener('popstate', () => {
   }
   // 3.41~3.46. 그 외 전체화면 모달들 - 이전엔 뒤로가기 케이스가 아예 없어서
   // 히스토리 유무와 무관하게 안 닫히던 것들
+  const qrScanEl = document.getElementById('qr-scan-overlay');
+  if (qrScanEl && qrScanEl.style.display === 'flex') { closeQrScanner(); history.pushState({ panel: null }, ''); return; }
   const advFilterEl = document.getElementById('adv-filter-overlay');
   if (advFilterEl && advFilterEl.style.display === 'block') { closeAdvFilter(); history.pushState({ panel: null }, ''); return; }
   const acctInfoEl = document.getElementById('modal-account-info');
@@ -377,7 +379,7 @@ window.addEventListener('popstate', () => {
     'panel-posting-detail','panel-app-job-detail','panel-owner-settings','panel-owner-chats',
     'panel-owner-map','panel-moim','panel-moim-create','panel-moim-detail',
     'baromeet-anon-overlay','sc-overlay','search-overlay','panel-owner',
-    'adv-filter-overlay','modal-account-info','modal-owner-account-info',
+    'adv-filter-overlay','modal-account-info','modal-owner-account-info','qr-scan-overlay',
     'payment-overlay','track-overlay','worker-share-overlay',
   ];
   function _isModalVisible(el) {
@@ -435,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '457';
+  const _APP_V = '458';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -451,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=457').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=458').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -17849,7 +17851,11 @@ async function openBaroPass() {
           ${pick.location_name ? `<div style="font-size:12px;color:#888">📍 ${pick.location_name}</div>` : ''}
         ` : `<div style="font-size:12px;color:#aaa;line-height:1.6">현재 확정된 참석 일정이 없어요<br>바로만남에서 신청 후 승인되면 여기에 표시돼요</div>`}
       </div>
-      <div style="font-size:11px;color:#bbb;margin-top:14px;line-height:1.6">상대방에게 이 화면을 보여주고<br>닉네임·참석 모임이 일치하는지 확인해주세요</div>
+      <div style="font-size:11px;color:#bbb;margin:14px 0 16px;line-height:1.6">상대방에게 이 화면을 보여주고<br>닉네임·참석 모임이 일치하는지 확인해주세요</div>
+      <button onclick="closeBottomSheet();openQrScanner()" style="width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><rect x="7" y="7" width="4" height="4"/><rect x="13" y="7" width="4" height="4"/><rect x="7" y="13" width="4" height="4"/><rect x="13" y="13" width="4" height="4"/></svg>
+        상대방 QR 스캔해서 확인하기
+      </button>
     </div>
   `);
 }
@@ -17866,6 +17872,106 @@ function _renderQrSvg(text, size) {
   } catch (e) {
     return '<div style="font-size:12px;color:#bbb">QR 생성 실패</div>';
   }
+}
+
+// ── 바로패스 QR 스캔 — jsQR(kazuhikoarase qrcode-generator와는 별개 라이브러리, 카메라
+// 프레임에서 실제로 QR을 디코딩)로 상대방 QR을 찍어 승인된 참가자가 맞는지 서버에서 검증 ──
+let _qrScanStream = null;
+let _qrScanRAF = null;
+async function openQrScanner() {
+  const overlay = document.getElementById('qr-scan-overlay');
+  const video = document.getElementById('qr-scan-video');
+  if (!overlay || !video) return;
+  document.getElementById('qr-scan-result').style.display = 'none';
+  overlay.style.display = 'flex';
+  try {
+    _qrScanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+  } catch (e) {
+    showToast('카메라 권한이 필요해요');
+    closeQrScanner();
+    return;
+  }
+  video.srcObject = _qrScanStream;
+  await video.play().catch(() => {});
+  _qrScanLoop();
+}
+function closeQrScanner() {
+  if (_qrScanRAF) { cancelAnimationFrame(_qrScanRAF); _qrScanRAF = null; }
+  if (_qrScanStream) { _qrScanStream.getTracks().forEach(t => t.stop()); _qrScanStream = null; }
+  const overlay = document.getElementById('qr-scan-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+function _qrScanLoop() {
+  const video = document.getElementById('qr-scan-video');
+  const canvas = document.getElementById('qr-scan-canvas');
+  if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
+    _qrScanRAF = requestAnimationFrame(_qrScanLoop);
+    return;
+  }
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = window.jsQR ? jsQR(imgData.data, imgData.width, imgData.height) : null;
+  if (code && code.data && code.data.startsWith('BAROPASS|')) {
+    _handleBaroPassScan(code.data);
+    return; // 스캔 성공 - 루프 중단 (결과 화면에서 다시 스캔하려면 재진입)
+  }
+  _qrScanRAF = requestAnimationFrame(_qrScanLoop);
+}
+async function _handleBaroPassScan(payload) {
+  if (_qrScanRAF) { cancelAnimationFrame(_qrScanRAF); _qrScanRAF = null; }
+  const parts = payload.split('|'); // BAROPASS|userId|gatheringId|timestamp
+  const scannedUserId = parts[1];
+  const gatheringId = parts[2];
+  const resultBox = document.getElementById('qr-scan-result');
+  const resultBody = document.getElementById('qr-scan-result-body');
+  resultBody.innerHTML = '<div class="spinner" style="margin:0 auto"></div>';
+  resultBox.style.display = 'flex';
+
+  if (!scannedUserId) {
+    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">⚠️</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">인식할 수 없는 QR이에요</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">다시 스캔</button>`;
+    return;
+  }
+  if (scannedUserId === currentUser?.id) {
+    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">🙂</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">본인의 QR이에요</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">다시 스캔</button>`;
+    return;
+  }
+
+  const { data: w } = await db.from('workers').select('name, gender, baromeet_nick, baromeet_avatar, photo_url, workplace_verify_status').eq('kakao_uid', scannedUserId).maybeSingle();
+  let approved = false, gatheringTitle = '';
+  if (gatheringId) {
+    const { data: app } = await db.from('gathering_applications').select('status, gatherings(title)').eq('applicant_id', scannedUserId).eq('gathering_id', gatheringId).maybeSingle();
+    approved = app?.status === 'approved';
+    gatheringTitle = app?.gatherings?.title || '';
+  }
+
+  const nick = w?.baromeet_nick || w?.name || '알 수 없음';
+  const genderLabel = w?.gender === 'male' ? '남성' : w?.gender === 'female' ? '여성' : '';
+  const verifiedBadge = w?.workplace_verify_status === 'verified' ? '<span style="font-size:11px;font-weight:800;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px;margin-left:4px">✅ 직장인증</span>' : '';
+
+  if (approved) {
+    resultBody.innerHTML = `
+      <div style="font-size:40px;margin-bottom:8px">✅</div>
+      <div style="font-size:16px;font-weight:900;color:#16a34a;margin-bottom:10px">인증된 참가자예요</div>
+      <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">${nick}${genderLabel ? ` · ${genderLabel}` : ''}${verifiedBadge}</div>
+      ${gatheringTitle ? `<div style="font-size:13px;color:#888;margin-bottom:20px">${gatheringTitle}의 승인된 참가자입니다</div>` : '<div style="font-size:13px;color:#888;margin-bottom:20px"></div>'}
+      <button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#f5f5f5;color:#666;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">다시 스캔</button>
+      <button onclick="closeQrScanner()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">확인 완료</button>
+    `;
+  } else {
+    resultBody.innerHTML = `
+      <div style="font-size:40px;margin-bottom:8px">❌</div>
+      <div style="font-size:16px;font-weight:900;color:#dc2626;margin-bottom:10px">인증되지 않았어요</div>
+      <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">이 QR은 유효하지 않거나<br>참가 신청이 취소·미승인 상태예요</div>
+      <button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">다시 스캔</button>
+    `;
+  }
+}
+function _retryQrScan() {
+  document.getElementById('qr-scan-result').style.display = 'none';
+  _qrScanLoop();
 }
 
 // ── 직장인증 — 직장인 상호 신뢰를 위한 재직 확인 (재직증명서/명함/직장이메일) ──

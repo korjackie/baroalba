@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=457"></script>
+  <script src="./shared-lang.js?v=458"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -54,9 +54,8 @@
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=457">
+  <link rel="stylesheet" href="./assets/css/style.css?v=458">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -487,7 +486,10 @@
 <!-- 게스트 배너 -->
 <div class="guest-banner" id="guest-banner">
   <span>로그인하면 바로 지원할 수 있어요</span>
-  <button class="guest-login-btn" onclick="goToLogin()">로그인</button>
+  <div style="display:flex;gap:6px;flex-shrink:0">
+    <button onclick="showOnboarding()" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">✨ 둘러보기</button>
+    <button class="guest-login-btn" onclick="goToLogin()">로그인</button>
+  </div>
 </div>
 
 <!-- 게스트 로그인 유도 모달 -->
@@ -4058,8 +4060,9 @@
 <!-- ── /owner 기능 패널 ── -->
 <div class="toast hidden" id="toast"></div>
 
-<script src="./assets/js/qrcode.min.js?v=457"></script>
-<script src="./assets/js/app.js?v=457"></script>
+<script src="./assets/js/qrcode.min.js?v=458"></script>
+<script src="./assets/js/jsqr.min.js?v=458"></script>
+<script src="./assets/js/app.js?v=458"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4480,6 +4483,29 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- 바로패스 QR 스캔 (상대방 QR을 카메라로 찍어 승인된 참가자인지 확인) -->
+<div id="qr-scan-overlay" style="display:none;position:fixed;inset:0;z-index:9200;background:#000;flex-direction:column">
+  <div style="height:var(--sat-safe,0px);flex-shrink:0"></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;flex-shrink:0">
+    <button onclick="closeQrScanner()" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span style="color:#fff;font-size:15px;font-weight:800">🎫 바로패스 QR 스캔</span>
+  </div>
+  <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
+    <video id="qr-scan-video" playsinline autoplay muted style="width:100%;height:100%;object-fit:cover"></video>
+    <canvas id="qr-scan-canvas" style="display:none"></canvas>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+      <div style="width:230px;height:230px;border:3px solid rgba(255,255,255,0.85);border-radius:20px;box-shadow:0 0 0 2000px rgba(0,0,0,0.45)"></div>
+    </div>
+    <div style="position:absolute;bottom:36px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.85);font-size:13px;font-weight:600">상대방의 바로패스 QR을 사각형 안에 맞춰주세요</div>
+  </div>
+  <!-- 스캔 결과 -->
+  <div id="qr-scan-result" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:24px;z-index:2">
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:340px;text-align:center" id="qr-scan-result-body"></div>
   </div>
 </div>
 
