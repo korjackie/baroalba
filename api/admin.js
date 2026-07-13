@@ -108,6 +108,35 @@ async function notifyUser(userId, title, body, type, svcKey, req) {
   }
 }
 
+// 바로스팟 남성 신청 확정 - 관리자 확정(confirm_barospot_application)과 여성 본인의
+// 블라인드 선택(select_barospot_candidate) 양쪽에서 공통으로 쓰는 로직.
+// 확정 시: 이 신청 confirmed, 짝지어진 여성 신청도 자동 confirmed, 이벤트도 confirmed로
+// 잠그고, 같은 이벤트의 다른 남성 경쟁자는 자동 취소. 실패 시 에러 문자열, 성공 시 null 반환.
+async function confirmBarospotMale(applicationId, svcKey, req) {
+  const appRows = await sb(`barospot_applications?id=eq.${applicationId}&select=id,user_id,event_id,gender,status`, svcKey).then(r => r.json());
+  const app = appRows?.[0];
+  if (!app) return '신청 정보를 찾을 수 없어요';
+  if (!app.event_id) return '아직 매장이 배정되지 않은 신청이에요';
+  if (app.gender !== 'male') return '여성 신청은 남성이 확정될 때 자동으로 함께 확정돼요';
+  if (app.status !== 'pending') return '이미 처리된 신청이에요';
+
+  await sb(`barospot_applications?id=eq.${applicationId}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
+  await sb(`barospot_events?id=eq.${app.event_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
+  await notifyUser(app.user_id, '✅ 바로스팟 확정', '참가가 확정됐어요! 위치·거리 실시간 공유를 이용할 수 있어요.', 'barospot_confirmed', svcKey, req);
+
+  const femaleRows = await sb(`barospot_applications?event_id=eq.${app.event_id}&gender=eq.female&status=eq.matched&select=id,user_id`, svcKey).then(r => r.json());
+  for (const f of (femaleRows || [])) {
+    await sb(`barospot_applications?id=eq.${f.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
+    await notifyUser(f.user_id, '✅ 바로스팟 확정', '상대방이 확정돼서 만남이 확정됐어요!', 'barospot_confirmed', svcKey, req);
+  }
+  const otherMales = await sb(`barospot_applications?event_id=eq.${app.event_id}&gender=eq.male&status=eq.pending&id=neq.${applicationId}&select=id,user_id`, svcKey).then(r => r.json());
+  for (const o of (otherMales || [])) {
+    await sb(`barospot_applications?id=eq.${o.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }) });
+    await notifyUser(o.user_id, '바로스팟 신청 결과 안내', '아쉽지만 이번 바로스팟은 다른 분과 매칭됐어요.', 'barospot_cancelled', svcKey, req);
+  }
+  return null;
+}
+
 // 포인트 지급/차감 시 인앱 알림 + 푸시 발송 (추천인 보상, 관리자 수동 지급 공통 사용)
 async function notifyPointsGranted(userId, amount, reason, svcKey, req) {
   const title = amount > 0 ? '🎁 포인트가 지급됐어요' : '포인트 차감 안내';
@@ -321,6 +350,63 @@ module.exports = async function handler(req, res) {
     ).then(r => r.json());
 
     return res.json({ ok: true, travelers: Array.isArray(shares) ? shares : [] });
+  }
+
+  // ── 바로스팟 블라인드 후보 조회 (관리자 아님, 매칭된 여성 본인만) ──
+  // 이름·전화번호는 빼고 나이·자기소개·노쇼이력·사진(클라이언트에서 블러 처리)만 반환한다
+  if (req.method === 'GET' && earlyAction === 'get_barospot_candidates') {
+    const bcJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const requesterId = getSubFromJWT(bcJwt);
+    if (!requesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { application_id: myAppId } = req.query;
+    if (!myAppId) return res.status(400).json({ error: 'application_id required' });
+
+    const myAppRows = await sb(`barospot_applications?id=eq.${myAppId}&select=id,user_id,event_id,gender,status`, svcKey).then(r => r.json());
+    const myApp = myAppRows?.[0];
+    if (!myApp || myApp.user_id !== requesterId || myApp.gender !== 'female' || myApp.status !== 'matched' || !myApp.event_id) {
+      return res.status(403).json({ error: '후보를 볼 수 있는 신청 건이 아니에요' });
+    }
+
+    const candidates = await sb(`barospot_applications?event_id=eq.${myApp.event_id}&gender=eq.male&status=eq.pending&select=id,user_id`, svcKey).then(r => r.json());
+    const list = Array.isArray(candidates) ? candidates : [];
+    const uids = list.map(c => c.user_id).filter(Boolean);
+    let workerMap = {};
+    if (uids.length) {
+      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,noshow_count`, svcKey).then(r => r.json());
+      workerMap = Object.fromEntries((workers || []).map(w => [w.kakao_uid, w]));
+    }
+    const result = list.map(c => {
+      const w = workerMap[c.user_id] || {};
+      let age = w.age || null;
+      if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
+      return { application_id: c.id, age, bio: w.bio || null, photo_url: w.photo_url || null, noshow_count: w.noshow_count || 0 };
+    });
+    return res.json({ ok: true, candidates: result });
+  }
+
+  // ── 바로스팟 후보 선택 (여성 본인이 직접 확정) - confirm_barospot_application의
+  // 관리자 확정과 동일한 로직을 그대로 재사용, 권한만 "매칭된 여성 본인"으로 검증 ──
+  if (req.method === 'POST' && earlyAction === 'select_barospot_candidate') {
+    const scJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const requesterId = getSubFromJWT(scJwt);
+    if (!requesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { application_id: myAppId, candidate_application_id: candId } = req.body || {};
+    if (!myAppId || !candId) return res.status(400).json({ error: 'application_id, candidate_application_id required' });
+
+    const myAppRows = await sb(`barospot_applications?id=eq.${myAppId}&select=id,user_id,event_id,gender,status`, svcKey).then(r => r.json());
+    const myApp = myAppRows?.[0];
+    if (!myApp || myApp.user_id !== requesterId || myApp.gender !== 'female' || myApp.status !== 'matched' || !myApp.event_id) {
+      return res.status(403).json({ error: '선택 권한이 없는 신청 건이에요' });
+    }
+    const candRows = await sb(`barospot_applications?id=eq.${candId}&select=id,event_id,gender,status`, svcKey).then(r => r.json());
+    const cand = candRows?.[0];
+    if (!cand || cand.event_id !== myApp.event_id || cand.gender !== 'male' || cand.status !== 'pending') {
+      return res.status(400).json({ error: '선택할 수 없는 후보예요' });
+    }
+
+    const err = await confirmBarospotMale(candId, svcKey, req);
+    if (err) return res.status(400).json({ error: err });
+    return res.json({ ok: true });
   }
 
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
@@ -646,28 +732,8 @@ module.exports = async function handler(req, res) {
     if (action === 'confirm_barospot_application' && req.method === 'PATCH') {
       const { application_id } = req.body || {};
       if (!application_id) return res.status(400).json({ error: 'application_id required' });
-      const appRows = await sb(`barospot_applications?id=eq.${application_id}&select=id,user_id,event_id,gender`, svcKey).then(r => r.json());
-      const app = appRows?.[0];
-      if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
-      if (!app.event_id) return res.status(400).json({ error: '아직 매장이 배정되지 않은 신청이에요' });
-      if (app.gender !== 'male') return res.status(400).json({ error: '여성 신청은 남성이 확정될 때 자동으로 함께 확정돼요' });
-
-      await sb(`barospot_applications?id=eq.${application_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
-      await sb(`barospot_events?id=eq.${app.event_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
-      await notifyUser(app.user_id, '✅ 바로스팟 확정', '참가가 확정됐어요! 위치·거리 실시간 공유를 이용할 수 있어요.', 'barospot_confirmed', svcKey, req);
-
-      // 같은 이벤트에 매칭된 여성 신청도 함께 확정
-      const femaleRows = await sb(`barospot_applications?event_id=eq.${app.event_id}&gender=eq.female&status=eq.matched&select=id,user_id`, svcKey).then(r => r.json());
-      for (const f of (femaleRows || [])) {
-        await sb(`barospot_applications?id=eq.${f.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'confirmed' }) });
-        await notifyUser(f.user_id, '✅ 바로스팟 확정', '상대방이 확정돼서 만남이 확정됐어요!', 'barospot_confirmed', svcKey, req);
-      }
-      // 같은 이벤트에 신청했던 다른 남성 경쟁자들은 자동 취소
-      const otherMales = await sb(`barospot_applications?event_id=eq.${app.event_id}&gender=eq.male&status=eq.pending&id=neq.${application_id}&select=id,user_id`, svcKey).then(r => r.json());
-      for (const o of (otherMales || [])) {
-        await sb(`barospot_applications?id=eq.${o.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }) });
-        await notifyUser(o.user_id, '바로스팟 신청 결과 안내', '아쉽지만 이번 바로스팟은 다른 분과 매칭됐어요.', 'barospot_cancelled', svcKey, req);
-      }
+      const err = await confirmBarospotMale(application_id, svcKey, req);
+      if (err) return res.status(400).json({ error: err });
       return res.json({ ok: true });
     }
 

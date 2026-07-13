@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '475';
+  const _APP_V = '476';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=475').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=476').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18557,6 +18557,8 @@ async function buySpotPass(gender) {
 
 async function applyBarospot() {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
+  const eligibility = await _checkBarospotEligibility();
+  if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
   if (_spotPassCount < 1) {
     showToast('이용권이 없습니다. 먼저 구매해주세요');
     openSpotPassSheet('female');
@@ -18606,17 +18608,83 @@ async function _loadFemaleApplications() {
   el.innerHTML = data.map(a => {
     const ev = a.barospot_events;
     const st = a.status;
-    const canTrack = ev && (st === 'matched' || st === 'confirmed');
+    // matched(매장 배정 완료) 단계는 아직 상대가 안 정해졌으니 "후보 보기"(블라인드 선택)를,
+    // confirmed(확정) 단계는 상대가 정해졌으니 위치·거리 트래커를 보여준다
+    const canPick = ev && st === 'matched';
+    const canTrack = ev && st === 'confirmed';
+    const clickAttr = canPick ? `onclick="openBarospotCandidates('${a.id}')"` : canTrack ? `onclick="_openSpotEventTracking('${a.event_id}', true)"` : '';
     const whenText = ev?.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
-    return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0;${canTrack ? 'cursor:pointer' : ''}" ${canTrack ? `onclick="_openSpotEventTracking('${a.event_id}', ${st === 'confirmed'})"` : ''}>
+    return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0;${(canPick||canTrack) ? 'cursor:pointer' : ''}" ${clickAttr}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
         <div style="font-size:13px;font-weight:800;color:#222">신청 #${a.id.slice(-6).toUpperCase()}</div>
         <div style="font-size:11px;font-weight:700;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:3px 8px;border-radius:8px">${statusLabel[st]||st}</div>
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || '식당 정보 확인 중'} · ${whenText}</div>` : ''}
+      ${canPick ? `<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:6px">🍽️ 눌러서 후보 보고 선택하기</div>` : ''}
       ${canTrack ? `<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:6px">🗺️ 눌러서 위치·거리 보기</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// ── 바로스팟 블라인드 후보 선택 (여성 전용 - 관리자 개입 없이 본인이 직접 고름) ──
+async function openBarospotCandidates(applicationId) {
+  openBottomSheet('<div style="text-align:center;padding:32px"><div class="spinner" style="margin:0 auto"></div></div>');
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(`/api/admin?action=get_barospot_candidates&application_id=${applicationId}`, {
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    });
+    const data = await res.json();
+    if (!res.ok) { openBottomSheet(`<div style="text-align:center;padding:32px;color:#999">${(data.error||'후보를 불러올 수 없어요').replace(/</g,'&lt;')}</div>`); return; }
+    const candidates = Array.isArray(data.candidates) ? data.candidates : [];
+    if (!candidates.length) {
+      openBottomSheet('<div style="text-align:center;padding:32px 20px"><div style="font-size:36px;margin-bottom:10px">⏳</div><div style="font-size:14px;font-weight:800;color:#666">아직 신청한 분이 없어요</div><div style="font-size:12px;color:#aaa;margin-top:6px">신청이 들어오면 알려드릴게요</div></div>');
+      return;
+    }
+    const html = `
+      <div style="text-align:center;padding:4px 20px 12px">
+        <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">🍽️ 후보를 골라주세요</div>
+        <div style="font-size:12px;color:#888">사진은 매칭 전까지 블러 처리돼요</div>
+      </div>
+      <div style="max-height:60vh;overflow-y:auto;padding:0 20px 20px">
+        ${candidates.map(c => `
+          <div style="display:flex;gap:12px;align-items:center;background:#f8f9fa;border-radius:14px;padding:14px;margin-bottom:10px">
+            <div style="width:56px;height:56px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
+              ${c.photo_url ? `<img src="${c.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(9px);transform:scale(1.15)">` : `<span style="font-size:22px">👤</span>`}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:800;color:#222">${c.age ? '만 ' + c.age + '세' : '나이 미상'}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">· 노쇼 ${c.noshow_count}회</span>` : ''}</div>
+              <div style="font-size:12px;color:#666;margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.bio ? c.bio.replace(/</g,'&lt;') : '자기소개가 없어요'}</div>
+            </div>
+            <button onclick="selectBarospotCandidate('${applicationId}','${c.application_id}')" style="flex-shrink:0;padding:9px 14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">선택</button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    openBottomSheet(html);
+  } catch (e) {
+    openBottomSheet('<div style="text-align:center;padding:32px;color:#999">오류가 발생했어요</div>');
+  }
+}
+
+async function selectBarospotCandidate(myApplicationId, candidateApplicationId) {
+  const confirmed = await showConfirmDialog('선택 확정', '이 분과 매칭을 확정하시겠어요?\n확정 후에는 되돌릴 수 없어요.', '확정하기', '취소');
+  if (!confirmed) return;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/api/admin?action=select_barospot_candidate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ application_id: myApplicationId, candidate_application_id: candidateApplicationId })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || '선택에 실패했어요'); return; }
+    closeBottomSheet();
+    showToast('🎉 매칭이 확정됐어요!');
+    await _loadFemaleApplications();
+  } catch (e) {
+    showToast('오류가 발생했어요');
+  }
 }
 
 async function _loadSpotEvents() {
@@ -18660,8 +18728,31 @@ function _renderSpotEventCard(ev) {
   </div>`;
 }
 
+// 바로스팟은 여성이 블라인드로 프로필만 보고 상대를 직접 고르는 방식이라, 관리자가
+// 대신 걸러주지 않는 이상 최소한의 자격 기준을 신청 시점에 미리 걸러야 함 - 노쇼
+// 이력이 많거나 평점이 낮은 사람은 애초에 신청 자체가 안 되도록 막는다(관리자 개입 없이
+// 통과한 사람은 전부 여성의 후보 목록에 뜸). 리뷰 수가 적은 신규 유저는 아직 평가할
+// 데이터가 없으니 평점 기준에서는 제외(노쇼 기준은 그대로 적용).
+const BAROSPOT_MIN_RATING = 3.5;
+const BAROSPOT_MIN_REVIEWS_FOR_RATING_CHECK = 2;
+const BAROSPOT_MAX_NOSHOW = 1;
+
+async function _checkBarospotEligibility() {
+  const { data: w } = await db.from('workers').select('rating, review_count, noshow_count').eq('kakao_uid', currentUser.id).maybeSingle();
+  const noshow = w?.noshow_count || 0;
+  const reviews = w?.review_count || 0;
+  const rating = w?.rating;
+  if (noshow > BAROSPOT_MAX_NOSHOW) return { ok: false, reason: `노쇼 이력(${noshow}회)이 있어 바로스팟 신청이 제한돼요` };
+  if (reviews >= BAROSPOT_MIN_REVIEWS_FOR_RATING_CHECK && rating != null && rating < BAROSPOT_MIN_RATING) {
+    return { ok: false, reason: `평점(${Number(rating).toFixed(1)})이 기준(${BAROSPOT_MIN_RATING}) 미만이라 바로스팟 신청이 제한돼요` };
+  }
+  return { ok: true };
+}
+
 async function applySpotEvent(eventId) {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
+  const eligibility = await _checkBarospotEligibility();
+  if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
   if (_spotPassCount < 1) {
     showToast('이용권이 없습니다. 먼저 구매해주세요');
     openSpotPassSheet('male');
