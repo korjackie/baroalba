@@ -68,6 +68,27 @@ async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) 
   }));
 }
 
+// 포인트 지급/차감 시 인앱 알림 + 푸시 발송 (추천인 보상, 관리자 수동 지급 공통 사용)
+async function notifyPointsGranted(userId, amount, reason, svcKey, req) {
+  const title = amount > 0 ? '🎁 포인트가 지급됐어요' : '포인트 차감 안내';
+  const body = reason || (amount > 0 ? `${amount.toLocaleString()}P가 지급됐어요` : `${Math.abs(amount).toLocaleString()}P가 차감됐어요`);
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const baseUrl = host ? `https://${host}` : '';
+
+  await sb('notifications', svcKey, {
+    method: 'POST',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ user_id: userId, title, body, type: 'points_granted' }),
+  }).catch(() => {});
+  if (baseUrl) {
+    await fetch(`${baseUrl}/api/send-push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, title, body, url: '/바로알바.html', type: 'points_granted' }),
+    }).catch(() => {});
+  }
+}
+
 // 승인/거절 시마다 실제 승인건수 기준으로 성별 정원 카운트를 재계산 - 수동 +1/-1 방식은
 // 과거 데이터(승인단계 도입 전 신청건 등)와 어긋나면 영구적으로 드리프트되는 문제가 있었음
 async function recomputeBaromeetCounts(gatheringId, svcKey) {
@@ -221,6 +242,11 @@ module.exports = async function handler(req, res) {
     await creditPointsServer(newUserId, REFERRAL_REWARD_POINTS);
     await creditPointsServer(referrer.kakao_uid, REFERRAL_REWARD_POINTS);
 
+    // 추천인은 지금 앱을 보고 있지 않을 가능성이 높아 알림/푸시로 알려줘야 함
+    // (신규가입자 본인은 클라이언트에서 즉시 토스트로도 뜨지만, 기록용으로 동일하게 남김)
+    await notifyPointsGranted(newUserId, REFERRAL_REWARD_POINTS, '추천코드로 가입해서 포인트를 받았어요! 🎉', svcKey, req);
+    await notifyPointsGranted(referrer.kakao_uid, REFERRAL_REWARD_POINTS, '내 추천코드로 친구가 가입해서 포인트를 받았어요! 🎉', svcKey, req);
+
     return res.json({ ok: true, credited: true, points: REFERRAL_REWARD_POINTS });
   }
 
@@ -336,6 +362,8 @@ module.exports = async function handler(req, res) {
         await sb('point_accounts', svcKey, { method: 'POST', body: JSON.stringify({ user_id: referrer.kakao_uid, balance: newBalance }) });
       }
 
+      await notifyPointsGranted(referrer.kakao_uid, REFERRAL_REWARD_POINTS, '내 추천코드로 친구가 가입해서 포인트를 받았어요! 🎉', svcKey, req);
+
       return res.json({ ok: true, credited: true, referrerUid: referrer.kakao_uid, referrerBalance: newBalance });
     }
 
@@ -365,6 +393,7 @@ module.exports = async function handler(req, res) {
         user_id: grantUid, type: amount > 0 ? 'admin_grant' : 'admin_deduct', amount, balance_after: newBalance,
         description: reason || '관리자 포인트 지급',
       }) }).catch(() => {}); // point_transactions는 참고용 로그 - 실패해도 지급 자체는 이미 반영됨
+      await notifyPointsGranted(grantUid, amount, reason, svcKey, req);
 
       return res.json({ ok: true, balance: newBalance });
     }
