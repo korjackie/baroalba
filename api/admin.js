@@ -560,9 +560,20 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 바로스팟 이벤트 개설/수정 - 주소는 서버사이드로 지오코딩(카카오 로컬 API) ──
+    // new_restaurant가 오면(네이버 플레이스 검색으로 제휴목록에 없는 새 장소를 고른 경우)
+    // barospot_restaurants에 먼저 등록하고 그 id를 restaurant_id로 사용한다
     if (action === 'save_barospot_event' && (req.method === 'POST' || req.method === 'PATCH')) {
-      const { id, restaurant_id, event_date, female_max, male_max, status, notes, address } = req.body || {};
-      if (!restaurant_id) return res.status(400).json({ error: '제휴매장을 선택해주세요' });
+      let { id, restaurant_id, new_restaurant, event_date, female_max, male_max, status, notes, address } = req.body || {};
+      if (!restaurant_id && new_restaurant?.name) {
+        const rr = await sb('barospot_restaurants', svcKey, {
+          method: 'POST',
+          body: JSON.stringify({ name: new_restaurant.name.trim(), address: (new_restaurant.address || '').trim(), phone: '', menu_description: '', base_price: 0, is_active: true }),
+        });
+        if (!rr.ok) return res.status(502).json({ error: '새 제휴매장 등록 실패: ' + await rr.text() });
+        const rows = await rr.json();
+        restaurant_id = rows?.[0]?.id;
+      }
+      if (!restaurant_id) return res.status(400).json({ error: '제휴매장을 선택하거나 새 장소를 검색해주세요' });
       if (!event_date) return res.status(400).json({ error: '일시를 입력해주세요' });
       const payload = {
         restaurant_id,
