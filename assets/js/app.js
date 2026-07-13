@@ -547,6 +547,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupSearch();
   applyLang();
   loadCategoriesWorker();
+  
+  // 첫 진입 온보딩 튜토리얼 (게스트 포함 모든 유저 대상)
+  if (!localStorage.getItem(_OB_KEY) || location.search.includes('tutorial=1')) setTimeout(showOnboarding, 800);
+
   const deepJobId = new URLSearchParams(location.search).get('job') || sessionStorage.getItem('pending_deep_job');
   if (deepJobId) sessionStorage.removeItem('pending_deep_job');
   const _dParams = new URLSearchParams(location.search);
@@ -11125,7 +11129,7 @@ async function initOwnerFeatures() {
   if (window._pendingFCMToken) _saveFCMToken(window._pendingFCMToken); // 로그인 전 수신된 토큰 저장
 
   // 첫 로그인 온보딩 튜토리얼
-  if (!localStorage.getItem(_OB_KEY) || location.search.includes('tutorial=1')) setTimeout(showOnboarding, 800);
+  // 첫 로그인 온보딩 튜토리얼 (메인 DOMContentLoaded로 이동됨)
 
   // 업주 레코드 조회
   const { data: biz } = await db.from('businesses')
