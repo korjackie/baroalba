@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '468';
+  const _APP_V = '469';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=468').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=469').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -738,6 +738,20 @@ async function _processReferralSignup(newUserId) {
     if (result?.credited) {
       showToast(`🎉 추천인 코드로 가입해 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받았어요!`);
       loadUserPoints();
+      return;
+    }
+    // 추천코드가 아니었다면 쿠폰/프로모션 코드일 수 있음 - 가입화면 입력란과 마이페이지
+    // "쿠폰 등록"을 사용자 입장에서 같은 개념으로 취급하기로 해서 여기서도 시도해본다
+    if (result?.skipped) {
+      const couponRes = await fetch('/api/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ code })
+      });
+      const couponResult = await couponRes.json();
+      if (couponRes.ok && couponResult?.granted) {
+        showToast(`✅ 이용권 ${couponResult.granted}장이 지급됐어요!`);
+      }
     }
   } catch (e) { /* 추천 처리 실패는 조용히 무시 - 가입 자체를 막으면 안 됨 */ }
 }
