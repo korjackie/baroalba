@@ -176,6 +176,54 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // ── 추천인 가입 처리 (관리자 아님, 로그인한 본인 세션으로 호출) ──
+  // 반드시 서비스 롤 키로 처리해야 함: 추천인의 point_accounts는 신규가입자 세션
+  // 기준으로는 "남의 행"이라 RLS가 UPDATE를 조용히 막아버림 (0 rows affected, 에러 없음) -
+  // assign_mannnam_manager와 동일한 클래스의 버그. 신규가입자 본인 몫은 클라이언트에서도
+  // 성공하지만 추천인 몫만 누락되는 형태로 나타났음.
+  if (req.method === 'POST' && earlyAction === 'process_referral') {
+    const refJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const newUserId = getSubFromJWT(refJwt);
+    if (!newUserId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { code } = req.body || {};
+    if (!code) return res.status(400).json({ error: 'code required' });
+
+    const REFERRAL_REWARD_POINTS = 3000;
+    const meRows = await sb(`workers?kakao_uid=eq.${newUserId}&select=id,referred_by`, svcKey).then(r => r.json());
+    const me = Array.isArray(meRows) ? meRows[0] : null;
+    if (me?.referred_by) return res.json({ ok: true, already: true }); // 이미 처리됨 - 중복 지급 방지
+
+    const refRows = await sb(`workers?referral_code=eq.${encodeURIComponent(code)}&select=kakao_uid`, svcKey).then(r => r.json());
+    const referrer = Array.isArray(refRows) ? refRows[0] : null;
+    if (!referrer || referrer.kakao_uid === newUserId) return res.json({ ok: true, skipped: true });
+
+    if (me) {
+      await sb(`workers?id=eq.${me.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ referred_by: referrer.kakao_uid }) });
+    } else {
+      let name = '알바생';
+      try {
+        const payload = JSON.parse(Buffer.from(refJwt.split('.')[1], 'base64').toString());
+        const meta = payload.user_metadata || {};
+        name = meta.full_name || meta.name || (payload.email ? payload.email.split('@')[0] : name);
+      } catch {}
+      await sb('workers', svcKey, { method: 'POST', body: JSON.stringify({ kakao_uid: newUserId, name, referred_by: referrer.kakao_uid }) });
+    }
+
+    async function creditPointsServer(userId, amount) {
+      const acctRows = await sb(`point_accounts?user_id=eq.${userId}&select=id,balance`, svcKey).then(r => r.json());
+      const acct = Array.isArray(acctRows) ? acctRows[0] : null;
+      if (acct) {
+        await sb(`point_accounts?id=eq.${acct.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ balance: (acct.balance || 0) + amount }) });
+      } else {
+        await sb('point_accounts', svcKey, { method: 'POST', body: JSON.stringify({ user_id: userId, balance: amount }) });
+      }
+    }
+    await creditPointsServer(newUserId, REFERRAL_REWARD_POINTS);
+    await creditPointsServer(referrer.kakao_uid, REFERRAL_REWARD_POINTS);
+
+    return res.json({ ok: true, credited: true, points: REFERRAL_REWARD_POINTS });
+  }
+
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   const email = getEmailFromJWT(token);

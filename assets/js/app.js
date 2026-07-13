@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '466';
+  const _APP_V = '467';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=463').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=467').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -717,33 +717,28 @@ async function _sendWelcomeEmail(user) {
 // ── 추천인 초대 시스템 ────────────────────────────────────
 const REFERRAL_REWARD_POINTS = 3000;
 
-// point_accounts 행이 없을 수도 있는(첫 지급) 케이스까지 안전하게 처리하는 공용 적립 함수
-async function _creditPoints(userId, amount) {
-  const { data: acct } = await db.from('point_accounts').select('id, balance').eq('user_id', userId).maybeSingle();
-  if (acct) {
-    await db.from('point_accounts').update({ balance: (acct.balance || 0) + amount }).eq('id', acct.id);
-  } else {
-    await db.from('point_accounts').insert({ user_id: userId, balance: amount });
-  }
-}
-
-// 가입 시 pending_ref_code(로그인 전 캐치해둔 추천코드)가 있으면 추천인을 찾아
-// 추천인/피추천인 양쪽에 포인트 지급 - 최대 1회만 처리(중복 지급 방지)
+// 가입 시 pending_ref_code(로그인 전 캐치해둔 추천코드)가 있으면 서버(api/admin.js의
+// process_referral)에 위임해 추천인/피추천인 양쪽에 포인트 지급 - 최대 1회만 처리(중복 지급 방지).
+// 반드시 서버(서비스 롤 키)에서 처리해야 함: 추천인의 point_accounts는 신규가입자 세션
+// 기준으론 "남의 행"이라 클라이언트에서 직접 update()하면 RLS가 조용히 막아 추천인
+// 몫만 누락됨(신규가입자 본인 몫은 자기 행이라 성공하는 것처럼 보여서 발견이 늦어짐).
 async function _processReferralSignup(newUserId) {
   const code = localStorage.getItem('pending_ref_code');
   if (!code || localStorage.getItem('referral_processed')) return;
   localStorage.setItem('referral_processed', '1');
   localStorage.removeItem('pending_ref_code');
   try {
-    const { data: me } = await db.from('workers').select('referred_by').eq('kakao_uid', newUserId).maybeSingle();
-    if (me?.referred_by) return; // 이미 추천인이 기록된 계정(중복 로그인 등)이면 스킵
-    const { data: referrer } = await db.from('workers').select('kakao_uid').eq('referral_code', code).maybeSingle();
-    if (!referrer || referrer.kakao_uid === newUserId) return; // 코드 없거나 자기 자신 추천 방지
-    await db.from('workers').update({ referred_by: referrer.kakao_uid }).eq('kakao_uid', newUserId);
-    await _creditPoints(newUserId, REFERRAL_REWARD_POINTS);
-    await _creditPoints(referrer.kakao_uid, REFERRAL_REWARD_POINTS);
-    showToast(`🎉 추천인 코드로 가입해 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받았어요!`);
-    loadUserPoints();
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/api/admin?action=process_referral', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ code })
+    });
+    const result = await res.json();
+    if (result?.credited) {
+      showToast(`🎉 추천인 코드로 가입해 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받았어요!`);
+      loadUserPoints();
+    }
   } catch (e) { /* 추천 처리 실패는 조용히 무시 - 가입 자체를 막으면 안 됨 */ }
 }
 

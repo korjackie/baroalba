@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=466"></script>
+  <script src="./shared-lang.js?v=467"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=463">
+  <link rel="stylesheet" href="./assets/css/style.css?v=467">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1467,6 +1467,31 @@
         </div>
       </div>
 
+      <!-- ── 내 프로필 (알바생만) - 프로필명 바로 아래, 기본정보/포트폴리오만 최상단에 노출 ── -->
+      <div class="mp-section" id="worker-profile-edit" style="display:none">
+        <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
+        <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-radius:16px 16px 0 0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+            <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
+            <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
+          </div>
+          <div style="height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden">
+            <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s;width:0%"></div>
+          </div>
+          <div id="completion-items" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
+        </div>
+        <div class="mp-rows">
+          <div class="mp-row" onclick="openMpSub('basic')">
+            <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
+          <div class="mp-row" onclick="openMpSub('portfolio')">
+            <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">추가 사진등록 (프로필, 포트폴리오 등)</span></div>
+            <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── 통계 바 (알바생만) ── -->
       <div id="worker-stats-grid" style="display:none;grid-template-columns:1fr 1fr 1fr 1fr;background:#fff;border-top:1px solid #f0f0f0;border-bottom:8px solid #f5f5f5">
         <div onclick="goToMyApplications()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
@@ -1571,37 +1596,8 @@
             <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="row_coupon">프로모션 쿠폰 등록 / 이용권 조회</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
-        </div>
-      </div>
-
-      <!-- ── 내 프로필 (알바생만) - 서비스 전용 활동내역이 아니라 기본 세팅이라 최상위로 이동 ── -->
-      <div class="mp-section" id="worker-profile-edit" style="display:none">
-        <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
-        <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-radius:16px 16px 0 0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
-            <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
-          </div>
-          <div style="height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden">
-            <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s;width:0%"></div>
-          </div>
-          <div id="completion-items" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
-        </div>
-        <div class="mp-rows">
-          <div class="mp-row" onclick="openMpSub('basic')">
-            <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('portfolio')">
-            <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">포트폴리오</span></div>
-            <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('skills')">
-            <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span data-i18n="row_skills_career">스킬 · 경력</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('docs')">
-            <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_docs">자격증 · 서류</span></div>
+          <div class="mp-row" onclick="openReferralInvite()">
+            <div class="mp-row-left"><span class="mp-row-icon">🎁</span><span>친구 초대하고 포인트 받기</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
@@ -1630,16 +1626,6 @@
           <div class="mp-row" onclick="openMpSub('foreigner-hub')">
             <div class="mp-row-left"><span class="mp-row-icon">🌏</span><span data-i18n="row_foreigner">외국인 전용</span></div>
             <div class="mp-row-right"><span id="mp-visa-val" style="font-size:12px;color:#16a34a;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── 친구 초대 (추천인 링크) - 다른 메뉴 행들과 폭/높이 통일 ── -->
-      <div class="mp-section">
-        <div class="mp-rows">
-          <div class="mp-row" onclick="openReferralInvite()">
-            <div class="mp-row-left"><span class="mp-row-icon">🎁</span><span>친구 초대하고 포인트 받기</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
       </div>
@@ -1779,6 +1765,14 @@
       </div>
       <div class="mp-row" onclick="openMpSub('wage-history')">
         <div class="mp-row-left"><span class="mp-row-icon">💴</span><span data-i18n="row_wage_history">급여 수령 확인</span></div>
+        <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+      </div>
+      <div class="mp-row" onclick="openMpSub('skills')">
+        <div class="mp-row-left"><span class="mp-row-icon">🏷️</span><span data-i18n="row_skills_career">스킬 · 경력</span></div>
+        <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+      </div>
+      <div class="mp-row" onclick="openMpSub('docs')">
+        <div class="mp-row-left"><span class="mp-row-icon">📋</span><span data-i18n="row_docs">자격증 · 서류</span></div>
         <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
       </div>
     </div>
@@ -4070,7 +4064,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=466"></script>
+<script src="./assets/js/app.js?v=467"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">

@@ -173,7 +173,7 @@ const TRANSLATIONS = {
     section_activity:'내 활동', row_applications:'지원 현황', row_income:'수입 현황', row_wage_history:'급여 수령 확인',
     row_points:'포인트 잔액', btn_charge:'충전', row_coupon:'프로모션 쿠폰 등록 / 이용권 조회',
     my_rating_label:'내 평점', trust_score_label:'신뢰점수', row_following:'팔로잉 업체', row_dashboard:'대시보드',
-    profile_completion_label:'프로필 완성도', row_basic_info:'기본 정보', row_portfolio:'포트폴리오',
+    profile_completion_label:'프로필 완성도', row_basic_info:'기본 정보', row_portfolio:'추가 사진등록 (프로필, 포트폴리오 등)',
     row_skills_career:'스킬 · 경력', row_docs:'자격증 · 서류',
     section_grade:'등급', row_my_grade:'내 등급',
     section_foreigner:'외국인 전용 서비스', row_foreigner:'외국인 전용',
