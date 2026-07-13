@@ -455,6 +455,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
+  // 추천인 링크(?ref=CODE) 캐치 - 로그인 전 게스트 상태로 들어와도 카카오 로그인
+  // 리다이렉트를 거치며 URL 파라미터가 사라지므로, 로그인 여부와 무관하게
+  // 여기서 먼저 localStorage에 잡아두고 로그인 완료 시점에 처리한다
+  const _refCode = new URLSearchParams(location.search).get('ref');
+  if (_refCode && !localStorage.getItem('referral_processed')) {
+    localStorage.setItem('pending_ref_code', _refCode);
+  }
+
   // 카카오 공유 SDK 초기화 (지도 SDK kakao.maps와 별개)
   if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
 
@@ -491,6 +499,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       localStorage.setItem('welcome_sent_' + session.user.id, '1');
       _sendWelcomeEmail(session.user);
     }
+    // 추천인 링크로 유입된 신규가입자 처리 (가입 후 5분 이내인 진짜 신규가입에만 적용)
+    if (_createdAgo < 5 * 60 * 1000) _processReferralSignup(session.user.id);
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     setTimeout(checkPushPermission, 3000); // 알림 배너 표시
@@ -688,6 +698,115 @@ async function _sendWelcomeEmail(user) {
       body: JSON.stringify({ email, name, provider })
     });
   } catch(e) { /* 환영 이메일 실패는 조용히 무시 */ }
+}
+
+// ── 추천인 초대 시스템 ────────────────────────────────────
+const REFERRAL_REWARD_POINTS = 3000;
+
+// point_accounts 행이 없을 수도 있는(첫 지급) 케이스까지 안전하게 처리하는 공용 적립 함수
+async function _creditPoints(userId, amount) {
+  const { data: acct } = await db.from('point_accounts').select('id, balance').eq('user_id', userId).maybeSingle();
+  if (acct) {
+    await db.from('point_accounts').update({ balance: (acct.balance || 0) + amount }).eq('id', acct.id);
+  } else {
+    await db.from('point_accounts').insert({ user_id: userId, balance: amount });
+  }
+}
+
+// 가입 시 pending_ref_code(로그인 전 캐치해둔 추천코드)가 있으면 추천인을 찾아
+// 추천인/피추천인 양쪽에 포인트 지급 - 최대 1회만 처리(중복 지급 방지)
+async function _processReferralSignup(newUserId) {
+  const code = localStorage.getItem('pending_ref_code');
+  if (!code || localStorage.getItem('referral_processed')) return;
+  localStorage.setItem('referral_processed', '1');
+  localStorage.removeItem('pending_ref_code');
+  try {
+    const { data: me } = await db.from('workers').select('referred_by').eq('kakao_uid', newUserId).maybeSingle();
+    if (me?.referred_by) return; // 이미 추천인이 기록된 계정(중복 로그인 등)이면 스킵
+    const { data: referrer } = await db.from('workers').select('kakao_uid').eq('referral_code', code).maybeSingle();
+    if (!referrer || referrer.kakao_uid === newUserId) return; // 코드 없거나 자기 자신 추천 방지
+    await db.from('workers').update({ referred_by: referrer.kakao_uid }).eq('kakao_uid', newUserId);
+    await _creditPoints(newUserId, REFERRAL_REWARD_POINTS);
+    await _creditPoints(referrer.kakao_uid, REFERRAL_REWARD_POINTS);
+    showToast(`🎉 추천인 코드로 가입해 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받았어요!`);
+    loadUserPoints();
+  } catch (e) { /* 추천 처리 실패는 조용히 무시 - 가입 자체를 막으면 안 됨 */ }
+}
+
+function _genReferralCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 혼동되는 0/O/1/I 제외
+  let s = '';
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+// 내 추천코드 조회 - 없으면 생성(충돌 시 재시도)해서 저장 후 반환
+async function _getMyReferralCode() {
+  const { data: w } = await db.from('workers').select('referral_code').eq('kakao_uid', currentUser.id).maybeSingle();
+  if (w?.referral_code) return w.referral_code;
+  for (let i = 0; i < 5; i++) {
+    const code = _genReferralCode();
+    const { error } = await db.from('workers').update({ referral_code: code }).eq('kakao_uid', currentUser.id);
+    if (!error) return code;
+  }
+  return null;
+}
+
+async function openReferralInvite() {
+  if (!currentUser || isGuest) { showLoginPrompt('로그인 후 이용할 수 있어요','친구 초대는 로그인이 필요합니다.'); return; }
+  openBottomSheet('<div style="text-align:center;padding:32px"><div class="spinner" style="margin:0 auto"></div></div>');
+  const code = await _getMyReferralCode();
+  if (!code) { closeBottomSheet(); showToast('코드 발급에 실패했어요. 다시 시도해주세요'); return; }
+  const { count } = await db.from('workers').select('id', { count: 'exact', head: true }).eq('referred_by', currentUser.id);
+  const link = `${location.origin}${location.pathname}?ref=${code}`;
+  openBottomSheet(`
+    <div style="text-align:center;padding:4px 20px 8px">
+      <div style="font-size:36px;margin-bottom:10px">🎁</div>
+      <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:6px">친구 초대하고 포인트 받기</div>
+      <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">내 링크로 친구가 가입하면<br>둘 다 <b style="color:#C8102E">${REFERRAL_REWARD_POINTS.toLocaleString()}P</b>를 받아요!</div>
+      <div style="background:#f8f8f8;border-radius:14px;padding:16px;margin-bottom:16px">
+        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">내 추천코드</div>
+        <div style="font-size:22px;font-weight:900;color:#C8102E;letter-spacing:2px;margin-bottom:10px">${code}</div>
+        <div style="font-size:11px;color:#bbb">지금까지 <b style="color:#666">${count || 0}명</b> 초대함</div>
+      </div>
+      <button onclick="shareReferralLink('${code}')" style="width:100%;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        카카오톡으로 초대하기
+      </button>
+      <button onclick="navigator.clipboard.writeText('${link}').then(()=>showToast('📋 링크 복사됨'))" style="width:100%;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">🔗 링크 복사하기</button>
+    </div>
+  `);
+}
+
+async function shareReferralLink(code) {
+  const link = `${location.origin}${location.pathname}?ref=${code}`;
+  const shareTitle = '바로알바 — 지금 바로 알바·모임·만남을 시작해보세요';
+  const shareText = `${shareTitle}\n제 추천코드로 가입하면 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 드려요!\n${link}`;
+
+  if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
+    window.AndroidBridge.share(shareTitle, `추천코드로 가입하면 ${REFERRAL_REWARD_POINTS.toLocaleString()}P 지급!`, link);
+    return;
+  }
+  if (window.Kakao?.isInitialized?.()) {
+    try {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: shareTitle,
+          description: `추천코드로 가입하면 ${REFERRAL_REWARD_POINTS.toLocaleString()}P 지급!`,
+          imageUrl: `${location.origin}/icons/og-share.png`,
+          link: { mobileWebUrl: link, webUrl: link }
+        },
+        buttons: [{ title: '지금 가입하기', link: { mobileWebUrl: link, webUrl: link } }]
+      });
+      return;
+    } catch(e) {}
+  }
+  if (navigator.share) {
+    navigator.share({ title: shareTitle, text: shareText, url: link }).catch(() => {});
+    return;
+  }
+  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
 }
 
 // ── 브라우저 접속 여부 감지 → 헤더 "앱 설치" 버튼 표시 ──────
@@ -9363,6 +9482,7 @@ function closeOnboarding() {
   if (el) el.style.display = 'none';
   localStorage.setItem(_OB_KEY, '1');
 }
+function obNext() {
   if (_obStep < _OB_SLIDES.length - 1) { _obStep++; _renderObSlide(); }
   else closeOnboarding();
 }
