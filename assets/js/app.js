@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '460';
+  const _APP_V = '461';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=460').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=461').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -786,11 +786,15 @@ async function openReferralInvite() {
 
 async function shareReferralLink(code) {
   const link = `${location.origin}${location.pathname}?ref=${code}`;
-  const shareTitle = '바로알바 — 지금 바로 알바·모임·만남을 시작해보세요';
-  const shareText = `${shareTitle}\n제 추천코드로 가입하면 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 드려요!\n${link}`;
+  // 그냥 포인트 지급 안내만 하지 말고 실제 슬로건("지금 바로, 돈 벌고 싶을 때도" -
+  // login.html의 hero-sub와 동일한 톤)으로 서비스 자체를 먼저 어필하고, 포인트는
+  // 뒤따르는 혜택으로 붙인다
+  const shareTitle = '지금 바로 가입하고, 돈 필요할 때 바로 알바 시작하세요!';
+  const shareDesc = `제 추천코드로 가입하면 서로 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받아요 🎁`;
+  const shareText = `${shareTitle}\n${shareDesc}\n${link}`;
 
   if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
-    window.AndroidBridge.share(shareTitle, `추천코드로 가입하면 ${REFERRAL_REWARD_POINTS.toLocaleString()}P 지급!`, link);
+    window.AndroidBridge.share(shareTitle, shareDesc, link);
     return;
   }
   if (window.Kakao?.isInitialized?.()) {
@@ -799,7 +803,7 @@ async function shareReferralLink(code) {
         objectType: 'feed',
         content: {
           title: shareTitle,
-          description: `추천코드로 가입하면 ${REFERRAL_REWARD_POINTS.toLocaleString()}P 지급!`,
+          description: shareDesc,
           imageUrl: `${location.origin}/icons/og-share.png`,
           link: { mobileWebUrl: link, webUrl: link }
         },
