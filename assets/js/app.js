@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '477';
+  const _APP_V = '478';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=477').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=478').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -6890,10 +6890,24 @@ function moveToMyLocation(silent = false) {
       saveMapCenter(pos.coords.latitude, pos.coords.longitude);
       kakaoMap.setCenter(latlng);
       loadJobs();
+      _persistLastKnownLocation(pos.coords.latitude, pos.coords.longitude);
     }
   }, () => {
     if (!silent) showToast('위치 권한이 필요합니다');
   }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+}
+
+// 지도를 볼 때마다 workers.last_lat/last_lng를 살짝 갱신해둔다(1시간에 한 번만) -
+// 바로스팟 전용으로 만든 컬럼이지만 "주변 회원에게 알림"이 필요한 다른 기능
+// (공고/바로미팅 반경 알림)도 그대로 재사용할 수 있는 공용 최근 위치 데이터가 된다
+let _lastKnownLocWriteAt = 0;
+function _persistLastKnownLocation(lat, lng) {
+  if (!currentUser) return;
+  const now = Date.now();
+  if (now - _lastKnownLocWriteAt < 60 * 60 * 1000) return;
+  _lastKnownLocWriteAt = now;
+  db.from('workers').update({ last_lat: lat, last_lng: lng, last_location_at: new Date().toISOString() })
+    .eq('kakao_uid', currentUser.id).then(() => {});
 }
 
 function stopLocationWatch() {
@@ -14098,7 +14112,7 @@ async function submitPosting() {
         .select('id').eq('business_id', bizRecord.id).order('created_at', { ascending: false }).limit(1).single();
       openShareModal(fresh?.id, true);
       // 비동기로 매칭 알림 발송 + 팔로워 알림 + 단골 우선 알림 (UI 차단 없음)
-      notifyMatchingWorkers(category, wage, addrText).catch(() => {});
+      notifyMatchingWorkers(category, wage, addrText, finalLat, finalLng).catch(() => {});
       _notifyFollowers(fresh?.id, title, wage).catch(() => {});
       _notifyFavWorkers(fresh?.id, title, wage).catch(() => {});
     } else {
@@ -14130,19 +14144,26 @@ async function _notifyFollowers(jobId, title, wage) {
 }
 
 // ── 맞춤 공고 알림 발송 ────────────────────────────────────
-async function notifyMatchingWorkers(category, wage, address) {
+async function notifyMatchingWorkers(category, wage, address, lat, lng) {
   try {
     // notify_enabled=true 이고 최소시급 조건 맞는 알바생 조회 (최대 50명)
     const { data: workers } = await db.from('workers')
-      .select('kakao_uid, notify_categories, notify_min_wage')
+      .select('kakao_uid, notify_categories, notify_min_wage, last_lat, last_lng, last_location_at')
       .eq('notify_enabled', true)
       .lte('notify_min_wage', wage)
       .limit(50);
     if (!workers?.length) return;
 
+    // 최근 위치 정보가 있는 회원만 반경 5km로 추가 필터링 - 지도를 최근에 켰던 적이 없어
+    // 위치 정보가 없는 회원은 기존처럼 업종/희망시급 기준만으로 계속 알림을 받는다
+    // (반경 필터를 위해 위치가 필수는 아니게 해서 기존 알림 대상이 줄어들지 않게 함)
+    const NOTIFY_RADIUS_KM = 5;
     const targets = workers.filter(w => {
       const cats = w.notify_categories;
-      return !cats?.length || cats.includes(category); // 빈 배열 = 전체 업종
+      const catOk = !cats?.length || cats.includes(category); // 빈 배열 = 전체 업종
+      if (!catOk) return false;
+      if (lat == null || lng == null || w.last_lat == null || w.last_lng == null) return true;
+      return _haversineM(lat, lng, w.last_lat, w.last_lng) / 1000 <= NOTIFY_RADIUS_KM;
     });
     if (!targets.length) return;
 

@@ -738,19 +738,32 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 바로스팟 완료 처리 (만남이 끝난 뒤) ──
+    // noshow_kakao_uids: 실제로 안 나온 사람의 kakao_uid 배열(0~2명) - 노쇼 처리하면
+    // workers.noshow_count가 올라가고, 이는 신청 자격 기준(_checkBarospotEligibility)과
+    // 그대로 연결돼 노쇼 이력이 쌓인 사람은 다음 바로스팟 신청 자체가 막힌다
     if (action === 'complete_barospot_event' && req.method === 'PATCH') {
-      const { id } = req.body || {};
+      const { id, noshow_kakao_uids } = req.body || {};
       if (!id) return res.status(400).json({ error: 'id required' });
       const r = await sb(`barospot_events?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'done' }) });
       if (!r.ok) return res.status(502).json({ error: await r.text() });
+      for (const uid of (Array.isArray(noshow_kakao_uids) ? noshow_kakao_uids : [])) {
+        const wRows = await sb(`workers?kakao_uid=eq.${uid}&select=id,noshow_count`, svcKey).then(r => r.json());
+        const w = wRows?.[0];
+        if (!w) continue;
+        await sb(`workers?id=eq.${w.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ noshow_count: (w.noshow_count || 0) + 1 }) });
+        await notifyUser(uid, '⚠️ 노쇼 처리 안내', '바로스팟 노쇼로 처리됐어요. 반복되면 신청이 제한될 수 있어요.', 'barospot_noshow', svcKey, req);
+      }
       return res.json({ ok: true });
     }
 
-    // ── 바로스팟 신청 목록 (여성: 매장배정 대기, 남성: 확정대기 등) ──
+    // ── 바로스팟 신청 목록 (여성: 매장배정 대기, 남성: 확정대기 등) - event_id로도 필터 가능
+    // (완료 처리 시 "누가 노쇼했는지" 고르기 위해 특정 이벤트의 확정자만 조회할 때 사용) ──
     if (action === 'barospot_applications') {
       const statusFilter = req.query.status;
+      const eventFilter = req.query.event_id;
       let url = 'barospot_applications?select=id,event_id,user_id,gender,status,created_at&order=created_at.desc&limit=200';
       if (statusFilter) url += `&status=eq.${encodeURIComponent(statusFilter)}`;
+      if (eventFilter) url += `&event_id=eq.${encodeURIComponent(eventFilter)}`;
       const apps = await sb(url, svcKey).then(r => r.json());
       const list = Array.isArray(apps) ? apps : [];
       const userIds = [...new Set(list.map(a => a.user_id).filter(Boolean))];
@@ -1160,6 +1173,17 @@ module.exports = async function handler(req, res) {
         prev.baromeeting_female_max !== payload.baromeeting_female_max
       )) {
         notifyBaromeetApplicants(id, payload.title, svcKey, req).catch(e => console.error('[save_baromeeting] 알림 발송 실패:', e));
+      }
+
+      // 신규 개설 + 좌표 확보 성공 시 반경 5km 내 알림 opt-in(notify_enabled) 회원에게 발송
+      // (바로스팟과 동일한 workers.last_lat/last_lng 위치 데이터 재사용)
+      if (!id && payload.lat != null && payload.lng != null) {
+        const BM_NOTIFY_RADIUS_KM = 5;
+        const nearbyWorkers = await sb(`workers?notify_enabled=eq.true&last_lat=not.is.null&last_lng=not.is.null&select=kakao_uid,last_lat,last_lng`, svcKey).then(r => r.json()).catch(() => []);
+        const nearby = (Array.isArray(nearbyWorkers) ? nearbyWorkers : []).filter(w => haversineKm(payload.lat, payload.lng, w.last_lat, w.last_lng) <= BM_NOTIFY_RADIUS_KM);
+        for (const w of nearby) {
+          await notifyUser(w.kakao_uid, '🤝 근처에 바로미팅이 열렸어요!', `"${payload.title}" - 지금 확인해보세요`, 'baromeeting_offer', svcKey, req);
+        }
       }
 
       return res.json({ ok: true });

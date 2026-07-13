@@ -954,6 +954,19 @@
   </div>
 </div>
 
+<!-- 바로스팟 완료 처리 (노쇼 표시) -->
+<div id="barospot-complete-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
+    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">✅ 바로스팟 완료 처리</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">실제로 노쇼가 있었다면 체크해주세요. 노쇼 처리되면 해당 회원의 노쇼 횟수가 올라가고, 반복되면 다음 바로스팟 신청이 제한돼요.</div>
+    <div id="bce-participants" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeBarospotComplete()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="submitBarospotComplete()" style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">완료 처리</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
@@ -2663,10 +2676,32 @@ async function cancelBarospotEvent(id) {
   loadBarospotApplications(_barospotAppsStatus);
 }
 
+let _bceEventId = null;
 async function completeBarospotEvent(id) {
-  const result = await adminApi('complete_barospot_event', 'PATCH', { id });
+  _bceEventId = id;
+  const data = await adminApi('barospot_applications', 'GET', null, { event_id: id, status: 'confirmed' });
+  const list = Array.isArray(data) ? data : [];
+  const box = document.getElementById('bce-participants');
+  box.innerHTML = list.length
+    ? list.map(a => `
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" value="${a.user_id}" style="width:18px;height:18px;accent-color:#DC2626;flex-shrink:0">
+          <span style="font-size:13px">${a.worker?.name || '이름없음'} (${a.gender === 'male' ? '남성' : '여성'}) 노쇼</span>
+        </label>`).join('')
+    : '<div style="font-size:12px;color:#94a3b8">확정된 참가자 정보를 찾을 수 없어요</div>';
+  document.getElementById('barospot-complete-overlay').style.display = 'flex';
+}
+
+function closeBarospotComplete() {
+  document.getElementById('barospot-complete-overlay').style.display = 'none';
+}
+
+async function submitBarospotComplete() {
+  const checked = [...document.querySelectorAll('#bce-participants input[type=checkbox]:checked')].map(el => el.value);
+  const result = await adminApi('complete_barospot_event', 'PATCH', { id: _bceEventId, noshow_kakao_uids: checked });
   if (result?.error) { showToast('실패: ' + result.error); return; }
-  showToast('완료 처리됐습니다');
+  closeBarospotComplete();
+  showToast('완료 처리됐습니다' + (checked.length ? ` (노쇼 ${checked.length}명 반영)` : ''));
   loadBarospotEvents();
 }
 
