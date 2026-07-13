@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=463"></script>
+  <script src="./shared-lang.js?v=465"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -2308,7 +2308,7 @@
 
 <!-- 회원정보 변경 오버레이 (알바생) -->
 <div id="modal-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;overflow-y:auto">
-  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
+  <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--sat-safe,0px) + 16px) 20px 16px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
     <button onclick="closeAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
@@ -3556,7 +3556,7 @@
 
 <!-- 회원정보 변경 오버레이 (업주) -->
 <div id="modal-owner-account-info" style="display:none;position:fixed;inset:0;background:#f5f5f5;z-index:600;overflow-y:auto">
-  <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
+  <div style="display:flex;align-items:center;gap:12px;padding:calc(var(--sat-safe,0px) + 16px) 20px 16px;border-bottom:1px solid #f0f0f0;background:#fff;position:sticky;top:0;z-index:1">
     <button onclick="closeOwnerAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
@@ -4062,7 +4062,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=463"></script>
+<script src="./assets/js/app.js?v=465"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">

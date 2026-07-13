@@ -146,7 +146,7 @@
     .posting-row {
       background:#fff; border-radius:12px; margin-bottom:8px;
       box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:14px 16px;
-      display:flex; align-items:center; gap:12px;
+      display:flex; align-items:center; gap:12px; cursor:pointer;
     }
     .posting-row.closed { opacity:0.5; }
     .posting-info { flex:1; min-width:0; }
@@ -745,6 +745,16 @@
 </div>
 
 <!-- 회원 상세 패널 -->
+<div class="detail-overlay" id="posting-detail-overlay" onclick="closePostingDetail()">
+  <div class="detail-panel" onclick="event.stopPropagation()">
+    <div class="dp-header">
+      <button onclick="closePostingDetail()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
+      <span style="font-size:16px;font-weight:800;color:#1e293b">공고 상세</span>
+    </div>
+    <div class="dp-body" id="posting-dp-body"><div class="loading">로딩 중...</div></div>
+  </div>
+</div>
+
 <div class="detail-overlay" id="user-detail-overlay" onclick="closeUserDetail()">
   <div class="detail-panel" onclick="event.stopPropagation()">
     <div class="dp-header">
@@ -1214,13 +1224,13 @@ async function loadPostings() {
         const isClosed = p.status === 'closed';
         const date = p.start_time ? new Date(p.start_time).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
         return `
-          <div class="posting-row ${isClosed ? 'closed' : ''}" id="pr-${p.id}">
+          <div class="posting-row ${isClosed ? 'closed' : ''}" id="pr-${p.id}" onclick="openPostingDetail('${p.id}')">
             <div class="posting-info">
               <div class="posting-title">${p.title || '(제목없음)'}</div>
               <div class="posting-meta">${p.biz_name || '-'} · ${date} · ${p.filled_count || 0}/${p.needed_count || 1}명</div>
             </div>
             <div class="posting-wage">${p.current_wage ? p.current_wage.toLocaleString() + '원' : '-'}</div>
-            <button class="close-btn" onclick="closePostingById('${p.id}')" ${isClosed ? 'disabled' : ''}>${isClosed ? '마감됨' : '강제마감'}</button>
+            <button class="close-btn" onclick="event.stopPropagation();closePostingById('${p.id}')" ${isClosed ? 'disabled' : ''}>${isClosed ? '마감됨' : '강제마감'}</button>
           </div>`;
       }).join('')
     : '<div class="empty">공고 없음</div>';
@@ -1239,6 +1249,41 @@ async function closePostingById(id, reportId) {
   showToast('공고가 강제 마감됐습니다');
   // 신고 카드에서 호출된 경우, 해당 신고도 조치완료로 갱신
   if (reportId) updateReport(reportId, 'done');
+}
+
+// 마감된 공고도 관리자는 조회 가능해야 하므로 상태와 무관하게 상세 열람 지원
+async function openPostingDetail(id) {
+  const overlay = document.getElementById('posting-detail-overlay');
+  const body = document.getElementById('posting-dp-body');
+  body.innerHTML = '<div class="loading">로딩 중...</div>';
+  overlay.classList.add('show');
+  const p = await adminApi('posting_detail', 'GET', null, { id });
+  if (p?.error) { body.innerHTML = `<div style="padding:12px;font-size:12px;color:#ef4444">${p.error}</div>`; return; }
+  const statusLabel = { open:'모집중', urgent:'급구', closed:'마감됨' }[p.status] || p.status;
+  const date = p.start_time ? new Date(p.start_time).toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '-';
+  const endDate = p.work_end_date ? new Date(p.work_end_date).toLocaleDateString('ko-KR') : '-';
+  body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <span style="font-size:18px;font-weight:900;color:#1e293b">${p.title || '(제목없음)'}</span>
+      <span class="status-badge ${p.status === 'closed' ? 'sb-dismissed' : 'sb-done'}">${statusLabel}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#334155">
+      <div><b>업체</b> · ${p.businesses?.name || p.biz_name || '-'} ${p.businesses?.phone ? '(' + p.businesses.phone + ')' : ''}</div>
+      <div><b>시급/급여</b> · ${p.current_wage ? p.current_wage.toLocaleString() + '원' : '-'} ${p.base_wage && p.base_wage !== p.current_wage ? `(기본 ${p.base_wage.toLocaleString()}원)` : ''}</div>
+      <div><b>업무유형</b> · ${p.work_type || '-'} ${p.category ? '· ' + p.category : ''} ${p.is_remote ? '· 비대면' : ''}</div>
+      <div><b>근무일시</b> · ${date} ${p.duration_hours ? `(${p.duration_hours}시간)` : ''}</div>
+      <div><b>근무종료일</b> · ${endDate}</div>
+      <div><b>모집인원</b> · ${p.filled_count || 0}/${p.needed_count || 1}명</div>
+      <div><b>주소</b> · ${p.address || '-'}</div>
+      <div><b>연령제한</b> · ${p.age_limit ? p.age_limit + '세 이상' : '무관'}</div>
+      ${p.description ? `<div style="background:#f8fafc;border-radius:10px;padding:10px 12px;white-space:pre-wrap">${p.description}</div>` : ''}
+      <div style="font-size:11px;color:#94a3b8">등록일 ${p.created_at ? new Date(p.created_at).toLocaleString('ko-KR') : '-'}</div>
+    </div>
+    ${p.status !== 'closed' ? `<button onclick="closePostingById('${p.id}');closePostingDetail()" style="width:100%;margin-top:16px;padding:12px;background:#fee2e2;color:#991b1b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">강제 마감</button>` : ''}
+  `;
+}
+function closePostingDetail() {
+  document.getElementById('posting-detail-overlay').classList.remove('show');
 }
 
 // ── 회원 관리 ─────────────────────────────────────────────

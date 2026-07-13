@@ -733,6 +733,19 @@ module.exports = async function handler(req, res) {
       return res.json(Array.isArray(data) ? data : []);
     }
 
+    // ── 공고 상세 (마감된 공고도 관리자는 조회 가능해야 함) ──
+    if (action === 'posting_detail') {
+      const pid = req.query.id;
+      if (!pid) return res.status(400).json({ error: 'id required' });
+      const rows = await sb(
+        `job_postings?id=eq.${pid}&select=id,title,biz_name,status,category,work_type,current_wage,base_wage,start_time,work_end_date,duration_hours,needed_count,filled_count,address,description,age_limit,is_remote,created_at,businesses(name,phone,rating)`,
+        svcKey
+      ).then(r => r.json());
+      const p = Array.isArray(rows) ? rows[0] : null;
+      if (!p) return res.status(404).json({ error: '공고를 찾을 수 없습니다' });
+      return res.json(p);
+    }
+
     // ── 공고 강제 마감 ─────────────────────────────────
     if (action === 'close_posting' && req.method === 'PATCH') {
       const { id } = req.body || {};

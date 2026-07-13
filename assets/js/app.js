@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '463';
+  const _APP_V = '465';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -11004,7 +11004,7 @@ async function submitCommunityPost() {
     insertData.business_id = b.id;
   } else {
     const wid = await _getWorkerId();
-    if (!wid) { showToast('프로필 등록 후 작성할 수 있어요'); return; }
+    if (!wid) { showToast('마이페이지 > 내 프로필 > 기본정보를 먼저 등록해주세요'); return; }
     insertData.worker_id = wid;
   }
 
@@ -11074,7 +11074,7 @@ async function submitCommunityComment() {
     insertData.business_id = b.id;
   } else {
     const wid = await _getWorkerId();
-    if (!wid) { showToast('프로필 등록 후 이용할 수 있어요'); return; }
+    if (!wid) { showToast('마이페이지 > 내 프로필 > 기본정보를 먼저 등록해주세요'); return; }
     insertData.worker_id = wid;
   }
 
