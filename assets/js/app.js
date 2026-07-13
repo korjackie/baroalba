@@ -9416,11 +9416,19 @@ function _renderObSlide() {
   }
 
   // 다국어 텍스트 매핑 (shared-lang.js의 OB_TRANS 활용)
-  // fallback: 언어 데이터가 없으면 ko 기준 출력
-  let transData = OB_TRANS['ko'][_obStep];
+  // fallback: 언어 데이터가 없으면 ko 기준 출력 (혹은 기본값)
+  let transData = (typeof OB_TRANS !== 'undefined' && OB_TRANS['ko'] && OB_TRANS['ko'][_obStep]) 
+    ? OB_TRANS['ko'][_obStep] 
+    : { title: '튜토리얼', desc: '', chips: [] };
+    
   if (typeof OB_TRANS !== 'undefined' && OB_TRANS[_lang] && OB_TRANS[_lang][_obStep]) {
     transData = OB_TRANS[_lang][_obStep];
   }
+
+  // 방어 코드: transData가 여전히 없거나 chips가 없을 수 있음
+  if (!transData.chips) transData.chips = [];
+  if (!transData.title) transData.title = '';
+  if (!transData.desc) transData.desc = '';
 
   const titleEl = document.getElementById('ob-title');
   const descEl = document.getElementById('ob-desc');
