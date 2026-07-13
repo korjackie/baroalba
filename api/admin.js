@@ -274,6 +274,39 @@ module.exports = async function handler(req, res) {
     return res.json({ ok: true, credited: true, points: REFERRAL_REWARD_POINTS });
   }
 
+  // ── 실시간 위치공유 - 다른 참가자 위치 조회 (관리자 아님, 로그인한 본인 세션) ──
+  // live_shares는 RLS가 본인 행만 SELECT 허용하므로, "남의 위치를 본다"는 이 기능의 핵심을
+  // 클라이언트에서 직접 조회하면 항상 빈 결과만 받게 됨(추천인 포인트 버그와 동일한 클래스) -
+  // 서비스 롤 키로 조회하되, 요청자가 실제로 그 모임의 승인된 참가자인지 여기서 직접 검증한다.
+  if (req.method === 'GET' && earlyAction === 'get_live_locations') {
+    const llJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const requesterId = getSubFromJWT(llJwt);
+    if (!requesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { context_type: ctxType, context_id: ctxId } = req.query;
+    if (!ctxType || !ctxId) return res.status(400).json({ error: 'context_type, context_id required' });
+
+    let authorized = false;
+    if (ctxType === 'baromeeting') {
+      const rows = await sb(`gathering_applications?gathering_id=eq.${ctxId}&applicant_id=eq.${requesterId}&status=eq.approved&select=id`, svcKey).then(r => r.json());
+      authorized = Array.isArray(rows) && rows.length > 0;
+    } else if (ctxType === 'barospot') {
+      const rows = await sb(`barospot_applications?event_id=eq.${ctxId}&user_id=eq.${requesterId}&status=eq.confirmed&select=id`, svcKey).then(r => r.json());
+      authorized = Array.isArray(rows) && rows.length > 0;
+    } else {
+      return res.status(400).json({ error: 'invalid context_type' });
+    }
+    if (!authorized) return res.status(403).json({ error: '이 모임의 승인된 참가자만 위치를 볼 수 있어요' });
+
+    const ctxCol = ctxType === 'baromeeting' ? 'gathering_id' : 'barospot_event_id';
+    const staleCutoff = new Date(Date.now() - 3 * 60 * 1000).toISOString(); // 3분 이상 갱신 없으면 끊긴 것으로 간주
+    const shares = await sb(
+      `live_shares?context_type=eq.${ctxType}&${ctxCol}=eq.${ctxId}&status=eq.sharing&updated_at=gte.${staleCutoff}&user_id=neq.${requesterId}&select=user_id,lat,lng,distance_m,updated_at`,
+      svcKey
+    ).then(r => r.json());
+
+    return res.json({ ok: true, travelers: Array.isArray(shares) ? shares : [] });
+  }
+
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   const email = getEmailFromJWT(token);

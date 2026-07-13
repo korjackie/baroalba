@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '469';
+  const _APP_V = '470';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=469').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=470').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -17199,6 +17199,172 @@ function switchMannnamTab(tab) {
 // + 드래그로 펼치면 장소·일정 상세가 나오는 하단시트
 let _trackMap = null, _trackVenueMarker = null, _trackMeMarker = null, _trackTimer = null;
 
+// ── 실시간 위치공유 (배달앱 스타일 거리 트래커, ETA 없이 직선거리만) ──
+let _trackLiveParams = null;   // 현재 열려있는 추적시트의 { contextType, contextId, destLat, destLng, iAmApproved }
+let _liveShareWatchId = null;  // 내 위치 공유용 watchPosition id (지도 중심 이동용 _locationWatchId와는 별개)
+let _liveShareTimeoutId = null;
+let _liveShareCtx = null;      // 공유 중일 때만 non-null - { contextType, contextId }
+let _liveShareLastWrite = 0;
+let _livePollTimer = null;
+let _liveShareOverlays = [];   // 다른 참가자 위치 마커 (CustomOverlay[]) - _moimOverlays와 동일한 클리어/재생성 패턴
+
+function _haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function _fmtDistanceM(m) {
+  if (typeof m !== 'number') return '위치 확인 중';
+  return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.round(m) + 'm';
+}
+
+function _renderLiveButton() {
+  const btn = document.getElementById('track-live-btn');
+  if (!btn) return;
+  if (_liveShareCtx) { btn.textContent = '✅ 도착했어요'; btn.style.background = '#f5f5f5'; btn.style.color = '#666'; }
+  else { btn.textContent = '🚀 출발했어요'; btn.style.background = '#7C3AED'; btn.style.color = '#fff'; }
+}
+
+function _toggleLiveShare() {
+  if (_liveShareCtx) { stopLiveShare('manual'); return; }
+  if (!_trackLiveParams) return;
+  startLiveShare(_trackLiveParams.contextType, _trackLiveParams.contextId, _trackLiveParams.destLat, _trackLiveParams.destLng);
+}
+
+// 출발 - 목적지 좌표가 있으면 위치 갱신마다 직선거리를 같이 계산해 올림(외부 API 없음)
+function startLiveShare(contextType, contextId, destLat, destLng) {
+  if (!navigator.geolocation || !currentUser) { showToast('위치 공유를 시작할 수 없어요'); return; }
+  _liveShareCtx = { contextType, contextId };
+  _liveShareLastWrite = 0;
+  _renderLiveButton();
+  showToast('🚀 위치 공유를 시작했어요');
+
+  _liveShareWatchId = navigator.geolocation.watchPosition(pos => {
+    const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+    const now = Date.now();
+    if (now - _liveShareLastWrite < 5000) return; // 5초 간격으로만 서버에 반영(배터리·트래픽 절약)
+    _liveShareLastWrite = now;
+    const distM = (typeof destLat === 'number' && typeof destLng === 'number') ? _haversineM(lat, lng, destLat, destLng) : null;
+    db.from('live_shares').upsert({
+      context_type: contextType,
+      gathering_id: contextType === 'baromeeting' ? contextId : null,
+      barospot_event_id: contextType === 'barospot' ? contextId : null,
+      user_id: currentUser.id,
+      status: 'sharing',
+      lat, lng, accuracy_m: accuracy,
+      distance_m: distM !== null ? Math.round(distM) : null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'context_type,gathering_id,barospot_event_id,user_id' }).then(() => {});
+    _updateMyLiveDistance(distM);
+    if (distM !== null && distM < 150) stopLiveShare('arrived'); // 목적지 150m 이내면 자동 도착 처리
+  }, () => { showToast('위치 정보를 가져올 수 없어요 - 위치 권한을 확인해주세요'); }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+
+  clearTimeout(_liveShareTimeoutId);
+  _liveShareTimeoutId = setTimeout(() => stopLiveShare('timeout'), 4 * 60 * 60 * 1000); // 4시간 안전장치
+}
+
+// 도착/중단 - reason: 'arrived'(자동/수동 도착) | 'manual'(직접 중단) | 'timeout'(안전장치)
+function stopLiveShare(reason) {
+  if (_liveShareWatchId !== null) { navigator.geolocation.clearWatch(_liveShareWatchId); _liveShareWatchId = null; }
+  clearTimeout(_liveShareTimeoutId);
+  if (_liveShareCtx && currentUser) {
+    const { contextType, contextId } = _liveShareCtx;
+    db.from('live_shares').upsert({
+      context_type: contextType,
+      gathering_id: contextType === 'baromeeting' ? contextId : null,
+      barospot_event_id: contextType === 'barospot' ? contextId : null,
+      user_id: currentUser.id,
+      status: reason === 'arrived' ? 'arrived' : 'stopped',
+      updated_at: new Date().toISOString(),
+      ended_at: new Date().toISOString(),
+    }, { onConflict: 'context_type,gathering_id,barospot_event_id,user_id' }).then(() => {});
+  }
+  _liveShareCtx = null;
+  _renderLiveButton();
+  _updateMyLiveDistance(null);
+  if (reason === 'arrived') showToast('🎉 도착 처리됐어요');
+}
+
+function _updateMyLiveDistance(distM) {
+  const el = document.getElementById('track-live-my-distance');
+  if (!el) return;
+  if (typeof distM !== 'number') { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.textContent = `📍 목적지까지 ${_fmtDistanceM(distM)} 남음`;
+}
+
+// 승인된 참가자만 다른 사람 위치를 볼 수 있음 (서버 get_live_locations가 재검증)
+async function _startLivePoll() {
+  _stopLivePoll();
+  if (!_trackLiveParams?.iAmApproved) return;
+  const { contextType, contextId } = _trackLiveParams;
+  const poll = async () => {
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) return;
+      const qs = new URLSearchParams({ context_type: contextType, context_id: contextId });
+      const res = await fetch(`/api/admin?action=get_live_locations&${qs}`, {
+        headers: { Authorization: 'Bearer ' + session.access_token }
+      });
+      const data = await res.json();
+      _renderLiveTravelers(Array.isArray(data.travelers) ? data.travelers : []);
+    } catch (e) { /* 폴링 실패는 조용히 무시 - 다음 주기에 재시도 */ }
+  };
+  poll();
+  _livePollTimer = setInterval(poll, 8000);
+}
+
+function _stopLivePoll() {
+  if (_livePollTimer) { clearInterval(_livePollTimer); _livePollTimer = null; }
+  _liveShareOverlays.forEach(o => o.setMap(null));
+  _liveShareOverlays = [];
+}
+
+function _renderLiveTravelers(travelers) {
+  _liveShareOverlays.forEach(o => o.setMap(null));
+  _liveShareOverlays = [];
+  const listEl = document.getElementById('track-live-others');
+  if (!listEl) return;
+  if (!travelers.length) { listEl.innerHTML = ''; listEl.style.display = 'none'; return; }
+  listEl.style.display = 'block';
+  listEl.innerHTML = travelers.map(t =>
+    `<div class="track-live-row">🚗 참가자가 이동 중이에요 · 목적지까지 ${_fmtDistanceM(t.distance_m)} 남음</div>`
+  ).join('');
+  if (!_trackMap) return;
+  travelers.forEach(t => {
+    if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(t.lat, t.lng),
+      content: `<div style="background:#7C3AED;color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.25)">🚗 ${_fmtDistanceM(t.distance_m)}</div>`,
+      yAnchor: 1,
+    });
+    overlay.setMap(_trackMap);
+    _liveShareOverlays.push(overlay);
+  });
+}
+
+function _renderLiveShareSection() {
+  const wrap = document.getElementById('track-live-wrap');
+  if (!wrap) return;
+  const btn = document.getElementById('track-live-btn');
+  const note = document.getElementById('track-live-note');
+  const p = _trackLiveParams;
+  if (!p || !p.iAmApproved) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  if (typeof p.destLat !== 'number' || typeof p.destLng !== 'number') {
+    btn.style.display = 'none';
+    note.style.display = 'block';
+    note.textContent = '📍 위치 좌표가 없어 실시간 추적이 어려워요';
+    return;
+  }
+  note.style.display = 'none';
+  btn.style.display = 'block';
+  _renderLiveButton();
+}
+
 function bindTrackSheetDrag(handleEl, sheetEl) {
   if (!handleEl || handleEl.dataset.trackDragBound) return;
   handleEl.dataset.trackDragBound = '1';
@@ -17309,6 +17475,10 @@ function openTrackingSheet(opts) {
     } else {
       chatBtn.style.display = 'none';
     }
+
+    _trackLiveParams = opts.liveShare || null;
+    _renderLiveShareSection();
+    _startLivePoll();
   } catch (e) {
     console.error('[openTrackingSheet] 정보 표시 실패:', e);
   }
@@ -17337,6 +17507,7 @@ function openTrackingSheet(opts) {
 function closeTrackingSheet() {
   document.getElementById('track-overlay').style.display = 'none';
   if (_trackTimer) { clearInterval(_trackTimer); _trackTimer = null; }
+  _stopLivePoll(); // 다른 참가자 위치 조회만 멈춤 - 내가 공유 중이면 시트를 닫아도 "도착했어요"를 누를 때까지 계속 공유됨
 }
 
 // 홈화면 바로미팅 미리보기 카드 (바로모임 카드와 동일한 형태 - 바로모임 리스트에서 빠진 만큼 홈 노출 보강)
@@ -17488,7 +17659,7 @@ function openBaromeetDetail(id) {
       <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-bottom:4px">📍 ${m.location_name||m.location_address||'장소 확인 후 안내'}</div>
       <div style="font-size:13px;color:#666">🕐 ${dtStr}</div>
     </div>
-    <button onclick="_openBaromeetTracking('${m.id}')" style="display:flex;align-items:center;gap:10px;width:calc(100% - 40px);margin:14px 20px 0;padding:12px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:12px;cursor:pointer;text-align:left">
+    <button onclick="_openBaromeetTracking('${m.id}', ${myStatus === 'approved'})" style="display:flex;align-items:center;gap:10px;width:calc(100% - 40px);margin:14px 20px 0;padding:12px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:12px;cursor:pointer;text-align:left">
       <span style="font-size:18px">🗺️</span>
       <span style="flex:1;font-size:13px;font-weight:800;color:#7C3AED">위치 · 남은 시간 실시간으로 보기</span>
       <span style="color:#c4b5fd;font-size:16px">›</span>
@@ -17675,9 +17846,9 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
 }
 
 // 신청 완료 직후 모임 정보를 불러와 실시간 추적화면을 연다
-async function _openBaromeetTracking(meetingId) {
+async function _openBaromeetTracking(meetingId, iAmApproved) {
   const { data: m } = await db.from('gatherings')
-    .select('title, location_name, location_address, gathering_date')
+    .select('title, location_name, location_address, gathering_date, lat, lng')
     .eq('id', meetingId).single();
   if (!m) return;
   const whenText = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 미정';
@@ -17691,6 +17862,7 @@ async function _openBaromeetTracking(meetingId) {
     whenText,
     steps: ['신청완료','확정','모임 진행','종료'],
     stepIndex: 1,
+    liveShare: { contextType: 'baromeeting', contextId: meetingId, destLat: m.lat, destLng: m.lng, iAmApproved: !!iAmApproved },
   });
 }
 
