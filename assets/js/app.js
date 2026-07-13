@@ -435,7 +435,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '455';
+  const _APP_V = '456';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -451,7 +451,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=455').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=456').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -9363,30 +9363,6 @@ function closeOnboarding() {
   if (el) el.style.display = 'none';
   localStorage.setItem(_OB_KEY, '1');
 }
-function _renderObSlide() {
-  const s = _OB_SLIDES[_obStep];
-  const illus = document.getElementById('ob-illus');
-  if (illus) {
-    illus.style.opacity = '0';
-    illus.style.transition = 'opacity 0.2s';
-    setTimeout(() => {
-      illus.style.background = s.bg;
-      illus.innerHTML = s.illus;
-      illus.style.opacity = '1';
-    }, 150);
-  }
-  const titleEl = document.getElementById('ob-title');
-  const descEl = document.getElementById('ob-desc');
-  if (titleEl) { titleEl.style.opacity='0'; setTimeout(()=>{ titleEl.textContent=s.title; titleEl.style.transition='opacity 0.25s'; titleEl.style.opacity='1'; },150); }
-  if (descEl) { descEl.style.opacity='0'; setTimeout(()=>{ descEl.textContent=s.desc; descEl.style.transition='opacity 0.25s'; descEl.style.opacity='1'; },150); }
-  const chips = document.getElementById('ob-chips');
-  if (chips) { chips.style.opacity='0'; setTimeout(()=>{ chips.innerHTML=s.chips.map(c=>`<span style="background:#f5f5f5;color:#333;font-size:13px;font-weight:700;padding:6px 14px;border-radius:20px">${c}</span>`).join(''); chips.style.transition='opacity 0.25s'; chips.style.opacity='1'; },200); }
-  document.querySelectorAll('#onboarding-overlay .ob-dot').forEach((d, i) => d.classList.toggle('active', i === _obStep));
-  const backBtn = document.getElementById('ob-back-btn');
-  if (backBtn) backBtn.style.visibility = _obStep > 0 ? 'visible' : 'hidden';
-  document.getElementById('ob-next-btn').textContent = _obStep === _OB_SLIDES.length - 1 ? '시작하기' : '다음';
-}
-function obNext() {
   if (_obStep < _OB_SLIDES.length - 1) { _obStep++; _renderObSlide(); }
   else closeOnboarding();
 }
