@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '462';
+  const _APP_V = '463';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=462').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=463').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -791,10 +791,14 @@ async function shareReferralLink(code) {
   // 동일한 톤으로 서비스 자체를 먼저 어필하고, 포인트는 뒤따르는 혜택으로 붙인다
   const shareTitle = '알바도, 모임도, 만남도 — 전부 바로 여기서!';
   const shareDesc = `제 추천코드로 가입하면 서로 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받아요 🎁`;
-  const shareText = `${shareTitle}\n${shareDesc}\n${link}`;
+  // MainActivity.java의 AndroidBridge.share(title,text,url)는 title 인자를 쓰지 않고
+  // "text + url"만 합쳐서 공유함(중복 표시 방지 목적) - 그래서 제목은 반드시
+  // text의 첫 줄로 직접 넣어야 실제로 보임 (shareMoim/shareBaromeet과 동일 컨벤션)
+  const shareBody = `${shareTitle}\n${shareDesc}`;
+  const shareText = `${shareBody}\n${link}`;
 
   if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
-    window.AndroidBridge.share(shareTitle, shareDesc, link);
+    window.AndroidBridge.share(shareTitle, shareBody, link);
     return;
   }
   if (window.Kakao?.isInitialized?.()) {
@@ -10759,10 +10763,13 @@ async function shareCommunityPost() {
   const title = document.getElementById('comm-post-title-h')?.textContent || '게시글';
   const link = `${location.origin}${location.pathname}?post=${_commCurrentPostId}`;
   const shareTitle = `[바로알바 커뮤니티] ${title}`;
-  const shareText = `${shareTitle}\n${link}`;
+  const shareBody = `${shareTitle}\n바로알바 커뮤니티에서 확인해보세요`;
+  const shareText = `${shareBody}\n${link}`;
 
+  // MainActivity.java의 AndroidBridge.share(title,text,url)는 title 인자를 안 쓰고
+  // text+url만 합쳐서 공유하므로, 제목은 text 첫 줄로 직접 넣어야 함
   if (/Android/i.test(navigator.userAgent) && window.AndroidBridge) {
-    window.AndroidBridge.share(shareTitle, '바로알바 커뮤니티에서 확인해보세요', link);
+    window.AndroidBridge.share(shareTitle, shareBody, link);
     return;
   }
   if (window.Kakao?.isInitialized?.()) {
