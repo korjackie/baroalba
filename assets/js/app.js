@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '485';
+  const _APP_V = '486';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=485').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=486').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18542,6 +18542,60 @@ async function setSpotGender(gender) {
   await _loadBarospotList();
 }
 
+// ── 바로만남 소개팅 프로필 (직업군/체형/관심사) ──────────────────────────
+// 블라인드 매칭이라도 최소한의 정보(나이/직업군/체형/관심사)는 있어야 상대가 신청
+// 여부를 판단할 수 있다는 피드백으로 신설. 바로스팟 남성 목록 미리보기(barospot_event_previews)와
+// 여성의 블라인드 후보 목록(get_barospot_candidates) 양쪽에서 이 값들을 보여준다.
+const DATING_JOB_CATEGORIES = ['직장인','공무원','전문직','자영업','프리랜서','학생','기타'];
+const DATING_BODY_TYPES = ['슬림','평균','통통','근육질'];
+const DATING_INTERESTS = ['여행','와인','필라테스','헬스','독서','요리','카페','반려동물','사진','등산','골프','캠핑','영화','게임'];
+let _datingProfileSelected = { job_category: null, body_type: null, interests: [] };
+
+async function openDatingProfileSheet() {
+  if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
+  openBottomSheet('<div style="text-align:center;padding:32px"><div class="spinner" style="margin:0 auto"></div></div>');
+  const { data: w } = await db.from('workers').select('job_category, body_type, interests').eq('kakao_uid', currentUser.id).maybeSingle();
+  _datingProfileSelected = { job_category: w?.job_category || null, body_type: w?.body_type || null, interests: w?.interests || [] };
+  _renderDatingProfileSheet();
+}
+
+function _renderDatingProfileSheet() {
+  const sel = _datingProfileSelected;
+  const chip = (label, active, onclick) => `<button onclick="${onclick}" style="padding:7px 13px;border-radius:20px;border:1.5px solid ${active?'#7C3AED':'#eee'};font-size:12.5px;font-weight:700;background:${active?'#F5F3FF':'#fff'};color:${active?'#7C3AED':'#888'};cursor:pointer;margin:0 6px 6px 0">${label}</button>`;
+  const html = `
+    <div style="padding:4px 20px 4px">
+      <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">👤 내 소개팅 프로필</div>
+      <div style="font-size:12px;color:#888;margin-bottom:18px">바로미팅·바로스팟에서 블라인드 상대에게 보여져요</div>
+    </div>
+    <div style="padding:0 20px 20px;max-height:60vh;overflow-y:auto">
+      <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">직업군</div>
+      <div style="margin-bottom:16px">${DATING_JOB_CATEGORIES.map(v => chip(v, sel.job_category===v, `_selectDatingJob('${v}')`)).join('')}</div>
+      <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">체형</div>
+      <div style="margin-bottom:16px">${DATING_BODY_TYPES.map(v => chip(v, sel.body_type===v, `_selectDatingBody('${v}')`)).join('')}</div>
+      <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">관심사 <span style="color:#aaa;font-weight:500">(최대 5개)</span></div>
+      <div>${DATING_INTERESTS.map(v => chip(v, sel.interests.includes(v), `_toggleDatingInterest('${v}')`)).join('')}</div>
+    </div>
+    <div style="padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #ebebeb">
+      <button onclick="saveDatingProfile()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+    </div>`;
+  openBottomSheet(html);
+}
+function _selectDatingJob(v) { _datingProfileSelected.job_category = _datingProfileSelected.job_category===v ? null : v; _renderDatingProfileSheet(); }
+function _selectDatingBody(v) { _datingProfileSelected.body_type = _datingProfileSelected.body_type===v ? null : v; _renderDatingProfileSheet(); }
+function _toggleDatingInterest(v) {
+  const s = _datingProfileSelected;
+  if (s.interests.includes(v)) { s.interests = s.interests.filter(x => x !== v); }
+  else { if (s.interests.length >= 5) { showToast('관심사는 최대 5개까지 선택할 수 있어요'); return; } s.interests = [...s.interests, v]; }
+  _renderDatingProfileSheet();
+}
+async function saveDatingProfile() {
+  const { job_category, body_type, interests } = _datingProfileSelected;
+  const { error } = await db.from('workers').update({ job_category, body_type, interests }).eq('kakao_uid', currentUser.id);
+  if (error) { showToast('저장 실패: ' + error.message); return; }
+  showToast('✅ 프로필이 저장됐어요');
+  closeBottomSheet();
+}
+
 async function openSpotPassSheet(gender) {
   const all = await loadBarospotPassProducts();
   const products = all[gender] || [];
@@ -18811,7 +18865,8 @@ async function openBarospotCandidates(applicationId) {
               ${c.photo_url ? `<img src="${c.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(9px);transform:scale(1.15)">` : `<span style="font-size:22px">👤</span>`}
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:800;color:#222">${c.age ? '만 ' + c.age + '세' : '나이 미상'}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">· 노쇼 ${c.noshow_count}회</span>` : ''}</div>
+              <div style="font-size:13px;font-weight:800;color:#222">${[c.age ? '만 '+c.age+'세' : null, c.job_category, c.body_type].filter(Boolean).join(' · ') || '나이 미상'}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">· 노쇼 ${c.noshow_count}회</span>` : ''}</div>
+              ${c.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${c.interests.slice(0,5).map(t=>'#'+t).join(' ')}</div>` : ''}
               <div style="font-size:12px;color:#666;margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.bio ? c.bio.replace(/</g,'&lt;') : '자기소개가 없어요'}</div>
             </div>
             <button onclick="selectBarospotCandidate('${applicationId}','${c.application_id}')" style="flex-shrink:0;padding:9px 14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">선택</button>
@@ -19037,20 +19092,43 @@ async function _loadSpotEvents() {
     return;
   }
   if (cntEl) cntEl.textContent = data.length;
-  el.innerHTML = data.map(ev => _renderSpotEventCard(ev)).join('');
+  // 블라인드라도 최소 정보(나이/직업군/체형/관심사)는 있어야 신청 여부를 판단할 수 있다는
+  // 피드백 반영 - 이미 배정된 여성의 프로필 미리보기를 서버(barospot_event_previews)에서
+  // 함께 불러와 카드에 합쳐서 보여준다
+  let previews = {};
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const ids = data.map(ev => ev.id).join(',');
+    const res = await fetch(`/api/admin?action=barospot_event_previews&event_ids=${encodeURIComponent(ids)}`, {
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    });
+    if (res.ok) previews = await res.json();
+  } catch (e) { /* 미리보기 실패해도 목록 자체는 보여줘야 함 */ }
+  el.innerHTML = data.map(ev => _renderSpotEventCard(ev, previews[ev.id])).join('');
 }
 
 // 여성 1명 + 남성 1명을 매칭하는 1:1 소개팅이라 목록 자체가 이미 "남성 모집중"
 // 상태만 필터링돼 있음 - 여러 명이 동시에 신청할 수 있고, 관리자가 그중 한 명만 확정한다
 // (확정되는 순간 이벤트 status가 바뀌어 이 목록에서 자동으로 빠짐)
-function _renderSpotEventCard(ev) {
+function _renderSpotEventCard(ev, preview) {
   const r = ev.barospot_restaurants || {};
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
+  const profileHtml = preview ? `
+    <div style="display:flex;gap:10px;align-items:center;background:#f8f9fa;border-radius:10px;padding:10px;margin-bottom:10px">
+      <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
+        ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(7px);transform:scale(1.15)">` : `<span style="font-size:18px">👤</span>`}
+      </div>
+      <div style="min-width:0">
+        <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+'세' : null, preview.job_category, preview.body_type].filter(Boolean).join(' · ') || '프로필 준비 중'}</div>
+        ${preview.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${preview.interests.slice(0,4).map(t=>'#'+t).join(' ')}</div>` : ''}
+      </div>
+    </div>` : '';
   return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #e8eaed;overflow:hidden">
     <div style="margin-bottom:10px">
       <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || '식당 정보 확인 중'}</div>
       <div style="font-size:12px;color:#888">${whenText}</div>
     </div>
+    ${profileHtml}
     ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:13px;font-weight:800;color:#3b82f6">${(r.base_price||0).toLocaleString()}원 <span style="font-size:11px;color:#aaa;font-weight:400">식사비 포함</span></div>

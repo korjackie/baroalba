@@ -395,16 +395,48 @@ module.exports = async function handler(req, res) {
     const uids = list.map(c => c.user_id).filter(Boolean);
     let workerMap = {};
     if (uids.length) {
-      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,noshow_count`, svcKey).then(r => r.json());
+      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,noshow_count,job_category,body_type,interests`, svcKey).then(r => r.json());
       workerMap = Object.fromEntries((workers || []).map(w => [w.kakao_uid, w]));
     }
     const result = list.map(c => {
       const w = workerMap[c.user_id] || {};
       let age = w.age || null;
       if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
-      return { application_id: c.id, age, bio: w.bio || null, photo_url: w.photo_url || null, noshow_count: w.noshow_count || 0 };
+      return {
+        application_id: c.id, age, bio: w.bio || null, photo_url: w.photo_url || null, noshow_count: w.noshow_count || 0,
+        job_category: w.job_category || null, body_type: w.body_type || null, interests: w.interests || [],
+      };
     });
     return res.json({ ok: true, candidates: result });
+  }
+
+  // ── 남성이 "참가 가능한 스팟" 목록을 볼 때, 이미 배정된 여성의 블라인드 프로필 미리보기
+  // (사진은 클라이언트에서 블러 처리) - 여성 후보 화면(get_barospot_candidates)과 동일한
+  // 취지로, 블라인드라도 최소한의 정보(나이/직업군/체형/관심사)는 보고 신청 여부를
+  // 판단할 수 있게 함. event_ids는 콤마로 구분된 여러 개를 한 번에 조회 ──
+  if (req.method === 'GET' && earlyAction === 'barospot_event_previews') {
+    const bepJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!getSubFromJWT(bepJwt)) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const ids = String(req.query.event_ids || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!ids.length) return res.json({});
+    const apps = await sb(`barospot_applications?event_id=in.(${ids.join(',')})&gender=eq.female&status=in.(matched,confirmed)&select=event_id,user_id`, svcKey).then(r => r.json()).catch(() => []);
+    const uidByEvent = {};
+    (Array.isArray(apps) ? apps : []).forEach(a => { uidByEvent[a.event_id] = a.user_id; });
+    const uids = [...new Set(Object.values(uidByEvent))];
+    let workerMap = {};
+    if (uids.length) {
+      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,job_category,body_type,interests`, svcKey).then(r => r.json()).catch(() => []);
+      workerMap = Object.fromEntries((Array.isArray(workers) ? workers : []).map(w => [w.kakao_uid, w]));
+    }
+    const result = {};
+    Object.entries(uidByEvent).forEach(([eventId, uid]) => {
+      const w = workerMap[uid];
+      if (!w) return;
+      let age = w.age || null;
+      if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
+      result[eventId] = { age, bio: w.bio || null, photo_url: w.photo_url || null, job_category: w.job_category || null, body_type: w.body_type || null, interests: w.interests || [] };
+    });
+    return res.json(result);
   }
 
   // ── 바로스팟 후보 선택 (여성 본인이 직접 확정) - confirm_barospot_application의
