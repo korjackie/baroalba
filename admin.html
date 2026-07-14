@@ -682,15 +682,9 @@
       </div>
     </div>
 
-    <!-- 바로스팟 신청 매칭/확정 -->
-    <div style="margin-top:24px">
+    <!-- 바로스팟 신청 매칭/확정 - 이름+상태만 보여주고 눌러야 상세/조치가 나오는 방식 -->
+    <div style="margin-top:24px;margin-bottom:24px">
       <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🙋 바로스팟 신청 관리</div>
-      <div class="filter-bar" style="margin-bottom:10px">
-        <button class="filter-btn active" onclick="filterBarospotApps('pending', this)">대기중</button>
-        <button class="filter-btn" onclick="filterBarospotApps('matched', this)">매칭됨</button>
-        <button class="filter-btn" onclick="filterBarospotApps('confirmed', this)">확정</button>
-        <button class="filter-btn" onclick="filterBarospotApps('cancelled', this)">취소</button>
-      </div>
       <div id="barospot-apps-list"><div class="loading">로딩 중...</div></div>
     </div>
   </div>
@@ -979,6 +973,22 @@
       <button onclick="closeBaromeetComplete()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
       <button onclick="submitBaromeetComplete()" style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">완료 처리</button>
     </div>
+  </div>
+</div>
+
+<!-- 바로스팟 신청자 상세 (이름+상태 리스트에서 눌렀을 때) -->
+<div id="barospot-app-detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28);max-height:80vh;overflow-y:auto">
+    <div id="bad-body"></div>
+    <button onclick="closeBarospotAppDetail()" style="width:100%;margin-top:14px;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+  </div>
+</div>
+
+<!-- 바로스팟 이벤트 상세 (개설 목록에서 카드를 눌렀을 때 - 배정된 여성/남성 정보 확인용) -->
+<div id="barospot-event-detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28);max-height:80vh;overflow-y:auto">
+    <div id="bed-body"></div>
+    <button onclick="closeBarospotEventDetail()" style="width:100%;margin-top:14px;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
   </div>
 </div>
 
@@ -2592,6 +2602,7 @@ function resetRestaurantForm() {
   document.getElementById('r-place-query').value = '';
   document.getElementById('r-place-results').style.display = 'none';
   document.getElementById('r-phone-hint').style.display = 'none';
+  _rNaverLink = null;
 }
 
 // ── 바로스팟 이벤트(일정) 관리 ───────────────────────────
@@ -2655,11 +2666,13 @@ async function searchBsePlace() {
   }
 }
 
+let _bseNaverLink = null; // 검색 결과의 네이버플레이스 링크 - 저장 시 barospot_restaurants.naver_place_url로 같이 넘김
 function selectBsePlace(idx) {
   const item = _bsePlaceItems[idx];
   if (!item) return;
   document.getElementById('bse-location-name').value = item.title || '';
   document.getElementById('bse-address').value = item.roadAddress || item.address || '';
+  _bseNaverLink = item.link || null;
   document.getElementById('bse-place-results').style.display = 'none';
   document.getElementById('bse-place-query').value = '';
 }
@@ -2678,11 +2691,12 @@ async function loadBarospotEvents() {
         const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
         const isActive = ev.status === 'recruiting_female' || ev.status === 'recruiting_male';
         return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
+          <div onclick="openBarospotEventDetail('${ev.id}')" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;cursor:pointer">
             <div style="min-width:0">
               <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '식당 미배정'}</div>
               <div style="font-size:11px;color:#94a3b8;margin-top:2px">${whenText}</div>
               ${ev.address ? `<div style="font-size:11px;color:#94a3b8">${ev.address}${(ev.lat==null)?' (좌표 확보 실패 - 주소 확인 필요)':''}</div>` : ''}
+              <div style="font-size:10.5px;color:#7C3AED;font-weight:700;margin-top:4px">눌러서 배정된 여성·남성 정보 보기 ›</div>
             </div>
             <span class="status-badge ${STATUS_BADGE_CLS[ev.status]||'sb-dismissed'}" style="flex-shrink:0">${STATUS_LABEL[ev.status]||ev.status}</span>
           </div>
@@ -2695,6 +2709,38 @@ async function loadBarospotEvents() {
         </div>`;
       }).join('')
     : '<div class="empty">개설된 바로스팟이 없습니다</div>';
+}
+
+// 이벤트 카드를 눌렀을 때 - 이 바로스팟에 실제로 배정/신청된 여성·남성이 누구인지 확인용
+// (신청 관리 목록에서 사람 기준으로 찾는 것과 반대로, 여기는 장소 기준으로 확인)
+async function openBarospotEventDetail(eventId) {
+  const ev = _barospotEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  const r = ev.barospot_restaurants || {};
+  const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
+  document.getElementById('bed-body').innerHTML = `
+    <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:2px">${r.name || '식당 미배정'}</div>
+    <div style="font-size:12.5px;color:#94a3b8;margin-bottom:14px">${whenText}${ev.address ? ' · ' + ev.address : ''}</div>
+    <div id="bed-participants"><div class="loading">로딩 중...</div></div>
+  `;
+  document.getElementById('barospot-event-detail-overlay').style.display = 'flex';
+  const data = await adminApi('barospot_applications', 'GET', null, { event_id: eventId });
+  const list = (Array.isArray(data) ? data : []).filter(a => a.status !== 'cancelled');
+  const box = document.getElementById('bed-participants');
+  box.innerHTML = list.length
+    ? list.map(a => {
+        const w = a.worker || {};
+        const genderLabel = a.gender === 'male' ? '남성' : '여성';
+        const color = BAROSPOT_APP_STATUS_COLOR[a.status] || '#94a3b8';
+        return `<div onclick="closeBarospotEventDetail();openBarospotAppDetail('${a.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f8fafc;border-radius:10px;padding:11px 14px;margin-bottom:8px;cursor:pointer">
+          <div style="font-size:13px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel}</span></div>
+          <span class="status-badge" style="background:${color}18;color:${color};flex-shrink:0">${BAROSPOT_APP_STATUS_LABEL[a.status] || a.status}</span>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:12.5px;color:#94a3b8;padding:8px 0">아직 배정/신청된 사람이 없어요</div>';
+}
+function closeBarospotEventDetail() {
+  document.getElementById('barospot-event-detail-overlay').style.display = 'none';
 }
 
 // 모집 중인 바로스팟을 홍보용으로 공유 (성별 무관 - 여성 모집중/남성 모집중 둘 다 가능) -
@@ -2772,6 +2818,7 @@ function resetBarospotEventForm() {
   updateBseDateDisplay();
   document.getElementById('bse-form-title').textContent = '바로스팟 개설';
   setBseLocationMode('partner');
+  _bseNaverLink = null;
 }
 
 async function saveBarospotEvent() {
@@ -2794,7 +2841,7 @@ async function saveBarospotEvent() {
   // 제휴매장 모드는 기존 매장 id를, 새 장소 검색 모드는 신규 매장 정보를 넘겨
   // 서버가 barospot_restaurants에 새로 등록한 뒤 그 id로 연결하도록 함
   if (_bseLocationMode === 'partner') payload.restaurant_id = restaurant_id;
-  else payload.new_restaurant = { name: locationName, address };
+  else payload.new_restaurant = { name: locationName, address, naver_place_url: _bseNaverLink };
 
   const result = await adminApi('save_barospot_event', id ? 'PATCH' : 'POST', payload);
   if (result?.error) { showToast('저장 실패: ' + result.error); return; }
@@ -2843,67 +2890,98 @@ async function submitBarospotComplete() {
   loadBarospotEvents();
 }
 
-// ── 바로스팟 신청 매칭/확정 ───────────────────────────────
-let _barospotAppsStatus = 'pending';
-function filterBarospotApps(status, btnEl) {
-  _barospotAppsStatus = status;
-  btnEl.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btnEl.classList.add('active');
-  loadBarospotApplications(status);
-}
+// ── 바로스팟 신청 관리 - 이름+상태 배지만 보이는 목록, 눌러야 상세/조치가 나옴
+// (예전엔 대기중/매칭됨/확정/취소 탭을 나눠서 매번 옮겨다니며 찾아야 했음) ──
+let _barospotAppsList = [];
+const BAROSPOT_APP_STATUS_LABEL = { pending: '대기중', matched: '매칭됨', confirmed: '확정', cancelled: '취소됨' };
+const BAROSPOT_APP_STATUS_COLOR = { pending: '#f59e0b', matched: '#8b5cf6', confirmed: '#10b981', cancelled: '#94a3b8' };
 
-async function loadBarospotApplications(status) {
+async function loadBarospotApplications() {
   const el = document.getElementById('barospot-apps-list');
   el.innerHTML = '<div class="loading">로딩 중...</div>';
-  const data = await adminApi('barospot_applications', 'GET', null, { status });
-  const list = Array.isArray(data) ? data : [];
-  const openEvents = _barospotEvents.filter(e => e.status === 'recruiting_male');
-  el.innerHTML = list.length
-    ? list.map(a => {
+  const data = await adminApi('barospot_applications', 'GET', null, {});
+  // 취소된 건은 기본 목록에서 숨김(노이즈) - 필요하면 상세에서 여전히 취소 가능
+  _barospotAppsList = (Array.isArray(data) ? data : []).filter(a => a.status !== 'cancelled');
+  el.innerHTML = _barospotAppsList.length
+    ? _barospotAppsList.map(a => {
         const w = a.worker || {};
         const genderLabel = a.gender === 'male' ? '남성' : '여성';
-        const needsMatch = status === 'pending' && a.gender === 'female' && !a.event_id;
-        // 1:1 매칭이라 확정은 매장이 배정된 남성 신청에서만 가능(여성은 남성이 확정되면
-        // 서버가 자동으로 함께 확정함) - 큐레이션용으로 평점/완료/노쇼 이력을 같이 보여줌
-        const canConfirm = a.gender === 'male' && a.event_id && (status === 'pending');
-        const scoreLine = (w.rating != null || w.review_count || w.noshow_count)
-          ? `<span style="font-size:11px;color:#94a3b8"> · ★${w.rating!=null?Number(w.rating).toFixed(1):'-'} 완료${w.review_count||0} ${w.noshow_count?'· 노쇼'+w.noshow_count:''}</span>` : '';
-        return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
-            <div style="font-size:14px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel} · ${w.phone||'-'}</span>${scoreLine}</div>
+        const color = BAROSPOT_APP_STATUS_COLOR[a.status] || '#94a3b8';
+        return `<div onclick="openBarospotAppDetail('${a.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border-radius:12px;padding:13px 16px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer">
+          <div style="min-width:0">
+            <div style="font-size:14px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel}</span></div>
           </div>
-          ${needsMatch ? `
-          <div style="display:flex;gap:6px">
-            <select id="bse-match-${a.id}" style="flex:1;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;background:#fff">
-              <option value="">매칭할 바로스팟 선택</option>
-              ${openEvents.map(e => `<option value="${e.id}">${(e.barospot_restaurants?.name)||'식당'} · ${new Date(e.event_date).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</option>`).join('')}
-            </select>
-            <button class="r-btn r-btn-done" onclick="matchBarospotApplication('${a.id}')">매칭</button>
-          </div>` : ''}
-          <div style="display:flex;gap:6px;${needsMatch ? 'margin-top:6px' : ''}">
-            ${canConfirm ? `<button class="r-btn r-btn-done" onclick="confirmBarospotApplication('${a.id}')">확정</button>` : ''}
-            ${status !== 'cancelled' ? `<button class="r-btn r-btn-dismiss" onclick="cancelBarospotApplication('${a.id}')">취소</button>` : ''}
-          </div>
+          <span class="status-badge" style="background:${color}18;color:${color};flex-shrink:0">${BAROSPOT_APP_STATUS_LABEL[a.status] || a.status}</span>
         </div>`;
       }).join('')
-    : '<div class="empty">해당하는 신청이 없습니다</div>';
+    : '<div class="empty">신청 내역이 없습니다</div>';
+}
+
+// 목록에서 카드를 눌렀을 때 - 여기서만 이름/전화번호/신뢰이력/배정 바로스팟 등 상세와
+// 매칭·확정·취소 액션을 다룬다(목록 자체는 이름+상태만 보여주는 게 목적)
+function openBarospotAppDetail(applicationId) {
+  const a = _barospotAppsList.find(x => x.id === applicationId);
+  if (!a) return;
+  const w = a.worker || {};
+  const genderLabel = a.gender === 'male' ? '남성' : '여성';
+  const ev = a.barospot_events;
+  const eventInfo = ev
+    ? `${ev.barospot_restaurants?.name || '식당 미정'} · ${new Date(ev.event_date).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}`
+    : '아직 배정된 바로스팟이 없어요';
+  const scoreLine = (w.rating != null || w.review_count || w.noshow_count)
+    ? `★${w.rating!=null?Number(w.rating).toFixed(1):'-'} · 완료 ${w.review_count||0}회${w.noshow_count?' · 노쇼 '+w.noshow_count+'회':''}`
+    : '평가 이력 없음';
+  // 1:1 매칭이라 확정은 매장이 배정된 남성 신청에서만 가능(여성은 남성이 확정되면
+  // 서버가 자동으로 함께 확정함)
+  const needsMatch = a.status === 'pending' && a.gender === 'female' && !a.event_id;
+  const canConfirm = a.gender === 'male' && a.event_id && a.status === 'pending';
+  const openEvents = _barospotEvents.filter(e => e.status === 'recruiting_male');
+  document.getElementById('bad-body').innerHTML = `
+    <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:2px">${w.name || '이름없음'}</div>
+    <div style="font-size:12.5px;color:#94a3b8;margin-bottom:14px">${genderLabel} · ${w.phone || '연락처 미등록'}</div>
+    <div style="background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#334155;display:flex;flex-direction:column;gap:6px">
+      <div><b>📍 배정 바로스팟</b> · ${eventInfo}</div>
+      <div><b>⭐ 신뢰 이력</b> · ${scoreLine}</div>
+      <div><b>📅 신청일</b> · ${a.applied_at ? new Date(a.applied_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '-'}</div>
+      <div><b>상태</b> · ${BAROSPOT_APP_STATUS_LABEL[a.status] || a.status}</div>
+    </div>
+    ${needsMatch ? `
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <select id="bad-match-select" style="flex:1;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;outline:none;background:#fff">
+        <option value="">매칭할 바로스팟 선택</option>
+        ${openEvents.map(e => `<option value="${e.id}">${(e.barospot_restaurants?.name)||'식당'} · ${new Date(e.event_date).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</option>`).join('')}
+      </select>
+      <button class="r-btn r-btn-done" onclick="matchBarospotApplication('${a.id}')">매칭</button>
+    </div>` : ''}
+    <div style="display:flex;gap:6px">
+      ${canConfirm ? `<button class="r-btn r-btn-done" style="flex:1" onclick="confirmBarospotApplication('${a.id}')">확정</button>` : ''}
+      ${a.status !== 'cancelled' ? `<button class="r-btn r-btn-dismiss" style="flex:1" onclick="cancelBarospotApplication('${a.id}')">취소</button>` : ''}
+    </div>
+  `;
+  document.getElementById('barospot-app-detail-overlay').style.display = 'flex';
+}
+function closeBarospotAppDetail() {
+  document.getElementById('barospot-app-detail-overlay').style.display = 'none';
 }
 
 async function matchBarospotApplication(applicationId) {
-  const sel = document.getElementById(`bse-match-${applicationId}`);
+  const sel = document.getElementById('bad-match-select');
   const eventId = sel?.value;
   if (!eventId) { showToast('매칭할 바로스팟을 선택해주세요'); return; }
   const result = await adminApi('match_barospot_application', 'POST', { application_id: applicationId, event_id: eventId });
   if (result?.error) { showToast('실패: ' + result.error); return; }
   showToast('매장이 배정됐습니다');
-  loadBarospotApplications(_barospotAppsStatus);
+  closeBarospotAppDetail();
+  loadBarospotApplications();
+  loadBarospotEvents();
 }
 
 async function confirmBarospotApplication(applicationId) {
   const result = await adminApi('confirm_barospot_application', 'PATCH', { application_id: applicationId });
   if (result?.error) { showToast('실패: ' + result.error); return; }
   showToast('확정됐습니다');
-  loadBarospotApplications(_barospotAppsStatus);
+  closeBarospotAppDetail();
+  loadBarospotApplications();
   loadBarospotEvents();
 }
 
@@ -2913,7 +2991,8 @@ async function cancelBarospotApplication(applicationId) {
   const result = await adminApi('cancel_barospot_application', 'PATCH', { application_id: applicationId });
   if (result?.error) { showToast('실패: ' + result.error); return; }
   showToast('신청이 취소됐습니다');
-  loadBarospotApplications(_barospotAppsStatus);
+  closeBarospotAppDetail();
+  loadBarospotApplications();
   loadBarospotEvents();
 }
 
@@ -2943,12 +3022,14 @@ async function searchRestaurantPlace() {
   }
 }
 
+let _rNaverLink = null; // 검색 결과의 네이버플레이스 링크 - 저장 시 naver_place_url로 같이 넘김
 function selectRestaurantPlace(idx) {
   const item = _restaurantPlaceItems[idx];
   if (!item) return;
   document.getElementById('r-name').value = item.title || '';
   document.getElementById('r-address').value = item.roadAddress || item.address || '';
   document.getElementById('r-phone').value = item.telephone || '';
+  _rNaverLink = item.link || null;
   // 네이버 지역검색 오픈API는 예약시스템 연동 매장 등 상당수에서 전화번호를
   // 비워서 줌(실제 네이버 플레이스 페이지엔 있어도) - 그런 경우 검색 링크로 대체
   const phoneHint = document.getElementById('r-phone-hint');
@@ -2977,6 +3058,7 @@ function editRestaurant(id) {
   document.getElementById('r-menu').value = r.menu_description || '';
   document.getElementById('r-base-price').value = r.base_price || '';
   document.getElementById('restaurant-form-title').textContent = '제휴 매장 수정';
+  _rNaverLink = r.naver_place_url || null; // 재검색 안 하고 저장해도 기존 링크가 유지되도록
 }
 
 async function saveRestaurant() {
@@ -2988,6 +3070,7 @@ async function saveRestaurant() {
     phone: document.getElementById('r-phone').value.trim(),
     menu_description: document.getElementById('r-menu').value.trim(),
     base_price: document.getElementById('r-base-price').value,
+    naver_place_url: _rNaverLink,
   };
   if (!payload.name) { showToast('식당명을 입력해주세요'); return; }
   const result = await adminApi('save_restaurant', id ? 'PATCH' : 'POST', payload);

@@ -845,7 +845,7 @@ module.exports = async function handler(req, res) {
     // (이전 코드는 female_price/male_price/discount_pct를 저장하려 했는데 그런
     // 컬럼이 애초에 존재한 적이 없어 매번 PGRST204로 저장이 실패하고 있었음)
     if (action === 'save_restaurant' && (req.method === 'POST' || req.method === 'PATCH')) {
-      const { id, name, address, phone, menu_description, base_price } = req.body || {};
+      const { id, name, address, phone, menu_description, base_price, naver_place_url } = req.body || {};
       if (!name || !name.trim()) return res.status(400).json({ error: '식당명을 입력해주세요' });
       const payload = {
         name: name.trim(),
@@ -853,6 +853,7 @@ module.exports = async function handler(req, res) {
         phone: (phone || '').trim(),
         menu_description: (menu_description || '').trim(),
         base_price: base_price ? parseInt(base_price) || 0 : 0,
+        naver_place_url: naver_place_url || null,
       };
       let r;
       if (id) {
@@ -897,7 +898,7 @@ module.exports = async function handler(req, res) {
       if (!restaurant_id && new_restaurant?.name) {
         const rr = await sb('barospot_restaurants', svcKey, {
           method: 'POST',
-          body: JSON.stringify({ name: new_restaurant.name.trim(), address: (new_restaurant.address || '').trim(), phone: '', menu_description: '', base_price: 0, is_active: true }),
+          body: JSON.stringify({ name: new_restaurant.name.trim(), address: (new_restaurant.address || '').trim(), phone: '', menu_description: '', base_price: 0, is_active: true, naver_place_url: new_restaurant.naver_place_url || null }),
         });
         if (!rr.ok) return res.status(502).json({ error: '새 제휴매장 등록 실패: ' + await rr.text() });
         const rows = await rr.json();
@@ -978,7 +979,7 @@ module.exports = async function handler(req, res) {
     if (action === 'barospot_applications') {
       const statusFilter = req.query.status;
       const eventFilter = req.query.event_id;
-      let url = 'barospot_applications?select=id,event_id,user_id,gender,status,applied_at&order=applied_at.desc&limit=200';
+      let url = 'barospot_applications?select=id,event_id,user_id,gender,status,applied_at,barospot_events(event_date,barospot_restaurants(name))&order=applied_at.desc&limit=200';
       if (statusFilter) url += `&status=eq.${encodeURIComponent(statusFilter)}`;
       if (eventFilter) url += `&event_id=eq.${encodeURIComponent(eventFilter)}`;
       const apps = await sb(url, svcKey).then(r => r.json());
