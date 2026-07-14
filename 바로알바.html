@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=494"></script>
+  <script src="./shared-lang.js?v=495"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=494">
+  <link rel="stylesheet" href="./assets/css/style.css?v=495">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1572,7 +1572,7 @@
           <div style="background:#fff;border:1.5px solid #fecdd3;border-radius:16px;padding:14px 16px;margin-bottom:10px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer" onclick="openMannnamPanel()">
               <span style="font-size:20px">🤝</span>
-              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로미팅</div>
+              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로만남</div>
               <span onclick="event.stopPropagation();openMpSub('gatherings')" style="font-size:15px;padding:2px" title="공지사항">🔔</span>
               <span class="mp-row-arrow">›</span>
             </div>
@@ -4124,7 +4124,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=494"></script>
+<script src="./assets/js/app.js?v=495"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4563,6 +4563,10 @@
         <!-- 이벤트 목록 -->
         <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">참가 가능한 스팟 <span id="mnm-spot-event-count" style="color:#3b82f6">0</span>건</div>
         <div id="mnm-m-events"><div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 스팟</div><div style="font-size:12px;line-height:1.65">현재 남성 참가자를 모집 중인<br>스팟 이벤트가 없어요</div></div></div>
+        <!-- 내 신청 현황 - 예전엔 이게 없어서 확정되고 나면(모집 목록에서 빠지니까) 내
+             신청 정보를 다시 볼 방법이 아예 없었음(여성 쪽엔 있었는데 남성 쪽만 누락) -->
+        <div style="font-size:12px;font-weight:800;color:#555;margin:18px 0 10px">내 신청 현황</div>
+        <div id="mnm-m-apps"><div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div></div>
       </div>
     </div>
 
@@ -4683,7 +4687,10 @@
       <!-- 바로스팟 사후 호감표시/수락→채팅 - 만남이 끝난(종료 단계) 이후에만 노출 -->
       <div id="track-barospot-interest-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee;text-align:center">
         <div id="track-barospot-interest-text" style="font-size:12.5px;color:#666;margin-bottom:8px;line-height:1.5"></div>
-        <button id="track-barospot-interest-btn" style="width:100%;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer"></button>
+        <div style="display:flex;gap:8px">
+          <button id="track-barospot-interest-btn" style="flex:2;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer"></button>
+          <button id="track-barospot-end-btn" style="display:none;flex:1;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#888">종료하기</button>
+        </div>
       </div>
       <div id="track-live-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee">
         <div id="track-live-note" style="display:none;font-size:12px;color:#bbb;text-align:center;padding:8px 0"></div>

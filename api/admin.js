@@ -616,6 +616,30 @@ module.exports = async function handler(req, res) {
     return res.json({ ok: true });
   }
 
+  // 어느 한쪽이 먼저 "종료하기"를 눌러 아직 아무도 호감표시 안 한 상태에서 바로 케이스를
+  // 닫는 경우 - barospot_interests를 status='declined'로 바로 만들어(pending 단계 없이)
+  // 이후 두 사람 다 "호감 표시하기" 버튼이 다시 안 뜨고 종료된 것으로 확정되게 함
+  if (req.method === 'POST' && earlyAction === 'close_barospot_case') {
+    const cbcJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const cbcRequesterId = getSubFromJWT(cbcJwt);
+    if (!cbcRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { event_id: cbcEventId } = req.body || {};
+    if (!cbcEventId) return res.status(400).json({ error: 'event_id required' });
+    const myRows = await sb(`barospot_applications?event_id=eq.${cbcEventId}&user_id=eq.${cbcRequesterId}&status=eq.confirmed&select=id`, svcKey).then(r => r.json()).catch(() => []);
+    if (!myRows?.length) return res.status(403).json({ error: '확정된 참가자만 종료할 수 있어요' });
+    const existing = await sb(`barospot_interests?event_id=eq.${cbcEventId}&select=id`, svcKey).then(r => r.json()).catch(() => []);
+    if (existing?.length) return res.status(409).json({ error: '이미 처리가 진행 중이에요' });
+    const targetUid = await _getOtherConfirmedBarospotUser(cbcEventId, cbcRequesterId);
+    if (!targetUid) return res.status(404).json({ error: '상대방을 찾을 수 없어요' });
+    const insRes = await sb('barospot_interests', svcKey, {
+      method: 'POST',
+      body: JSON.stringify({ event_id: cbcEventId, initiator_user_id: cbcRequesterId, target_user_id: targetUid, status: 'declined', responded_at: new Date().toISOString() }),
+    });
+    if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
+    await notifyUser(targetUid, '바로스팟 안내', '상대방과의 바로스팟이 종료됐어요', 'barospot_case_closed', svcKey, req).catch(() => {});
+    return res.json({ ok: true });
+  }
+
   if (req.method === 'POST' && earlyAction === 'respond_barospot_interest') {
     const riJwt = (req.headers.authorization || '').replace('Bearer ', '');
     const riRequesterId = getSubFromJWT(riJwt);
