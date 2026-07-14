@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '491';
+  const _APP_V = '492';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=491').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=492').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -2875,8 +2875,9 @@ function loadHomePanel() {
   _renderHomeLessonHot().catch(() => {}); // 레슨/과외 HOT
   // 바로모임 미리보기
   loadMoimList('').catch(() => {});
-  // 바로미팅 홈 미리보기 카드 표시
+  // 바로미팅/바로스팟 홈 미리보기 카드 표시
   _loadHomeBaromeetTeaser().catch(() => {});
+  _loadHomeBarospotTeaser().catch(() => {});
 
   // 공고가 없으면 GPS 확보 후 재조회 (홈 진입 시 watchPosition이 중단되므로 getCurrentPosition 사용)
   clearTimeout(_homeJobRetryTimer);
@@ -17595,9 +17596,45 @@ async function _loadHomeBaromeetTeaser() {
     .select('id,title,gathering_date,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
     .eq('status', 'open').eq('category', 'baromeeting')
     .order('created_at', { ascending: false }).limit(6);
-  if (!data?.length) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  list.innerHTML = data.map(m => _baromeetHomeCard(m)).join('');
+  if (!data?.length) { section.style.display = 'none'; }
+  else { section.style.display = 'block'; list.innerHTML = data.map(m => _baromeetHomeCard(m)).join(''); }
+  _updateHomeMannamEmptyState();
+}
+
+// 바로스팟(참가 가능한 스팟 - recruiting_male) 홈 미리보기 - 바로미팅 미리보기와 같은
+// 카드에 나란히 표시. 예전엔 바로만남 카드에 바로미팅만 있고 바로스팟은 아예 노출이
+// 안 돼서 "왜 바로스팟은 홈에서 안 보이냐"는 피드백을 받았음.
+async function _loadHomeBarospotTeaser() {
+  const section = document.getElementById('home-barospot-section');
+  const list = document.getElementById('home-barospot-list');
+  if (!section || !list) return;
+  const { data } = await db.from('barospot_events')
+    .select('id, event_date, barospot_restaurants(name)')
+    .eq('status', 'recruiting_male').order('event_date', { ascending: true }).limit(6);
+  if (!data?.length) { section.style.display = 'none'; }
+  else { section.style.display = 'block'; list.innerHTML = data.map(ev => _barospotHomeCard(ev)).join(''); }
+  _updateHomeMannamEmptyState();
+}
+function _barospotHomeCard(ev) {
+  const r = ev.barospot_restaurants || {};
+  const dateStr = ev.event_date ? new Date(ev.event_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+  // 바로모임 홈카드(_moimHomeCard)와 동일한 구성/아이콘(.mc-cat/.mc-title/.mc-date/.mc-slots/.mc-fee) 재사용
+  return `<div onclick="openMannnamPanel()" class="moim-card" style="flex-shrink:0;width:160px;padding:16px">
+    <div class="mc-cat" style="color:#e11d48">바로스팟</div>
+    <div class="mc-title">${r.name || '바로스팟'}</div>
+    <div class="mc-date">${dateStr}</div>
+    <div class="mc-slots">남성 신청 중</div>
+    <div class="mc-fee" style="color:#e11d48">자리있음</div>
+  </div>`;
+}
+// 바로미팅/바로스팟 둘 다 없을 때도 바로모임 카드와 높이가 맞도록 빈 상태 문구를 채워둠
+function _updateHomeMannamEmptyState() {
+  const bmSec = document.getElementById('home-baromeet-section');
+  const bsSec = document.getElementById('home-barospot-section');
+  const empty = document.getElementById('home-mannam-empty');
+  if (!empty) return;
+  const bothHidden = (!bmSec || bmSec.style.display === 'none') && (!bsSec || bsSec.style.display === 'none');
+  empty.style.display = bothHidden ? 'block' : 'none';
 }
 function _baromeetHomeCard(m) {
   const maleLeft = (m.baromeeting_male_max || 4) - (m.baromeeting_male_cur || 0);
@@ -19136,18 +19173,21 @@ async function _loadSpotEvents() {
     if (res.ok) previews = await res.json();
   } catch (e) { /* 미리보기 실패해도 목록 자체는 보여줘야 함 */ }
   el.innerHTML = data.map(ev => _renderSpotEventCard(ev, previews[ev.id])).join('');
-  // 정적 지도는 실제 DOM에 컨테이너가 붙은 뒤에만 그릴 수 있어 innerHTML 대입 이후 실행
+  // 지도는 실제 DOM에 컨테이너가 붙은 뒤에만 그릴 수 있어 innerHTML 대입 이후 실행.
+  // kakao.maps.StaticMap은 이 앱이 로드하는 SDK 구성(libraries=services,clusterer)에서
+  // 존재하지 않는 API라 항상 조용히 실패하고 있었음(빈 회색 박스) - 트래킹 시트 지도(_trackMap)와
+  // 동일하게 실제로 동작이 검증된 kakao.maps.Map(인터랙티브)으로 교체.
   data.forEach(ev => {
     if (ev.lat == null || ev.lng == null) return;
     const mapEl = document.getElementById(`bse-card-map-${ev.id}`);
     if (!mapEl || !window.kakao?.maps) return;
     try {
-      new kakao.maps.StaticMap(mapEl, {
-        center: new kakao.maps.LatLng(ev.lat, ev.lng),
-        level: 4,
-        marker: { position: new kakao.maps.LatLng(ev.lat, ev.lng) },
-      });
-    } catch (e) { /* 정적 지도 렌더 실패해도 나머지 정보는 보여야 함 */ }
+      const pos = new kakao.maps.LatLng(ev.lat, ev.lng);
+      const map = new kakao.maps.Map(mapEl, { center: pos, level: 4 });
+      map.setDraggable(false);
+      map.setZoomable(false);
+      new kakao.maps.Marker({ position: pos, map });
+    } catch (e) { /* 지도 렌더 실패해도 나머지 정보는 보여야 함 */ }
   });
 }
 
