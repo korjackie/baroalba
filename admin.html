@@ -1039,6 +1039,22 @@ window.addEventListener('DOMContentLoaded', async () => {
     };
     window.visualViewport.addEventListener('resize', _adjustPanels);
     window.visualViewport.addEventListener('scroll', _adjustPanels);
+
+    // 위의 _adjustPanels는 .detail-overlay/.detail-panel(슬라이드업 모달) 안의 입력창만
+    // 처리함 - 바로스팟 개설 폼처럼 일반 페이지 흐름(.content) 안에 있는 입력창은 대상이
+    // 아니라서 키보드가 올라와도 아무 보정 없이 그대로 가려졌음. 문서 전체 스크롤을
+    // 조정하는 범용 버전을 추가(모달 안의 입력창은 closest('.detail-panel')로 걸러 중복 방지)
+    window.visualViewport.addEventListener('resize', () => {
+      setTimeout(() => {
+        const f = document.activeElement;
+        if (!f || (f.tagName !== 'INPUT' && f.tagName !== 'TEXTAREA') || f.closest('.detail-panel')) return;
+        const fRect = f.getBoundingClientRect();
+        const vpBottom = window.visualViewport.height;
+        if (fRect.bottom > vpBottom - 20) {
+          window.scrollBy(0, fRect.bottom - vpBottom + 80);
+        }
+      }, 200);
+    });
   }
 });
 
@@ -2594,6 +2610,7 @@ async function loadBarospotEvents() {
             <span class="status-badge ${STATUS_BADGE_CLS[ev.status]||'sb-dismissed'}" style="flex-shrink:0">${STATUS_LABEL[ev.status]||ev.status}</span>
           </div>
           <div style="display:flex;gap:6px">
+            ${ev.status === 'recruiting_female' ? `<button class="r-btn r-btn-done" onclick="shareBarospotEvent('${ev.id}')">📢 공유하기</button>` : ''}
             ${isActive ? `<button class="r-btn r-btn-reviewing" onclick="editBarospotEvent('${ev.id}')">수정</button>` : ''}
             ${isActive ? `<button class="r-btn r-btn-dismiss" onclick="cancelBarospotEvent('${ev.id}')">취소</button>` : ''}
             ${ev.status === 'confirmed' ? `<button class="r-btn r-btn-done" onclick="completeBarospotEvent('${ev.id}')">완료 처리</button>` : ''}
@@ -2601,6 +2618,26 @@ async function loadBarospotEvents() {
         </div>`;
       }).join('')
     : '<div class="empty">개설된 바로스팟이 없습니다</div>';
+}
+
+// 여성 모집중인 바로스팟을 홍보용으로 공유 - 여는 순간 앱에서 자동으로
+// 선점 안내가 뜨는 딥링크(?barospot=ID)를 생성한다(app.js의 딥링크 처리와 연동)
+async function shareBarospotEvent(eventId) {
+  const ev = _barospotEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  const name = ev.barospot_restaurants?.name || '바로스팟';
+  const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
+  const link = `https://baroalba.multimove.co.kr/바로알바.html?barospot=${eventId}`;
+  const shareText = `🍽️ 바로스팟이 열렸어요!\n${name} · ${whenText}\n먼저 신청하는 분에게 선점 기회가 있어요\n${link}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: '바로스팟 안내', text: shareText }); return; } catch (e) { /* 사용자가 취소한 경우 등 - 조용히 무시 */ return; }
+  }
+  try {
+    await navigator.clipboard.writeText(shareText);
+    showToast('📋 공유 문구가 복사됐어요');
+  } catch (e) {
+    showToast('공유하기를 지원하지 않는 환경이에요');
+  }
 }
 
 function updateBseDateDisplay() {
