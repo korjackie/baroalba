@@ -9,6 +9,8 @@
   <title>바로알바 관리자</title>
   <script src="./config.js"></script>
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services"><\/scr'+'ipt>');</script>
+  <!-- 카카오 공유 SDK (Kakao.Share) — 지도 SDK(kakao.maps)와 별도 네임스페이스, 바로스팟 공유하기용 -->
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -970,6 +972,8 @@
 <script>
 const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
+
+if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
 
 let currentSession = null;
 let _reports = [];
@@ -2638,6 +2642,21 @@ async function shareBarospotEvent(eventId) {
   };
   const pitch = pitchByStatus[ev.status] || '';
   const shareText = `🍽️ 바로스팟이 열렸어요!\n${name} · ${whenText}${pitch ? `\n${pitch}` : ''}\n${link}`;
+  if (window.Kakao?.isInitialized?.()) {
+    try {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '🍽️ 바로스팟이 열렸어요!',
+          description: `${name} · ${whenText}${pitch ? `\n${pitch}` : ''}`,
+          imageUrl: `${location.origin}/icons/og-share.png`,
+          link: { mobileWebUrl: link, webUrl: link }
+        },
+        buttons: [{ title: '바로스팟 보러 가기', link: { mobileWebUrl: link, webUrl: link } }]
+      });
+      return;
+    } catch (e) { /* SDK 오류 시 아래 공유 방식으로 폴백 */ }
+  }
   if (navigator.share) {
     try { await navigator.share({ title: '바로스팟 안내', text: shareText }); return; } catch (e) { /* 사용자가 취소한 경우 등 - 조용히 무시 */ return; }
   }
