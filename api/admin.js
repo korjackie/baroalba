@@ -1254,6 +1254,24 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // ── 바로미팅 완료 처리 + 노쇼 체크 (바로스팟의 complete_barospot_event와 동일한 취지) -
+    // 승인만 되고 나면 관리자가 아무 조치도 취할 수 없었던 것("승인 이후엔 컨트롤 기능이
+    // 없다"는 피드백)을 보완 - 모임을 closed로 마감하면서 노쇼 신고된 인원은 노쇼 카운트를
+    // 올려 바로스팟 자격심사(_checkBarospotEligibility)에도 함께 반영되게 한다 ──
+    if (action === 'complete_baromeeting' && req.method === 'PATCH') {
+      const { id, noshow_applicant_ids } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'id required' });
+      const r = await sb(`gatherings?id=eq.${id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'closed' }) });
+      if (!r.ok) return res.status(502).json({ error: await r.text() });
+      for (const uid of (Array.isArray(noshow_applicant_ids) ? noshow_applicant_ids : [])) {
+        const wRows = await sb(`workers?kakao_uid=eq.${uid}&select=noshow_count`, svcKey).then(res2 => res2.json()).catch(() => []);
+        const cur = wRows?.[0]?.noshow_count || 0;
+        await sb(`workers?kakao_uid=eq.${uid}`, svcKey, { method: 'PATCH', body: JSON.stringify({ noshow_count: cur + 1 }) }).catch(() => {});
+        await notifyUser(uid, '바로미팅 노쇼 안내', '신청하신 바로미팅에 노쇼로 기록됐어요. 반복되면 이후 이용이 제한될 수 있어요.', 'baromeeting_noshow', svcKey, req).catch(() => {});
+      }
+      return res.json({ ok: true });
+    }
+
     // ── 바로미팅 삭제 ─────────────────────────────────────
     if (action === 'delete_baromeeting' && req.method === 'DELETE') {
       const { id } = req.body || {};

@@ -969,6 +969,19 @@
   </div>
 </div>
 
+<!-- 바로미팅 완료 처리 (노쇼 표시) - 바로스팟과 동일한 패턴 -->
+<div id="baromeet-complete-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
+    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">✅ 바로미팅 완료 처리</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">실제로 노쇼가 있었다면 체크해주세요. 노쇼 처리되면 해당 회원의 노쇼 횟수가 올라가고, 반복되면 바로스팟 등 다른 이용도 제한돼요.</div>
+    <div id="bmce-participants" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeBaromeetComplete()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="submitBaromeetComplete()" style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">완료 처리</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const { createClient } = supabase;
 const db = createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON_KEY);
@@ -2166,6 +2179,7 @@ async function loadBaromeetings() {
           <div style="display:flex;gap:6px">
             <button class="r-btn r-btn-reviewing" onclick="editBaromeeting('${m.id}')">수정</button>
             <button class="r-btn ${isClosed ? 'r-btn-done' : 'r-btn-dismiss'}" onclick="toggleBaromeeting('${m.id}', '${isClosed ? 'open' : 'closed'}')">${isClosed ? '재오픈' : '강제마감'}</button>
+            <button class="r-btn r-btn-done" onclick="completeBaromeeting('${m.id}')">완료 처리</button>
             <button class="r-btn r-btn-close" onclick="deleteBaromeetingById('${m.id}')">삭제</button>
           </div>
         </div>`;
@@ -2296,6 +2310,9 @@ async function renderBmApplicantsList() {
         <button onclick="approveBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">승인</button>
         <button onclick="rejectBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">거절</button>
         ` : ''}
+        ${a.status === 'approved' ? `
+        <button onclick="rejectBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">참가취소</button>
+        ` : ''}
         <button onclick="sendApplicantNotice('${a.applicant_id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#F5F3FF;color:#7C3AED;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">공지</button>
         <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
       </div>
@@ -2351,6 +2368,9 @@ async function openBmDetail(id) {
           <button onclick="approveBmApplicant('${a.id}','${nameEsc}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">승인</button>
           <button onclick="rejectBmApplicant('${a.id}','${nameEsc}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">거절</button>
           ` : ''}
+          ${a.status === 'approved' ? `
+          <button onclick="rejectBmApplicant('${a.id}','${nameEsc}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">참가취소</button>
+          ` : ''}
           <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
         </div>
       </div>`;
@@ -2386,6 +2406,38 @@ async function rejectBmApplicant(applicationId, name) {
   if (result?.error) { showToast('거절 실패: ' + result.error); return; }
   showToast(`🙏 ${name}님에게 거절 안내를 보냈어요`);
   _refreshBmApplicantsView();
+  loadBaromeetings();
+}
+
+// 바로미팅 완료 처리(노쇼 체크) - "승인 이후엔 관리자가 아무것도 할 수 없다"는 피드백으로
+// 신설. 바로스팟의 completeBarospotEvent와 동일한 패턴(확정 참가자 목록 → 체크박스로
+// 노쇼 선택 → workers.noshow_count 반영, 바로스팟 자격심사에도 함께 적용됨)
+let _bmceGatheringId = null;
+async function completeBaromeeting(id) {
+  _bmceGatheringId = id;
+  const data = await adminApi('baromeeting_applicants', 'GET', null, { gathering_id: id });
+  const list = (Array.isArray(data) ? data : []).filter(a => a.status === 'approved');
+  const box = document.getElementById('bmce-participants');
+  box.innerHTML = list.length
+    ? list.map(a => `
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" value="${a.applicant_id}" style="width:18px;height:18px;accent-color:#DC2626;flex-shrink:0">
+          <span style="font-size:13px">${a.worker?.name || '이름없음'} (${a.worker?.gender === 'male' ? '남성' : '여성'}) 노쇼</span>
+        </label>`).join('')
+    : '<div style="font-size:12px;color:#94a3b8">확정된 참가자가 없어요</div>';
+  document.getElementById('baromeet-complete-overlay').style.display = 'flex';
+}
+
+function closeBaromeetComplete() {
+  document.getElementById('baromeet-complete-overlay').style.display = 'none';
+}
+
+async function submitBaromeetComplete() {
+  const checked = [...document.querySelectorAll('#bmce-participants input[type=checkbox]:checked')].map(el => el.value);
+  const result = await adminApi('complete_baromeeting', 'PATCH', { id: _bmceGatheringId, noshow_applicant_ids: checked });
+  if (result?.error) { showToast('실패: ' + result.error); return; }
+  closeBaromeetComplete();
+  showToast('완료 처리됐습니다' + (checked.length ? ` (노쇼 ${checked.length}명 반영)` : ''));
   loadBaromeetings();
 }
 
