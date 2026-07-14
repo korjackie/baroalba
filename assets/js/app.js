@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '487';
+  const _APP_V = '488';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=487').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=488').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18550,7 +18550,7 @@ const DATING_JOB_CATEGORIES = ['대기업 / 외국계기업','중견 / 중소기
 // 체형은 남녀 표현이 달라야 자연스러워서(여성에게 "근육질"은 안 맞음) 성별별로 분리
 const DATING_BODY_TYPES_FEMALE = ['슬림','슬림탄탄','보통','글래머','통통한 편'];
 const DATING_BODY_TYPES_MALE = ['마른 편','보통','슬림탄탄','근육질','통통한 편'];
-const DATING_INTERESTS = ['여행','와인','필라테스','헬스','독서','요리','카페','반려동물','사진','등산','골프','캠핑','영화','게임'];
+const DATING_INTERESTS = ['여행','와인','필라테스','헬스','독서','요리','카페','반려동물','사진','등산','골프','캠핑','영화','게임','러닝','자전거','테니스','클라이밍','요가','산책'];
 let _datingProfileSelected = { gender: null, job_category: null, body_type: null, interests: [] };
 
 async function openDatingProfileSheet() {
@@ -19091,7 +19091,7 @@ async function _loadSpotEvents() {
   // 아니라 여성 1명+남성 1명을 매칭하는 1:1 소개팅이라 "남성 모집중(recruiting_male)" 상태인
   // 것만 신청 가능한 목록으로 보여준다
   const { data, error } = await db.from('barospot_events')
-    .select('id, event_date, barospot_restaurants(name, menu_description, base_price)')
+    .select('id, event_date, address, lat, lng, barospot_restaurants(name, menu_description, base_price)')
     .eq('status', 'recruiting_male').order('event_date', { ascending: true });
   if (error || !data?.length) {
     if (cntEl) cntEl.textContent = '0';
@@ -19099,9 +19099,9 @@ async function _loadSpotEvents() {
     return;
   }
   if (cntEl) cntEl.textContent = data.length;
-  // 블라인드라도 최소 정보(나이/직업군/체형/관심사)는 있어야 신청 여부를 판단할 수 있다는
-  // 피드백 반영 - 이미 배정된 여성의 프로필 미리보기를 서버(barospot_event_previews)에서
-  // 함께 불러와 카드에 합쳐서 보여준다
+  // 블라인드라도 최소 정보(나이/직업군/체형/관심사/자기소개/장소)는 있어야 신청 여부를
+  // 판단할 수 있다는 피드백 반영 - 이미 배정된 여성의 프로필 미리보기를
+  // 서버(barospot_event_previews)에서 함께 불러와 카드에 합쳐서 보여준다
   let previews = {};
   try {
     const { data: { session } } = await db.auth.getSession();
@@ -19112,6 +19112,19 @@ async function _loadSpotEvents() {
     if (res.ok) previews = await res.json();
   } catch (e) { /* 미리보기 실패해도 목록 자체는 보여줘야 함 */ }
   el.innerHTML = data.map(ev => _renderSpotEventCard(ev, previews[ev.id])).join('');
+  // 정적 지도는 실제 DOM에 컨테이너가 붙은 뒤에만 그릴 수 있어 innerHTML 대입 이후 실행
+  data.forEach(ev => {
+    if (ev.lat == null || ev.lng == null) return;
+    const mapEl = document.getElementById(`bse-card-map-${ev.id}`);
+    if (!mapEl || !window.kakao?.maps) return;
+    try {
+      new kakao.maps.StaticMap(mapEl, {
+        center: new kakao.maps.LatLng(ev.lat, ev.lng),
+        level: 4,
+        marker: { position: new kakao.maps.LatLng(ev.lat, ev.lng) },
+      });
+    } catch (e) { /* 정적 지도 렌더 실패해도 나머지 정보는 보여야 함 */ }
+  });
 }
 
 // 여성 1명 + 남성 1명을 매칭하는 1:1 소개팅이라 목록 자체가 이미 "남성 모집중"
@@ -19121,20 +19134,26 @@ function _renderSpotEventCard(ev, preview) {
   const r = ev.barospot_restaurants || {};
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
   const profileHtml = preview ? `
-    <div style="display:flex;gap:10px;align-items:center;background:#f8f9fa;border-radius:10px;padding:10px;margin-bottom:10px">
+    <div style="display:flex;gap:10px;align-items:flex-start;background:#f8f9fa;border-radius:10px;padding:10px;margin-bottom:10px">
       <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
         ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(7px);transform:scale(1.15)">` : `<span style="font-size:18px">👤</span>`}
       </div>
-      <div style="min-width:0">
+      <div style="min-width:0;flex:1">
         <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+'세' : null, preview.job_category, preview.body_type].filter(Boolean).join(' · ') || '프로필 준비 중'}</div>
         ${preview.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${preview.interests.slice(0,4).map(t=>'#'+t).join(' ')}</div>` : ''}
+        ${preview.bio ? `<div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${preview.bio.replace(/</g,'&lt;')}</div>` : ''}
       </div>
     </div>` : '';
+  const mapHtml = (ev.lat != null && ev.lng != null)
+    ? `<div id="bse-card-map-${ev.id}" style="width:100%;height:100px;border-radius:10px;margin-bottom:10px;background:#eee"></div>`
+    : '';
   return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #e8eaed;overflow:hidden">
     <div style="margin-bottom:10px">
       <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || '식당 정보 확인 중'}</div>
       <div style="font-size:12px;color:#888">${whenText}</div>
+      ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">📍 ${ev.address}</div>` : ''}
     </div>
+    ${mapHtml}
     ${profileHtml}
     ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
