@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '483';
+  const _APP_V = '484';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=483').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=484').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18589,17 +18589,19 @@ async function buySpotPass(gender) {
   closeBottomSheet();
   showToast('결제 처리 중...');
   // 실제 결제는 Toss Payments 연동 전까지 관리자 확인 방식으로 처리
-  // 이용권 레코드 upsert (기존 잔여 + 추가)
+  // 이용권 레코드 upsert (기존 잔여 + 추가) - total_count는 NOT NULL 컬럼인데 신규 발급 시
+  // 빠뜨려서 "null value in column total_count" 오류로 매번 등록이 실패하던 버그였음.
+  // 누적 구매량을 추적하는 컬럼으로 보이므로 신규는 qty로 시작, 기존은 qty만큼 누적
   const { data: existing } = await db.from('barospot_passes')
-    .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', gender).eq('status', 'active').maybeSingle();
+    .select('id, remaining_count, total_count').eq('user_id', currentUser.id).eq('gender', gender).eq('status', 'active').maybeSingle();
   let err;
   if (existing) {
     const { error } = await db.from('barospot_passes')
-      .update({ remaining_count: existing.remaining_count + prod.qty }).eq('id', existing.id);
+      .update({ remaining_count: existing.remaining_count + prod.qty, total_count: (existing.total_count || 0) + prod.qty }).eq('id', existing.id);
     err = error;
   } else {
     const { error } = await db.from('barospot_passes')
-      .insert({ user_id: currentUser.id, gender, remaining_count: prod.qty, status: 'active' });
+      .insert({ user_id: currentUser.id, gender, remaining_count: prod.qty, total_count: prod.qty, status: 'active' });
     err = error;
   }
   if (err) { showToast('이용권 등록 실패: ' + err.message); return; }
@@ -18607,27 +18609,52 @@ async function buySpotPass(gender) {
   await _loadBarospotList();
 }
 
+// 바로미팅의 첫 이용 무료체험(BAROMEET_TRIAL_EVENT)과 동일한 취지로 바로스팟에도 적용 -
+// 이벤트 기간 내 + 바로스팟 신청 이력이 한 번도 없는 유저는 이용권 차감 없이 신청,
+// 대신 식사비는 멀티무브 계좌로 입금(프로모션 종료 시 enabled만 false로 바꾸면 됨)
+const BAROSPOT_TRIAL_EVENT = {
+  enabled: true,
+  start: '2026-07-11T00:00:00+09:00',
+  end: '2026-08-10T23:59:59+09:00',
+};
+async function _isBarospotTrialEligible(userId) {
+  if (!BAROSPOT_TRIAL_EVENT.enabled || !userId) return false;
+  const now = Date.now();
+  const start = new Date(BAROSPOT_TRIAL_EVENT.start).getTime();
+  const end = new Date(BAROSPOT_TRIAL_EVENT.end).getTime();
+  if (now < start || now > end) return false;
+  const { count } = await db.from('barospot_applications')
+    .select('id', { count: 'exact', head: true }).eq('user_id', userId);
+  return (count || 0) === 0;
+}
+
 async function applyBarospot() {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   const eligibility = await _checkBarospotEligibility();
   if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
-  if (_spotPassCount < 1) {
+  const isTrial = await _isBarospotTrialEligible(currentUser.id);
+  if (!isTrial && _spotPassCount < 1) {
     showToast('이용권이 없습니다. 먼저 구매해주세요');
     openSpotPassSheet('female');
     return;
   }
-  const confirmed = await showConfirmDialog('바로스팟 신청', '이용권 1회가 차감됩니다.\n매니저가 제휴 식당과 일정을 배정해드립니다.\n신청하시겠어요?', '신청하기', '취소');
+  const confirmMsg = isTrial
+    ? `🎉 첫 이용 무료체험으로 이용권 차감 없이 신청할 수 있어요!\n식사비만 아래 계좌로 입금해주세요.\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`
+    : '이용권 1회가 차감됩니다.\n매니저가 제휴 식당과 일정을 배정해드립니다.\n신청하시겠어요?';
+  const confirmed = await showConfirmDialog('바로스팟 신청', confirmMsg, isTrial ? '무료로 신청하기' : '신청하기', '취소');
   if (!confirmed) return;
-  const { data: passRow } = await db.from('barospot_passes')
-    .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'female').eq('status', 'active').maybeSingle();
-  if (!passRow || passRow.remaining_count < 1) { showToast('이용권이 없습니다'); return; }
-  const { error: pe } = await db.from('barospot_passes')
-    .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
-  if (pe) { showToast('오류: ' + pe.message); return; }
+  if (!isTrial) {
+    const { data: passRow } = await db.from('barospot_passes')
+      .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'female').eq('status', 'active').maybeSingle();
+    if (!passRow || passRow.remaining_count < 1) { showToast('이용권이 없습니다'); return; }
+    const { error: pe } = await db.from('barospot_passes')
+      .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
+    if (pe) { showToast('오류: ' + pe.message); return; }
+  }
   const { error: ae } = await db.from('barospot_applications')
     .insert({ user_id: currentUser.id, gender: 'female', status: 'pending' });
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
-  showToast('신청 완료! 매니저가 검토 후 배정을 안내해드립니다');
+  showToast(isTrial ? '✅ 무료 체험 신청 완료! 매니저가 검토 후 배정을 안내해드립니다' : '신청 완료! 매니저가 검토 후 배정을 안내해드립니다');
   await _loadBarospotList();
   // 이 시점엔 아직 매니저가 식당/일정을 배정하기 전이라 지도에 표시할 장소가 없음 -
   // 배정 대기 상태만 보여준다 (배정 완료 후 상세는 마이페이지 > 신청 내역에서 확인)
@@ -18858,12 +18885,16 @@ async function loadNearbyBarospotOffers() {
 }
 
 async function claimBarospotEvent(eventId) {
-  if (_spotPassCount < 1) {
+  const isTrial = currentUser && await _isBarospotTrialEligible(currentUser.id);
+  if (!isTrial && _spotPassCount < 1) {
     showToast('이용권이 없습니다. 먼저 구매해주세요');
     openSpotPassSheet('female');
     return;
   }
-  const confirmed = await showConfirmDialog('바로스팟 선점', '이 바로스팟을 선점하시겠어요?\n이용권 1회가 차감돼요.', '선점하기', '취소');
+  const confirmMsg = isTrial
+    ? `🎉 첫 이용 무료체험으로 이용권 차감 없이 선점할 수 있어요!\n식사비만 아래 계좌로 입금해주세요.\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`
+    : '이 바로스팟을 선점하시겠어요?\n이용권 1회가 차감돼요.';
+  const confirmed = await showConfirmDialog('바로스팟 선점', confirmMsg, isTrial ? '무료로 선점하기' : '선점하기', '취소');
   if (!confirmed) return;
   try {
     const { data: { session } } = await db.auth.getSession();
@@ -18874,13 +18905,15 @@ async function claimBarospotEvent(eventId) {
     });
     const data = await res.json();
     if (!res.ok) { showToast('😢 ' + (data.error || '선점에 실패했어요')); await loadNearbyBarospotOffers(); return; }
-    // 선점 성공 후에만 이용권 차감 (실패했는데 먼저 깎으면 안 됨)
-    const { data: passRow } = await db.from('barospot_passes')
-      .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'female').eq('status', 'active').maybeSingle();
-    if (passRow && passRow.remaining_count > 0) {
-      await db.from('barospot_passes').update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
+    // 선점 성공 후에만 이용권 차감 (실패했는데 먼저 깎으면 안 됨) - 무료체험이면 차감 자체를 건너뜀
+    if (!isTrial) {
+      const { data: passRow } = await db.from('barospot_passes')
+        .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'female').eq('status', 'active').maybeSingle();
+      if (passRow && passRow.remaining_count > 0) {
+        await db.from('barospot_passes').update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
+      }
     }
-    showToast('🎉 선점 완료! 남성 신청을 기다려주세요');
+    showToast(isTrial ? '🎉 무료체험으로 선점 완료! 남성 신청을 기다려주세요' : '🎉 선점 완료! 남성 신청을 기다려주세요');
     await _loadBarospotList();
   } catch (e) {
     showToast('오류가 발생했어요');
@@ -19004,23 +19037,29 @@ async function applySpotEvent(eventId) {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   const eligibility = await _checkBarospotEligibility();
   if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
-  if (_spotPassCount < 1) {
+  const isTrial = await _isBarospotTrialEligible(currentUser.id);
+  if (!isTrial && _spotPassCount < 1) {
     showToast('이용권이 없습니다. 먼저 구매해주세요');
     openSpotPassSheet('male');
     return;
   }
-  const confirmed = await showConfirmDialog('바로스팟 참가', '이용권 1회가 차감됩니다.\n참가 신청 후 매니저가 최종 확정합니다.\n신청하시겠어요?', '신청하기', '취소');
+  const confirmMsg = isTrial
+    ? `🎉 첫 이용 무료체험으로 이용권 차감 없이 참가 신청할 수 있어요!\n식사비만 아래 계좌로 입금해주세요.\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`
+    : '이용권 1회가 차감됩니다.\n참가 신청 후 매니저가 최종 확정합니다.\n신청하시겠어요?';
+  const confirmed = await showConfirmDialog('바로스팟 참가', confirmMsg, isTrial ? '무료로 신청하기' : '신청하기', '취소');
   if (!confirmed) return;
-  const { data: passRow } = await db.from('barospot_passes')
-    .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'male').eq('status', 'active').maybeSingle();
-  if (!passRow || passRow.remaining_count < 1) { showToast('이용권이 없습니다'); return; }
-  const { error: pe } = await db.from('barospot_passes')
-    .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
-  if (pe) { showToast('오류: ' + pe.message); return; }
+  if (!isTrial) {
+    const { data: passRow } = await db.from('barospot_passes')
+      .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'male').eq('status', 'active').maybeSingle();
+    if (!passRow || passRow.remaining_count < 1) { showToast('이용권이 없습니다'); return; }
+    const { error: pe } = await db.from('barospot_passes')
+      .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
+    if (pe) { showToast('오류: ' + pe.message); return; }
+  }
   const { error: ae } = await db.from('barospot_applications')
     .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending' });
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
-  showToast('참가 신청 완료! 매니저가 확인 후 안내드립니다');
+  showToast(isTrial ? '🎉 무료체험 신청 완료! 매니저가 확인 후 안내드립니다' : '참가 신청 완료! 매니저가 확인 후 안내드립니다');
   await _loadSpotEvents();
   _openSpotEventTracking(eventId, false); // 신청 직후는 아직 미확정 상태라 위치공유는 확정 후에만 가능
 }
