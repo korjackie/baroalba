@@ -2610,7 +2610,7 @@ async function loadBarospotEvents() {
             <span class="status-badge ${STATUS_BADGE_CLS[ev.status]||'sb-dismissed'}" style="flex-shrink:0">${STATUS_LABEL[ev.status]||ev.status}</span>
           </div>
           <div style="display:flex;gap:6px">
-            ${isActive ? `<button class="r-btn r-btn-done" onclick="shareBarospotEvent('${ev.id}')">📢 공유하기</button>` : ''}
+            <button class="r-btn r-btn-done" onclick="shareBarospotEvent('${ev.id}')">📢 공유하기</button>
             ${isActive ? `<button class="r-btn r-btn-reviewing" onclick="editBarospotEvent('${ev.id}')">수정</button>` : ''}
             ${isActive ? `<button class="r-btn r-btn-dismiss" onclick="cancelBarospotEvent('${ev.id}')">취소</button>` : ''}
             ${ev.status === 'confirmed' ? `<button class="r-btn r-btn-done" onclick="completeBarospotEvent('${ev.id}')">완료 처리</button>` : ''}
@@ -2629,10 +2629,15 @@ async function shareBarospotEvent(eventId) {
   const name = ev.barospot_restaurants?.name || '바로스팟';
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
   const link = `https://baroalba.multimove.co.kr/바로알바.html?barospot=${eventId}`;
-  const pitch = ev.status === 'recruiting_male'
-    ? '남성 신청을 받고 있어요! 지금 신청해보세요'
-    : '먼저 신청하는 분에게 선점 기회가 있어요';
-  const shareText = `🍽️ 바로스팟이 열렸어요!\n${name} · ${whenText}\n${pitch}\n${link}`;
+  const pitchByStatus = {
+    recruiting_female: '먼저 신청하는 분에게 선점 기회가 있어요',
+    recruiting_male: '남성 신청을 받고 있어요! 지금 신청해보세요',
+    confirmed: '매칭이 확정된 바로스팟이에요',
+    done: '이미 종료된 바로스팟이에요',
+    cancelled: '취소된 바로스팟이에요',
+  };
+  const pitch = pitchByStatus[ev.status] || '';
+  const shareText = `🍽️ 바로스팟이 열렸어요!\n${name} · ${whenText}${pitch ? `\n${pitch}` : ''}\n${link}`;
   if (navigator.share) {
     try { await navigator.share({ title: '바로스팟 안내', text: shareText }); return; } catch (e) { /* 사용자가 취소한 경우 등 - 조용히 무시 */ return; }
   }

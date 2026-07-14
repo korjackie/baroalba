@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '480';
+  const _APP_V = '481';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=480').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=481').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18671,10 +18671,36 @@ async function _loadFemaleApplications() {
         <div style="font-size:11px;font-weight:700;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:3px 8px;border-radius:8px">${statusLabel[st]||st}</div>
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || '식당 정보 확인 중'} · ${whenText}</div>` : ''}
-      ${canPick ? `<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:6px">🍽️ 눌러서 후보 보고 선택하기</div>` : ''}
+      ${canPick ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div style="font-size:11px;color:#7C3AED;font-weight:700">🍽️ 눌러서 후보 보고 선택하기</div>
+        <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:700;color:#3b82f6;background:#eff6ff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">📢 공유</button>
+      </div>` : ''}
       ${canTrack ? `<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:6px">🗺️ 눌러서 위치·거리 보기</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// matched(식당 배정 완료, 아직 남성 후보 없음) 단계의 여성 신청자가 직접 남성 신청을
+// 늘리려고 공유할 수 있게 함 - 관리자만 공유 가능했던 것을 신청 당사자에게도 열어준 것.
+// barospot_events는 인증 유저면 직접 select 가능(_loadSpotEvents 등에서 이미 그렇게 씀)
+async function shareBarospotEventForApplicant(eventId) {
+  const { data: ev } = await db.from('barospot_events')
+    .select('id, event_date, barospot_restaurants(name)')
+    .eq('id', eventId).maybeSingle();
+  if (!ev) { showToast('바로스팟 정보를 불러올 수 없어요'); return; }
+  const name = ev.barospot_restaurants?.name || '바로스팟';
+  const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
+  const link = `https://baroalba.multimove.co.kr/바로알바.html?barospot=${eventId}`;
+  const shareText = `🍽️ 바로스팟 남성 신청을 받고 있어요!\n${name} · ${whenText}\n${link}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: '바로스팟 안내', text: shareText }); return; } catch (e) { return; }
+  }
+  try {
+    await navigator.clipboard.writeText(shareText);
+    showToast('📋 공유 문구가 복사됐어요');
+  } catch (e) {
+    showToast('공유하기를 지원하지 않는 환경이에요');
+  }
 }
 
 // ── 바로스팟 블라인드 후보 선택 (여성 전용 - 관리자 개입 없이 본인이 직접 고름) ──
