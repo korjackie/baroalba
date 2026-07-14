@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '479';
+  const _APP_V = '480';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=479').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=480').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -17812,14 +17812,21 @@ async function handleBarospotDeeplink(eventId) {
     .select('id, status, event_date, barospot_restaurants(name)')
     .eq('id', eventId).maybeSingle();
   if (!ev) { showToast('유효하지 않은 바로스팟 링크예요'); return; }
-  if (ev.status !== 'recruiting_female') { showToast('이미 선점됐거나 종료된 바로스팟이에요'); return; }
+  if (ev.status !== 'recruiting_female' && ev.status !== 'recruiting_male') { showToast('이미 선점됐거나 종료된 바로스팟이에요'); return; }
   if (!currentUser) { showToast('로그인 후 확인할 수 있어요'); return; }
   const { data: w } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
-  if (w?.gender !== 'female') { showToast('바로스팟 선점은 여성 회원만 가능해요'); return; }
   const name = ev.barospot_restaurants?.name || '바로스팟';
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
-  const confirmed = await showConfirmDialog('🍽️ 바로스팟 선점', `${name}\n${whenText}\n\n지금 선점하시겠어요? 먼저 누르는 분에게 기회가 있어요.`, '선점하기', '나중에');
-  if (confirmed) await claimBarospotEvent(eventId);
+  if (ev.status === 'recruiting_female') {
+    if (w?.gender !== 'female') { showToast('바로스팟 선점은 여성 회원만 가능해요'); return; }
+    const confirmed = await showConfirmDialog('🍽️ 바로스팟 선점', `${name}\n${whenText}\n\n지금 선점하시겠어요? 먼저 누르는 분에게 기회가 있어요.`, '선점하기', '나중에');
+    if (confirmed) await claimBarospotEvent(eventId);
+    return;
+  }
+  // recruiting_male: 여성이 이미 선점 확정, 남성 신청을 받는 단계
+  if (w?.gender !== 'male') { showToast('현재 남성 신청을 받고 있는 바로스팟이에요'); return; }
+  await _loadSpotEvents();
+  await applySpotEvent(eventId);
 }
 
 // 첫 이용 무료체험 이벤트: 이벤트 기간 내 + 바로미팅 신청 이력이 한 번도 없는 유저는

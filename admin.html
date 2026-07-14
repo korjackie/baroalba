@@ -2610,7 +2610,7 @@ async function loadBarospotEvents() {
             <span class="status-badge ${STATUS_BADGE_CLS[ev.status]||'sb-dismissed'}" style="flex-shrink:0">${STATUS_LABEL[ev.status]||ev.status}</span>
           </div>
           <div style="display:flex;gap:6px">
-            ${ev.status === 'recruiting_female' ? `<button class="r-btn r-btn-done" onclick="shareBarospotEvent('${ev.id}')">📢 공유하기</button>` : ''}
+            ${isActive ? `<button class="r-btn r-btn-done" onclick="shareBarospotEvent('${ev.id}')">📢 공유하기</button>` : ''}
             ${isActive ? `<button class="r-btn r-btn-reviewing" onclick="editBarospotEvent('${ev.id}')">수정</button>` : ''}
             ${isActive ? `<button class="r-btn r-btn-dismiss" onclick="cancelBarospotEvent('${ev.id}')">취소</button>` : ''}
             ${ev.status === 'confirmed' ? `<button class="r-btn r-btn-done" onclick="completeBarospotEvent('${ev.id}')">완료 처리</button>` : ''}
@@ -2620,15 +2620,19 @@ async function loadBarospotEvents() {
     : '<div class="empty">개설된 바로스팟이 없습니다</div>';
 }
 
-// 여성 모집중인 바로스팟을 홍보용으로 공유 - 여는 순간 앱에서 자동으로
-// 선점 안내가 뜨는 딥링크(?barospot=ID)를 생성한다(app.js의 딥링크 처리와 연동)
+// 모집 중인 바로스팟을 홍보용으로 공유 (성별 무관 - 여성 모집중/남성 모집중 둘 다 가능) -
+// 여는 순간 앱에서 자동으로 안내가 뜨는 딥링크(?barospot=ID)를 생성한다
+// (app.js의 handleBarospotDeeplink가 상태별로 여성 선점/남성 신청 안내를 알아서 분기)
 async function shareBarospotEvent(eventId) {
   const ev = _barospotEvents.find(e => e.id === eventId);
   if (!ev) return;
   const name = ev.barospot_restaurants?.name || '바로스팟';
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
   const link = `https://baroalba.multimove.co.kr/바로알바.html?barospot=${eventId}`;
-  const shareText = `🍽️ 바로스팟이 열렸어요!\n${name} · ${whenText}\n먼저 신청하는 분에게 선점 기회가 있어요\n${link}`;
+  const pitch = ev.status === 'recruiting_male'
+    ? '남성 신청을 받고 있어요! 지금 신청해보세요'
+    : '먼저 신청하는 분에게 선점 기회가 있어요';
+  const shareText = `🍽️ 바로스팟이 열렸어요!\n${name} · ${whenText}\n${pitch}\n${link}`;
   if (navigator.share) {
     try { await navigator.share({ title: '바로스팟 안내', text: shareText }); return; } catch (e) { /* 사용자가 취소한 경우 등 - 조용히 무시 */ return; }
   }
