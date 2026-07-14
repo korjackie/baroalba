@@ -101,7 +101,8 @@ async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) 
 }
 
 // 범용 인앱 알림 + 푸시 발송 (제목/본문을 직접 넘기는 단순 버전)
-async function notifyUser(userId, title, body, type, svcKey, req) {
+// url: 푸시 클릭 시 이동할 딥링크(선택, 기본은 앱 메인) - 기존 호출부는 그대로 6개 인자만 넘겨도 동작함
+async function notifyUser(userId, title, body, type, svcKey, req, url) {
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const baseUrl = host ? `https://${host}` : '';
   await sb('notifications', svcKey, {
@@ -111,8 +112,22 @@ async function notifyUser(userId, title, body, type, svcKey, req) {
   if (baseUrl) {
     await fetch(`${baseUrl}/api/send-push`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, title, body, url: '/바로알바.html', type }),
+      body: JSON.stringify({ user_id: userId, title, body, url: url || '/바로알바.html', type }),
     }).catch(() => {});
+  }
+}
+
+// recruiting_female → recruiting_male로 바뀌는 순간(여성 선점 또는 관리자 수동 매칭)
+// 미리 신청(barospot_prebookings)해둔 남성들에게 "지금 신청하세요" 알림을 보낸다.
+// 자동으로 신청/이용권 차감까지 하지 않는 이유: 결제성 행위는 본인이 직접 확인하고
+// 눌러야 함 - 알림만 주고 실제 신청은 기존 applySpotEvent 플로우를 그대로 타게 한다.
+async function notifyBarospotPrebookers(eventId, svcKey, req) {
+  const rows = await sb(`barospot_prebookings?event_id=eq.${eventId}&select=user_id`, svcKey).then(r => r.json()).catch(() => []);
+  if (!rows?.length) return;
+  const evRows = await sb(`barospot_events?id=eq.${eventId}&select=event_date,barospot_restaurants(name)`, svcKey).then(r => r.json()).catch(() => []);
+  const name = evRows?.[0]?.barospot_restaurants?.name || '바로스팟';
+  for (const row of rows) {
+    await notifyUser(row.user_id, '🍽️ 미리 신청하신 바로스팟이 열렸어요!', `${name} · 지금 바로 신청해보세요`, 'barospot_open', svcKey, req, `/바로알바.html?barospot=${eventId}`).catch(() => {});
   }
 }
 
@@ -720,6 +735,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({ user_id: requesterId, event_id: claimEventId, gender: 'female', status: 'matched' }),
       });
       if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
+      await notifyBarospotPrebookers(claimEventId, svcKey, req).catch(() => {});
       return res.json({ ok: true, event_id: claimEventId });
     }
 
@@ -783,8 +799,13 @@ module.exports = async function handler(req, res) {
       const app = appRows?.[0];
       if (!app) return res.status(404).json({ error: '신청 정보를 찾을 수 없어요' });
       // 이 이벤트가 아직 recruiting_female(선점 전)이면 관리자가 수동 매칭한 것도
-      // 선점과 동일하게 recruiting_male로 전환해줘야 남성 목록에 노출된다
-      await sb(`barospot_events?id=eq.${event_id}&status=eq.recruiting_female`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'recruiting_male' }) }).catch(() => {});
+      // 선점과 동일하게 recruiting_male로 전환해줘야 남성 목록에 노출된다. 실제로
+      // 전환이 일어났을 때만(중복 알림 방지) 미리 신청자들에게 알림을 보낸다
+      const flipRes = await sb(`barospot_events?id=eq.${event_id}&status=eq.recruiting_female`, svcKey, { method: 'PATCH', body: JSON.stringify({ status: 'recruiting_male' }) }).catch(() => null);
+      if (flipRes?.ok) {
+        const flipped = await flipRes.json().catch(() => []);
+        if (flipped?.length) await notifyBarospotPrebookers(event_id, svcKey, req).catch(() => {});
+      }
       const r = await sb(`barospot_applications?id=eq.${application_id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ event_id, status: 'matched' }) });
       if (!r.ok) return res.status(502).json({ error: await r.text() });
       await notifyUser(app.user_id, '🍽️ 바로스팟 매장 배정 완료', '식당이 배정됐어요! 남성 신청자가 확정되면 다시 알려드릴게요.', 'barospot_matched', svcKey, req);

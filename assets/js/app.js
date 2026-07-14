@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '482';
+  const _APP_V = '483';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=482').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=483').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18518,6 +18518,7 @@ async function _loadBarospotList() {
     const el = document.getElementById('mnm-m-pass-count');
     if (el) el.textContent = _spotPassCount;
     await _loadSpotEvents();
+    await loadUpcomingBarospotOffers();
     show('mnm-spot-male');
   }
 }
@@ -18883,6 +18884,57 @@ async function claimBarospotEvent(eventId) {
     await _loadBarospotList();
   } catch (e) {
     showToast('오류가 발생했어요');
+  }
+}
+
+// 남성 대상 "곧 열릴 수 있는 바로스팟" - 아직 여성이 배정 안 된(recruiting_female)
+// 이벤트도 남성에게 미리 보여주고 "미리 신청" 등록을 받는다. 이 시점엔 특정 여성 정보가
+// 전혀 없어 노출해도 프라이버시 문제가 없고, 여성이 실제 선점하는 순간(recruiting_male
+// 전환) 서버가 barospot_prebookings을 조회해 미리 신청자들에게만 먼저 알려준다
+// (자동 신청/결제는 하지 않음 - 알림만 주고 실제 신청은 applySpotEvent를 그대로 탐).
+async function loadUpcomingBarospotOffers() {
+  const wrap = document.getElementById('mnm-spot-upcoming-wrap');
+  const list = document.getElementById('mnm-spot-upcoming-list');
+  if (!wrap || !list || !currentUser) return;
+  const { data, error } = await db.from('barospot_events')
+    .select('id, event_date, barospot_restaurants(name)')
+    .eq('status', 'recruiting_female').order('event_date', { ascending: true });
+  if (error || !data?.length) { wrap.style.display = 'none'; return; }
+  const { data: mine } = await db.from('barospot_prebookings').select('event_id').eq('user_id', currentUser.id);
+  const bookedIds = new Set((mine || []).map(r => r.event_id));
+  wrap.style.display = 'block';
+  list.innerHTML = data.map(ev => {
+    const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
+    const booked = bookedIds.has(ev.id);
+    return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#222">${ev.barospot_restaurants?.name || '식당 정보 확인 중'}</div>
+        <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · 여성 배정 대기 중</div>
+      </div>
+      <button onclick="toggleBarospotPrebook('${ev.id}', this)" data-booked="${booked}" style="flex-shrink:0;padding:9px 14px;background:${booked ? '#eef2ff' : '#3b82f6'};color:${booked ? '#6366f1' : '#fff'};border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${booked ? '신청 예약됨' : '미리 신청'}</button>
+    </div>`;
+  }).join('');
+}
+
+async function toggleBarospotPrebook(eventId, btnEl) {
+  if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
+  const booked = btnEl.dataset.booked === 'true';
+  if (booked) {
+    const { error } = await db.from('barospot_prebookings').delete().eq('event_id', eventId).eq('user_id', currentUser.id);
+    if (error) { showToast('오류: ' + error.message); return; }
+    btnEl.dataset.booked = 'false';
+    btnEl.textContent = '미리 신청';
+    btnEl.style.background = '#3b82f6';
+    btnEl.style.color = '#fff';
+    showToast('예약이 취소됐어요');
+  } else {
+    const { error } = await db.from('barospot_prebookings').insert({ event_id: eventId, user_id: currentUser.id });
+    if (error) { showToast('오류: ' + error.message); return; }
+    btnEl.dataset.booked = 'true';
+    btnEl.textContent = '신청 예약됨';
+    btnEl.style.background = '#eef2ff';
+    btnEl.style.color = '#6366f1';
+    showToast('🔔 여성이 배정되면 바로 알려드릴게요');
   }
 }
 
