@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '495';
+  const _APP_V = '496';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -17299,6 +17299,8 @@ let _liveShareCtx = null;      // 공유 중일 때만 non-null - { contextType,
 let _liveShareLastWrite = 0;
 let _livePollTimer = null;
 let _liveShareOverlays = [];   // 다른 참가자 위치 마커 (CustomOverlay[]) - _moimOverlays와 동일한 클리어/재생성 패턴
+let _liveShareArrived = false; // 도착 확정 후에는 버튼을 잠가 "출발↔도착"이 의미없이 계속 토글되는 것을 막음
+let _trackLiveLastCtxId = null; // 마지막으로 연 트래킹 시트의 liveShare 컨텍스트 - 바뀌면 _liveShareArrived 리셋
 
 function _haversineM(lat1, lng1, lat2, lng2) {
   const R = 6371000;
@@ -17316,12 +17318,22 @@ function _fmtDistanceM(m) {
 function _renderLiveButton() {
   const btn = document.getElementById('track-live-btn');
   if (!btn) return;
-  if (_liveShareCtx) { btn.textContent = '✅ 도착했어요'; btn.style.background = '#f5f5f5'; btn.style.color = '#666'; }
-  else { btn.textContent = '🚀 출발했어요'; btn.style.background = '#7C3AED'; btn.style.color = '#fff'; }
+  if (_liveShareArrived) { btn.textContent = '✅ 도착 완료'; btn.style.background = '#f5f5f5'; btn.style.color = '#999'; btn.disabled = true; }
+  else if (_liveShareCtx) { btn.textContent = '✅ 도착했어요'; btn.style.background = '#f5f5f5'; btn.style.color = '#666'; btn.disabled = false; }
+  else { btn.textContent = '🚀 출발했어요'; btn.style.background = '#7C3AED'; btn.style.color = '#fff'; btn.disabled = false; }
 }
 
-function _toggleLiveShare() {
-  if (_liveShareCtx) { stopLiveShare('manual'); return; }
+// 예전엔 "도착했어요"를 눌러도 그냥 공유만 멈추고(status:'stopped') 아무 확인/피드백 없이
+// 버튼이 다시 "출발했어요"로 되돌아가서, 계속 누르면 의미없이 토글만 되는 것처럼 보였음
+// (버튼 문구는 "도착"인데 실제로는 도착 확정이 아니었던 것이 근본 원인) - 이제 수동으로
+// 눌러도 진짜 도착 확인 후에만 'arrived'로 확정하고, 확정 후엔 버튼을 잠가 재토글을 막는다.
+async function _toggleLiveShare() {
+  if (_liveShareArrived) return;
+  if (_liveShareCtx) {
+    const confirmed = await showConfirmDialog('🎉 도착 확인', '목적지에 도착하셨나요?\n도착 처리하면 위치 공유가 종료돼요.', '네, 도착했어요', '아직이에요');
+    if (confirmed) stopLiveShare('arrived');
+    return;
+  }
   if (!_trackLiveParams) return;
   startLiveShare(_trackLiveParams.contextType, _trackLiveParams.contextId, _trackLiveParams.destLat, _trackLiveParams.destLng);
 }
@@ -17375,6 +17387,7 @@ function stopLiveShare(reason) {
     }, { onConflict: 'context_type,gathering_id,barospot_event_id,user_id' }).then(() => {});
   }
   _liveShareCtx = null;
+  if (reason === 'arrived') _liveShareArrived = true;
   _renderLiveButton();
   _updateMyLiveDistance(null);
   if (reason === 'arrived') showToast('🎉 도착 처리됐어요');
@@ -17585,6 +17598,10 @@ function openTrackingSheet(opts) {
       interestWrap.style.display = 'none';
     }
 
+    // 다른 context(이전에 도착 확정한 이벤트)의 상태가 새로 여는 트래킹 시트에 남아
+    // "도착 완료"로 잠긴 채 보이지 않도록 컨텍스트가 바뀌면 도착 플래그를 초기화한다.
+    const newLiveCtxId = opts.liveShare ? `${opts.liveShare.contextType}:${opts.liveShare.contextId}` : null;
+    if (newLiveCtxId !== _trackLiveLastCtxId) { _liveShareArrived = false; _trackLiveLastCtxId = newLiveCtxId; }
     _trackLiveParams = opts.liveShare || null;
     _renderLiveShareSection();
     _startLivePoll();
@@ -19553,6 +19570,10 @@ let _bspChatMyPhoto = null;
 
 async function openBarospotChatRoom(eventId) {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
+  // track-overlay(z-index:8700)가 panel-barospot-chat(z-index:520)보다 위에 떠 있어서
+  // 트래킹 시트를 닫지 않고 채팅 패널만 display:flex로 바꾸면 채팅창이 그 뒤에 가려져
+  // "채팅하기"를 눌러도 아무 반응이 없는 것처럼 보였음 - 채팅을 열기 전에 트래킹 시트부터 닫는다
+  closeTrackingSheet();
   try {
     const { data: { session } } = await db.auth.getSession();
     const ensureRes = await fetch('/api/admin?action=ensure_chat_room', {
