@@ -464,6 +464,21 @@ module.exports = async function handler(req, res) {
     return res.json({ ok: true });
   }
 
+  // ── 남성이 신청하면 매칭된 여성에게 "새 후보가 있다" 알림 (남의 행에 알림을 써야 해서
+  // 클라이언트 직접 처리 불가 - RLS가 조용히 막는 패턴이라 서버에서 처리) ──
+  if (req.method === 'POST' && earlyAction === 'notify_barospot_new_candidate') {
+    const nbcJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!getSubFromJWT(nbcJwt)) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { event_id: nbcEventId } = req.body || {};
+    if (!nbcEventId) return res.status(400).json({ error: 'event_id required' });
+    const femaleRows = await sb(`barospot_applications?event_id=eq.${nbcEventId}&gender=eq.female&status=in.(matched,confirmed)&select=user_id`, svcKey).then(r => r.json()).catch(() => []);
+    const femaleUid = femaleRows?.[0]?.user_id;
+    if (femaleUid) {
+      await notifyUser(femaleUid, '🍽️ 새로운 바로스팟 신청자가 있어요', '후보를 확인하고 선택해보세요', 'barospot_new_candidate', svcKey, req).catch(() => {});
+    }
+    return res.json({ ok: true });
+  }
+
   // ── 바로스팟 선점 (여성 본인, 선착순) - 두 명이 동시에 눌러도 한 명만 성공하도록
   // "상태가 아직 recruiting_female일 때만" 조건부 UPDATE로 원자적으로 처리한다.
   // 경쟁에서 진 요청은 이 UPDATE가 0건 반영되어 자연스럽게 걸러진다(추가 락 불필요).

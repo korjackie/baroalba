@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '488';
+  const _APP_V = '489';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=488').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=489').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -19184,6 +19184,20 @@ async function _checkBarospotEligibility() {
   return { ok: true };
 }
 
+// 남성이 신청하면 매칭된 여성에게 "새 후보가 있다" 알림 - 여성의 알림 행에 써야 해서
+// 클라이언트에서 직접 못 하고(RLS가 남의 행 쓰기를 조용히 막음) 서버를 거친다.
+// 실패해도 신청 자체는 이미 끝난 뒤라 굳이 사용자에게 에러를 보여주지 않음(fire-and-forget)
+async function _notifyBarospotNewCandidate(eventId) {
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    await fetch('/api/admin?action=notify_barospot_new_candidate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ event_id: eventId })
+    });
+  } catch (e) {}
+}
+
 async function applySpotEvent(eventId) {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   const eligibility = await _checkBarospotEligibility();
@@ -19198,6 +19212,7 @@ async function applySpotEvent(eventId) {
     showToast(`🎉 ${pay.price.toLocaleString()}P 차감 후 참가 신청 완료! 매니저가 확인 후 안내드립니다`);
     await loadUserPoints();
     await _loadSpotEvents();
+    _notifyBarospotNewCandidate(eventId);
     _openSpotEventTracking(eventId, false);
     return;
   }
@@ -19219,6 +19234,7 @@ async function applySpotEvent(eventId) {
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
   showToast(isTrial ? '🎉 무료체험 신청 완료! 매니저가 확인 후 안내드립니다' : '참가 신청 완료! 매니저가 확인 후 안내드립니다');
   await _loadSpotEvents();
+  _notifyBarospotNewCandidate(eventId);
   _openSpotEventTracking(eventId, false); // 신청 직후는 아직 미확정 상태라 위치공유는 확정 후에만 가능
 }
 
