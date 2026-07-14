@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '484';
+  const _APP_V = '485';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=484').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=485').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18628,16 +18628,47 @@ async function _isBarospotTrialEligible(userId) {
   return (count || 0) === 0;
 }
 
+// 이용권이 없을 때 바로미팅(applyBaromeet)과 동일하게 포인트로 대신 결제 - 결국 이용권도
+// 포인트도 같은 결제 수단일 뿐이라는 피드백을 반영해 바로스팟에도 동일하게 적용.
+// 1회권 가격만큼 선차감하고, 실패 시 호출부가 rollback()을 불러 되돌릴 수 있게 반환한다.
+async function _tryPayBarospotWithPoints(gender, title) {
+  const products = await loadBarospotPassProducts();
+  const onePass = (products[gender] || []).find(p => p.qty === 1);
+  const price = onePass?.price ?? 2000;
+  const confirmed = await showConfirmDialog(title, `이용권이 없어 포인트로 결제합니다.\n${price.toLocaleString()}P가 차감돼요.`, `${price.toLocaleString()}P 차감하고 진행`, '취소');
+  if (!confirmed) return null;
+  const pts = await loadUserPoints();
+  if (pts < price) { showToast('포인트가 부족해요. 충전 후 다시 시도해주세요'); openPointCharge(); return null; }
+  const { data: acct } = await db.from('point_accounts').select('id, balance').eq('user_id', currentUser.id).single();
+  if (!acct || acct.balance < price) { showToast('포인트가 부족해요'); return null; }
+  const { error: pe } = await db.from('point_accounts').update({ balance: acct.balance - price }).eq('id', acct.id);
+  if (pe) { showToast('포인트 차감 실패: ' + pe.message); return null; }
+  return { price, rollback: () => db.from('point_accounts').update({ balance: acct.balance }).eq('id', acct.id) };
+}
+
 async function applyBarospot() {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   const eligibility = await _checkBarospotEligibility();
   if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
   const isTrial = await _isBarospotTrialEligible(currentUser.id);
+
   if (!isTrial && _spotPassCount < 1) {
-    showToast('이용권이 없습니다. 먼저 구매해주세요');
-    openSpotPassSheet('female');
+    const pay = await _tryPayBarospotWithPoints('female', '바로스팟 신청');
+    if (!pay) return;
+    const { error: ae } = await db.from('barospot_applications')
+      .insert({ user_id: currentUser.id, gender: 'female', status: 'pending' });
+    if (ae) { await pay.rollback(); showToast('신청 오류: ' + ae.message); return; }
+    showToast(`✅ ${pay.price.toLocaleString()}P 차감 후 신청 완료! 매니저가 검토 후 배정을 안내해드립니다`);
+    await loadUserPoints();
+    await _loadBarospotList();
+    openTrackingSheet({
+      brand: '📍 바로스팟', title: '매니저 배정 대기 중', place: '식당 배정 후 안내됩니다',
+      addressQuery: null, whenISO: null, whenText: '배정 대기 중',
+      steps: ['신청완료','매니저 배정 대기','확정','종료'], stepIndex: 0,
+    });
     return;
   }
+
   const confirmMsg = isTrial
     ? `🎉 첫 이용 무료체험으로 이용권 차감 없이 신청할 수 있어요!\n식사비만 아래 계좌로 입금해주세요.\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`
     : '이용권 1회가 차감됩니다.\n매니저가 제휴 식당과 일정을 배정해드립니다.\n신청하시겠어요?';
@@ -18887,8 +18918,24 @@ async function loadNearbyBarospotOffers() {
 async function claimBarospotEvent(eventId) {
   const isTrial = currentUser && await _isBarospotTrialEligible(currentUser.id);
   if (!isTrial && _spotPassCount < 1) {
-    showToast('이용권이 없습니다. 먼저 구매해주세요');
-    openSpotPassSheet('female');
+    const pay = await _tryPayBarospotWithPoints('female', '바로스팟 선점');
+    if (!pay) return;
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      const res = await fetch('/api/admin?action=claim_barospot_event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ event_id: eventId })
+      });
+      const data = await res.json();
+      if (!res.ok) { await pay.rollback(); showToast('😢 ' + (data.error || '선점에 실패했어요')); await loadNearbyBarospotOffers(); return; }
+      showToast(`🎉 ${pay.price.toLocaleString()}P 차감 후 선점 완료! 남성 신청을 기다려주세요`);
+      await loadUserPoints();
+      await _loadBarospotList();
+    } catch (e) {
+      await pay.rollback();
+      showToast('오류가 발생했어요');
+    }
     return;
   }
   const confirmMsg = isTrial
@@ -19039,8 +19086,15 @@ async function applySpotEvent(eventId) {
   if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
   const isTrial = await _isBarospotTrialEligible(currentUser.id);
   if (!isTrial && _spotPassCount < 1) {
-    showToast('이용권이 없습니다. 먼저 구매해주세요');
-    openSpotPassSheet('male');
+    const pay = await _tryPayBarospotWithPoints('male', '바로스팟 참가');
+    if (!pay) return;
+    const { error: ae } = await db.from('barospot_applications')
+      .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending' });
+    if (ae) { await pay.rollback(); showToast('신청 오류: ' + ae.message); return; }
+    showToast(`🎉 ${pay.price.toLocaleString()}P 차감 후 참가 신청 완료! 매니저가 확인 후 안내드립니다`);
+    await loadUserPoints();
+    await _loadSpotEvents();
+    _openSpotEventTracking(eventId, false);
     return;
   }
   const confirmMsg = isTrial
