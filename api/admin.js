@@ -432,6 +432,37 @@ module.exports = async function handler(req, res) {
     return res.json({ ok: true });
   }
 
+  // ── 바로스팟 선점 (여성 본인, 선착순) - 두 명이 동시에 눌러도 한 명만 성공하도록
+  // "상태가 아직 recruiting_female일 때만" 조건부 UPDATE로 원자적으로 처리한다.
+  // 경쟁에서 진 요청은 이 UPDATE가 0건 반영되어 자연스럽게 걸러진다(추가 락 불필요).
+  // 원래 관리자 인증 게이트 아래(try 블록 안)에 있어서 일반회원(비관리자)이 선점 버튼을
+  // 누르면 무조건 "Forbidden"(관리자 아님) 403으로 막히던 버그 - 다른 early-bypass
+  // 액션들(get_live_locations 등)과 같은 위치인 게이트 이전으로 옮김 ──
+  if (req.method === 'POST' && earlyAction === 'claim_barospot_event') {
+    const cbJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const requesterId = getSubFromJWT(cbJwt);
+    if (!requesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { event_id: claimEventId } = req.body || {};
+    if (!claimEventId) return res.status(400).json({ error: 'event_id required' });
+
+    const claimRes = await fetch(`${SUPABASE_URL}/rest/v1/barospot_events?id=eq.${claimEventId}&status=eq.recruiting_female`, {
+      method: 'PATCH',
+      headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({ status: 'recruiting_male' }),
+    });
+    const claimedRows = await claimRes.json();
+    if (!claimRes.ok || !Array.isArray(claimedRows) || !claimedRows.length) {
+      return res.status(409).json({ error: '이미 다른 분이 선점했어요' });
+    }
+    const insRes = await sb('barospot_applications', svcKey, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: requesterId, event_id: claimEventId, gender: 'female', status: 'matched' }),
+    });
+    if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
+    await notifyBarospotPrebookers(claimEventId, svcKey, req).catch(() => {});
+    return res.json({ ok: true, event_id: claimEventId });
+  }
+
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   const email = getEmailFromJWT(token);
@@ -709,34 +740,6 @@ module.exports = async function handler(req, res) {
         }
       }
       return res.json({ ok: true });
-    }
-
-    // ── 바로스팟 선점 (여성 본인, 선착순) - 두 명이 동시에 눌러도 한 명만 성공하도록
-    // "상태가 아직 recruiting_female일 때만" 조건부 UPDATE로 원자적으로 처리한다.
-    // 경쟁에서 진 요청은 이 UPDATE가 0건 반영되어 자연스럽게 걸러진다(추가 락 불필요) ──
-    if (req.method === 'POST' && earlyAction === 'claim_barospot_event') {
-      const cbJwt = (req.headers.authorization || '').replace('Bearer ', '');
-      const requesterId = getSubFromJWT(cbJwt);
-      if (!requesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
-      const { event_id: claimEventId } = req.body || {};
-      if (!claimEventId) return res.status(400).json({ error: 'event_id required' });
-
-      const claimRes = await fetch(`${SUPABASE_URL}/rest/v1/barospot_events?id=eq.${claimEventId}&status=eq.recruiting_female`, {
-        method: 'PATCH',
-        headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-        body: JSON.stringify({ status: 'recruiting_male' }),
-      });
-      const claimedRows = await claimRes.json();
-      if (!claimRes.ok || !Array.isArray(claimedRows) || !claimedRows.length) {
-        return res.status(409).json({ error: '이미 다른 분이 선점했어요' });
-      }
-      const insRes = await sb('barospot_applications', svcKey, {
-        method: 'POST',
-        body: JSON.stringify({ user_id: requesterId, event_id: claimEventId, gender: 'female', status: 'matched' }),
-      });
-      if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
-      await notifyBarospotPrebookers(claimEventId, svcKey, req).catch(() => {});
-      return res.json({ ok: true, event_id: claimEventId });
     }
 
     // ── 바로스팟 취소 - 이벤트와 아직 확정 안 된 연결 신청들을 함께 취소 처리 ──

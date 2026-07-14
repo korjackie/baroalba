@@ -2303,10 +2303,14 @@ async function renderBmApplicantsList() {
   }).join('');
 }
 
-// 카드를 눌렀을 때 - 수정화면이 아니라 조회 전용 상세 패널
+// 카드를 눌렀을 때 - 수정화면이 아니라 조회 전용 상세 패널. 신청자 승인/거절은 단순
+// 조회 행위인데 예전엔 이걸 하려면 꼭 "수정" 버튼을 눌러 개설 폼까지 열어야 했음 -
+// 여기서도 바로 승인/거절할 수 있게 함(approveBmApplicant/rejectBmApplicant가
+// _bmApplicantsGatheringId로 이 패널이 열려있는지 감지해서 새로고침함)
 async function openBmDetail(id) {
   const m = _baromeetings.find(x => x.id === id);
   if (!m) return;
+  _bmApplicantsGatheringId = id;
   document.getElementById('bm-detail-overlay').classList.add('show');
   document.getElementById('bm-detail-edit-btn').onclick = () => { closeBmDetail(); editBaromeeting(id); };
   const body = document.getElementById('bm-detail-body');
@@ -2336,12 +2340,19 @@ async function openBmDetail(id) {
     ${apps.length ? apps.map(a => {
       const w = a.worker;
       const genderLabel = w?.gender === 'female' ? '여성' : w?.gender === 'male' ? '남성' : '-';
+      const nameEsc = (w?.name||'신청자').replace(/'/g,"\\'");
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9">
         <div style="min-width:0">
           <div style="font-size:13px;font-weight:800;color:#1e293b">${w?.name || '이름없음'} <span style="font-size:11px;font-weight:700;color:#94a3b8">${genderLabel}</span></div>
           <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w?.phone || '연락처 미등록'} · ${new Date(a.applied_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
         </div>
-        <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          ${a.status === 'pending' ? `
+          <button onclick="approveBmApplicant('${a.id}','${nameEsc}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">승인</button>
+          <button onclick="rejectBmApplicant('${a.id}','${nameEsc}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">거절</button>
+          ` : ''}
+          <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
+        </div>
       </div>`;
     }).join('') : '<div style="font-size:12px;color:#94a3b8;padding:8px 0">아직 신청자가 없어요</div>'}
   `;
@@ -2351,12 +2362,22 @@ function closeBmDetail() {
   document.getElementById('bm-detail-overlay').classList.remove('show');
 }
 
+// 승인/거절 후 새로고침할 화면을 판단 - 조회 전용 상세 패널(bm-detail-overlay)이
+// 열려있으면 그쪽을, 아니면(개설 폼 안의 신청자 목록) renderBmApplicantsList를 갱신
+function _refreshBmApplicantsView() {
+  if (document.getElementById('bm-detail-overlay')?.classList.contains('show')) {
+    openBmDetail(_bmApplicantsGatheringId);
+  } else {
+    renderBmApplicantsList();
+  }
+}
+
 async function approveBmApplicant(applicationId, name) {
   if (!await adminConfirm(`${name}님의 바로미팅 참가를 승인할까요?`, '승인')) return;
   const result = await adminApi('approve_baromeet_applicant', 'POST', { application_id: applicationId });
   if (result?.error) { showToast('승인 실패: ' + result.error); return; }
   showToast(`✅ ${name}님을 승인했어요`);
-  renderBmApplicantsList();
+  _refreshBmApplicantsView();
 }
 
 async function rejectBmApplicant(applicationId, name) {
@@ -2364,7 +2385,7 @@ async function rejectBmApplicant(applicationId, name) {
   const result = await adminApi('reject_baromeet_applicant', 'POST', { application_id: applicationId });
   if (result?.error) { showToast('거절 실패: ' + result.error); return; }
   showToast(`🙏 ${name}님에게 거절 안내를 보냈어요`);
-  renderBmApplicantsList();
+  _refreshBmApplicantsView();
   loadBaromeetings();
 }
 
