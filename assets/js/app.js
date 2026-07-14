@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '489';
+  const _APP_V = '490';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=489').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=490').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -2526,7 +2526,21 @@ async function _doSendMoimChat(msg) {
     : (currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '참가자');
   const senderPhotoUrl = isBaromeet ? (_baromeetPhotoUrl || null) : null;
   const { error: _gcErr } = await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, sender_photo_url: senderPhotoUrl, message: msg });
-  if (_gcErr) { showToast('전송 실패: ' + _gcErr.message); }
+  if (_gcErr) { showToast('전송 실패: ' + _gcErr.message); return; }
+  _notifyGatheringChat(gatheringId, msg);
+}
+
+// 채팅방을 안 열어놓은 다른 참가자에게도 푸시가 가도록 서버를 거쳐 알림 발송
+// (남의 알림 행에 써야 해서 클라이언트 직접 처리 불가 - fire-and-forget)
+async function _notifyGatheringChat(gatheringId, message) {
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    await fetch('/api/admin?action=notify_gathering_chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ gathering_id: gatheringId, message })
+    });
+  } catch (e) {}
 }
 
 async function sendMoimChat() {

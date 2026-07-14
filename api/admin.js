@@ -464,6 +464,29 @@ module.exports = async function handler(req, res) {
     return res.json({ ok: true });
   }
 
+  // ── 모임/바로미팅 그룹채팅 새 메시지 알림 - 지금까진 Realtime 구독으로 채팅창을
+  // 열어놓은 사람에게만 실시간으로 보이고, 앱을 꺼놓은 다른 참가자에겐 푸시가 전혀
+  // 안 가고 있었음. 발신자 제외 승인된 참가자+호스트 전원에게 발송 ──
+  if (req.method === 'POST' && earlyAction === 'notify_gathering_chat') {
+    const gcJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const senderId = getSubFromJWT(gcJwt);
+    if (!senderId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { gathering_id: gcGatheringId, message: gcMessage } = req.body || {};
+    if (!gcGatheringId) return res.status(400).json({ error: 'gathering_id required' });
+    const gRows = await sb(`gatherings?id=eq.${gcGatheringId}&select=title,host_id,category`, svcKey).then(r => r.json()).catch(() => []);
+    const gathering = gRows?.[0];
+    const appRows = await sb(`gathering_applications?gathering_id=eq.${gcGatheringId}&status=eq.approved&select=applicant_id`, svcKey).then(r => r.json()).catch(() => []);
+    const recipients = new Set((appRows || []).map(a => a.applicant_id));
+    if (gathering?.host_id) recipients.add(gathering.host_id);
+    recipients.delete(senderId);
+    const title = gathering?.category === 'baromeeting' ? '🤝 바로미팅 새 메시지' : '💬 모임 새 메시지';
+    const body = (gcMessage || '새 메시지가 도착했어요').slice(0, 60);
+    for (const uid of recipients) {
+      await notifyUser(uid, title, body, 'gathering_chat', svcKey, req).catch(() => {});
+    }
+    return res.json({ ok: true });
+  }
+
   // ── 남성이 신청하면 매칭된 여성에게 "새 후보가 있다" 알림 (남의 행에 알림을 써야 해서
   // 클라이언트 직접 처리 불가 - RLS가 조용히 막는 패턴이라 서버에서 처리) ──
   if (req.method === 'POST' && earlyAction === 'notify_barospot_new_candidate') {
