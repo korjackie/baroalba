@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '486';
+  const _APP_V = '487';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=486').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=487').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18546,21 +18546,28 @@ async function setSpotGender(gender) {
 // 블라인드 매칭이라도 최소한의 정보(나이/직업군/체형/관심사)는 있어야 상대가 신청
 // 여부를 판단할 수 있다는 피드백으로 신설. 바로스팟 남성 목록 미리보기(barospot_event_previews)와
 // 여성의 블라인드 후보 목록(get_barospot_candidates) 양쪽에서 이 값들을 보여준다.
-const DATING_JOB_CATEGORIES = ['직장인','공무원','전문직','자영업','프리랜서','학생','기타'];
-const DATING_BODY_TYPES = ['슬림','평균','통통','근육질'];
+const DATING_JOB_CATEGORIES = ['대기업 / 외국계기업','중견 / 중소기업','공기업 / 공공기관 / 공무원','전문직 (의료/법조 등)','스타트업 / IT','자영업 / F&B','프리랜서 / 기타'];
+// 체형은 남녀 표현이 달라야 자연스러워서(여성에게 "근육질"은 안 맞음) 성별별로 분리
+const DATING_BODY_TYPES_FEMALE = ['슬림','슬림탄탄','보통','글래머','통통한 편'];
+const DATING_BODY_TYPES_MALE = ['마른 편','보통','슬림탄탄','근육질','통통한 편'];
 const DATING_INTERESTS = ['여행','와인','필라테스','헬스','독서','요리','카페','반려동물','사진','등산','골프','캠핑','영화','게임'];
-let _datingProfileSelected = { job_category: null, body_type: null, interests: [] };
+let _datingProfileSelected = { gender: null, job_category: null, body_type: null, interests: [] };
 
 async function openDatingProfileSheet() {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   openBottomSheet('<div style="text-align:center;padding:32px"><div class="spinner" style="margin:0 auto"></div></div>');
-  const { data: w } = await db.from('workers').select('job_category, body_type, interests').eq('kakao_uid', currentUser.id).maybeSingle();
-  _datingProfileSelected = { job_category: w?.job_category || null, body_type: w?.body_type || null, interests: w?.interests || [] };
+  const { data: w } = await db.from('workers').select('gender, job_category, body_type, interests').eq('kakao_uid', currentUser.id).maybeSingle();
+  if (!w?.gender) {
+    openBottomSheet('<div style="text-align:center;padding:32px 20px"><div style="font-size:36px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#666">먼저 바로스팟 탭에서<br>성별을 설정해주세요</div><div style="font-size:12px;color:#aaa;margin-top:6px">체형 항목이 성별에 맞게 달라져서 필요해요</div></div>');
+    return;
+  }
+  _datingProfileSelected = { gender: w.gender, job_category: w?.job_category || null, body_type: w?.body_type || null, interests: w?.interests || [] };
   _renderDatingProfileSheet();
 }
 
 function _renderDatingProfileSheet() {
   const sel = _datingProfileSelected;
+  const bodyTypes = sel.gender === 'male' ? DATING_BODY_TYPES_MALE : DATING_BODY_TYPES_FEMALE;
   const chip = (label, active, onclick) => `<button onclick="${onclick}" style="padding:7px 13px;border-radius:20px;border:1.5px solid ${active?'#7C3AED':'#eee'};font-size:12.5px;font-weight:700;background:${active?'#F5F3FF':'#fff'};color:${active?'#7C3AED':'#888'};cursor:pointer;margin:0 6px 6px 0">${label}</button>`;
   const html = `
     <div style="padding:4px 20px 4px">
@@ -18569,9 +18576,9 @@ function _renderDatingProfileSheet() {
     </div>
     <div style="padding:0 20px 20px;max-height:60vh;overflow-y:auto">
       <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">직업군</div>
-      <div style="margin-bottom:16px">${DATING_JOB_CATEGORIES.map(v => chip(v, sel.job_category===v, `_selectDatingJob('${v}')`)).join('')}</div>
+      <div style="margin-bottom:16px">${DATING_JOB_CATEGORIES.map(v => chip(v, sel.job_category===v, `_selectDatingJob('${v.replace(/'/g,"\\'")}')`)).join('')}</div>
       <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">체형</div>
-      <div style="margin-bottom:16px">${DATING_BODY_TYPES.map(v => chip(v, sel.body_type===v, `_selectDatingBody('${v}')`)).join('')}</div>
+      <div style="margin-bottom:16px">${bodyTypes.map(v => chip(v, sel.body_type===v, `_selectDatingBody('${v}')`)).join('')}</div>
       <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">관심사 <span style="color:#aaa;font-weight:500">(최대 5개)</span></div>
       <div>${DATING_INTERESTS.map(v => chip(v, sel.interests.includes(v), `_toggleDatingInterest('${v}')`)).join('')}</div>
     </div>
