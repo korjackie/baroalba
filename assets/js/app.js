@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '492';
+  const _APP_V = '493';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=492').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=493').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18831,9 +18831,9 @@ async function _loadFemaleApplications() {
   // barospot_restaurants를 조인해야 식당명이 나오고, 일시는 event_date 하나로 통합돼 있음) -
   // 예전 쿼리는 존재하지 않는 컬럼을 select해서 매번 400 에러로 조용히 실패하고 있었음
   const { data, error } = await db.from('barospot_applications')
-    .select('id, event_id, status, created_at, barospot_events(event_date, barospot_restaurants(name))')
+    .select('id, event_id, status, applied_at, barospot_events(event_date, barospot_restaurants(name))')
     .eq('user_id', currentUser.id).eq('gender', 'female')
-    .order('created_at', { ascending: false }).limit(10);
+    .order('applied_at', { ascending: false }).limit(10);
   if (error || !data?.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div>'; return; }
   const statusLabel = { pending:'검토 중', matched:'식당 배정 완료', confirmed:'일정 확정', cancelled:'취소됨' };
   const statusColor = { pending:'#f59e0b', matched:'#8b5cf6', confirmed:'#10b981', cancelled:'#9ca3af' };
@@ -19183,10 +19183,12 @@ async function _loadSpotEvents() {
     if (!mapEl || !window.kakao?.maps) return;
     try {
       const pos = new kakao.maps.LatLng(ev.lat, ev.lng);
-      const map = new kakao.maps.Map(mapEl, { center: pos, level: 4 });
+      const map = new kakao.maps.Map(mapEl, { center: pos, level: 3 });
       map.setDraggable(false);
       map.setZoomable(false);
-      new kakao.maps.Marker({ position: pos, map });
+      const marker = new kakao.maps.Marker({ position: pos });
+      marker.setMap(map);
+      setTimeout(() => map.relayout(), 0); // 카드 레이아웃 직후라 컨테이너 크기가 아직 0일 수 있어 재계산
     } catch (e) { /* 지도 렌더 실패해도 나머지 정보는 보여야 함 */ }
   });
 }
@@ -19208,8 +19210,9 @@ function _renderSpotEventCard(ev, preview) {
         ${preview.bio ? `<div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${preview.bio.replace(/</g,'&lt;')}</div>` : ''}
       </div>
     </div>` : '';
+  const naverQuery = encodeURIComponent(`${r.name || ''} ${ev.address || ''}`.trim());
   const mapHtml = (ev.lat != null && ev.lng != null)
-    ? `<div id="bse-card-map-${ev.id}" style="width:100%;height:100px;border-radius:10px;margin-bottom:10px;background:#eee"></div>`
+    ? `<div id="bse-card-map-${ev.id}" style="width:100%;height:180px;border-radius:10px;margin-bottom:6px;background:#eee"></div>`
     : '';
   return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #e8eaed;overflow:hidden">
     <div style="margin-bottom:10px">
@@ -19218,6 +19221,7 @@ function _renderSpotEventCard(ev, preview) {
       ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">📍 ${ev.address}</div>` : ''}
     </div>
     ${mapHtml}
+    ${(ev.lat != null && ev.lng != null) ? `<div onclick="window.open('https://map.naver.com/v5/search/${naverQuery}','_blank')" style="text-align:center;font-size:11.5px;font-weight:700;color:#03C75A;margin-bottom:10px;cursor:pointer;padding:2px 0">📍 네이버지도에서 자세히 보기</div>` : ''}
     ${profileHtml}
     ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">

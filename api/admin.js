@@ -690,7 +690,7 @@ module.exports = async function handler(req, res) {
         sb(`businesses?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()).catch(() => []),
         sb(`gatherings?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()),
         sb('gathering_applications?select=id', svcKey).then(r => r.json()).catch(() => []),
-        sb(`barospot_applications?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()).catch(() => []),
+        sb(`barospot_applications?select=id&applied_at=gte.${today}`, svcKey).then(r => r.json()).catch(() => []),
         sb('barospot_applications?select=id', svcKey).then(r => r.json()).catch(() => []),
         sb('barospot_restaurants?select=id&is_active=eq.true', svcKey).then(r => r.json()).catch(() => []),
         sb('gatherings?select=id&category=eq.baromeeting&status=eq.open', svcKey).then(r => r.json()).catch(() => []),
@@ -978,7 +978,7 @@ module.exports = async function handler(req, res) {
     if (action === 'barospot_applications') {
       const statusFilter = req.query.status;
       const eventFilter = req.query.event_id;
-      let url = 'barospot_applications?select=id,event_id,user_id,gender,status,created_at&order=created_at.desc&limit=200';
+      let url = 'barospot_applications?select=id,event_id,user_id,gender,status,applied_at&order=applied_at.desc&limit=200';
       if (statusFilter) url += `&status=eq.${encodeURIComponent(statusFilter)}`;
       if (eventFilter) url += `&event_id=eq.${encodeURIComponent(eventFilter)}`;
       const apps = await sb(url, svcKey).then(r => r.json());
