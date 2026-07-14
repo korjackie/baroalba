@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '493';
+  const _APP_V = '494';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=493').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=494').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -19152,7 +19152,7 @@ async function _loadSpotEvents() {
   // 아니라 여성 1명+남성 1명을 매칭하는 1:1 소개팅이라 "남성 모집중(recruiting_male)" 상태인
   // 것만 신청 가능한 목록으로 보여준다
   const { data, error } = await db.from('barospot_events')
-    .select('id, event_date, address, lat, lng, barospot_restaurants(name, menu_description, base_price)')
+    .select('id, event_date, address, lat, lng, barospot_restaurants(name, menu_description, base_price, naver_place_url)')
     .eq('status', 'recruiting_male').order('event_date', { ascending: true });
   if (error || !data?.length) {
     if (cntEl) cntEl.textContent = '0';
@@ -19210,7 +19210,10 @@ function _renderSpotEventCard(ev, preview) {
         ${preview.bio ? `<div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${preview.bio.replace(/</g,'&lt;')}</div>` : ''}
       </div>
     </div>` : '';
+  // 등록 시점에 저장해둔 정확한 네이버플레이스 링크가 있으면 그걸 쓰고, 예전에
+  // 등록돼 저장된 링크가 없는 매장은 이름+주소로 검색 결과를 여는 것으로 대체
   const naverQuery = encodeURIComponent(`${r.name || ''} ${ev.address || ''}`.trim());
+  const naverUrl = r.naver_place_url || `https://map.naver.com/v5/search/${naverQuery}`;
   const mapHtml = (ev.lat != null && ev.lng != null)
     ? `<div id="bse-card-map-${ev.id}" style="width:100%;height:180px;border-radius:10px;margin-bottom:6px;background:#eee"></div>`
     : '';
@@ -19221,7 +19224,7 @@ function _renderSpotEventCard(ev, preview) {
       ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">📍 ${ev.address}</div>` : ''}
     </div>
     ${mapHtml}
-    ${(ev.lat != null && ev.lng != null) ? `<div onclick="window.open('https://map.naver.com/v5/search/${naverQuery}','_blank')" style="text-align:center;font-size:11.5px;font-weight:700;color:#03C75A;margin-bottom:10px;cursor:pointer;padding:2px 0">📍 네이버지도에서 자세히 보기</div>` : ''}
+    ${(ev.lat != null && ev.lng != null) ? `<div onclick="window.open('${naverUrl}','_blank')" style="text-align:center;font-size:11.5px;font-weight:700;color:#03C75A;margin-bottom:10px;cursor:pointer;padding:2px 0">📍 네이버지도에서 자세히 보기</div>` : ''}
     ${profileHtml}
     ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
