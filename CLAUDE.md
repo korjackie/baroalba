@@ -407,8 +407,13 @@ sw.js (v270)
 | Android SHOW_FORCED 리빌드 | 🟡 대기 | versionCode 24로 빌드 필요 |
 | 커뮤니티 글/댓글 수정·삭제 UI | 🟡 미구현 | 본인 콘텐츠 편집/삭제 버튼 추가 |
 | 커뮤니티 댓글 익명 토글 | 🟡 미구현 | `is_anonymous: false` 하드코딩 → 체크박스 필요 |
-| 단체채팅 키보드 여백 과다 | 🟡 조사중 | `#moim-chat-messages`의 `min-height:100%`가 짧은 대화에서 하단 여백을 만드는 것으로 추정 (2026-07-13), `justify-content:flex-end` 전환 검토 필요 |
 | 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 확인대기 | v436까지 배포완료, 대표님 실기기 재확인 필요 (버전버그 수정 이후 최초 확인) |
+| 바로스팟 채팅 진입 불가 | ✅ 해결 (v496, 2026-07-15) | track-overlay(z-index:8700)가 panel-barospot-chat(520)/panel-moim-chat(530)보다 위라 채팅 패널이 가려짐 - openBarospotChatRoom/openBaromeetChat에서 closeTrackingSheet() 선호출로 수정. panel-barospot-chat이 전역 뒤로가기 핸들러에도 없어 추가 |
+| 위치공유 "도착했어요" 버튼 의미없는 토글 | ✅ 해결 (v496, 2026-07-15) | 수동 클릭 시 확인 없이 조용히 멈추기만 해서 계속 눌러도 아무 일도 안 일어나는 것처럼 보임 - 도착 확인 다이얼로그 + 도착 확정 후 버튼 잠금으로 수정 |
+| 바로스팟 채팅 키보드 가림 | ✅ 해결 (v496, 2026-07-15) | 다른 채팅 패널(wchat/chat/moim-chat)은 `_onNativeKbChange`에 등록돼 있었는데 이 패널만 빠져서 키보드가 입력창을 가림 - 등록 추가 |
+| swipe-screen 상태표시줄 가림 | ✅ 해결 (v496, 2026-07-15) | 다른 전체화면 패널은 다 `--sat-safe` 처리돼 있었는데 이 화면 헤더만 빠짐 |
+| 레슨/과외 등록·상세 모달 핸들바 드래그 안 됨 | ✅ 해결 (v496, 2026-07-15) | `.modal-handle` 두 곳(lesson-register-modal/lesson-detail-modal)이 시각적 핸들만 있고 드래그 바인딩이 전혀 없었음 - bindSheetDragClose 연결 |
+| 단체채팅 키보드 여백 과다 | ✅ 해결됨 (문서만 미갱신) | `#moim-chat-messages`에 이미 `justify-content:flex-end`가 적용돼 있어 짧은 대화도 하단에 붙음 - 2026-07-13 시점 이후 누군가 수정했으나 이 표만 갱신이 안 돼있었음 |
 
 ---
 

@@ -261,6 +261,15 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 4-3. 바로스팟 1:1 채팅 (display:flex) - openBarospotChatRoom이 여는 이 패널이
+  // 이 뒤로가기 핸들러 어디에도 등록돼 있지 않아, 채팅방 안에서 뒤로가기를 눌러도
+  // 아무 반응 없이 그대로 남아있던 문제(위 moimChatEl과 동일 패턴으로 추가)
+  const bspChatEl = document.getElementById('panel-barospot-chat');
+  if (bspChatEl && bspChatEl.style.display === 'flex') {
+    closeBarospotChatRoom();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 5. 외국인환영 언어 패널
   const foreignerEl = document.getElementById('panel-foreigner-lang');
   if (foreignerEl && foreignerEl.style.display === 'block') {
@@ -437,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '496';
+  const _APP_V = '497';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -4937,6 +4946,19 @@ window._onFCMToken = function(token) {
         requestAnimationFrame(function() { requestAnimationFrame(function() {
           var mm = document.getElementById('moim-chat-messages');
           if (mm) mm.scrollTop = mm.scrollHeight;
+        }); });
+      }
+    }
+    // 바로스팟 1:1 채팅 (panel-barospot-chat) - 다른 채팅 패널들은 다 이 네이티브 IME 처리가
+    // 돼있었는데 나중에 추가된 이 패널만 여기 등록이 빠져서, 키보드가 올라오면 입력창을
+    // 그대로 가려버리던 "고질병" 버그가 이 화면에만 재발해 있었음
+    var bc = document.getElementById('panel-barospot-chat');
+    if (bc && bc.style.display === 'flex') {
+      bc.style.paddingBottom = val;
+      if (dp > 80) {
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
+          var bs = document.getElementById('bspchat-scroll');
+          if (bs) bs.scrollTop = bs.scrollHeight;
         }); });
       }
     }
@@ -12185,6 +12207,8 @@ async function openLessonDetail(profileId) {
     <div class="lesson-cta-row"></div>`;
   document.getElementById('lesson-booking-form').style.display = 'none';
   document.getElementById('lesson-detail-modal').classList.add('open');
+  // 핸들바가 있으면서도 드래그로 닫히지 않던 문제 - 다른 바텀시트들과 동일하게 바인딩
+  bindSheetDragClose(document.getElementById('lesson-detail-drag-handle'), document.getElementById('lesson-detail-sheet'), closeLessonDetailModal);
 }
 function closeLessonDetailModal() {
   document.getElementById('lesson-detail-modal').classList.remove('open');
@@ -12247,6 +12271,8 @@ function openLessonRegisterModal() {
   const pkgRows = document.getElementById('pkg-rows');
   if (pkgRows) { pkgRows.innerHTML = ''; _pkgRowIdx = 0; }
   document.getElementById('lesson-register-modal').classList.add('open');
+  // 핸들바가 있으면서도 드래그로 닫히지 않던 문제 - 다른 바텀시트들과 동일하게 바인딩
+  bindSheetDragClose(document.getElementById('lesson-register-handle'), document.getElementById('lesson-register-sheet'), closeLessonRegisterModal);
 }
 function closeLessonRegisterModal() {
   document.getElementById('lesson-register-modal').classList.remove('open');
@@ -18148,6 +18174,10 @@ function setBaromeetAvatarType(type) {
 
 async function openBaromeetChat(gatheringId, title) {
   if (!currentUser) return;
+  // track-overlay(z-index:8700)가 이후 열릴 baromeet-anon-overlay(8600)/panel-moim-chat(530)
+  // 보다 위라서, 트래킹 시트의 "💬 채팅방" 버튼으로 여기 들어올 때 미리 닫아두지 않으면
+  // 닉네임 미설정 시 뜨는 익명설정 오버레이까지 포함해 전부 트래킹 시트 뒤에 가려짐
+  closeTrackingSheet();
   // try/catch 없이 await만 쓰면 네트워크 오류 시 예외가 조용히 묻혀서
   // "눌러도 아무 반응 없음"으로 보이는 문제 방지 - 실패를 항상 토스트로 노출
   try {

@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=496"></script>
+  <script src="./shared-lang.js?v=497"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=496">
+  <link rel="stylesheet" href="./assets/css/style.css?v=497">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -961,7 +961,7 @@
 <!-- ── 스와이프 모드 ── -->
 <div id="swipe-screen" style="display:none;position:fixed;inset:0;bottom:var(--nav-h);background:#f0f0f5;z-index:250;flex-direction:column;align-items:center;justify-content:center;">
 
-  <div style="width:100%;padding:14px 20px 6px;display:flex;align-items:center;justify-content:space-between;">
+  <div style="width:100%;padding:calc(14px + var(--sat-safe,0px)) 20px 6px;display:flex;align-items:center;justify-content:space-between;">
     <div style="display:flex;align-items:center;gap:10px">
       <button id="swipe-back-btn" onclick="closeSwipeBackToMap()" style="display:none;background:none;border:none;padding:6px 2px;cursor:pointer;color:#888;font-size:13px;font-weight:700;display:none;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>지도
@@ -2379,8 +2379,8 @@
 
 <!-- ── 레슨/과외 등록 모달 ── -->
 <div class="modal-overlay" id="lesson-register-modal">
-  <div class="modal" style="max-height:90dvh;overflow-y:auto">
-    <div class="modal-handle"></div>
+  <div class="modal" id="lesson-register-sheet" style="max-height:90dvh;overflow-y:auto">
+    <div id="lesson-register-handle" style="touch-action:none;cursor:grab;padding:8px 0"><div class="modal-handle" style="margin:4px auto"></div></div>
     <div class="modal-title" data-i18n="lesson_reg_title">레슨/과외 등록</div>
     <div class="modal-sub">내 서비스를 등록해서 수강생을 모집하세요 (여러 개 등록 가능)</div>
 
@@ -2477,8 +2477,8 @@
 
 <!-- ── 레슨/과외 상세 + 예약 모달 ── -->
 <div class="modal-overlay" id="lesson-detail-modal">
-  <div class="modal" style="max-height:90dvh;overflow-y:auto">
-    <div class="modal-handle"></div>
+  <div class="modal" id="lesson-detail-sheet" style="max-height:90dvh;overflow-y:auto">
+    <div id="lesson-detail-drag-handle" style="touch-action:none;cursor:grab;padding:8px 0"><div class="modal-handle" style="margin:4px auto"></div></div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
       <button onclick="closeLessonDetailModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px">✕</button>
     </div>
@@ -4124,7 +4124,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=496"></script>
+<script src="./assets/js/app.js?v=497"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
