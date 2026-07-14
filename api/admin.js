@@ -533,6 +533,134 @@ module.exports = async function handler(req, res) {
     return res.json({ ok: true, event_id: claimEventId });
   }
 
+  // ── 통합 채팅 시스템 (chat_rooms/chat_messages/chat_reads) - 알바채팅/바로미팅채팅/
+  // 바로스팟채팅이 전부 이 하나의 스키마를 공유. 방 생성만 서버가 처리(자격 검증이
+  // 필요해서) - 메시지 전송/조회는 RLS가 안전하게 허용하므로 클라이언트가 직접 처리 ──
+
+  // 이 이벤트의 confirmed 신청 중 requesterId가 아닌 "상대방"의 user_id를 찾는다
+  async function _getOtherConfirmedBarospotUser(eventId, requesterId) {
+    const rows = await sb(`barospot_applications?event_id=eq.${eventId}&status=eq.confirmed&select=user_id`, svcKey).then(r => r.json()).catch(() => []);
+    const other = (Array.isArray(rows) ? rows : []).find(r => r.user_id !== requesterId);
+    return other?.user_id || null;
+  }
+
+  // context_type+context_id로 방을 get-or-create. 자격 검증은 RLS 정책과 동일한 기준으로
+  // 여기서도 확인(서버가 방을 만들 때도 아무나 못 만들게).
+  async function _ensureChatRoom(contextType, contextId, requesterId) {
+    if (contextType === 'barospot') {
+      const myRows = await sb(`barospot_applications?event_id=eq.${contextId}&user_id=eq.${requesterId}&status=eq.confirmed&select=id`, svcKey).then(r => r.json()).catch(() => []);
+      if (!myRows?.length) return { error: '이 바로스팟의 확정 참가자만 채팅할 수 있어요' };
+      const interestRows = await sb(`barospot_interests?event_id=eq.${contextId}&status=eq.accepted&select=id`, svcKey).then(r => r.json()).catch(() => []);
+      if (!interestRows?.length) return { error: '아직 서로 호감 수락이 안 된 상태예요' };
+      const col = 'barospot_event_id';
+      let roomRows = await sb(`chat_rooms?${col}=eq.${contextId}&select=id`, svcKey).then(r => r.json()).catch(() => []);
+      let roomId = roomRows?.[0]?.id;
+      if (!roomId) {
+        const created = await sb('chat_rooms', svcKey, { method: 'POST', body: JSON.stringify({ context_type: 'barospot', barospot_event_id: contextId }) }).then(r => r.json()).catch(() => []);
+        roomId = created?.[0]?.id;
+      }
+      if (!roomId) return { error: '채팅방 생성에 실패했어요' };
+      return { room_id: roomId };
+    }
+    return { error: '지원하지 않는 컨텍스트예요' };
+  }
+
+  if (req.method === 'POST' && earlyAction === 'ensure_chat_room') {
+    const ecrJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const ecrRequesterId = getSubFromJWT(ecrJwt);
+    if (!ecrRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { context_type: ecrContextType, context_id: ecrContextId } = req.body || {};
+    if (!ecrContextType || !ecrContextId) return res.status(400).json({ error: 'context_type, context_id required' });
+    const result = await _ensureChatRoom(ecrContextType, ecrContextId, ecrRequesterId);
+    if (result.error) return res.status(403).json({ error: result.error });
+    return res.json({ ok: true, room_id: result.room_id });
+  }
+
+  // 채팅창을 안 열어놓은 상대에게도 푸시가 가도록 - 컨텍스트별 수신자 해석
+  if (req.method === 'POST' && earlyAction === 'notify_chat_message') {
+    const ncmJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const ncmSenderId = getSubFromJWT(ncmJwt);
+    if (!ncmSenderId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { room_id: ncmRoomId, message: ncmMessage } = req.body || {};
+    if (!ncmRoomId) return res.status(400).json({ error: 'room_id required' });
+    const roomRows = await sb(`chat_rooms?id=eq.${ncmRoomId}&select=context_type,barospot_event_id`, svcKey).then(r => r.json()).catch(() => []);
+    const room = roomRows?.[0];
+    if (!room) return res.json({ ok: true });
+    const body = (ncmMessage || '새 메시지가 도착했어요').slice(0, 60);
+    if (room.context_type === 'barospot') {
+      const otherUid = await _getOtherConfirmedBarospotUser(room.barospot_event_id, ncmSenderId);
+      if (otherUid) await notifyUser(otherUid, '💬 바로스팟 채팅 새 메시지', body, 'chat_message', svcKey, req).catch(() => {});
+    }
+    return res.json({ ok: true });
+  }
+
+  // ── 바로스팟 사후 호감표시 → 상호수락 → 채팅 오픈 ──────────────────────
+  if (req.method === 'POST' && earlyAction === 'express_barospot_interest') {
+    const eiJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const eiRequesterId = getSubFromJWT(eiJwt);
+    if (!eiRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { event_id: eiEventId } = req.body || {};
+    if (!eiEventId) return res.status(400).json({ error: 'event_id required' });
+    const myRows = await sb(`barospot_applications?event_id=eq.${eiEventId}&user_id=eq.${eiRequesterId}&status=eq.confirmed&select=id`, svcKey).then(r => r.json()).catch(() => []);
+    if (!myRows?.length) return res.status(403).json({ error: '확정된 참가자만 호감을 표시할 수 있어요' });
+    const existing = await sb(`barospot_interests?event_id=eq.${eiEventId}&select=id`, svcKey).then(r => r.json()).catch(() => []);
+    if (existing?.length) return res.status(409).json({ error: '이미 호감 표시가 진행 중이에요' });
+    const targetUid = await _getOtherConfirmedBarospotUser(eiEventId, eiRequesterId);
+    if (!targetUid) return res.status(404).json({ error: '상대방을 찾을 수 없어요' });
+    const insRes = await sb('barospot_interests', svcKey, {
+      method: 'POST',
+      body: JSON.stringify({ event_id: eiEventId, initiator_user_id: eiRequesterId, target_user_id: targetUid, status: 'pending' }),
+    });
+    if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
+    await notifyUser(targetUid, '💌 상대방이 호감을 표현했어요', '바로스팟에서 확인하고 수락 여부를 선택해보세요', 'barospot_interest', svcKey, req, `/바로알바.html?barospot_interest=${eiEventId}`).catch(() => {});
+    return res.json({ ok: true });
+  }
+
+  if (req.method === 'POST' && earlyAction === 'respond_barospot_interest') {
+    const riJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const riRequesterId = getSubFromJWT(riJwt);
+    if (!riRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { event_id: riEventId, accept } = req.body || {};
+    if (!riEventId || typeof accept !== 'boolean') return res.status(400).json({ error: 'event_id, accept required' });
+    const rows = await sb(`barospot_interests?event_id=eq.${riEventId}&select=id,initiator_user_id,target_user_id,status`, svcKey).then(r => r.json()).catch(() => []);
+    const interest = rows?.[0];
+    if (!interest || interest.target_user_id !== riRequesterId || interest.status !== 'pending') {
+      return res.status(403).json({ error: '응답할 수 있는 호감 표시가 없어요' });
+    }
+    const newStatus = accept ? 'accepted' : 'declined';
+    const upd = await sb(`barospot_interests?id=eq.${interest.id}`, svcKey, {
+      method: 'PATCH', body: JSON.stringify({ status: newStatus, responded_at: new Date().toISOString() }),
+    });
+    if (!upd.ok) return res.status(502).json({ error: await upd.text() });
+    if (accept) {
+      const roomResult = await _ensureChatRoom('barospot', riEventId, riRequesterId);
+      await notifyUser(interest.initiator_user_id, '🎉 상대방이 호감을 수락했어요!', '채팅방이 열렸어요. 지금 대화를 시작해보세요', 'barospot_interest_accepted', svcKey, req, `/바로알바.html?barospot_chat=${riEventId}`).catch(() => {});
+      return res.json({ ok: true, room_id: roomResult.room_id || null });
+    } else {
+      await notifyUser(interest.initiator_user_id, '바로스팟 안내', '아쉽지만 이번엔 채팅으로 이어지지 않았어요', 'barospot_interest_declined', svcKey, req).catch(() => {});
+      return res.json({ ok: true });
+    }
+  }
+
+  // 서로 호감 수락된 이후에만 실명+실사진 등 상세 프로필 공개(전화번호는 절대 포함 안 함)
+  if (req.method === 'GET' && earlyAction === 'get_barospot_revealed_profile') {
+    const rpJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const rpRequesterId = getSubFromJWT(rpJwt);
+    if (!rpRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const rpEventId = req.query.event_id;
+    if (!rpEventId) return res.status(400).json({ error: 'event_id required' });
+    const interestRows = await sb(`barospot_interests?event_id=eq.${rpEventId}&status=eq.accepted&select=id`, svcKey).then(r => r.json()).catch(() => []);
+    if (!interestRows?.length) return res.status(403).json({ error: '아직 프로필을 볼 수 없어요' });
+    const otherUid = await _getOtherConfirmedBarospotUser(rpEventId, rpRequesterId);
+    if (!otherUid) return res.status(404).json({ error: '상대방을 찾을 수 없어요' });
+    const wRows = await sb(`workers?kakao_uid=eq.${otherUid}&select=name,photo_url,age,birth_date,job_category,body_type,interests,bio`, svcKey).then(r => r.json()).catch(() => []);
+    const w = wRows?.[0];
+    if (!w) return res.status(404).json({ error: '프로필을 찾을 수 없어요' });
+    let age = w.age || null;
+    if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
+    return res.json({ ok: true, name: w.name, photo_url: w.photo_url, age, job_category: w.job_category, body_type: w.body_type, interests: w.interests || [], bio: w.bio });
+  }
+
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   const email = getEmailFromJWT(token);

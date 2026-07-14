@@ -437,7 +437,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '490';
+  const _APP_V = '491';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=490').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=491').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -607,6 +607,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 바로스팟 딥링크 처리 (관리자가 "공유하기"로 만든 링크)
   const deepBarospotId = _dParams.get('barospot');
   if (deepBarospotId) setTimeout(() => handleBarospotDeeplink(deepBarospotId), 800);
+  // 바로스팟 호감표시 알림/수락알림 딥링크 - 트래킹 시트를 열어 호감표시 섹션이 보이게 함
+  const deepBarospotInterestId = _dParams.get('barospot_interest') || _dParams.get('barospot_chat');
+  if (deepBarospotInterestId) setTimeout(() => _openSpotEventTracking(deepBarospotInterestId, true), 800);
   // 커뮤니티 게시글 딥링크 처리 (공유하기로 받은 링크)
   const deepPostId = _dParams.get('post');
   if (deepPostId) setTimeout(() => { openCommunityPanel(); openCommunityPost(deepPostId); }, 800);
@@ -17542,6 +17545,13 @@ function openTrackingSheet(opts) {
       chatBtn.style.display = 'none';
     }
 
+    const interestWrap = document.getElementById('track-barospot-interest-wrap');
+    if (opts.barospotInterest) {
+      _renderBarospotInterestSection(opts.barospotInterest.eventId);
+    } else if (interestWrap) {
+      interestWrap.style.display = 'none';
+    }
+
     _trackLiveParams = opts.liveShare || null;
     _renderLiveShareSection();
     _startLivePoll();
@@ -19262,6 +19272,21 @@ async function _openSpotEventTracking(eventId, iAmApproved) {
   if (!ev) return;
   const r = ev.barospot_restaurants || {};
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
+
+  // 예전엔 stepIndex가 항상 0으로 고정돼 있어 실제 만남이 끝난 뒤에도 "종료"에 절대
+  // 도달하지 못했음(바로미팅의 시간 기반 계산과 동일한 방식으로 수정) - "종료"에 도달해야
+  // 사후 호감표시 UI가 뜨므로 이 수정이 그 기능의 전제조건임. 식사 자리는 1.5시간으로 가정.
+  const MEETUP_DURATION_MS = 1.5 * 60 * 60 * 1000;
+  let stepIndex = 0;
+  if (iAmApproved) {
+    const start = ev.event_date ? new Date(ev.event_date).getTime() : null;
+    const now = Date.now();
+    if (start === null) stepIndex = 2;
+    else if (now < start) stepIndex = 2;
+    else if (now < start + MEETUP_DURATION_MS) stepIndex = 2;
+    else stepIndex = 3;
+  }
+
   openTrackingSheet({
     brand: '📍 바로스팟',
     title: r.name || '바로스팟',
@@ -19271,9 +19296,259 @@ async function _openSpotEventTracking(eventId, iAmApproved) {
     whenISO: ev.event_date,
     whenText,
     steps: ['신청완료','매니저 확인 중','확정','종료'],
-    stepIndex: 0,
+    stepIndex,
     liveShare: { contextType: 'barospot', contextId: eventId, destLat: ev.lat, destLng: ev.lng, iAmApproved: !!iAmApproved },
+    barospotInterest: stepIndex >= 3 ? { eventId } : null,
   });
+}
+
+// 트래킹 시트가 "종료" 단계에 도달하면 호출 - 현재 호감표시 상태를 조회해 배너를 그린다.
+// barospot_interests의 SELECT RLS가 당사자(initiator/target) 본인 조회는 허용하므로
+// 서버를 거치지 않고 클라이언트에서 바로 조회 가능.
+async function _renderBarospotInterestSection(eventId) {
+  const wrap = document.getElementById('track-barospot-interest-wrap');
+  const textEl = document.getElementById('track-barospot-interest-text');
+  const btn = document.getElementById('track-barospot-interest-btn');
+  if (!wrap || !currentUser) return;
+  wrap.style.display = 'block';
+  const { data: interest } = await db.from('barospot_interests').select('*').eq('event_id', eventId).maybeSingle();
+
+  if (!interest) {
+    textEl.textContent = '식사는 잘 하셨나요? 상대방이 마음에 드셨다면 호감을 표시해보세요.';
+    btn.textContent = '💌 호감 표시하기';
+    btn.style.background = '#f43f5e'; btn.style.color = '#fff';
+    btn.onclick = () => expressBarospotInterest(eventId);
+    return;
+  }
+  const iAmInitiator = interest.initiator_user_id === currentUser.id;
+  if (interest.status === 'pending' && iAmInitiator) {
+    textEl.textContent = '호감을 표시했어요. 상대방의 응답을 기다리고 있어요.';
+    btn.textContent = '응답 대기 중';
+    btn.style.background = '#e5e7eb'; btn.style.color = '#888';
+    btn.onclick = () => showToast('상대방의 응답을 기다리고 있어요');
+  } else if (interest.status === 'pending' && !iAmInitiator) {
+    textEl.textContent = '상대방이 호감을 표현했어요! 수락하면 채팅방이 열려요.';
+    btn.textContent = '💌 확인하고 응답하기';
+    btn.style.background = '#f43f5e'; btn.style.color = '#fff';
+    btn.onclick = () => respondBarospotInterest(eventId);
+  } else if (interest.status === 'accepted') {
+    textEl.textContent = '서로 호감을 수락했어요! 채팅으로 편하게 대화해보세요.';
+    btn.textContent = '💬 채팅하기';
+    btn.style.background = '#7C3AED'; btn.style.color = '#fff';
+    btn.onclick = () => openBarospotChatRoom(eventId);
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+async function expressBarospotInterest(eventId) {
+  const confirmed = await showConfirmDialog('💌 호감 표시하기', '상대방에게 호감을 표시하시겠어요?\n상대가 수락하면 채팅방이 열려요.', '표시하기', '취소');
+  if (!confirmed) return;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/api/admin?action=express_barospot_interest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ event_id: eventId })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('😢 ' + (data.error || '실패했어요')); return; }
+    showToast('💌 호감을 표시했어요! 상대방의 응답을 기다려주세요');
+    await _renderBarospotInterestSection(eventId);
+  } catch (e) { showToast('오류가 발생했어요'); }
+}
+
+async function respondBarospotInterest(eventId) {
+  const accept = await showConfirmDialog('💌 호감 표시 받음', '상대방이 호감을 표현했어요.\n수락하면 채팅방이 열려요. 수락하시겠어요?', '수락하기', '거절하기');
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/api/admin?action=respond_barospot_interest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ event_id: eventId, accept: !!accept })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('😢 ' + (data.error || '실패했어요')); return; }
+    showToast(accept ? '🎉 수락했어요! 채팅방이 열렸어요' : '응답을 보냈어요');
+    await _renderBarospotInterestSection(eventId);
+  } catch (e) { showToast('오류가 발생했어요'); }
+}
+
+// ── 바로스팟 1:1 채팅 (통합 chat_rooms/chat_messages/chat_reads 스키마 사용) ──────────
+// 서로 호감을 수락한 뒤에만 열림. 방 생성/자격검증은 서버(ensure_chat_room)가 처리하고,
+// 메시지 조회/전송은 RLS가 방 멤버 여부를 직접 확인해주므로 클라이언트에서 바로 처리한다.
+let _bspChatRoomId = null;
+let _bspChatEventId = null;
+let _bspChatRealtimeCh = null;
+let _bspChatCounterpart = null; // {name, photo_url, age, job_category, body_type, interests, bio}
+let _bspChatMyName = null;
+let _bspChatMyPhoto = null;
+
+async function openBarospotChatRoom(eventId) {
+  if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const ensureRes = await fetch('/api/admin?action=ensure_chat_room', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ context_type: 'barospot', context_id: eventId })
+    });
+    const ensureData = await ensureRes.json();
+    if (!ensureRes.ok) { showToast('😢 ' + (ensureData.error || '채팅방을 열 수 없어요')); return; }
+    _bspChatRoomId = ensureData.room_id;
+    _bspChatEventId = eventId;
+
+    const profRes = await fetch(`/api/admin?action=get_barospot_revealed_profile&event_id=${eventId}`, {
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    });
+    _bspChatCounterpart = profRes.ok ? await profRes.json() : null;
+    const titleEl = document.getElementById('bspchat-title');
+    const avatarEl = document.getElementById('bspchat-cp-avatar');
+    if (titleEl) titleEl.textContent = _bspChatCounterpart?.name || '바로스팟';
+    if (avatarEl) avatarEl.innerHTML = _bspChatCounterpart?.photo_url
+      ? `<img src="${_bspChatCounterpart.photo_url}" style="width:100%;height:100%;object-fit:cover">`
+      : '👤';
+
+    const { data: w } = await db.from('workers').select('name, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+    _bspChatMyName = w?.name || '나';
+    _bspChatMyPhoto = w?.photo_url || null;
+
+    document.getElementById('panel-barospot-chat').style.display = 'flex';
+    history.pushState({ panel: 'barospot-chat' }, '');
+    await _loadBarospotChatMessages();
+    if (_bspChatRealtimeCh) db.removeChannel(_bspChatRealtimeCh);
+    _bspChatRealtimeCh = db.channel('barospot-chat-' + _bspChatRoomId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `room_id=eq.${_bspChatRoomId}` }, payload => {
+        _appendBarospotChatMessage(payload.new);
+        _markBarospotChatRead();
+      })
+      .subscribe();
+    await _markBarospotChatRead();
+  } catch (e) {
+    showToast('오류가 발생했어요');
+  }
+}
+
+function closeBarospotChatRoom() {
+  document.getElementById('panel-barospot-chat').style.display = 'none';
+  if (_bspChatRealtimeCh) { db.removeChannel(_bspChatRealtimeCh); _bspChatRealtimeCh = null; }
+  _bspChatRoomId = null; _bspChatEventId = null; _bspChatCounterpart = null;
+}
+
+async function _markBarospotChatRead() {
+  if (!_bspChatRoomId || !currentUser) return;
+  await db.from('chat_reads').upsert({ room_id: _bspChatRoomId, user_id: currentUser.id, last_read_at: new Date().toISOString() }, { onConflict: 'room_id,user_id' });
+}
+
+async function _loadBarospotChatMessages() {
+  const { data } = await db.from('chat_messages').select('*').eq('room_id', _bspChatRoomId).order('created_at', { ascending: true }).limit(200);
+  const el = document.getElementById('bspchat-messages');
+  el.innerHTML = (data || []).map(m => _barospotChatBubbleHtml(m)).join('');
+  const scroll = document.getElementById('bspchat-scroll');
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+}
+
+function _appendBarospotChatMessage(m) {
+  const el = document.getElementById('bspchat-messages');
+  if (!el) return;
+  el.insertAdjacentHTML('beforeend', _barospotChatBubbleHtml(m));
+  const scroll = document.getElementById('bspchat-scroll');
+  if (scroll) scroll.scrollTop = scroll.scrollHeight;
+}
+
+function _barospotChatBubbleHtml(m) {
+  const isMine = m.sender_id === currentUser?.id;
+  const time = m.created_at ? new Date(m.created_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' }) : '';
+  const isImg = typeof m.content === 'string' && m.content.startsWith('[img]');
+  const bubbleContent = isImg
+    ? `<img src="${m.content.slice(5)}" style="max-width:200px;border-radius:12px;display:block">`
+    : `<div style="max-width:240px;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;word-break:break-word;background:${isMine?'#7C3AED':'#fff'};color:${isMine?'#fff':'#222'};border:${isMine?'none':'1px solid #eee'}">${(m.content||'').replace(/</g,'&lt;')}</div>`;
+  const avatar = !isMine ? `<div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:13px">${m.sender_photo_url ? `<img src="${m.sender_photo_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}</div>` : '';
+  return `<div style="display:flex;flex-direction:column;${isMine?'align-items:flex-end':'align-items:flex-start'};margin-bottom:10px">
+    <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:${isMine?'row-reverse':'row'}">
+      ${avatar}
+      ${bubbleContent}
+      <div style="font-size:10px;color:#bbb;white-space:nowrap">${time}</div>
+    </div>
+  </div>`;
+}
+
+async function _doSendBarospotChat(content) {
+  if (!_bspChatRoomId || !currentUser) return;
+  const { error } = await db.from('chat_messages').insert({
+    room_id: _bspChatRoomId, sender_id: currentUser.id,
+    sender_name: _bspChatMyName, sender_photo_url: _bspChatMyPhoto, content,
+  });
+  if (error) { showToast('전송 실패: ' + error.message); return; }
+  _notifyChatMessage(_bspChatRoomId, content);
+}
+
+async function _notifyChatMessage(roomId, message) {
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    await fetch('/api/admin?action=notify_chat_message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ room_id: roomId, message })
+    });
+  } catch (e) {}
+}
+
+async function sendBarospotChat() {
+  if (_pendingBspChatFiles.length) { await _uploadAndSendBarospotChatImage(); return; }
+  const input = document.getElementById('bspchat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  await _doSendBarospotChat(msg);
+}
+
+let _pendingBspChatFiles = [];
+function sendBarospotChatImage(inputEl) {
+  const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
+  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
+  inputEl.value = '';
+  closeMediaPanel('bspchat');
+  if (!files.length) return;
+  _pendingBspChatFiles = files;
+  const bar = document.getElementById('bspchat-img-preview-bar');
+  const thumb = document.getElementById('bspchat-img-preview-thumb');
+  thumb.src = URL.createObjectURL(files[0]);
+  _setImgPreviewCountBadge('bspchat', files.length);
+  bar.style.display = 'flex';
+}
+function cancelBarospotChatImage() {
+  _pendingBspChatFiles = [];
+  document.getElementById('bspchat-img-preview-bar').style.display = 'none';
+}
+async function _uploadAndSendBarospotChatImage() {
+  const files = _pendingBspChatFiles;
+  _pendingBspChatFiles = [];
+  document.getElementById('bspchat-img-preview-bar').style.display = 'none';
+  showToast(files.length > 1 ? `이미지 ${files.length}장 전송 중...` : '이미지 전송 중...');
+  for (const file of files) {
+    try {
+      const url = await uploadChatImage(file);
+      await _doSendBarospotChat('[img]' + url);
+    } catch(e) { showToast('이미지 전송 실패'); }
+  }
+}
+
+// 채팅방 헤더 탭 → 서로 수락된 사이라 실명+실사진(모자이크 해제)+나이/직업군/체형/관심사/자기소개 공개
+function openBarospotProfileReveal() {
+  const p = _bspChatCounterpart;
+  if (!p) { showToast('프로필을 불러올 수 없어요'); return; }
+  const html = `
+    <div style="text-align:center;padding:24px 20px">
+      <div style="width:88px;height:88px;border-radius:50%;margin:0 auto 14px;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:36px">
+        ${p.photo_url ? `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}
+      </div>
+      <div style="font-size:18px;font-weight:900;color:#111;margin-bottom:4px">${p.name || '이름 미상'}</div>
+      <div style="font-size:13px;color:#888;margin-bottom:14px">${[p.age?p.age+'세':null, p.job_category, p.body_type].filter(Boolean).join(' · ')}</div>
+      ${p.interests?.length ? `<div style="font-size:12.5px;color:#7C3AED;margin-bottom:14px">${p.interests.map(t=>'#'+t).join(' ')}</div>` : ''}
+      ${p.bio ? `<div style="text-align:left;background:#f8f9fa;border-radius:12px;padding:14px;font-size:13px;color:#444;line-height:1.6">${p.bio.replace(/</g,'&lt;')}</div>` : ''}
+    </div>`;
+  openBottomSheet(html);
 }
 
 // ── 포인트 시스템 ──────────────────────────────────────────

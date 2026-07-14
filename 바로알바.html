@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=490"></script>
+  <script src="./shared-lang.js?v=491"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=490">
+  <link rel="stylesheet" href="./assets/css/style.css?v=491">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2918,6 +2918,59 @@
   </div>
 </div>
 
+<!-- 바로스팟 1:1 채팅 (사후 호감 상호수락 후에만 진입 가능) - 통합 chat_rooms/chat_messages 스키마 사용 -->
+<div id="panel-barospot-chat" style="display:none;position:fixed;inset:0;z-index:520;background:#f8f8f8;flex-direction:column;overflow:hidden">
+  <div style="height:var(--sat-safe,0px);background:#7C3AED;flex-shrink:0"></div>
+  <div style="background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:12px 14px">
+    <button onclick="closeBarospotChatRoom()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div onclick="openBarospotProfileReveal()" style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;min-width:0">
+      <div id="bspchat-cp-avatar" style="width:34px;height:34px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:16px">👤</div>
+      <div style="min-width:0">
+        <div id="bspchat-title" style="font-size:14.5px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">바로스팟</div>
+        <div style="font-size:10.5px;color:#aaa">눌러서 프로필 보기</div>
+      </div>
+    </div>
+  </div>
+  <div id="bspchat-scroll" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 6px">
+    <div id="bspchat-messages"></div>
+  </div>
+  <div id="bspchat-input-bar" style="flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0">
+    <div id="bspchat-media-panel" style="display:none;padding:14px 20px 12px;border-bottom:1px solid #f5f5f5">
+      <div style="display:flex;gap:20px">
+        <input type="file" id="bspchat-img-input" accept="image/*" multiple style="display:none" onchange="sendBarospotChatImage(this)">
+        <input type="file" id="bspchat-cam-input" accept="image/*" capture="environment" style="display:none" onchange="sendBarospotChatImage(this)">
+        <div onclick="document.getElementById('bspchat-img-input').click()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer">
+          <div style="width:54px;height:54px;background:#f5f5f5;border-radius:14px;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          </div>
+          <span style="font-size:11px;color:#555;font-weight:600">사진</span>
+        </div>
+        <div onclick="document.getElementById('bspchat-cam-input').click()" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer">
+          <div style="width:54px;height:54px;background:#f5f5f5;border-radius:14px;display:flex;align-items:center;justify-content:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span style="font-size:11px;color:#555;font-weight:600">카메라</span>
+        </div>
+      </div>
+    </div>
+    <div id="bspchat-img-preview-bar" style="display:none;padding:8px 16px;background:#f8f8f8;border-top:1px solid #eee;align-items:center;gap:10px">
+      <img id="bspchat-img-preview-thumb" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #ddd">
+      <span style="font-size:13px;color:#555;flex:1">사진 선택됨 — 전송 버튼을 누르세요</span>
+      <button onclick="cancelBarospotChatImage()" style="background:none;border:none;font-size:20px;color:#aaa;cursor:pointer;padding:4px">✕</button>
+    </div>
+    <div style="padding:10px 16px;display:flex;gap:8px;align-items:center">
+      <button onmousedown="event.preventDefault()" onclick="toggleMediaPanel('bspchat')" id="bspchat-plus-btn" style="width:36px;height:36px;flex-shrink:0;background:#f0f0f0;border:none;border-radius:50%;font-size:22px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;transition:transform 0.2s">+</button>
+      <input id="bspchat-input" type="text" placeholder="메시지 입력..." maxlength="300"
+        style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid #eee;border-radius:24px;font-size:14px;outline:none;font-family:inherit"
+        onfocus="closeMediaPanel('bspchat')"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendBarospotChat();}">
+      <button onmousedown="event.preventDefault()" ontouchstart="event.preventDefault();sendBarospotChat()" onclick="sendBarospotChat()" style="padding:10px 14px;background:#7C3AED;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;flex-shrink:0">전송</button>
+    </div>
+  </div>
+</div>
+
 <!-- 커뮤니티 패널 -->
 <div class="full-panel" id="panel-community" style="z-index:360">
   <div class="panel-header" style="display:flex;align-items:center;gap:10px;flex-shrink:0">
@@ -4064,7 +4117,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=490"></script>
+<script src="./assets/js/app.js?v=491"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4619,6 +4672,11 @@
       <div class="track-detail-row" id="track-participants-row" style="display:none">
         <div class="track-detail-label">👥 참가 현황</div>
         <div class="track-detail-value" id="track-participants">-</div>
+      </div>
+      <!-- 바로스팟 사후 호감표시/수락→채팅 - 만남이 끝난(종료 단계) 이후에만 노출 -->
+      <div id="track-barospot-interest-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee;text-align:center">
+        <div id="track-barospot-interest-text" style="font-size:12.5px;color:#666;margin-bottom:8px;line-height:1.5"></div>
+        <button id="track-barospot-interest-btn" style="width:100%;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer"></button>
       </div>
       <div id="track-live-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee">
         <div id="track-live-note" style="display:none;font-size:12px;color:#bbb;text-align:center;padding:8px 0"></div>
