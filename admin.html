@@ -1108,6 +1108,55 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// ── 독립 키보드 가림 방지 (위의 DOMContentLoaded 핸들러와 무관하게 항상 동작) ──
+// 위 _adjustPanels/_scrollFieldAboveKeyboard는 큰 async DOMContentLoaded 핸들러 안에
+// 있어서, 그 함수 안 어디선가(세션 체크, loadDashboard 등) 에러가 나면 이 아래
+// 코드 자체가 등록조차 안 될 수 있음 - 바로스팟 개설 메모 등에서 실제로 안 먹히는
+// 문제가 재발해서, 다른 코드의 성공 여부와 완전히 무관하게 즉시 등록되는 별도
+// 핸들러를 추가한다. .detail-panel 안의 모든 input/textarea에 적용되며,
+// 패널을 실제로 줄여주는(overlay padding-bottom + panel maxHeight) 부분까지 포함해서
+// 스크롤 조정만으로는 안 되는 경우(패널 자체가 키보드 뒤에 그대로 있는 경우)도 커버한다.
+(function() {
+  let _maxVPH2 = window.innerHeight;
+  function _adjustPanelsIndependent() {
+    try {
+      const vvH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const activeTag = document.activeElement && document.activeElement.tagName;
+      if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+        _maxVPH2 = Math.max(_maxVPH2, window.innerHeight, vvH);
+      }
+      const kbH = Math.max(0, _maxVPH2 - vvH);
+      document.querySelectorAll('.detail-overlay.show').forEach(overlay => {
+        const panel = overlay.querySelector('.detail-panel');
+        if (kbH > 100) {
+          overlay.style.setProperty('padding-bottom', kbH + 'px', 'important');
+          if (panel) panel.style.maxHeight = (vvH - 40) + 'px';
+        } else {
+          overlay.style.paddingBottom = '';
+          if (panel) panel.style.maxHeight = '';
+        }
+      });
+      const f = document.activeElement;
+      if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA')) {
+        const panel = f.closest('.detail-panel');
+        if (panel) {
+          const fRect = f.getBoundingClientRect();
+          if (fRect.bottom > vvH - 24) panel.scrollTop += (fRect.bottom - vvH + 90);
+        }
+      }
+    } catch (e) { /* 무시 - 이 안전망이 다른 동작을 막으면 안 됨 */ }
+  }
+  document.addEventListener('focusin', (e) => {
+    if (!e.target || !e.target.matches || !e.target.matches('input,textarea')) return;
+    if (!e.target.closest('.detail-panel')) return;
+    [100, 250, 400, 600, 900, 1300].forEach(ms => setTimeout(_adjustPanelsIndependent, ms));
+  });
+  window.addEventListener('resize', () => setTimeout(_adjustPanelsIndependent, 150));
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => setTimeout(_adjustPanelsIndependent, 150));
+  }
+})();
+
 // 키보드 올라올 때 패널 내 입력창 스크롤
 function scrollPanelToInput(el) {
   const doScroll = () => {
