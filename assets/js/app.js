@@ -468,7 +468,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '513';
+  const _APP_V = '514';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -484,7 +484,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=513').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=514').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -8642,7 +8642,7 @@ function openProfile() {
     document.getElementById('worker-grade-section').style.display = 'block';
     document.getElementById('owner-profile-edit').style.display = 'none';
     document.getElementById('owner-settings-shortcut').style.display = 'none';
-    document.getElementById('profile-logged-in').style.display = 'block';
+    document.getElementById('profile-logged-in').style.display = 'flex';
     document.getElementById('profile-guest').style.display = 'none';
     loadWorkerProfileForm();
     loadWorkerGrade();
@@ -9209,8 +9209,12 @@ async function loadWorkerPhotos(avatarUrl) {
     list.push({ ...portfolio.shift(), isAvatar: true });
   }
   list.push(...portfolio);
-  _renderWorkerPhotos(list.slice(0, 5));
-  _wPhotosOriginalOrder = _wPhotos.map(p => p.id);
+  // _renderWorkerPhotos 안에서 _updateProfilePhotoSaveBar가 곧바로 _wPhotosOriginalOrder와
+  // 비교하므로, 렌더링 *전에* 원본 순서를 먼저 기록해야 한다. 순서가 바뀌어 있어서
+  // 방금 불러온 상태(변경 없음)인데도 "저장하기" 바가 항상 떠 있던 버그였음(2026-07-16 피드백)
+  const finalList = list.slice(0, 5);
+  _wPhotosOriginalOrder = finalList.map(p => p.id);
+  _renderWorkerPhotos(finalList);
 }
 
 // 저장 안 된 변경(새 사진 업로드 또는 순서/대표사진 변경)이 있을 때 상단에
@@ -9242,19 +9246,20 @@ function _paintHeaderAvatar() {
   }
 }
 
-function _slotHtml(idx, p, readonly) {
+function _slotHtml(idx, p, readonly, big) {
+  const ratio = big ? '16/11' : '1';
   if (!p) {
-    if (readonly) return `<div style="aspect-ratio:1;border-radius:10px;background:#eee"></div>`;
-    return `<label style="display:flex;align-items:center;justify-content:center;aspect-ratio:1;background:#f8f8f8;border:2px dashed #ddd;border-radius:10px;cursor:pointer">
-      <span style="font-size:24px;color:#ccc;line-height:1">+</span>
+    if (readonly) return `<div style="aspect-ratio:${ratio};border-radius:10px;background:#eee"></div>`;
+    return `<label style="display:flex;align-items:center;justify-content:center;aspect-ratio:${ratio};background:#f8f8f8;border:2px dashed #ddd;border-radius:10px;cursor:pointer">
+      <span style="font-size:${big ? 32 : 24}px;color:#ccc;line-height:1">+</span>
       <input type="file" accept="image/*" style="display:none" onchange="addProfilePhoto(this)">
     </label>`;
   }
-  const badge = idx === 0 ? '대표' : String(idx + 1);
+  const num = idx + 1;
   if (readonly) {
-    return `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb">
+    return `<div style="position:relative;aspect-ratio:${ratio};border-radius:10px;overflow:hidden;background:#e5e7eb">
       <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">
-      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px">${badge}</span>
+      <span style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">${num}</span>
     </div>`;
   }
   return `<div draggable="true" data-slot-idx="${idx}"
@@ -9264,20 +9269,23 @@ function _slotHtml(idx, p, readonly) {
       ondragleave="wPhotoDragLeave(event,this)"
       ondrop="wPhotoDrop(event,${idx},this)"
       onclick="openImgViewer('${p.photo_url}')"
-      style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb;cursor:pointer">
+      style="position:relative;aspect-ratio:${ratio};border-radius:10px;overflow:hidden;background:#e5e7eb;cursor:pointer">
       <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
-      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;pointer-events:none">${badge}</span>
-      <button onclick="event.stopPropagation();deleteSlotPhoto(${idx})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+      <button onclick="event.stopPropagation();deleteSlotPhoto(${idx})" style="position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+      <span style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${num}</span>
     </div>`;
 }
 
+// 대표사진(0번)을 위, 포트폴리오(1~4번)를 그 아래 2x2로 배치 - 왼쪽/오른쪽 나열은
+// 대표사진이 잘 부각되지 않아 어색하다는 피드백(2026-07-16)으로 변경. 배지도
+// "대표" 글자 대신 다른 사진들과 동일하게 우측상단 번호(1~5)로 통일
 function _paintPhotoGrid(container, readonly) {
   if (!container) return;
-  const avatarCell = _slotHtml(0, _wPhotos[0], readonly);
-  const restCells = [1, 2, 3, 4].map(i => _slotHtml(i, _wPhotos[i], readonly)).join('');
-  container.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start">
-    <div style="flex:0 0 42%">${avatarCell}</div>
-    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px">${restCells}</div>
+  const avatarCell = _slotHtml(0, _wPhotos[0], readonly, true);
+  const restCells = [1, 2, 3, 4].map(i => _slotHtml(i, _wPhotos[i], readonly, false)).join('');
+  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">
+    ${avatarCell}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${restCells}</div>
   </div>`;
   if (!readonly) _setupTouchDnd(container, _swapPhotoSlots, 'data-slot-idx');
 }

@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=513"></script>
+  <script src="./shared-lang.js?v=514"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=513">
+  <link rel="stylesheet" href="./assets/css/style.css?v=514">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1460,7 +1460,7 @@
     </div>
 
     <!-- 로그인 상태 -->
-    <div id="profile-logged-in" style="display:none">
+    <div id="profile-logged-in" style="display:none;flex-direction:column;min-height:100%">
         <!-- ── 프로필 헤더 ── -->
       <div style="background:#fff;padding:20px 20px 16px">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
@@ -1715,10 +1715,12 @@
           </div>
         </div>
       </div>
-      <!-- 얇은 회색 푸터 바 안에 버전 표시 - 예전엔 로그아웃 밑에 큰 빈 여백이 먼저 있고
-           그 아래 작은 버전 글씨가 따로 떠 있어 어색했음(2026-07-16 피드백). 푸터 자체를
-           얇은 회색 띠로 만들어 그 안에 자연스럽게 배치 -->
-      <div style="padding:10px 20px;text-align:center;background:#eee"><div style="font-size:10px;color:#999;font-weight:600">바로알바 v1.4.1</div></div>
+      <!-- #profile-logged-in을 flex-column(+ 위 JS에서 display:flex로 전환)으로 만들고
+           margin-top:auto로 이 푸터를 진짜 맨 아래로 밀어붙임 - 콘텐츠가 화면보다 짧을 때
+           로그아웃 밑에 남는 빈 여백을 새 바 없이 이 푸터 자체가 흡수하도록 함(2026-07-16
+           피드백: 새 바를 따로 만들지 말고 기존 빈 공간을 줄여서 그 안에 표기해달라는 요청).
+           콘텐츠가 화면보다 길면 margin-top:auto가 그냥 0으로 접혀 평소처럼 붙는다 -->
+      <div style="margin-top:auto;padding:10px 20px;text-align:center;background:#eee"><div style="font-size:10px;color:#999;font-weight:600">바로알바 v1.4.1</div></div>
 
       <!-- ── 숨김 컨테이너: 업주 프로필 편집 (서브패널에 없는 ID) ── -->
       <div style="display:none">
@@ -4249,7 +4251,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=513"></script>
+<script src="./assets/js/app.js?v=514"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
