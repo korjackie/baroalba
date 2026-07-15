@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=521"></script>
+  <script src="./shared-lang.js?v=522"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=521">
+  <link rel="stylesheet" href="./assets/css/style.css?v=522">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1932,14 +1932,23 @@
       <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200" oninput="updateBioCounter(this)" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:80px;box-sizing:border-box;font-family:inherit"></textarea>
       <div id="worker-bio-hint" style="display:none;font-size:11px;color:#C8102E;margin-top:3px">최소 20자 이상 입력해주세요</div>
     </div>
-    <!-- 바로만남용 프로필 정보 - 예전엔 별도 화면(마이페이지에 "프로필 편집"/"바로만남
+    <!-- 바로만남 프로필 정보 - 예전엔 별도 화면(마이페이지에 "프로필 편집"/"바로만남
          프로필" 2개)이었는데, 계정 프로필과 지나치게 나눠져 있어 헷갈린다는 피드백
-         (2026-07-16)으로 이 화면 안에 구분 섹션으로 합침. 블라인드 매칭 상대에게만
-         공개되는 정보라는 점은 그대로 안내 -->
+         (2026-07-16)으로 이 화면 안에 구분 섹션으로 합침. 알바만 찾고 만남에는
+         관심 없는 유저(기혼자 포함)도 많으므로 ON/OFF 토글로 켜야만 아래 상세 항목이
+         펼쳐지도록 함(같은 날 피드백) -->
     <div style="border-top:8px solid #f5f5f5;margin:6px -16px 0;padding:16px 16px 0">
-      <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:4px">💕 바로만남용 프로필 정보</div>
-      <div style="font-size:11.5px;color:#999;line-height:1.6;margin-bottom:14px">여기 등록한 정보만 바로미팅·바로스팟에서 블라인드 상대에게 공개돼요. 위 계정 프로필(경력·스킬 등)과는 서로 안 보여요.</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:13px;font-weight:900;color:#7C3AED">💕 바로만남 프로필 정보</div>
+        <label style="cursor:pointer;position:relative;width:44px;height:24px;flex-shrink:0">
+          <input type="checkbox" id="mannam-enabled-toggle" onchange="saveMannamEnabled(this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+          <span id="mannam-enabled-track" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+          <span id="mannam-enabled-thumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+        </label>
+      </div>
+      <div style="font-size:11.5px;color:#999;line-height:1.6;margin-bottom:14px">알바 매칭과는 별개로, 소셜 모임인 바로미팅·바로스팟에도 참여하고 싶다면 켜주세요. 여기 등록한 정보만 블라인드 상대에게 공개되고 위 계정 프로필(경력·스킬 등)과는 서로 안 보여요.</div>
 
+      <div id="mannam-enabled-body" style="display:none">
       <div id="mannam-gender-gate" style="display:none;background:#F5F3FF;border-radius:12px;padding:14px;font-size:12.5px;color:#7C3AED;font-weight:700;text-align:center;margin-bottom:4px">👆 위에서 성별을 먼저 설정하면 바로만남 프로필도 함께 관리할 수 있어요</div>
 
       <div id="mannam-profile-fields" style="display:flex;flex-direction:column;gap:16px">
@@ -1988,6 +1997,7 @@
           <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">MBTI <span style="color:#aaa;font-weight:500">(선택)</span></div>
           <div id="mp-dating-mbti" style="display:flex;gap:8px"></div>
         </div>
+      </div>
       </div>
     </div>
 
@@ -4249,7 +4259,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=521"></script>
+<script src="./assets/js/app.js?v=522"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">

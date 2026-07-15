@@ -514,7 +514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '521';
+  const _APP_V = '522';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -530,7 +530,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=521').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=522').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -19065,6 +19065,23 @@ async function openMannamProfilePanel() {
   const { data: w } = await db.from('workers')
     .select('gender, job_category, body_type, interests, height_cm, mbti, dating_photo_url, photo_url')
     .eq('kakao_uid', currentUser.id).maybeSingle();
+  // dating_profile_enabled 컬럼은 DDL 추가 전이면 없을 수 있어 별도 조회 + try/catch로
+  // 분리(컬럼 없으면 위 select 전체가 실패하는 것을 방지). 컬럼이 아직 없거나 값이
+  // null이면, 이미 등록된 바로만남 정보가 있는 기존 유저는 켜진 것으로 간주해 갑자기
+  // 데이터가 숨겨지지 않게 함
+  let datingEnabledCol = null;
+  try {
+    const { data: wExtra } = await db.from('workers').select('dating_profile_enabled').eq('kakao_uid', currentUser.id).maybeSingle();
+    datingEnabledCol = wExtra?.dating_profile_enabled;
+  } catch (e) { /* 컬럼 미존재 시 무시 */ }
+  const hasExistingDatingData = !!(w?.job_category || w?.body_type || (w?.interests && w.interests.length));
+  _mpDatingEnabled = datingEnabledCol != null ? datingEnabledCol : hasExistingDatingData;
+
+  const toggleEl = document.getElementById('mannam-enabled-toggle');
+  if (toggleEl) toggleEl.checked = _mpDatingEnabled;
+  _renderMannamEnabledToggle(_mpDatingEnabled);
+  document.getElementById('mannam-enabled-body').style.display = _mpDatingEnabled ? 'block' : 'none';
+
   const gate = document.getElementById('mannam-gender-gate');
   const fields = document.getElementById('mannam-profile-fields');
   if (!w?.gender) {
@@ -19086,6 +19103,25 @@ async function openMannamProfilePanel() {
     _renderMannamProfilePanel();
   }
   openMpSub('basic');
+}
+
+let _mpDatingEnabled = false;
+function _renderMannamEnabledToggle(on) {
+  const track = document.getElementById('mannam-enabled-track');
+  const thumb = document.getElementById('mannam-enabled-thumb');
+  if (track) track.style.background = on ? '#7C3AED' : '#ddd';
+  if (thumb) thumb.style.transform = on ? 'translateX(20px)' : 'translateX(0)';
+}
+// 알바만 찾고 만남(바로미팅·바로스팟)에는 관심 없는 유저(기혼자 포함)도 많다는
+// 피드백(2026-07-16)으로, 이 정보를 아예 관리할지 자체를 토글로 켜고 끄게 함
+async function saveMannamEnabled(val) {
+  _mpDatingEnabled = val;
+  _renderMannamEnabledToggle(val);
+  document.getElementById('mannam-enabled-body').style.display = val ? 'block' : 'none';
+  if (val && _mpDatingProfile.gender) _renderMannamProfilePanel();
+  if (!currentUser) return;
+  const { error } = await db.from('workers').update({ dating_profile_enabled: val }).eq('kakao_uid', currentUser.id);
+  if (error) console.error('[mannam] dating_profile_enabled 저장 실패 (DDL 미적용 가능):', error);
 }
 
 function _renderMannamProfilePanel() {
@@ -19173,7 +19209,7 @@ async function saveMannamProfile() {
 // 성별이 설정된 경우에만 화면에 노출되므로 그때만 같이 저장하고, saveAllProfileSettings가
 // 마지막에 페이지를 새로고침한다
 async function saveCombinedProfile() {
-  if (_mpDatingProfile.gender) await saveMannamProfile();
+  if (_mpDatingEnabled && _mpDatingProfile.gender) await saveMannamProfile();
   await saveAllProfileSettings();
 }
 
