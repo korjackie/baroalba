@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=525"></script>
+  <script src="./shared-lang.js?v=526"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=525">
+  <link rel="stylesheet" href="./assets/css/style.css?v=526">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1877,7 +1877,7 @@
        있다는 걸 탭으로 자연스럽게 보여주는 방식으로 교체 -->
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button id="basic-tab-btn-account" onclick="switchBasicTab('account')" style="flex:1;padding:13px;border:none;background:none;font-size:14px;font-weight:800;color:var(--red);border-bottom:2.5px solid var(--red);cursor:pointer">⚡ 바로알바 프로필</button>
-    <button id="basic-tab-btn-mannam" onclick="switchBasicTab('mannam')" style="flex:1;padding:13px;border:none;background:none;font-size:14px;font-weight:800;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer">💕 바로만남 프로필</button>
+    <button id="basic-tab-btn-mannam" onclick="switchBasicTab('mannam')" style="flex:1;padding:13px;border:none;background:none;font-size:14px;font-weight:800;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer">💕 바로만남/모임 프로필</button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px">
     <div id="basic-tab-account" style="display:flex;flex-direction:column;gap:10px">
@@ -4277,7 +4277,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=525"></script>
+<script src="./assets/js/app.js?v=526"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
