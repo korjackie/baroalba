@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '499';
+  const _APP_V = '500';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -6334,12 +6334,15 @@ function _renderChatList() {
       : `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:${ac.fg};flex-shrink:0">${a.counterpartName.charAt(0)}</div>`;
     const preview = msg.content?.startsWith('[img]') ? '📷 사진' : (isMine ? `나: ${msg.content}` : msg.content);
     // 바로알바(1:1 채팅)는 화이트 유지, 바로모임(퍼플)/바로미팅(로즈)만 카드 색으로 구분
+    // 바로스팟도 바로미팅과 같은 "바로만남" 계열이라 같은 로즈 톤으로 통일
+    // (예전엔 일반 알바채팅과 똑같은 흰 배경이라 채팅목록에서 구분이 안 됐음)
+    const isBarospotRow = a.side === 'barospot';
     const rowBg = isGathering
       ? (a.gatheringCategory === 'baromeeting' ? '#ffe4e8' : '#e9e3ff')
-      : '#fff';
+      : isBarospotRow ? '#ffe4e8' : '#fff';
     const rowBorder = isGathering
       ? (a.gatheringCategory === 'baromeeting' ? '#e11d48' : '#7C3AED')
-      : 'transparent';
+      : isBarospotRow ? '#e11d48' : 'transparent';
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
       <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':rowBg};border-left:3.5px solid ${unread>0?'var(--red)':rowBorder}">
         <div style="position:relative;flex-shrink:0">
@@ -6515,7 +6518,7 @@ async function loadMyChatList() {
         const prof = profiles[i];
         const obj = {
           id: rowId, eventId: r.barospot_event_id, roomId: r.id,
-          title: '📍 바로스팟', counterpartName: prof?.name || '바로스팟 상대',
+          title: '💕 바로스팟', counterpartName: prof?.name || '바로스팟 상대',
           photoUrl: prof?.photo_url || null, side: 'barospot',
         };
         allApps.push(obj); appMap[rowId] = obj;
@@ -19805,24 +19808,15 @@ async function openBarospotChatRoom(eventId) {
     _bspChatRoomId = ensureData.room_id;
     _bspChatEventId = eventId;
 
-    const profRes = await fetch(`/api/admin?action=get_barospot_revealed_profile&event_id=${eventId}`, {
-      headers: { Authorization: 'Bearer ' + session.access_token }
-    });
-    _bspChatCounterpart = profRes.ok ? await profRes.json() : null;
-    const titleEl = document.getElementById('bspchat-title');
-    const avatarEl = document.getElementById('bspchat-cp-avatar');
-    if (titleEl) titleEl.textContent = _bspChatCounterpart?.name || '바로스팟';
-    if (avatarEl) avatarEl.innerHTML = _bspChatCounterpart?.photo_url
-      ? `<img src="${_bspChatCounterpart.photo_url}" style="width:100%;height:100%;object-fit:cover">`
-      : '👤';
-
-    const { data: w } = await db.from('workers').select('name, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
-    _bspChatMyName = w?.name || '나';
-    _bspChatMyPhoto = w?.photo_url || null;
-
+    // 예전엔 프로필 조회(서버 왕복)까지 다 끝난 뒤에야 패널을 열어서 다른 채팅(wchat/chat)보다
+    // 훨씬 느리게 느껴졌음 - 인가 확인(ensure_chat_room)만 끝나면 패널부터 바로 보여주고,
+    // 프로필/내 정보/메시지는 그 뒤에 병렬로 채운다
+    document.getElementById('bspchat-title').textContent = '바로스팟';
+    document.getElementById('bspchat-cp-avatar').innerHTML = '👤';
+    document.getElementById('bspchat-messages').innerHTML = '<div style="text-align:center;padding:24px"><div class="spinner" style="margin:0 auto"></div></div>';
     document.getElementById('panel-barospot-chat').style.display = 'flex';
     history.pushState({ panel: 'barospot-chat' }, '');
-    await _loadBarospotChatMessages();
+
     _bspSentIds.clear();
     if (_bspChatRealtimeCh) db.removeChannel(_bspChatRealtimeCh);
     _bspChatRealtimeCh = db.channel('barospot-chat-' + _bspChatRoomId)
@@ -19833,7 +19827,24 @@ async function openBarospotChatRoom(eventId) {
         _markBarospotChatRead();
       })
       .subscribe();
-    await _markBarospotChatRead();
+
+    const [profRes, wResult] = await Promise.all([
+      fetch(`/api/admin?action=get_barospot_revealed_profile&event_id=${eventId}`, {
+        headers: { Authorization: 'Bearer ' + session.access_token }
+      }),
+      db.from('workers').select('name, photo_url').eq('kakao_uid', currentUser.id).maybeSingle(),
+      _loadBarospotChatMessages(),
+      _markBarospotChatRead(),
+    ]);
+    _bspChatCounterpart = profRes.ok ? await profRes.json() : null;
+    const titleEl = document.getElementById('bspchat-title');
+    const avatarEl = document.getElementById('bspchat-cp-avatar');
+    if (titleEl) titleEl.textContent = _bspChatCounterpart?.name || '바로스팟';
+    if (avatarEl) avatarEl.innerHTML = _bspChatCounterpart?.photo_url
+      ? `<img src="${_bspChatCounterpart.photo_url}" style="width:100%;height:100%;object-fit:cover">`
+      : '👤';
+    _bspChatMyName = wResult?.data?.name || '나';
+    _bspChatMyPhoto = wResult?.data?.photo_url || null;
   } catch (e) {
     showToast('오류가 발생했어요');
   }
