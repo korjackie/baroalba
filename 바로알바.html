@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=502"></script>
+  <script src="./shared-lang.js?v=503"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=502">
+  <link rel="stylesheet" href="./assets/css/style.css?v=503">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -894,7 +894,7 @@
 
 <!-- 업주 평점 모달 -->
 <div class="modal-overlay" id="biz-rating-modal" onclick="if(event.target===this)closeBizRatingModal()" style="z-index:1200;align-items:flex-end;display:none">
-  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 36px;animation:slideUp 0.3s ease">
+  <div id="biz-rating-inner" style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 36px;animation:slideUp 0.3s ease">
     <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
       <div style="font-size:17px;font-weight:800;color:#222">업주 평점 남기기</div>
       <button onclick="closeBizRatingModal()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
@@ -943,7 +943,7 @@
 
 <!-- 신고 모달 -->
 <div class="modal-overlay" id="report-modal" onclick="if(event.target===this)closeReportModal()" style="z-index:1100;align-items:flex-end">
-  <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
+  <div id="report-modal-inner" style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
     <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
       <div style="font-size:17px;font-weight:800;color:#222">신고하기</div>
       <button onclick="closeReportModal()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
@@ -4152,7 +4152,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=502"></script>
+<script src="./assets/js/app.js?v=503"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">

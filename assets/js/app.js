@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '502';
+  const _APP_V = '503';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -4991,6 +4991,25 @@ window._onFCMToken = function(token) {
       ai.style.transform = dp > 80 ? 'translateY(-' + dp + 'px)' : '';
       ai.style.maxHeight = dp > 80 ? (window.innerHeight - dp - 60) + 'px' : '';
     }
+    // 업주 평점 남기기 모달(biz-review-text) - 키보드 처리가 전혀 없어 입력창이 가려지던 문제
+    var brm = document.getElementById('biz-rating-modal');
+    var bri = document.getElementById('biz-rating-inner');
+    if (brm && brm.style.display === 'flex' && bri) {
+      bri.style.paddingBottom = (dp > 80 && !isNativelyResized) ? (dp + 20) + 'px' : '';
+    }
+    // 신고하기 모달(report-detail) - 키보드 처리가 전혀 없어 입력창이 가려지던 문제
+    var rpm = document.getElementById('report-modal');
+    var rpi = document.getElementById('report-modal-inner');
+    if (rpm && rpm.classList.contains('open') && rpi) {
+      rpi.style.paddingBottom = (dp > 80 && !isNativelyResized) ? (dp + 20) + 'px' : '';
+    }
+    // 커뮤니티 게시글 상세 댓글 입력창(comm-post-sheet) - height:85vh 고정 + 댓글바가
+    // 스크롤 영역 밖(하단 고정)이라 키보드가 열리면 그대로 가려지던 문제 (전체 검수 중 발견)
+    var cpo = document.getElementById('community-post-overlay');
+    var cps = document.getElementById('comm-post-sheet');
+    if (cpo && cpo.classList.contains('open') && cps) {
+      cps.style.paddingBottom = (dp > 80 && !isNativelyResized) ? dp + 'px' : '';
+    }
   };
 
   // 브라우저 환경 폴백 (WebView 외에서 접속 시)
@@ -6403,12 +6422,8 @@ function _renderChatList() {
   }, {once:false,capture:true});
 }
 
-async function loadMyChatList() {
-  if (isGuest || !currentUser) return;
-  const el = document.getElementById('my-chats-list');
-  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
-
-  const allApps = [], appMap = {};
+async function _loadJobChatsIntoList(allApps) {
+  const appMap = {};
   const [wid, bizRes] = await Promise.all([
     _getWorkerId(),
     db.from('businesses').select('id').eq('kakao_uid', currentUser.id).maybeSingle()
@@ -6440,11 +6455,10 @@ async function loadMyChatList() {
     }
   }
 
-  _latestMsg = {}; _unreadCnt = {};
-
-  if (allApps.length) {
+  const jobAppIds = Object.keys(appMap);
+  if (jobAppIds.length) {
     const { data: messages } = await db.from('messages')
-      .select('*').in('application_id', allApps.map(a => a.id))
+      .select('*').in('application_id', jobAppIds)
       .order('created_at', { ascending: false });
     (messages || []).forEach(m => {
       if (!_latestMsg[m.application_id]) _latestMsg[m.application_id] = m;
@@ -6452,85 +6466,105 @@ async function loadMyChatList() {
         _unreadCnt[m.application_id] = (_unreadCnt[m.application_id] || 0) + 1;
     });
   }
+}
 
-  // 바로모임/바로미팅 단체채팅도 같은 목록에 포함 - "채팅 메뉴에서 못 찾겠다"는 피드백 반영.
-  // gathering_chats는 개인별 읽음여부를 저장하지 않아 안읽음 뱃지는 표시하지 않음
+// 바로모임/바로미팅 단체채팅도 같은 목록에 포함 - "채팅 메뉴에서 못 찾겠다"는 피드백 반영.
+// gathering_chats는 개인별 읽음여부를 저장하지 않아 안읽음 뱃지는 표시하지 않음
+async function _loadGatheringChatsIntoList(allApps) {
   const { data: myGatherApps } = await db.from('gathering_applications')
     .select('gathering_id').eq('applicant_id', currentUser.id).eq('status', 'approved');
   const gatheringIds = [...new Set((myGatherApps || []).map(a => a.gathering_id))];
-  if (gatheringIds.length) {
-    const [{ data: gatherings }, { data: gMsgs }] = await Promise.all([
-      db.from('gatherings').select('id, title, category').in('id', gatheringIds),
-      db.from('gathering_chats').select('*').in('gathering_id', gatheringIds).order('sent_at', { ascending: false }),
-    ]);
-    const gLatest = {};
-    (gMsgs || []).forEach(m => { if (!gLatest[m.gathering_id]) gLatest[m.gathering_id] = m; });
-    (gatherings || []).forEach(g => {
-      const rowId = 'g_' + g.id;
-      const isBaromeeting = g.category === 'baromeeting';
-      const obj = {
-        id: rowId, gatheringId: g.id, gatheringCategory: g.category,
-        title: isBaromeeting ? '🤝 바로미팅' : '👥 바로모임',
-        counterpartName: g.title || (isBaromeeting ? '바로미팅' : '바로모임'),
-        photoUrl: null, side: 'gathering',
-      };
-      allApps.push(obj); appMap[rowId] = obj;
-      const lm = gLatest[g.id];
-      _latestMsg[rowId] = lm
-        ? { content: lm.message, created_at: lm.sent_at, sender_id: lm.sender_id }
-        : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
-    });
-  }
+  if (!gatheringIds.length) return;
+  const [{ data: gatherings }, { data: gMsgs }] = await Promise.all([
+    db.from('gatherings').select('id, title, category').in('id', gatheringIds),
+    db.from('gathering_chats').select('*').in('gathering_id', gatheringIds).order('sent_at', { ascending: false }),
+  ]);
+  const gLatest = {};
+  (gMsgs || []).forEach(m => { if (!gLatest[m.gathering_id]) gLatest[m.gathering_id] = m; });
+  (gatherings || []).forEach(g => {
+    const rowId = 'g_' + g.id;
+    const isBaromeeting = g.category === 'baromeeting';
+    const obj = {
+      id: rowId, gatheringId: g.id, gatheringCategory: g.category,
+      title: isBaromeeting ? '🤝 바로미팅' : '👥 바로모임',
+      counterpartName: g.title || (isBaromeeting ? '바로미팅' : '바로모임'),
+      photoUrl: null, side: 'gathering',
+    };
+    allApps.push(obj);
+    const lm = gLatest[g.id];
+    _latestMsg[rowId] = lm
+      ? { content: lm.message, created_at: lm.sent_at, sender_id: lm.sender_id }
+      : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
+  });
+}
 
-  // 바로스팟 1:1 채팅도 같은 목록에 포함 - chat_rooms/chat_messages 통합 스키마를 쓰는
-  // 새 기능인데 정작 이 목록 로딩 함수엔 조회 자체가 없어서 "채팅목록에 바로스팟 채팅방이
-  // 안 보인다"는 문제가 있었음
+// 바로스팟 1:1 채팅도 같은 목록에 포함 - chat_rooms/chat_messages 통합 스키마를 쓰는
+// 새 기능인데 정작 이 목록 로딩 함수엔 조회 자체가 없어서 "채팅목록에 바로스팟 채팅방이
+// 안 보인다"는 문제가 있었음
+async function _loadBarospotChatsIntoList(allApps) {
   const { data: myBspApps } = await db.from('barospot_applications')
     .select('event_id').eq('user_id', currentUser.id).eq('status', 'confirmed').not('event_id', 'is', null);
   const bspEventIds = [...new Set((myBspApps || []).map(a => a.event_id))];
-  if (bspEventIds.length) {
-    const { data: bspRooms } = await db.from('chat_rooms')
-      .select('id, barospot_event_id').eq('context_type', 'barospot').in('barospot_event_id', bspEventIds);
-    if (bspRooms?.length) {
-      const roomIds = bspRooms.map(r => r.id);
-      const [{ data: bspMsgs }, { data: bspReads }, { data: { session } }] = await Promise.all([
-        db.from('chat_messages').select('*').in('room_id', roomIds).order('created_at', { ascending: false }),
-        db.from('chat_reads').select('room_id, last_read_at').eq('user_id', currentUser.id).in('room_id', roomIds),
-        db.auth.getSession(),
-      ]);
-      const readMap = {};
-      (bspReads || []).forEach(r => { readMap[r.room_id] = r.last_read_at; });
-      const bspLatestByRoom = {}, bspUnreadByRoom = {};
-      (bspMsgs || []).forEach(m => {
-        if (!bspLatestByRoom[m.room_id]) bspLatestByRoom[m.room_id] = m;
-        const lastRead = readMap[m.room_id];
-        if (m.sender_id !== currentUser.id && (!lastRead || new Date(m.created_at) > new Date(lastRead))) {
-          bspUnreadByRoom[m.room_id] = (bspUnreadByRoom[m.room_id] || 0) + 1;
-        }
-      });
-      // 상대방 이름/사진은 서로 호감수락된 사이에서만 공개되는 정보라 서버 API로만 조회 가능
-      const profiles = await Promise.all(bspRooms.map(r =>
-        fetch(`/api/admin?action=get_barospot_revealed_profile&event_id=${r.barospot_event_id}`, {
-          headers: { Authorization: 'Bearer ' + session.access_token }
-        }).then(res => res.ok ? res.json() : null).catch(() => null)
-      ));
-      bspRooms.forEach((r, i) => {
-        const rowId = 'bsp_' + r.id;
-        const prof = profiles[i];
-        const obj = {
-          id: rowId, eventId: r.barospot_event_id, roomId: r.id,
-          title: '💕 바로스팟', counterpartName: prof?.name || '바로스팟 상대',
-          photoUrl: prof?.photo_url || null, side: 'barospot',
-        };
-        allApps.push(obj); appMap[rowId] = obj;
-        const lm = bspLatestByRoom[r.id];
-        _latestMsg[rowId] = lm
-          ? { content: lm.content, created_at: lm.created_at, sender_id: lm.sender_id }
-          : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
-        if (bspUnreadByRoom[r.id]) _unreadCnt[rowId] = bspUnreadByRoom[r.id];
-      });
+  if (!bspEventIds.length) return;
+  const { data: bspRooms } = await db.from('chat_rooms')
+    .select('id, barospot_event_id').eq('context_type', 'barospot').in('barospot_event_id', bspEventIds);
+  if (!bspRooms?.length) return;
+  const roomIds = bspRooms.map(r => r.id);
+  const [{ data: bspMsgs }, { data: bspReads }, { data: { session } }] = await Promise.all([
+    db.from('chat_messages').select('*').in('room_id', roomIds).order('created_at', { ascending: false }),
+    db.from('chat_reads').select('room_id, last_read_at').eq('user_id', currentUser.id).in('room_id', roomIds),
+    db.auth.getSession(),
+  ]);
+  const readMap = {};
+  (bspReads || []).forEach(r => { readMap[r.room_id] = r.last_read_at; });
+  const bspLatestByRoom = {}, bspUnreadByRoom = {};
+  (bspMsgs || []).forEach(m => {
+    if (!bspLatestByRoom[m.room_id]) bspLatestByRoom[m.room_id] = m;
+    const lastRead = readMap[m.room_id];
+    if (m.sender_id !== currentUser.id && (!lastRead || new Date(m.created_at) > new Date(lastRead))) {
+      bspUnreadByRoom[m.room_id] = (bspUnreadByRoom[m.room_id] || 0) + 1;
     }
-  }
+  });
+  // 상대방 이름/사진 조회(서버 API, event당 1회)도 병렬로 - 한 건 실패해도 나머지엔 영향 없게
+  // 개별적으로 catch
+  const profiles = await Promise.all(bspRooms.map(r =>
+    fetch(`/api/admin?action=get_barospot_revealed_profile&event_id=${r.barospot_event_id}`, {
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    }).then(res => res.ok ? res.json() : null).catch(() => null)
+  ));
+  bspRooms.forEach((r, i) => {
+    const rowId = 'bsp_' + r.id;
+    const prof = profiles[i];
+    const obj = {
+      id: rowId, eventId: r.barospot_event_id, roomId: r.id,
+      title: '💕 바로스팟', counterpartName: prof?.name || '바로스팟 상대',
+      photoUrl: prof?.photo_url || null, side: 'barospot',
+    };
+    allApps.push(obj);
+    const lm = bspLatestByRoom[r.id];
+    _latestMsg[rowId] = lm
+      ? { content: lm.content, created_at: lm.created_at, sender_id: lm.sender_id }
+      : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
+    if (bspUnreadByRoom[r.id]) _unreadCnt[rowId] = bspUnreadByRoom[r.id];
+  });
+}
+
+async function loadMyChatList() {
+  if (isGuest || !currentUser) return;
+  const el = document.getElementById('my-chats-list');
+  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+
+  const allApps = [];
+  _latestMsg = {}; _unreadCnt = {};
+
+  // 알바채팅/모임·바로미팅/바로스팟 세 유형을 병렬로 불러오고 각각 개별적으로 에러를 잡는다 -
+  // 예전엔 순차 실행에 에러처리가 전혀 없어서, 그 중 하나만 실패해도(RLS·네트워크 등) 목록
+  // 전체가 로딩 스피너에서 영원히 멈춰있었고, 순차 실행이라 체감 속도도 느렸음
+  await Promise.all([
+    _loadJobChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 알바채팅 로딩 실패:', e)),
+    _loadGatheringChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 모임채팅 로딩 실패:', e)),
+    _loadBarospotChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 바로스팟채팅 로딩 실패:', e)),
+  ]);
 
   const badge = document.getElementById('chat-unread-badge');
   if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
