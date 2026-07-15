@@ -639,51 +639,61 @@
   </div>
 
   <!-- 바로스팟 개설·관리 (제휴매장 자체와는 별개 - 제휴매장은 일반 정보, 바로스팟은 특정 날짜·정원 세션) -->
+  <!-- 개설 폼과 신청 관리(전체 이벤트의 신청자 목록)가 한 화면에 이어져 있어서, 새 바로스팟을
+       개설하는 중에 이전에 개설한 바로스팟의 신청자(예: 박근욱)가 바로 아래 같이 보여
+       "왜 개설 화면에 남의 신청자가 나오냐"는 혼란이 있었음 - 서브탭으로 완전히 분리 -->
   <div class="tab-content" id="tab-barospot">
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">제휴매장 중 하나를 골라 특정 날짜·정원으로 바로스팟을 개설하고, 신청을 매칭·확정합니다.</div>
-    <div id="barospot-events-list"><div class="loading">로딩 중...</div></div>
-    <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div id="bse-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">바로스팟 개설</div>
-      <input type="hidden" id="bse-id">
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;gap:8px">
-          <button type="button" id="bse-loc-tab-partner" onclick="setBseLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:700;cursor:pointer">제휴매장에서 선택</button>
-          <button type="button" id="bse-loc-tab-search" onclick="setBseLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">새 장소 검색</button>
-        </div>
-        <select id="bse-restaurant" onchange="selectBseRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
-          <option value="">제휴매장을 선택하세요</option>
-        </select>
-        <div id="bse-search-block" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button type="button" id="bsp-subtab-manage" onclick="setBarospotSubTab('manage')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:13px;font-weight:800;cursor:pointer">개설·목록</button>
+      <button type="button" id="bsp-subtab-apps" onclick="setBarospotSubTab('apps')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:13px;font-weight:800;cursor:pointer">🙋 신청 관리</button>
+    </div>
+
+    <div id="bsp-subtab-content-manage">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">제휴매장 중 하나를 골라 특정 날짜·정원으로 바로스팟을 개설하고, 신청을 매칭·확정합니다.</div>
+      <div id="barospot-events-list"><div class="loading">로딩 중...</div></div>
+      <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <div id="bse-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">바로스팟 개설</div>
+        <input type="hidden" id="bse-id">
+        <div style="display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;gap:8px">
-            <input id="bse-place-query" type="text" placeholder="장소명 검색 (예: 강남 OO식당)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBsePlace();}">
-            <button onclick="searchBsePlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+            <button type="button" id="bse-loc-tab-partner" onclick="setBseLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:700;cursor:pointer">제휴매장에서 선택</button>
+            <button type="button" id="bse-loc-tab-search" onclick="setBseLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">새 장소 검색</button>
           </div>
-          <div id="bse-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-top:8px"></div>
-        </div>
-        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">검색해서 고르면 새 제휴매장으로 자동 등록되며 바로 이 바로스팟에 연결됩니다. 필요하면 아래 매장명·주소를 직접 수정할 수도 있어요.</div>
-        <input id="bse-location-name" type="text" placeholder="매장명 (예: 강남역 OO식당)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <input id="bse-address" type="text" placeholder="주소 (실시간 위치추적을 쓰려면 꼭 입력)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">진행 일시</div>
-          <div style="display:flex;gap:8px">
-            <div style="position:relative;flex:1.3;min-width:0">
-              <input id="bse-date" type="date" oninput="updateBseDateDisplay()" onchange="updateBseDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
-              <div id="bse-date-display" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#475569;box-sizing:border-box;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">날짜 선택</div>
+          <select id="bse-restaurant" onchange="selectBseRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
+            <option value="">제휴매장을 선택하세요</option>
+          </select>
+          <div id="bse-search-block" style="display:none">
+            <div style="display:flex;gap:8px">
+              <input id="bse-place-query" type="text" placeholder="장소명 검색 (예: 강남 OO식당)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBsePlace();}">
+              <button onclick="searchBsePlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
             </div>
-            <input id="bse-time" type="time" step="300" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
+            <div id="bse-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-top:8px"></div>
           </div>
-        </div>
-        <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">바로스팟은 여성 1명 + 남성 1명을 매칭하는 1:1 소개팅이라 별도 정원 입력은 없습니다. 저장하면 "남성 모집중" 상태로 열립니다.</div>
-        <textarea id="bse-notes" placeholder="메모 (선택)" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
-        <div style="display:flex;gap:8px;margin-top:4px">
-          <button onclick="saveBarospotEvent()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
-          <button onclick="resetBarospotEventForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+          <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">검색해서 고르면 새 제휴매장으로 자동 등록되며 바로 이 바로스팟에 연결됩니다. 필요하면 아래 매장명·주소를 직접 수정할 수도 있어요.</div>
+          <input id="bse-location-name" type="text" placeholder="매장명 (예: 강남역 OO식당)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <input id="bse-address" type="text" placeholder="주소 (실시간 위치추적을 쓰려면 꼭 입력)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">진행 일시</div>
+            <div style="display:flex;gap:8px">
+              <div style="position:relative;flex:1.3;min-width:0">
+                <input id="bse-date" type="date" oninput="updateBseDateDisplay()" onchange="updateBseDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+                <div id="bse-date-display" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;color:#475569;box-sizing:border-box;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">날짜 선택</div>
+              </div>
+              <input id="bse-time" type="time" step="300" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569;box-sizing:border-box">
+            </div>
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">바로스팟은 여성 1명 + 남성 1명을 매칭하는 1:1 소개팅이라 별도 정원 입력은 없습니다. 저장하면 "남성 모집중" 상태로 열립니다.</div>
+          <textarea id="bse-notes" placeholder="메모 (선택)" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button onclick="saveBarospotEvent()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
+            <button onclick="resetBarospotEventForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 바로스팟 신청 매칭/확정 - 이름+상태만 보여주고 눌러야 상세/조치가 나오는 방식 -->
-    <div style="margin-top:24px;margin-bottom:24px">
+    <div id="bsp-subtab-content-apps" style="display:none">
       <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🙋 바로스팟 신청 관리</div>
       <div id="barospot-apps-list"><div class="loading">로딩 중...</div></div>
     </div>
@@ -2905,6 +2915,23 @@ async function submitBarospotComplete() {
 let _barospotAppsList = [];
 const BAROSPOT_APP_STATUS_LABEL = { pending: '대기중', matched: '매칭됨', confirmed: '확정', cancelled: '취소됨' };
 const BAROSPOT_APP_STATUS_COLOR = { pending: '#f59e0b', matched: '#8b5cf6', confirmed: '#10b981', cancelled: '#94a3b8' };
+
+// 개설·목록 화면과 신청 관리(전체 이벤트 대상) 화면이 한 화면에 이어져 있어서 "새 바로스팟을
+// 개설하는데 왜 다른 바로스팟 신청자가 같이 보이냐"는 혼란이 있었음 - 완전히 분리된 서브탭으로 전환
+function setBarospotSubTab(tab) {
+  const isManage = tab === 'manage';
+  document.getElementById('bsp-subtab-content-manage').style.display = isManage ? 'block' : 'none';
+  document.getElementById('bsp-subtab-content-apps').style.display = isManage ? 'none' : 'block';
+  const mBtn = document.getElementById('bsp-subtab-manage');
+  const aBtn = document.getElementById('bsp-subtab-apps');
+  mBtn.style.background = isManage ? '#7C3AED' : '#fff';
+  mBtn.style.color = isManage ? '#fff' : '#64748b';
+  mBtn.style.borderColor = isManage ? '#7C3AED' : '#e2e8f0';
+  aBtn.style.background = isManage ? '#fff' : '#7C3AED';
+  aBtn.style.color = isManage ? '#64748b' : '#fff';
+  aBtn.style.borderColor = isManage ? '#e2e8f0' : '#7C3AED';
+  if (!isManage) loadBarospotApplications();
+}
 
 async function loadBarospotApplications() {
   const el = document.getElementById('barospot-apps-list');
