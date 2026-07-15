@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '503';
+  const _APP_V = '504';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -10134,11 +10134,28 @@ async function _doSaveAllProfileSettings() {
       }
       _pendingAvatarBlob = null;
     }
+    const uploadedPortfolioUrls = [];
     for (const p of pendingPortfolio) {
       const path = `${currentUser.id}/portfolio_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
       const { error: upErr } = await db.storage.from('biz-photos').upload(path, p.blob, { contentType: 'image/jpeg' });
-      if (!upErr) URL.revokeObjectURL(p.photo_url);
-      else { console.error('[photo] 포트폴리오 실패:', upErr); showToast('포트폴리오 업로드 실패: ' + upErr.message, 6000); }
+      if (!upErr) {
+        URL.revokeObjectURL(p.photo_url);
+        uploadedPortfolioUrls.push(db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl);
+      } else { console.error('[photo] 포트폴리오 실패:', upErr); showToast('포트폴리오 업로드 실패: ' + upErr.message, 6000); }
+    }
+
+    // 대표사진(workers.photo_url, 채팅/바로만남 등 앱 전체에서 쓰는 아바타)을 따로 안 올리고
+    // 포트폴리오(최대 5장)만 올리는 유저가 많아서, 정작 대표사진은 계속 비어있는 채로 남는
+    // 문제가 있었음("사진 올렸는데 계속 기본정보 입력하라고 뜬다"는 신고, 2026-07-16) -
+    // 대표사진이 비어있으면 방금 올린(또는 기존) 포트폴리오 첫 장을 자동으로 채워준다
+    if (!_pendingAvatarBlob) {
+      const fallbackUrl = uploadedPortfolioUrls[0] || _wPhotos.find(p => !p.blob)?.photo_url;
+      if (fallbackUrl) {
+        const { data: wRow } = await db.from('workers').select('photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
+        if (!wRow?.photo_url) {
+          await db.from('workers').upsert({ kakao_uid: currentUser.id, photo_url: fallbackUrl }, { onConflict: 'kakao_uid' });
+        }
+      }
     }
 
     await saveWorkerProfile();
