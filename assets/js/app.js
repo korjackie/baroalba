@@ -514,7 +514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '516';
+  const _APP_V = '517';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -530,7 +530,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=516').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=517').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -9331,23 +9331,29 @@ function _slotHtml(idx, p, readonly) {
 
 // 대표사진(0번)을 위, 포트폴리오(1~4번)를 그 아래 2x2로 배치. 대표사진 칸은 화면 폭의
 // 58%로 좁혀 너무 커서 잘려 보이지 않게 하고(2026-07-16 피드백), 정사각형 비율로 통일
-function _paintPhotoGrid(container, readonly) {
+// layout 'top': 대표사진을 위에 크게 + 아래 2x2 (사진 관리 - 편집 화면, 사진이 메인이라
+// 넉넉하게). layout 'left': 대표사진을 왼쪽에 + 오른쪽 2x2 (프로필 편집 안의 미리보기 -
+// 사진이 아니라 다른 정보들이 메인이라 자리를 적게 차지하도록 컴팩트하게, 2026-07-16 피드백)
+function _paintPhotoGrid(container, readonly, layout) {
   if (!container) return;
   const avatarCell = _slotHtml(0, _wPhotos[0], readonly);
   const restCells = [1, 2, 3, 4].map(i => _slotHtml(i, _wPhotos[i], readonly)).join('');
-  // 포트폴리오 4장이 화면 폭을 꽉 채워 빽빽해 보인다는 피드백(2026-07-16)으로 80%
-  // 너비로 줄이고 칸 사이 간격도 8px→14px로 넓혀 여유있게 보이도록 조정
-  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px;align-items:center">
-    <div style="width:58%">${avatarCell}</div>
-    <div style="width:80%;display:grid;grid-template-columns:1fr 1fr;gap:14px">${restCells}</div>
-  </div>`;
+  container.innerHTML = layout === 'left'
+    ? `<div style="display:flex;gap:10px;align-items:flex-start">
+         <div style="flex:0 0 42%">${avatarCell}</div>
+         <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px">${restCells}</div>
+       </div>`
+    : `<div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+         <div style="width:58%">${avatarCell}</div>
+         <div style="width:80%;display:grid;grid-template-columns:1fr 1fr;gap:14px">${restCells}</div>
+       </div>`;
   if (!readonly) _setupTouchDnd(container, _swapPhotoSlots, 'data-slot-idx');
 }
 
 function _renderWorkerPhotos(photos) {
   _wPhotos = photos;
-  _paintPhotoGrid(document.getElementById('photo-mgr-grid'), false);
-  _paintPhotoGrid(document.getElementById('worker-photos-preview'), true);
+  _paintPhotoGrid(document.getElementById('photo-mgr-grid'), false, 'top');
+  _paintPhotoGrid(document.getElementById('worker-photos-preview'), true, 'left');
   _paintHeaderAvatar();
   const countEl = document.getElementById('photo-mgr-count');
   if (countEl) countEl.textContent = `${photos.length}/5`;
