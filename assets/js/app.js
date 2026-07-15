@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '500';
+  const _APP_V = '501';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -18086,9 +18086,14 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', meetingId).eq('applicant_id', currentUser.id).limit(1);
   if (existing?.length) { showToast('이미 신청한 바로미팅이에요'); return; }
 
-  const { data: wRow } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
+  const { data: wRow } = await db.from('workers')
+    .select('gender, photo_url, age, birth_date, job_category, body_type').eq('kakao_uid', currentUser.id).maybeSingle();
   const gender = wRow?.gender;
   if (!gender) { showToast('바로만남 > 바로스팟에서 성별을 먼저 등록해주세요'); return; }
+  // 블라인드 매칭이라 프로필(사진/나이/직업군/체형)이 비어있으면 상대가 신청 여부를 판단할
+  // 수 없음 - 바로스팟과 동일한 기준으로 신청 전에 먼저 채우도록 안내
+  const profileGap = _datingProfileGap(wRow);
+  if (profileGap) { await _promptCompleteDatingProfile(profileGap); return; }
 
   // 이벤트 기간 중 첫 이용자는 포인트/이용권 차감 없이 무료 체험 신청 (식사비만 멀티무브 계좌로 입금)
   if (await _isBaromeetTrialEligible(currentUser.id)) {
@@ -18941,7 +18946,7 @@ async function _tryPayBarospotWithPoints(gender, title) {
 async function applyBarospot() {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   const eligibility = await _checkBarospotEligibility();
-  if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
+  if (!eligibility.ok) { await _handleBarospotIneligible(eligibility); return; }
   const isTrial = await _isBarospotTrialEligible(currentUser.id);
 
   if (!isTrial && _spotPassCount < 1) {
@@ -19247,6 +19252,9 @@ async function loadNearbyBarospotOffers() {
 }
 
 async function claimBarospotEvent(eventId) {
+  if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
+  const eligibility = await _checkBarospotEligibility();
+  if (!eligibility.ok) { await _handleBarospotIneligible(eligibility); return; }
   const isTrial = currentUser && await _isBarospotTrialEligible(currentUser.id);
   if (!isTrial && _spotPassCount < 1) {
     const pay = await _tryPayBarospotWithPoints('female', '바로스팟 선점');
@@ -19517,8 +19525,38 @@ const BAROSPOT_MIN_RATING = 3.5;
 const BAROSPOT_MIN_REVIEWS_FOR_RATING_CHECK = 2;
 const BAROSPOT_MAX_NOSHOW = 1;
 
+// 사진/나이(마이페이지 기본정보) 또는 직업군/체형(내 소개팅 프로필) 중 어느 게 비어있는지
+// 판정 - 블라인드 매칭인데 프로필이 비어있으면 상대가 신청/수락 여부를 전혀 판단할 수
+// 없어서(실제로 사진·나이가 빈 채로 매칭된 사례 발견) 신청 전에 먼저 채우도록 막는다
+function _datingProfileGap(w) {
+  if (!w?.photo_url || !(w?.age || w?.birth_date)) return 'basic';
+  if (!w?.job_category || !w?.body_type) return 'dating';
+  return null;
+}
+// gap에 맞는 화면으로 안내 - 'basic'은 마이페이지 기본정보, 'dating'은 내 소개팅 프로필
+async function _promptCompleteDatingProfile(gap) {
+  if (gap === 'basic') {
+    const go = await showConfirmDialog('프로필을 먼저 완성해주세요', '바로미팅·바로스팟은 서로의 프로필을 보고 참여를 결정해요.\n마이페이지에서 프로필 사진과 나이를 먼저 등록해주세요.', '마이페이지로 이동', '나중에');
+    if (!go) return;
+    closeMannnamPanel();
+    const profileNav = document.querySelectorAll('.nav-item')[4];
+    if (profileNav) setNav(profileNav, 'profile');
+    setTimeout(() => openMpSub('basic'), 150);
+  } else {
+    const go = await showConfirmDialog('소개팅 프로필을 먼저 등록해주세요', '직업군·체형 정보가 있어야 상대방이 참여 여부를 판단할 수 있어요.', '지금 등록하기', '나중에');
+    if (!go) return;
+    openDatingProfileSheet();
+  }
+}
+async function _handleBarospotIneligible(eligibility) {
+  if (eligibility.needsProfile) { await _promptCompleteDatingProfile(eligibility.needsProfile); return; }
+  showToast('🚫 ' + eligibility.reason);
+}
+
 async function _checkBarospotEligibility() {
-  const { data: w } = await db.from('workers').select('rating, review_count, noshow_count').eq('kakao_uid', currentUser.id).maybeSingle();
+  const { data: w } = await db.from('workers')
+    .select('rating, review_count, noshow_count, photo_url, age, birth_date, job_category, body_type')
+    .eq('kakao_uid', currentUser.id).maybeSingle();
   const noshow = w?.noshow_count || 0;
   const reviews = w?.review_count || 0;
   const rating = w?.rating;
@@ -19526,6 +19564,8 @@ async function _checkBarospotEligibility() {
   if (reviews >= BAROSPOT_MIN_REVIEWS_FOR_RATING_CHECK && rating != null && rating < BAROSPOT_MIN_RATING) {
     return { ok: false, reason: `평점(${Number(rating).toFixed(1)})이 기준(${BAROSPOT_MIN_RATING}) 미만이라 바로스팟 신청이 제한돼요` };
   }
+  const gap = _datingProfileGap(w);
+  if (gap) return { ok: false, needsProfile: gap };
   return { ok: true };
 }
 
@@ -19546,7 +19586,7 @@ async function _notifyBarospotNewCandidate(eventId) {
 async function applySpotEvent(eventId) {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   const eligibility = await _checkBarospotEligibility();
-  if (!eligibility.ok) { showToast('🚫 ' + eligibility.reason); return; }
+  if (!eligibility.ok) { await _handleBarospotIneligible(eligibility); return; }
   const isTrial = await _isBarospotTrialEligible(currentUser.id);
   if (!isTrial && _spotPassCount < 1) {
     const pay = await _tryPayBarospotWithPoints('male', '바로스팟 참가');
