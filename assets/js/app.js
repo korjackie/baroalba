@@ -468,7 +468,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '511';
+  const _APP_V = '512';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -484,7 +484,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=511').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=512').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -8749,7 +8749,7 @@ async function loadWorkerProfileForm() {
     }
   }
   // 포트폴리오 사진 로드
-  loadWorkerPhotos().catch(() => {});
+  loadWorkerPhotos(w.photo_url).catch(() => {});
   // 증빙서류 상태 확인
   const { data: certFiles } = await db.storage.from('health-certs').list(currentUser.id);
   if (certFiles?.length) {
@@ -9178,94 +9178,138 @@ function applyCrop() {
   img2.src = src;
 }
 
-// ── Storage 업로드 ────────────────────────────────────
-async function uploadAvatar(input) {
-  const file = input.files[0];
-  if (!file || !currentUser) { input.value = ''; return; }
-  input.value = '';
-  openCropModal(file, blob => {
-    _pendingAvatarBlob = blob;
-    const inner = document.getElementById('header-avatar-inner');
-    if (inner) {
-      const fc = (currentUser?.user_metadata?.full_name || currentUser?.email || '?').charAt(0);
-      const url = URL.createObjectURL(blob);
-      inner.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${fc}',58)">`;
-    }
-    _updateProfilePhotoSaveBar();
-    showToast('✅ 사진 준비됨 — 상단의 저장하기를 눌러주세요');
-  });
-}
+// ── 사진 (대표사진 + 포트폴리오, 5칸 통합) ──────────────────
+// 예전엔 대표사진(마이페이지 헤더 클릭 → 파일 1장 즉시 업로드)과 포트폴리오(프로필 편집
+// 안의 별도 그리드)가 서로 다른 화면/모델이라 헷갈린다는 피드백(2026-07-16)으로 통합.
+// _wPhotos[0] = 대표 프로필 사진(왼쪽 큰 칸), _wPhotos[1..4] = 포트폴리오(오른쪽 2x2).
+// 등록/드래그/삭제는 이 화면(mpsub-photos, 마이페이지 헤더 사진 클릭으로 진입)에서만 하고,
+// 프로필 편집(mpsub-basic) 쪽은 같은 배치를 그대로 보여주는 읽기전용 미리보기만 둔다.
+let _wPhotos = [], _wPhotosOriginalOrder = [], _wDragSrcIdx = null;
+let _activityLat = null, _activityLng = null, _activityAreaName = '';
 
-// 사진(대표사진/포트폴리오)이 아직 저장 안 된 상태일 때 마이페이지 상단에
-// 저장/나가기 바를 띄운다 — _renderWorkerPhotos가 호출될 때마다도 같이 갱신됨
-function _updateProfilePhotoSaveBar() {
-  const bar = document.getElementById('profile-photo-savebar');
-  if (!bar) return;
-  const hasPending = !!_pendingAvatarBlob || _wPhotos.some(p => p.blob);
-  bar.style.display = hasPending ? 'block' : 'none';
-}
-
-async function discardPendingProfilePhoto() {
-  _pendingAvatarBlob = null;
-  _wPhotos.filter(p => p.blob).forEach(p => URL.revokeObjectURL(p.photo_url));
-  _renderWorkerPhotos(_wPhotos.filter(p => !p.blob));
-  await loadWorkerProfileForm();
-  _updateProfilePhotoSaveBar();
-  showToast('변경사항을 취소했어요');
-}
-
-// ── 포트폴리오 사진 (다중, 최대 5장) ─────────────────────
-async function loadWorkerPhotos() {
+async function loadWorkerPhotos(avatarUrl) {
   if (!currentUser) return;
   const prefix = `${currentUser.id}`;
   const { data: files, error } = await db.storage.from('biz-photos').list(prefix);
   if (error) { console.error('loadWorkerPhotos error:', error); return; }
-  const photos = (files || [])
-    .filter(f => f.name.startsWith('portfolio_'))
+  // 대표사진이 예전 백필 로직 등으로 portfolio_ 파일을 그대로 가리키고 있을 수 있어
+  // 같은 파일이 대표사진 칸과 포트폴리오 칸에 중복 노출되지 않도록 제외
+  const avatarFilename = avatarUrl ? avatarUrl.split('/').pop().split('?')[0] : null;
+  const portfolio = (files || [])
+    .filter(f => f.name.startsWith('portfolio_') && f.name !== avatarFilename)
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(f => ({
       id: f.name,
       photo_url: db.storage.from('biz-photos').getPublicUrl(`${prefix}/${f.name}`).data.publicUrl
     }));
-  _renderWorkerPhotos(photos);
+  const list = [];
+  if (avatarUrl) {
+    list.push({ id: avatarFilename, photo_url: avatarUrl, isAvatar: true });
+  } else if (portfolio.length) {
+    list.push({ ...portfolio.shift(), isAvatar: true });
+  }
+  list.push(...portfolio);
+  _renderWorkerPhotos(list.slice(0, 5));
+  _wPhotosOriginalOrder = _wPhotos.map(p => p.id);
 }
 
-let _wPhotos = [], _wDragSrcId = null, _pendingAvatarBlob = null;
-let _activityLat = null, _activityLng = null, _activityAreaName = '';
+// 저장 안 된 변경(새 사진 업로드 또는 순서/대표사진 변경)이 있을 때 상단에
+// 저장/나가기 바를 띄운다 — _renderWorkerPhotos가 호출될 때마다도 같이 갱신됨
+function _updateProfilePhotoSaveBar() {
+  const bar = document.getElementById('profile-photo-savebar');
+  if (!bar) return;
+  const curIds = _wPhotos.map(p => p.id);
+  const reordered = curIds.length !== _wPhotosOriginalOrder.length
+    || curIds.some((id, i) => id !== _wPhotosOriginalOrder[i]);
+  bar.style.display = (_wPhotos.some(p => p.blob) || reordered) ? 'block' : 'none';
+}
 
-function _renderWorkerPhotos(photos) {
-  _wPhotos = photos;
-  const grid = document.getElementById('worker-photos-grid');
-  const addBtn = document.getElementById('worker-photos-add-btn');
-  const countEl = document.getElementById('worker-photos-count');
-  if (!grid) return;
-  countEl.textContent = `${photos.length}/5`;
-  grid.innerHTML = photos.map((p, i) => `
-    <div draggable="true" data-photo-id="${p.id}"
-      ondragstart="wPhotoDragStart(event,'${p.id}')"
+async function discardPendingProfilePhoto() {
+  _wPhotos.filter(p => p.blob).forEach(p => URL.revokeObjectURL(p.photo_url));
+  await loadWorkerProfileForm();
+  showToast('변경사항을 취소했어요');
+}
+
+function _paintHeaderAvatar() {
+  const inner = document.getElementById('header-avatar-inner');
+  if (!inner) return;
+  const p = _wPhotos[0];
+  if (p) {
+    inner.innerHTML = `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">`;
+  } else {
+    const fc = (currentUser?.user_metadata?.full_name || currentUser?.email || '?').charAt(0);
+    inner.innerHTML = _initialAvatar(fc, 58);
+  }
+}
+
+function _slotHtml(idx, p, readonly) {
+  if (!p) {
+    if (readonly) return `<div style="aspect-ratio:1;border-radius:10px;background:#eee"></div>`;
+    return `<label style="display:flex;align-items:center;justify-content:center;aspect-ratio:1;background:#f8f8f8;border:2px dashed #ddd;border-radius:10px;cursor:pointer">
+      <span style="font-size:24px;color:#ccc;line-height:1">+</span>
+      <input type="file" accept="image/*" style="display:none" onchange="addProfilePhoto(this)">
+    </label>`;
+  }
+  const badge = idx === 0 ? '대표' : String(idx + 1);
+  if (readonly) {
+    return `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb">
+      <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">
+      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px">${badge}</span>
+    </div>`;
+  }
+  return `<div draggable="true" data-slot-idx="${idx}"
+      ondragstart="wPhotoDragStart(event,${idx})"
       ondragover="wPhotoDragOver(event)"
       ondragenter="wPhotoDragEnter(event,this)"
       ondragleave="wPhotoDragLeave(event,this)"
-      ondrop="wPhotoDrop(event,'${p.id}',this)"
+      ondrop="wPhotoDrop(event,${idx},this)"
       onclick="openImgViewer('${p.photo_url}')"
       style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb;cursor:pointer">
       <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
-      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;pointer-events:none">${i+1}</span>
-      <button onclick="event.stopPropagation();deleteWorkerPhoto('${p.id}')" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
-    </div>`).join('');
-  addBtn.style.display = photos.length < 5 ? 'flex' : 'none';
-  _setupTouchDnd(grid, () => {});
+      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;pointer-events:none">${badge}</span>
+      <button onclick="event.stopPropagation();deleteSlotPhoto(${idx})" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`;
+}
+
+function _paintPhotoGrid(container, readonly) {
+  if (!container) return;
+  const avatarCell = _slotHtml(0, _wPhotos[0], readonly);
+  const restCells = [1, 2, 3, 4].map(i => _slotHtml(i, _wPhotos[i], readonly)).join('');
+  container.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start">
+    <div style="flex:0 0 42%">${avatarCell}</div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px">${restCells}</div>
+  </div>`;
+  if (!readonly) _setupTouchDnd(container, _swapPhotoSlots, 'data-slot-idx');
+}
+
+function _renderWorkerPhotos(photos) {
+  _wPhotos = photos;
+  _paintPhotoGrid(document.getElementById('photo-mgr-grid'), false);
+  _paintPhotoGrid(document.getElementById('worker-photos-preview'), true);
+  _paintHeaderAvatar();
+  const countEl = document.getElementById('photo-mgr-count');
+  if (countEl) countEl.textContent = `${photos.length}/5`;
   _updateProfilePhotoSaveBar();
 }
 
-function wPhotoDragStart(e, photoId) { _wDragSrcId = photoId; e.dataTransfer.effectAllowed = 'move'; }
+function _swapPhotoSlots(fromIdx, toIdx) {
+  fromIdx = parseInt(fromIdx, 10); toIdx = parseInt(toIdx, 10);
+  if (isNaN(fromIdx) || isNaN(toIdx) || fromIdx === toIdx) return;
+  if (fromIdx >= _wPhotos.length || toIdx >= _wPhotos.length) return;
+  const arr = [..._wPhotos];
+  [arr[fromIdx], arr[toIdx]] = [arr[toIdx], arr[fromIdx]];
+  _renderWorkerPhotos(arr);
+}
+
+function wPhotoDragStart(e, idx) { _wDragSrcIdx = idx; e.dataTransfer.effectAllowed = 'move'; }
 function wPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
 function wPhotoDragEnter(e, el) { e.preventDefault(); if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #C8102E'; el.style.outlineOffset = '-3px'; } }
 function wPhotoDragLeave(e, el) { if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; } }
-function wPhotoDrop(e, photoId, el) {
+function wPhotoDrop(e, idx, el) {
   e.preventDefault();
   el.style.outline = ''; el.style.outlineOffset = '';
-  _wDragSrcId = null;
+  if (_wDragSrcIdx !== null) _swapPhotoSlots(_wDragSrcIdx, idx);
+  _wDragSrcIdx = null;
 }
 
 function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
@@ -9317,55 +9361,36 @@ function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
   });
 }
 
-async function uploadWorkerPhoto(input) {
-  const files = [...input.files];
+async function addProfilePhoto(input) {
+  const file = input.files[0];
   input.value = '';
-  if (!files.length || !currentUser) return;
-  const available = 5 - _wPhotos.length;
-  if (available <= 0) { showToast('최대 5장까지 등록 가능합니다'); return; }
-  const toProcess = files.slice(0, available);
-  if (files.length > available) showToast(`${available}장만 추가 가능합니다`);
-
-  if (toProcess.length === 1) {
-    openCropModal(toProcess[0], blob => {
-      _renderWorkerPhotos([..._wPhotos, { id: 'pending_' + Date.now(), photo_url: URL.createObjectURL(blob), blob }]);
-      showToast('저장하기를 눌러 사진을 확정하세요');
-    });
-  } else {
-    for (const file of toProcess) {
-      const blob = await new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = new Image();
-          img.onload = () => {
-            const sz = Math.min(img.width, img.height, 1200);
-            const c = document.createElement('canvas');
-            c.width = c.height = sz;
-            c.getContext('2d').drawImage(img, (img.width-sz)/2, (img.height-sz)/2, sz, sz, 0, 0, sz, sz);
-            c.toBlob(resolve, 'image/jpeg', 0.85);
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-      if (blob) _renderWorkerPhotos([..._wPhotos, { id: 'pending_' + Date.now(), photo_url: URL.createObjectURL(blob), blob }]);
-    }
-    showToast(`${toProcess.length}장 추가됨 — 저장하기를 눌러 확정하세요`);
-  }
+  if (!file || !currentUser) return;
+  if (_wPhotos.length >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
+  openCropModal(file, blob => {
+    _renderWorkerPhotos([..._wPhotos, { id: 'pending_' + Date.now(), photo_url: URL.createObjectURL(blob), blob }]);
+    showToast(_wPhotos.length === 1 ? '✅ 대표 프로필 사진 준비됨 — 저장하기를 눌러주세요' : '사진 준비됨 — 저장하기를 눌러주세요');
+  });
 }
 
-async function deleteWorkerPhoto(photoId) {
-  const photo = _wPhotos.find(p => p.id === photoId);
+async function deleteSlotPhoto(idx) {
+  const photo = _wPhotos[idx];
   if (!photo) return;
   if (photo.blob) {
     URL.revokeObjectURL(photo.photo_url);
-    _renderWorkerPhotos(_wPhotos.filter(p => p.id !== photoId));
+    _renderWorkerPhotos(_wPhotos.filter((_, i) => i !== idx));
     return;
   }
-  const path = `${currentUser.id}/${photoId}`;
+  const path = `${currentUser.id}/${photo.id}`;
   const { error } = await db.storage.from('biz-photos').remove([path]);
   if (error) { showToast('삭제 실패: ' + error.message); return; }
-  _renderWorkerPhotos(_wPhotos.filter(p => p.id !== photoId));
+  const next = _wPhotos.filter((_, i) => i !== idx);
+  if (idx === 0) {
+    // 대표사진을 지웠으니 DB의 workers.photo_url도 즉시 갱신 - 안 그러면 저장하기 전까지
+    // DB가 방금 지운(존재하지 않는) 파일을 계속 가리키는 상태로 남는다
+    const newAvatarUrl = (next[0] && !next[0].blob) ? next[0].photo_url : null;
+    await db.from('workers').upsert({ kakao_uid: currentUser.id, photo_url: newAvatarUrl }, { onConflict: 'kakao_uid' }).catch(() => {});
+  }
+  _renderWorkerPhotos(next);
 }
 
 function searchActivityArea() {
@@ -10158,58 +10183,45 @@ async function _doSaveAllProfileSettings() {
     currentLang = _pendingLang;
     localStorage.setItem('baroalba_lang', currentLang);
 
-    const pendingPortfolio = _wPhotos.filter(p => p.blob);
-
-    console.log('[photo] blob 존재:', !!_pendingAvatarBlob, '| 포트폴리오:', pendingPortfolio.length);
-
-    if (_pendingAvatarBlob) {
-      const path = `${currentUser.id}/avatar_${Date.now()}.jpg`;
-      console.log('[photo] Storage 업로드 시작:', path);
-      const { error: upErr } = await db.storage.from('biz-photos').upload(path, _pendingAvatarBlob, { contentType: 'image/jpeg' });
-      if (!upErr) {
-        const newUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
-        console.log('[photo] Storage 업로드 성공, URL:', newUrl);
-        const { error: dbErr } = await db.from('workers').upsert(
-          { kakao_uid: currentUser.id, photo_url: newUrl },
-          { onConflict: 'kakao_uid' }
-        );
-        if (dbErr) {
-          console.error('[photo] DB 저장 실패:', dbErr);
-          showToast('사진 저장 실패: ' + dbErr.message, 6000);
+    // _wPhotos[0]=대표사진, [1..4]=포트폴리오. 새로 올린 사진(blob)은 위치에 맞는 이름으로
+    // 업로드하고, 기존 파일이 자리를 옮겼으면(대표<->포트폴리오 승격/강등, 순서변경) storage
+    // move()로 이름만 그 위치 규칙(avatar_ / portfolio_p{n}_)에 맞게 바꿔 재사용한다.
+    // 삭제는 deleteSlotPhoto에서 이미 즉시 처리되므로 여기선 orphan 정리가 필요 없다.
+    let finalAvatarUrl = null;
+    const photoItems = _wPhotos.slice(0, 5);
+    console.log('[photo] 저장할 사진 수:', photoItems.length, '| 신규 업로드:', photoItems.filter(p => p.blob).length);
+    for (let i = 0; i < photoItems.length; i++) {
+      const item = photoItems[i];
+      const wantPrefix = i === 0 ? 'avatar' : `portfolio_p${i}`;
+      try {
+        if (item.blob) {
+          const path = `${currentUser.id}/${wantPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}.jpg`;
+          const { error: upErr } = await db.storage.from('biz-photos').upload(path, item.blob, { contentType: 'image/jpeg' });
+          if (upErr) { console.error('[photo] 업로드 실패:', upErr); showToast('사진 업로드 실패: ' + upErr.message, 6000); continue; }
+          URL.revokeObjectURL(item.photo_url);
+          const newUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
+          if (i === 0) finalAvatarUrl = newUrl;
+        } else if (item.id.startsWith(wantPrefix + '_')) {
+          if (i === 0) finalAvatarUrl = item.photo_url; // 이미 올바른 위치/이름 - 그대로 사용
         } else {
-          console.log('[photo] DB 저장 성공');
-          showToast('사진 저장 완료', 4000);
+          const oldPath = `${currentUser.id}/${item.id}`;
+          const newPath = `${currentUser.id}/${wantPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}.jpg`;
+          const { error: mvErr } = await db.storage.from('biz-photos').move(oldPath, newPath);
+          if (mvErr) {
+            console.error('[photo] 이동 실패:', mvErr);
+            if (i === 0) finalAvatarUrl = item.photo_url; // 이름은 못 바꿨어도 URL 자체는 유효하므로 유지
+          } else if (i === 0) {
+            finalAvatarUrl = db.storage.from('biz-photos').getPublicUrl(newPath).data.publicUrl;
+          }
         }
-        if (bizRecord) await db.from('businesses').update({ photo_url: newUrl }).eq('kakao_uid', currentUser.id);
-      } else {
-        console.error('[photo] Storage 업로드 실패:', upErr);
-        showToast('사진 업로드 실패: ' + upErr.message, 6000);
-      }
-      _pendingAvatarBlob = null;
+      } catch (e) { console.error('[photo] 처리 실패:', e); }
     }
-    const uploadedPortfolioUrls = [];
-    for (const p of pendingPortfolio) {
-      const path = `${currentUser.id}/portfolio_${Date.now()}_${Math.random().toString(36).slice(2,5)}.jpg`;
-      const { error: upErr } = await db.storage.from('biz-photos').upload(path, p.blob, { contentType: 'image/jpeg' });
-      if (!upErr) {
-        URL.revokeObjectURL(p.photo_url);
-        uploadedPortfolioUrls.push(db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl);
-      } else { console.error('[photo] 포트폴리오 실패:', upErr); showToast('포트폴리오 업로드 실패: ' + upErr.message, 6000); }
-    }
-
-    // 대표사진(workers.photo_url, 채팅/바로만남 등 앱 전체에서 쓰는 아바타)을 따로 안 올리고
-    // 포트폴리오(최대 5장)만 올리는 유저가 많아서, 정작 대표사진은 계속 비어있는 채로 남는
-    // 문제가 있었음("사진 올렸는데 계속 기본정보 입력하라고 뜬다"는 신고, 2026-07-16) -
-    // 대표사진이 비어있으면 방금 올린(또는 기존) 포트폴리오 첫 장을 자동으로 채워준다
-    if (!_pendingAvatarBlob) {
-      const fallbackUrl = uploadedPortfolioUrls[0] || _wPhotos.find(p => !p.blob)?.photo_url;
-      if (fallbackUrl) {
-        const { data: wRow } = await db.from('workers').select('photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
-        if (!wRow?.photo_url) {
-          await db.from('workers').upsert({ kakao_uid: currentUser.id, photo_url: fallbackUrl }, { onConflict: 'kakao_uid' });
-        }
-      }
-    }
+    const { error: avatarDbErr } = await db.from('workers').upsert(
+      { kakao_uid: currentUser.id, photo_url: finalAvatarUrl },
+      { onConflict: 'kakao_uid' }
+    );
+    if (avatarDbErr) { console.error('[photo] DB 저장 실패:', avatarDbErr); showToast('사진 저장 실패: ' + avatarDbErr.message, 6000); }
+    if (bizRecord) await db.from('businesses').update({ photo_url: finalAvatarUrl }).eq('kakao_uid', currentUser.id);
 
     await saveWorkerProfile();
     await saveOwnerProfile();
@@ -10222,47 +10234,6 @@ async function _doSaveAllProfileSettings() {
 
 function closeProfileIfBg(e) {
   void e;
-}
-
-function showAvatarTip(inputId) {
-  const existing = document.getElementById('avatar-tip-overlay');
-  if (existing) { existing.remove(); return; }
-  const el = document.createElement('div');
-  el.id = 'avatar-tip-overlay';
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:flex-end';
-  el.onclick = e => { if (e.target === el) el.remove(); };
-  el.innerHTML = `
-    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 20px 44px">
-      <div style="width:32px;height:3px;background:#e5e7eb;border-radius:2px;margin:0 auto 22px"></div>
-      <div style="margin-bottom:20px">
-        <div style="font-size:18px;font-weight:900;color:#111;margin-bottom:4px">사진 등록</div>
-        <div style="font-size:13px;color:#9ca3af">좋은 사진은 매칭 확률을 높여줍니다</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:12px">
-          <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span style="font-size:14px;color:#374151;font-weight:600">얼굴이 잘 보이는 정면 사진</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:12px">
-          <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span style="font-size:14px;color:#374151;font-weight:600">밝고 깔끔한 배경</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:12px">
-          <div style="width:24px;height:24px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-          <span style="font-size:14px;color:#6b7280;font-weight:500">단체 사진 · 풍경 사진</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:12px">
-          <div style="width:24px;height:24px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-          <span style="font-size:14px;color:#6b7280;font-weight:500">선글라스 · 마스크 착용 사진</span>
-        </div>
-      </div>
-      <label style="display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:#C8102E;color:#fff;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;box-sizing:border-box;gap:8px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        사진 선택하기
-        <input type="file" accept="image/*" style="display:none" onchange="document.getElementById('avatar-tip-overlay').remove();uploadAvatar(this)">
-      </label>
-    </div>`;
-  document.body.appendChild(el);
 }
 
 // 뒤로가기 핸들러에 등록되지 않은 오버레이라 뒤로가기를 눌러도 안 닫히던 문제
@@ -10435,7 +10406,7 @@ async function saveServiceNotiSetting(key, val) {
 
 async function doLogout() {
   window._myWorkerId = null;
-  _pendingAvatarBlob = null;
+  _wPhotos = [];
   await db.auth.signOut();
   localStorage.removeItem('baroalba_guest');
   location.href = '/login.html';

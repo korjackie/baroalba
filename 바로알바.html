@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=511"></script>
+  <script src="./shared-lang.js?v=512"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=511">
+  <link rel="stylesheet" href="./assets/css/style.css?v=512">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1460,18 +1460,17 @@
     </div>
 
     <!-- 로그인 상태 -->
-    <div id="profile-logged-in" style="display:none;position:relative;min-height:100%">
+    <div id="profile-logged-in" style="display:none">
         <!-- ── 프로필 헤더 ── -->
       <div style="background:#fff;padding:20px 20px 16px">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-          <label style="position:relative;width:72px;height:72px;flex-shrink:0;cursor:pointer;display:block" onclick="event.preventDefault();showAvatarTip('worker-avatar-file')">
+          <label style="position:relative;width:72px;height:72px;flex-shrink:0;cursor:pointer;display:block" onclick="event.preventDefault();openMpSub('photos')">
             <div id="header-avatar-inner" style="width:72px;height:72px;border-radius:50%;background:#f0f0f0;overflow:hidden;border:2px solid #f0f0f0;display:flex;align-items:center;justify-content:center">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
             <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:#C8102E;border:2px solid #fff;display:flex;align-items:center;justify-content:center">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </div>
-            <input id="worker-avatar-file" type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
           </label>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
@@ -1716,11 +1715,10 @@
           </div>
         </div>
       </div>
-      <!-- position:absolute + 부모(#profile-logged-in)의 min-height:100% 조합 - 계정이
-           짧아 콘텐츠가 화면보다 짧을 때 로그아웃 버튼 아래 빈 공간이 통째로 남고 버전
-           표시만 뚝 떨어져 있던 문제(2026-07-16 피드백)를 해결. 콘텐츠가 화면보다 길면
-           평소처럼 맨 아래에 자연스럽게 붙음 -->
-      <div style="position:absolute;left:0;right:0;bottom:0;padding:6px 20px;text-align:center"><div style="font-size:10px;color:#ccc;font-weight:600">바로알바 v1.4.1</div></div>
+      <!-- 얇은 회색 푸터 바 안에 버전 표시 - 예전엔 로그아웃 밑에 큰 빈 여백이 먼저 있고
+           그 아래 작은 버전 글씨가 따로 떠 있어 어색했음(2026-07-16 피드백). 푸터 자체를
+           얇은 회색 띠로 만들어 그 안에 자연스럽게 배치 -->
+      <div style="padding:10px 20px;text-align:center;background:#eee"><div style="font-size:10px;color:#999;font-weight:600">바로알바 v1.4.1</div></div>
 
       <!-- ── 숨김 컨테이너: 업주 프로필 편집 (서브패널에 없는 ID) ── -->
       <div style="display:none">
@@ -1850,6 +1848,29 @@
 <!-- 프로필 편집 (기본정보 + 사진) - 예전엔 기본정보/추가사진등록이 별도 화면이라
      "저장하기를 눌러주세요" 토스트만 뜨고 정작 저장 버튼은 각 서브패널에 따로 있어
      헷갈린다는 피드백(2026-07-16)으로 한 화면에 통합, 헤더 바로가기 메뉴로 승격 -->
+<!-- 사진 관리 (대표사진 + 포트폴리오 통합) - 예전엔 대표사진(마이페이지 헤더 클릭)과
+     포트폴리오(프로필 편집 안의 별도 그리드)가 서로 다른 화면/모델이라 헷갈린다는
+     피드백(2026-07-16)으로 한 화면으로 통합. 등록/드래그/삭제는 여기서만 하고, 프로필
+     편집 쪽은 아래 mpsub-basic 안에 같은 배치의 읽기전용 미리보기만 둔다.
+     0번 칸(왼쪽, 크게)이 대표 프로필 사진, 1~4번(오른쪽 2x2)이 포트폴리오.
+     원하는 사진을 왼쪽 칸으로 드래그하면 그 사진이 대표 프로필 사진으로 바뀐다. -->
+<div class="mpsub-panel" id="mpsub-photos">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('photos')">‹</button>
+    <div class="mpsub-ttl">사진 관리</div>
+    <span id="photo-mgr-count" style="margin-left:auto;font-size:13px;color:#aaa;font-weight:600">0/5</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+    <div style="font-size:12px;color:#999;line-height:1.6;margin-bottom:14px">📌 왼쪽 큰 사진이 <b style="color:#C8102E">대표 프로필 사진</b>이에요. 사진을 드래그해서 자리를 바꿀 수 있고, 원하는 사진을 왼쪽 칸으로 옮기면 그 사진이 대표 프로필 사진이 돼요. 나머지는 포트폴리오로 노출됩니다.</div>
+    <div id="photo-mgr-grid"></div>
+    <div style="font-size:11px;color:#bbb;margin-top:12px;line-height:1.6">최대 5장 · 업주에게 공개됩니다</div>
+  </div>
+  <div style="display:flex;gap:8px;padding:14px 16px;border-top:1px solid #f0f0f0;background:#fff;flex-shrink:0">
+    <button onclick="closeMpSub('photos')" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
+    <button onclick="saveAllProfileSettings()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+  </div>
+</div>
+
 <div class="mpsub-panel" id="mpsub-basic">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('basic')">‹</button>
@@ -1859,14 +1880,10 @@
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:12px;color:#888;font-weight:700">📷 사진 (프로필/포트폴리오)</div>
-        <span id="worker-photos-count" style="font-size:11px;color:#aaa;font-weight:600">0/5</span>
+        <span style="font-size:11px;color:#C8102E;font-weight:700">편집 ›</span>
       </div>
-      <div id="worker-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
-      <label id="worker-photos-add-btn" onclick="showPhotoTip(event)" style="display:flex;align-items:center;justify-content:center;height:70px;background:#f8f8f8;border:2px dashed #ddd;border-radius:12px;cursor:pointer">
-        <span style="font-size:28px;color:#ccc;line-height:1">+</span>
-        <input id="worker-photos-input" type="file" accept="image/*" multiple style="display:none" onchange="uploadWorkerPhoto(this)">
-      </label>
-      <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6">최대 5장 · 업주에게 공개됩니다</div>
+      <div id="worker-photos-preview" onclick="openMpSub('photos')" style="cursor:pointer"></div>
+      <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6">왼쪽이 대표 프로필 사진, 나머지는 포트폴리오로 노출돼요 · 최대 5장</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <label data-i18n="birth_label" style="font-size:12px;color:#888;font-weight:700;width:54px;flex-shrink:0">생년월일</label>
@@ -4232,7 +4249,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=511"></script>
+<script src="./assets/js/app.js?v=512"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
