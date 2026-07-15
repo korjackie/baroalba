@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean captureMode = false;
     private Uri pendingPhotoUri = null;
     private int safeTop = 0, safeBottom = 0;
+    private boolean safeAreaReceived = false; // 실측 WindowInsets 콜백을 한 번이라도 받았는지
     private String latestFCMToken = null; // 페이지 로드 전 수신된 토큰 보관
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             safeTop    = bars.top;
             safeBottom = bars.bottom;
+            safeAreaReceived = true;
             applySafeArea();
 
             boolean imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
@@ -72,6 +74,9 @@ public class MainActivity extends AppCompatActivity {
 
             return WindowInsetsCompat.CONSUMED;
         });
+        // 리스너 등록 직후 능동적으로 한 번 더 요청 - 시스템이 자연스럽게 첫 콜백을
+        // 늦게 보내는 기기에서 safeAreaReceived==true가 되는 시점을 앞당김
+        ViewCompat.requestApplyInsets(webView);
 
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
@@ -250,8 +255,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // 상태표시줄이 헤더에 바로 붙어보이던 문제(마이페이지 여러 서브패널, 2026-07-16)의
+    // 의심되는 근본 원인: onPageFinished가 WindowInsets 콜백보다 먼저 발생하면
+    // safeTop/safeBottom이 아직 0,0(필드 기본값)인 채로 --sat/--sab에 그대로 찍혀버려서,
+    // 웹 쪽 JS 폴백(28px)까지 나중에 덮어써버릴 수 있었음. 실측 콜백을 한 번도 못 받은
+    // 상태면 0을 찍지 않고 그냥 넘어가서(웹 쪽 자체 폴백이 유지되게) 방지한다.
+    // ※ 이 파일은 Java라 이 수정 자체는 APK를 다시 빌드해야 반영됨 - 웹 쪽
+    // (.mpsub-hdr의 max(...,34px) 최소 여백)은 이 콜백 타이밍과 무관하게 항상 보장됨
     private void applySafeArea() {
-        if (webView == null) return;
+        if (webView == null || !safeAreaReceived) return;
         float density = getResources().getDisplayMetrics().density;
         int topDp  = Math.round(safeTop  / density);
         int botDp  = Math.round(safeBottom / density);
