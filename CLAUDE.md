@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
           ├── admin.html        (관리자 전용, ADMIN_EMAILS 화이트리스트)
           ├── login.html        (PWA 진입점 + 웹 스플래시)
           ├── shared-lang.js    (번역 데이터 + applyLang())
-          ├── sw.js             (PWA 서비스워커, 현재 v270)
+          ├── sw.js             (PWA 서비스워커, 현재 v528, 배포마다 갱신 - 정확한 값은 sw.js 직접 확인)
           ├── manifest.json     (PWA 설정, start_url: ./login.html)
           └── api/send-push.js  (Vercel 서버리스, Web Push 발송)
 
@@ -115,7 +115,7 @@ no-session fallback → _afterSplash(showLoginScreen)
 
 ```
 android/app/build.gradle
-  versionCode 23, versionName '1.4.2'
+  versionCode 29, versionName '1.5.4' (2026-07-16 기준, 13-6 참고)
   implementation 'androidx.core:core-splashscreen:1.0.1'
   implementation platform('com.google.firebase:firebase-bom:33.1.0')
 
@@ -287,7 +287,7 @@ manifest.json
   background_color: #FF4B4B
   theme_color: #FF4B4B
 
-sw.js (v270)
+sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드코딩된 특정 버전 문서화하지 않음)
   SHELL: manifest.json, icons/*.{svg,png}
   전략:
     - HTML: 네트워크 우선
@@ -482,9 +482,55 @@ sw.js (v270)
 - `workers.height_cm INT`, `workers.mbti TEXT`, `workers.dating_photo_url TEXT`
 
 **미해결/재확인 필요**
-- 마이페이지 기본정보 화면 상단이 상태표시줄을 가리는 것처럼 보인다는 스크린샷 제보 -
-  `.mpsub-hdr` CSS 자체는 `--sat-safe` 처리가 이미 정상이라 원인을 특정 못 함.
-  재현되면 스크린샷과 함께 재확인 필요
+- ✅ 해결 (v527, 2026-07-16, Phase 58 참고) - `.mpsub-panel`이 `.full-panel`과 달리
+  `inset:0`으로 상태표시줄 뒤부터 시작하던 구조적 불일치가 원인이었음
+
+---
+
+### Phase 58 ✅ 전수감사 + 상태표시줄 근본원인 + 백버튼/DOM 부재/키보드 일괄 수정 (2026-07-16, v527~v528)
+
+**상태표시줄 가림 근본 원인 (v527)** — 네 번째 시도 만에 특정
+- `.full-panel`(마이페이지 등)은 `top:var(--sat-safe)`로 패널 자체가 상태표시줄 아래서
+  시작하는데, `.mpsub-panel`(프로필편집 등 서브화면)만 `inset:0`으로 화면 맨 위부터
+  꽉 채우고 헤더 padding으로만 보정하던 구조적 불일치가 진짜 원인. `.mpsub-panel`도
+  `top:var(--sat-safe)`로 통일 + `_enforceMpsubSafeArea()`가 `--sat` 실측 후 인라인
+  style로 재차 강제 적용
+- **교훈**: CSS 변수 해석 결과를 못 믿게 된 상황에서도, 같은 세션 안에서 이미 읽은
+  `.full-panel`의 정답 패턴을 스스로 연결짓지 못하고 세 번을 헤맸다. "안 된다"는
+  신고를 받으면 그 화면만 보지 말고 **같은 성격의 다른 화면과 CSS 구조를 diff로
+  비교**할 것 (13-1 원칙의 연장)
+
+**전수감사로 발견한 3개 버그 클래스 일괄 수정 (v528)**
+- **DOM 자체가 없던 기능**: `openOwnerReport()`/`openBizCropModal()`이 참조하는
+  `owner-report-modal`/`biz-crop-modal`이 실제 `바로알바.html`에 존재하지 않고
+  (미배포 목업 폴더 "바로만남 테스트/*.html"에만 있었음) `uploadOwnerAvatar()`에서
+  실제로 호출되고 있어, **업주가 업체 프로필/업체사진을 올리려 하면 크롭 화면 자체가
+  안 뜨고 조용히 실패**하고 있었음(신고하기 버튼도 동일). 알바생용 `crop-modal`/
+  `report-modal`과 동일 구조로 복붙해 추가
+- **백버튼 미등록 (12개 모달)**: `apply-msg-modal`, `biz-rating-modal`, `report-modal`,
+  `owner-report-modal`, `community-post-overlay`, `crop-modal`, `biz-crop-modal`,
+  `guest-login-modal`, `wage-calc-modal`, `qr-modal`, `onboarding-overlay`,
+  `lesson-register-modal`이 `WATCH_IDS`/popstate 캐스케이드 어디에도 없어 하드웨어
+  뒤로가기 시 앱이 그대로 종료되던 문제(`.mpsub-panel`과 동일 버그 클래스) - 전부 등록.
+  `panel-barospot-chat`도 개별 `pushState` 대신 `WATCH_IDS`로 일원화(방어적 통일)
+- **프로필편집 키보드 가림**: `.mpsub-panel`은 네이티브 `adjustResize`로 창은 줄어들어도
+  포커스된 입력창까지 자동으로 안 딸려와, 자기소개처럼 스크롤 아래쪽 필드는 여전히
+  키보드에 가려짐(2026-07-16 실사용 피드백) - `_onNativeKbChange`에서 포커스 요소를
+  `scrollIntoView`로 명시 처리, `.mpsub-panel` 공유 클래스라 전체 서브폼에 일괄 적용
+
+**발견했지만 미수정 (판단 필요, 사용자 확인 후 처리)**
+- `wage-transfer-modal`(당일정산 송금), `contract-modal`(전자계약서),
+  `banned-agree-overlay`(바로심부름 금지행위 동의), `photo-tip-overlay`(사진 TIP)
+  4개 모달이 HTML엔 있지만 **여는 함수 자체가 어디에도 없어 완전히 죽은 코드** —
+  특히 `banned-agree-overlay`는 술/담배/의약품 등 불법 심부름 금지 동의를 받는
+  안전/법적 장치처럼 보이는데 실제로 아무도 못 보고 있음. 의도된 기능인지, 완성해야
+  할지, 정리해야 할지 결정 필요
+- `qrcode.min.js?v=463`, `jsqr.min.js?v=463`이 `_APP_V` lockstep 밖에 있는 별도
+  버전 쿼리 — 당장 위험은 아니지만 나중에 이 라이브러리를 갱신하면서 쿼리를 안 올리면
+  `sw.js?v=495` 드리프트 버그가 재발할 수 있는 잠재 지점
+- 이 문서의 "3. DB 테이블 구조" 중 `job_postings` 컬럼 목록이 실제 `submitPosting()`의
+  payload(`current_wage`/`needed_count`/`status`/`surge_*` 등)와 크게 어긋나 있어
+  문서가 오래된 상태로 보임 — Supabase 대시보드에서 실제 컬럼 확인 후 갱신 필요
 
 ---
 
@@ -492,11 +538,12 @@ sw.js (v270)
 
 | 항목 | 상태 | 처리 방법 |
 |------|------|-----------|
-| 공고 저장 오류 | 🔴 미결 | 저장 실패 시 alert 디버그 중, 근본 원인 조사 필요 |
-| Android SHOW_FORCED 리빌드 | 🟡 대기 | versionCode 24로 빌드 필요 |
+| 공고 저장 오류 | 🟡 재확인 필요 (2026-07-16 점검) | `submitPosting()` 자체는 타임아웃/네트워크에러/서버에러를 `showAlert`로 상세 표시하고 버튼도 `finally`로 복구하도록 이미 잘 계장돼 있음(추정 이유 없음). 문서상 `job_postings` 스키마가 실제 payload와 어긋나 있어(Phase 58 참고) DB 제약 불일치 가능성 있음 - 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것 |
+| Android SHOW_FORCED 리빌드 | ✅ 해결 (v29, 2026-07-16) | 13-6 참고 - versionCode 29까지 빌드+Play Console 배포 완료, 대기 중인 리빌드 없음 |
 | 커뮤니티 글/댓글 수정·삭제 UI | 🟡 미구현 | 본인 콘텐츠 편집/삭제 버튼 추가 |
 | 커뮤니티 댓글 익명 토글 | 🟡 미구현 | `is_anonymous: false` 하드코딩 → 체크박스 필요 |
-| 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 확인대기 | v436까지 배포완료, 대표님 실기기 재확인 필요 (버전버그 수정 이후 최초 확인) |
+| 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 재확인 필요 (v436 시점 기록, 현재 v528) | 이후 수백 개 커밋이 쌓였고 관련 이슈 재보고가 없어 사실상 해소된 것으로 보이나, 이 표만 미갱신 상태였을 가능성 - 별도 이슈 없으면 다음 정리 때 행 삭제 |
+| `wage-transfer-modal`/`contract-modal`/`banned-agree-overlay`/`photo-tip-overlay` | 🟡 판단 필요 (2026-07-16 발견) | HTML은 있지만 여는 함수가 없는 완전한 죽은 코드 4건, Phase 58 참고 - 완성/삭제 여부 결정 필요 |
 | 바로스팟 채팅 진입 불가 | ✅ 해결 (v496, 2026-07-15) | track-overlay(z-index:8700)가 panel-barospot-chat(520)/panel-moim-chat(530)보다 위라 채팅 패널이 가려짐 - openBarospotChatRoom/openBaromeetChat에서 closeTrackingSheet() 선호출로 수정. panel-barospot-chat이 전역 뒤로가기 핸들러에도 없어 추가 |
 | 위치공유 "도착했어요" 버튼 의미없는 토글 | ✅ 해결 (v496, 2026-07-15) | 수동 클릭 시 확인 없이 조용히 멈추기만 해서 계속 눌러도 아무 일도 안 일어나는 것처럼 보임 - 도착 확인 다이얼로그 + 도착 확정 후 버튼 잠금으로 수정 |
 | 바로스팟 채팅 키보드 가림 | ✅ 해결 (v496, 2026-07-15) | 다른 채팅 패널(wchat/chat/moim-chat)은 `_onNativeKbChange`에 등록돼 있었는데 이 패널만 빠져서 키보드가 입력창을 가림 - 등록 추가 |
