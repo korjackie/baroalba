@@ -445,7 +445,13 @@ window.addEventListener('popstate', () => {
   probe.remove();
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone === true;
-  if (isStandalone && sat === 0) sat = 28; // Android 비노치 기기 기본 상태표시줄 높이
+  // 네이티브 Android 앱(TWA 아님, MainActivity.java가 감싼 raw WebView)은
+  // display-mode:standalone이 아니라서 이 폴백을 그동안 안 타고 있었음 - 첫 진입 시
+  // MainActivity의 실측 콜백이 늦게 도착하는 동안 화면이 상태표시줄에 바로 붙어보이던
+  // 문제(2026-07-16 피드백, MY 바로알바 상세 등에서 재현)의 원인. window.AndroidBridge
+  // 존재 여부로 네이티브 앱도 동일하게 폴백 적용 - 이후 실측 콜백이 오면 정확한 값으로 덮어씀
+  var isNativeApp = !!window.AndroidBridge;
+  if ((isStandalone || isNativeApp) && sat === 0) sat = 28; // Android 비노치 기기 기본 상태표시줄 높이
   document.documentElement.style.setProperty('--status-bar-h', sat + 'px');
   // --status-bar-h를 계산만 하고 실제 CSS 어디서도 쓰지 않던 문제 수정 -
   // --sat/--sat-safe가 이 값을 참조하도록 --sat 자체를 덮어써서, 상태표시줄이
@@ -462,7 +468,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '510';
+  const _APP_V = '511';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -478,7 +484,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=510').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=511').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -5300,8 +5306,10 @@ async function loadMyAlbaPreview() {
   const { data: apps } = await db.from('applications')
     .select('id, status, job_postings(title, current_wage)')
     .eq('worker_id', wid).order('applied_at', { ascending: false }).limit(5);
-  const statusLabel = { pending:'검토중', reviewing:'검토중', accepted:'합격', rejected:'불합격', completed:'완료', canceled:'취소' };
-  const statusColor = { pending:'#F59E0B', reviewing:'#F59E0B', accepted:'#16a34a', rejected:'#94a3b8', completed:'#3b82f6', canceled:'#94a3b8' };
+  // 'canceled'(오타, 실제 DB값은 'cancelled')와 'noshow' 키 누락으로 상태값 원문(예: "noshow")이
+  // 그대로 화면에 노출되던 문제 - 다른 상태 매핑들과 동일한 값으로 통일 (2026-07-16 피드백)
+  const statusLabel = { pending:'검토중', reviewing:'검토중', accepted:'합격', rejected:'불합격', completed:'완료', cancelled:'취소', noshow:'노쇼' };
+  const statusColor = { pending:'#F59E0B', reviewing:'#F59E0B', accepted:'#16a34a', rejected:'#94a3b8', completed:'#3b82f6', cancelled:'#94a3b8', noshow:'#D97706' };
   if (badge) {
     const activeCount = (apps || []).filter(a => ['pending','reviewing','accepted'].includes(a.status)).length;
     badge.textContent = activeCount > 0 ? `진행중 ${activeCount}건` : '';
@@ -5466,6 +5474,10 @@ function closeMpSub(name) {
 }
 
 function goToMyApplications() {
+  // mpsub-alba-detail 등 mpsub-panel(z-index:450) 안에서 호출되면 panel-applications
+  // (z-index:300, .full-panel)가 그 뒤에 열려 화면엔 아무 변화도 없어 보이던 문제
+  // (2026-07-16 피드백) - 열려있는 mypage 서브패널을 먼저 전부 닫음
+  document.querySelectorAll('.mpsub-panel').forEach(p => p.classList.remove('show'));
   document.getElementById('panel-profile')?.classList.remove('show');
   window._fromProfile = true;
   openDashPanel('applications');
@@ -6568,7 +6580,12 @@ async function _loadBarospotChatsIntoList(allApps) {
 async function loadMyChatList() {
   if (isGuest || !currentUser) return;
   const el = document.getElementById('my-chats-list');
-  el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+  // 채팅 탭에 들어갈 때마다(이미 목록이 있어도) 매번 스피너로 통째로 비웠다가 다시 그려서
+  // 매번 버벅이는 것처럼 느껴지던 문제(2026-07-16 피드백) - 첫 로딩일 때만 스피너를 보여주고,
+  // 이미 목록이 있으면 그대로 둔 채 새로고침해서 다 되면 한번에 바뀌도록(_renderChatList) 함
+  if (!el.children.length) {
+    el.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>';
+  }
 
   const allApps = [];
   _latestMsg = {}; _unreadCnt = {};
