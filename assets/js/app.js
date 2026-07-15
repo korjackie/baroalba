@@ -485,19 +485,22 @@ window.addEventListener('popstate', () => {
   if (sat > 0) document.documentElement.style.setProperty('--sat', sat + 'px');
 })();
 
-// .mpsub-hdr의 CSS max(calc(var(--sat-safe,0px)+14px), 34px)는 이론상 항상 34px 이상을
-// 보장해야 하는데도 헤더가 상태표시줄에 붙어보인다는 신고가 반복됨(2026-07-16,
-// v511/v524 두 차례 CSS만으로 시도) - CSS 함수/커스텀 프로퍼티 해석에 대한 의심을
-// 완전히 배제하기 위해 JS로 직접 실측 후 인라인 style을 강제 지정한다(인라인 style은
-// 클래스 규칙보다 항상 우선하므로 특이도 문제가 원천적으로 없음). openMpSub()이
-// 모든 서브패널 오픈의 공통 경로라 거기서 호출하면 전체 화면에 적용됨
-function _enforceMpsubHdrPadding() {
+// 상태표시줄이 헤더를 가리는 문제(2026-07-16, 네 차례 시도 끝에 원인 특정):
+// .full-panel(마이페이지 등 메인 탭 화면)은 애초에 top:상태표시줄높이로 패널 자체가
+// 상태표시줄 아래서 시작하는데, .mpsub-panel(프로필편집 등 서브화면)만 inset:0으로
+// 화면 맨 위부터 꽉 채우고 헤더 padding으로만 보정하던 구조적 불일치가 진짜 원인이었음.
+// CSS(var(--sat-safe)) 해석 결과를 못 믿게 됐으므로, JS가 --sat을 직접 실측해 .mpsub-panel의
+// top과 .mpsub-hdr의 padding-top에 인라인 style로 강제 지정한다(인라인 style은 클래스
+// 규칙보다 항상 우선하므로 특이도 문제가 원천적으로 없음). openMpSub()이 모든 서브패널
+// 오픈의 공통 경로라 거기서 재호출하면 --sat이 나중에 갱신돼도 다음 오픈 시 반영됨
+function _enforceMpsubSafeArea() {
   const satRaw = getComputedStyle(document.documentElement).getPropertyValue('--sat').trim();
   const sat = parseFloat(satRaw) || 0;
-  const px = Math.max(sat + 14, 34);
-  document.querySelectorAll('.mpsub-hdr').forEach(hdr => { hdr.style.paddingTop = px + 'px'; });
+  const topPx = Math.max(sat, 24);
+  document.querySelectorAll('.mpsub-panel').forEach(p => { p.style.top = topPx + 'px'; });
+  document.querySelectorAll('.mpsub-hdr').forEach(hdr => { hdr.style.paddingTop = '14px'; });
 }
-_enforceMpsubHdrPadding();
+_enforceMpsubSafeArea();
 
 // ── 마이페이지 하단 버전 푸터를 화면 최하단에 붙임 ──────────────
 // CSS만으로(퍼센트 min-height, calc(100vh...) 둘 다) 이 중첩된 flex+overflow 구조에서
@@ -533,7 +536,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '526';
+  const _APP_V = '527';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -549,7 +552,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=526').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=527').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -5487,7 +5490,7 @@ function openMpSub(name) {
   // 것처럼 보이던 문제(2026-07-16 피드백과 함께 발견) - 열기 전에 다른 서브패널을 먼저 닫음
   document.querySelectorAll('.mpsub-panel.show').forEach(p => { if (p !== el) p.classList.remove('show'); });
   el.classList.add('show');
-  _enforceMpsubHdrPadding(); // 매번 최신 --sat 값으로 재측정해 인라인 style 강제 적용
+  _enforceMpsubSafeArea(); // 매번 최신 --sat 값으로 재측정해 인라인 style 강제 적용
   if (name === 'income')        loadWorkerIncome();
   if (name === 'foreigner')     loadVisaProfile();
   if (name === 'wage-history')  loadWageHistory();

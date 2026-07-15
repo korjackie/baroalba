@@ -584,12 +584,15 @@
     .job-type-chip { padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s }
     .job-type-chip.selected { background:#C8102E;border-color:#C8102E;color:#fff }
     .rights-card { background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:14px;padding:16px;color:#fff;margin-top:12px }
-    .mpsub-panel { position:fixed; inset:0; background:#f5f5f5; z-index:450; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
+    /* .full-panel(마이페이지 등 메인 탭 화면)은 애초에 top:상태표시줄높이로 패널 자체가
+       상태표시줄 아래에서 시작하는데, .mpsub-panel(프로필편집 등 서브화면)만 inset:0으로
+       화면 맨 위(상태표시줄 뒤)부터 꽉 채우고 헤더 padding으로만 보정하던 불일치가
+       있었음(2026-07-16, 네 번째 시도에서야 발견) - .full-panel과 동일하게 통일 */
+    .mpsub-panel { position:fixed; top:var(--sat-safe); right:0; bottom:0; left:0; background:#f5f5f5; z-index:450; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; overflow:hidden; }
     .mpsub-panel.show { transform:translateX(0); }
-    /* --sat-safe가 0으로 해석되면(네이티브 실측 콜백이 늦거나 잘못 오는 경우가 있었음,
-       2026-07-16 재발 - 마이페이지 서브패널 여러 화면에서 헤더가 상태표시줄에 바로 붙음)
-       헤더 제목이 상태표시줄에 완전히 붙어버리므로, max()로 최소 여백을 보장 */
-    .mpsub-hdr { display:flex; align-items:center; gap:8px; padding:14px 16px; padding-top:max(calc(var(--sat-safe,0px) + 14px), 34px); background:#fff; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
+    /* 상태표시줄 안전영역 보정은 이제 .mpsub-panel 자체의 top(위 참고)이 담당하므로
+       헤더는 일반 여백만 있으면 됨 */
+    .mpsub-hdr { display:flex; align-items:center; gap:8px; padding:14px 16px; background:#fff; border-bottom:1px solid #f0f0f0; flex-shrink:0; }
     .mpsub-back { background:none; border:none; font-size:26px; color:#333; cursor:pointer; padding:0 10px 0 0; line-height:1; }
     .mpsub-ttl { font-size:17px; font-weight:900; color:#222; }
 
