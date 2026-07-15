@@ -1071,17 +1071,27 @@ window.addEventListener('DOMContentLoaded', async () => {
     // 처리함 - 바로스팟 개설 폼처럼 일반 페이지 흐름(.content) 안에 있는 입력창은 대상이
     // 아니라서 키보드가 올라와도 아무 보정 없이 그대로 가려졌음. 문서 전체 스크롤을
     // 조정하는 범용 버전을 추가(모달 안의 입력창은 closest('.detail-panel')로 걸러 중복 방지)
-    window.visualViewport.addEventListener('resize', () => {
-      setTimeout(() => {
-        const f = document.activeElement;
-        if (!f || (f.tagName !== 'INPUT' && f.tagName !== 'TEXTAREA') || f.closest('.detail-panel')) return;
-        const fRect = f.getBoundingClientRect();
-        const vpBottom = window.visualViewport.height;
-        if (fRect.bottom > vpBottom - 20) {
-          window.scrollBy(0, fRect.bottom - vpBottom + 80);
-        }
-      }, 200);
+    //
+    // resize 이벤트 한 번만 믿고 200ms 뒤 한 번 계산하던 이전 버전은 실제로는 안 먹혔음
+    // (Android 키보드 애니메이션이 그 시점에 아직 안 끝났거나, resize 자체가 페이지 흐름
+    // 입력창에는 안정적으로 안 걸리는 것으로 추정) - focusin에서 바로 시작해서 여러 번
+    // 재시도하고, scrollIntoView + window.scrollBy 두 방식을 함께 써서 신뢰성을 높임
+    const _scrollFieldAboveKeyboard = () => {
+      const f = document.activeElement;
+      if (!f || (f.tagName !== 'INPUT' && f.tagName !== 'TEXTAREA') || f.closest('.detail-panel')) return;
+      const vpBottom = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const fRect = f.getBoundingClientRect();
+      if (fRect.bottom > vpBottom - 24) {
+        f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.scrollBy(0, fRect.bottom - vpBottom + 80);
+      }
+    };
+    document.addEventListener('focusin', (e) => {
+      if (!e.target.matches || !e.target.matches('input,textarea')) return;
+      // 키보드가 실제로 완전히 올라오기까지 시간이 걸리므로 여러 시점에 재시도
+      [150, 350, 600].forEach(ms => setTimeout(_scrollFieldAboveKeyboard, ms));
     });
+    window.visualViewport.addEventListener('resize', () => setTimeout(_scrollFieldAboveKeyboard, 150));
   }
 });
 
