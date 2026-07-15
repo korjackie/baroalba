@@ -524,6 +524,17 @@
         <input class="form-input" id="signup-pw" type="password" placeholder="6자 이상" autocomplete="new-password">
       </div>
 
+      <!-- 성별 - 일부 알바 공고는 성별에 따라 지원 가능 여부가 달라져 가입 시 필수로
+           받음(2026-07-16). SNS 가입은 이 폼을 안 거치므로 app.js의 로그인 시점
+           성별 필수 게이트(showMandatoryGenderGate)가 대신 처리 -->
+      <div class="form-group">
+        <label class="form-label">성별 <span style="color:#C8102E;font-weight:700">*</span></label>
+        <div style="display:flex;gap:8px">
+          <button type="button" id="signup-gender-male-btn" onclick="setSignupGender('male')" style="flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">남성</button>
+          <button type="button" id="signup-gender-female-btn" onclick="setSignupGender('female')" style="flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">여성</button>
+        </div>
+      </div>
+
       <!-- 국적 선택 -->
       <div class="form-group">
         <label class="form-label">국적 <span style="color:#C8102E;font-weight:700">*</span></label>
@@ -1125,6 +1136,20 @@ function onSignupVisaChange() {
 }
 
 // ── 이메일 회원가입 ────────────────────────────────────────
+// 성별 필수화(2026-07-16) - 알바 매칭에도 성별 관련 공고가 많다는 판단으로 가입 단계에서
+// 받는다. user_metadata에 실어 보내면, 첫 로그인 시 app.js가 workers 행을 만들 때 그대로
+// gender 컬럼에 반영해서(그 코드 쪽 주석 참고) 로그인 직후 다시 물어보는 중복을 피한다
+let _signupGender = null;
+function setSignupGender(val) {
+  _signupGender = val;
+  const mBtn = document.getElementById('signup-gender-male-btn');
+  const fBtn = document.getElementById('signup-gender-female-btn');
+  const activeStyle = 'flex:1;padding:11px;border:1.5px solid #C8102E;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#C8102E;color:#fff';
+  const idleStyle   = 'flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555';
+  mBtn.style.cssText = val === 'male'   ? activeStyle : idleStyle;
+  fBtn.style.cssText = val === 'female' ? activeStyle : idleStyle;
+}
+
 async function signupEmail() {
   const name  = document.getElementById('signup-name').value.trim();
   const phone = document.getElementById('signup-phone').value.trim();
@@ -1135,6 +1160,7 @@ async function signupEmail() {
 
   if (!name || !email || !pw) { showError('이름, 이메일, 비밀번호는 필수입니다.'); return; }
   if (pw.length < 6) { showError('비밀번호는 6자 이상이어야 합니다.'); return; }
+  if (!_signupGender) { showError('성별을 선택해주세요.'); return; }
   if (!nationality) { showError('국적을 선택해주세요.'); return; }
   if (nationality !== 'KR' && !visaType) { showError('체류 비자 종류를 선택해주세요.'); return; }
   if (!document.getElementById('agree-age')?.checked) { showError('만 19세 이상인 경우에만 가입 가능합니다.'); return; }
@@ -1147,6 +1173,7 @@ async function signupEmail() {
       data: {
         full_name: name,
         phone,
+        gender: _signupGender,
         nationality,
         visa_type: nationality !== 'KR' ? visaType : null,
       }

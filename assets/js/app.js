@@ -514,7 +514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '518';
+  const _APP_V = '519';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -530,7 +530,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=518').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=519').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -568,17 +568,27 @@ window.addEventListener('DOMContentLoaded', async () => {
     // (예전엔 "기본정보 저장하기"를 눌러야만 workers 행이 생겨서, 아무 것도 안 건드린
     // 신규가입자는 게시글 작성 등에서 "프로필 등록 후 이용 가능"에 계속 막혔음 -
     // 가입은 곧 프로필 생성이어야 하므로 로그인 시점에 없으면 바로 만들어둠)
-    db.from('workers').select('id, age, birth_date, languages').eq('kakao_uid', session.user.id).maybeSingle()
+    db.from('workers').select('id, age, birth_date, languages, gender').eq('kakao_uid', session.user.id).maybeSingle()
       .then(({ data: w }) => {
         if (!w) {
           const meta = session.user.user_metadata || {};
           const name = meta.full_name || meta.name || session.user.email?.split('@')[0] || '알바생';
-          db.from('workers').insert({ kakao_uid: session.user.id, name }).then(() => {});
+          // 이메일 가입은 login.html 가입폼에서 이미 성별을 받아 user_metadata에 실어보내므로
+          // 여기서 그대로 옮겨 적어 로그인 직후 다시 물어보는 중복을 피한다.
+          // SNS 가입은 폼 자체가 없어 메타데이터에 성별이 없으므로 게이트가 대신 받는다
+          const genderFromSignup = meta.gender || null;
+          db.from('workers').insert({ kakao_uid: session.user.id, name, gender: genderFromSignup }).then(() => {
+            if (!genderFromSignup) showMandatoryGenderGate();
+          });
           return;
         }
         _myAge = w.age || (w.birth_date ? calcAgeFromBirth(w.birth_date) : null);
         _myLangs = Array.isArray(w.languages) ? w.languages : [];
         _updateLangFilterBtn();
+        // 성별 필수화(2026-07-16) - 기존 가입자는 다음 로그인(=이 코드가 매번 실행되는
+        // 앱 진입 시점)에 이 모달로 안내. 알바 매칭에도 성별이 관련된 공고가 많다는
+        // 판단으로 역할(알바생/업주) 구분 없이 전체 계정에 동일 적용
+        if (!w.gender) showMandatoryGenderGate();
       });
     // 신규 가입 감지 → 환영 이메일 (가입 후 5분 이내 + 중복 발송 방지)
     const _createdAgo = Date.now() - new Date(session.user.created_at).getTime();
@@ -10315,6 +10325,42 @@ async function _doSaveAllProfileSettings() {
 
 function closeProfileIfBg(e) {
   void e;
+}
+
+// 성별 필수 입력 게이트(2026-07-16) - "알바 매칭에도 성별이 관련된 공고가 많으니
+// 역할(알바생/업주) 구분 없이 전 계정 필수로 받자"는 결정에 따라, 성별이 없는 계정은
+// 앱 진입 시(위 workers 행 조회 직후) 이 모달이 뜬다. 배경 탭/뒤로가기로 닫히지 않는
+// 진짜 필수 게이트 - 두 버튼 중 하나를 눌러야만 사라진다
+function showMandatoryGenderGate() {
+  if (document.getElementById('gender-gate-overlay')) return;
+  const el = document.createElement('div');
+  el.id = 'gender-gate-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:340px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">🙋</div>
+      <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:6px">성별을 알려주세요</div>
+      <div style="font-size:13px;color:#999;line-height:1.6;margin-bottom:20px">일부 알바 공고는 성별에 따라 지원 가능 여부가 달라져요.<br>정확한 매칭을 위해 꼭 필요해요.</div>
+      <div style="display:flex;gap:10px">
+        <button onclick="_submitGenderGate('male')" style="flex:1;padding:16px;background:#f8f8f8;border:1.5px solid #eee;border-radius:14px;font-size:15px;font-weight:800;color:#333;cursor:pointer">남성</button>
+        <button onclick="_submitGenderGate('female')" style="flex:1;padding:16px;background:#f8f8f8;border:1.5px solid #eee;border-radius:14px;font-size:15px;font-weight:800;color:#333;cursor:pointer">여성</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+async function _submitGenderGate(gender) {
+  const el = document.getElementById('gender-gate-overlay');
+  if (el) el.querySelectorAll('button').forEach(b => b.disabled = true);
+  const { error } = await db.from('workers').upsert({ kakao_uid: currentUser.id, gender }, { onConflict: 'kakao_uid' });
+  if (error) {
+    showToast('저장 실패: ' + error.message);
+    if (el) el.querySelectorAll('button').forEach(b => b.disabled = false);
+    return;
+  }
+  if (el) el.remove();
+  showToast('✅ 성별이 저장됐어요');
+  // 마이페이지 성별 버튼이 이미 그려져 있었다면 즉시 반영
+  if (typeof setGender === 'function') setGender(gender);
 }
 
 // 뒤로가기 핸들러에 등록되지 않은 오버레이라 뒤로가기를 눌러도 안 닫히던 문제
