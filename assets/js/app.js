@@ -468,7 +468,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '512';
+  const _APP_V = '513';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -484,7 +484,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=512').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=513').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -10184,8 +10184,11 @@ async function _doSaveAllProfileSettings() {
     localStorage.setItem('baroalba_lang', currentLang);
 
     // _wPhotos[0]=대표사진, [1..4]=포트폴리오. 새로 올린 사진(blob)은 위치에 맞는 이름으로
-    // 업로드하고, 기존 파일이 자리를 옮겼으면(대표<->포트폴리오 승격/강등, 순서변경) storage
-    // move()로 이름만 그 위치 규칙(avatar_ / portfolio_p{n}_)에 맞게 바꿔 재사용한다.
+    // 업로드하고, 기존 파일이 자리를 옮겼으면(대표<->포트폴리오 승격/강등, 순서변경) 이름만
+    // 그 위치 규칙(avatar_ / portfolio_p{n}_)에 맞게 바꿔 재사용한다. storage.move()는 RLS
+    // 정책이 실제로 허용하는지 확인할 방법이 없어(2026-07-16) 대신 이미 이 저장 함수와
+    // deleteSlotPhoto에서 실제로 동작이 검증된 upload+remove 조합으로 재구현 - 기존 파일을
+    // 내려받아 새 이름으로 재업로드하고 옛 파일을 지운다.
     // 삭제는 deleteSlotPhoto에서 이미 즉시 처리되므로 여기선 orphan 정리가 필요 없다.
     let finalAvatarUrl = null;
     const photoItems = _wPhotos.slice(0, 5);
@@ -10206,12 +10209,15 @@ async function _doSaveAllProfileSettings() {
         } else {
           const oldPath = `${currentUser.id}/${item.id}`;
           const newPath = `${currentUser.id}/${wantPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}.jpg`;
-          const { error: mvErr } = await db.storage.from('biz-photos').move(oldPath, newPath);
-          if (mvErr) {
-            console.error('[photo] 이동 실패:', mvErr);
-            if (i === 0) finalAvatarUrl = item.photo_url; // 이름은 못 바꿨어도 URL 자체는 유효하므로 유지
-          } else if (i === 0) {
-            finalAvatarUrl = db.storage.from('biz-photos').getPublicUrl(newPath).data.publicUrl;
+          const resp = await fetch(item.photo_url);
+          const blob = await resp.blob();
+          const { error: upErr2 } = await db.storage.from('biz-photos').upload(newPath, blob, { contentType: blob.type || 'image/jpeg' });
+          if (upErr2) {
+            console.error('[photo] 재배치 업로드 실패:', upErr2);
+            if (i === 0) finalAvatarUrl = item.photo_url; // 이름은 못 바꿨어도 기존 URL 자체는 유효하므로 유지
+          } else {
+            await db.storage.from('biz-photos').remove([oldPath]).catch(e => console.error('[photo] 옛 파일 삭제 실패:', e));
+            if (i === 0) finalAvatarUrl = db.storage.from('biz-photos').getPublicUrl(newPath).data.publicUrl;
           }
         }
       } catch (e) { console.error('[photo] 처리 실패:', e); }
