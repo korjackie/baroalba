@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=527"></script>
+  <script src="./shared-lang.js?v=528"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=527">
+  <link rel="stylesheet" href="./assets/css/style.css?v=528">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -954,6 +954,48 @@
         style="width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box"></textarea>
       <button onclick="submitReport()" style="width:100%;margin-top:12px;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">신고 제출</button>
       <div style="font-size:11px;color:#bbb;text-align:center;margin-top:10px;line-height:1.7">허위 신고 시 이용이 제한될 수 있습니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- 업주용 신고 모달 (openOwnerReport/closeOwnerReport/submitOwnerReport가 참조하는 DOM이
+     실제로 존재하지 않아 "신고하기" 버튼이 조용히 아무 반응 없던 문제, 2026-07-16 전수감사로
+     발견 - 위 report-modal(알바생용)과 동일 구조로 복붙 후 id만 owner- 접두사로 교체 -->
+<div class="modal-overlay" id="owner-report-modal" onclick="if(event.target===this)closeOwnerReport()" style="z-index:1100;align-items:flex-end">
+  <div id="owner-report-modal-inner" style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp 0.3s ease">
+    <div style="padding:14px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:800;color:#222">신고하기</div>
+      <button onclick="closeOwnerReport()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:20px">
+      <div id="owner-report-reason-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <textarea id="owner-report-detail" placeholder="추가 내용을 입력해주세요 (선택)" rows="3"
+        style="width:100%;padding:12px;border:1.5px solid #e5e5e5;border-radius:12px;font-size:13px;font-family:inherit;resize:none;outline:none;box-sizing:border-box"></textarea>
+      <button onclick="submitOwnerReport()" style="width:100%;margin-top:12px;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">신고 제출</button>
+      <div style="font-size:11px;color:#bbb;text-align:center;margin-top:10px;line-height:1.7">허위 신고 시 이용이 제한될 수 있습니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- 업주용 사진 크롭 모달 (openBizCropModal/closeBizCropModal/applyBizCrop이 참조하는 DOM이
+     실제로 존재하지 않아 업체 프로필/업체사진 업로드 시 크롭 화면 자체가 안 뜨던 문제,
+     2026-07-16 전수감사로 발견 - 위 crop-modal(알바생용)과 동일 구조로 복붙 후 id만
+     biz- 접두사로 교체 -->
+<div class="modal-overlay" id="biz-crop-modal" style="z-index:2000;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:360px;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:800;color:#222">사진 편집</div>
+      <button onclick="closeBizCropModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:16px">
+      <div style="width:100%;background:#000;border-radius:12px;overflow:hidden;max-height:300px">
+        <img id="biz-crop-source" style="display:block;max-width:100%">
+      </div>
+      <div style="font-size:12px;color:#aaa;text-align:center;margin:10px 0 14px">드래그로 이동, 핀치로 확대/축소</div>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeBizCropModal()" style="flex:1;padding:13px;background:#f5f5f5;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:#555">취소</button>
+        <button onclick="applyBizCrop()" style="flex:2;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">적용</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4277,7 +4319,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=527"></script>
+<script src="./assets/js/app.js?v=528"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">

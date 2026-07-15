@@ -266,6 +266,33 @@ window.addEventListener('popstate', () => {
   if (trackEl && trackEl.style.display === 'block') { closeTrackingSheet(); history.pushState({ panel: null }, ''); return; }
   const workerShareEl = document.getElementById('worker-share-overlay');
   if (workerShareEl && workerShareEl.style.display === 'block') { closeWorkerShare(); history.pushState({ panel: null }, ''); return; }
+  // 3.47~3.58 (2026-07-16 전수감사로 발견) - 아래 모달들도 지금까지 이 캐스케이드/WATCH_IDS
+  // 어디에도 등록돼 있지 않아, 열린 채 뒤로가기를 누르면 히스토리가 없어 앱이 그대로
+  // 종료되거나 엉뚱한 아래 화면이 대신 닫히던 문제 - z-index 높은 순으로 정리
+  const onboardingEl = document.getElementById('onboarding-overlay');
+  if (onboardingEl && onboardingEl.style.display === 'flex') { closeOnboarding(); history.pushState({ panel: null }, ''); return; }
+  const cropEl = document.getElementById('crop-modal');
+  if (cropEl && cropEl.style.display === 'flex') { closeCropModal(); history.pushState({ panel: null }, ''); return; }
+  const bizCropEl = document.getElementById('biz-crop-modal');
+  if (bizCropEl && bizCropEl.style.display === 'flex') { closeBizCropModal(); history.pushState({ panel: null }, ''); return; }
+  const guestLoginEl = document.getElementById('guest-login-modal');
+  if (guestLoginEl && guestLoginEl.style.display === 'flex') { closeGuestLoginModal(); history.pushState({ panel: null }, ''); return; }
+  const wageCalcEl = document.getElementById('wage-calc-modal');
+  if (wageCalcEl && wageCalcEl.style.display === 'flex') { closeWageCalc(); history.pushState({ panel: null }, ''); return; }
+  const bizRatingEl = document.getElementById('biz-rating-modal');
+  if (bizRatingEl && bizRatingEl.style.display === 'flex') { closeBizRatingModal(); history.pushState({ panel: null }, ''); return; }
+  const applyMsgEl = document.getElementById('apply-msg-modal');
+  if (applyMsgEl && applyMsgEl.style.display === 'flex') { closeApplyMsg(); history.pushState({ panel: null }, ''); return; }
+  const reportEl = document.getElementById('report-modal');
+  if (reportEl && reportEl.classList.contains('open')) { closeReportModal(); history.pushState({ panel: null }, ''); return; }
+  const ownerReportEl = document.getElementById('owner-report-modal');
+  if (ownerReportEl && ownerReportEl.classList.contains('open')) { closeOwnerReport(); history.pushState({ panel: null }, ''); return; }
+  const qrModalEl = document.getElementById('qr-modal');
+  if (qrModalEl && qrModalEl.style.display === 'flex') { closeQRModal(); history.pushState({ panel: null }, ''); return; }
+  const commPostEl = document.getElementById('community-post-overlay');
+  if (commPostEl && commPostEl.classList.contains('open')) { closeCommunityPost(); history.pushState({ panel: null }, ''); return; }
+  const lessonRegEl = document.getElementById('lesson-register-modal');
+  if (lessonRegEl && lessonRegEl.classList.contains('open')) { closeLessonRegisterModal(); history.pushState({ panel: null }, ''); return; }
   // 3.5. 검색 오버레이 (.show)
   const searchEl = document.getElementById('search-overlay');
   if (searchEl && searchEl.classList.contains('show')) {
@@ -422,7 +449,13 @@ window.addEventListener('popstate', () => {
     'panel-owner-map','panel-moim','panel-moim-create','panel-moim-detail',
     'baromeet-anon-overlay','sc-overlay','search-overlay','panel-owner',
     'adv-filter-overlay','modal-account-info','modal-owner-account-info','qr-scan-overlay',
-    'payment-overlay','track-overlay','worker-share-overlay',
+    'payment-overlay','track-overlay','worker-share-overlay','panel-barospot-chat',
+    // 2026-07-16 전수감사로 발견: 아래 모달들도 openXXX()가 history.pushState 없이
+    // display/class만 바꿔서 열려, 안드로이드 하드웨어 뒤로가기를 누르면 히스토리가
+    // 없어 앱이 그대로 종료되던 것들 (.mpsub-panel/panel-barospot-chat과 동일 버그 클래스)
+    'apply-msg-modal','biz-rating-modal','report-modal','owner-report-modal',
+    'community-post-overlay','crop-modal','biz-crop-modal','guest-login-modal',
+    'wage-calc-modal','qr-modal','onboarding-overlay','lesson-register-modal',
   ];
   function _isModalVisible(el) {
     if (!el) return false;
@@ -536,7 +569,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '527';
+  const _APP_V = '528';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -552,7 +585,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=527').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=528').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -5109,6 +5142,22 @@ window._onFCMToken = function(token) {
     var cps = document.getElementById('comm-post-sheet');
     if (cpo && cpo.classList.contains('open') && cps) {
       cps.style.paddingBottom = (dp > 80 && !isNativelyResized) ? dp + 'px' : '';
+    }
+    // 마이페이지 서브패널(.mpsub-panel, 프로필 편집의 자기소개 등) - adjustResize로 창
+    // 자체는 줄어들어도, 이미 포커스돼있던 입력창이 줄어든 스크롤 영역 밖으로 밀려나면
+    // 브라우저가 알아서 다시 스크롤해주지 않아 계속 가려진 채로 남아있던 문제
+    // (2026-07-16 피드백: "자기소개 입력하는데도 키보드에 가려져서") - 포커스된 입력창을
+    // 명시적으로 보이는 위치까지 스크롤. .mpsub-panel은 다양한 폼(프로필편집/스킬/서류/
+    // 바로만남 프로필 등)이 공유하는 클래스라 여기 한 번만 처리하면 전부 커버됨
+    if (dp > 80) {
+      var mpFoc = document.activeElement;
+      if (mpFoc && (mpFoc.tagName === 'TEXTAREA' || mpFoc.tagName === 'INPUT') && mpFoc.closest('.mpsub-panel.show')) {
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            mpFoc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+        });
+      }
     }
   };
 
