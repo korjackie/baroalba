@@ -186,6 +186,14 @@ async function submitGatheringRequest() {
 
 history.pushState({ panel: null }, ''); // 초기 기준점
 window.addEventListener('popstate', () => {
+  // 0. 사진 크게보기 오버레이 (openImgViewer) - 다른 오버레이들보다 항상 위(z-index:9999)에
+  // 뜨므로 제일 먼저 확인
+  const imgViewerEl = document.getElementById('img-viewer-overlay');
+  if (imgViewerEl) {
+    closeImgViewer();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 1. 공고 상세 (detail-overlay .open)
   const detailEl = document.getElementById('detail-overlay');
   if (detailEl && detailEl.classList.contains('open')) {
@@ -446,7 +454,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '508';
+  const _APP_V = '509';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -462,7 +470,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=508').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=509').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -13936,12 +13944,21 @@ function calcWage() {
   document.getElementById('wc-net').parentElement.children[0].textContent = '실수령액 (' + taxPct + ')';
 }
 
+// 뒤로가기 핸들러(위쪽 popstate 리스너)에 등록되지 않은 오버레이라, 사진을 보고
+// 하드웨어 뒤로가기를 누르면 이 오버레이는 그대로 남은 채 그 아래 panel-profile이
+// 대신 닫혀버리거나(화면이 시커멓게 멈춤) 심하면 앱이 그대로 꺼지는 문제가 있었음
+// (2026-07-16 피드백) - 다른 오버레이처럼 열 때 history.pushState로 등록
 function openImgViewer(url) {
   const ov = document.createElement('div');
+  ov.id = 'img-viewer-overlay';
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
-  ov.onclick = () => ov.remove();
+  ov.onclick = () => closeImgViewer();
   ov.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:10px">';
   document.body.appendChild(ov);
+  history.pushState({ overlay: 'img-viewer' }, '');
+}
+function closeImgViewer() {
+  document.getElementById('img-viewer-overlay')?.remove();
 }
 
 function setLocTab(n) {
@@ -18862,7 +18879,15 @@ const DATING_JOB_CATEGORIES = ['대기업 / 외국계기업','중견 / 중소기
 // 체형은 남녀 표현이 달라야 자연스러워서(여성에게 "근육질"은 안 맞음) 성별별로 분리
 const DATING_BODY_TYPES_FEMALE = ['슬림','슬림탄탄','보통','글래머','통통한 편'];
 const DATING_BODY_TYPES_MALE = ['마른 편','보통','슬림탄탄','근육질','통통한 편'];
-const DATING_INTERESTS = ['여행','와인','필라테스','헬스','독서','요리','카페','반려동물','사진','등산','골프','캠핑','영화','게임','러닝','자전거','테니스','클라이밍','요가','산책'];
+// 비슷한 취미끼리 나란히 묶어서 배치 (아웃도어 / 피트니스 / 라켓·구기 / 음식·음료 / 실내·라이프)
+// - 2026-07-16 피드백: 맥주·크로스핏 추가 요청 + 배드민턴·볼링·베이킹 추천 추가
+const DATING_INTERESTS = [
+  '여행','캠핑','등산','산책','자전거','러닝',
+  '헬스','크로스핏','필라테스','요가','클라이밍',
+  '골프','테니스','배드민턴','볼링',
+  '와인','맥주','요리','베이킹','카페',
+  '독서','영화','게임','사진','반려동물'
+];
 // 바로만남 공개 프로필 - 계정 프로필과 완전히 분리된 정보(블라인드 상대에게만 공개).
 // 예전엔 바텀시트(바로만남 탭 안에서만 진입)였는데, 마이페이지 기본정보에서도 찾을 수
 // 있도록 정식 서브패널(mpsub-mannam-profile)로 승격 - 사진(대표사진 재사용 또는 전용
