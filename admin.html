@@ -1108,14 +1108,44 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// ── 독립 키보드 가림 방지 (위의 DOMContentLoaded 핸들러와 무관하게 항상 동작) ──
-// 위 _adjustPanels/_scrollFieldAboveKeyboard는 큰 async DOMContentLoaded 핸들러 안에
-// 있어서, 그 함수 안 어디선가(세션 체크, loadDashboard 등) 에러가 나면 이 아래
-// 코드 자체가 등록조차 안 될 수 있음 - 바로스팟 개설 메모 등에서 실제로 안 먹히는
-// 문제가 재발해서, 다른 코드의 성공 여부와 완전히 무관하게 즉시 등록되는 별도
-// 핸들러를 추가한다. .detail-panel 안의 모든 input/textarea에 적용되며,
-// 패널을 실제로 줄여주는(overlay padding-bottom + panel maxHeight) 부분까지 포함해서
-// 스크롤 조정만으로는 안 되는 경우(패널 자체가 키보드 뒤에 그대로 있는 경우)도 커버한다.
+// ── 네이티브 키보드 브리지 (진짜 원인 수정) ──────────────────────────
+// admin.html은 baroalba.multimove.co.kr 도메인이라 MainActivity.java의
+// shouldOverrideUrlLoading이 그대로 앱 내부 WebView에서 로드한다(AndroidBridge 포함,
+// return false 처리). 즉 네이티브가 키보드 높이를 이미 window._onNativeKbChange(dp)로
+// 계속 호출해주고 있었는데("if(window._onNativeKbChange)..."로 존재 여부만 체크하고
+// 조용히 스킵) admin.html엔 이 함수 자체가 정의돼 있지 않아 값을 계속 버리고 있었음.
+// 그동안 시도한 visualViewport 기반 방식은 전부 이 진짜 신호를 안 쓰고 브라우저
+// API로 추측하는 방식이었던 것 - app.js의 _onNativeKbChange와 동일한 패턴으로 이식.
+window._onNativeKbChange = function(dp) {
+  try {
+    const isNativelyResized = (window.innerHeight < window.screen.height - 200);
+    const kbH = (dp > 80 && !isNativelyResized) ? dp : 0;
+    document.querySelectorAll('.detail-overlay.show').forEach(overlay => {
+      const panel = overlay.querySelector('.detail-panel');
+      if (kbH > 0) {
+        overlay.style.setProperty('padding-bottom', kbH + 'px', 'important');
+        if (panel) {
+          panel.style.maxHeight = (window.innerHeight - kbH - 40) + 'px';
+          const f = document.activeElement;
+          if (f && (f.tagName === 'INPUT' || f.tagName === 'TEXTAREA') && panel.contains(f)) {
+            const fRect = f.getBoundingClientRect();
+            const visibleBottom = window.innerHeight - kbH;
+            if (fRect.bottom > visibleBottom - 20) {
+              panel.scrollTop += fRect.bottom - visibleBottom + 80;
+            }
+          }
+        }
+      } else {
+        overlay.style.paddingBottom = '';
+        if (panel) panel.style.maxHeight = '';
+      }
+    });
+  } catch (e) { /* 무시 */ }
+};
+
+// ── 독립 키보드 가림 방지 (브라우저로 접속하는 경우를 위한 폴백) ──
+// 위 _onNativeKbChange가 이 앱(AAB) 안에서는 진짜 해결책이고, 아래는 admin.html을
+// 혹시 일반 브라우저로 열 때를 위한 2차 안전망으로 유지한다.
 (function() {
   let _maxVPH2 = window.innerHeight;
   function _adjustPanelsIndependent() {
