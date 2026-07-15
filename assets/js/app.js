@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '501';
+  const _APP_V = '502';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -6337,12 +6337,13 @@ function _renderChatList() {
     // 바로스팟도 바로미팅과 같은 "바로만남" 계열이라 같은 로즈 톤으로 통일
     // (예전엔 일반 알바채팅과 똑같은 흰 배경이라 채팅목록에서 구분이 안 됐음)
     const isBarospotRow = a.side === 'barospot';
+    // 바로미팅/바로스팟 배경이 너무 진하다는 피드백으로 톤다운 (#ffe4e8 → #fff3f4)
     const rowBg = isGathering
-      ? (a.gatheringCategory === 'baromeeting' ? '#ffe4e8' : '#e9e3ff')
-      : isBarospotRow ? '#ffe4e8' : '#fff';
+      ? (a.gatheringCategory === 'baromeeting' ? '#fff3f4' : '#e9e3ff')
+      : isBarospotRow ? '#fff3f4' : '#fff';
     const rowBorder = isGathering
-      ? (a.gatheringCategory === 'baromeeting' ? '#e11d48' : '#7C3AED')
-      : isBarospotRow ? '#e11d48' : 'transparent';
+      ? (a.gatheringCategory === 'baromeeting' ? '#f43f5e' : '#7C3AED')
+      : isBarospotRow ? '#f43f5e' : 'transparent';
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
       <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':rowBg};border-left:3.5px solid ${unread>0?'var(--red)':rowBorder}">
         <div style="position:relative;flex-shrink:0">
@@ -11122,8 +11123,10 @@ async function openCommunityPost(postId) {
   const fmtRel = iso => { const d = new Date(iso); const now = new Date(); const diffH = (now - d) / 3600000; if (diffH < 1) return Math.floor(diffH * 60) + '분 전'; if (diffH < 24) return Math.floor(diffH) + '시간 전'; return `${d.getMonth()+1}/${d.getDate()}`; };
 
   const isMyPost = currentUser && (post.workers?.kakao_uid === currentUser.id || post.businesses?.kakao_uid === currentUser.id);
+  // 좋아요 버튼과 수정/삭제 버튼이 서로 다른 줄에 따로 떨어져 있어 어색했던 문제 -
+  // 좋아요는 왼쪽, 수정/삭제는 오른쪽으로 한 줄에 나란히 배치
   const myPostBtns = isMyPost ? `
-    <div style="display:flex;gap:8px;margin-top:12px">
+    <div style="display:flex;gap:8px">
       <button onclick="openEditCommPost()" style="padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;background:#fff;font-size:12px;font-weight:700;color:#555;cursor:pointer">✏️ 수정</button>
       <button onclick="deleteCommPost()" style="padding:7px 14px;border:1.5px solid #fca5a5;border-radius:20px;background:#fff3f3;font-size:12px;font-weight:700;color:#c53030;cursor:pointer">🗑 삭제</button>
     </div>` : '';
@@ -11150,10 +11153,12 @@ async function openCommunityPost(postId) {
       </div>
       <div style="font-size:13px;color:#aaa;margin-bottom:14px">${author} · ${fmtFull(post.created_at)}</div>
       <div style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">${post.content}</div>
-      ${myPostBtns}
-      <button id="comm-like-btn" onclick="likeCommunityPost()" style="margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'#C8102E':'#555'};cursor:pointer">
-        ❤️ <span id="comm-like-count">${post.likes || 0}</span>
-      </button>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px">
+        <button id="comm-like-btn" onclick="likeCommunityPost()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'#C8102E':'#555'};cursor:pointer">
+          ❤️ <span id="comm-like-count">${post.likes || 0}</span>
+        </button>
+        ${myPostBtns}
+      </div>
     </div>
     <div style="font-size:12px;font-weight:800;color:#999;margin-bottom:8px">댓글 ${comments?.length || 0}개</div>
     <div id="comm-comments-list">${commentsHtml}</div>
