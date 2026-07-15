@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=524"></script>
+  <script src="./shared-lang.js?v=525"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=524">
+  <link rel="stylesheet" href="./assets/css/style.css?v=525">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2002,6 +2002,20 @@
           <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">MBTI <span style="color:#aaa;font-weight:500">(선택)</span></div>
           <div id="mp-dating-mbti" style="display:flex;gap:8px"></div>
         </div>
+      </div>
+
+      <!-- 바로미팅 익명 채팅 프로필(baromeet_nick/baromeet_avatar) - 예전엔 채팅방 진입
+           직전에만 뜨는 별도 팝업(openBaromeetAnonSetup)에서만 설정 가능해서 찾기 어려웠음.
+           채팅 중 빠른 접근용 팝업은 그대로 두고, 여기선 기존 화면을 그대로 열어 요약
+           한 줄 + "편집 ›"으로 접근하게 함(2026-07-16 피드백, 사진/스킬 항목과 동일 패턴).
+           성별과 무관하게 항상 노출 -->
+      <div style="border-top:1px solid #f0f0f0;padding-top:16px">
+        <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">바로미팅 익명 채팅 프로필</div>
+        <div onclick="openBaromeetAnonSetup()" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f8;border-radius:10px;cursor:pointer">
+          <div style="font-size:13px;color:#333;font-weight:700">💬 익명 닉네임 · 프로필 표시 방식</div>
+          <span style="font-size:11px;color:#7C3AED;font-weight:700">편집 ›</span>
+        </div>
+        <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6">바로미팅 채팅방에서 실명 대신 표시할 닉네임과 프로필 사진 공개 여부예요.</div>
       </div>
     </div>
 
@@ -4263,7 +4277,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=524"></script>
+<script src="./assets/js/app.js?v=525"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
