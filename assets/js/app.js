@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '529';
+  const _APP_V = '530';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=529').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=530').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -5169,17 +5169,26 @@ window._onFCMToken = function(token) {
     // (2026-07-16 피드백: "자기소개 입력하는데도 키보드에 가려져서") - 포커스된 입력창을
     // 명시적으로 보이는 위치까지 스크롤. .mpsub-panel은 다양한 폼(프로필편집/스킬/서류/
     // 바로만남 프로필 등)이 공유하는 클래스라 여기 한 번만 처리하면 전부 커버됨
-    if (dp > 80) {
-      var mpFoc = document.activeElement;
-      if (mpFoc && (mpFoc.tagName === 'TEXTAREA' || mpFoc.tagName === 'INPUT') && mpFoc.closest('.mpsub-panel.show')) {
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            mpFoc.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          });
-        });
-      }
-    }
+    if (dp > 80) _scrollMpsubFocusIntoView(document.activeElement);
   };
+
+  function _scrollMpsubFocusIntoView(el) {
+    if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') && el.closest('.mpsub-panel.show')) {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      });
+    }
+  }
+  // 위 _onNativeKbChange는 키보드 "높이가 바뀔 때"만 호출된다 - 이미 키보드가 열려있는
+  // 상태에서(예: 생년월일 입력 중) 스크롤을 내려 더 아래쪽의 자기소개로 포커스만 옮기면
+  // dp 값 자체는 안 바뀌어 재호출되지 않고, 위 처리만으로는 이 경우를 놓쳐 여전히
+  // 가려진 채로 남아있을 수 있었다(자체 재검토로 발견, 실제로 자기소개는 프로필편집
+  // 폼에서 스크롤 꽤 아래쪽에 있어 이 경로를 탈 가능성이 높음) - 포커스 자체를 직접 감시
+  document.addEventListener('focusin', function(e) {
+    if (window._lastKbDp > 80) _scrollMpsubFocusIntoView(e.target);
+  });
 
   // 브라우저 환경 폴백 (WebView 외에서 접속 시)
   // 네이티브 앱에서는 _onNativeKbChange가 이미 정확한 IME 높이를 적용하므로
