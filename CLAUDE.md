@@ -658,3 +658,36 @@ head V='421' 하드코딩)를 다 고쳤는데도 FAB 라벨이 계속 안 바�
 **현재 대기 중인 리빌드**: `LOAD_NO_CACHE` + `clearCache(true)` Java 변경분
 → GitHub Actions → "Build Android TWA" → Run workflow 실행 필요 (1회만)
 → 이후 HTML 변경은 영구적으로 리빌드 불필요
+
+### 13-7. "키보드가 입력창을 가린다" 보고를 받으면 절대 visualViewport부터 짜지 말 것 (2026-07-16)
+
+**이 프로젝트의 모든 페이지(바로알바.html뿐 아니라 admin.html 포함)는 도메인이
+`baroalba.multimove.co.kr`이면 AAB 앱의 WebView 안에서 그대로 로드된다**
+(`MainActivity.java`의 `shouldOverrideUrlLoading`이 이 도메인을 `return false` 처리 →
+외부 브라우저로 안 나가고 같은 WebView가 그대로 로드, `AndroidBridge`도 그대로 살아있음).
+
+즉 **이 도메인의 어떤 페이지든 네이티브가 이미 정확한 키보드 높이를 실시간으로
+보내주고 있다**(`MainActivity.java`의 `applyKbHeight()` → 매번
+`"if(window._onNativeKbChange)window._onNativeKbChange(dp)"`를 evaluateJavascript로
+호출). 이 함수가 존재하면 실행하고, 없으면 조용히 아무 일도 안 일어난다.
+
+**교훈 (2026-07-16, admin.html 바로스팟 개설 메모 키보드 가림)**: 이 문제를 여러 차례
+"고쳤다"고 보고했는데 계속 재발했다. 원인은 `admin.html`에 `window._onNativeKbChange`가
+아예 정의돼 있지 않아서 — 네이티브는 계속 정확한 dp 값을 보내고 있었는데 받는 쪽이
+없어서 매번 버려지고 있었다. 그런데도 `visualViewport.resize`/`window.scrollBy`/
+`scrollIntoView` 같은 **브라우저 API로 키보드 높이를 추측하는 방식을 세 번이나
+새로 짜서** 시간을 허비했다. `_onNativeKbChange(dp)`는 이미 `CLAUDE.md` 2-5 Android
+구조 섹션에 명시돼 있었는데 그걸 먼저 안 찾아본 게 근본 실수.
+
+**앞으로 이 프로젝트의 어떤 화면에서든** "키보드가 입력창/버튼을 가린다"는 보고를
+받으면:
+1. 먼저 그 페이지에 `window._onNativeKbChange`가 정의돼 있는지 `grep`으로 확인
+   (`grep -n "_onNativeKbChange" 그페이지.html`).
+2. 없으면 그게 100% 원인이다 — app.js의 구현을 그대로 복붙해서 그 페이지의
+   패널 구조(`.detail-overlay`/`.detail-panel`, `wchat-overlay` 스타일 등 무엇이든)에
+   맞게 `overlay.style.paddingBottom` + `panel.style.maxHeight` + 포커스된
+   입력창 `scrollTop` 보정만 이식하면 된다. **`visualViewport`나 `resize` 이벤트로
+   새로 짜지 말 것** — 이미 훨씬 신뢰도 높은 신호가 매번 오고 있다.
+3. `_onNativeKbChange`가 이미 있는데도 특정 패널만 안 먹히면, 십중팔구 그 패널의
+   id/class가 함수 안의 `querySelectorAll` 대상에 등록이 안 된 것뿐이다
+   (barospot-chat 패널 누락 사례, 13-5 체크리스트와 같은 종류의 "등록 누락" 패턴).
