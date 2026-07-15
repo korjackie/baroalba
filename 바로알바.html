@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=498"></script>
+  <script src="./shared-lang.js?v=499"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=498">
+  <link rel="stylesheet" href="./assets/css/style.css?v=499">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2124,6 +2124,32 @@
         </label>
       </div>
     </div>
+    <div style="background:#fff;border-radius:14px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
+        <div><div style="font-size:14px;font-weight:700;color:#222">🤝 바로미팅 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">신청/확정/채팅 등 바로미팅 관련 알림</div></div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="noti-toggle-svc-baromeeting" onchange="saveServiceNotiSetting('baromeeting',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+          <span id="noti-track-svc-baromeeting" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+          <span id="noti-thumb-svc-baromeeting" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+        </label>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
+        <div><div style="font-size:14px;font-weight:700;color:#222">📍 바로스팟 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">선점/확정/채팅 등 바로스팟 관련 알림</div></div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="noti-toggle-svc-barospot" onchange="saveServiceNotiSetting('barospot',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+          <span id="noti-track-svc-barospot" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+          <span id="noti-thumb-svc-barospot" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+        </label>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+        <div><div style="font-size:14px;font-weight:700;color:#222">👥 바로모임 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">모임 채팅 등 바로모임 관련 알림</div></div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="noti-toggle-svc-moim" onchange="saveServiceNotiSetting('moim',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+          <span id="noti-track-svc-moim" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
+          <span id="noti-thumb-svc-moim" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></span>
+        </label>
+      </div>
+    </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:13px;font-weight:800;color:#222">🔔 맞춤 공고 알림</div>
@@ -4125,7 +4151,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=498"></script>
+<script src="./assets/js/app.js?v=499"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4691,6 +4717,16 @@
         <div style="display:flex;gap:8px">
           <button id="track-barospot-interest-btn" style="flex:2;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer"></button>
           <button id="track-barospot-end-btn" style="display:none;flex:1;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#888">종료하기</button>
+        </div>
+      </div>
+      <!-- 바로스팟 만남 후 상호평가 (별점+태그) - 호감표시와 별개로 독립 동작 -->
+      <div id="track-barospot-review-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee;text-align:center">
+        <div id="track-barospot-review-done" style="display:none;font-size:12.5px;color:#888">✅ 평가를 남겨주셔서 감사해요</div>
+        <div id="track-barospot-review-form">
+          <div style="font-size:12.5px;color:#666;margin-bottom:8px">만남은 어떠셨나요?</div>
+          <div id="track-barospot-review-stars" style="display:flex;justify-content:center;gap:4px;font-size:26px;margin-bottom:10px"></div>
+          <div id="track-barospot-review-tags" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px"></div>
+          <button id="track-barospot-review-submit" onclick="submitBarospotReview()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer">평가 남기기</button>
         </div>
       </div>
       <div id="track-live-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee">

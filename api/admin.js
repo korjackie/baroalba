@@ -103,6 +103,15 @@ async function notifyBaromeetApplicants(gatheringId, meetingTitle, svcKey, req) 
 // 범용 인앱 알림 + 푸시 발송 (제목/본문을 직접 넘기는 단순 버전)
 // url: 푸시 클릭 시 이동할 딥링크(선택, 기본은 앱 메인) - 기존 호출부는 그대로 6개 인자만 넘겨도 동작함
 async function notifyUser(userId, title, body, type, svcKey, req, url) {
+  // 서비스별 알림 개별 차단 - type 접두어(barospot_/baromeeting_/moim_)로 카테고리를 판별해
+  // workers.notify_* 컬럼이 명시적으로 false인 경우만 발송을 건너뛴다 (기본값 true)
+  const prefCol = type?.startsWith('barospot_') ? 'notify_barospot'
+    : type?.startsWith('baromeeting_') ? 'notify_baromeeting'
+    : type?.startsWith('moim_') ? 'notify_moim' : null;
+  if (prefCol) {
+    const prefRows = await sb(`workers?kakao_uid=eq.${userId}&select=${prefCol}`, svcKey).then(r => r.json()).catch(() => []);
+    if (prefRows?.[0]?.[prefCol] === false) return;
+  }
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const baseUrl = host ? `https://${host}` : '';
   await sb('notifications', svcKey, {
@@ -158,6 +167,20 @@ async function confirmBarospotMale(applicationId, svcKey, req) {
     await notifyUser(o.user_id, '바로스팟 신청 결과 안내', '아쉽지만 이번 바로스팟은 다른 분과 매칭됐어요.', 'barospot_cancelled', svcKey, req);
   }
   return null;
+}
+
+// 바로스팟 취소 시 원래 결제수단대로 환불 - pass면 이용권 1회 복구, points면 차감했던
+// 금액 그대로 반환. trial(무료체험)은 애초에 차감된 게 없어 환불할 것도 없음.
+async function _refundBarospotPayment(app, svcKey) {
+  if (app.paid_method === 'pass') {
+    const passRows = await sb(`barospot_passes?user_id=eq.${app.user_id}&gender=eq.${app.gender}&status=eq.active&select=id,remaining_count`, svcKey).then(r => r.json()).catch(() => []);
+    const pass = passRows?.[0];
+    if (pass) await sb(`barospot_passes?id=eq.${pass.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ remaining_count: pass.remaining_count + 1 }) });
+  } else if (app.paid_method === 'points' && app.paid_amount) {
+    const acctRows = await sb(`point_accounts?user_id=eq.${app.user_id}&select=id,balance`, svcKey).then(r => r.json()).catch(() => []);
+    const acct = acctRows?.[0];
+    if (acct) await sb(`point_accounts?id=eq.${acct.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ balance: acct.balance + app.paid_amount }) });
+  }
 }
 
 // 포인트 지급/차감 시 인앱 알림 + 푸시 발송 (추천인 보상, 관리자 수동 지급 공통 사용)
@@ -481,8 +504,9 @@ module.exports = async function handler(req, res) {
     recipients.delete(senderId);
     const title = gathering?.category === 'baromeeting' ? '🤝 바로미팅 새 메시지' : '💬 모임 새 메시지';
     const body = (gcMessage || '새 메시지가 도착했어요').slice(0, 60);
+    const chatType = gathering?.category === 'baromeeting' ? 'baromeeting_chat' : 'moim_chat';
     for (const uid of recipients) {
-      await notifyUser(uid, title, body, 'gathering_chat', svcKey, req).catch(() => {});
+      await notifyUser(uid, title, body, chatType, svcKey, req).catch(() => {});
     }
     return res.json({ ok: true });
   }
@@ -512,7 +536,7 @@ module.exports = async function handler(req, res) {
     const cbJwt = (req.headers.authorization || '').replace('Bearer ', '');
     const requesterId = getSubFromJWT(cbJwt);
     if (!requesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
-    const { event_id: claimEventId } = req.body || {};
+    const { event_id: claimEventId, paid_method: claimPaidMethod, paid_amount: claimPaidAmount } = req.body || {};
     if (!claimEventId) return res.status(400).json({ error: 'event_id required' });
 
     const claimRes = await fetch(`${SUPABASE_URL}/rest/v1/barospot_events?id=eq.${claimEventId}&status=eq.recruiting_female`, {
@@ -526,7 +550,7 @@ module.exports = async function handler(req, res) {
     }
     const insRes = await sb('barospot_applications', svcKey, {
       method: 'POST',
-      body: JSON.stringify({ user_id: requesterId, event_id: claimEventId, gender: 'female', status: 'matched' }),
+      body: JSON.stringify({ user_id: requesterId, event_id: claimEventId, gender: 'female', status: 'matched', paid_method: claimPaidMethod || null, paid_amount: claimPaidAmount || null }),
     });
     if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
     await notifyBarospotPrebookers(claimEventId, svcKey, req).catch(() => {});
@@ -589,7 +613,7 @@ module.exports = async function handler(req, res) {
     const body = (ncmMessage || '새 메시지가 도착했어요').slice(0, 60);
     if (room.context_type === 'barospot') {
       const otherUid = await _getOtherConfirmedBarospotUser(room.barospot_event_id, ncmSenderId);
-      if (otherUid) await notifyUser(otherUid, '💬 바로스팟 채팅 새 메시지', body, 'chat_message', svcKey, req).catch(() => {});
+      if (otherUid) await notifyUser(otherUid, '💬 바로스팟 채팅 새 메시지', body, 'barospot_chat_message', svcKey, req).catch(() => {});
     }
     return res.json({ ok: true });
   }
@@ -664,6 +688,71 @@ module.exports = async function handler(req, res) {
       await notifyUser(interest.initiator_user_id, '바로스팟 안내', '아쉽지만 이번엔 채팅으로 이어지지 않았어요', 'barospot_interest_declined', svcKey, req).catch(() => {});
       return res.json({ ok: true });
     }
+  }
+
+  // ── 바로스팟 확정 후 자발적 취소 (일정 24시간 전까지만 전액환불) ──────────────
+  // 한쪽이 취소하면 만남 자체가 성립 안 하므로 확정된 상대방 신청건도 함께 취소+환불하고 알림
+  if (req.method === 'POST' && earlyAction === 'cancel_barospot_application') {
+    const cbaJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const cbaRequesterId = getSubFromJWT(cbaJwt);
+    if (!cbaRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { application_id: cbaAppId } = req.body || {};
+    if (!cbaAppId) return res.status(400).json({ error: 'application_id required' });
+
+    const appRows = await sb(`barospot_applications?id=eq.${cbaAppId}&select=id,user_id,event_id,gender,status,paid_method,paid_amount`, svcKey).then(r => r.json()).catch(() => []);
+    const app = appRows?.[0];
+    if (!app || app.user_id !== cbaRequesterId) return res.status(403).json({ error: '본인의 신청만 취소할 수 있어요' });
+    if (app.status !== 'confirmed') return res.status(400).json({ error: '확정된 신청만 취소할 수 있어요' });
+    if (!app.event_id) return res.status(400).json({ error: '이벤트 정보가 없어요' });
+
+    const evRows = await sb(`barospot_events?id=eq.${app.event_id}&select=id,event_date`, svcKey).then(r => r.json()).catch(() => []);
+    const ev = evRows?.[0];
+    if (!ev) return res.status(404).json({ error: '이벤트를 찾을 수 없어요' });
+    const hoursLeft = ev.event_date ? (new Date(ev.event_date).getTime() - Date.now()) / 3600000 : 999;
+    if (hoursLeft < 24) return res.status(400).json({ error: '일정 24시간 이내에는 취소할 수 없어요' });
+
+    const nowIso = new Date().toISOString();
+    await sb(`barospot_applications?id=eq.${cbaAppId}`, svcKey, {
+      method: 'PATCH', body: JSON.stringify({ status: 'cancelled', cancelled_at: nowIso }),
+    });
+    await _refundBarospotPayment(app, svcKey);
+
+    // 확정된 상대방(있다면)도 함께 취소 + 환불 + 안내
+    const otherRows = await sb(`barospot_applications?event_id=eq.${app.event_id}&status=eq.confirmed&user_id=neq.${cbaRequesterId}&select=id,user_id,gender,paid_method,paid_amount`, svcKey).then(r => r.json()).catch(() => []);
+    for (const other of (otherRows || [])) {
+      await sb(`barospot_applications?id=eq.${other.id}`, svcKey, {
+        method: 'PATCH', body: JSON.stringify({ status: 'cancelled', cancelled_at: nowIso }),
+      });
+      await _refundBarospotPayment(other, svcKey);
+      await notifyUser(other.user_id, '바로스팟 취소 안내', '상대방 사정으로 바로스팟이 취소돼서 결제하신 이용권/포인트가 전액 환불됐어요', 'barospot_cancelled_by_other', svcKey, req).catch(() => {});
+    }
+    await sb(`barospot_events?id=eq.${app.event_id}`, svcKey, {
+      method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }),
+    });
+    return res.json({ ok: true });
+  }
+
+  // 만남 후 상호평가 (별점+태그) - 호감표시/채팅과 무관하게 확정 참가자면 누구나 남길 수 있음
+  // (다시 만나고 싶은지와 별개로 노쇼/매너 등 신뢰도 지표로 쓰기 위함)
+  if (req.method === 'POST' && earlyAction === 'submit_barospot_review') {
+    const sbrJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const sbrRequesterId = getSubFromJWT(sbrJwt);
+    if (!sbrRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const { event_id: sbrEventId, rating: sbrRating, tags: sbrTags } = req.body || {};
+    if (!sbrEventId || !Number.isInteger(sbrRating) || sbrRating < 1 || sbrRating > 5) {
+      return res.status(400).json({ error: 'event_id, rating(1~5) required' });
+    }
+    const myRows = await sb(`barospot_applications?event_id=eq.${sbrEventId}&user_id=eq.${sbrRequesterId}&status=eq.confirmed&select=id`, svcKey).then(r => r.json()).catch(() => []);
+    if (!myRows?.length) return res.status(403).json({ error: '확정된 참가자만 평가할 수 있어요' });
+    const revieweeId = await _getOtherConfirmedBarospotUser(sbrEventId, sbrRequesterId);
+    if (!revieweeId) return res.status(404).json({ error: '상대방을 찾을 수 없어요' });
+    const insRes = await sb('barospot_reviews?on_conflict=event_id,reviewer_id', svcKey, {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ event_id: sbrEventId, reviewer_id: sbrRequesterId, reviewee_id: revieweeId, rating: sbrRating, tags: sbrTags || [] }),
+    });
+    if (!insRes.ok) return res.status(502).json({ error: await insRes.text() });
+    return res.json({ ok: true });
   }
 
   // 서로 호감 수락된 이후에만 실명+실사진 등 상세 프로필 공개(전화번호는 절대 포함 안 함)

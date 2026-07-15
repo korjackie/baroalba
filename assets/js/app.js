@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '498';
+  const _APP_V = '499';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -8584,6 +8584,7 @@ function openProfile() {
     document.getElementById('profile-guest').style.display = 'block';
   }
   initNotiToggles();
+  initServiceNotiToggles();
 }
 
 
@@ -10286,6 +10287,32 @@ function initNotiToggles() {
 }
 function getNotiSetting(key) {
   return localStorage.getItem('baro_noti_' + key) !== '0'; // default ON
+}
+
+// 서비스별(바로미팅/바로스팟/바로모임) 알림 개별 토글 - localStorage 기반인 위 토글과 달리
+// workers.notify_* 컬럼에 저장해서 서버(notifyUser)가 실제 발송 여부를 직접 확인/차단한다
+function _renderServiceNotiToggle(key, on) {
+  const track = document.getElementById('noti-track-svc-' + key);
+  const thumb = document.getElementById('noti-thumb-svc-' + key);
+  if (track) track.style.background = on ? 'var(--red)' : '#ddd';
+  if (thumb) thumb.style.transform = on ? 'translateX(20px)' : 'translateX(0)';
+}
+async function initServiceNotiToggles() {
+  if (!currentUser) return;
+  const { data: w } = await db.from('workers')
+    .select('notify_baromeeting, notify_barospot, notify_moim').eq('kakao_uid', currentUser.id).maybeSingle();
+  ['baromeeting', 'barospot', 'moim'].forEach(key => {
+    const on = w?.['notify_' + key] !== false; // 컬럼이 없거나 null이어도 기본은 켜진 것으로 표시
+    const el = document.getElementById('noti-toggle-svc-' + key);
+    if (el) el.checked = on;
+    _renderServiceNotiToggle(key, on);
+  });
+}
+async function saveServiceNotiSetting(key, val) {
+  _renderServiceNotiToggle(key, val);
+  if (!currentUser) return;
+  const { error } = await db.from('workers').update({ ['notify_' + key]: val }).eq('kakao_uid', currentUser.id);
+  if (error) showToast('저장 실패: ' + error.message);
 }
 
 async function doLogout() {
@@ -17677,6 +17704,12 @@ function openTrackingSheet(opts) {
     } else if (interestWrap) {
       interestWrap.style.display = 'none';
     }
+    const reviewWrap = document.getElementById('track-barospot-review-wrap');
+    if (opts.barospotInterest) {
+      _renderBarospotReviewSection(opts.barospotInterest.eventId);
+    } else if (reviewWrap) {
+      reviewWrap.style.display = 'none';
+    }
 
     // 다른 context(이전에 도착 확정한 이벤트)의 상태가 새로 여는 트래킹 시트에 남아
     // "도착 완료"로 잠긴 채 보이지 않도록 컨텍스트가 바뀌면 도착 플래그를 초기화한다.
@@ -18912,7 +18945,7 @@ async function applyBarospot() {
     const pay = await _tryPayBarospotWithPoints('female', '바로스팟 신청');
     if (!pay) return;
     const { error: ae } = await db.from('barospot_applications')
-      .insert({ user_id: currentUser.id, gender: 'female', status: 'pending' });
+      .insert({ user_id: currentUser.id, gender: 'female', status: 'pending', paid_method: 'points', paid_amount: pay.price });
     if (ae) { await pay.rollback(); showToast('신청 오류: ' + ae.message); return; }
     showToast(`✅ ${pay.price.toLocaleString()}P 차감 후 신청 완료! 매니저가 검토 후 배정을 안내해드립니다`);
     await loadUserPoints();
@@ -18939,7 +18972,7 @@ async function applyBarospot() {
     if (pe) { showToast('오류: ' + pe.message); return; }
   }
   const { error: ae } = await db.from('barospot_applications')
-    .insert({ user_id: currentUser.id, gender: 'female', status: 'pending' });
+    .insert({ user_id: currentUser.id, gender: 'female', status: 'pending', paid_method: isTrial ? 'trial' : 'pass', paid_amount: null });
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
   showToast(isTrial ? '✅ 무료 체험 신청 완료! 매니저가 검토 후 배정을 안내해드립니다' : '신청 완료! 매니저가 검토 후 배정을 안내해드립니다');
   await _loadBarospotList();
@@ -18971,6 +19004,15 @@ async function _loadFemaleApplications() {
   if (error || !data?.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div>'; return; }
   const statusLabel = { pending:'검토 중', matched:'식당 배정 완료', confirmed:'일정 확정', cancelled:'취소됨' };
   const statusColor = { pending:'#f59e0b', matched:'#8b5cf6', confirmed:'#10b981', cancelled:'#9ca3af' };
+  // matched(남성 신청 받는 중) 단계는 매니저만 몇 명 신청했는지 알 수 있어서 여성 입장에선
+  // 감감무소식으로 느껴지던 문제 - 신청 건수만 노출(신원은 매니저 선택 전까지 비공개 유지)
+  const matchedEventIds = data.filter(a => a.status === 'matched' && a.event_id).map(a => a.event_id);
+  let maleAppCount = {};
+  if (matchedEventIds.length) {
+    const { data: maleApps } = await db.from('barospot_applications')
+      .select('event_id').eq('gender', 'male').eq('status', 'pending').in('event_id', matchedEventIds);
+    (maleApps || []).forEach(m => { maleAppCount[m.event_id] = (maleAppCount[m.event_id] || 0) + 1; });
+  }
   el.innerHTML = data.map(a => {
     const ev = a.barospot_events;
     const st = a.status;
@@ -18987,12 +19029,41 @@ async function _loadFemaleApplications() {
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || '식당 정보 확인 중'} · ${whenText}</div>` : ''}
       ${canPick ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <div style="font-size:11px;color:#7C3AED;font-weight:700">🍽️ 눌러서 후보 보고 선택하기</div>
+        <div style="font-size:11px;color:#7C3AED;font-weight:700">🍽️ 눌러서 후보 보고 선택하기${maleAppCount[a.event_id] ? ` · 남성 ${maleAppCount[a.event_id]}명 신청 중` : ''}</div>
         <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:700;color:#3b82f6;background:#eff6ff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">📢 공유</button>
       </div>` : ''}
-      ${canTrack ? `<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:6px">🗺️ 눌러서 위치·거리 보기</div>` : ''}
+      ${canTrack ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div style="font-size:11px;color:#7C3AED;font-weight:700">🗺️ 눌러서 위치·거리 보기</div>
+        ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
+          ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">취소하기</button>`
+          : ''}
+      </div>` : ''}
     </div>`;
   }).join('');
+}
+
+// 확정된 바로스팟을 일정 24시간 전까지만 자발적으로 취소(전액환불) - 서버가 시간 조건과
+// 본인 소유 여부를 재검증하고, 확정된 상대방 신청건도 함께 취소+환불 처리한다
+async function cancelBarospotApplication(applicationId) {
+  const confirmed = await showConfirmDialog(
+    '바로스팟 취소',
+    '이 바로스팟을 취소하시겠어요?\n일정 24시간 전까지는 결제하신 이용권/포인트가 전액 환불돼요.\n상대방에게도 취소 사실이 안내됩니다.',
+    '취소하기', '그대로 두기'
+  );
+  if (!confirmed) return;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/api/admin?action=cancel_barospot_application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ application_id: applicationId })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('😢 ' + (data.error || '취소에 실패했어요')); return; }
+    showToast('✅ 취소되었어요. 결제하신 금액은 전액 환불됐어요');
+    await loadUserPoints();
+    await _loadBarospotList();
+  } catch (e) { showToast('오류가 발생했어요'); }
 }
 
 // matched(식당 배정 완료, 아직 남성 후보 없음) 단계의 여성 신청자가 직접 남성 신청을
@@ -19182,7 +19253,7 @@ async function claimBarospotEvent(eventId) {
       const res = await fetch('/api/admin?action=claim_barospot_event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ event_id: eventId })
+        body: JSON.stringify({ event_id: eventId, paid_method: 'points', paid_amount: pay.price })
       });
       const data = await res.json();
       if (!res.ok) { await pay.rollback(); showToast('😢 ' + (data.error || '선점에 실패했어요')); await loadNearbyBarospotOffers(); return; }
@@ -19205,7 +19276,7 @@ async function claimBarospotEvent(eventId) {
     const res = await fetch('/api/admin?action=claim_barospot_event', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-      body: JSON.stringify({ event_id: eventId })
+      body: JSON.stringify({ event_id: eventId, paid_method: isTrial ? 'trial' : 'pass' })
     });
     const data = await res.json();
     if (!res.ok) { showToast('😢 ' + (data.error || '선점에 실패했어요')); await loadNearbyBarospotOffers(); return; }
@@ -19325,7 +19396,12 @@ async function _loadMaleApplications() {
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || '식당 정보 확인 중'} · ${whenText}</div>` : ''}
       ${previewHtml}
-      ${canTrack ? `<div style="font-size:11px;color:#3b82f6;font-weight:700;margin-top:6px">🗺️ 눌러서 위치·거리 보기</div>` : ''}
+      ${canTrack ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div style="font-size:11px;color:#3b82f6;font-weight:700">🗺️ 눌러서 위치·거리 보기</div>
+        ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
+          ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">취소하기</button>`
+          : ''}
+      </div>` : ''}
     </div>`;
   }).join('');
 }
@@ -19473,7 +19549,7 @@ async function applySpotEvent(eventId) {
     const pay = await _tryPayBarospotWithPoints('male', '바로스팟 참가');
     if (!pay) return;
     const { error: ae } = await db.from('barospot_applications')
-      .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending' });
+      .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending', paid_method: 'points', paid_amount: pay.price });
     if (ae) { await pay.rollback(); showToast('신청 오류: ' + ae.message); return; }
     showToast(`🎉 ${pay.price.toLocaleString()}P 차감 후 참가 신청 완료! 매니저가 확인 후 안내드립니다`);
     await loadUserPoints();
@@ -19496,7 +19572,7 @@ async function applySpotEvent(eventId) {
     if (pe) { showToast('오류: ' + pe.message); return; }
   }
   const { error: ae } = await db.from('barospot_applications')
-    .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending' });
+    .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending', paid_method: isTrial ? 'trial' : 'pass', paid_amount: null });
   if (ae) { showToast('신청 오류: ' + ae.message); return; }
   showToast(isTrial ? '🎉 무료체험 신청 완료! 매니저가 확인 후 안내드립니다' : '참가 신청 완료! 매니저가 확인 후 안내드립니다');
   await _loadSpotEvents();
@@ -19606,6 +19682,64 @@ async function endBarospotCase(eventId) {
     if (!res.ok) { showToast('😢 ' + (data.error || '실패했어요')); return; }
     showToast('바로스팟을 종료했어요');
     await _renderBarospotInterestSection(eventId);
+  } catch (e) { showToast('오류가 발생했어요'); }
+}
+
+// 만남 후 상호평가 (별점+태그) - 호감표시/채팅 성사 여부와 무관하게 확정 참가자면
+// 누구나 남길 수 있음(노쇼/매너 등 신뢰도 지표 목적). barospot_reviews 테이블 사용.
+let _bspReviewEventId = null, _bspReviewRating = 0, _bspReviewTags = new Set();
+const BAROSPOT_REVIEW_TAGS = ['친절해요', '시간약속을 잘 지켜요', '매너가 좋아요', '대화가 즐거웠어요', '다시 만나고 싶어요'];
+
+async function _renderBarospotReviewSection(eventId) {
+  const wrap = document.getElementById('track-barospot-review-wrap');
+  if (!wrap || !currentUser) return;
+  wrap.style.display = 'block';
+  const { data: mine } = await db.from('barospot_reviews').select('id').eq('event_id', eventId).eq('reviewer_id', currentUser.id).maybeSingle();
+  const doneEl = document.getElementById('track-barospot-review-done');
+  const formEl = document.getElementById('track-barospot-review-form');
+  if (mine) { doneEl.style.display = 'block'; formEl.style.display = 'none'; return; }
+  doneEl.style.display = 'none'; formEl.style.display = 'block';
+  _bspReviewEventId = eventId; _bspReviewRating = 0; _bspReviewTags = new Set();
+  _renderBarospotReviewStars();
+  document.getElementById('track-barospot-review-tags').innerHTML = BAROSPOT_REVIEW_TAGS.map(tag =>
+    `<button type="button" onclick="_toggleBarospotReviewTag(this,'${tag}')" style="padding:6px 12px;border-radius:16px;border:1.5px solid #eee;background:#fff;color:#666;font-size:11.5px;font-weight:700;cursor:pointer">${tag}</button>`
+  ).join('');
+}
+function _renderBarospotReviewStars() {
+  const el = document.getElementById('track-barospot-review-stars');
+  if (!el) return;
+  el.innerHTML = [1, 2, 3, 4, 5].map(n =>
+    `<span onclick="_setBarospotReviewRating(${n})" style="cursor:pointer;color:${n <= _bspReviewRating ? '#f59e0b' : '#e5e7eb'}">★</span>`
+  ).join('');
+}
+function _setBarospotReviewRating(n) {
+  _bspReviewRating = n;
+  _renderBarospotReviewStars();
+}
+function _toggleBarospotReviewTag(btn, tag) {
+  if (_bspReviewTags.has(tag)) {
+    _bspReviewTags.delete(tag);
+    btn.style.background = '#fff'; btn.style.color = '#666'; btn.style.borderColor = '#eee';
+  } else {
+    _bspReviewTags.add(tag);
+    btn.style.background = '#7C3AED'; btn.style.color = '#fff'; btn.style.borderColor = '#7C3AED';
+  }
+}
+async function submitBarospotReview() {
+  if (!_bspReviewEventId) return;
+  if (_bspReviewRating < 1) { showToast('별점을 선택해주세요'); return; }
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/api/admin?action=submit_barospot_review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+      body: JSON.stringify({ event_id: _bspReviewEventId, rating: _bspReviewRating, tags: [..._bspReviewTags] })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('😢 ' + (data.error || '평가 저장에 실패했어요')); return; }
+    showToast('✅ 평가가 저장됐어요. 감사합니다!');
+    document.getElementById('track-barospot-review-done').style.display = 'block';
+    document.getElementById('track-barospot-review-form').style.display = 'none';
   } catch (e) { showToast('오류가 발생했어요'); }
 }
 
