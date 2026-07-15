@@ -682,7 +682,8 @@ module.exports = async function handler(req, res) {
     if (!w) return res.status(404).json({ error: '프로필을 찾을 수 없어요' });
     let age = w.age || null;
     if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
-    return res.json({ ok: true, name: w.name, photo_url: w.photo_url, age, job_category: w.job_category, body_type: w.body_type, interests: w.interests || [], bio: w.bio });
+    // kakao_uid도 함께 반환 - 채팅방 신고하기 버튼이 신고 대상(target_id)으로 사용
+    return res.json({ ok: true, kakao_uid: otherUid, name: w.name, photo_url: w.photo_url, age, job_category: w.job_category, body_type: w.body_type, interests: w.interests || [], bio: w.bio });
   }
 
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)

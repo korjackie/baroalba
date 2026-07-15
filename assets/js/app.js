@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '497';
+  const _APP_V = '498';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -4747,6 +4747,9 @@ function _chatItemClick(e, appId, name, side) {
     const item = _allChats.find(a => a.id === appId);
     if (item?.gatheringCategory === 'baromeeting') openBaromeetChat(gatheringId, name);
     else openMoimChat(gatheringId, name);
+  } else if (side === 'barospot') {
+    const item = _allChats.find(a => a.id === appId);
+    if (item?.eventId) openBarospotChatRoom(item.eventId);
   } else if (side === 'owner') {
     openChat(appId, name);
   } else {
@@ -6475,6 +6478,56 @@ async function loadMyChatList() {
     });
   }
 
+  // 바로스팟 1:1 채팅도 같은 목록에 포함 - chat_rooms/chat_messages 통합 스키마를 쓰는
+  // 새 기능인데 정작 이 목록 로딩 함수엔 조회 자체가 없어서 "채팅목록에 바로스팟 채팅방이
+  // 안 보인다"는 문제가 있었음
+  const { data: myBspApps } = await db.from('barospot_applications')
+    .select('event_id').eq('user_id', currentUser.id).eq('status', 'confirmed').not('event_id', 'is', null);
+  const bspEventIds = [...new Set((myBspApps || []).map(a => a.event_id))];
+  if (bspEventIds.length) {
+    const { data: bspRooms } = await db.from('chat_rooms')
+      .select('id, barospot_event_id').eq('context_type', 'barospot').in('barospot_event_id', bspEventIds);
+    if (bspRooms?.length) {
+      const roomIds = bspRooms.map(r => r.id);
+      const [{ data: bspMsgs }, { data: bspReads }, { data: { session } }] = await Promise.all([
+        db.from('chat_messages').select('*').in('room_id', roomIds).order('created_at', { ascending: false }),
+        db.from('chat_reads').select('room_id, last_read_at').eq('user_id', currentUser.id).in('room_id', roomIds),
+        db.auth.getSession(),
+      ]);
+      const readMap = {};
+      (bspReads || []).forEach(r => { readMap[r.room_id] = r.last_read_at; });
+      const bspLatestByRoom = {}, bspUnreadByRoom = {};
+      (bspMsgs || []).forEach(m => {
+        if (!bspLatestByRoom[m.room_id]) bspLatestByRoom[m.room_id] = m;
+        const lastRead = readMap[m.room_id];
+        if (m.sender_id !== currentUser.id && (!lastRead || new Date(m.created_at) > new Date(lastRead))) {
+          bspUnreadByRoom[m.room_id] = (bspUnreadByRoom[m.room_id] || 0) + 1;
+        }
+      });
+      // 상대방 이름/사진은 서로 호감수락된 사이에서만 공개되는 정보라 서버 API로만 조회 가능
+      const profiles = await Promise.all(bspRooms.map(r =>
+        fetch(`/api/admin?action=get_barospot_revealed_profile&event_id=${r.barospot_event_id}`, {
+          headers: { Authorization: 'Bearer ' + session.access_token }
+        }).then(res => res.ok ? res.json() : null).catch(() => null)
+      ));
+      bspRooms.forEach((r, i) => {
+        const rowId = 'bsp_' + r.id;
+        const prof = profiles[i];
+        const obj = {
+          id: rowId, eventId: r.barospot_event_id, roomId: r.id,
+          title: '📍 바로스팟', counterpartName: prof?.name || '바로스팟 상대',
+          photoUrl: prof?.photo_url || null, side: 'barospot',
+        };
+        allApps.push(obj); appMap[rowId] = obj;
+        const lm = bspLatestByRoom[r.id];
+        _latestMsg[rowId] = lm
+          ? { content: lm.content, created_at: lm.created_at, sender_id: lm.sender_id }
+          : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
+        if (bspUnreadByRoom[r.id]) _unreadCnt[rowId] = bspUnreadByRoom[r.id];
+      });
+    }
+  }
+
   const badge = document.getElementById('chat-unread-badge');
   if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
 
@@ -7807,6 +7860,7 @@ function setNav(el, tab) {
   closeOwnerPanel();
   closeWChat(false);
   closeChat(false);
+  closeBarospotChatRoom();
   document.getElementById('cp-profile-modal')?.remove();
   // z-index:500 이상 오버레이 강제 숨김 (이전 탭에서 남은 레이어 차단 방지)
   const _wo = document.getElementById('wchat-overlay');
@@ -19597,6 +19651,7 @@ let _bspChatRealtimeCh = null;
 let _bspChatCounterpart = null; // {name, photo_url, age, job_category, body_type, interests, bio}
 let _bspChatMyName = null;
 let _bspChatMyPhoto = null;
+let _bspSentIds = new Set(); // 내가 방금 낙관적으로 화면에 그린 메시지 id - realtime 에코로 중복 렌더 방지
 
 async function openBarospotChatRoom(eventId) {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
@@ -19634,9 +19689,12 @@ async function openBarospotChatRoom(eventId) {
     document.getElementById('panel-barospot-chat').style.display = 'flex';
     history.pushState({ panel: 'barospot-chat' }, '');
     await _loadBarospotChatMessages();
+    _bspSentIds.clear();
     if (_bspChatRealtimeCh) db.removeChannel(_bspChatRealtimeCh);
     _bspChatRealtimeCh = db.channel('barospot-chat-' + _bspChatRoomId)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `room_id=eq.${_bspChatRoomId}` }, payload => {
+        // 내가 방금 낙관적으로 그린 메시지가 realtime으로 에코되어 두 번 나오는 것 방지
+        if (payload.new?.id && _bspSentIds.has(payload.new.id)) { _bspSentIds.delete(payload.new.id); return; }
         _appendBarospotChatMessage(payload.new);
         _markBarospotChatRead();
       })
@@ -19693,11 +19751,17 @@ function _barospotChatBubbleHtml(m) {
 
 async function _doSendBarospotChat(content) {
   if (!_bspChatRoomId || !currentUser) return;
-  const { error } = await db.from('chat_messages').insert({
+  // 다른 채팅(wchat/chat/moim-chat)과 동일하게 realtime 에코에만 의존했더니, 이 방의 realtime이
+  // 정상 동작하지 않을 때 본인 메시지조차 화면에 안 나타나 "전송이 안 됨"으로 보이는 문제가
+  // 있었음 - insert 결과를 직접 돌려받아 낙관적으로 바로 그려서 최소한 보낸 사람 화면은
+  // realtime 상태와 무관하게 항상 정상 동작하게 한다.
+  const { data, error } = await db.from('chat_messages').insert({
     room_id: _bspChatRoomId, sender_id: currentUser.id,
     sender_name: _bspChatMyName, sender_photo_url: _bspChatMyPhoto, content,
-  });
+  }).select().single();
   if (error) { showToast('전송 실패: ' + error.message); return; }
+  if (data?.id) _bspSentIds.add(data.id);
+  _appendBarospotChatMessage(data || { sender_id: currentUser.id, sender_photo_url: _bspChatMyPhoto, content, created_at: new Date().toISOString() });
   _notifyChatMessage(_bspChatRoomId, content);
 }
 
@@ -19753,6 +19817,14 @@ async function _uploadAndSendBarospotChatImage() {
 }
 
 // 채팅방 헤더 탭 → 서로 수락된 사이라 실명+실사진(모자이크 해제)+나이/직업군/체형/관심사/자기소개 공개
+// 낯선 사람과의 블라인드 매칭 채팅이라 신고 경로가 없던 안전 공백 - 기존 신고 모달/
+// reports 테이블을 그대로 재사용해서 DDL 없이 추가 (REPORT_REASONS_USER가 이미 범용이라 그대로 적용)
+function reportBarospotCounterpart() {
+  const uid = _bspChatCounterpart?.kakao_uid;
+  if (!uid) { showToast('상대방 정보를 불러오지 못했어요'); return; }
+  openReportModal('user', uid);
+}
+
 function openBarospotProfileReveal() {
   const p = _bspChatCounterpart;
   if (!p) { showToast('프로필을 불러올 수 없어요'); return; }
