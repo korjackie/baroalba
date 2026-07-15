@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '505';
+  const _APP_V = '506';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -18843,56 +18843,114 @@ const DATING_JOB_CATEGORIES = ['대기업 / 외국계기업','중견 / 중소기
 const DATING_BODY_TYPES_FEMALE = ['슬림','슬림탄탄','보통','글래머','통통한 편'];
 const DATING_BODY_TYPES_MALE = ['마른 편','보통','슬림탄탄','근육질','통통한 편'];
 const DATING_INTERESTS = ['여행','와인','필라테스','헬스','독서','요리','카페','반려동물','사진','등산','골프','캠핑','영화','게임','러닝','자전거','테니스','클라이밍','요가','산책'];
-let _datingProfileSelected = { gender: null, job_category: null, body_type: null, interests: [] };
+// 바로만남 공개 프로필 - 계정 프로필과 완전히 분리된 정보(블라인드 상대에게만 공개).
+// 예전엔 바텀시트(바로만남 탭 안에서만 진입)였는데, 마이페이지 기본정보에서도 찾을 수
+// 있도록 정식 서브패널(mpsub-mannam-profile)로 승격 - 사진(대표사진 재사용 또는 전용
+// 사진)/직업군/체형/취미·관심사/키/MBTI를 관리한다.
+let _mpDatingProfile = { gender: null, job_category: null, body_type: null, interests: [], height_cm: null, mbti: null, _existingDatingPhotoUrl: null };
+let _mpDatingPhotoMode = 'avatar'; // 'avatar'(대표사진 재사용) | 'custom'(바로만남 전용 사진)
+let _mpPendingDatingPhotoBlob = null;
+let _mpAvatarPhotoUrl = null;
+let _mpMbtiParts = [null, null, null, null]; // [E/I, S/N, T/F, J/P]
 
-async function openDatingProfileSheet() {
+async function openMannamProfilePanel() {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
-  openBottomSheet('<div style="text-align:center;padding:32px"><div class="spinner" style="margin:0 auto"></div></div>');
-  const { data: w } = await db.from('workers').select('gender, job_category, body_type, interests').eq('kakao_uid', currentUser.id).maybeSingle();
-  if (!w?.gender) {
-    openBottomSheet('<div style="text-align:center;padding:32px 20px"><div style="font-size:36px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#666">먼저 바로스팟 탭에서<br>성별을 설정해주세요</div><div style="font-size:12px;color:#aaa;margin-top:6px">체형 항목이 성별에 맞게 달라져서 필요해요</div></div>');
-    return;
-  }
-  _datingProfileSelected = { gender: w.gender, job_category: w?.job_category || null, body_type: w?.body_type || null, interests: w?.interests || [] };
-  _renderDatingProfileSheet();
+  const { data: w } = await db.from('workers')
+    .select('gender, job_category, body_type, interests, height_cm, mbti, dating_photo_url, photo_url')
+    .eq('kakao_uid', currentUser.id).maybeSingle();
+  if (!w?.gender) { showToast('먼저 바로만남 > 바로스팟 탭에서 성별을 설정해주세요'); return; }
+  _mpDatingProfile = {
+    gender: w.gender, job_category: w.job_category || null, body_type: w.body_type || null,
+    interests: w.interests || [], height_cm: w.height_cm || null, mbti: w.mbti || null,
+    _existingDatingPhotoUrl: w.dating_photo_url || null,
+  };
+  _mpAvatarPhotoUrl = w.photo_url || null;
+  _mpPendingDatingPhotoBlob = null;
+  _mpDatingPhotoMode = w.dating_photo_url ? 'custom' : 'avatar';
+  _mpMbtiParts = (w.mbti && w.mbti.length === 4) ? w.mbti.split('') : [null, null, null, null];
+  _renderMannamProfilePanel();
+  document.getElementById('mpsub-mannam-profile').classList.add('show');
 }
 
-function _renderDatingProfileSheet() {
-  const sel = _datingProfileSelected;
+function _renderMannamProfilePanel() {
+  const sel = _mpDatingProfile;
   const bodyTypes = sel.gender === 'male' ? DATING_BODY_TYPES_MALE : DATING_BODY_TYPES_FEMALE;
-  const chip = (label, active, onclick) => `<button onclick="${onclick}" style="padding:7px 13px;border-radius:20px;border:1.5px solid ${active?'#7C3AED':'#eee'};font-size:12.5px;font-weight:700;background:${active?'#F5F3FF':'#fff'};color:${active?'#7C3AED':'#888'};cursor:pointer;margin:0 6px 6px 0">${label}</button>`;
-  const html = `
-    <div style="padding:4px 20px 4px">
-      <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">👤 내 소개팅 프로필</div>
-      <div style="font-size:12px;color:#888;margin-bottom:18px">바로미팅·바로스팟에서 블라인드 상대에게 보여져요</div>
-    </div>
-    <div style="padding:0 20px 20px;max-height:60vh;overflow-y:auto">
-      <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">직업군</div>
-      <div style="margin-bottom:16px">${DATING_JOB_CATEGORIES.map(v => chip(v, sel.job_category===v, `_selectDatingJob('${v.replace(/'/g,"\\'")}')`)).join('')}</div>
-      <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">체형</div>
-      <div style="margin-bottom:16px">${bodyTypes.map(v => chip(v, sel.body_type===v, `_selectDatingBody('${v}')`)).join('')}</div>
-      <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">관심사 <span style="color:#aaa;font-weight:500">(최대 5개)</span></div>
-      <div>${DATING_INTERESTS.map(v => chip(v, sel.interests.includes(v), `_toggleDatingInterest('${v}')`)).join('')}</div>
-    </div>
-    <div style="padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #ebebeb">
-      <button onclick="saveDatingProfile()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
-    </div>`;
-  openBottomSheet(html);
+  const chip = (label, active, onclick) => `<button type="button" onclick="${onclick}" style="padding:7px 13px;border-radius:20px;border:1.5px solid ${active?'#7C3AED':'#eee'};font-size:12.5px;font-weight:700;background:${active?'#F5F3FF':'#fff'};color:${active?'#7C3AED':'#888'};cursor:pointer">${label}</button>`;
+  document.getElementById('mp-dating-job-chips').innerHTML = DATING_JOB_CATEGORIES.map(v => chip(v, sel.job_category===v, `_mpSelectDatingJob('${v.replace(/'/g,"\\'")}')`)).join('');
+  document.getElementById('mp-dating-body-chips').innerHTML = bodyTypes.map(v => chip(v, sel.body_type===v, `_mpSelectDatingBody('${v}')`)).join('');
+  document.getElementById('mp-dating-interest-chips').innerHTML = DATING_INTERESTS.map(v => chip(v, sel.interests.includes(v), `_mpToggleDatingInterest('${v}')`)).join('');
+  document.getElementById('mp-dating-height').value = sel.height_cm || '';
+
+  const pairs = [['E','I'],['S','N'],['T','F'],['J','P']];
+  document.getElementById('mp-dating-mbti').innerHTML = pairs.map(([a,b], i) => `
+    <div style="flex:1;display:flex;border-radius:10px;overflow:hidden;border:1.5px solid #eee">
+      <button type="button" onclick="_mpSetMbtiPart(${i},'${a}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===a?'#7C3AED':'#fff'};color:${_mpMbtiParts[i]===a?'#fff':'#888'};font-size:13px;font-weight:800;cursor:pointer">${a}</button>
+      <button type="button" onclick="_mpSetMbtiPart(${i},'${b}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===b?'#7C3AED':'#fff'};color:${_mpMbtiParts[i]===b?'#fff':'#888'};font-size:13px;font-weight:800;cursor:pointer">${b}</button>
+    </div>`).join('');
+
+  const preview = document.getElementById('mp-photo-preview');
+  const previewUrl = _mpPendingDatingPhotoBlob ? URL.createObjectURL(_mpPendingDatingPhotoBlob)
+    : _mpDatingPhotoMode === 'custom' ? sel._existingDatingPhotoUrl
+    : _mpAvatarPhotoUrl;
+  preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover">` : '📷';
+  const avatarBtn = document.getElementById('mp-photo-mode-avatar');
+  const customBtn = document.getElementById('mp-photo-mode-custom');
+  const isAvatar = _mpDatingPhotoMode === 'avatar';
+  avatarBtn.style.borderColor = isAvatar ? '#7C3AED' : '#eee';
+  avatarBtn.style.color = isAvatar ? '#7C3AED' : '#666';
+  avatarBtn.style.background = isAvatar ? '#F5F3FF' : '#fff';
+  customBtn.style.borderColor = !isAvatar ? '#7C3AED' : '#eee';
+  customBtn.style.color = !isAvatar ? '#7C3AED' : '#666';
+  customBtn.style.background = !isAvatar ? '#F5F3FF' : '#fff';
 }
-function _selectDatingJob(v) { _datingProfileSelected.job_category = _datingProfileSelected.job_category===v ? null : v; _renderDatingProfileSheet(); }
-function _selectDatingBody(v) { _datingProfileSelected.body_type = _datingProfileSelected.body_type===v ? null : v; _renderDatingProfileSheet(); }
-function _toggleDatingInterest(v) {
-  const s = _datingProfileSelected;
+function _mpSelectDatingJob(v) { _mpDatingProfile.job_category = _mpDatingProfile.job_category===v ? null : v; _renderMannamProfilePanel(); }
+function _mpSelectDatingBody(v) { _mpDatingProfile.body_type = _mpDatingProfile.body_type===v ? null : v; _renderMannamProfilePanel(); }
+function _mpToggleDatingInterest(v) {
+  const s = _mpDatingProfile;
   if (s.interests.includes(v)) { s.interests = s.interests.filter(x => x !== v); }
-  else { if (s.interests.length >= 5) { showToast('관심사는 최대 5개까지 선택할 수 있어요'); return; } s.interests = [...s.interests, v]; }
-  _renderDatingProfileSheet();
+  else { if (s.interests.length >= 5) { showToast('취미·관심사는 최대 5개까지 선택할 수 있어요'); return; } s.interests = [...s.interests, v]; }
+  _renderMannamProfilePanel();
 }
-async function saveDatingProfile() {
-  const { job_category, body_type, interests } = _datingProfileSelected;
-  const { error } = await db.from('workers').update({ job_category, body_type, interests }).eq('kakao_uid', currentUser.id);
+function _mpSetMbtiPart(i, v) { _mpMbtiParts[i] = _mpMbtiParts[i] === v ? null : v; _renderMannamProfilePanel(); }
+
+function setMannamPhotoMode(mode) {
+  _mpDatingPhotoMode = mode;
+  if (mode === 'avatar') _mpPendingDatingPhotoBlob = null;
+  _renderMannamProfilePanel();
+}
+function onMannamPhotoSelected(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  openCropModal(file, blob => {
+    _mpPendingDatingPhotoBlob = blob;
+    _mpDatingPhotoMode = 'custom';
+    _renderMannamProfilePanel();
+  });
+}
+
+async function saveMannamProfile() {
+  const { job_category, body_type, interests } = _mpDatingProfile;
+  const heightVal = parseInt(document.getElementById('mp-dating-height').value, 10);
+  const height_cm = (heightVal >= 130 && heightVal <= 230) ? heightVal : null;
+  const mbti = _mpMbtiParts.every(Boolean) ? _mpMbtiParts.join('') : null;
+  const payload = { job_category, body_type, interests, height_cm, mbti };
+
+  if (_mpDatingPhotoMode === 'avatar') {
+    payload.dating_photo_url = null;
+  } else if (_mpPendingDatingPhotoBlob) {
+    const path = `${currentUser.id}/dating_${Date.now()}.jpg`;
+    const { error: upErr } = await db.storage.from('biz-photos').upload(path, _mpPendingDatingPhotoBlob, { contentType: 'image/jpeg' });
+    if (upErr) { showToast('사진 업로드 실패: ' + upErr.message); return; }
+    payload.dating_photo_url = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
+  }
+  // custom 모드인데 새로 고른 사진이 없으면(기존 dating_photo_url 유지) 그 키를 아예 안 보내
+  // 서 update()가 그 컬럼은 건드리지 않게 함
+
+  const { error } = await db.from('workers').update(payload).eq('kakao_uid', currentUser.id);
   if (error) { showToast('저장 실패: ' + error.message); return; }
-  showToast('✅ 프로필이 저장됐어요');
-  closeBottomSheet();
+  showToast('✅ 바로만남 프로필이 저장됐어요');
+  closeMpSub('mannam-profile');
 }
 
 async function openSpotPassSheet(gender) {
@@ -19202,7 +19260,7 @@ async function openBarospotCandidates(applicationId) {
               ${c.photo_url ? `<img src="${c.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(4px);transform:scale(1.15)">` : `<span style="font-size:22px">👤</span>`}
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:800;color:#222">${[c.age ? '만 '+c.age+'세' : null, c.job_category, c.body_type].filter(Boolean).join(' · ') || '나이 미상'}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">· 노쇼 ${c.noshow_count}회</span>` : ''}</div>
+              <div style="font-size:13px;font-weight:800;color:#222">${[c.age ? '만 '+c.age+'세' : null, c.height_cm?c.height_cm+'cm':null, c.job_category, c.body_type, c.mbti].filter(Boolean).join(' · ') || '나이 미상'}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">· 노쇼 ${c.noshow_count}회</span>` : ''}</div>
               ${c.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${c.interests.slice(0,5).map(t=>'#'+t).join(' ')}</div>` : ''}
               <div style="font-size:12px;color:#666;margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.bio ? c.bio.replace(/</g,'&lt;') : '자기소개가 없어요'}</div>
             </div>
@@ -19454,7 +19512,7 @@ async function _loadMaleApplications() {
         <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
           ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:14px">👤</span>`}
         </div>
-        <div style="font-size:11px;color:#666;min-width:0">${[preview.age?preview.age+'세':null, preview.job_category, preview.body_type].filter(Boolean).join(' · ') || '프로필 준비 중'}</div>
+        <div style="font-size:11px;color:#666;min-width:0">${[preview.age?preview.age+'세':null, preview.height_cm?preview.height_cm+'cm':null, preview.job_category, preview.body_type, preview.mbti].filter(Boolean).join(' · ') || '프로필 준비 중'}</div>
       </div>` : '';
     return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0;${canTrack ? 'cursor:pointer' : ''}" ${clickAttr}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
@@ -19601,9 +19659,9 @@ async function _promptCompleteDatingProfile(gap) {
     const profileNav = document.querySelectorAll('.nav-item')[4];
     if (profileNav) setNav(profileNav, 'profile');
   } else {
-    const go = await showConfirmDialog('소개팅 프로필을 먼저 등록해주세요', '직업군·체형 정보가 있어야 상대방이 참여 여부를 판단할 수 있어요.', '지금 등록하기', '나중에');
+    const go = await showConfirmDialog('바로만남 프로필을 먼저 등록해주세요', '직업군·체형 정보가 있어야 상대방이 참여 여부를 판단할 수 있어요.', '지금 등록하기', '나중에');
     if (!go) return;
-    openDatingProfileSheet();
+    openMannamProfilePanel();
   }
 }
 async function _handleBarospotIneligible(eligibility) {
@@ -20077,7 +20135,7 @@ function openBarospotProfileReveal() {
         ${p.photo_url ? `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}
       </div>
       <div style="font-size:18px;font-weight:900;color:#111;margin-bottom:4px">${p.name || '이름 미상'}</div>
-      <div style="font-size:13px;color:#888;margin-bottom:14px">${[p.age?p.age+'세':null, p.job_category, p.body_type].filter(Boolean).join(' · ')}</div>
+      <div style="font-size:13px;color:#888;margin-bottom:14px">${[p.age?p.age+'세':null, p.height_cm?p.height_cm+'cm':null, p.job_category, p.body_type, p.mbti].filter(Boolean).join(' · ')}</div>
       ${p.interests?.length ? `<div style="font-size:12.5px;color:#7C3AED;margin-bottom:14px">${p.interests.map(t=>'#'+t).join(' ')}</div>` : ''}
       ${p.bio ? `<div style="text-align:left;background:#f8f9fa;border-radius:12px;padding:14px;font-size:13px;color:#444;line-height:1.6">${p.bio.replace(/</g,'&lt;')}</div>` : ''}
     </div>`;

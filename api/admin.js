@@ -418,7 +418,7 @@ module.exports = async function handler(req, res) {
     const uids = list.map(c => c.user_id).filter(Boolean);
     let workerMap = {};
     if (uids.length) {
-      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,noshow_count,job_category,body_type,interests`, svcKey).then(r => r.json());
+      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,dating_photo_url,noshow_count,job_category,body_type,interests,height_cm,mbti`, svcKey).then(r => r.json());
       workerMap = Object.fromEntries((workers || []).map(w => [w.kakao_uid, w]));
     }
     const result = list.map(c => {
@@ -426,8 +426,9 @@ module.exports = async function handler(req, res) {
       let age = w.age || null;
       if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
       return {
-        application_id: c.id, age, bio: w.bio || null, photo_url: w.photo_url || null, noshow_count: w.noshow_count || 0,
+        application_id: c.id, age, bio: w.bio || null, photo_url: w.dating_photo_url || w.photo_url || null, noshow_count: w.noshow_count || 0,
         job_category: w.job_category || null, body_type: w.body_type || null, interests: w.interests || [],
+        height_cm: w.height_cm || null, mbti: w.mbti || null,
       };
     });
     return res.json({ ok: true, candidates: result });
@@ -448,7 +449,7 @@ module.exports = async function handler(req, res) {
     const uids = [...new Set(Object.values(uidByEvent))];
     let workerMap = {};
     if (uids.length) {
-      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,job_category,body_type,interests`, svcKey).then(r => r.json()).catch(() => []);
+      const workers = await sb(`workers?kakao_uid=in.(${uids.join(',')})&select=kakao_uid,age,birth_date,bio,photo_url,dating_photo_url,job_category,body_type,interests,height_cm,mbti`, svcKey).then(r => r.json()).catch(() => []);
       workerMap = Object.fromEntries((Array.isArray(workers) ? workers : []).map(w => [w.kakao_uid, w]));
     }
     const result = {};
@@ -457,7 +458,7 @@ module.exports = async function handler(req, res) {
       if (!w) return;
       let age = w.age || null;
       if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
-      result[eventId] = { age, bio: w.bio || null, photo_url: w.photo_url || null, job_category: w.job_category || null, body_type: w.body_type || null, interests: w.interests || [] };
+      result[eventId] = { age, bio: w.bio || null, photo_url: w.dating_photo_url || w.photo_url || null, job_category: w.job_category || null, body_type: w.body_type || null, interests: w.interests || [], height_cm: w.height_cm || null, mbti: w.mbti || null };
     });
     return res.json(result);
   }
@@ -766,13 +767,19 @@ module.exports = async function handler(req, res) {
     if (!interestRows?.length) return res.status(403).json({ error: '아직 프로필을 볼 수 없어요' });
     const otherUid = await _getOtherConfirmedBarospotUser(rpEventId, rpRequesterId);
     if (!otherUid) return res.status(404).json({ error: '상대방을 찾을 수 없어요' });
-    const wRows = await sb(`workers?kakao_uid=eq.${otherUid}&select=name,photo_url,age,birth_date,job_category,body_type,interests,bio`, svcKey).then(r => r.json()).catch(() => []);
+    const wRows = await sb(`workers?kakao_uid=eq.${otherUid}&select=name,photo_url,dating_photo_url,age,birth_date,job_category,body_type,interests,height_cm,mbti,bio`, svcKey).then(r => r.json()).catch(() => []);
     const w = wRows?.[0];
     if (!w) return res.status(404).json({ error: '프로필을 찾을 수 없어요' });
     let age = w.age || null;
     if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
-    // kakao_uid도 함께 반환 - 채팅방 신고하기 버튼이 신고 대상(target_id)으로 사용
-    return res.json({ ok: true, kakao_uid: otherUid, name: w.name, photo_url: w.photo_url, age, job_category: w.job_category, body_type: w.body_type, interests: w.interests || [], bio: w.bio });
+    // kakao_uid도 함께 반환 - 채팅방 신고하기 버튼이 신고 대상(target_id)으로 사용.
+    // dating_photo_url(바로만남 전용 사진)이 있으면 그걸, 없으면 대표사진(photo_url)을 photo_url로 반환
+    // - 클라이언트는 어떤 사진이 쓰였는지 신경 안 쓰고 photo_url 하나만 그대로 쓰면 됨
+    return res.json({
+      ok: true, kakao_uid: otherUid, name: w.name, photo_url: w.dating_photo_url || w.photo_url, age,
+      job_category: w.job_category, body_type: w.body_type, interests: w.interests || [],
+      height_cm: w.height_cm || null, mbti: w.mbti || null, bio: w.bio,
+    });
   }
 
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
