@@ -397,6 +397,35 @@ sw.js (v270)
 - `바로알바.html` head의 `V='421'` 하드코딩이 app.js `_APP_V`와 동기화 안 돼 캐시 초기화가
   세션 내내 전혀 실행되지 않음 → localStorage 기반 단일 버전판정으로 통합, head 중복 로직 제거
 
+### Phase 56 ✅ 바로만남 전체 점검 + 바로스팟 안전/기능 확장 (2026-07-15, v496~v499)
+
+**전체 점검 (바로만남/바로모임/바로알바 공통 패턴 감사)**
+- track-overlay(z-index:8700)가 채팅 패널(barospot-chat 520, moim-chat 530)보다 위라
+  트래킹 시트에서 채팅으로 들어가면 화면이 가려지던 버그 - 양쪽 다 수정
+- `panel-barospot-chat`이 전역 뒤로가기 핸들러/`setNav` 정리 목록에 아예 없던 문제 추가
+- 위치공유 "출발했어요/도착했어요" 버튼 - 수동 클릭 시 확인 없이 조용히 멈추기만 해서
+  의미없이 토글되던 문제를 도착확인 다이얼로그 + 도착 후 버튼 잠금으로 개선
+- 키보드가 입력창을 가리는 처리(`_onNativeKbChange`)에 `panel-barospot-chat` 누락 추가
+- `swipe-screen` 헤더에 상태표시줄 안전영역(`--sat-safe`) 처리 누락 추가
+- 레슨/과외 등록·상세 모달의 핸들바가 시각적으로만 있고 드래그 바인딩이 없던 문제 수정
+
+**바로스팟 채팅 실사용 버그 3건 (실제 사용 중 발견)**
+- 메시지 전송이 realtime 에코에만 의존해 본인 화면에도 안 나타나던 문제 → 낙관적 렌더로 수정
+- `loadMyChatList`에 `chat_rooms`/`chat_messages` 조회가 아예 없어 바로스팟 채팅방이
+  채팅 목록에 안 보이던 문제 → 목록/안읽음뱃지/클릭 라우팅 추가
+
+**바로스팟 안전/기능 확장**
+- 1:1 채팅에 신고하기 버튼 추가 (기존 reports 테이블/모달 재사용)
+- recruiting_male 단계 남성 신청 건수를 여성에게 노출
+- 확정 후 일정 24시간 전까지 자발적 취소 시 결제수단대로 전액환불 (상대방 확정건도 연동 취소)
+- 서비스별(바로미팅/바로스팟/바로모임) 알림 개별 토글 - 서버(`notifyUser`)에서 실제 차단
+- 만남 후 상호평가(별점+태그) - `barospot_reviews` 테이블, 호감표시와 무관하게 독립 동작
+
+**필요 DDL (대표님 Supabase 대시보드에서 직접 실행 필요, 2026-07-15 대화 중 전달)**
+- `workers.notify_baromeeting/notify_barospot/notify_moim` BOOLEAN DEFAULT true
+- `barospot_applications.paid_method/paid_amount/cancelled_at`
+- `barospot_reviews` 신규 테이블 (RLS 포함)
+
 ---
 
 ## 8. 현재 버그 / 미완료
