@@ -514,7 +514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '520';
+  const _APP_V = '521';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -530,7 +530,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=520').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=521').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -9178,8 +9178,15 @@ let _cropper = null;
 let _cropCallback = null;
 
 function openCropModal(file, callback, aspectRatio = 1) {
-  if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다'); return; }
+  if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다', 5000); return; }
   const reader = new FileReader();
+  // 예전엔 onerror가 없어서 파일 읽기가 실패하면(포맷·용량·일부 Android 갤러리 앱의
+  // content:// URI 이슈 등) 크롭 화면이 뜨지도 않고 아무 반응 없이 그대로 멈췄음
+  // ("사진 선택하면 먹통" 신고, 2026-07-16) - 실패를 눈에 보이게 알려주도록 추가
+  reader.onerror = () => {
+    console.error('[crop] FileReader 실패:', reader.error);
+    showToast('❌ 사진을 불러오지 못했어요. 다른 사진으로 다시 시도해주세요.', 5000);
+  };
   reader.onload = e => {
     window._cropSourceUrl = e.target.result; // 원본 dataURL 저장 (applyCrop 직접 그리기용)
     const img = document.getElementById('crop-source');
@@ -9187,18 +9194,29 @@ function openCropModal(file, callback, aspectRatio = 1) {
     document.getElementById('crop-modal').style.display = 'flex';
     if (_cropper) { _cropper.destroy(); _cropper = null; }
     img.onload = () => {
-      _cropper = new Cropper(img, {
-        aspectRatio: aspectRatio,
-        viewMode: 1,
-        dragMode: 'move',
-        autoCropArea: 0.85,
-        guides: false,
-        center: true,
-        highlight: false,
-        cropBoxMovable: true,
-        cropBoxResizable: true,
-        toggleDragModeOnDblclick: false,
-      });
+      try {
+        _cropper = new Cropper(img, {
+          aspectRatio: aspectRatio,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 0.85,
+          guides: false,
+          center: true,
+          highlight: false,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false,
+        });
+      } catch (e2) {
+        console.error('[crop] Cropper 초기화 실패:', e2);
+        showToast('❌ 사진 편집 도구를 여는 데 실패했어요', 5000);
+        closeCropModal();
+      }
+    };
+    img.onerror = () => {
+      console.error('[crop] 이미지 렌더링 실패');
+      showToast('❌ 사진을 표시하지 못했어요. 다른 사진으로 시도해주세요.', 5000);
+      closeCropModal();
     };
     _cropCallback = callback;
   };
@@ -10377,7 +10395,7 @@ function showDisclaimerSheet(onConfirm) {
       <div style="font-size:17px;font-weight:800;color:#222;margin-bottom:4px">&#9888;&#65039; 서비스 이용 동의</div>
       <div style="font-size:13px;color:#999;font-weight:400;margin-bottom:16px">아래 내용을 확인하고 동의해주세요</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128286; 만 19세 이상만 이용 가능합니다</div>
+        <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128286; 만 19세 미만은 보호자 동의가 필요할 수 있어요</div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128683; 주류·담배·의약품 대리 구매 등 불법 매칭 시 즉시 계정 정지</div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128274; 타인 개인정보 유출 및 사기 행위 금지</div>
       </div>
