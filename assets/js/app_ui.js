@@ -18,16 +18,22 @@ function closeBannedAgreeSheet() {
 }
 
 // ── 프로필 사진 TIP 바텀시트 ─────────────────────────────
+// 예전엔 사진 입력창이 worker-photos-input 하나뿐이라 그 id를 직접 클릭했는데,
+// 이후 5칸 슬롯 시스템으로 바뀌면서 슬롯마다 별도 input이 생겨 그 id가 아예 사라졌고
+// (이 함수를 부르는 곳도 같이 없어져 완전히 죽어있었음) - 지금 클릭된 슬롯의 input을
+// 기억해뒀다가 그 슬롯에만 파일 선택을 열어주도록 수정(2026-07-16 전수감사로 발견/복원)
+let _photoTipTargetInput = null;
 function showPhotoTip(e) {
   if (localStorage.getItem('baro_photo_tip_seen')) return;
   e.preventDefault();
+  _photoTipTargetInput = e.currentTarget.querySelector('input[type=file]');
   document.getElementById('photo-tip-overlay').style.display = 'flex';
   bindSheetDragClose(document.getElementById('photo-tip-handle'), document.getElementById('photo-tip-panel'), () => document.getElementById('photo-tip-overlay').style.display = 'none');
 }
 function openPhotoPickerAndCloseTip() {
   localStorage.setItem('baro_photo_tip_seen', '1');
   document.getElementById('photo-tip-overlay').style.display = 'none';
-  document.getElementById('worker-photos-input').click();
+  if (_photoTipTargetInput) { _photoTipTargetInput.click(); _photoTipTargetInput = null; }
 }
 
 // ── 커스텀 confirm / alert ────────────────────────────────
@@ -639,7 +645,7 @@ function openReviewReplyModal(appId, workerName, review, existingReply) {
 
 async function showContractModal(appId) {
   const { data: app } = await db.from('applications')
-    .select('*, workers(name, phone), job_postings(title, start_time, hourly_wage, work_type, address, businesses(biz_name, name, phone))')
+    .select('*, workers(name, phone), job_postings(title, start_time, current_wage, wage_type, wage_label, work_type, address, businesses(biz_name, name, phone))')
     .eq('id', appId).single();
   if (!app) return;
   const w = app.workers;
@@ -649,7 +655,11 @@ async function showContractModal(appId) {
   const workDate = j?.start_time
     ? new Date(j.start_time).toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' })
     : '별도 협의';
-  const wage = j?.hourly_wage ? j.hourly_wage.toLocaleString() + '원/시간' : '협의';
+  // job_postings에 hourly_wage 컬럼은 존재하지 않음(실제 컬럼은 current_wage) - 이 필드명
+  // 불일치로 계약서의 임금 란이 항상 "협의"로만 표시되고 있었음(2026-07-16 전수감사로 발견)
+  const wage = j?.wage_type === 'other' ? (j.wage_label || '협의')
+    : j?.current_wage ? j.current_wage.toLocaleString() + '원/' + (j.work_type === 'errand' ? '건' : '시간')
+    : '협의';
   document.getElementById('contract-content').innerHTML = `
     <p style="margin-bottom:14px"><strong>${b?.biz_name || b?.name || '업체명'}</strong>(이하 "사용자")와 <strong>${w?.name || '근로자'}</strong>(이하 "근로자")는 다음과 같이 근로계약을 체결합니다.</p>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">

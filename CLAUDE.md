@@ -518,19 +518,48 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
   키보드에 가려짐(2026-07-16 실사용 피드백) - `_onNativeKbChange`에서 포커스 요소를
   `scrollIntoView`로 명시 처리, `.mpsub-panel` 공유 클래스라 전체 서브폼에 일괄 적용
 
-**발견했지만 미수정 (판단 필요, 사용자 확인 후 처리)**
-- `wage-transfer-modal`(당일정산 송금), `contract-modal`(전자계약서),
-  `banned-agree-overlay`(바로심부름 금지행위 동의), `photo-tip-overlay`(사진 TIP)
-  4개 모달이 HTML엔 있지만 **여는 함수 자체가 어디에도 없어 완전히 죽은 코드** —
-  특히 `banned-agree-overlay`는 술/담배/의약품 등 불법 심부름 금지 동의를 받는
-  안전/법적 장치처럼 보이는데 실제로 아무도 못 보고 있음. 의도된 기능인지, 완성해야
-  할지, 정리해야 할지 결정 필요
-- `qrcode.min.js?v=463`, `jsqr.min.js?v=463`이 `_APP_V` lockstep 밖에 있는 별도
-  버전 쿼리 — 당장 위험은 아니지만 나중에 이 라이브러리를 갱신하면서 쿼리를 안 올리면
-  `sw.js?v=495` 드리프트 버그가 재발할 수 있는 잠재 지점
-- 이 문서의 "3. DB 테이블 구조" 중 `job_postings` 컬럼 목록이 실제 `submitPosting()`의
-  payload(`current_wage`/`needed_count`/`status`/`surge_*` 등)와 크게 어긋나 있어
-  문서가 오래된 상태로 보임 — Supabase 대시보드에서 실제 컬럼 확인 후 갱신 필요
+**정정 (2026-07-16 같은 날 재조사)**: 처음엔 `wage-transfer-modal`/`contract-modal`도
+`banned-agree-overlay`/`photo-tip-overlay`와 같은 "완전히 죽은 코드"로 잘못 보고했음 —
+원인은 `app.js`만 grep하고 `assets/js/app_ui.js`(별도 스크립트 파일)를 안 봤기 때문.
+실제로는:
+- `wage-transfer-modal`/`showContractModal`은 **`app_ui.js`에 이미 완전히 구현·연결돼
+  있었음** (STAFF 관리 패널의 "송금하기" 버튼, 최종합격 500ms 후 자동 표시). 다만
+  `showContractModal`이 존재하지 않는 컬럼 `job_postings.hourly_wage`를 참조해 계약서
+  임금란이 항상 "협의"로만 나오던 버그가 있어 `current_wage`로 수정(v529)
+- `banned-agree-overlay`/`photo-tip-overlay`는 `app_ui.js`에 `checkBannedAgree()`/
+  `showPhotoTip()` 함수 자체는 있었지만 **부르는 곳이 정말 없어서** 진짜 죽어있었음.
+  `checkBannedAgree()`는 `applyJob()`에서 `work_type==='errand'`일 때 지원 전에
+  호출하도록, `showPhotoTip()`은 프로필 사진 빈 슬롯 클릭 시 호출하도록 연결(v529).
+  동의 여부는 계정별이 아니라 기기별 `localStorage`로 추적됨 - 계정 단위/서버 감사
+  기록이 필요하면 DDL로 컬럼 추가 후 별도 요청할 것
+- **`app_ui.js`가 5개 버전 lockstep(`_APP_V`)에 아예 빠져있었음** — 캐시 버스팅 쿼리가
+  없어 PWA 캐시에 구버전이 고착될 수 있는, 13-5 교훈3과 동일한 유형의 잠재 버그.
+  `?v=` 쿼리 추가하고 이후 lockstep에 포함시킴(v529)
+- `qrcode.min.js?v=463`, `jsqr.min.js?v=463`도 여전히 lockstep 밖 — 당장 위험은 아니지만
+  나중에 이 라이브러리를 갱신하며 쿼리를 안 올리면 같은 유형의 드리프트가 재발할 수 있음
+- 이 문서의 "3. DB 테이블 구조" 중 `job_postings` 컬럼 목록이 실제 payload/쿼리와 크게
+  어긋나 있어(`hourly_wage`→`current_wage` 등) 문서가 오래된 상태로 보임 — Supabase
+  대시보드에서 실제 컬럼 확인 후 갱신 필요
+- **교훈**: 이 프로젝트는 HTML+CSS+JS가 `바로알바.html`/`app.js`/`app_ui.js`/`style.css`
+  4개 파일에 나뉘어 있다. 특정 기능이 "죽었다/없다"고 결론 내리기 전에 **4개 파일
+  전부**를 grep했는지 반드시 확인할 것 (13-1 원칙의 연장 — 결론 내리기 전 관련 파일을
+  다 읽었는지 체크)
+
+**디자인 토큰 정리 (v529)**
+- `--red`(기존)가 있는데도 리터럴 `#C8102E`가 42곳에서 따로 쓰이고 있던 것 발견,
+  `--purple`(#7C3AED)/`--blue`(#3B82F6)/`--green`(#16a34a) 신규 추가 후 총 96곳을
+  변수 참조로 통일. 값 자체는 그대로라 시각적 변화 없음(안전한 리팩터링)
+- spacing 스케일/gray 팔레트는 아직 미정리 — 기존 회색 계열(#888/#999/#aaa 등)은
+  서로 다른 값이라 통합하면 실제로 화면이 달라지므로, 육안 확인 없이 손대지 않음.
+  다음에 여유 있을 때 화면별로 확인하며 점진적으로 정리 권장
+
+**GA4 분석 이벤트 트래킹 (v529)**
+- `app.js`에 `_track(eventName, params)` 헬퍼 추가 (`window.gtag` 없으면 조용히 무시)
+- 이벤트 3종 연결: `profile_complete`(성별 게이트 통과), `job_apply`(지원 완료),
+  `hire_accepted`(최종합격)
+- `바로알바.html` head에 gtag.js 로더 추가했으나 **측정 ID는 플레이스홀더
+  `G-XXXXXXXXXX`** — analytics.google.com에서 GA4 속성 만들고 받은 실제 ID로
+  head의 두 곳만 바꿔치기하면 추가 배포 없이 바로 수집 시작
 
 ---
 
@@ -543,7 +572,7 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 | 커뮤니티 글/댓글 수정·삭제 UI | 🟡 미구현 | 본인 콘텐츠 편집/삭제 버튼 추가 |
 | 커뮤니티 댓글 익명 토글 | 🟡 미구현 | `is_anonymous: false` 하드코딩 → 체크박스 필요 |
 | 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 재확인 필요 (v436 시점 기록, 현재 v528) | 이후 수백 개 커밋이 쌓였고 관련 이슈 재보고가 없어 사실상 해소된 것으로 보이나, 이 표만 미갱신 상태였을 가능성 - 별도 이슈 없으면 다음 정리 때 행 삭제 |
-| `wage-transfer-modal`/`contract-modal`/`banned-agree-overlay`/`photo-tip-overlay` | 🟡 판단 필요 (2026-07-16 발견) | HTML은 있지만 여는 함수가 없는 완전한 죽은 코드 4건, Phase 58 참고 - 완성/삭제 여부 결정 필요 |
+| `banned-agree-overlay`/`photo-tip-overlay` 트리거 누락, `showContractModal` 필드명 버그, `app_ui.js` 버전 lockstep 누락 | ✅ 해결 (v529, 2026-07-16) | Phase 58 참고 - `wage-transfer-modal`/`contract-modal`은 애초에 죽은 코드가 아니었음(app_ui.js 미확인으로 인한 오판, 정정 기록 참고) |
 | 바로스팟 채팅 진입 불가 | ✅ 해결 (v496, 2026-07-15) | track-overlay(z-index:8700)가 panel-barospot-chat(520)/panel-moim-chat(530)보다 위라 채팅 패널이 가려짐 - openBarospotChatRoom/openBaromeetChat에서 closeTrackingSheet() 선호출로 수정. panel-barospot-chat이 전역 뒤로가기 핸들러에도 없어 추가 |
 | 위치공유 "도착했어요" 버튼 의미없는 토글 | ✅ 해결 (v496, 2026-07-15) | 수동 클릭 시 확인 없이 조용히 멈추기만 해서 계속 눌러도 아무 일도 안 일어나는 것처럼 보임 - 도착 확인 다이얼로그 + 도착 확정 후 버튼 잠금으로 수정 |
 | 바로스팟 채팅 키보드 가림 | ✅ 해결 (v496, 2026-07-15) | 다른 채팅 패널(wchat/chat/moim-chat)은 `_onNativeKbChange`에 등록돼 있었는데 이 패널만 빠져서 키보드가 입력창을 가림 - 등록 추가 |
@@ -733,9 +762,12 @@ if (empEl) {
 □ sw.js CACHE 버전 올렸는가?
 □ sw.js?v= 쿼리도 맞게 올렸는가?
 □ (2026-07-13 추가, 제일 중요) 바로알바.html의 <script src="./assets/js/app.js?v=">,
-  <script src="./shared-lang.js?v=">, <link href="./assets/css/style.css?v="> 쿼리도
+  <script src="./shared-lang.js?v=">, <link href="./assets/css/style.css?v=">,
+  <script src="./assets/js/app_ui.js?v="> (2026-07-16부터 lockstep 편입) 쿼리도
   전부 같은 번호로 올렸는가?
 □ 새 기능의 JS 함수가 HTML에서 호출되는 함수와 이름이 일치하는가?
+□ (2026-07-16 추가) "이 기능 죽어있다/없다"고 결론 내리기 전에 app.js뿐 아니라
+  app_ui.js도 grep했는가? (Phase 58 정정 기록 참고)
 ```
 
 **교훈 3 (2026-07-13, 진짜 최종 원인)**: 앞의 두 버전드리프트 버그(index.html 냉동사본,

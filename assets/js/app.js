@@ -518,6 +518,14 @@ window.addEventListener('popstate', () => {
   if (sat > 0) document.documentElement.style.setProperty('--sat', sat + 'px');
 })();
 
+// ── 분석 이벤트 트래킹 (2026-07-16 추가, GA4) ──────────────
+// GA4 측정 ID는 아직 없어서 바로알바.html head의 GA4_MEASUREMENT_ID가 플레이스홀더 상태 -
+// gtag가 아직 로드 안 됐거나 ID 미설정이어도 조용히 무시하고, 나중에 실제 ID를
+// 채워넣으면 아래 코드는 그대로 살아나 바로 수집을 시작함(추가 배포 불필요)
+function _track(eventName, params) {
+  if (typeof window.gtag === 'function') window.gtag('event', eventName, params || {});
+}
+
 // 상태표시줄이 헤더를 가리는 문제(2026-07-16, 네 차례 시도 끝에 원인 특정):
 // .full-panel(마이페이지 등 메인 탭 화면)은 애초에 top:상태표시줄높이로 패널 자체가
 // 상태표시줄 아래서 시작하는데, .mpsub-panel(프로필편집 등 서브화면)만 inset:0으로
@@ -569,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '528';
+  const _APP_V = '529';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -585,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=528').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=529').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -4432,14 +4440,24 @@ function applyJob() {
     window.addEventListener('resize', _applyMsgKbResize);
     setTimeout(() => { document.getElementById('apply-msg-text')?.focus(); _applyMsgKbResize(); }, 400);
   };
-  // 노쇼 보증금 동의 확인
-  const depositEl = document.getElementById('d-deposit');
-  if (depositEl && depositEl.style.display !== 'none') {
-    const depositTxt = document.getElementById('d-deposit-badge')?.textContent || '노쇼 보증금';
-    showConfirm('지원 시 보증금에 동의한 것으로 간주됩니다.', _openApplyModal, {icon:'🛡️', title:depositTxt, okLabel:'동의하고 지원'});
-    return;
+  const _proceedToApply = () => {
+    // 노쇼 보증금 동의 확인
+    const depositEl = document.getElementById('d-deposit');
+    if (depositEl && depositEl.style.display !== 'none') {
+      const depositTxt = document.getElementById('d-deposit-badge')?.textContent || '노쇼 보증금';
+      showConfirm('지원 시 보증금에 동의한 것으로 간주됩니다.', _openApplyModal, {icon:'🛡️', title:depositTxt, okLabel:'동의하고 지원'});
+      return;
+    }
+    _openApplyModal();
+  };
+  // 바로심부름(errand) 공고는 지원 전 금지행위 동의가 필요 - checkBannedAgree()는
+  // 이미 구현돼 있었지만 여기서 호출하는 곳이 어디에도 없어 화면 자체가 안 뜨고
+  // 있었음(2026-07-16 전수감사로 발견). 동의 완료(localStorage)까지는 재확인 안 함
+  if (_applyJob?.work_type === 'errand') {
+    checkBannedAgree(_proceedToApply);
+  } else {
+    _proceedToApply();
   }
-  _openApplyModal();
 }
 
 function _applyMsgKbResize() {
@@ -4515,6 +4533,7 @@ async function submitApplyWithMsg(skipMsg) {
         } else {
           showToast('✅ 지원 완료!');
           showAppliedState(revived.id);
+          _track('job_apply', { job_id: selectedJobId, re_apply: true });
           _notifyOwnerNewApplicant(selectedJobId);
         }
       } else {
@@ -4527,6 +4546,7 @@ async function submitApplyWithMsg(skipMsg) {
     } else {
       showToast('✅ 지원 완료!');
       showAppliedState(appData.id);
+      _track('job_apply', { job_id: selectedJobId, re_apply: false });
       // 업주에게 새 지원자 Push 알림
       _notifyOwnerNewApplicant(selectedJobId);
     }
@@ -9403,7 +9423,7 @@ function _slotHtml(idx, p, readonly) {
   // 잘려 보이던 문제(2026-07-16 피드백)
   if (!p) {
     if (readonly) return `<div style="aspect-ratio:1;border-radius:10px;background:#eee"></div>`;
-    return `<label style="display:flex;align-items:center;justify-content:center;aspect-ratio:1;background:#f8f8f8;border:2px dashed #ddd;border-radius:10px;cursor:pointer">
+    return `<label onclick="showPhotoTip(event)" style="display:flex;align-items:center;justify-content:center;aspect-ratio:1;background:#f8f8f8;border:2px dashed #ddd;border-radius:10px;cursor:pointer">
       <span style="font-size:24px;color:#ccc;line-height:1">+</span>
       <input type="file" accept="image/*" style="display:none" onchange="addProfilePhoto(this)">
     </label>`;
@@ -10449,6 +10469,7 @@ async function _submitGenderGate(gender) {
   }
   if (el) el.remove();
   showToast('✅ 성별이 저장됐어요');
+  _track('profile_complete', { gender });
   // 마이페이지 성별 버튼이 이미 그려져 있었다면 즉시 반영
   if (typeof setGender === 'function') setGender(gender);
 }
@@ -13690,6 +13711,7 @@ async function updateApplication(appId, status) {
     await sendAcceptMessage(appId);
     sendAppStatusPush(appId, 'accepted');
     showToast('✅ 최종합격 확정! 합격 메시지를 전송했습니다');
+    _track('hire_accepted', { application_id: appId });
     setTimeout(() => showContractModal(appId), 500);
     loadPostings();
     return;

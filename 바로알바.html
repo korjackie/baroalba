@@ -16,6 +16,19 @@
   <meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share.png">
   <meta property="og:type" content="website">
 
+  <!-- 구글 애널리틱스4 (GA4) - 2026-07-16 추가. 측정 ID는 아직 없어서 플레이스홀더.
+       analytics.google.com에서 GA4 속성 만들고 측정 ID(G-로 시작) 받으면 아래 두 곳의
+       'G-XXXXXXXXXX'만 바꿔치기하면 바로 수집 시작됨(추가 배포 불필요, gtag.js가 없는
+       동안엔 app.js의 _track()이 조용히 무시하도록 짜여있어 지금 상태로는 아무 동작도
+       안 함, 에러도 안 남) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <!-- 카카오톡 인앱브라우저 → Chrome 자동 탈출 (딥링크 파라미터 보존) -->
   <script>
   (function() {
@@ -46,7 +59,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=528"></script>
+  <script src="./shared-lang.js?v=529"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +68,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=528">
+  <link rel="stylesheet" href="./assets/css/style.css?v=529">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -4319,7 +4332,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=528"></script>
+<script src="./assets/js/app.js?v=529"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4477,7 +4490,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js"></script>
+<script src="./assets/js/app_ui.js?v=529"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
