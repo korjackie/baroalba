@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '506';
+  const _APP_V = '507';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -9158,8 +9158,27 @@ async function uploadAvatar(input) {
       const url = URL.createObjectURL(blob);
       inner.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=_initialAvatar('${fc}',58)">`;
     }
-    showToast('✅ 사진 준비됨 — 저장하기를 눌러주세요');
+    _updateProfilePhotoSaveBar();
+    showToast('✅ 사진 준비됨 — 상단의 저장하기를 눌러주세요');
   });
+}
+
+// 사진(대표사진/포트폴리오)이 아직 저장 안 된 상태일 때 마이페이지 상단에
+// 저장/나가기 바를 띄운다 — _renderWorkerPhotos가 호출될 때마다도 같이 갱신됨
+function _updateProfilePhotoSaveBar() {
+  const bar = document.getElementById('profile-photo-savebar');
+  if (!bar) return;
+  const hasPending = !!_pendingAvatarBlob || _wPhotos.some(p => p.blob);
+  bar.style.display = hasPending ? 'block' : 'none';
+}
+
+async function discardPendingProfilePhoto() {
+  _pendingAvatarBlob = null;
+  _wPhotos.filter(p => p.blob).forEach(p => URL.revokeObjectURL(p.photo_url));
+  _renderWorkerPhotos(_wPhotos.filter(p => !p.blob));
+  await loadWorkerProfileForm();
+  _updateProfilePhotoSaveBar();
+  showToast('변경사항을 취소했어요');
 }
 
 // ── 포트폴리오 사진 (다중, 최대 5장) ─────────────────────
@@ -9203,6 +9222,7 @@ function _renderWorkerPhotos(photos) {
     </div>`).join('');
   addBtn.style.display = photos.length < 5 ? 'flex' : 'none';
   _setupTouchDnd(grid, () => {});
+  _updateProfilePhotoSaveBar();
 }
 
 function wPhotoDragStart(e, photoId) { _wDragSrcId = photoId; e.dataTransfer.effectAllowed = 'move'; }
