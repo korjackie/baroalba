@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=507"></script>
+  <script src="./shared-lang.js?v=508"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=507">
+  <link rel="stylesheet" href="./assets/css/style.css?v=508">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1485,13 +1485,21 @@
               <div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:none" id="profile-provider"></div>
             </div>
           </div>
+          <!-- 헤더 바로가기 메뉴 - 예전엔 프로필 편집/사진등록 진입점이 마이페이지 안에
+               여러 줄(기본정보/추가사진등록)로 흩어져 있어 헷갈린다는 피드백(2026-07-16)으로
+               헤더에서 바로 진입하도록 승격 -->
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button onclick="openMpSub('basic')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 10px;border:none;border-radius:12px;background:#FFF0F0;color:var(--red);font-size:11px;font-weight:800;line-height:1.35;cursor:pointer;white-space:nowrap"><span>프로필</span><span>편집</span></button>
+            <button onclick="openMannamProfilePanel()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 10px;border:none;border-radius:12px;background:#F5F3FF;color:#7C3AED;font-size:11px;font-weight:800;line-height:1.35;cursor:pointer;white-space:nowrap"><span>바로만남</span><span>프로필</span></button>
+          </div>
         </div>
       </div>
 
-      <!-- ── 내 프로필 (알바생만) - 프로필명 바로 아래, 기본정보/포트폴리오만 최상단에 노출 ── -->
+      <!-- ── 내 프로필 (알바생만) - 프로필 편집/사진등록 진입점은 헤더 바로가기 버튼으로
+           이동(2026-07-16), 여기엔 완성도 표시만 남김 ── -->
       <div class="mp-section" id="worker-profile-edit" style="display:none">
         <div class="mp-section-title" data-i18n="section_profile">내 프로필</div>
-        <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-radius:16px 16px 0 0">
+        <div id="profile-completion-wrap" style="display:none;background:#fff;padding:10px 20px 12px;border-radius:16px;cursor:pointer" onclick="openMpSub('basic')">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
             <span style="font-size:11px;font-weight:700;color:#888" data-i18n="profile_completion_label">프로필 완성도</span>
             <span id="completion-pct" style="font-size:11px;font-weight:900;color:var(--red)">0%</span>
@@ -1500,16 +1508,6 @@
             <div id="completion-bar" style="height:100%;background:var(--red);border-radius:99px;transition:width 0.4s;width:0%"></div>
           </div>
           <div id="completion-items" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
-        </div>
-        <div class="mp-rows">
-          <div class="mp-row" onclick="openMpSub('basic')">
-            <div class="mp-row-left"><span class="mp-row-icon">👤</span><span data-i18n="row_basic_info">기본 정보</span></div>
-            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-          </div>
-          <div class="mp-row" onclick="openMpSub('portfolio')">
-            <div class="mp-row-left"><span class="mp-row-icon">📷</span><span data-i18n="row_portfolio">추가 사진등록 (프로필, 포트폴리오 등)</span></div>
-            <div class="mp-row-right"><span id="mp-photos-val" style="font-size:13px;color:#888;font-weight:600"></span><span class="mp-row-arrow">›</span></div>
-          </div>
         </div>
       </div>
 
@@ -1718,7 +1716,7 @@
           </div>
         </div>
       </div>
-      <div style="padding:20px;text-align:center"><div style="font-size:11px;color:#ccc;font-weight:600">바로알바 v1.4.1</div></div>
+      <div style="padding:6px 20px;text-align:center"><div style="font-size:10px;color:#ccc;font-weight:600">바로알바 v1.4.1</div></div>
 
       <!-- ── 숨김 컨테이너: 업주 프로필 편집 (서브패널에 없는 ID) ── -->
       <div style="display:none">
@@ -1845,22 +1843,26 @@
   </div>
 </div>
 
-<!-- 기본 정보 -->
+<!-- 프로필 편집 (기본정보 + 사진) - 예전엔 기본정보/추가사진등록이 별도 화면이라
+     "저장하기를 눌러주세요" 토스트만 뜨고 정작 저장 버튼은 각 서브패널에 따로 있어
+     헷갈린다는 피드백(2026-07-16)으로 한 화면에 통합, 헤더 바로가기 메뉴로 승격 -->
 <div class="mpsub-panel" id="mpsub-basic">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('basic')">‹</button>
-    <div class="mpsub-ttl">기본 정보</div>
+    <div class="mpsub-ttl">프로필 편집</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px">
-    <!-- 바로만남 공개 프로필 배너 - 계정 프로필(여기)과 완전히 별개인 화면이라는 걸
-         몰라서 못 찾는 유저가 많았음(2026-07-16 피드백) - 여기서 바로 진입 가능하게 함 -->
-    <div onclick="openMannamProfilePanel()" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,#F5F3FF,#FFF1F2);border:1px solid #ECE3FB;border-radius:14px;cursor:pointer;margin-bottom:4px">
-      <div style="width:38px;height:38px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.08)">💕</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13.5px;font-weight:800;color:#333">바로만남 공개 프로필</div>
-        <div style="font-size:11px;color:#999;margin-top:1px">바로미팅·바로스팟 상대에게 보여줄 정보 (계정 프로필과 별개)</div>
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;color:#888;font-weight:700">📷 사진 (프로필/포트폴리오)</div>
+        <span id="worker-photos-count" style="font-size:11px;color:#aaa;font-weight:600">0/5</span>
       </div>
-      <span style="font-size:16px;color:#bbb;flex-shrink:0">›</span>
+      <div id="worker-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+      <label id="worker-photos-add-btn" onclick="showPhotoTip(event)" style="display:flex;align-items:center;justify-content:center;height:70px;background:#f8f8f8;border:2px dashed #ddd;border-radius:12px;cursor:pointer">
+        <span style="font-size:28px;color:#ccc;line-height:1">+</span>
+        <input id="worker-photos-input" type="file" accept="image/*" multiple style="display:none" onchange="uploadWorkerPhoto(this)">
+      </label>
+      <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6">최대 5장 · 업주에게 공개됩니다</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <label data-i18n="birth_label" style="font-size:12px;color:#888;font-weight:700;width:54px;flex-shrink:0">생년월일</label>
@@ -1907,7 +1909,10 @@
       <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200" oninput="updateBioCounter(this)" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:80px;box-sizing:border-box;font-family:inherit"></textarea>
       <div id="worker-bio-hint" style="display:none;font-size:11px;color:#C8102E;margin-top:3px">최소 20자 이상 입력해주세요</div>
     </div>
-    <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:6px">저장하기</button>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button onclick="closeMpSub('basic')" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
+      <button id="worker-save-profile-btn" onclick="saveAllProfileSettings()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+    </div>
   </div>
 </div>
 
@@ -1969,24 +1974,6 @@
     </div>
 
     <button onclick="saveMannamProfile()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px">저장하기</button>
-  </div>
-</div>
-
-<!-- 포트폴리오 -->
-<div class="mpsub-panel" id="mpsub-portfolio">
-  <div class="mpsub-hdr">
-    <button class="mpsub-back" onclick="closeMpSub('portfolio')">‹</button>
-    <div class="mpsub-ttl">포트폴리오</div>
-    <span id="worker-photos-count" style="margin-left:auto;font-size:13px;color:#aaa;font-weight:600">0/5</span>
-  </div>
-  <div style="flex:1;overflow-y:auto;padding:16px">
-    <div id="worker-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
-    <label id="worker-photos-add-btn" onclick="showPhotoTip(event)" style="display:flex;align-items:center;justify-content:center;height:80px;background:#f8f8f8;border:2px dashed #ddd;border-radius:12px;cursor:pointer">
-      <span style="font-size:32px;color:#ccc;line-height:1">+</span>
-      <input id="worker-photos-input" type="file" accept="image/*" multiple style="display:none" onchange="uploadWorkerPhoto(this)">
-    </label>
-    <div style="font-size:11px;color:#bbb;margin-top:10px;line-height:1.7">프로필 및 포트폴리오 사진 (최대 5장) · 업주에게 공개됩니다</div>
-    <button onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:16px">저장하기</button>
   </div>
 </div>
 
@@ -4241,7 +4228,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=507"></script>
+<script src="./assets/js/app.js?v=508"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
