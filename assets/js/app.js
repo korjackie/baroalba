@@ -446,7 +446,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '504';
+  const _APP_V = '505';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -18101,7 +18101,7 @@ async function handleBarospotDeeplink(eventId) {
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
   if (ev.status === 'recruiting_female') {
     if (w?.gender !== 'female') { showToast('바로스팟 선점은 여성 회원만 가능해요'); return; }
-    const confirmed = await showConfirmDialog('🍽️ 바로스팟 선점', `${name}\n${whenText}\n\n지금 선점하시겠어요? 먼저 누르는 분에게 기회가 있어요.`, '선점하기', '나중에');
+    const confirmed = await showConfirmDialog('🍽️ 바로스팟 선점', `${name}\n${whenText}\n\n지금 선점하시겠어요?\n먼저 누르는 분에게 기회가 있어요.`, '선점하기', '나중에');
     if (confirmed) await claimBarospotEvent(eventId);
     return;
   }
@@ -19589,15 +19589,17 @@ function _datingProfileGap(w) {
   if (!w?.job_category || !w?.body_type) return 'dating';
   return null;
 }
-// gap에 맞는 화면으로 안내 - 'basic'은 마이페이지 기본정보, 'dating'은 내 소개팅 프로필
+// gap에 맞는 화면으로 안내 - 'basic'은 마이페이지 메인(프로필 사진은 여기 헤더 아바타를
+// 눌러야 하는데, 예전엔 곧바로 mpsub-basic을 열어서 그 화면이 헤더를 통째로 덮어버려
+// 사진 올릴 방법 자체가 안 보이는 채로 계속 막히는 문제가 있었음 - 이제 메인 화면에
+// 머물러 아바타와 "기본정보" 진입 둘 다 보이게 함), 'dating'은 내 소개팅 프로필
 async function _promptCompleteDatingProfile(gap) {
   if (gap === 'basic') {
-    const go = await showConfirmDialog('프로필을 먼저 완성해주세요', '바로미팅·바로스팟은 서로의 프로필을 보고 참여를 결정해요.\n마이페이지에서 프로필 사진과 나이를 먼저 등록해주세요.', '마이페이지로 이동', '나중에');
+    const go = await showConfirmDialog('프로필을 먼저 완성해주세요', '바로미팅·바로스팟은 서로의 프로필을 보고 참여를 결정해요.\n마이페이지에서 프로필 사진과 정보를\n먼저 등록해주세요!', '이동하기', '나중에');
     if (!go) return;
     closeMannnamPanel();
     const profileNav = document.querySelectorAll('.nav-item')[4];
     if (profileNav) setNav(profileNav, 'profile');
-    setTimeout(() => openMpSub('basic'), 150);
   } else {
     const go = await showConfirmDialog('소개팅 프로필을 먼저 등록해주세요', '직업군·체형 정보가 있어야 상대방이 참여 여부를 판단할 수 있어요.', '지금 등록하기', '나중에');
     if (!go) return;
