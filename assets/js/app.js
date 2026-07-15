@@ -514,7 +514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '522';
+  const _APP_V = '523';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -530,7 +530,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=522').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=523').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -19056,7 +19056,10 @@ let _mpMbtiParts = [null, null, null, null]; // [E/I, S/N, T/F, J/P]
 // 섹션 대신 안내만 보여주고, 위쪽 계정 프로필의 성별 버튼으로 설정하게 유도한다
 // (예전엔 성별 없으면 아예 진입 자체를 막아서 정작 성별을 처음 설정할 화면에
 // 못 들어가는 모순이 있었음)
-async function openMannamProfilePanel() {
+// 프로필 편집(mpsub-basic) 진입점 - 계정 정보/바로만남 프로필 탭 전환은 switchBasicTab()이
+// 담당. defaultTab: 'account'(기본, 헤더 버튼·완성도 카드) | 'mannam'(바로만남 탭 "내
+// 프로필", 프로필 완성 유도 다이얼로그 등 - 바로 그 탭으로 열어줌, 2026-07-16 토글→탭 전환)
+async function openMannamProfilePanel(defaultTab = 'account') {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   // 바로만남 탭(mannnam-panel, z-index:510)이 열려있는 상태에서 "내 프로필"을 누르면
   // 프로필 편집(mpsub-panel, z-index:450)이 그 밑에 깔려 화면이 안 바뀐 것처럼 보이던
@@ -19065,23 +19068,6 @@ async function openMannamProfilePanel() {
   const { data: w } = await db.from('workers')
     .select('gender, job_category, body_type, interests, height_cm, mbti, dating_photo_url, photo_url')
     .eq('kakao_uid', currentUser.id).maybeSingle();
-  // dating_profile_enabled 컬럼은 DDL 추가 전이면 없을 수 있어 별도 조회 + try/catch로
-  // 분리(컬럼 없으면 위 select 전체가 실패하는 것을 방지). 컬럼이 아직 없거나 값이
-  // null이면, 이미 등록된 바로만남 정보가 있는 기존 유저는 켜진 것으로 간주해 갑자기
-  // 데이터가 숨겨지지 않게 함
-  let datingEnabledCol = null;
-  try {
-    const { data: wExtra } = await db.from('workers').select('dating_profile_enabled').eq('kakao_uid', currentUser.id).maybeSingle();
-    datingEnabledCol = wExtra?.dating_profile_enabled;
-  } catch (e) { /* 컬럼 미존재 시 무시 */ }
-  const hasExistingDatingData = !!(w?.job_category || w?.body_type || (w?.interests && w.interests.length));
-  _mpDatingEnabled = datingEnabledCol != null ? datingEnabledCol : hasExistingDatingData;
-
-  const toggleEl = document.getElementById('mannam-enabled-toggle');
-  if (toggleEl) toggleEl.checked = _mpDatingEnabled;
-  _renderMannamEnabledToggle(_mpDatingEnabled);
-  document.getElementById('mannam-enabled-body').style.display = _mpDatingEnabled ? 'block' : 'none';
-
   const gate = document.getElementById('mannam-gender-gate');
   const fields = document.getElementById('mannam-profile-fields');
   if (!w?.gender) {
@@ -19103,25 +19089,21 @@ async function openMannamProfilePanel() {
     _renderMannamProfilePanel();
   }
   openMpSub('basic');
+  switchBasicTab(defaultTab);
 }
 
-let _mpDatingEnabled = false;
-function _renderMannamEnabledToggle(on) {
-  const track = document.getElementById('mannam-enabled-track');
-  const thumb = document.getElementById('mannam-enabled-thumb');
-  if (track) track.style.background = on ? '#7C3AED' : '#ddd';
-  if (thumb) thumb.style.transform = on ? 'translateX(20px)' : 'translateX(0)';
-}
-// 알바만 찾고 만남(바로미팅·바로스팟)에는 관심 없는 유저(기혼자 포함)도 많다는
-// 피드백(2026-07-16)으로, 이 정보를 아예 관리할지 자체를 토글로 켜고 끄게 함
-async function saveMannamEnabled(val) {
-  _mpDatingEnabled = val;
-  _renderMannamEnabledToggle(val);
-  document.getElementById('mannam-enabled-body').style.display = val ? 'block' : 'none';
-  if (val && _mpDatingProfile.gender) _renderMannamProfilePanel();
-  if (!currentUser) return;
-  const { error } = await db.from('workers').update({ dating_profile_enabled: val }).eq('kakao_uid', currentUser.id);
-  if (error) console.error('[mannam] dating_profile_enabled 저장 실패 (DDL 미적용 가능):', error);
+// ON/OFF 토글은 "켜야 보인다"는 개념이 하나 더 늘어 오히려 헷갈릴 수 있다는
+// 피드백(2026-07-16)으로, 계정 정보/바로만남 프로필을 그냥 탭으로 나눔
+function switchBasicTab(tab) {
+  const isAccount = tab !== 'mannam';
+  const accountBtn = document.getElementById('basic-tab-btn-account');
+  const mannamBtn = document.getElementById('basic-tab-btn-mannam');
+  const accountPane = document.getElementById('basic-tab-account');
+  const mannamPane = document.getElementById('basic-tab-mannam');
+  if (accountPane) accountPane.style.display = isAccount ? 'flex' : 'none';
+  if (mannamPane) mannamPane.style.display = isAccount ? 'none' : 'flex';
+  if (accountBtn) { accountBtn.style.color = isAccount ? 'var(--red)' : '#aaa'; accountBtn.style.borderBottomColor = isAccount ? 'var(--red)' : 'transparent'; }
+  if (mannamBtn) { mannamBtn.style.color = isAccount ? '#aaa' : '#7C3AED'; mannamBtn.style.borderBottomColor = isAccount ? 'transparent' : '#7C3AED'; }
 }
 
 function _renderMannamProfilePanel() {
@@ -19186,7 +19168,9 @@ async function saveMannamProfile() {
   const heightVal = parseInt(document.getElementById('mp-dating-height').value, 10);
   const height_cm = (heightVal >= 130 && heightVal <= 230) ? heightVal : null;
   const mbti = _mpMbtiParts.every(Boolean) ? _mpMbtiParts.join('') : null;
-  const payload = { job_category, body_type, interests, height_cm, mbti };
+  // dating_profile_enabled: 토글 UI는 탭으로 대체됐지만(2026-07-16) 이미 만들어둔 DDL
+  // 컬럼은 "바로만남 프로필을 실제로 채워본 적 있는 유저" 신호로 계속 활용
+  const payload = { job_category, body_type, interests, height_cm, mbti, dating_profile_enabled: true };
 
   if (_mpDatingPhotoMode === 'avatar') {
     payload.dating_photo_url = null;
@@ -19209,7 +19193,7 @@ async function saveMannamProfile() {
 // 성별이 설정된 경우에만 화면에 노출되므로 그때만 같이 저장하고, saveAllProfileSettings가
 // 마지막에 페이지를 새로고침한다
 async function saveCombinedProfile() {
-  if (_mpDatingEnabled && _mpDatingProfile.gender) await saveMannamProfile();
+  if (_mpDatingProfile.gender) await saveMannamProfile();
   await saveAllProfileSettings();
 }
 
@@ -19921,7 +19905,7 @@ async function _promptCompleteDatingProfile(gap) {
   } else {
     const go = await showConfirmDialog('바로만남 프로필을 먼저 등록해주세요', '직업군·체형 정보가 있어야 상대방이 참여 여부를 판단할 수 있어요.', '지금 등록하기', '나중에');
     if (!go) return;
-    openMannamProfilePanel();
+    openMannamProfilePanel('mannam');
   }
 }
 async function _handleBarospotIneligible(eligibility) {
