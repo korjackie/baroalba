@@ -371,6 +371,18 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 8.6. 마이페이지 서브패널(.mpsub-panel, 예: 사진 관리/프로필 편집 등) - 지금까지 이
+  // 뒤로가기 핸들러 어디에도 등록돼 있지 않아서, 서브패널이 열린 채 뒤로가기를 누르면
+  // 서브패널(z-index:450)은 그대로 남고 그 아래 panel-profile(z-index:300, 아래 9번
+  // 케이스에서 매칭됨)만 대신 닫혀 화면이 안 바뀐 것처럼 보이다가, 두 번째로 누르면
+  // 쌓인 히스토리가 없어 앱이 그대로 꺼져버리던 문제(2026-07-16 피드백) - 전체 서브패널
+  // 공통으로 먼저 닫히도록 등록
+  const openMpSubs = document.querySelectorAll('.mpsub-panel.show');
+  if (openMpSubs.length) {
+    openMpSubs.forEach(p => p.classList.remove('show'));
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 9. full-panel.show (기존)
   const visible = [...document.querySelectorAll('.full-panel.show')]
     .sort((a, b) => (parseInt(b.style.zIndex) || 100) - (parseInt(a.style.zIndex) || 100));
@@ -413,8 +425,13 @@ window.addEventListener('popstate', () => {
     const d = el.style.display;
     return !!d && d !== 'none';
   }
+  // 마이페이지 서브패널(.mpsub-panel)도 감시 대상에 포함 - 개별 id를 일일이 나열하는 대신
+  // 클래스로 한 번에 잡아서, 새 서브패널이 추가돼도 별도 등록 없이 자동으로 커버되게 함
+  function _anyMpSubOpen() {
+    return !!document.querySelector('.mpsub-panel.show');
+  }
   function _anyOpen() {
-    return WATCH_IDS.some(id => _isModalVisible(document.getElementById(id)));
+    return WATCH_IDS.some(id => _isModalVisible(document.getElementById(id))) || _anyMpSubOpen();
   }
   let _histPushed = false;
   const _check = () => {
@@ -430,6 +447,9 @@ window.addEventListener('popstate', () => {
   WATCH_IDS.forEach(id => {
     const el = document.getElementById(id);
     if (el) observer.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+  });
+  document.querySelectorAll('.mpsub-panel').forEach(el => {
+    observer.observe(el, { attributes: true, attributeFilter: ['class'] });
   });
   // popstate로 패널이 닫힌 직후에도 플래그를 재확인해 다음 오픈 때 다시 쌓이도록 함
   window.addEventListener('popstate', () => setTimeout(_check, 0));
@@ -460,6 +480,32 @@ window.addEventListener('popstate', () => {
   if (sat > 0) document.documentElement.style.setProperty('--sat', sat + 'px');
 })();
 
+// ── 마이페이지 하단 버전 푸터를 화면 최하단에 붙임 ──────────────
+// CSS만으로(퍼센트 min-height, calc(100vh...) 둘 다) 이 중첩된 flex+overflow 구조에서
+// 시도했으나 실제로는 전혀 반영되지 않았음(2026-07-16, 세 번째 피드백) - CSS 해석에
+// 의존하지 않도록 실측 픽셀 높이로 margin-top을 직접 계산해서 지정한다.
+// 콘텐츠(사진·통계 등 비동기 로딩 포함)가 화면보다 짧으면 남는 공간만큼 밀어 최하단에
+// 붙이고, 콘텐츠가 이미 화면보다 길면 0으로 계산돼 평소처럼 자연스럽게 붙는다.
+(function() {
+  const panel = document.getElementById('panel-profile');
+  const content = document.getElementById('profile-logged-in');
+  const footer = document.getElementById('profile-version-footer');
+  if (!panel || !content || !footer) return;
+  let raf = null;
+  const reflow = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      if (content.style.display === 'none') return;
+      footer.style.marginTop = '0px';
+      const gap = panel.clientHeight - content.scrollHeight;
+      footer.style.marginTop = (gap > 0 ? gap : 0) + 'px';
+    });
+  };
+  new ResizeObserver(reflow).observe(content);
+  new ResizeObserver(reflow).observe(panel);
+  window.addEventListener('resize', reflow);
+})();
+
 // ── 초기화 ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   // head 안전 타이머 즉시 취소 — 여기서 reveal 타이밍을 직접 제어
@@ -468,7 +514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '515';
+  const _APP_V = '516';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -484,7 +530,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=515').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=516').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -5406,6 +5452,11 @@ async function loadMyBaromeetPreview() {
 function openMpSub(name) {
   const el = document.getElementById('mpsub-' + name);
   if (!el) return;
+  // 서브패널끼리는 전부 z-index가 동일해서 DOM 순서상 나중에 오는 쪽이 항상 위에
+  // 그려진다 - 다른 서브패널이 열린 채로 이 함수를 또 부르면(예: 프로필 편집 화면 안의
+  // 사진 미리보기를 눌러 사진 관리로 이동) 새로 연 패널이 밑에 깔려 화면이 안 바뀐
+  // 것처럼 보이던 문제(2026-07-16 피드백과 함께 발견) - 열기 전에 다른 서브패널을 먼저 닫음
+  document.querySelectorAll('.mpsub-panel.show').forEach(p => { if (p !== el) p.classList.remove('show'); });
   el.classList.add('show');
   if (name === 'income')        loadWorkerIncome();
   if (name === 'foreigner')     loadVisaProfile();
@@ -8642,7 +8693,7 @@ function openProfile() {
     document.getElementById('worker-grade-section').style.display = 'block';
     document.getElementById('owner-profile-edit').style.display = 'none';
     document.getElementById('owner-settings-shortcut').style.display = 'none';
-    document.getElementById('profile-logged-in').style.display = 'flex';
+    document.getElementById('profile-logged-in').style.display = 'block';
     document.getElementById('profile-guest').style.display = 'none';
     loadWorkerProfileForm();
     loadWorkerGrade();
@@ -9284,9 +9335,11 @@ function _paintPhotoGrid(container, readonly) {
   if (!container) return;
   const avatarCell = _slotHtml(0, _wPhotos[0], readonly);
   const restCells = [1, 2, 3, 4].map(i => _slotHtml(i, _wPhotos[i], readonly)).join('');
-  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+  // 포트폴리오 4장이 화면 폭을 꽉 채워 빽빽해 보인다는 피드백(2026-07-16)으로 80%
+  // 너비로 줄이고 칸 사이 간격도 8px→14px로 넓혀 여유있게 보이도록 조정
+  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px;align-items:center">
     <div style="width:58%">${avatarCell}</div>
-    <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px">${restCells}</div>
+    <div style="width:80%;display:grid;grid-template-columns:1fr 1fr;gap:14px">${restCells}</div>
   </div>`;
   if (!readonly) _setupTouchDnd(container, _swapPhotoSlots, 'data-slot-idx');
 }
