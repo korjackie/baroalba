@@ -638,21 +638,30 @@
 
   </div>
 
-  <!-- 바로스팟 개설·관리 (제휴매장 자체와는 별개 - 제휴매장은 일반 정보, 바로스팟은 특정 날짜·정원 세션) -->
-  <!-- 개설 폼과 신청 관리(전체 이벤트의 신청자 목록)가 한 화면에 이어져 있어서, 새 바로스팟을
-       개설하는 중에 이전에 개설한 바로스팟의 신청자(예: 박근욱)가 바로 아래 같이 보여
-       "왜 개설 화면에 남의 신청자가 나오냐"는 혼란이 있었음 - 서브탭으로 완전히 분리 -->
+  <!-- 바로스팟 개설·관리 (제휴매장 자체와는 별개 - 제휴매장은 일반 정보, 바로스팟은 특정 날짜 세션) -->
+  <!-- 바로미팅 관리 화면과 동일한 패턴: 목록만 먼저 보이고 "+ 새로 개설" → 별도 슬라이드업
+       시트(bse-form-overlay)로 개설/수정, 카드 클릭 → 상세(신청자 목록)는 별도 오버레이.
+       예전엔 개설 폼과 목록이 한 페이지에 이어 붙어있어서 개설 중에 이전 바로스팟의
+       신청자가 바로 아래 같이 보이는 혼란이 있었고, 그 폼이 일반 페이지 흐름 안에 있어서
+       키보드가 메모 입력창을 가리는 문제도 있었음 - 슬라이드업 시트로 옮기면 두 문제가
+       동시에 해결됨(시트 안 입력창은 이미 있는 _adjustPanels가 키보드를 정상 처리해줌) -->
   <div class="tab-content" id="tab-barospot">
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button type="button" id="bsp-subtab-manage" onclick="setBarospotSubTab('manage')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:13px;font-weight:800;cursor:pointer">개설·목록</button>
-      <button type="button" id="bsp-subtab-apps" onclick="setBarospotSubTab('apps')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:13px;font-weight:800;cursor:pointer">🙋 신청 관리</button>
-    </div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">현재 개설된 바로스팟 목록입니다. 새로 개설하려면 아래 버튼을 눌러주세요.</div>
+    <button type="button" onclick="resetBarospotEventForm();openBseForm()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer">+ 새로 개설</button>
+    <div id="barospot-events-list"><div class="loading">로딩 중...</div></div>
+    <!-- 신청자 상세조회(openBarospotAppDetail)에 필요한 데이터만 백그라운드로 채워두는
+         용도 - 화면에는 안 보이고, 신청자 관리는 각 바로스팟 카드 클릭 → 상세에서 함 -->
+    <div id="barospot-apps-list" style="display:none"></div>
+  </div>
 
-    <div id="bsp-subtab-content-manage">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">제휴매장 중 하나를 골라 특정 날짜·정원으로 바로스팟을 개설하고, 신청을 매칭·확정합니다.</div>
-      <div id="barospot-events-list"><div class="loading">로딩 중...</div></div>
-      <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <div id="bse-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">바로스팟 개설</div>
+  <!-- 바로스팟 개설/수정 패널 -->
+  <div class="detail-overlay" id="bse-form-overlay" onclick="if(event.target===this)closeBseForm()">
+    <div class="detail-panel" onclick="event.stopPropagation()" style="max-height:93vh">
+      <div class="dp-header">
+        <button onclick="closeBseForm()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
+        <span id="bse-form-title" style="font-size:16px;font-weight:800;color:#1e293b">바로스팟 개설</span>
+      </div>
+      <div class="dp-body" style="overflow-y:auto">
         <input type="hidden" id="bse-id">
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;gap:8px">
@@ -684,18 +693,12 @@
           </div>
           <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">바로스팟은 여성 1명 + 남성 1명을 매칭하는 1:1 소개팅이라 별도 정원 입력은 없습니다. 저장하면 "남성 모집중" 상태로 열립니다.</div>
           <textarea id="bse-notes" placeholder="메모 (선택)" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <button onclick="saveBarospotEvent()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
-            <button onclick="resetBarospotEventForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
-          </div>
         </div>
       </div>
-    </div>
-
-    <!-- 바로스팟 신청 매칭/확정 - 이름+상태만 보여주고 눌러야 상세/조치가 나오는 방식 -->
-    <div id="bsp-subtab-content-apps" style="display:none">
-      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🙋 바로스팟 신청 관리</div>
-      <div id="barospot-apps-list"><div class="loading">로딩 중...</div></div>
+      <div style="padding:16px;flex-shrink:0;border-top:1px solid #e2e8f0;display:flex;gap:8px">
+        <button onclick="saveBarospotEvent()" style="flex:2;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
+        <button onclick="resetBarospotEventForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">초기화</button>
+      </div>
     </div>
   </div>
 
@@ -2701,8 +2704,18 @@ let _barospotEvents = [];
 async function loadBarospotEvents() {
   const el = document.getElementById('barospot-events-list');
   el.innerHTML = '<div class="loading">로딩 중...</div>';
-  const data = await adminApi('barospot_events');
+  // 카드에 신청 현황(여성/남성 건수)을 바로 보여주기 위해 전체 신청 데이터도 같이 조회
+  const [data, appsData] = await Promise.all([
+    adminApi('barospot_events'),
+    adminApi('barospot_applications', 'GET', null, {}),
+  ]);
   _barospotEvents = Array.isArray(data) ? data : [];
+  const countsByEvent = {};
+  (Array.isArray(appsData) ? appsData : []).forEach(a => {
+    if (a.status === 'cancelled' || !a.event_id) return;
+    const c = countsByEvent[a.event_id] || (countsByEvent[a.event_id] = { female: 0, male: 0 });
+    if (a.gender === 'female') c.female++; else if (a.gender === 'male') c.male++;
+  });
   const STATUS_LABEL = { recruiting_female:'여성 모집중', recruiting_male:'남성 모집중', confirmed:'확정됨', done:'완료', cancelled:'취소됨' };
   const STATUS_BADGE_CLS = { recruiting_female:'sb-done', recruiting_male:'sb-done', confirmed:'sb-reviewing', done:'sb-dismissed', cancelled:'sb-dismissed' };
   el.innerHTML = _barospotEvents.length
@@ -2710,13 +2723,14 @@ async function loadBarospotEvents() {
         const r = ev.barospot_restaurants || {};
         const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
         const isActive = ev.status === 'recruiting_female' || ev.status === 'recruiting_male';
+        const cnt = countsByEvent[ev.id] || { female: 0, male: 0 };
         return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div onclick="openBarospotEventDetail('${ev.id}')" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;cursor:pointer">
             <div style="min-width:0">
               <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '식당 미배정'}</div>
               <div style="font-size:11px;color:#94a3b8;margin-top:2px">${whenText}</div>
               ${ev.address ? `<div style="font-size:11px;color:#94a3b8">${ev.address}${(ev.lat==null)?' (좌표 확보 실패 - 주소 확인 필요)':''}</div>` : ''}
-              <div style="font-size:10.5px;color:#7C3AED;font-weight:700;margin-top:4px">눌러서 배정된 여성·남성 정보 보기 ›</div>
+              <div style="font-size:11px;color:#64748b;margin-top:4px">신청 현황 · 여성 ${cnt.female} · 남성 ${cnt.male}</div>
             </div>
             <span class="status-badge ${STATUS_BADGE_CLS[ev.status]||'sb-dismissed'}" style="flex-shrink:0">${STATUS_LABEL[ev.status]||ev.status}</span>
           </div>
@@ -2812,6 +2826,13 @@ function updateBseDateDisplay() {
   document.getElementById('bse-date-display').textContent = v ? v.replace(/-/g, '.') : '날짜 선택';
 }
 
+function openBseForm() {
+  document.getElementById('bse-form-overlay').classList.add('show');
+}
+function closeBseForm() {
+  document.getElementById('bse-form-overlay').classList.remove('show');
+}
+
 function editBarospotEvent(id) {
   const ev = _barospotEvents.find(e => e.id === id);
   if (!ev) return;
@@ -2829,6 +2850,7 @@ function editBarospotEvent(id) {
   document.getElementById('bse-address').value = ev.address || '';
   document.getElementById('bse-notes').value = ev.notes || '';
   document.getElementById('bse-form-title').textContent = '바로스팟 수정';
+  openBseForm();
 }
 
 function resetBarospotEventForm() {
@@ -2867,6 +2889,7 @@ async function saveBarospotEvent() {
   if (result?.error) { showToast('저장 실패: ' + result.error); return; }
   showToast(id ? '바로스팟이 수정됐습니다' : '바로스팟이 개설됐습니다');
   resetBarospotEventForm();
+  closeBseForm();
   loadBseRestaurantOptions();
   loadBarospotEvents();
 }
@@ -2915,23 +2938,6 @@ async function submitBarospotComplete() {
 let _barospotAppsList = [];
 const BAROSPOT_APP_STATUS_LABEL = { pending: '대기중', matched: '매칭됨', confirmed: '확정', cancelled: '취소됨' };
 const BAROSPOT_APP_STATUS_COLOR = { pending: '#f59e0b', matched: '#8b5cf6', confirmed: '#10b981', cancelled: '#94a3b8' };
-
-// 개설·목록 화면과 신청 관리(전체 이벤트 대상) 화면이 한 화면에 이어져 있어서 "새 바로스팟을
-// 개설하는데 왜 다른 바로스팟 신청자가 같이 보이냐"는 혼란이 있었음 - 완전히 분리된 서브탭으로 전환
-function setBarospotSubTab(tab) {
-  const isManage = tab === 'manage';
-  document.getElementById('bsp-subtab-content-manage').style.display = isManage ? 'block' : 'none';
-  document.getElementById('bsp-subtab-content-apps').style.display = isManage ? 'none' : 'block';
-  const mBtn = document.getElementById('bsp-subtab-manage');
-  const aBtn = document.getElementById('bsp-subtab-apps');
-  mBtn.style.background = isManage ? '#7C3AED' : '#fff';
-  mBtn.style.color = isManage ? '#fff' : '#64748b';
-  mBtn.style.borderColor = isManage ? '#7C3AED' : '#e2e8f0';
-  aBtn.style.background = isManage ? '#fff' : '#7C3AED';
-  aBtn.style.color = isManage ? '#64748b' : '#fff';
-  aBtn.style.borderColor = isManage ? '#e2e8f0' : '#7C3AED';
-  if (!isManage) loadBarospotApplications();
-}
 
 async function loadBarospotApplications() {
   const el = document.getElementById('barospot-apps-list');
