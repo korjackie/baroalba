@@ -514,7 +514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '517';
+  const _APP_V = '518';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -530,7 +530,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=517').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=518').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -9338,10 +9338,17 @@ function _paintPhotoGrid(container, readonly, layout) {
   if (!container) return;
   const avatarCell = _slotHtml(0, _wPhotos[0], readonly);
   const restCells = [1, 2, 3, 4].map(i => _slotHtml(i, _wPhotos[i], readonly)).join('');
+  // left 레이아웃: 대표사진을 오른쪽 2x2 블록 높이에 맞춰 세로 가운데 정렬하고 그 밑에
+  // "대표사진" 라벨을 붙임. 오른쪽 4장은 90% 너비로 살짝 줄여 여유있게(2026-07-16 피드백)
   container.innerHTML = layout === 'left'
-    ? `<div style="display:flex;gap:10px;align-items:flex-start">
-         <div style="flex:0 0 42%">${avatarCell}</div>
-         <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px">${restCells}</div>
+    ? `<div style="display:flex;gap:10px;align-items:center">
+         <div style="flex:0 0 42%;display:flex;flex-direction:column;align-items:center;gap:4px">
+           ${avatarCell}
+           <span style="font-size:10px;color:#888;font-weight:700">대표사진</span>
+         </div>
+         <div style="flex:1;display:flex;justify-content:center">
+           <div style="width:90%;display:grid;grid-template-columns:1fr 1fr;gap:8px">${restCells}</div>
+         </div>
        </div>`
     : `<div style="display:flex;flex-direction:column;gap:14px;align-items:center">
          <div style="width:58%">${avatarCell}</div>
@@ -18968,33 +18975,49 @@ const DATING_INTERESTS = [
   '와인','맥주','요리','베이킹','카페',
   '독서','영화','게임','사진','반려동물'
 ];
-// 바로만남 공개 프로필 - 계정 프로필과 완전히 분리된 정보(블라인드 상대에게만 공개).
-// 예전엔 바텀시트(바로만남 탭 안에서만 진입)였는데, 마이페이지 기본정보에서도 찾을 수
-// 있도록 정식 서브패널(mpsub-mannam-profile)로 승격 - 사진(대표사진 재사용 또는 전용
-// 사진)/직업군/체형/취미·관심사/키/MBTI를 관리한다.
+// 바로만남 공개 프로필 - 계정 프로필과 별개로 저장되는 데이터(블라인드 상대에게만 공개)지만,
+// 화면은 2026-07-16부터 마이페이지 "프로필 편집"(mpsub-basic) 하단 섹션에 통합돼 있다.
+// 사진(대표사진 재사용 또는 전용 사진)/직업군/체형/취미·관심사/키/MBTI를 관리한다.
 let _mpDatingProfile = { gender: null, job_category: null, body_type: null, interests: [], height_cm: null, mbti: null, _existingDatingPhotoUrl: null };
 let _mpDatingPhotoMode = 'avatar'; // 'avatar'(대표사진 재사용) | 'custom'(바로만남 전용 사진)
 let _mpPendingDatingPhotoBlob = null;
 let _mpAvatarPhotoUrl = null;
 let _mpMbtiParts = [null, null, null, null]; // [E/I, S/N, T/F, J/P]
 
+// 프로필 편집(mpsub-basic) 진입점 - 계정 프로필(기본정보/사진)과 바로만남용 프로필이
+// 예전엔 별도 화면(마이페이지에 "프로필 편집"/"바로만남 프로필" 버튼 2개)이었는데
+// 지나치게 나눠져 헷갈린다는 피드백(2026-07-16)으로 이 화면 하나로 합쳐서, 헤더의
+// 유일한 진입 버튼과 "내 프로필 완성도" 카드, 바로만남 탭의 "내 프로필" 버튼이 전부
+// 여길 거쳐가게 함. 성별이 아직 없으면(체형/직업군 칩이 성별별로 다름) 바로만남
+// 섹션 대신 안내만 보여주고, 위쪽 계정 프로필의 성별 버튼으로 설정하게 유도한다
+// (예전엔 성별 없으면 아예 진입 자체를 막아서 정작 성별을 처음 설정할 화면에
+// 못 들어가는 모순이 있었음)
 async function openMannamProfilePanel() {
   if (!currentUser) { showToast('로그인 후 이용하세요'); return; }
   const { data: w } = await db.from('workers')
     .select('gender, job_category, body_type, interests, height_cm, mbti, dating_photo_url, photo_url')
     .eq('kakao_uid', currentUser.id).maybeSingle();
-  if (!w?.gender) { showToast('먼저 바로만남 > 바로스팟 탭에서 성별을 설정해주세요'); return; }
-  _mpDatingProfile = {
-    gender: w.gender, job_category: w.job_category || null, body_type: w.body_type || null,
-    interests: w.interests || [], height_cm: w.height_cm || null, mbti: w.mbti || null,
-    _existingDatingPhotoUrl: w.dating_photo_url || null,
-  };
-  _mpAvatarPhotoUrl = w.photo_url || null;
-  _mpPendingDatingPhotoBlob = null;
-  _mpDatingPhotoMode = w.dating_photo_url ? 'custom' : 'avatar';
-  _mpMbtiParts = (w.mbti && w.mbti.length === 4) ? w.mbti.split('') : [null, null, null, null];
-  _renderMannamProfilePanel();
-  document.getElementById('mpsub-mannam-profile').classList.add('show');
+  const gate = document.getElementById('mannam-gender-gate');
+  const fields = document.getElementById('mannam-profile-fields');
+  if (!w?.gender) {
+    if (gate) gate.style.display = 'block';
+    if (fields) fields.style.display = 'none';
+    _mpDatingProfile = { gender: null, job_category: null, body_type: null, interests: [], height_cm: null, mbti: null, _existingDatingPhotoUrl: null };
+  } else {
+    if (gate) gate.style.display = 'none';
+    if (fields) fields.style.display = 'flex';
+    _mpDatingProfile = {
+      gender: w.gender, job_category: w.job_category || null, body_type: w.body_type || null,
+      interests: w.interests || [], height_cm: w.height_cm || null, mbti: w.mbti || null,
+      _existingDatingPhotoUrl: w.dating_photo_url || null,
+    };
+    _mpAvatarPhotoUrl = w.photo_url || null;
+    _mpPendingDatingPhotoBlob = null;
+    _mpDatingPhotoMode = w.dating_photo_url ? 'custom' : 'avatar';
+    _mpMbtiParts = (w.mbti && w.mbti.length === 4) ? w.mbti.split('') : [null, null, null, null];
+    _renderMannamProfilePanel();
+  }
+  openMpSub('basic');
 }
 
 function _renderMannamProfilePanel() {
@@ -19075,7 +19098,15 @@ async function saveMannamProfile() {
   const { error } = await db.from('workers').update(payload).eq('kakao_uid', currentUser.id);
   if (error) { showToast('저장 실패: ' + error.message); return; }
   showToast('✅ 바로만남 프로필이 저장됐어요');
-  closeMpSub('mannam-profile');
+}
+
+// 프로필 편집(mpsub-basic) 하단 "저장하기" - 계정 프로필과 바로만남 프로필을 한 화면에서
+// 같이 관리하게 되면서(2026-07-16) 버튼도 하나로 합쳐 둘 다 저장한다. 바로만남 섹션은
+// 성별이 설정된 경우에만 화면에 노출되므로 그때만 같이 저장하고, saveAllProfileSettings가
+// 마지막에 페이지를 새로고침한다
+async function saveCombinedProfile() {
+  if (_mpDatingProfile.gender) await saveMannamProfile();
+  await saveAllProfileSettings();
 }
 
 async function openSpotPassSheet(gender) {
