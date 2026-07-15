@@ -46,7 +46,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=509"></script>
+  <script src="./shared-lang.js?v=510"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=509">
+  <link rel="stylesheet" href="./assets/css/style.css?v=510">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1460,7 +1460,7 @@
     </div>
 
     <!-- 로그인 상태 -->
-    <div id="profile-logged-in" style="display:none">
+    <div id="profile-logged-in" style="display:none;position:relative;min-height:100%">
         <!-- ── 프로필 헤더 ── -->
       <div style="background:#fff;padding:20px 20px 16px">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
@@ -1716,7 +1716,11 @@
           </div>
         </div>
       </div>
-      <div style="padding:6px 20px;text-align:center"><div style="font-size:10px;color:#ccc;font-weight:600">바로알바 v1.4.1</div></div>
+      <!-- position:absolute + 부모(#profile-logged-in)의 min-height:100% 조합 - 계정이
+           짧아 콘텐츠가 화면보다 짧을 때 로그아웃 버튼 아래 빈 공간이 통째로 남고 버전
+           표시만 뚝 떨어져 있던 문제(2026-07-16 피드백)를 해결. 콘텐츠가 화면보다 길면
+           평소처럼 맨 아래에 자연스럽게 붙음 -->
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:6px 20px;text-align:center"><div style="font-size:10px;color:#ccc;font-weight:600">바로알바 v1.4.1</div></div>
 
       <!-- ── 숨김 컨테이너: 업주 프로필 편집 (서브패널에 없는 ID) ── -->
       <div style="display:none">
@@ -4228,7 +4232,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=509"></script>
+<script src="./assets/js/app.js?v=510"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">

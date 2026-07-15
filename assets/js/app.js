@@ -194,6 +194,14 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 0-1. 서비스 이용 동의 바텀시트 (showDisclaimerSheet) - 뒤로가기를 눌러도 안 닫히던
+  // 문제(2026-07-16 피드백). 동의 버튼을 누르지 않고 닫는 것이므로 저장은 진행되지 않음
+  const disclaimerEl = document.getElementById('disclaimer-sheet-overlay');
+  if (disclaimerEl) {
+    closeDisclaimerSheet();
+    history.pushState({ panel: null }, '');
+    return;
+  }
   // 1. 공고 상세 (detail-overlay .open)
   const detailEl = document.getElementById('detail-overlay');
   if (detailEl && detailEl.classList.contains('open')) {
@@ -454,7 +462,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '509';
+  const _APP_V = '510';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -470,7 +478,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=509').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=510').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -10240,12 +10248,17 @@ function showAvatarTip(inputId) {
   document.body.appendChild(el);
 }
 
+// 뒤로가기 핸들러에 등록되지 않은 오버레이라 뒤로가기를 눌러도 안 닫히던 문제
+// (img-viewer와 동일 유형, 2026-07-16 피드백) - 배경 탭/핸들바 드래그/뒤로가기 전부
+// 동의 없이 닫히도록(=저장 취소) 등록. 동의 버튼을 눌러야만 onConfirm이 호출됨
 function showDisclaimerSheet(onConfirm) {
   const el = document.createElement('div');
+  el.id = 'disclaimer-sheet-overlay';
   el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:flex-end';
+  el.onclick = e => { if (e.target === el) closeDisclaimerSheet(); };
   el.innerHTML = `
-    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
-      <div style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
+    <div id="disclaimer-sheet-panel" style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
+      <div id="disclaimer-sheet-handle" style="width:40px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
       <div style="font-size:17px;font-weight:800;color:#222;margin-bottom:4px">&#9888;&#65039; 서비스 이용 동의</div>
       <div style="font-size:13px;color:#999;font-weight:400;margin-bottom:16px">아래 내용을 확인하고 동의해주세요</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
@@ -10257,6 +10270,11 @@ function showDisclaimerSheet(onConfirm) {
     </div>`;
   document.body.appendChild(el);
   el.querySelector('#disclaimer-ok-btn').onclick = () => { el.remove(); if (onConfirm) onConfirm(); };
+  bindSheetDragClose(document.getElementById('disclaimer-sheet-handle'), document.getElementById('disclaimer-sheet-panel'), closeDisclaimerSheet);
+  history.pushState({ overlay: 'disclaimer' }, '');
+}
+function closeDisclaimerSheet() {
+  document.getElementById('disclaimer-sheet-overlay')?.remove();
 }
 
 function openAccountInfoModal() { document.getElementById('modal-account-info').style.display = 'block'; }
