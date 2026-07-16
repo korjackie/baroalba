@@ -16,17 +16,14 @@
   <meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share.png">
   <meta property="og:type" content="website">
 
-  <!-- 구글 애널리틱스4 (GA4) - 2026-07-16 추가. 측정 ID는 아직 없어서 플레이스홀더.
-       analytics.google.com에서 GA4 속성 만들고 측정 ID(G-로 시작) 받으면 아래 두 곳의
-       'G-XXXXXXXXXX'만 바꿔치기하면 바로 수집 시작됨(추가 배포 불필요, gtag.js가 없는
-       동안엔 app.js의 _track()이 조용히 무시하도록 짜여있어 지금 상태로는 아무 동작도
-       안 함, 에러도 안 남) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <!-- 구글 애널리틱스4 (GA4) - 2026-07-16 추가, 측정 ID(BAROALBA WEB 스트림) 연결 완료 -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5SB5VVP5ZB"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
+    gtag('config', 'G-5SB5VVP5ZB');
   </script>
 
   <!-- 카카오톡 인앱브라우저 → Chrome 자동 탈출 (딥링크 파라미터 보존) -->
@@ -59,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=533"></script>
+  <script src="./shared-lang.js?v=534"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -68,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=533">
+  <link rel="stylesheet" href="./assets/css/style.css?v=534">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1250,7 +1247,7 @@
 
       <!-- ⑤-1 커뮤니티 게시판 - 예전 대시보드 전용 카드였는데 FAB가 등록시트로 바뀌며
            그 화면 자체가 진입 경로를 잃어서 홈 화면에 그대로 옮겨옴 -->
-      <div onclick="openCommunityPanel()" style="margin:7px 12px 0;background:#fffbf0;border:1.5px solid #FDE68A;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;cursor:pointer;-webkit-tap-highlight-color:rgba(245,158,11,0.05)">
+      <div onclick="openCommunityPanel()" style="margin:8px 12px 0;background:#fffbf0;border:1.5px solid #FDE68A;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;cursor:pointer;-webkit-tap-highlight-color:rgba(245,158,11,0.05)">
         <div style="width:30px;height:30px;border-radius:9px;background:#F59E0B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         </div>
@@ -1261,26 +1258,28 @@
         <span style="font-size:12px;color:#94a3b8;font-weight:700">›</span>
       </div>
 
-      <!-- ⑥ RANK 진입점 - 바로모임/바로만남 배너와 같은 아이콘 크기(30px)·패딩(11px 14px)으로
-           통일 (예전엔 44px 아이콘 + "TRUST RANK" 라벨줄까지 있어서 유독 두꺼워 보였음) -->
-      <div onclick="showRankPanel('employer')" style="margin:10px 12px 16px;background:linear-gradient(135deg,#92400e,#b45309);border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;cursor:pointer;-webkit-tap-highlight-color:rgba(146,64,14,0.05)">
-        <div style="width:30px;height:30px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🏆</div>
+      <!-- ⑥ RANK 진입점 - 2026-07-16 재조정: 진한 그라데이션 배경이 위아래 카드(연한 파스텔
+           톤)와 색감이 튀어 "뒤죽박죽"으로 보인다는 피드백 - 다른 카드들과 동일하게 연한
+           배경+테두리+색상 아이콘박스 톤으로 통일, 간격도 상하 카드와 동일하게(8px) 맞춤 -->
+      <div onclick="showRankPanel('employer')" style="margin:8px 12px 0;background:#FFF7ED;border:1.5px solid #FDBA74;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;cursor:pointer;-webkit-tap-highlight-color:rgba(194,65,12,0.05)">
+        <div style="width:30px;height:30px;background:#C2410C;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🏆</div>
         <div style="flex:1">
-          <div style="font-size:14px;font-weight:900;color:#fff;line-height:1.25" data-i18n="rank_title">업체 · 알바생 신뢰도 순위</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:1px" data-i18n="rank_desc">업종별 1위가 누구인지 확인하세요</div>
+          <div style="font-size:14px;font-weight:900;color:#222;line-height:1.25" data-i18n="rank_title">업체 · 알바생 신뢰도 순위</div>
+          <div style="font-size:10px;color:#c2793d;margin-top:1px" data-i18n="rank_desc">업종별 1위가 누구인지 확인하세요</div>
         </div>
-        <span style="font-size:9px;font-weight:900;letter-spacing:0.3px;background:rgba(255,255,255,.15);color:#fff;padding:2px 8px;border-radius:10px;flex-shrink:0">RANK</span>
-        <span style="font-size:12px;color:rgba(255,255,255,.6);font-weight:700">›</span>
+        <span style="font-size:9px;font-weight:900;letter-spacing:0.3px;background:#FFEDD5;color:#C2410C;padding:2px 8px;border-radius:10px;flex-shrink:0">RANK</span>
+        <span style="font-size:12px;color:#94a3b8;font-weight:700">›</span>
       </div>
 
-      <!-- ⑦ 바로브랜딩 배너 (2026-07-16 시험 노출) - 업주 대상 온라인 브랜딩/네이버플레이스
-           순위진단 SaaS 크로스셀. 기존 카드들과 동일한 크기(11px 14px 패딩, 30px 아이콘)로
-           통일, 계열 서비스임을 알 수 있게 회사명 명시. 반응 보고 배치/문구 조정 예정 -->
-      <a href="https://barobranding.vercel.app/" target="_blank" rel="noopener" style="margin:0 12px 16px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;text-decoration:none;-webkit-tap-highlight-color:rgba(37,99,235,0.05)">
+      <!-- ⑦ 바로브랜딩 배너 (2026-07-16 시험 노출, 같은 날 재조정) - 업주 대상 온라인
+           브랜딩/네이버플레이스 순위진단 SaaS 크로스셀. 위 카드들과 동일한 연한 배경+
+           테두리+아이콘박스 톤·간격(8px)으로 통일. 서비스명(바로브랜딩)을 부제가 아니라
+           본문 급으로 키우고, "MultiMOVE 계열 서비스" 문구는 불필요하다는 피드백으로 제거 -->
+      <a href="https://barobranding.vercel.app/" target="_blank" rel="noopener" style="margin:8px 12px 16px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;text-decoration:none;-webkit-tap-highlight-color:rgba(37,99,235,0.05)">
         <div style="width:30px;height:30px;border-radius:9px;background:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">📈</div>
         <div style="flex:1">
-          <div style="font-size:14px;font-weight:900;color:#1e3a8a">우리 매장 온라인 순위, 무료로 확인하기</div>
-          <div style="font-size:10px;color:#60a5fa;margin-top:1px">바로브랜딩 · MultiMOVE 계열 서비스</div>
+          <div style="font-size:14px;font-weight:900;color:#1e3a8a">바로브랜딩</div>
+          <div style="font-size:10px;color:#60a5fa;margin-top:1px">우리 매장 온라인 순위, 무료로 확인하기</div>
         </div>
         <span style="font-size:12px;color:#93c5fd;font-weight:700">›</span>
       </a>
@@ -4354,7 +4353,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=533"></script>
+<script src="./assets/js/app.js?v=534"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4512,7 +4511,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=533"></script>
+<script src="./assets/js/app_ui.js?v=534"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
