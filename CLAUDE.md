@@ -578,8 +578,7 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 |------|------|-----------|
 | 공고 저장 오류 | 🟡 재확인 필요 (2026-07-16 점검) | `submitPosting()` 자체는 타임아웃/네트워크에러/서버에러를 `showAlert`로 상세 표시하고 버튼도 `finally`로 복구하도록 이미 잘 계장돼 있음(추정 이유 없음). 문서상 `job_postings` 스키마가 실제 payload와 어긋나 있어(Phase 58 참고) DB 제약 불일치 가능성 있음 - 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것 |
 | Android SHOW_FORCED 리빌드 | ✅ 해결 (v29, 2026-07-16) | 13-6 참고 - versionCode 29까지 빌드+Play Console 배포 완료, 대기 중인 리빌드 없음 |
-| 커뮤니티 글/댓글 수정·삭제 UI | 🟡 미구현 | 본인 콘텐츠 편집/삭제 버튼 추가 |
-| 커뮤니티 댓글 익명 토글 | 🟡 미구현 | `is_anonymous: false` 하드코딩 → 체크박스 필요 |
+| 커뮤니티 글/댓글 수정·삭제 UI, 댓글 익명 토글 | ✅ 이미 구현돼있었음 (2026-07-16 재확인) | `openEditCommPost()`/`deleteCommPost()`/`deleteCommComment()`/`comm-comment-anon` 체크박스 전부 존재·정상 동작. 이 표만 오래전부터 미구현으로 잘못 남아있었음 |
 | 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 재확인 필요 (v436 시점 기록, 현재 v528) | 이후 수백 개 커밋이 쌓였고 관련 이슈 재보고가 없어 사실상 해소된 것으로 보이나, 이 표만 미갱신 상태였을 가능성 - 별도 이슈 없으면 다음 정리 때 행 삭제 |
 | `banned-agree-overlay`/`photo-tip-overlay` 트리거 누락, `showContractModal` 필드명 버그, `app_ui.js` 버전 lockstep 누락 | ✅ 해결 (v529, 2026-07-16) | Phase 58 참고 - `wage-transfer-modal`/`contract-modal`은 애초에 죽은 코드가 아니었음(app_ui.js 미확인으로 인한 오판, 정정 기록 참고) |
 | 바로스팟 채팅 진입 불가 | ✅ 해결 (v496, 2026-07-15) | track-overlay(z-index:8700)가 panel-barospot-chat(520)/panel-moim-chat(530)보다 위라 채팅 패널이 가려짐 - openBarospotChatRoom/openBaromeetChat에서 closeTrackingSheet() 선호출로 수정. panel-barospot-chat이 전역 뒤로가기 핸들러에도 없어 추가 |
@@ -596,9 +595,10 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 ### 단기 (바로 가능)
 | 항목 | 설명 |
 |------|------|
-| 커뮤니티 수정/삭제 | 본인 글·댓글 편집 UI |
-| 공고 저장 오류 수정 | DB constraint 또는 validation 원인 추적 |
-| 알바생 스킬 공고 필터 | skills[] 매칭 필터 추가 |
+| 공고 저장 오류 수정 | DB constraint 또는 validation 원인 추적 - 재현 시 `showAlert` 실제 에러 메시지부터 확보 |
+
+- ~~커뮤니티 수정/삭제~~ ✅ 이미 구현돼있었음 (섹션 8 참고)
+- ~~알바생 스킬 공고 필터~~ ✅ 완료 (v531, 2026-07-16) - 홈 필터패널에 "내 스킬 맞춤" 토글 추가, `workers.skills[]`와 공고 `category`가 겹치는 것만 표시, 업주 계정엔 숨김
 
 ### 중기 (1~2주)
 | 항목 | 설명 |
