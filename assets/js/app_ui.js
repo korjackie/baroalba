@@ -1,15 +1,32 @@
 
 // ── 금지행위 동의 바텀시트 ──────────────────────────────
 let _bannedAgreeCallback = null;
-function checkBannedAgree(callback) {
+// 2026-07-16: 동의 기록을 기기별 localStorage에만 남기면 다른 기기(재설치·기종변경)에서
+// 매번 다시 뜨는 문제가 있어, 계정 단위로 Supabase(workers.banned_agreed_at)에도 남긴다.
+// localStorage는 그대로 1차 캐시로 유지(서버 왕복 없이 즉시 판단, 오프라인 대비).
+async function checkBannedAgree(callback) {
   if (localStorage.getItem('baro_banned_agreed')) { callback(); return; }
+  const wid = await _getWorkerId();
+  if (wid) {
+    const { data } = await db.from('workers').select('banned_agreed_at').eq('id', wid).maybeSingle();
+    if (data?.banned_agreed_at) {
+      localStorage.setItem('baro_banned_agreed', '1'); // 캐시 동기화 - 다음부턴 서버 왕복 없이 통과
+      callback();
+      return;
+    }
+  }
   _bannedAgreeCallback = callback;
   document.getElementById('banned-agree-overlay').style.display = 'flex';
   bindSheetDragClose(document.getElementById('banned-agree-handle'), document.getElementById('banned-agree-panel'), closeBannedAgreeSheet);
 }
-function confirmBannedAgree() {
+async function confirmBannedAgree() {
   localStorage.setItem('baro_banned_agreed', '1');
   document.getElementById('banned-agree-overlay').style.display = 'none';
+  const wid = await _getWorkerId();
+  if (wid) {
+    db.from('workers').update({ banned_agreed_at: new Date().toISOString() }).eq('id', wid)
+      .then(({ error }) => { if (error) console.error('[banned-agree] 서버 기록 실패:', error.message); });
+  }
   if (_bannedAgreeCallback) { _bannedAgreeCallback(); _bannedAgreeCallback = null; }
 }
 function closeBannedAgreeSheet() {
