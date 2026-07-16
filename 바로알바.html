@@ -59,7 +59,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=531"></script>
+  <script src="./shared-lang.js?v=532"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -68,7 +68,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=531">
+  <link rel="stylesheet" href="./assets/css/style.css?v=532">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1272,6 +1272,18 @@
         <span style="font-size:9px;font-weight:900;letter-spacing:0.3px;background:rgba(255,255,255,.15);color:#fff;padding:2px 8px;border-radius:10px;flex-shrink:0">RANK</span>
         <span style="font-size:12px;color:rgba(255,255,255,.6);font-weight:700">›</span>
       </div>
+
+      <!-- ⑦ 바로브랜딩 배너 (2026-07-16 시험 노출) - 업주 대상 온라인 브랜딩/네이버플레이스
+           순위진단 SaaS 크로스셀. 기존 카드들과 동일한 크기(11px 14px 패딩, 30px 아이콘)로
+           통일, 계열 서비스임을 알 수 있게 회사명 명시. 반응 보고 배치/문구 조정 예정 -->
+      <a href="https://barobranding.vercel.app/" target="_blank" rel="noopener" style="margin:0 12px 16px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;text-decoration:none;-webkit-tap-highlight-color:rgba(37,99,235,0.05)">
+        <div style="width:30px;height:30px;border-radius:9px;background:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">📈</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:900;color:#1e3a8a">우리 매장 온라인 순위, 무료로 확인하기</div>
+          <div style="font-size:10px;color:#60a5fa;margin-top:1px">바로브랜딩 · MultiMOVE 계열 서비스</div>
+        </div>
+        <span style="font-size:12px;color:#93c5fd;font-weight:700">›</span>
+      </a>
 
       <!-- 숨김 요소 (JS 호환성 유지) -->
       <div style="display:none">
@@ -4342,7 +4354,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=531"></script>
+<script src="./assets/js/app.js?v=532"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4500,7 +4512,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=531"></script>
+<script src="./assets/js/app_ui.js?v=532"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
