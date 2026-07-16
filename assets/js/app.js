@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '530';
+  const _APP_V = '531';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=530').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=531').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -2976,6 +2976,7 @@ let _homeFilterNat = '';
 let _homeFilterJobType = '';
 let _homeFilterWorkType = '';
 let _homeFilterSearch = '';
+let _homeFilterSkillMatch = false; // 2026-07-16 추가 - 내 보유 스킬(workers.skills)과 카테고리가 겹치는 공고만
 let _homeSort = 'latest';
 let _hfPendingCat = '';
 let _hfPendingWage = '';
@@ -2983,6 +2984,8 @@ let _hfPendingNat = '';
 let _hfPendingJobType = '';
 let _hfPendingWorkType = '';
 let _hfPendingSearch = '';
+let _hfPendingSkillMatch = false;
+let _myWorkerSkills = null; // 최초 토글 시 1회 조회 후 캐시
 
 function _wageUnit(j) {
   const t = j?.wage_type;
@@ -3572,13 +3575,17 @@ function openHomeFilterFromBar() {
 function openHomeFilter() {
   _hfPendingCat = _homeFilterCat; _hfPendingWage = _homeFilterWage; _hfPendingNat = _homeFilterNat;
   _hfPendingJobType = _homeFilterJobType; _hfPendingWorkType = _homeFilterWorkType;
-  _hfPendingSearch = _homeFilterSearch;
+  _hfPendingSearch = _homeFilterSearch; _hfPendingSkillMatch = _homeFilterSkillMatch;
   document.querySelectorAll('.hfc-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === _hfPendingCat));
   document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.toggle('active', b.dataset.jtype === _hfPendingJobType));
   document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.toggle('active', b.dataset.wtype === _hfPendingWorkType));
   const si = document.getElementById('hfc-search-input'); if (si) { si.value = _hfPendingSearch; }
   const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.toggle('on', _hfPendingWage==='same_day');
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.toggle('on', _hfPendingNat==='foreigner');
+  const skl = document.getElementById('hfc-toggle-skill'); if (skl) skl.classList.toggle('on', _hfPendingSkillMatch);
+  // 스킬 맞춤 필터는 알바생 전용 - 업주 계정은 그 항목 자체를 숨김
+  const sklRow = document.getElementById('hfc-skill-row');
+  if (sklRow) sklRow.style.display = (currentUser?.user_metadata?.baroalba_role === 'business') ? 'none' : 'flex';
   _updateHomeFilterCount();
   document.getElementById('home-filter-overlay').style.display = 'block';
   // 키보드 자동실행 금지 — 사용자가 직접 검색어 입력창을 탭할 때만 키보드 열림
@@ -3586,13 +3593,14 @@ function openHomeFilter() {
 function closeHomeFilter() { document.getElementById('home-filter-overlay').style.display = 'none'; }
 function resetHomeFilter() {
   _hfPendingCat = ''; _hfPendingWage = ''; _hfPendingNat = '';
-  _hfPendingJobType = ''; _hfPendingWorkType = ''; _hfPendingSearch = '';
+  _hfPendingJobType = ''; _hfPendingWorkType = ''; _hfPendingSearch = ''; _hfPendingSkillMatch = false;
   document.querySelectorAll('.hfc-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === ''));
   document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.toggle('active', b.dataset.jtype === ''));
   document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.toggle('active', b.dataset.wtype === ''));
   const si = document.getElementById('hfc-search-input'); if (si) si.value = '';
   const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.remove('on');
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.remove('on');
+  const skl = document.getElementById('hfc-toggle-skill'); if (skl) skl.classList.remove('on');
   _updateHomeFilterCount();
 }
 function selectHomeFilterCat(btn, cat) {
@@ -3611,6 +3619,28 @@ function selectHomeFilterWorkType(btn, wtype) {
   _hfPendingWorkType = wtype;
   document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  _updateHomeFilterCount();
+}
+// 로그인한 알바생 본인의 workers.skills를 1회만 조회해 캐시 (스킬 맞춤 필터용)
+async function _getMySkills() {
+  if (_myWorkerSkills) return _myWorkerSkills;
+  const wid = await _getWorkerId();
+  if (!wid) { _myWorkerSkills = []; return _myWorkerSkills; }
+  const { data } = await db.from('workers').select('skills').eq('id', wid).single();
+  _myWorkerSkills = Array.isArray(data?.skills) ? data.skills : [];
+  return _myWorkerSkills;
+}
+async function toggleHFSkillMatch() {
+  _hfPendingSkillMatch = !_hfPendingSkillMatch;
+  const el = document.getElementById('hfc-toggle-skill'); if (el) el.classList.toggle('on', _hfPendingSkillMatch);
+  if (_hfPendingSkillMatch && !_myWorkerSkills) {
+    const skills = await _getMySkills();
+    if (!skills.length) {
+      showToast('마이페이지 > 프로필 편집에서 보유 스킬을 먼저 등록해주세요');
+      _hfPendingSkillMatch = false;
+      if (el) el.classList.remove('on');
+    }
+  }
   _updateHomeFilterCount();
 }
 function toggleHFCond(cond) {
@@ -3632,6 +3662,7 @@ function _updateHomeFilterCount() {
   if (_hfPendingWorkType) f = f.filter(j => _hfPendingWorkType==='lesson'?(j.work_type==='lesson'||j.job_type==='technical'):(j.work_type||'spot')===_hfPendingWorkType);
   if (_hfPendingWage==='same_day') f = f.filter(j => j.same_day_payment);
   if (_hfPendingNat==='foreigner') f = f.filter(j => j.nationality_requirement==='foreigner_welcome');
+  if (_hfPendingSkillMatch && _myWorkerSkills?.length) f = f.filter(j => _myWorkerSkills.includes(j.category));
   const btn = document.getElementById('home-filter-apply-btn');
   if (btn) btn.textContent = `공고보기 ${f.length}개`;
 }
@@ -3639,6 +3670,7 @@ function applyHomeFilter() {
   _homeFilterSearch = (document.getElementById('hfc-search-input')?.value || '').trim();
   _homeFilterCat = _hfPendingCat; _homeFilterWage = _hfPendingWage; _homeFilterNat = _hfPendingNat;
   _homeFilterJobType = _hfPendingJobType; _homeFilterWorkType = _hfPendingWorkType;
+  _homeFilterSkillMatch = _hfPendingSkillMatch;
   const si = document.getElementById('home-search-input');
   if (si) si.value = _homeFilterSearch;
   window._homeFilterApplied = true; // 필터 명시 적용 — 전체여도 결과창 유지
@@ -3648,7 +3680,7 @@ function applyHomeFilter() {
 
 function setHomeFilter(btn, cat, wage, nat) {
   // 타일에서 직접 호출 시 전체 필터 상태 초기화 후 특정 필터만 설정
-  _homeFilterSearch = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
+  _homeFilterSearch = ''; _homeFilterJobType = ''; _homeFilterWorkType = ''; _homeFilterSkillMatch = false;
   _homeFilterCat = cat || '';
   _homeFilterWage = wage || '';
   _homeFilterNat = nat || '';
@@ -3661,7 +3693,7 @@ function setHomeFilter(btn, cat, wage, nat) {
 
 function clearHomeFilter() {
   _homeFilterSearch = ''; _homeFilterCat = ''; _homeFilterWage = '';
-  _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = '';
+  _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = ''; _homeFilterSkillMatch = false;
   _homeSort = 'latest';
   window._homeFilterApplied = false;
   const si = document.getElementById('home-search-input'); if (si) si.value = '';
@@ -3677,8 +3709,9 @@ function _doHomeFilterRender() {
   if (_homeFilterWorkType) filtered = filtered.filter(j => _homeFilterWorkType==='lesson'?(j.work_type==='lesson'||j.job_type==='technical'):(j.work_type||'spot')===_homeFilterWorkType);
   if (_homeFilterWage === 'same_day') filtered = filtered.filter(j => j.same_day_payment);
   if (_homeFilterNat === 'foreigner') filtered = filtered.filter(j => j.nationality_requirement === 'foreigner_welcome');
+  if (_homeFilterSkillMatch && _myWorkerSkills?.length) filtered = filtered.filter(j => _myWorkerSkills.includes(j.category));
 
-  const hasFilter = window._homeFilterApplied || _homeFilterSearch || _homeFilterCat || _homeFilterWage || _homeFilterNat || _homeFilterJobType || _homeFilterWorkType;
+  const hasFilter = window._homeFilterApplied || _homeFilterSearch || _homeFilterCat || _homeFilterWage || _homeFilterNat || _homeFilterJobType || _homeFilterWorkType || _homeFilterSkillMatch;
   const srEl = document.getElementById('home-search-results');
   const defaultEl = document.getElementById('home-default-content');
   if (!hasFilter) {
@@ -3696,6 +3729,7 @@ function _doHomeFilterRender() {
   if (_homeFilterWorkType) parts.push({spot:'스팟',short:'단기',regular:'정기',lesson:'레슨/과외'}[_homeFilterWorkType]||_homeFilterWorkType);
   if (_homeFilterWage === 'same_day') parts.push('당일정산');
   if (_homeFilterNat === 'foreigner') parts.push('외국인환영');
+  if (_homeFilterSkillMatch) parts.push('내 스킬 맞춤');
   if (label) label.textContent = `${parts.join(' · ')} 공고 ${filtered.length}개`;
   _renderHomeSearchList(filtered);
 }
