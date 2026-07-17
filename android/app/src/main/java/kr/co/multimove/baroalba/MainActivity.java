@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import androidx.core.content.FileProvider;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -77,6 +78,15 @@ public class MainActivity extends AppCompatActivity {
         // 리스너 등록 직후 능동적으로 한 번 더 요청 - 시스템이 자연스럽게 첫 콜백을
         // 늦게 보내는 기기에서 safeAreaReceived==true가 되는 시점을 앞당김
         ViewCompat.requestApplyInsets(webView);
+
+        // 카카오/네이버/구글 로그인은 우리 도메인 → Supabase auth 도메인 → 각 OAuth
+        // 제공자 도메인을 오가는 여러 단계 리다이렉트인데, 안드로이드 WebView는 기본적으로
+        // "제3자 쿠키"(현재 페이지 도메인과 다른 도메인이 심는 쿠키)를 차단한다. 이걸 켜주지
+        // 않으면 카카오 로그인 세션 쿠키가 유지되지 않아, 이미 카카오에 로그인돼있어도 매번
+        // 새로 이메일/비번을 입력해야 하는 것처럼 보인다(2026-07-17 피드백으로 발견) - 명시적으로 허용
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(webView, true);
 
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
@@ -284,6 +294,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         webView.loadUrl(resolveUrl(intent));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // 카카오 로그인 세션 쿠키를 디스크에 실제로 기록 - 이걸 안 하면 앱을 껐다 켤 때
+        // 메모리상 쿠키가 날아가 로그인 세션이 유지되지 않을 수 있음(2026-07-17 추가)
+        CookieManager.getInstance().flush();
     }
 
     private String resolveUrl(Intent intent) {
