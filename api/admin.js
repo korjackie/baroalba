@@ -782,6 +782,49 @@ module.exports = async function handler(req, res) {
     });
   }
 
+  // 채팅목록 화면에서 바로스팟 방이 여러 개면 위 API를 방 개수만큼 순차/병렬 호출해야 했는데,
+  // 호출 1건마다 내부적으로 barospot_interests→barospot_applications→workers 3단 순차 조회 +
+  // 서버리스 콜드스타트가 겹쳐서 채팅목록 로딩이 느려짐(2026-07-17 "채팅목록 3초 걸린다" 피드백).
+  // event_id 여러 개를 한 번의 호출로 몰아서 처리 - 3단 조회를 event 개수와 무관하게 딱 2단
+  // (interests+applications 병렬 → workers 1번)으로 끝냄.
+  if (req.method === 'GET' && earlyAction === 'get_barospot_revealed_profiles_batch') {
+    const rpbJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const rpbRequesterId = getSubFromJWT(rpbJwt);
+    if (!rpbRequesterId) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const rpbEventIds = (req.query.event_ids || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!rpbEventIds.length) return res.status(400).json({ error: 'event_ids required' });
+    const idList = rpbEventIds.join(',');
+    const [interestRows, appRows] = await Promise.all([
+      sb(`barospot_interests?event_id=in.(${idList})&status=eq.accepted&select=event_id`, svcKey).then(r => r.json()).catch(() => []),
+      sb(`barospot_applications?event_id=in.(${idList})&status=eq.confirmed&select=event_id,user_id`, svcKey).then(r => r.json()).catch(() => []),
+    ]);
+    const revealedEventIds = new Set((interestRows || []).map(r => r.event_id));
+    const otherUidByEvent = {};
+    (appRows || []).forEach(a => {
+      if (revealedEventIds.has(a.event_id) && a.user_id !== rpbRequesterId) otherUidByEvent[a.event_id] = a.user_id;
+    });
+    const otherUids = [...new Set(Object.values(otherUidByEvent))];
+    const wRows = otherUids.length
+      ? await sb(`workers?kakao_uid=in.(${otherUids.join(',')})&select=kakao_uid,name,photo_url,dating_photo_url,age,birth_date,job_category,body_type,interests,height_cm,mbti,bio`, svcKey).then(r => r.json()).catch(() => [])
+      : [];
+    const workerByUid = {};
+    (wRows || []).forEach(w => { workerByUid[w.kakao_uid] = w; });
+    const result = {};
+    rpbEventIds.forEach(eid => {
+      const otherUid = otherUidByEvent[eid];
+      const w = otherUid && workerByUid[otherUid];
+      if (!w) return;
+      let age = w.age || null;
+      if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
+      result[eid] = {
+        kakao_uid: otherUid, name: w.name, photo_url: w.dating_photo_url || w.photo_url, age,
+        job_category: w.job_category, body_type: w.body_type, interests: w.interests || [],
+        height_cm: w.height_cm || null, mbti: w.mbti || null, bio: w.bio,
+      };
+    });
+    return res.json({ ok: true, profiles: result });
+  }
+
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   const email = getEmailFromJWT(token);

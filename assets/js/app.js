@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '537';
+  const _APP_V = '538';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=537').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=538').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -6767,16 +6767,16 @@ async function _loadBarospotChatsIntoList(allApps) {
       bspUnreadByRoom[m.room_id] = (bspUnreadByRoom[m.room_id] || 0) + 1;
     }
   });
-  // 상대방 이름/사진 조회(서버 API, event당 1회)도 병렬로 - 한 건 실패해도 나머지엔 영향 없게
-  // 개별적으로 catch
-  const profiles = await Promise.all(bspRooms.map(r =>
-    fetch(`/api/admin?action=get_barospot_revealed_profile&event_id=${r.barospot_event_id}`, {
-      headers: { Authorization: 'Bearer ' + session.access_token }
-    }).then(res => res.ok ? res.json() : null).catch(() => null)
-  ));
-  bspRooms.forEach((r, i) => {
+  // 상대방 이름/사진 조회 - 예전엔 방 개수만큼 서버 API를 한 번씩 따로 호출해서(각 호출마다
+  // 내부적으로 3단 순차 조회 + 콜드스타트) 방이 여러 개면 그만큼 느려졌음(2026-07-17 "채팅목록
+  // 3초 걸린다" 피드백) - event_id들을 한 번에 몰아서 배치 API 1번만 호출하도록 변경
+  const bspEventIdList = [...new Set(bspRooms.map(r => r.barospot_event_id))];
+  const profileMap = await fetch(`/api/admin?action=get_barospot_revealed_profiles_batch&event_ids=${bspEventIdList.join(',')}`, {
+    headers: { Authorization: 'Bearer ' + session.access_token }
+  }).then(res => res.ok ? res.json() : null).then(j => j?.profiles || {}).catch(() => ({}));
+  bspRooms.forEach((r) => {
     const rowId = 'bsp_' + r.id;
-    const prof = profiles[i];
+    const prof = profileMap[r.barospot_event_id];
     const obj = {
       id: rowId, eventId: r.barospot_event_id, roomId: r.id,
       title: '💕 바로스팟', counterpartName: prof?.name || '바로스팟 상대',
@@ -6807,11 +6807,18 @@ async function loadMyChatList() {
   // 알바채팅/모임·바로미팅/바로스팟 세 유형을 병렬로 불러오고 각각 개별적으로 에러를 잡는다 -
   // 예전엔 순차 실행에 에러처리가 전혀 없어서, 그 중 하나만 실패해도(RLS·네트워크 등) 목록
   // 전체가 로딩 스피너에서 영원히 멈춰있었고, 순차 실행이라 체감 속도도 느렸음
+  // 2026-07-17: "아직도 3초 걸린다" 피드백 - 세 유형 중 실제로 뭐가 느린지 추측 대신
+  // 직접 재서 확인하기 위한 임시 타이밍 로그. 원인 확정되면 제거할 것.
+  const _t0 = performance.now();
   await Promise.all([
-    _loadJobChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 알바채팅 로딩 실패:', e)),
-    _loadGatheringChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 모임채팅 로딩 실패:', e)),
-    _loadBarospotChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 바로스팟채팅 로딩 실패:', e)),
+    _loadJobChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 알바채팅 로딩 실패:', e))
+      .finally(() => console.log('[chat-timing] 알바채팅', Math.round(performance.now() - _t0), 'ms')),
+    _loadGatheringChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 모임채팅 로딩 실패:', e))
+      .finally(() => console.log('[chat-timing] 모임채팅', Math.round(performance.now() - _t0), 'ms')),
+    _loadBarospotChatsIntoList(allApps).catch(e => console.error('[loadMyChatList] 바로스팟채팅 로딩 실패:', e))
+      .finally(() => console.log('[chat-timing] 바로스팟채팅', Math.round(performance.now() - _t0), 'ms')),
   ]);
+  console.log('[chat-timing] 전체', Math.round(performance.now() - _t0), 'ms');
 
   const badge = document.getElementById('chat-unread-badge');
   if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
