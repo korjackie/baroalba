@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '535';
+  const _APP_V = '536';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=535').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=536').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -5197,41 +5197,33 @@ window._onFCMToken = function(token) {
     if (cpo && cpo.classList.contains('open') && cps) {
       cps.style.paddingBottom = (dp > 80 && !isNativelyResized) ? dp + 'px' : '';
     }
-    // 마이페이지 서브패널(.mpsub-panel, 프로필 편집의 자기소개 등) - 2026-07-17 재수정.
-    // 1차(v528)는 scrollIntoView만 썼는데, 이미 스크롤이 최하단이라 더 올라갈 여지 자체가
-    // 없으면 아무 효과가 없었다(실사용 재확인으로 발견) - "입력창은 무조건 키보드 위로
-    // 이동시켜 가리지 않는다"는 이 프로젝트의 기존 원칙대로, 다른 모달들(apply-msg-modal
-    // 등)처럼 키보드 높이만큼 스크롤 컨테이너에 paddingBottom을 강제로 줘서 스크롤할
-    // 공간 자체를 만든 다음 scrollIntoView 하도록 변경. .mpsub-panel은 다양한 폼(프로필
-    // 편집/스킬/서류/바로만남 프로필 등)이 공유하는 클래스라 여기 한 번만 처리하면 전부 커버됨
+    // 마이페이지 서브패널(.mpsub-panel, 프로필 편집의 자기소개 등) - 2026-07-17 세 번째 수정.
+    // 1차(scrollIntoView만) → 2차(안쪽 스크롤div에 paddingBottom, 스크롤 "범위"만 늘어남)
+    // 둘 다 패널 자체는 그대로 두고 그 안에서 어떻게든 옮겨보려 한 것이었다 - 채팅
+    // (wchat-overlay 등)이 실제로 하는 방식은 다르다: 오버레이 자체에 paddingBottom을
+    // 줘서 패널의 보이는 높이 자체를 키보드 높이만큼 줄인다 - 그러면 flex:1인 안쪽
+    // 스크롤 영역도 진짜로 짧아지고, 입력창이 화면에서 실제로 키보드 위까지 올라온다.
+    // .mpsub-panel도 동일하게 패널 자체를 줄이는 방식으로 통일(2026-07-17, 사용자 지적).
     if (dp > 80) {
       _scrollMpsubFocusIntoView(document.activeElement);
-    } else if (_mpsubKbPaddedEl) {
-      _mpsubKbPaddedEl.style.paddingBottom = '';
-      _mpsubKbPaddedEl = null;
+    } else if (_mpsubKbShrunkPanel) {
+      _mpsubKbShrunkPanel.style.paddingBottom = '';
+      _mpsubKbShrunkPanel = null;
     }
   };
 
-  var _mpsubKbPaddedEl = null;
-  function _findMpsubScrollParent(el, panel) {
-    var p = el.parentElement;
-    while (p && p !== panel) {
-      var cs = getComputedStyle(p);
-      if (cs.overflowY === 'auto' || cs.overflowY === 'scroll') return p;
-      p = p.parentElement;
-    }
-    return null;
-  }
+  var _mpsubKbShrunkPanel = null;
   function _scrollMpsubFocusIntoView(el) {
     if (!el || (el.tagName !== 'TEXTAREA' && el.tagName !== 'INPUT')) return;
     var panel = el.closest('.mpsub-panel.show');
     if (!panel) return;
-    var scrollParent = _findMpsubScrollParent(el, panel);
     var kbH = window._lastKbDp || 0;
-    if (scrollParent && kbH > 80) {
-      if (_mpsubKbPaddedEl && _mpsubKbPaddedEl !== scrollParent) _mpsubKbPaddedEl.style.paddingBottom = '';
-      scrollParent.style.paddingBottom = (kbH + 24) + 'px';
-      _mpsubKbPaddedEl = scrollParent;
+    if (kbH > 80) {
+      // 채팅 오버레이와 동일한 방식 - 패널 자체를 키보드 높이만큼 줄여서 안쪽 flex
+      // 레이아웃이 실제로 짧아지게 만든다(스크롤 "범위"만 늘리는 게 아니라 패널의
+      // 실제 보이는 높이를 줄임 - 그래야 입력창이 진짜로 키보드 위로 올라옴)
+      panel.style.paddingBottom = kbH + 'px';
+      _mpsubKbShrunkPanel = panel;
     }
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
