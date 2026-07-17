@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '534';
+  const _APP_V = '535';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=534').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=535').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -5197,23 +5197,47 @@ window._onFCMToken = function(token) {
     if (cpo && cpo.classList.contains('open') && cps) {
       cps.style.paddingBottom = (dp > 80 && !isNativelyResized) ? dp + 'px' : '';
     }
-    // 마이페이지 서브패널(.mpsub-panel, 프로필 편집의 자기소개 등) - adjustResize로 창
-    // 자체는 줄어들어도, 이미 포커스돼있던 입력창이 줄어든 스크롤 영역 밖으로 밀려나면
-    // 브라우저가 알아서 다시 스크롤해주지 않아 계속 가려진 채로 남아있던 문제
-    // (2026-07-16 피드백: "자기소개 입력하는데도 키보드에 가려져서") - 포커스된 입력창을
-    // 명시적으로 보이는 위치까지 스크롤. .mpsub-panel은 다양한 폼(프로필편집/스킬/서류/
-    // 바로만남 프로필 등)이 공유하는 클래스라 여기 한 번만 처리하면 전부 커버됨
-    if (dp > 80) _scrollMpsubFocusIntoView(document.activeElement);
+    // 마이페이지 서브패널(.mpsub-panel, 프로필 편집의 자기소개 등) - 2026-07-17 재수정.
+    // 1차(v528)는 scrollIntoView만 썼는데, 이미 스크롤이 최하단이라 더 올라갈 여지 자체가
+    // 없으면 아무 효과가 없었다(실사용 재확인으로 발견) - "입력창은 무조건 키보드 위로
+    // 이동시켜 가리지 않는다"는 이 프로젝트의 기존 원칙대로, 다른 모달들(apply-msg-modal
+    // 등)처럼 키보드 높이만큼 스크롤 컨테이너에 paddingBottom을 강제로 줘서 스크롤할
+    // 공간 자체를 만든 다음 scrollIntoView 하도록 변경. .mpsub-panel은 다양한 폼(프로필
+    // 편집/스킬/서류/바로만남 프로필 등)이 공유하는 클래스라 여기 한 번만 처리하면 전부 커버됨
+    if (dp > 80) {
+      _scrollMpsubFocusIntoView(document.activeElement);
+    } else if (_mpsubKbPaddedEl) {
+      _mpsubKbPaddedEl.style.paddingBottom = '';
+      _mpsubKbPaddedEl = null;
+    }
   };
 
-  function _scrollMpsubFocusIntoView(el) {
-    if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') && el.closest('.mpsub-panel.show')) {
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      });
+  var _mpsubKbPaddedEl = null;
+  function _findMpsubScrollParent(el, panel) {
+    var p = el.parentElement;
+    while (p && p !== panel) {
+      var cs = getComputedStyle(p);
+      if (cs.overflowY === 'auto' || cs.overflowY === 'scroll') return p;
+      p = p.parentElement;
     }
+    return null;
+  }
+  function _scrollMpsubFocusIntoView(el) {
+    if (!el || (el.tagName !== 'TEXTAREA' && el.tagName !== 'INPUT')) return;
+    var panel = el.closest('.mpsub-panel.show');
+    if (!panel) return;
+    var scrollParent = _findMpsubScrollParent(el, panel);
+    var kbH = window._lastKbDp || 0;
+    if (scrollParent && kbH > 80) {
+      if (_mpsubKbPaddedEl && _mpsubKbPaddedEl !== scrollParent) _mpsubKbPaddedEl.style.paddingBottom = '';
+      scrollParent.style.paddingBottom = (kbH + 24) + 'px';
+      _mpsubKbPaddedEl = scrollParent;
+    }
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
   }
   // 위 _onNativeKbChange는 키보드 "높이가 바뀔 때"만 호출된다 - 이미 키보드가 열려있는
   // 상태에서(예: 생년월일 입력 중) 스크롤을 내려 더 아래쪽의 자기소개로 포커스만 옮기면
