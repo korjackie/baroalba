@@ -807,9 +807,10 @@ head V='421' 하드코딩)를 다 고쳤는데도 FAB 라벨이 계속 안 바�
 | `build.gradle` 수정 | ✅ 필요 |
 | `AndroidManifest.xml` 수정 | ✅ 필요 |
 
-**현재 대기 중인 리빌드**: 없음. versionCode 29(1.5.4, 상태표시줄 안전영역 콜백 타이밍
-경합 방어 `safeAreaReceived`/`requestApplyInsets` 포함)까지 빌드+Play Console 배포
-완료(2026-07-16). 이후 HTML/JS/CSS 변경은 영구적으로 리빌드 불필요.
+**현재 대기 중인 리빌드**: 🟡 있음. versionCode 30(1.5.5) - 카카오 로그인 세션이
+유지 안 되던 문제(제3자 쿠키 미허용) 수정, 커밋 `d5f7393` (2026-07-17). GitHub Actions
+"Build Android TWA" 실행 → Play Console 수동 업로드 필요. (versionCode 29/1.5.4까지는
+2026-07-16 배포 완료 상태였음)
 → 새 `android/` 변경이 쌓이면: `git log <마지막빌드커밋>..HEAD -- android/`로 확인 →
   `build.gradle`의 `versionCode` +1 → GitHub Actions "Build Android TWA" 실행 →
   아티팩트를 Play Console에 수동 업로드(워크플로가 자동 배포하진 않음)
