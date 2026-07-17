@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '536';
+  const _APP_V = '537';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=536').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=537').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -6668,32 +6668,34 @@ async function _loadJobChatsIntoList(allApps) {
     _getWorkerId(),
     db.from('businesses').select('id').eq('kakao_uid', currentUser.id).maybeSingle()
   ]);
-
-  if (wid) {
-    const { data: apps } = await db.from('applications')
-      .select('id, job_postings(title, businesses(name, photo_url))')
-      .eq('worker_id', wid);
-    (apps || []).forEach(a => {
-      const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.job_postings?.businesses?.name || '업체', photoUrl: a.job_postings?.businesses?.photo_url || null, side: 'worker' };
-      allApps.push(obj); appMap[a.id] = obj;
-    });
-  }
-
   const biz = bizRecord || bizRes.data;
-  if (biz) {
-    const { data: myJobs } = await db.from('job_postings').select('id').eq('business_id', biz.id);
-    if (myJobs?.length) {
-      const { data: apps } = await db.from('applications')
-        .select('id, workers(name, photo_url), job_postings(title)')
-        .in('job_posting_id', myJobs.map(j => j.id));
-      (apps || []).forEach(a => {
-        if (!appMap[a.id]) {
-          const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.workers?.name || '지원자', photoUrl: a.workers?.photo_url || null, side: 'owner' };
-          allApps.push(obj); appMap[a.id] = obj;
-        }
-      });
+
+  // 알바생 쪽(내가 지원한 것들)과 업주 쪽(내 공고에 지원한 사람들) 조회가 서로 완전히
+  // 독립적인데 예전엔 순차로(하나 끝나야 다음 시작) 실행돼 체감 로딩이 느렸음
+  // (2026-07-17 피드백: "채팅목록 나오기까지 오래 걸린다") - 병렬로 변경
+  const [workerAppsRes, ownerAppsRes] = await Promise.all([
+    wid
+      ? db.from('applications').select('id, job_postings(title, businesses(name, photo_url))').eq('worker_id', wid)
+      : Promise.resolve({ data: [] }),
+    biz
+      ? db.from('job_postings').select('id').eq('business_id', biz.id).then(({ data: myJobs }) =>
+          myJobs?.length
+            ? db.from('applications').select('id, workers(name, photo_url), job_postings(title)').in('job_posting_id', myJobs.map(j => j.id))
+            : { data: [] }
+        )
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  (workerAppsRes.data || []).forEach(a => {
+    const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.job_postings?.businesses?.name || '업체', photoUrl: a.job_postings?.businesses?.photo_url || null, side: 'worker' };
+    allApps.push(obj); appMap[a.id] = obj;
+  });
+  (ownerAppsRes.data || []).forEach(a => {
+    if (!appMap[a.id]) {
+      const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.workers?.name || '지원자', photoUrl: a.workers?.photo_url || null, side: 'owner' };
+      allApps.push(obj); appMap[a.id] = obj;
     }
-  }
+  });
 
   const jobAppIds = Object.keys(appMap);
   if (jobAppIds.length) {
