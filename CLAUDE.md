@@ -583,8 +583,8 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 | applications.updated_at 컬럼 부재로 워커 알림조회 400 | ✅ 해결 (v541, 2026-07-19) | applied_at으로 대체 |
 | `_fetchOwnerNotifications` 죽은 쿼리(결과 미사용, businesses 미임베딩 필터로 항상 400) | ✅ 해결 (v541, 2026-07-19) | 삭제 |
 | businesses.plan 컬럼 부재로 모임(바로모임) 목록 전체가 안 뜨는 문제 | ✅ 해결 (v542, 2026-07-19) | PRO/BASIC 뱃지 조회가 바깥 try와 묶여있어 실패시 이미 성공한 목록까지 비워지던 것 - 별도 try로 격리 |
-| job_postings.updated_at 컬럼 부재로 번개알바 자동인상(`checkSurgeIntervals`, 60초마다 폴링) 400 | 🔴 DDL 필요 (대표님 실행 대기) | `ALTER TABLE job_postings ADD COLUMN updated_at TIMESTAMPTZ DEFAULT now();` - 코드가 "마지막 인상 시각" 읽기/쓰기 용도로 이 컬럼을 쓰고 있어 다른 컬럼으로 대체하면 시급 폭주 위험, 반드시 DDL로 컬럼 추가할 것 |
-| `follows`(업체 팔로우) 테이블 자체가 없음 - 팔로우/알림구독 기능 전체 비활성 | 🔴 DDL 필요 (대표님 실행 대기) | 4곳(`_loadMyFollows`/`_toggleFollow`/`_notifyFollowers`)에서 참조하나 테이블 부재로 전부 무동작(에러는 try/catch로 이미 조용히 흡수돼 크래시는 없음). 필요 SQL: `CREATE TABLE follows (id uuid primary key default gen_random_uuid(), worker_id uuid references workers(id) on delete cascade, business_id uuid references businesses(id) on delete cascade, created_at timestamptz default now(), unique(worker_id, business_id));` + RLS 정책은 기존 `bookmarks` 등 유사 개인 테이블 컨벤션 참고해 추가 필요 |
+| job_postings.updated_at 컬럼 부재로 번개알바 자동인상(`checkSurgeIntervals`, 60초마다 폴링) 400 | ✅ 해결 (DDL, 2026-07-19 대표님 실행) | `ALTER TABLE job_postings ADD COLUMN updated_at TIMESTAMPTZ DEFAULT now();` 실행 완료, anon key로 컬럼 존재 확인함 |
+| `follows`(업체 팔로우) 테이블 자체가 없음 - 팔로우/알림구독 기능 전체 비활성 | ✅ 해결 (DDL, 2026-07-19 대표님 실행) | 테이블 생성 + RLS 정책 2개(`worker_manage_own_follows`, `business_view_own_followers`) 적용 완료. 정책 작성 중 `kakao_uid`(uuid)와 `auth.jwt()->>'sub'`(text) 타입 불일치로 첫 시도는 실패 → `(auth.jwt()->>'sub')::uuid` 캐스팅으로 해결, anon key로 테이블 접근 확인함 |
 | Android SHOW_FORCED 리빌드 | ✅ 해결 (v29, 2026-07-16) | 13-6 참고 - versionCode 29까지 빌드+Play Console 배포 완료, 대기 중인 리빌드 없음 |
 | 커뮤니티 글/댓글 수정·삭제 UI, 댓글 익명 토글 | ✅ 이미 구현돼있었음 (2026-07-16 재확인) | `openEditCommPost()`/`deleteCommPost()`/`deleteCommComment()`/`comm-comment-anon` 체크박스 전부 존재·정상 동작. 이 표만 오래전부터 미구현으로 잘못 남아있었음 |
 | 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 재확인 필요 (v436 시점 기록, 현재 v528) | 이후 수백 개 커밋이 쌓였고 관련 이슈 재보고가 없어 사실상 해소된 것으로 보이나, 이 표만 미갱신 상태였을 가능성 - 별도 이슈 없으면 다음 정리 때 행 삭제 |
