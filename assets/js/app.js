@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '538';
+  const _APP_V = '539';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=538').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=539').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -6699,9 +6699,14 @@ async function _loadJobChatsIntoList(allApps) {
 
   const jobAppIds = Object.keys(appMap);
   if (jobAppIds.length) {
+    // 채팅목록엔 대화당 최신 메시지 1개 + 안읽음 개수만 필요한데 LIMIT 없이 전체 메시지를
+    // 다 긁어와서 대화 개수가 아니라 "쌓인 메시지 총량"에 비례해 느려지고 있었음
+    // (2026-07-18 피드백: 대화 15개짜리 실계정에서 여전히 느림) - 컬럼 축소 + 최근 N개로 제한
     const { data: messages } = await db.from('messages')
-      .select('*').in('application_id', jobAppIds)
-      .order('created_at', { ascending: false });
+      .select('application_id, content, created_at, sender_id, is_read')
+      .in('application_id', jobAppIds)
+      .order('created_at', { ascending: false })
+      .limit(1000);
     (messages || []).forEach(m => {
       if (!_latestMsg[m.application_id]) _latestMsg[m.application_id] = m;
       if (!m.is_read && m.sender_id !== currentUser.id)
@@ -6719,7 +6724,7 @@ async function _loadGatheringChatsIntoList(allApps) {
   if (!gatheringIds.length) return;
   const [{ data: gatherings }, { data: gMsgs }] = await Promise.all([
     db.from('gatherings').select('id, title, category').in('id', gatheringIds),
-    db.from('gathering_chats').select('*').in('gathering_id', gatheringIds).order('sent_at', { ascending: false }),
+    db.from('gathering_chats').select('gathering_id, message, sent_at, sender_id').in('gathering_id', gatheringIds).order('sent_at', { ascending: false }).limit(1000),
   ]);
   const gLatest = {};
   (gMsgs || []).forEach(m => { if (!gLatest[m.gathering_id]) gLatest[m.gathering_id] = m; });
@@ -6753,7 +6758,7 @@ async function _loadBarospotChatsIntoList(allApps) {
   if (!bspRooms?.length) return;
   const roomIds = bspRooms.map(r => r.id);
   const [{ data: bspMsgs }, { data: bspReads }, { data: { session } }] = await Promise.all([
-    db.from('chat_messages').select('*').in('room_id', roomIds).order('created_at', { ascending: false }),
+    db.from('chat_messages').select('room_id, content, created_at, sender_id').in('room_id', roomIds).order('created_at', { ascending: false }).limit(1000),
     db.from('chat_reads').select('room_id, last_read_at').eq('user_id', currentUser.id).in('room_id', roomIds),
     db.auth.getSession(),
   ]);
