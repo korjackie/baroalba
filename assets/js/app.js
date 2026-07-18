@@ -202,6 +202,12 @@ window.addEventListener('popstate', () => {
     history.pushState({ panel: null }, '');
     return;
   }
+  // 0-2. 지원자 프로필 상세보기(openWorkerProfile, _wp-overlay) - 동적으로 생성/제거되는
+  // 오버레이라 WATCH_IDS(정적 엘리먼트 전제)로는 못 잡음. z-index 9100으로 채팅 위에 뜨는
+  // 화면인데 뒤로가기 케이스가 아예 없어 안 닫히던 문제(2026-07-19 피드백) - 채팅보다
+  // 먼저 확인해야 함
+  const wpEl = document.getElementById('_wp-overlay');
+  if (wpEl) { wpEl.remove(); history.pushState({ panel: null }, ''); return; }
   // 1. 공고 상세 (detail-overlay .open)
   const detailEl = document.getElementById('detail-overlay');
   if (detailEl && detailEl.classList.contains('open')) {
@@ -293,6 +299,10 @@ window.addEventListener('popstate', () => {
   if (commPostEl && commPostEl.classList.contains('open')) { closeCommunityPost(); history.pushState({ panel: null }, ''); return; }
   const lessonRegEl = document.getElementById('lesson-register-modal');
   if (lessonRegEl && lessonRegEl.classList.contains('open')) { closeLessonRegisterModal(); history.pushState({ panel: null }, ''); return; }
+  // 전자계약서 모달 (2026-07-19 피드백과 같은 시점에 함께 발견 - contract-modal도
+  // WATCH_IDS/캐스케이드 어디에도 없어 동일 버그 클래스였음)
+  const contractEl = document.getElementById('contract-modal');
+  if (contractEl && contractEl.style.display === 'flex') { contractEl.style.display = 'none'; history.pushState({ panel: null }, ''); return; }
   // 3.5. 검색 오버레이 (.show)
   const searchEl = document.getElementById('search-overlay');
   if (searchEl && searchEl.classList.contains('show')) {
@@ -577,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '543';
+  const _APP_V = '544';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=543').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=544').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -15823,6 +15833,9 @@ async function openWorkerProfile() {
     <button onclick="document.getElementById('_wp-overlay').remove()" style="width:100%;margin-top:10px;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
   </div>`;
   document.body.appendChild(el);
+  // 뒤로가기로 닫히려면 히스토리가 쌓여있어야 함 - 팝업 케이스는 위쪽 popstate 캐스케이드
+  // "0-2"에 등록해둠
+  history.pushState({ panel: 'wp' }, '');
 }
 
 // PDF 다운로드 - 인쇄 대화상자 대신 파일로 바로 저장(2026-07-19, "인쇄 말고 저장이 낫다"

@@ -693,6 +693,9 @@ async function showContractModal(appId) {
       <span>바로알바 플랫폼 자동 생성</span>
     </div>`;
   document.getElementById('contract-modal').style.display = 'flex';
+  // 뒤로가기로 닫히려면 히스토리가 쌓여있어야 함 - 팝업 케이스는 app.js의 popstate
+  // 캐스케이드에 등록해둠(2026-07-19, "뒤로가기 안 됨" 피드백)
+  history.pushState({ panel: 'contract' }, '');
 }
 function _printInPage(bodyHtml, extraCss) {
   const styleId = '_ps_style', divId = '_ps_content';
