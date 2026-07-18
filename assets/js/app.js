@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '542';
+  const _APP_V = '543';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=542').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=543').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -15818,11 +15818,56 @@ async function openWorkerProfile() {
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
       <button onclick="openOwnerReport('worker','${w.kakao_uid || w.id || ''}')" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
-      <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:#3B82F6;cursor:pointer;font-weight:700">📄 지원서 출력</button>
+      <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:#3B82F6;cursor:pointer;font-weight:700">📥 지원서 저장</button>
     </div>
     <button onclick="document.getElementById('_wp-overlay').remove()" style="width:100%;margin-top:10px;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
   </div>`;
   document.body.appendChild(el);
+}
+
+// PDF 다운로드 - 인쇄 대화상자 대신 파일로 바로 저장(2026-07-19, "인쇄 말고 저장이 낫다"
+// 피드백으로 계약서/지원서 둘 다 인쇄 방식에서 전환). html2pdf.js(jsPDF+html2canvas 번들,
+// ~900KB)는 무거워서 페이지 로드시 항상 받지 않고, 실제로 다운로드 버튼을 누르는 시점에만
+// 지연 로드
+let _html2pdfLoadPromise = null;
+function _ensureHtml2Pdf() {
+  if (window.html2pdf) return Promise.resolve();
+  if (_html2pdfLoadPromise) return _html2pdfLoadPromise;
+  _html2pdfLoadPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = './assets/js/html2pdf.bundle.min.js?v=1';
+    s.onload = resolve;
+    s.onerror = () => { _html2pdfLoadPromise = null; reject(new Error('html2pdf load failed')); };
+    document.body.appendChild(s);
+  });
+  return _html2pdfLoadPromise;
+}
+
+async function _downloadPdf(filename, bodyHtml, extraCss) {
+  try {
+    await _ensureHtml2Pdf();
+  } catch (e) {
+    showToast('PDF 생성 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해주세요');
+    return;
+  }
+  const div = document.createElement('div');
+  div.style.cssText = "position:fixed;left:-9999px;top:0;background:#fff;width:210mm;box-sizing:border-box;padding:14mm 16mm;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#222;line-height:1.7";
+  div.innerHTML = `<style>${extraCss || ''}</style>${bodyHtml}`;
+  document.body.appendChild(div);
+  try {
+    await window.html2pdf().set({
+      margin: 10,
+      filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(div).save();
+  } catch (e) {
+    console.error('[pdf] 생성 실패:', e);
+    showToast('PDF 저장에 실패했어요. 다시 시도해주세요');
+  } finally {
+    div.remove();
+  }
 }
 
 async function printWorkerProfile(appId) {
@@ -15844,7 +15889,8 @@ async function printWorkerProfile(appId) {
   const langs = (w.languages || []).map(l => ({'ko':'한국어','en':'영어','zh':'중국어','ja':'일본어','vi':'베트남어','ru':'러시아어','mn':'몽골어'}[l]||l)).join(', ') || null;
   const phone = w.phone ? w.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') : null;
 
-  _printInPage(
+  await _downloadPdf(
+    `지원서_${(w.name || '지원자').replace(/[^\w가-힣]/g, '')}_${today.replace(/\./g, '')}.pdf`,
     `<h2 style="text-align:center;letter-spacing:3px;margin-bottom:6px;font-size:20px">지 원 서</h2>
      <p style="text-align:center;font-size:12px;color:#888;margin-bottom:24px">바로알바 플랫폼 자동 생성 · ${today}</p>
      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px">
@@ -15863,7 +15909,7 @@ async function printWorkerProfile(appId) {
      ${w.bio ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">자기소개</div><div style="font-size:13px;line-height:1.7;color:#333">${w.bio.replace(/</g,'&lt;')}</div></div>` : ''}
      ${w.experience ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">경력 / 특기</div><div style="font-size:13px;line-height:1.7;color:#333">${w.experience.replace(/</g,'&lt;')}</div></div>` : ''}
      ${app.apply_message ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">지원 메시지</div><div style="font-size:13px;line-height:1.7;color:#333">${app.apply_message.replace(/</g,'&lt;')}</div></div>` : ''}`,
-    `#_ps_content{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;padding:40px 48px;max-width:580px;margin:0 auto;color:#222;line-height:1.7}@page{size:A4;margin:20mm}`
+    `table{width:100%;border-collapse:collapse}`
   );
 }
 

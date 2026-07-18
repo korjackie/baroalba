@@ -707,14 +707,13 @@ function _printInPage(bodyHtml, extraCss) {
   window.print();
 }
 
-function printContract() {
+async function printContract() {
   const content = document.getElementById('contract-content').innerHTML;
-  _printInPage(
+  const today = new Date().toISOString().slice(0, 10);
+  await _downloadPdf(
+    `근로계약서_${today}.pdf`,
     `<h2 style="text-align:center;letter-spacing:4px;margin-bottom:28px;font-size:20px">근 로 계 약 서</h2>${content}`,
-    `#_ps_content{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;padding:40px 48px;max-width:580px;margin:0 auto;color:#222;line-height:1.7}` +
-    `#_ps_content table{width:100%;border-collapse:collapse;margin:12px 0}` +
-    `#_ps_content td{padding:9px 10px;border:1px solid #ddd;font-size:13px}` +
-    `@page{size:A4;margin:20mm}`
+    `table{width:100%;border-collapse:collapse;margin:12px 0}td{padding:9px 10px;border:1px solid #ddd;font-size:13px}`
   );
 }
 
