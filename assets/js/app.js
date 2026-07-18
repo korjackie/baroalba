@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '544';
+  const _APP_V = '545';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -603,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=544').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=545').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -15868,13 +15868,23 @@ async function _downloadPdf(filename, bodyHtml, extraCss) {
   div.innerHTML = `<style>${extraCss || ''}</style>${bodyHtml}`;
   document.body.appendChild(div);
   try {
-    await window.html2pdf().set({
+    const opt = {
       margin: 10,
       filename,
       image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(div).save();
+    };
+    if (window.AndroidBridge && window.AndroidBridge.saveBase64File) {
+      // 안드로이드 네이티브 WebView는 JS가 만드는 blob: 다운로드(html2pdf 기본 .save())를
+      // 받아줄 장치가 없어(2026-07-19 "다운로드 안 됨" 피드백, MainActivity.java에 다운로드
+      // 핸들러 자체가 없었음) base64로 뽑아서 네이티브 브릿지로 직접 저장
+      const dataUri = await window.html2pdf().set(opt).from(div).outputPdf('datauristring');
+      const base64 = dataUri.split(',')[1];
+      window.AndroidBridge.saveBase64File(base64, filename, 'application/pdf');
+    } else {
+      await window.html2pdf().set(opt).from(div).save();
+    }
   } catch (e) {
     console.error('[pdf] 생성 실패:', e);
     showToast('PDF 저장에 실패했어요. 다시 시도해주세요');

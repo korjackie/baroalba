@@ -3,19 +3,25 @@ package kr.co.multimove.baroalba;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
+import android.widget.Toast;
 import androidx.core.content.FileProvider;
 import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -363,6 +369,44 @@ public class MainActivity extends AppCompatActivity {
             if (token == null || token.isEmpty()) return;
             getSharedPreferences("baroalba", MODE_PRIVATE)
                 .edit().putString("supabase_token", token).apply();
+        }
+
+        // PDF(계약서/지원서) 다운로드용 - WebView는 JS의 blob: URL 다운로드(html2pdf의
+        // save())를 받아줄 장치가 기본적으로 없어서(setDownloadListener는 실제 URL 네비게이션만
+        // 잡고 프로그래매틱 blob 앵커 클릭은 못 잡음) 계속 "다운로드 안 됨" 상태였음
+        // (2026-07-19 피드백). JS에서 PDF를 base64로 만들어 이 브릿지로 직접 넘기고,
+        // 네이티브에서 MediaStore(API 29+)/앱 전용 폴더(API<29)에 파일로 씀.
+        @JavascriptInterface
+        public void saveBase64File(String base64Data, String filename, String mimeType) {
+            runOnUiThread(() -> {
+                try {
+                    byte[] bytes = Base64.decode(base64Data, Base64.DEFAULT);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        ContentValues cv = new ContentValues();
+                        cv.put(MediaStore.Downloads.DISPLAY_NAME, filename);
+                        cv.put(MediaStore.Downloads.MIME_TYPE, mimeType);
+                        cv.put(MediaStore.Downloads.IS_PENDING, 1);
+                        Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                        if (uri == null) throw new Exception("MediaStore insert 실패");
+                        try (OutputStream os = getContentResolver().openOutputStream(uri)) {
+                            os.write(bytes);
+                        }
+                        cv.clear();
+                        cv.put(MediaStore.Downloads.IS_PENDING, 0);
+                        getContentResolver().update(uri, cv, null, null);
+                    } else {
+                        File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                        if (dir != null && !dir.exists()) dir.mkdirs();
+                        File out = new File(dir, filename);
+                        try (FileOutputStream fos = new FileOutputStream(out)) {
+                            fos.write(bytes);
+                        }
+                    }
+                    Toast.makeText(MainActivity.this, "다운로드 폴더에 저장했어요: " + filename, Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "파일 저장에 실패했어요", Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 
