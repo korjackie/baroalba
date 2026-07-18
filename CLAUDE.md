@@ -576,7 +576,9 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 
 | 항목 | 상태 | 처리 방법 |
 |------|------|-----------|
-| 공고 저장 오류 | 🟡 재확인 필요 (2026-07-16 점검) | `submitPosting()` 자체는 타임아웃/네트워크에러/서버에러를 `showAlert`로 상세 표시하고 버튼도 `finally`로 복구하도록 이미 잘 계장돼 있음(추정 이유 없음). 문서상 `job_postings` 스키마가 실제 payload와 어긋나 있어(Phase 58 참고) DB 제약 불일치 가능성 있음 - 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것 |
+| 공고 저장 오류 | 🟢 스키마 대조 완료, 불일치 없음 (2026-07-18 재점검) | Supabase anon key로 `job_postings` 실제 컬럼을 직접 조회(`GET /rest/v1/job_postings?limit=1`)해 `submitPosting()`의 payload 필드 전부와 1:1 대조함 - 불일치 없음. `submitPosting()` 코드 자체도 10초 타임아웃/에러메시지 표시/버튼 복구가 이미 잘 돼있어 추가 조치 없음. 그래도 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것(원인이 payload 스키마는 아닌 것으로 확인됨) |
+| 홈 화면 400 에러 다수 (콘솔에서 발견) | ✅ 해결 (v540, 2026-07-18) | `businesses.biz_type` 컬럼이 코드 9곳에서 참조되는데 실제 DB엔 존재하지 않아(anon key로 직접 확인, `column businesses.biz_type does not exist`) 업체 랭킹/프로필상세(`.single()`이라 전체 실패)/즐겨찾기 업체/채팅 상대방 정보 등 6개 쿼리가 매번 400으로 실패하고 있었음. select()에서 biz_type 제거(표시 코드는 이미 빈값 fallback 있어 그대로 둠) |
+| 채팅목록 로딩 느림 | ✅ 해결 (v537~v539, 2026-07-17~18) | `_loadJobChatsIntoList` 내부 순차 대기 체인 병렬화(v537) + 바로스팟 방별 프로필 조회를 배치 API 1건으로 통합(v538, `get_barospot_revealed_profiles_batch` 신설) + 세 로더 전부 메시지 쿼리에 LIMIT 없어서 "대화 개수"가 아니라 "누적 메시지 총량"에 비례해 느려지던 것 발견해 컬럼 축소+LIMIT 1000 적용(v539). 대화 15개짜리 실계정 기준 체감 속도 재확인 대기 중 |
 | Android SHOW_FORCED 리빌드 | ✅ 해결 (v29, 2026-07-16) | 13-6 참고 - versionCode 29까지 빌드+Play Console 배포 완료, 대기 중인 리빌드 없음 |
 | 커뮤니티 글/댓글 수정·삭제 UI, 댓글 익명 토글 | ✅ 이미 구현돼있었음 (2026-07-16 재확인) | `openEditCommPost()`/`deleteCommPost()`/`deleteCommComment()`/`comm-comment-anon` 체크박스 전부 존재·정상 동작. 이 표만 오래전부터 미구현으로 잘못 남아있었음 |
 | 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 재확인 필요 (v436 시점 기록, 현재 v528) | 이후 수백 개 커밋이 쌓였고 관련 이슈 재보고가 없어 사실상 해소된 것으로 보이나, 이 표만 미갱신 상태였을 가능성 - 별도 이슈 없으면 다음 정리 때 행 삭제 |
@@ -809,8 +811,20 @@ head V='421' 하드코딩)를 다 고쳤는데도 FAB 라벨이 계속 안 바�
 
 **현재 대기 중인 리빌드**: 🟡 있음. versionCode 30(1.5.5) - 카카오 로그인 세션이
 유지 안 되던 문제(제3자 쿠키 미허용) 수정, 커밋 `d5f7393` (2026-07-17). GitHub Actions
-"Build Android TWA" 실행 → Play Console 수동 업로드 필요. (versionCode 29/1.5.4까지는
-2026-07-16 배포 완료 상태였음)
+"Build Android TWA" 실행 → Play Console 수동 업로드 필요.
+
+**2026-07-18 재확인 (대표님 "그때 리빌드했었는데 또 해야되냐" 질문에 대한 답)**:
+GitHub Actions API(`gh` 인증 없이도 조회 가능, 이 repo는 public)로 실행 이력 직접
+확인함 — 가장 최근 "Build Android TWA" 실행은 2026-07-15, 커밋 `51caa44`(versionCode
+28→29, **상태표시줄 콜백 경합 방어** 수정)였고, 그 뒤에 커밋된 `d5f7393`(카카오 쿠키
+수정, versionCode 30)에 대한 빌드는 **한 번도 실행된 적 없음**. 즉 대표님이 기억하는
+"그때 리빌드"는 상태표시줄 건이고, 카카오 로그인 건은 아직 빌드조차 안 됨 — 이번엔
+진짜 필요. `build.gradle`엔 이미 versionCode 30/1.5.5로 반영돼 있어 코드는 준비된
+상태, GitHub Actions 실행 + Play Console 업로드만 남음.
+→ 확인 방법(재발 방지용): `curl -s "https://api.github.com/repos/korjackie/baroalba/actions/runs?per_page=5" | python3 -c "import json,sys; d=json.load(sys.stdin); [print(r['name'],r['created_at'],r['head_sha'][:8]) for r in d['workflow_runs']]"`
+  로 최근 빌드가 어느 커밋 기준인지 먼저 확인하고, `android/` 관련 최신 커밋이 그
+  이후인지 `git log <빌드커밋>..HEAD -- android/`로 대조할 것 — "리빌드했었는데"라는
+  기억에만 의존하지 말고 매번 이렇게 교차 확인.
 → 새 `android/` 변경이 쌓이면: `git log <마지막빌드커밋>..HEAD -- android/`로 확인 →
   `build.gradle`의 `versionCode` +1 → GitHub Actions "Build Android TWA" 실행 →
   아티팩트를 Play Console에 수동 업로드(워크플로가 자동 배포하진 않음)
