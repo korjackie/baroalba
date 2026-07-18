@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '541';
+  const _APP_V = '542';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=541').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=542').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -1850,12 +1850,17 @@ async function loadMoimList(cat = '') {
     _moimList = data || [];
 
     // 모임장의 실제 구독 플랜 조회 (PRO/BASIC 뱃지용)
+    // businesses.plan 컬럼이 실제 DB엔 없어(2026-07-19 확인) 이 조회가 항상 400으로
+    // 실패하는데, 바깥 try 블록과 묶여있어서 실패할 때마다 이미 불러온 _moimList까지
+    // catch(e)에서 통째로 비워버리고 있었음("모임 목록이 아예 안 뜬다"는 재현 원인) -
+    // 뱃지 조회 실패가 목록 자체를 막지 않도록 별도 try로 분리
     const hostIds = [...new Set(_moimList.map(m => m.host_id).filter(Boolean))];
+    _moimHostPlans = {};
     if (hostIds.length) {
-      const { data: hostBiz } = await db.from('businesses').select('kakao_uid,plan').in('kakao_uid', hostIds);
-      _moimHostPlans = Object.fromEntries((hostBiz || []).map(b => [b.kakao_uid, b.plan]));
-    } else {
-      _moimHostPlans = {};
+      try {
+        const { data: hostBiz } = await db.from('businesses').select('kakao_uid,plan').in('kakao_uid', hostIds);
+        _moimHostPlans = Object.fromEntries((hostBiz || []).map(b => [b.kakao_uid, b.plan]));
+      } catch(e) { console.warn('[moim] 호스트 플랜 조회 실패:', e); }
     }
   } catch(e) {
     if (myVer !== _moimLoadVer) return;
