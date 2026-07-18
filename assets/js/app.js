@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '545';
+  const _APP_V = '546';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -603,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=545').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=546').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -6774,6 +6774,8 @@ async function _loadGatheringChatsIntoList(allApps) {
 // 바로스팟 1:1 채팅도 같은 목록에 포함 - chat_rooms/chat_messages 통합 스키마를 쓰는
 // 새 기능인데 정작 이 목록 로딩 함수엔 조회 자체가 없어서 "채팅목록에 바로스팟 채팅방이
 // 안 보인다"는 문제가 있었음
+// event_id -> { p: profile|null, t: fetchedAt(ms) } - 세션 내내 유지되는 메모리 캐시
+const _bspProfileCache = {};
 async function _loadBarospotChatsIntoList(allApps) {
   // 2026-07-19: 어느 단계가 느린지(DB 조회 vs 서버리스 API 콜드스타트) 구분하기 위한
   // 임시 세부 타이밍 로그. 원인 확정되면 제거할 것.
@@ -6805,12 +6807,23 @@ async function _loadBarospotChatsIntoList(allApps) {
   });
   // 상대방 이름/사진 조회 - 예전엔 방 개수만큼 서버 API를 한 번씩 따로 호출해서(각 호출마다
   // 내부적으로 3단 순차 조회 + 콜드스타트) 방이 여러 개면 그만큼 느려졌음(2026-07-17 "채팅목록
-  // 3초 걸린다" 피드백) - event_id들을 한 번에 몰아서 배치 API 1번만 호출하도록 변경
+  // 3초 걸린다" 피드백) - event_id들을 한 번에 몰아서 배치 API 1번만 호출하도록 변경(v538).
+  // 그래도 이 API 호출 자체가(서버리스 콜드스타트로 추정) ~2.3초씩 걸려 채팅목록 진입할
+  // 때마다 매번 다시 부르면 여전히 느림(2026-07-19 "채팅 여전히 느림" 재확인) - 상대방
+  // 프로필은 자주 안 바뀌는 정보이므로 세션 내 메모리 캐시(5분 TTL)로 재방문 시 재호출 생략
   const bspEventIdList = [...new Set(bspRooms.map(r => r.barospot_event_id))];
-  const profileMap = await fetch(`/api/admin?action=get_barospot_revealed_profiles_batch&event_ids=${bspEventIdList.join(',')}`, {
-    headers: { Authorization: 'Bearer ' + session.access_token }
-  }).then(res => res.ok ? res.json() : null).then(j => j?.profiles || {}).catch(() => ({}));
-  console.log('[chat-timing] 바로스팟-프로필배치API', Math.round(performance.now() - _bt0), 'ms');
+  const _bspCacheTtl = 5 * 60 * 1000;
+  const _now = Date.now();
+  const _needFetch = bspEventIdList.filter(id => !(id in _bspProfileCache) || _now - _bspProfileCache[id].t > _bspCacheTtl);
+  if (_needFetch.length) {
+    const fetched = await fetch(`/api/admin?action=get_barospot_revealed_profiles_batch&event_ids=${_needFetch.join(',')}`, {
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    }).then(res => res.ok ? res.json() : null).then(j => j?.profiles || {}).catch(() => ({}));
+    _needFetch.forEach(id => { _bspProfileCache[id] = { p: fetched[id] || null, t: _now }; });
+  }
+  const profileMap = {};
+  bspEventIdList.forEach(id => { if (_bspProfileCache[id]?.p) profileMap[id] = _bspProfileCache[id].p; });
+  console.log('[chat-timing] 바로스팟-프로필배치API', Math.round(performance.now() - _bt0), 'ms', `(캐시 적중 ${bspEventIdList.length - _needFetch.length}/${bspEventIdList.length})`);
   bspRooms.forEach((r) => {
     const rowId = 'bsp_' + r.id;
     const prof = profileMap[r.barospot_event_id];
