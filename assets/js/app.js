@@ -577,7 +577,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '540';
+  const _APP_V = '541';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -593,7 +593,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=540').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=541').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -6663,29 +6663,39 @@ function _renderChatList() {
 }
 
 async function _loadJobChatsIntoList(allApps) {
+  const _jt0 = performance.now();
   const appMap = {};
   const [wid, bizRes] = await Promise.all([
     _getWorkerId(),
     db.from('businesses').select('id').eq('kakao_uid', currentUser.id).maybeSingle()
   ]);
   const biz = bizRecord || bizRes.data;
+  console.log('[chat-timing] 알바-워커/비즈ID', Math.round(performance.now() - _jt0), 'ms');
 
   // 알바생 쪽(내가 지원한 것들)과 업주 쪽(내 공고에 지원한 사람들) 조회가 서로 완전히
   // 독립적인데 예전엔 순차로(하나 끝나야 다음 시작) 실행돼 체감 로딩이 느렸음
   // (2026-07-17 피드백: "채팅목록 나오기까지 오래 걸린다") - 병렬로 변경
+  // 지원내역/공고 조회도 LIMIT이 없어서 "현재 활성 채팅 개수"가 아니라 "이 계정이
+  // 지금까지 쌓아온 전체 이력 총량"에 비례해 느려지고 있었음(2026-07-19, 대화 15개인데
+  // 지원/공고 이력이 훨씬 많은 실계정에서 여전히 느리다는 재현으로 확인) - 최근 것 위주로
+  // 제한해서 채팅목록엔 어차피 다 안 쓰일 아주 오래된 이력까지 매번 긁어오지 않게 함
   const [workerAppsRes, ownerAppsRes] = await Promise.all([
     wid
       ? db.from('applications').select('id, job_postings(title, businesses(name, photo_url))').eq('worker_id', wid)
+          .order('applied_at', { ascending: false }).limit(300)
       : Promise.resolve({ data: [] }),
     biz
-      ? db.from('job_postings').select('id').eq('business_id', biz.id).then(({ data: myJobs }) =>
+      ? db.from('job_postings').select('id').eq('business_id', biz.id)
+          .order('created_at', { ascending: false }).limit(200).then(({ data: myJobs }) =>
           myJobs?.length
             ? db.from('applications').select('id, workers(name, photo_url), job_postings(title)').in('job_posting_id', myJobs.map(j => j.id))
+                .order('applied_at', { ascending: false }).limit(300)
             : { data: [] }
         )
       : Promise.resolve({ data: [] }),
   ]);
 
+  console.log('[chat-timing] 알바-지원내역', Math.round(performance.now() - _jt0), 'ms');
   (workerAppsRes.data || []).forEach(a => {
     const obj = { id: a.id, title: a.job_postings?.title || '', counterpartName: a.job_postings?.businesses?.name || '업체', photoUrl: a.job_postings?.businesses?.photo_url || null, side: 'worker' };
     allApps.push(obj); appMap[a.id] = obj;
@@ -6707,6 +6717,7 @@ async function _loadJobChatsIntoList(allApps) {
       .in('application_id', jobAppIds)
       .order('created_at', { ascending: false })
       .limit(1000);
+    console.log('[chat-timing] 알바-메시지', Math.round(performance.now() - _jt0), 'ms');
     (messages || []).forEach(m => {
       if (!_latestMsg[m.application_id]) _latestMsg[m.application_id] = m;
       if (!m.is_read && m.sender_id !== currentUser.id)
@@ -6749,6 +6760,9 @@ async function _loadGatheringChatsIntoList(allApps) {
 // 새 기능인데 정작 이 목록 로딩 함수엔 조회 자체가 없어서 "채팅목록에 바로스팟 채팅방이
 // 안 보인다"는 문제가 있었음
 async function _loadBarospotChatsIntoList(allApps) {
+  // 2026-07-19: 어느 단계가 느린지(DB 조회 vs 서버리스 API 콜드스타트) 구분하기 위한
+  // 임시 세부 타이밍 로그. 원인 확정되면 제거할 것.
+  const _bt0 = performance.now();
   const { data: myBspApps } = await db.from('barospot_applications')
     .select('event_id').eq('user_id', currentUser.id).eq('status', 'confirmed').not('event_id', 'is', null);
   const bspEventIds = [...new Set((myBspApps || []).map(a => a.event_id))];
@@ -6756,12 +6770,14 @@ async function _loadBarospotChatsIntoList(allApps) {
   const { data: bspRooms } = await db.from('chat_rooms')
     .select('id, barospot_event_id').eq('context_type', 'barospot').in('barospot_event_id', bspEventIds);
   if (!bspRooms?.length) return;
+  console.log('[chat-timing] 바로스팟-방목록', Math.round(performance.now() - _bt0), 'ms');
   const roomIds = bspRooms.map(r => r.id);
   const [{ data: bspMsgs }, { data: bspReads }, { data: { session } }] = await Promise.all([
     db.from('chat_messages').select('room_id, content, created_at, sender_id').in('room_id', roomIds).order('created_at', { ascending: false }).limit(1000),
     db.from('chat_reads').select('room_id, last_read_at').eq('user_id', currentUser.id).in('room_id', roomIds),
     db.auth.getSession(),
   ]);
+  console.log('[chat-timing] 바로스팟-메시지+세션', Math.round(performance.now() - _bt0), 'ms');
   const readMap = {};
   (bspReads || []).forEach(r => { readMap[r.room_id] = r.last_read_at; });
   const bspLatestByRoom = {}, bspUnreadByRoom = {};
@@ -6779,6 +6795,7 @@ async function _loadBarospotChatsIntoList(allApps) {
   const profileMap = await fetch(`/api/admin?action=get_barospot_revealed_profiles_batch&event_ids=${bspEventIdList.join(',')}`, {
     headers: { Authorization: 'Bearer ' + session.access_token }
   }).then(res => res.ok ? res.json() : null).then(j => j?.profiles || {}).catch(() => ({}));
+  console.log('[chat-timing] 바로스팟-프로필배치API', Math.round(performance.now() - _bt0), 'ms');
   bspRooms.forEach((r) => {
     const rowId = 'bsp_' + r.id;
     const prof = profileMap[r.barospot_event_id];
@@ -10924,11 +10941,14 @@ async function _fetchWorkerNotifications() {
   const { data: w } = await db.from('workers').select('id, rating, review_count, noshow_count').eq('kakao_uid', currentUser.id).single();
   if (!w) return [];
 
+  // applications 테이블엔 updated_at(상태 변경 시각) 컬럼이 없어(2026-07-19 확인,
+  // 400 에러로 늘 실패하고 있었음) applied_at(지원 시각)으로 대체 - 상태변경 시각까진
+  // 아니지만 최소한 조회는 되게 함
   const { data: apps } = await db.from('applications')
-    .select('id, status, updated_at, completed_at, worker_rating, worker_review, job_postings(title, businesses(name))')
+    .select('id, status, applied_at, completed_at, worker_rating, worker_review, job_postings(title, businesses(name))')
     .eq('worker_id', w.id)
     .not('status', 'in', '(pending,reviewing)')
-    .order('updated_at', { ascending: false })
+    .order('applied_at', { ascending: false })
     .limit(40);
 
   const items = [];
@@ -10942,7 +10962,7 @@ async function _fetchWorkerNotifications() {
   (apps || []).forEach(app => {
     const biz = app.job_postings?.businesses?.name || '업체';
     const jobTitle = app.job_postings?.title || '공고';
-    const t = app.updated_at;
+    const t = app.applied_at;
     if (app.status === 'accepted') {
       items.push({ id: app.id + '_acc', icon: '✅', color: '#16a34a', title: `${biz} 합격 확정!`, body: `"${jobTitle}" 공고에서 합격됐어요`, time: t });
     } else if (app.status === 'rejected') {
@@ -17384,11 +17404,10 @@ function _ownerTimeAgo(iso) {
 async function _fetchOwnerNotifications() {
   if (!currentUser || !bizRecord) return [];
   // 내 공고의 최근 지원자 이벤트
-  const { data: apps } = await db.from('applications')
-    .select('id, status, applied_at, updated_at, workers(name), job_postings(title)')
-    .eq('job_postings.businesses.kakao_uid', currentUser.id)
-    .order('applied_at', { ascending: false })
-    .limit(40);
+  // (2026-07-19 확인) 바로 아래 "FK join 복잡도 우회" 쿼리가 실제로 쓰이고 있었고,
+  // 여기 있던 첫 쿼리는 select에 없는 businesses를 필터에서만 참조해 PostgREST가
+  // 매번 400으로 거부하고 있었음('businesses' is not an embedded resource) - 게다가
+  // 결과(apps)도 이 함수 어디서도 안 쓰여 완전한 죽은 코드였음. 삭제.
 
   // bizRecord.id로 직접 조회 (FK join 복잡도 우회)
   const { data: myPostings } = await db.from('job_postings').select('id').eq('business_id', bizRecord.id);
