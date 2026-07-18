@@ -583,6 +583,8 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 | applications.updated_at 컬럼 부재로 워커 알림조회 400 | ✅ 해결 (v541, 2026-07-19) | applied_at으로 대체 |
 | `_fetchOwnerNotifications` 죽은 쿼리(결과 미사용, businesses 미임베딩 필터로 항상 400) | ✅ 해결 (v541, 2026-07-19) | 삭제 |
 | businesses.plan 컬럼 부재로 모임(바로모임) 목록 전체가 안 뜨는 문제 | ✅ 해결 (v542, 2026-07-19) | PRO/BASIC 뱃지 조회가 바깥 try와 묶여있어 실패시 이미 성공한 목록까지 비워지던 것 - 별도 try로 격리 |
+| 지원자 프로필(`_wp-overlay`)/전자계약서(`contract-modal`) 뒤로가기 안 됨 | ✅ 해결 (v544, 2026-07-19) | Phase 58 전수감사(WATCH_IDS/popstate 캐스케이드)에서 누락됐던 동일 버그 클래스. `_wp-overlay`는 동적 생성/제거 방식이라 WATCH_IDS로 못 잡아 popstate 캐스케이드에 직접 등록 |
+| 전자계약서/지원서 PDF 다운로드 안 됨(인쇄→다운로드 전환 직후) | ✅ 해결 (v545 + Android versionCode 31, 2026-07-19) | 브라우저는 인쇄 대신 파일 다운로드로 전환(html2pdf.js)하면 되지만, 안드로이드 WebView는 JS의 blob 다운로드를 받아줄 장치가 원래 없음(`MainActivity.java`에 다운로드 핸들러 자체가 없었음) - `AndroidBridge.saveBase64File()` 신설해 PDF를 base64로 네이티브에 직접 전달, MediaStore(API29+)/앱 전용 폴더(API<29)에 저장. Android 리빌드+Play Console 업로드까지 완료 |
 | job_postings.updated_at 컬럼 부재로 번개알바 자동인상(`checkSurgeIntervals`, 60초마다 폴링) 400 | ✅ 해결 (DDL, 2026-07-19 대표님 실행) | `ALTER TABLE job_postings ADD COLUMN updated_at TIMESTAMPTZ DEFAULT now();` 실행 완료, anon key로 컬럼 존재 확인함 |
 | `follows`(업체 팔로우) 테이블 자체가 없음 - 팔로우/알림구독 기능 전체 비활성 | ✅ 해결 (DDL, 2026-07-19 대표님 실행) | 테이블 생성 + RLS 정책 2개(`worker_manage_own_follows`, `business_view_own_followers`) 적용 완료. 정책 작성 중 `kakao_uid`(uuid)와 `auth.jwt()->>'sub'`(text) 타입 불일치로 첫 시도는 실패 → `(auth.jwt()->>'sub')::uuid` 캐스팅으로 해결, anon key로 테이블 접근 확인함 |
 | Android SHOW_FORCED 리빌드 | ✅ 해결 (v29, 2026-07-16) | 13-6 참고 - versionCode 29까지 빌드+Play Console 배포 완료, 대기 중인 리빌드 없음 |
@@ -815,10 +817,13 @@ head V='421' 하드코딩)를 다 고쳤는데도 FAB 라벨이 계속 안 바�
 | `build.gradle` 수정 | ✅ 필요 |
 | `AndroidManifest.xml` 수정 | ✅ 필요 |
 
-**현재 대기 중인 리빌드**: ✅ 없음. versionCode 30(1.5.5) - 카카오 로그인 세션이
-유지 안 되던 문제(제3자 쿠키 미허용) 수정, 커밋 `d5f7393`(2026-07-17) - GitHub Actions
-빌드 완료(2026-07-19, 커밋 `2ef56d36` 기준, `d5f7393`의 자손 커밋이라 수정사항 포함 확인함)
-+ Play Console 업로드까지 완료(2026-07-19, 대표님 확인). 실사용자에게 반영됨.
+**현재 대기 중인 리빌드**: ✅ 없음.
+- versionCode 30(1.5.5) - 카카오 로그인 세션 유지 안 되던 문제(제3자 쿠키 미허용)
+  수정, 커밋 `d5f7393`(2026-07-17) - 빌드+Play Console 업로드 완료(2026-07-19)
+- versionCode 31(1.5.6) - PDF 다운로드 안 되던 문제(WebView가 blob 다운로드를
+  못 받아줘서 `AndroidBridge.saveBase64File()` 신설) 수정, 커밋 `7289461`(2026-07-19) -
+  GitHub Actions 빌드 성공 확인(커밋 `7289461` 기준) + Play Console 업로드까지
+  완료(2026-07-19, 대표님 확인). 실사용자에게 반영됨.
 
 **2026-07-18 재확인 (대표님 "그때 리빌드했었는데 또 해야되냐" 질문에 대한 답)**:
 GitHub Actions API(`gh` 인증 없이도 조회 가능, 이 repo는 public)로 실행 이력 직접
