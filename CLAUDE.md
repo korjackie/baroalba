@@ -589,7 +589,6 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 | `follows`(업체 팔로우) 테이블 자체가 없음 - 팔로우/알림구독 기능 전체 비활성 | ✅ 해결 (DDL, 2026-07-19 대표님 실행) | 테이블 생성 + RLS 정책 2개(`worker_manage_own_follows`, `business_view_own_followers`) 적용 완료. 정책 작성 중 `kakao_uid`(uuid)와 `auth.jwt()->>'sub'`(text) 타입 불일치로 첫 시도는 실패 → `(auth.jwt()->>'sub')::uuid` 캐스팅으로 해결, anon key로 테이블 접근 확인함 |
 | Android SHOW_FORCED 리빌드 | ✅ 해결 (v29, 2026-07-16) | 13-6 참고 - versionCode 29까지 빌드+Play Console 배포 완료, 대기 중인 리빌드 없음 |
 | 커뮤니티 글/댓글 수정·삭제 UI, 댓글 익명 토글 | ✅ 이미 구현돼있었음 (2026-07-16 재확인) | `openEditCommPost()`/`deleteCommPost()`/`deleteCommComment()`/`comm-comment-anon` 체크박스 전부 존재·정상 동작. 이 표만 오래전부터 미구현으로 잘못 남아있었음 |
-| 지도 통합핀/필터/FAB 신기능 실기기 미확인 | 🟡 재확인 필요 (v436 시점 기록, 현재 v528) | 이후 수백 개 커밋이 쌓였고 관련 이슈 재보고가 없어 사실상 해소된 것으로 보이나, 이 표만 미갱신 상태였을 가능성 - 별도 이슈 없으면 다음 정리 때 행 삭제 |
 | `banned-agree-overlay`/`photo-tip-overlay` 트리거 누락, `showContractModal` 필드명 버그, `app_ui.js` 버전 lockstep 누락 | ✅ 해결 (v529, 2026-07-16) | Phase 58 참고 - `wage-transfer-modal`/`contract-modal`은 애초에 죽은 코드가 아니었음(app_ui.js 미확인으로 인한 오판, 정정 기록 참고) |
 | 바로스팟 채팅 진입 불가 | ✅ 해결 (v496, 2026-07-15) | track-overlay(z-index:8700)가 panel-barospot-chat(520)/panel-moim-chat(530)보다 위라 채팅 패널이 가려짐 - openBarospotChatRoom/openBaromeetChat에서 closeTrackingSheet() 선호출로 수정. panel-barospot-chat이 전역 뒤로가기 핸들러에도 없어 추가 |
 | 위치공유 "도착했어요" 버튼 의미없는 토글 | ✅ 해결 (v496, 2026-07-15) | 수동 클릭 시 확인 없이 조용히 멈추기만 해서 계속 눌러도 아무 일도 안 일어나는 것처럼 보임 - 도착 확인 다이얼로그 + 도착 확정 후 버튼 잠금으로 수정 |
