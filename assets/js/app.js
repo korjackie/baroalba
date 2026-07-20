@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '546';
+  const _APP_V = '547';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -603,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=546').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=547').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -2093,11 +2093,11 @@ async function loadMoimApplicants(gatheringId) {
   sec.style.display = 'block';
   sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">불러오는 중...</div>';
   const { data } = await db.from('gathering_applications')
-    .select('id,gathering_id,applicant_id,status,fee_paid,fee_paid_at,created_at')
-    .eq('gathering_id', gatheringId).order('created_at', { ascending: false });
+    .select('id,gathering_id,applicant_id,status,fee_paid,fee_paid_at,applied_at')
+    .eq('gathering_id', gatheringId).order('applied_at', { ascending: false });
   if (!data?.length) { sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">신청자가 없어요</div>'; return; }
-  const { data: profileRows } = await db.from('profiles').select('id,name,rating,review_count,nationality').in('id', data.map(a => a.applicant_id));
-  const _pMap = Object.fromEntries((profileRows || []).map(p => [p.id, p]));
+  const { data: profileRows } = await db.from('workers').select('kakao_uid,name,rating,review_count,nationality').in('kakao_uid', data.map(a => a.applicant_id));
+  const _pMap = Object.fromEntries((profileRows || []).map(p => [p.kakao_uid, p]));
   const m = _moimDetailData;
   const hasFee = m && (m.entry_fee > 0 || m.entry_fee < 0);
   const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', NP:'🇳🇵', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
@@ -5032,7 +5032,7 @@ async function openWChat(applicationId, bizName) {
   // 상대방(업주) 정보 — 메시지 로드 전에 먼저 fetch (아바타 사진 반영)
   // 같은 상대와 여러 건 지원 시 어느 공고 얘기인지 구분되도록 공고 제목도 같이 표시
   try {
-    const { data: _appData } = await db.from('applications').select('job_postings(title,businesses(id,name,photo_url,region))').eq('id', applicationId).single();
+    const { data: _appData } = await db.from('applications').select('job_postings(title,businesses(id,name,photo_url))').eq('id', applicationId).single();
     const biz = _appData?.job_postings?.businesses;
     const jobTitle = _appData?.job_postings?.title;
     if (_wchatAppId === applicationId) {
@@ -6523,7 +6523,7 @@ async function _renderFollowingSection() {
   if (row) row.style.display = 'flex';
   const bizIds = [...window._myFollows];
   cnt.textContent = `${bizIds.length}개 업체`;
-  const { data: bizList } = await db.from('businesses').select('id, name, photo_url, region').in('id', bizIds);
+  const { data: bizList } = await db.from('businesses').select('id, name, photo_url').in('id', bizIds);
   if (!bizList?.length) { if (row) row.style.display = 'none'; return; }
   const mpFollowingVal = document.getElementById('mp-following-val');
   if (mpFollowingVal) mpFollowingVal.textContent = `${bizIds.length}개`;
@@ -6917,7 +6917,7 @@ function _showDetailBizProfileById() {
 
 async function _showDetailBizProfile(bizId) {
   const { data: biz } = await db.from('businesses')
-    .select('id, name, region, description, rating, review_count, photo_url, is_verified')
+    .select('id, name, description, rating, review_count, photo_url, is_verified')
     .eq('id', bizId).single();
   if (!biz) { showToast('업체 정보를 불러올 수 없어요'); return; }
   const existing = document.getElementById('cp-profile-modal');
@@ -7002,7 +7002,7 @@ async function _showCounterpartProfile(type) {
     // 업주 프로필도 최신 photo_url 로드
     try {
       const { data: fb } = await db.from('businesses')
-        .select('photo_url, description, rating, review_count, region, is_verified')
+        .select('photo_url, description, rating, review_count, is_verified')
         .eq('id', cp.id).single();
       if (fb) {
         if (fb.photo_url) cp.photoUrl = fb.photo_url;
@@ -8033,7 +8033,7 @@ async function loadDashboard() {
     const [wid, bizRes, lessonRes] = await Promise.all([
       _getWorkerId(),
       db.from('businesses').select('id').eq('kakao_uid', currentUser.id).maybeSingle(),
-      db.from('lesson_profiles').select('id').eq('worker_kakao_uid', currentUser.id).eq('is_active', true)
+      db.from('lesson_profiles').select('id').eq('worker_id', currentUser.id).eq('is_active', true)
     ]);
     if (wid) {
       const { data: apps } = await db.from('applications').select('id').eq('worker_id', wid).in('status', ['pending', 'accepted']);
@@ -11757,23 +11757,18 @@ async function submitCommunityComment() {
       : null;
     const targetUid = targetWorkerUid || targetBizUid;
     if (targetUid && targetUid !== currentUser.id) {
-      const { data: subs } = await db.from('push_subscriptions').select('endpoint, p256dh, auth, fcm_token').eq('user_id', targetUid).limit(3);
-      if (subs?.length) {
-        subs.forEach(sub => {
-          fetch('/api/send-push', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-              fcmToken: sub.fcm_token,
-              title: '💬 새 댓글',
-              body: `${commenterName}님이 댓글을 달았어요: "${cur.title}"`,
-              url: './바로알바.html',
-              tag: 'comm-comment-' + _commCurrentPostId,
-            })
-          }).catch(() => {});
-        });
-      }
+      // send-push는 user_id만 받아 서버가 fcm_tokens를 직접 조회해 발송함
+      fetch('/api/send-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: targetUid,
+          title: '💬 새 댓글',
+          body: `${commenterName}님이 댓글을 달았어요: "${cur.title}"`,
+          url: './바로알바.html',
+          type: 'comm',
+        })
+      }).catch(() => {});
     }
   }
 
@@ -12543,7 +12538,7 @@ async function loadMyLessonInquiries() {
     const profileIds = profiles.map(p => p.id);
     const profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
     const { data: inquiries } = await db.from('lesson_inquiries')
-      .select('*, profiles!seeker_kakao_uid(name,nationality)')
+      .select('*')
       .in('lesson_profile_id', profileIds)
       .order('created_at', { ascending: false });
     if (!inquiries?.length) {
@@ -12552,15 +12547,20 @@ async function loadMyLessonInquiries() {
       if (badge) badge.style.display = 'none';
       return;
     }
+    // 문의자(수강생) 정보는 workers에서 별도 조회 (lesson_inquiries↔workers 관계 없음)
+    const _seekerUids = [...new Set(inquiries.map(i => i.seeker_kakao_uid).filter(Boolean))];
+    const { data: _seekerRows } = await db.from('workers').select('kakao_uid,name,nationality').in('kakao_uid', _seekerUids);
+    const _seekerMap = Object.fromEntries((_seekerRows || []).map(w => [w.kakao_uid, w]));
     const STATUS_MAP = { pending:'대기중', accepted:'수락됨', rejected:'거절됨', closed:'종료' };
     const STATUS_COLOR = { pending:'#D97706', accepted:'#16a34a', rejected:'#9CA3AF', closed:'#9CA3AF' };
     el.innerHTML = inquiries.map(inq => {
-      const seeker = inq.profiles || {};
+      const seeker = _seekerMap[inq.seeker_kakao_uid] || {};
       const prof = profileMap[inq.lesson_profile_id] || {};
-      const stColor = STATUS_COLOR[inq.status] || '#888';
-      const stLabel = STATUS_MAP[inq.status] || inq.status;
+      const _st = inq.status || 'pending';
+      const stColor = STATUS_COLOR[_st] || '#888';
+      const stLabel = STATUS_MAP[_st] || _st;
       const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleDateString('ko-KR', {month:'short',day:'numeric'}) : '';
-      const isPending = inq.status === 'pending';
+      const isPending = _st === 'pending';
       return `<div style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:14px;margin-bottom:10px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
           <div>
@@ -12581,7 +12581,7 @@ async function loadMyLessonInquiries() {
       </div>`;
     }).join('');
     // 대기중 뱃지
-    const pendingCnt = inquiries.filter(i => i.status === 'pending').length;
+    const pendingCnt = inquiries.filter(i => (i.status || 'pending') === 'pending').length;
     const badge = document.getElementById('lm-inq-badge');
     if (badge) { badge.textContent = pendingCnt; badge.style.display = pendingCnt > 0 ? 'inline-block' : 'none'; }
   } catch(e) {
@@ -12598,10 +12598,11 @@ async function decideLessonInquiry(inquiryId, decision) {
 
 async function openLessonInquiryChat(inquiryId) {
   const { data: inq } = await db.from('lesson_inquiries')
-    .select('id,seeker_kakao_uid,lesson_profile_id,profiles!seeker_kakao_uid(name)')
+    .select('id,seeker_kakao_uid,lesson_profile_id')
     .eq('id', inquiryId).single();
   if (!inq) { showToast('문의 정보를 찾을 수 없어요'); return; }
-  const seekerName = inq.profiles?.name || '문의자';
+  const { data: _seeker } = await db.from('workers').select('name').eq('kakao_uid', inq.seeker_kakao_uid).maybeSingle();
+  const seekerName = _seeker?.name || '문의자';
   _openLessonChatOverlay(inquiryId, seekerName, inq.seeker_kakao_uid);
 }
 

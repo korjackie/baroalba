@@ -572,10 +572,45 @@ sw.js (배포마다 버전 바뀜 - _APP_V와 동일 번호로 lockstep, 하드�
 
 ---
 
+### Phase 59 ✅ 스키마 드리프트 전수 대조(코드↔실제DB) + 조용히 죽어있던 기능 9건 일괄 수정 (2026-07-21, v547)
+
+**검수 방법(이게 핵심)**: 지금까지의 "전면검수"는 대부분 **코드만 grep**하거나(죽은 코드/DOM 부재/백버튼), DB 대조를 하더라도 **대표님이 콘솔에서 400을 본 테이블만 반응적으로** 확인했다. 이번엔 처음으로 **코드가 `.from()`으로 참조하는 45개 테이블 × 모든 select/eq/order/insert 컬럼을 anon key로 실제 DB에 전수 쿼리해 대조**했다. `const { data } = await ...`로 에러를 삼키는 패턴 때문에 400이 나도 크래시 없이 "조용히 빈 화면"만 남아, 코드를 아무리 읽어도 안 잡히던 버그들이었다. **교훈: 스키마 드리프트는 코드 리뷰로 못 잡는다. 살아있는 DB에 쿼리해서 대조하는 게 유일한 검출법.** (검수 스크립트: 각 테이블 `?select=컬럼&limit=1` → 400이면 컬럼 없음, 임베딩은 `?select=*,관계(...)` → PGRST200이면 관계 없음)
+
+**근본원인 1 — `businesses.region` 컬럼 없음 (v540에서 `biz_type`만 지우고 같은 select의 region은 남김)**
+- 업체 프로필 상세(`_showDetailBizProfile`, `.single()`이라 400시 전체 실패 → "업체 정보를 불러올 수 없어요" 고정), 팔로잉 업체 목록, 채팅 상대(업주) 정보 임베딩, 업주 프로필 최신화 4곳 select에서 `region` 제거
+
+**근본원인 2 — `gathering_applications`에 `created_at` 없음(실제 `applied_at`) + `profiles` 테이블 자체가 없음**
+- `loadMoimApplicants`가 select+order를 없는 `created_at`으로 해서 400 → **모임 주최자가 신청자를 아예 못 보던** 문제. `applied_at`으로 교체 + 신청자 프로필을 없는 `profiles` 대신 `workers`(`kakao_uid`로 조회)로 변경
+
+**근본원인 3 — 레슨 문의: 없는 `profiles!seeker_kakao_uid` 임베딩(PostgREST 400) + `lesson_inquiries` 스키마 불일치**
+- 강사 "받은 문의" 목록/문의 채팅이 임베딩 400으로 **항상 비어있고 안 열리던** 것 → 임베딩 제거 후 `workers` 별도 조회로 문의자 이름 복구
+- `lesson_profiles`를 없는 `worker_kakao_uid`로 조회하던 곳(마이페이지 레슨 카운트) → 실제 `worker_id`로 수정
+- ⚠️ 수락/거절(`decideLessonInquiry`)은 `lesson_inquiries`에 `status`/`decided_at` 컬럼이 없어 여전히 실패 — **DDL 필요(아래)**. 코드는 컬럼 추가 즉시 동작하도록 준비돼 있고, 목록은 status 없어도 'pending' 기본값으로 정상 렌더
+
+**근본원인 4 — 커뮤니티 댓글 알림 푸시가 옛 API 형식**
+- `push_subscriptions`의 없는 개별 컬럼(`endpoint/p256dh/auth/fcm_token`, 실제는 `subscription` JSON 하나)을 조회 + `/api/send-push`에 옛 `{subscription, fcmToken}` 형식 전송(현재 API는 `{user_id, title, body, url}`만 받아 서버가 `fcm_tokens` 조회) → 이중으로 틀려 댓글 알림이 안 감. 다른 정상 호출부와 동일하게 `{user_id, ...}`로 통일
+
+**검증**: 9건 전부 수정 전 400 → 수정 후 200을 라이브 쿼리로 확인, `node --check` 문법 통과, 버전 락스텝 546→547.
+
+**필요 DDL (대표님 Supabase SQL Editor에서 실행 — 레슨 문의 수락/거절 활성화용)**
+```sql
+ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS decided_at TIMESTAMPTZ;
+-- (선택) 문의 메시지/제안금액도 저장하려면:
+ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS message TEXT;
+ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS proposed_price INT;
+```
+
+**남은 권장 작업**: 이번엔 `.from()` 참조 테이블만 훑었다. `.rpc()` 호출·`api/*.js` 서버함수의 SQL·admin.js/mannam-owner.js 등 다른 스크립트도 같은 방식으로 전수 대조하면 추가 드리프트를 더 잡을 수 있음.
+
+---
+
 ## 8. 현재 버그 / 미완료
 
 | 항목 | 상태 | 처리 방법 |
 |------|------|-----------|
+| 스키마 드리프트 9건(businesses.region 4곳/모임 신청자목록/레슨 문의·채팅·카운트/댓글푸시) | ✅ 해결 (v547, 2026-07-21) | Phase 59 참고 - 코드↔실제DB 전수 대조로 발견, 전부 400→200 검증. 이전 "전면검수"가 코드만 봐서 못 잡던 유형 |
+| 레슨 문의 수락/거절(`decideLessonInquiry`) | 🟡 코드 준비완료, DDL 대기 | `lesson_inquiries.status`/`decided_at` 컬럼 없음 - Phase 59의 DDL 실행하면 즉시 동작 |
 | 공고 저장 오류 | 🟢 스키마 대조 완료, 불일치 없음 (2026-07-18 재점검) | Supabase anon key로 `job_postings` 실제 컬럼을 직접 조회(`GET /rest/v1/job_postings?limit=1`)해 `submitPosting()`의 payload 필드 전부와 1:1 대조함 - 불일치 없음. `submitPosting()` 코드 자체도 10초 타임아웃/에러메시지 표시/버튼 복구가 이미 잘 돼있어 추가 조치 없음. 그래도 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것(원인이 payload 스키마는 아닌 것으로 확인됨) |
 | 홈 화면 400 에러 다수 (콘솔에서 발견) | ✅ 해결 (v540, 2026-07-18) | `businesses.biz_type` 컬럼이 코드 9곳에서 참조되는데 실제 DB엔 존재하지 않아(anon key로 직접 확인, `column businesses.biz_type does not exist`) 업체 랭킹/프로필상세(`.single()`이라 전체 실패)/즐겨찾기 업체/채팅 상대방 정보 등 6개 쿼리가 매번 400으로 실패하고 있었음. select()에서 biz_type 제거(표시 코드는 이미 빈값 fallback 있어 그대로 둠) |
 | 채팅목록 로딩 느림 | 🟡 대폭 개선(9538ms→3092ms), 잔여 병목 특정됨 (v537~v541, 2026-07-17~19) | `_loadJobChatsIntoList` 내부 순차 대기 체인 병렬화(v537) + 바로스팟 방별 프로필 조회를 배치 API 1건으로 통합(v538) + 메시지 쿼리 LIMIT 없어서 "대화 개수"가 아니라 "누적 메시지/이력 총량"에 비례해 느려지던 것 발견해 컬럼 축소+LIMIT 적용(v539, v541 - 지원내역/공고 조회까지 확장). 세부 타이밍 계측(v541)으로 재확인한 결과 **잔여 병목은 바로스팟 프로필배치 API(`/api/admin?action=get_barospot_revealed_profiles_batch`) 단독으로 ~2.3초** - Vercel 서버리스 콜드스타트로 추정, DB 쿼리 자체는 이미 빠름. 바로스팟 채팅방이 있는 계정에서만 발생. 다음 단계: 함수 워밍 또는 클라이언트 캐싱 검토 |
