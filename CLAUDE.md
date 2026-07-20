@@ -610,7 +610,7 @@ ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS proposed_price INT;
 | 항목 | 상태 | 처리 방법 |
 |------|------|-----------|
 | 스키마 드리프트 9건(businesses.region 4곳/모임 신청자목록/레슨 문의·채팅·카운트/댓글푸시) | ✅ 해결 (v547, 2026-07-21) | Phase 59 참고 - 코드↔실제DB 전수 대조로 발견, 전부 400→200 검증. 이전 "전면검수"가 코드만 봐서 못 잡던 유형 |
-| 레슨 문의 수락/거절(`decideLessonInquiry`) | 🟡 코드 준비완료, DDL 대기 | `lesson_inquiries.status`/`decided_at` 컬럼 없음 - Phase 59의 DDL 실행하면 즉시 동작 |
+| 레슨 문의 수락/거절(`decideLessonInquiry`) | ✅ 해결 (DDL, 2026-07-21 대표님 실행) | `lesson_inquiries.status`/`decided_at` 추가 완료, anon key로 200 확인. 선택 컬럼 message/proposed_price는 미추가지만 조건부 표시라 무해 |
 | 공고 저장 오류 | 🟢 스키마 대조 완료, 불일치 없음 (2026-07-18 재점검) | Supabase anon key로 `job_postings` 실제 컬럼을 직접 조회(`GET /rest/v1/job_postings?limit=1`)해 `submitPosting()`의 payload 필드 전부와 1:1 대조함 - 불일치 없음. `submitPosting()` 코드 자체도 10초 타임아웃/에러메시지 표시/버튼 복구가 이미 잘 돼있어 추가 조치 없음. 그래도 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것(원인이 payload 스키마는 아닌 것으로 확인됨) |
 | 홈 화면 400 에러 다수 (콘솔에서 발견) | ✅ 해결 (v540, 2026-07-18) | `businesses.biz_type` 컬럼이 코드 9곳에서 참조되는데 실제 DB엔 존재하지 않아(anon key로 직접 확인, `column businesses.biz_type does not exist`) 업체 랭킹/프로필상세(`.single()`이라 전체 실패)/즐겨찾기 업체/채팅 상대방 정보 등 6개 쿼리가 매번 400으로 실패하고 있었음. select()에서 biz_type 제거(표시 코드는 이미 빈값 fallback 있어 그대로 둠) |
 | 채팅목록 로딩 느림 | 🟡 대폭 개선(9538ms→3092ms), 잔여 병목 특정됨 (v537~v541, 2026-07-17~19) | `_loadJobChatsIntoList` 내부 순차 대기 체인 병렬화(v537) + 바로스팟 방별 프로필 조회를 배치 API 1건으로 통합(v538) + 메시지 쿼리 LIMIT 없어서 "대화 개수"가 아니라 "누적 메시지/이력 총량"에 비례해 느려지던 것 발견해 컬럼 축소+LIMIT 적용(v539, v541 - 지원내역/공고 조회까지 확장). 세부 타이밍 계측(v541)으로 재확인한 결과 **잔여 병목은 바로스팟 프로필배치 API(`/api/admin?action=get_barospot_revealed_profiles_batch`) 단독으로 ~2.3초** - Vercel 서버리스 콜드스타트로 추정, DB 쿼리 자체는 이미 빠름. 바로스팟 채팅방이 있는 계정에서만 발생. 다음 단계: 함수 워밍 또는 클라이언트 캐싱 검토 |
