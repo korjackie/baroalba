@@ -618,17 +618,19 @@ ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS proposed_price INT;
   3. `max_uses_per_user` 컬럼 없음 → `>= undefined`가 항상 false라 **1인당 재사용 제한이 전혀 안 걸려 쿠폰 무한사용 가능** → `|| 1` 기본값으로 방어
 - **교훈**: URL 쿼리 컬럼은 스크립트로 전수 대조되지만, **INSERT/PATCH 바디 키와 `obj.컬럼` 속성 접근은 코드를 눈으로 읽어야** 잡힌다(coupon.js 사례). 서버함수 검수 시 body의 `JSON.stringify({...})` 키와 응답 객체 `.속성` 접근도 스키마와 대조할 것.
 
-**필요 DDL 2건 (대표님 Supabase SQL Editor)**
+**필요 DDL 2건 (✅ 2026-07-21 대표님 실행 완료)**
 ```sql
 -- 1) 업체 플랜 영속화 (P0 근본해결) - toss-confirm.js의 PATCH가 이걸 기다림
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'free';
--- 기존 결제자 백필 (subscriptions.business_id = businesses.kakao_uid 로 저장돼 있음)
+-- 기존 결제자 백필 (subscriptions.business_id=text, businesses.kakao_uid=uuid 라 캐스팅 필수)
 UPDATE businesses b SET plan = s.plan
   FROM subscriptions s
-  WHERE s.business_id = b.kakao_uid AND s.status = 'active';
+  WHERE s.business_id = b.kakao_uid::text AND s.status = 'active';
 -- 2) 직장인증 토큰 (admin.js 244/251/272의 workplace 인증 플로우가 이 컬럼을 씀)
 ALTER TABLE workers ADD COLUMN IF NOT EXISTS workplace_verify_token TEXT;
 ```
+⚠️ 이 프로젝트의 반복 함정: `subscriptions.business_id`처럼 kakao_uid를 **text로 저장한 컬럼**과
+`businesses.kakao_uid`(uuid)를 조인할 때는 `::text` 캐스팅 필수(`follows` 테이블 때와 동일 - 12절/13절 참고).
 
 ---
 
@@ -638,8 +640,8 @@ ALTER TABLE workers ADD COLUMN IF NOT EXISTS workplace_verify_token TEXT;
 |------|------|-----------|
 | 스키마 드리프트 9건(businesses.region 4곳/모임 신청자목록/레슨 문의·채팅·카운트/댓글푸시) | ✅ 해결 (v547, 2026-07-21) | Phase 59 참고 - 코드↔실제DB 전수 대조로 발견, 전부 400→200 검증. 이전 "전면검수"가 코드만 봐서 못 잡던 유형 |
 | 서버함수 드리프트 7건(admin 지원카운트/회원상세리뷰/모임주최자명, coupon 지급수·카운터·1인제한) | ✅ 해결 (api 배포, 2026-07-21) | Phase 59-B 참고 - admin.js·coupon.js 수정, node --check 통과 |
-| businesses.plan 미영속화 = 결제 후 plan이 free로 리셋 (오래된 P0) | 🟡 코드는 정상, DDL 대기 | Phase 59-B: 근본원인은 toss-confirm.js가 없는 `businesses.plan`을 PATCH하던 것. Phase 59-B DDL(컬럼추가+백필) 실행하면 해결 |
-| workers.workplace_verify_token 부재로 직장인증 토큰플로우 400 | 🟡 코드는 정상, DDL 대기 | Phase 59-B DDL 실행하면 해결 |
+| businesses.plan 미영속화 = 결제 후 plan이 free로 리셋 (오래된 P0) | ✅ 해결 (DDL, 2026-07-21 대표님 실행) | Phase 59-B: 컬럼추가+subscriptions 백필 완료(첫 시도는 `s.business_id(text)=b.kakao_uid(uuid)` 타입불일치로 실패 → `b.kakao_uid::text` 캐스팅으로 성공). anon key로 businesses.plan 200 확인 |
+| workers.workplace_verify_token 부재로 직장인증 토큰플로우 400 | ✅ 해결 (DDL, 2026-07-21 대표님 실행) | 컬럼추가 완료, 200 확인 |
 | 레슨 문의 수락/거절(`decideLessonInquiry`) | ✅ 해결 (DDL, 2026-07-21 대표님 실행) | `lesson_inquiries.status`/`decided_at` 추가 완료, anon key로 200 확인. 선택 컬럼 message/proposed_price는 미추가지만 조건부 표시라 무해 |
 | 공고 저장 오류 | 🟢 스키마 대조 완료, 불일치 없음 (2026-07-18 재점검) | Supabase anon key로 `job_postings` 실제 컬럼을 직접 조회(`GET /rest/v1/job_postings?limit=1`)해 `submitPosting()`의 payload 필드 전부와 1:1 대조함 - 불일치 없음. `submitPosting()` 코드 자체도 10초 타임아웃/에러메시지 표시/버튼 복구가 이미 잘 돼있어 추가 조치 없음. 그래도 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것(원인이 payload 스키마는 아닌 것으로 확인됨) |
 | 홈 화면 400 에러 다수 (콘솔에서 발견) | ✅ 해결 (v540, 2026-07-18) | `businesses.biz_type` 컬럼이 코드 9곳에서 참조되는데 실제 DB엔 존재하지 않아(anon key로 직접 확인, `column businesses.biz_type does not exist`) 업체 랭킹/프로필상세(`.single()`이라 전체 실패)/즐겨찾기 업체/채팅 상대방 정보 등 6개 쿼리가 매번 400으로 실패하고 있었음. select()에서 biz_type 제거(표시 코드는 이미 빈값 fallback 있어 그대로 둠) |
