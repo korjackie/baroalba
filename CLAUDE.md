@@ -603,6 +603,33 @@ ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS proposed_price INT;
 
 **남은 권장 작업**: 이번엔 `.from()` 참조 테이블만 훑었다. `.rpc()` 호출·`api/*.js` 서버함수의 SQL·admin.js/mannam-owner.js 등 다른 스크립트도 같은 방식으로 전수 대조하면 추가 드리프트를 더 잡을 수 있음.
 
+**Phase 59-B ✅ 서버함수(api/*.js) + RPC 전수 대조 2차 (같은 날 이어서)** — 위 "남은 권장 작업"을 바로 수행
+
+- **RPC 3종**(`nearby_jobs`/`increment_post_likes`/`delete_user_account`) 전부 존재 확인.
+- **결제/포인트/알림 서버함수**(toss-confirm/toss-points/role-notify/send-push/surge-check)의 payments·subscriptions·point_accounts·point_transactions·notifications·fcm_tokens 쓰기 컬럼 **전부 정상**.
+- **🔴 `toss-confirm.js`가 결제 후 없는 `businesses.plan`을 PATCH(400)** — 이게 문서에 오래 있던 P0("plan이 새로고침/재로그인하면 free로 리셋")의 **진짜 근본원인**이었다. 구독은 `subscriptions` 테이블에 정상 저장되지만 클라이언트는 `businesses.plan`을 읽어서 항상 free로 보였던 것. **DDL 필요(아래)** — 컬럼만 추가하면 이미 작성된 PATCH가 동작.
+- **admin.js 스키마 드리프트 3건 수정(v-불필요, 서버파일이라 캐시무관)**:
+  1. 오늘 지원건수 카운트가 `applications.created_at`(실제 `applied_at`)로 400
+  2. 회원상세 지원이력이 `applications.review`/`reviewed_at`(실제 `employer_review`/`employer_reviewed_at`) - PostgREST 별칭(`review:employer_review`)으로 응답키 유지한 채 수정
+  3. **모임 주최자 이름이 admin에서 항상 공란**: `gatherings.host_id`는 `currentUser.id`(=kakao_uid)인데 workers는 `id`로, businesses는 없는 `owner_id`로 조회하고 있었음(workers는 조용히 빈결과, businesses는 400) → 둘 다 `kakao_uid`로 통일. **이건 스키마 드리프트가 아니라 "잘못된 키로 조인"하는 의미 버그라, 컬럼 존재검사만으론 workers쪽은 안 잡히고 host_id 저장값을 코드에서 역추적해야 발견됨** (schema audit의 한계 - 값 의미까지 봐야 하는 유형)
+- **coupon.js 쿠폰 지급 4건 수정** — URL쿼리 밖(바디·속성)이라 스크립트가 못 잡아 코드를 직접 읽어 발견:
+  1. `coupons(ticket_count)`/`.ticket_count`(실제 `pass_qty`) → 지급 티켓수가 undefined
+  2. `used_count` PATCH(실제 `uses_count`) → 400, 사용카운터 안 올라감
+  3. `max_uses_per_user` 컬럼 없음 → `>= undefined`가 항상 false라 **1인당 재사용 제한이 전혀 안 걸려 쿠폰 무한사용 가능** → `|| 1` 기본값으로 방어
+- **교훈**: URL 쿼리 컬럼은 스크립트로 전수 대조되지만, **INSERT/PATCH 바디 키와 `obj.컬럼` 속성 접근은 코드를 눈으로 읽어야** 잡힌다(coupon.js 사례). 서버함수 검수 시 body의 `JSON.stringify({...})` 키와 응답 객체 `.속성` 접근도 스키마와 대조할 것.
+
+**필요 DDL 2건 (대표님 Supabase SQL Editor)**
+```sql
+-- 1) 업체 플랜 영속화 (P0 근본해결) - toss-confirm.js의 PATCH가 이걸 기다림
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'free';
+-- 기존 결제자 백필 (subscriptions.business_id = businesses.kakao_uid 로 저장돼 있음)
+UPDATE businesses b SET plan = s.plan
+  FROM subscriptions s
+  WHERE s.business_id = b.kakao_uid AND s.status = 'active';
+-- 2) 직장인증 토큰 (admin.js 244/251/272의 workplace 인증 플로우가 이 컬럼을 씀)
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS workplace_verify_token TEXT;
+```
+
 ---
 
 ## 8. 현재 버그 / 미완료
@@ -610,6 +637,9 @@ ALTER TABLE lesson_inquiries ADD COLUMN IF NOT EXISTS proposed_price INT;
 | 항목 | 상태 | 처리 방법 |
 |------|------|-----------|
 | 스키마 드리프트 9건(businesses.region 4곳/모임 신청자목록/레슨 문의·채팅·카운트/댓글푸시) | ✅ 해결 (v547, 2026-07-21) | Phase 59 참고 - 코드↔실제DB 전수 대조로 발견, 전부 400→200 검증. 이전 "전면검수"가 코드만 봐서 못 잡던 유형 |
+| 서버함수 드리프트 7건(admin 지원카운트/회원상세리뷰/모임주최자명, coupon 지급수·카운터·1인제한) | ✅ 해결 (api 배포, 2026-07-21) | Phase 59-B 참고 - admin.js·coupon.js 수정, node --check 통과 |
+| businesses.plan 미영속화 = 결제 후 plan이 free로 리셋 (오래된 P0) | 🟡 코드는 정상, DDL 대기 | Phase 59-B: 근본원인은 toss-confirm.js가 없는 `businesses.plan`을 PATCH하던 것. Phase 59-B DDL(컬럼추가+백필) 실행하면 해결 |
+| workers.workplace_verify_token 부재로 직장인증 토큰플로우 400 | 🟡 코드는 정상, DDL 대기 | Phase 59-B DDL 실행하면 해결 |
 | 레슨 문의 수락/거절(`decideLessonInquiry`) | ✅ 해결 (DDL, 2026-07-21 대표님 실행) | `lesson_inquiries.status`/`decided_at` 추가 완료, anon key로 200 확인. 선택 컬럼 message/proposed_price는 미추가지만 조건부 표시라 무해 |
 | 공고 저장 오류 | 🟢 스키마 대조 완료, 불일치 없음 (2026-07-18 재점검) | Supabase anon key로 `job_postings` 실제 컬럼을 직접 조회(`GET /rest/v1/job_postings?limit=1`)해 `submitPosting()`의 payload 필드 전부와 1:1 대조함 - 불일치 없음. `submitPosting()` 코드 자체도 10초 타임아웃/에러메시지 표시/버튼 복구가 이미 잘 돼있어 추가 조치 없음. 그래도 재현되면 `showAlert`가 띄우는 실제 서버 에러 메시지부터 확인할 것(원인이 payload 스키마는 아닌 것으로 확인됨) |
 | 홈 화면 400 에러 다수 (콘솔에서 발견) | ✅ 해결 (v540, 2026-07-18) | `businesses.biz_type` 컬럼이 코드 9곳에서 참조되는데 실제 DB엔 존재하지 않아(anon key로 직접 확인, `column businesses.biz_type does not exist`) 업체 랭킹/프로필상세(`.single()`이라 전체 실패)/즐겨찾기 업체/채팅 상대방 정보 등 6개 쿼리가 매번 400으로 실패하고 있었음. select()에서 biz_type 제거(표시 코드는 이미 빈값 fallback 있어 그대로 둠) |

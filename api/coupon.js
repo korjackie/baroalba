@@ -82,9 +82,9 @@ module.exports = async function handler(req, res) {
   const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   async function myTicketTotal() {
-    const rows = await sb(`coupon_redemptions?user_id=eq.${userId}&select=coupons(ticket_count)`, svcKey).then(r => r.json());
+    const rows = await sb(`coupon_redemptions?user_id=eq.${userId}&select=coupons(pass_qty)`, svcKey).then(r => r.json());
     if (!Array.isArray(rows)) return 0;
-    return rows.reduce((sum, r) => sum + (r.coupons?.ticket_count || 0), 0);
+    return rows.reduce((sum, r) => sum + (r.coupons?.pass_qty || 0), 0);
   }
 
   try {
@@ -114,7 +114,7 @@ module.exports = async function handler(req, res) {
       const myRedemptions = await sb(
         `coupon_redemptions?coupon_id=eq.${coupon.id}&user_id=eq.${userId}&select=id`, svcKey
       ).then(r => r.json());
-      if (Array.isArray(myRedemptions) && myRedemptions.length >= coupon.max_uses_per_user) {
+      if (Array.isArray(myRedemptions) && myRedemptions.length >= (coupon.max_uses_per_user || 1)) {
         return res.status(400).json({ error: '이미 사용한 쿠폰입니다' });
       }
 
@@ -133,10 +133,10 @@ module.exports = async function handler(req, res) {
 
       await sb(`coupons?id=eq.${coupon.id}`, svcKey, {
         method: 'PATCH',
-        body: JSON.stringify({ used_count: (coupon.used_count || 0) + 1 })
+        body: JSON.stringify({ uses_count: (coupon.uses_count || 0) + 1 })
       });
 
-      return res.json({ ok: true, granted: coupon.ticket_count, tickets: await myTicketTotal() });
+      return res.json({ ok: true, granted: coupon.pass_qty, tickets: await myTicketTotal() });
     }
 
     return res.status(404).json({ error: 'Unknown action' });

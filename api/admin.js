@@ -847,7 +847,7 @@ module.exports = async function handler(req, res) {
         sb('workers?select=id', svcKey).then(r => r.json()),
         sb('job_postings?select=id&status=neq.closed', svcKey).then(r => r.json()),
         sb('reports?select=id,status', svcKey).then(r => r.json()),
-        sb(`applications?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()),
+        sb(`applications?select=id&applied_at=gte.${today}`, svcKey).then(r => r.json()),
         sb('gatherings?select=id&status=eq.open', svcKey).then(r => r.json()),
         sb('businesses?select=id', svcKey).then(r => r.json()).catch(() => []),
         sb(`workers?select=id&created_at=gte.${today}`, svcKey).then(r => r.json()),
@@ -1767,7 +1767,7 @@ module.exports = async function handler(req, res) {
       if (!id) return res.status(400).json({ error: 'id required' });
       const [workerArr, apps] = await Promise.all([
         sb(`workers?id=eq.${id}&select=*`, svcKey).then(r => r.json()),
-        sb(`applications?worker_id=eq.${id}&select=id,status,applied_at,job_posting_id,employer_rating,review,reviewed_at,biz_rating&order=applied_at.desc&limit=20`, svcKey).then(r => r.json()),
+        sb(`applications?worker_id=eq.${id}&select=id,status,applied_at,job_posting_id,employer_rating,review:employer_review,reviewed_at:employer_reviewed_at,biz_rating&order=applied_at.desc&limit=20`, svcKey).then(r => r.json()),
       ]);
       const worker = Array.isArray(workerArr) ? workerArr[0] : null;
       if (!worker) return res.status(404).json({ error: 'User not found' });
@@ -1877,12 +1877,12 @@ module.exports = async function handler(req, res) {
       const hostIds = [...new Set(list.map(m => m.host_id).filter(Boolean))];
       // workers + businesses 두 테이블 모두 조회
       const [workers, bizzes] = await Promise.all([
-        hostIds.length ? sb(`workers?id=in.(${hostIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
-        hostIds.length ? sb(`businesses?owner_id=in.(${hostIds.join(',')})&select=owner_id,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
+        hostIds.length ? sb(`workers?kakao_uid=in.(${hostIds.join(',')})&select=kakao_uid,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
+        hostIds.length ? sb(`businesses?kakao_uid=in.(${hostIds.join(',')})&select=kakao_uid,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
       ]);
       const hostMap = {};
-      (Array.isArray(workers) ? workers : []).forEach(h => { hostMap[h.id] = { name: h.name, phone: h.phone }; });
-      (Array.isArray(bizzes) ? bizzes : []).forEach(b => { if (!hostMap[b.owner_id]) hostMap[b.owner_id] = { name: b.name, phone: b.phone }; });
+      (Array.isArray(workers) ? workers : []).forEach(h => { hostMap[h.kakao_uid] = { name: h.name, phone: h.phone }; });
+      (Array.isArray(bizzes) ? bizzes : []).forEach(b => { if (!hostMap[b.kakao_uid]) hostMap[b.kakao_uid] = { name: b.name, phone: b.phone }; });
       return res.json(list.map(m => ({
         ...m,
         host_name: hostMap[m.host_id]?.name || '(알 수 없음)',
