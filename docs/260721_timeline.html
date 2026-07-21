@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 개발 타임라인 (2026.07.21)</title>
+<style>
+  :root{--red:#C8102E;--green:#16a34a;--blue:#3b82f6;--orange:#f59e0b;--purple:#7c3aed;--pink:#f43f5e;--gray-100:#f8f9fa;--gray-200:#eee;--gray-500:#888;--gray-900:#111;--white:#fff;--radius:16px;--shadow:0 2px 12px rgba(0,0,0,0.06)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px}
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);padding:100px 5% 60px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(200,16,46,0.25),transparent 70%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#ff6b7a;font-size:12px;font-weight:800;padding:5px 16px;border-radius:100px;letter-spacing:1px;margin-bottom:20px}
+  .hero h1{font-size:clamp(26px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.2;margin-bottom:12px}
+  .hero h1 span{color:var(--red)}
+  .hero-desc{font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:36px}
+  .hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+  .stat-item{text-align:center}
+  .stat-num{font-size:28px;font-weight:900;color:var(--red);line-height:1}
+  .stat-label{font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;font-weight:700}
+  .container{max-width:860px;margin:0 auto;padding:60px 5%}
+  .section-label{font-size:12px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .section-title{font-size:clamp(20px,3vw,28px);font-weight:900;letter-spacing:-0.5px;margin-bottom:8px}
+  .section-desc{font-size:14px;color:var(--gray-500);margin-bottom:36px}
+  .timeline-wrapper{position:relative}
+  .timeline-wrapper::before{content:'';position:absolute;left:130px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red),rgba(200,16,46,0.1))}
+  .tl-group{margin-bottom:44px}
+  .tl-date-header{display:flex;align-items:center;margin-bottom:18px}
+  .tl-date-label{width:120px;font-size:11px;font-weight:800;color:var(--gray-500);text-align:right;padding-right:18px;flex-shrink:0;letter-spacing:0.5px}
+  .tl-date-dot{width:14px;height:14px;border-radius:50%;background:var(--red);border:3px solid var(--gray-100);flex-shrink:0;margin-left:-8px;position:relative;z-index:1}
+  .tl-date-dot.today{background:var(--green);box-shadow:0 0 0 5px rgba(22,163,74,0.2)}
+  .tl-date-text{font-size:14px;font-weight:800;color:var(--gray-900);margin-left:14px}
+  .tl-items{padding-left:148px;display:flex;flex-direction:column;gap:10px}
+  .tl-item{background:var(--white);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200)}
+  .tl-item.bug{border-left-color:#ef4444}
+  .tl-item.feat{border-left-color:var(--green)}
+  .tl-item.ux{border-left-color:var(--blue)}
+  .tl-item.fix{border-left-color:var(--orange)}
+  .tl-item.infra{border-left-color:var(--purple)}
+  .tl-item.today-item{background:linear-gradient(135deg,#0a2a0a,#1a3a0a);border:1.5px solid rgba(22,163,74,0.4);border-left:4px solid var(--green)}
+  .tl-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .v-chip{font-size:11px;font-weight:900;background:var(--gray-100);color:#666;padding:2px 10px;border-radius:100px;font-family:'SF Mono',monospace}
+  .tl-item.today-item .v-chip{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8)}
+  .type-chip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:100px}
+  .type-chip.bug{background:#fee2e2;color:#991b1b}
+  .type-chip.feat{background:#dcfce7;color:#14532d}
+  .type-chip.ux{background:#dbeafe;color:#1e3a8a}
+  .type-chip.fix{background:#fef9c3;color:#713f12}
+  .type-chip.infra{background:#ede9fe;color:#4c1d95}
+  .type-chip.new{background:linear-gradient(90deg,#f43f5e,#a855f7);color:#fff}
+  .type-chip.api{background:#fffbeb;color:#92400e}
+  .type-chip.crit{background:linear-gradient(90deg,#ef4444,#f97316);color:#fff}
+  .tl-title{font-size:15px;font-weight:900;margin-bottom:4px;color:var(--gray-900)}
+  .tl-item.today-item .tl-title{color:#fff}
+  .tl-desc{font-size:12px;color:var(--gray-500);line-height:1.6}
+  .tl-item.today-item .tl-desc{color:rgba(255,255,255,0.6)}
+  .today-badge{display:inline-block;background:var(--green);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:100px;letter-spacing:1px}
+  .pending-section{margin-top:56px}
+  .pending-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .pending-card{background:var(--white);border-radius:var(--radius);padding:20px;border:1px solid var(--gray-200);box-shadow:var(--shadow)}
+  .pending-prio{display:inline-block;font-size:11px;font-weight:900;padding:3px 10px;border-radius:100px;margin-bottom:12px}
+  .prio-high{background:#fee2e2;color:#991b1b}
+  .prio-mid{background:#ffedd5;color:#9a3412}
+  .prio-low{background:#dbeafe;color:#1e3a8a}
+  .prio-ddl{background:#fffbeb;color:#92400e}
+  .prio-plan{background:#ede9fe;color:#4c1d95}
+  .pending-title{font-size:14px;font-weight:900;margin-bottom:4px}
+  .pending-desc{font-size:12px;color:var(--gray-500);line-height:1.6}
+  footer{text-align:center;padding:40px 5% 20px;font-size:13px;color:var(--gray-500);border-top:1px solid var(--gray-200)}
+  @media(max-width:768px){.timeline-wrapper::before{left:16px}.tl-date-label{display:none}.tl-date-dot{margin-left:10px}.tl-items{padding-left:44px}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">타임라인 · 2026.07.21</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">DEV TIMELINE</div>
+  <h1>바로알바 <span>개발 타임라인</span></h1>
+  <p class="hero-desc">2026년 상반기 ~ 7월 21일 개발 이력 통합본</p>
+  <div class="hero-stats">
+    <div class="stat-item"><div class="stat-num">548</div><div class="stat-label">SW 최신 버전</div></div>
+    <div class="stat-item"><div class="stat-num">16</div><div class="stat-label">스키마 드리프트 색출·수정</div></div>
+    <div class="stat-item"><div class="stat-num">32</div><div class="stat-label">7/16~21 커밋 수</div></div>
+    <div class="stat-item"><div class="stat-num">P0</div><div class="stat-label">결제 플랜 리셋 근본종결</div></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="section-label">Timeline</div>
+  <div class="section-title">개발 이력</div>
+  <div class="section-desc">최신 순. 7/16 오후~7/21(오늘)은 초록색 — 스킬필터·바로브랜딩 배너로 시작해, 스키마 드리프트(코드↔실제DB 불일치)를 전수 대조로 16건 색출하고 오래된 P0(결제 플랜 리셋)를 근본 종결한 구간.</div>
+
+  <div class="timeline-wrapper">
+
+    <!-- 7/21 오늘 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.21</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">스키마 드리프트 전수 대조 + P0 근본종결 <span class="today-badge">TODAY</span></div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item crit"><div class="tl-header"><span class="v-chip">v547</span><span class="type-chip crit">ROOT CAUSE</span></div><div class="tl-title">코드↔살아있는DB 전수대조 — 조용히 죽어있던 클라이언트 기능 9건</div><div class="tl-desc">businesses.region(없는 컬럼) 등을 curl로 200/400 대조해 색출. 에러 삼킴 패턴(const {data}로 400을 조용히 흡수)이 화면을 빈 채로 "정상인 척" 만들고 있었음.</div></div>
+        <div class="tl-item today-item infra"><div class="tl-header"><span class="v-chip">원칙 13-9</span><span class="type-chip crit">PRINCIPLE</span></div><div class="tl-title">"검수는 코드가 아니라 살아있는 DB에 대고 하라" 확립</div><div class="tl-desc">"수차례 전면검수에도 이상없다"던 버그가 반복해 새어나간 이유 = 검수를 코드에 대고 했기 때문. 모델 역량이 아니라 검증 방법론의 문제.</div></div>
+        <div class="tl-item today-item bug"><div class="tl-header"><span class="v-chip">api</span><span class="type-chip crit">CRITICAL</span></div><div class="tl-title">서버함수(admin.js/coupon.js) 스키마 드리프트 7건</div><div class="tl-desc">admin 지원통계·리뷰·모임 주최자명 공란, 쿠폰 지급수 undefined·카운터 미증가·1인당 재사용제한 무효(무한사용) 등. 쓰기 바디 키는 눈으로 읽어야 잡힘.</div></div>
+        <div class="tl-item today-item feat"><div class="tl-header"><span class="v-chip">DDL</span><span class="type-chip crit">P0 CLOSED</span></div><div class="tl-title">P0 근본종결 — businesses.plan 컬럼 추가 + 결제자 백필</div><div class="tl-desc">"결제해도 새로고침하면 free로 리셋"의 진짜 원인은 없는 businesses.plan을 PATCH하던 것. 컬럼 추가+백필로 종결(첫 DDL은 text=uuid 타입불일치 → ::text 캐스팅으로 성공).</div></div>
+        <div class="tl-item today-item feat"><div class="tl-header"><span class="v-chip">v548</span><span class="type-chip feat">DDL</span></div><div class="tl-title">레슨 문의 수락/거절 + 직장인증 토큰 DDL 완료</div><div class="tl-desc">lesson_inquiries.status/decided_at, workers.workplace_verify_token 추가 후 200 확인. 낡은 "plan 컬럼 없음" 주석 정정.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/19 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.19</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">스키마 드리프트 첫 색출 + PDF 다운로드 <span class="today-badge">RECENT</span></div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item crit"><div class="tl-header"><span class="v-chip">07-19</span><span class="type-chip crit">CRITICAL</span></div><div class="tl-title">모임 목록이 통째로 안 뜨던 원인 = businesses.plan 400 격리</div><div class="tl-desc">알림 조회 400(존재 안 하는 컬럼)도 함께 수정. 스키마 드리프트 전수조사 착수 — 이 신호가 07-21 대청소로 이어짐.</div></div>
+        <div class="tl-item today-item feat"><div class="tl-header"><span class="v-chip">v30/31</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">계약서/지원서 인쇄 대신 PDF 파일로 바로 다운로드</div><div class="tl-desc">안드로이드 네이티브 저장 브릿지(versionCode 31 리빌드+배포). 지원자 프로필/전자계약서 뒤로가기 수정.</div></div>
+        <div class="tl-item today-item infra"><div class="tl-header"><span class="v-chip">DDL</span><span class="type-chip infra">INFRA</span></div><div class="tl-title">DDL 2건 실행 — follows 테이블, job_postings.updated_at</div><div class="tl-desc">바로스팟 프로필 조회 세션 메모리 캐시로 반복 조회 최적화.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/18 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.18</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">biz_type 400 제거 + 채팅 최적화 <span class="today-badge">RECENT</span></div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item bug"><div class="tl-header"><span class="v-chip">07-18</span><span class="type-chip bug">BUG</span></div><div class="tl-title">businesses.biz_type 참조 제거 — 실제 DB에 없는 컬럼(400)</div><div class="tl-desc">스키마 드리프트의 첫 뚜렷한 신호. 채팅목록 메시지 쿼리 컬럼제한+LIMIT로 로딩 속도도 개선.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/17 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.17</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">키보드가림 재수정 + 원칙 13-8 + 안드로이드 로그인</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item fix"><div class="tl-header"><span class="v-chip">v535/536</span><span class="type-chip fix">FIX</span></div><div class="tl-title">프로필편집 키보드가림 2차 근본 재수정</div><div class="tl-desc">여백강제 방식 → 채팅과 동일하게 패널 자체를 줄이는 방식으로 통일. 원칙 13-8(재해석 대신 복붙)을 배포 체크리스트 강제항목으로 편입.</div></div>
+        <div class="tl-item ux"><div class="tl-header"><span class="v-chip">Android</span><span class="type-chip ux">UX</span></div><div class="tl-title">카카오 로그인 세션유지 안 되던 문제 + 채팅목록 병렬화</div><div class="tl-desc">제3자 쿠키 허용으로 세션 유지. 채팅목록 조회 순차→병렬, 바로스팟 프로필 배치화로 속도 개선.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/16 오후 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.16 PM</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">스킬필터 · 바로브랜딩 배너 · GA4 실연결</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v531~534</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">알바생 스킬 맞춤 공고 필터 + GA4 실제 측정 ID 연결</div><div class="tl-desc">바로심부름 금지행위 동의 계정단위(서버) 기록, 홈 하단 카드 3종 디자인 통일.</div></div>
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v532</span><span class="type-chip new">TRIAL</span></div><div class="tl-title">홈 최하단 바로브랜딩(신규 사업) 배너 시험 노출</div><div class="tl-desc">본격 착수 전 반응 측정용 배너 노출 시작.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/13~16 (이전 문서 구간) -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.13~16</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">바로스팟 1:1 재설계 · 마이페이지 대개편 (260716 문서)</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">118 commits</span><span class="type-chip new">RESTRUCTURE</span></div><div class="tl-title">바로스팟 정원제→1:1 매칭 전면 재설계 + 마이페이지 통합 + 상태표시줄 근본해결</div><div class="tl-desc">추천인/포인트 강화, 성별 필수화, 전수감사(백버튼 12곳·DOM부재 2건), app_ui.js lockstep 편입. 상세는 260716_* 문서 참고.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/6 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.06</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">💫 바로만남 서비스 최초 론칭</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v360~362</span><span class="type-chip new">NEW SERVICE</span></div><div class="tl-title">바로만남 풀스크린 패널 최초 구현</div><div class="tl-desc">이후 07.09~16에 초기 구현의 미완성 부분들을 대거 재설계.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/2 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.02</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">Google Play 정식 출시 (Android v1.5.0)</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v328~332</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">Google Play Store 정식 출시</div><div class="tl-desc">모임채팅 FAB · 레슨채팅 DDL · 뒤로가기 버그 · 숏컷 필터 통일.</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 미결 작업 -->
+  <div class="pending-section">
+    <div class="section-label">Pending</div>
+    <div class="section-title">잔여 검수 · 예정 작업</div>
+    <div class="pending-grid">
+      <div class="pending-card">
+        <div class="pending-prio prio-high">HIGH</div>
+        <div class="pending-title">실기기에서 P0 종결 확인</div>
+        <div class="pending-desc">businesses.plan DDL 후 실제 결제→재로그인 시 플랜이 유지되는지 프로덕션 실사용 확인.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-high">HIGH</div>
+        <div class="pending-title">알바 프리미엄 플랜 실결제</div>
+        <div class="pending-desc">plan 영속화가 해결돼 실결제 연동의 남은 걸림돌이 줄어듦 — 가장 빠른 매출 레버.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-mid">MEDIUM</div>
+        <div class="pending-title">admin.js 잔여 .속성 읽기 검수</div>
+        <div class="pending-desc">이번엔 URL쿼리+쓰기바디 위주. 응답객체 obj.컬럼 접근까지 파면 몇 건 더 나올 수 있음.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-mid">MEDIUM</div>
+        <div class="pending-title">login/admin.html 스키마 대조</div>
+        <div class="pending-desc">이번 전수대조는 app.js·api/ 위주 — 나머지 HTML/스크립트도 같은 방식으로 훑을 여지.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-ddl">자동화 검토</div>
+        <div class="pending-title">스키마 드리프트 CI 자동화</div>
+        <div class="pending-desc">curl 대조 스크립트를 배포 전 자동 실행 체계로 승격하면 재발 방지 가능.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-plan">신규 기획</div>
+        <div class="pending-title">바로브랜딩 (신규 사업)</div>
+        <div class="pending-desc">홈 최하단 배너 시험노출 시작(v532). 본격 착수 여부는 별도 결정.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>바로알바 by MultiMOVE · 타임라인 최종 업데이트: 2026.07.21</footer>
+</body>
+</html>
