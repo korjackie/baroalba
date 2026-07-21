@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '548';
+  const _APP_V = '549';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -603,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=548').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=549').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -3010,6 +3010,17 @@ function _wageUnit(j) {
   if (t === 'weekly')                      return '/주';
   return '/시간';
 }
+// 시급제 여부 - 시급일 때만 "단가 x 근무시간 = 총액" 환산이 성립한다.
+// (일급/건당/월급/주급 공고에 시간을 곱하면 금액이 몇 배로 부풀려짐 - 2026-07-21 수정)
+function _isHourlyJob(j) {
+  const t = j?.wage_type;
+  return !t || t === 'hourly';
+}
+// 공고 1건의 실수령 예상액. 시급제만 시간을 곱하고, 그 외는 단가 자체가 금액이다.
+function _jobEarning(j) {
+  const w = j?.current_wage || 0;
+  return _isHourlyJob(j) ? w * (j?.duration_hours || 0) : w;
+}
 function _wageLabel(j) {
   const t = j?.wage_type;
   if (t === 'daily')                       return '일급';
@@ -3434,10 +3445,12 @@ async function _renderRankPanel() {
       let q = db.from('businesses').select('id,name,rating,review_count,photo_url').not('rating','is',null).gte('review_count',1).order('review_count',{ascending:false}).limit(50);
       const r = await q;
       data = r.data || [];
-      if (_rankCurrentCat && _rankCurrentCat !== '전체') data = data.filter(d => d.biz_type === _rankCurrentCat);
+      // businesses.biz_type은 실제 DB에 없는 컬럼(2026-07-18 확인, select에서도 제거됨)이라
+      // d.biz_type이 항상 undefined -> 업종을 고르면 무조건 "데이터가 없어요"가 뜨고 있었음.
+      // 업체는 업종 분류 자체가 없으므로 카테고리 필터를 적용하지 않는다.
     } else {
       const pref = _rankCurrentCat && _rankCurrentCat !== '전체' ? _rankCurrentCat : null;
-      let q = db.from('workers').select('id,name,rating,review_count,photo_url,pref_categories,nationality').not('rating','is',null).gte('review_count',1).order('review_count',{ascending:false}).limit(50);
+      let q = db.from('workers').select('id,name,rating,review_count,noshow_count,photo_url,pref_categories,nationality').not('rating','is',null).gte('review_count',1).order('review_count',{ascending:false}).limit(50);
       const r = await q;
       data = r.data || [];
       if (pref) data = data.filter(d => {
@@ -3456,7 +3469,11 @@ async function _renderRankPanel() {
         ? `<img src="${d.photo_url}" style="width:40px;height:40px;border-radius:${isEmployer?'10px':'50%'};object-fit:cover;flex-shrink:0">`
         : `<div style="width:40px;height:40px;border-radius:${isEmployer?'10px':'50%'};background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:${ac.text};flex-shrink:0">${(d.name||'?')[0]}</div>`;
       const sub = isEmployer ? (d.biz_type||'') : `${_NAT[d.nationality]||'👤'} ${d.name?d.name[0]+'*'.repeat(Math.max(1,(d.name.length||2)-1)):'익명'}`;
-      const trust = _trustScore(d.rating, d.review_count);
+      // 순위 정렬은 후기 수까지 반영하는 _trustScore로 하되, 화면에 보이는 숫자는
+      // 마이페이지/지원자 뱃지와 동일한 calcBakalbaScore(N점)로 통일한다.
+      // 예전엔 여기만 9.73 같은 원시값을 "신뢰도"로 띄워서, 같은 이름의 지표가
+      // 화면마다 전혀 다른 숫자로 보였음 (2026-07-21 수정)
+      const trust = calcBakalbaScore(d);
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
         <div style="width:24px;display:flex;justify-content:center;flex-shrink:0">${medal}</div>
         ${avatar}
@@ -3465,7 +3482,7 @@ async function _renderRankPanel() {
           <div style="font-size:11px;color:#aaa;margin-top:1px">${isEmployer?sub:''} ⭐ ${(d.rating||0).toFixed(1)} <span style="color:#ddd">(${d.review_count}건)</span></div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:12px;font-weight:900;color:${isEmployer?'#b45309':'#15803d'}">${trust.toFixed(2)}</div>
+          <div style="font-size:12px;font-weight:900;color:${isEmployer?'#b45309':'#15803d'}">${trust}점</div>
           <div style="font-size:10px;color:#bbb">신뢰도</div>
         </div>
       </div>`;
@@ -5365,7 +5382,7 @@ async function loadMyApplications() {
   }
 
   const { data: apps } = await db.from('applications')
-    .select('*, job_postings(title, current_wage, duration_hours, start_time, work_type, work_end_date, work_days, category, address, businesses(name, phone))')
+    .select('*, job_postings(title, current_wage, wage_type, duration_hours, start_time, work_type, work_end_date, work_days, category, address, businesses(name, phone))')
     .eq('worker_id', wid)
     .order('applied_at', { ascending: false });
 
@@ -5379,8 +5396,9 @@ async function loadMyApplications() {
     const _accepted = apps.filter(a => ['accepted','completed'].includes(a.status)).length;
     const _rate = _total > 0 ? Math.round(_accepted / _total * 100) : 0;
     const _nowM = new Date(); const _thisYM = `${_nowM.getFullYear()}-${String(_nowM.getMonth()+1).padStart(2,'0')}`;
+    // 이달수입도 같은 버그가 전파돼 있었음 - 일급/건당 공고까지 시간을 곱해 부풀림
     const _monthEarnings = apps.filter(a => a.status === 'completed' && (a.completed_at||'').startsWith(_thisYM))
-      .reduce((s,a) => s + ((a.job_postings?.current_wage||0) * (a.job_postings?.duration_hours||0)), 0);
+      .reduce((s,a) => s + _jobEarning(a.job_postings), 0);
     const _pending = apps.filter(a => ['pending','reviewing'].includes(a.status)).length;
     const mkStat = (v, lbl, color) =>
       `<div style="background:#fff;border-radius:10px;padding:8px 4px;text-align:center;border:1px solid #f0f0f0">
@@ -5438,10 +5456,14 @@ async function loadMyApplications() {
       return `<span style="font-size:11px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:3px 8px;border-radius:8px">취소가능 D-${diffD}</span>`;
     })();
 
+    // 2026-07-21: wage_type을 아예 조회조차 안 하고 모든 공고를 시급으로 간주해
+    // '원/시'로 찍고 duration_hours를 곱해 총액을 부풀리던 버그
+    // (일급 905,000원 공고가 "905,000원/시 · 3시간 = 총 2,715,000원"으로 표시됨).
+    // 이미 있는 _wageUnit/_wageLabel을 재사용하고, 시간 환산은 시급제일 때만 한다.
     const wageStr = job.current_wage
-      ? job.duration_hours
-        ? `${job.current_wage.toLocaleString()}원/시 · ${job.duration_hours}시간 (총 ${(job.current_wage * job.duration_hours).toLocaleString()}원 예상)`
-        : `${job.current_wage.toLocaleString()}원/시`
+      ? _isHourlyJob(job) && job.duration_hours
+        ? `${job.current_wage.toLocaleString()}원${_wageUnit(job)} · ${job.duration_hours}시간 (총 ${(job.current_wage * job.duration_hours).toLocaleString()}원 예상)`
+        : `${job.current_wage.toLocaleString()}원${_wageUnit(job)}`
       : '';
 
     const startStr = (() => {
@@ -5798,6 +5820,65 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
     _myAppsCache = null;
     loadMyApplications();
   };
+}
+
+// 마이페이지 "신뢰점수"를 누르면 showRankPanel('worker')로 남의 전체 랭킹이 열려서
+// 정작 내 점수는 못 보던 문제(2026-07-21 피드백) - 내 점수와 산출 근거를 보여준다.
+// 시트 구조는 showMyRatings의 것을 그대로 따름(13-8 재해석 대신 복붙).
+async function showMyTrustScore() {
+  if (!currentUser) return;
+  const wid = await _getWorkerId();
+  const { data: w } = await db.from('workers')
+    .select('rating, review_count, noshow_count').eq('id', wid || '').maybeSingle();
+  const rating  = parseFloat(w?.rating) || 0;
+  const reviews = parseInt(w?.review_count) || 0;
+  const noshow  = parseInt(w?.noshow_count) || 0;
+  const score   = calcBakalbaScore(w || {});
+  const cappedR = Math.min(reviews, 10);
+  const ptRating = reviews > 0 ? Math.round((rating / 5) * 40) : 0;
+  const ptReview = cappedR * 2;
+  const ptNoshow = noshow * 8;
+  const color = score >= 80 ? '#16a34a' : score >= 60 ? '#F59E0B' : '#94a3b8';
+  const row = (label, val, sub, c) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f5f5f5">
+       <div><div style="font-size:13px;font-weight:700;color:#333">${label}</div>
+       <div style="font-size:11px;color:#aaa;margin-top:2px">${sub}</div></div>
+       <div style="font-size:14px;font-weight:900;color:${c}">${val}</div>
+     </div>`;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:flex;align-items:flex-end';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:17px;font-weight:900">내 신뢰점수</div>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+      </div>
+      <div style="text-align:center;padding:18px 0 22px">
+        <div style="font-size:44px;font-weight:900;color:${color};line-height:1">${score}<span style="font-size:18px;color:#bbb">점</span></div>
+        <div style="font-size:12px;color:#aaa;margin-top:6px">100점 만점</div>
+      </div>
+      ${reviews === 0 ? `
+        <div style="background:#f8fafc;border-radius:12px;padding:14px;font-size:13px;color:#555;line-height:1.7;margin-bottom:14px">
+          아직 받은 후기가 없어 <b>기본 점수 40점</b>만 반영돼 있어요.<br>
+          알바를 완료하고 후기를 받으면 점수가 올라갑니다.
+        </div>` : ''}
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:4px">점수 산출 내역</div>
+      ${row('기본 점수', '+40', '가입 시 누구나', '#555')}
+      ${row('평점', `+${ptRating}`, reviews > 0 ? `★ ${rating.toFixed(1)} / 5.0 (최대 40점)` : '후기가 있어야 반영돼요 (최대 40점)', '#16a34a')}
+      ${row('완료 알바', `+${ptReview}`, `후기 ${reviews}건${reviews > 10 ? ' (10건까지 반영)' : ''} · 건당 2점 (최대 20점)`, '#16a34a')}
+      ${row('노쇼', ptNoshow ? `-${ptNoshow}` : '0', `${noshow}건 · 건당 -8점`, ptNoshow ? '#ef4444' : '#ccc')}
+      <div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border-radius:12px;font-size:12px;color:#888;line-height:1.7">
+        신뢰점수는 업주에게 <b>신뢰 ${score}점</b> 뱃지로 표시됩니다.<br>
+        80점 이상이면 초록 뱃지로 강조돼요.
+      </div>
+      <button onclick="this.closest('div[style*=fixed]').remove();showRankPanel('worker')"
+        style="width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;background:#f5f5f5;color:#555;font-size:13px;font-weight:800;cursor:pointer">
+        전체 알바생 순위 보기
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
 }
 
 async function showMyRatings() {
@@ -6202,7 +6283,7 @@ function showCalendarDay(dateKey) {
     ${dayApps.map(a=>{
       const job = a.job_postings||{};
       const s = STATUS[a.status]||{label:a.status,color:'#888'};
-      const wage = job.current_wage ? job.current_wage.toLocaleString()+'원/시' : '';
+      const wage = job.current_wage ? job.current_wage.toLocaleString()+'원'+_wageUnit(job) : '';
       const hours = job.duration_hours ? job.duration_hours+'시간' : '';
       return `<div onclick="openApplicationJobDetail('${a.job_posting_id}')" style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid #f0f0f0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div style="min-width:0"><div style="font-size:14px;font-weight:800;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${job.title||'공고'}</div><div style="font-size:12px;color:#aaa;margin-top:2px">${[wage,hours].filter(Boolean).join(' · ')}</div></div>
@@ -6224,7 +6305,7 @@ async function loadBookmarks() {
   }
 
   const { data: bookmarks } = await db.from('bookmarks')
-    .select('*, job_postings(id, title, current_wage, category, status, businesses(name))')
+    .select('*, job_postings(id, title, current_wage, wage_type, category, status, businesses(name))')
     .eq('worker_id', wid)
     .order('created_at', { ascending: false });
 
@@ -6270,7 +6351,7 @@ async function loadBookmarks() {
         <div style="flex:1;min-width:0;cursor:pointer" onclick="openDetail('${job.id}')">
           <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:3px">${job.title || '공고'}</div>
           <div style="font-size:13px;color:#888;margin-bottom:4px">${biz.name || ''}</div>
-          <div style="font-size:14px;font-weight:700;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원/시' : ''}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원' + _wageUnit(job) : ''}</div>
         </div>
         <button onclick="toggleBookmark('${job.id}')" style="padding:6px 12px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">북마크 해제</button>
       </div>
@@ -9145,8 +9226,11 @@ async function loadWorkerGrade() {
     document.getElementById('stat-apply-count').textContent = total;
     document.getElementById('stat-complete-count').textContent = done;
     document.getElementById('stat-rating').textContent = w?.rating ? `★${w.rating.toFixed(1)}` : '-';
+    // 후기가 없으면 '-'로만 보여서 "내 점수가 안 나온다"는 피드백(2026-07-21).
+    // 후기 0건이어도 기본 40점은 실제로 부여되므로 그대로 표시하고,
+    // 왜 그 점수인지는 눌렀을 때 showMyTrustScore()가 설명한다.
     const _ts = document.getElementById('stat-trust-score');
-    if (_ts) _ts.textContent = (w && parseInt(w?.review_count || 0) > 0) ? `${calcBakalbaScore(w)}점` : '-';
+    if (_ts) _ts.textContent = w ? `${calcBakalbaScore(w)}점` : '-';
     const mpApply = document.getElementById('mp-apply-val');
     if (mpApply) mpApply.textContent = total > 0 ? `${total}건` : '';
     const mpRating = document.getElementById('mp-rating-val');
@@ -12267,18 +12351,23 @@ function adminQuickEdit(table, id, field, currentValue, label) {
   };
 }
 
+// 신뢰점수(0~100). 2026-07-21 정리:
+//  - 기존엔 review_count를 20으로 한 번 자른 뒤 다시 10으로 잘라 20 캡이 죽은 코드였음
+//  - 배점 합이 40+35+15=90인데 상한만 99로 잡아, 아무도 도달할 수 없는 만점 표기였고
+//    초록 뱃지 기준(80점)이 사실상 평점 만점+후기 10건이어야 해서 대부분 회색에 머물렀음
+//    -> 배점을 40/40/20으로 맞춰 실제 만점이 100이 되도록 재조정
 function calcBakalbaScore(w) {
-  const reviews = Math.min(parseInt(w?.review_count) || 0, 20);
+  const reviews = Math.min(parseInt(w?.review_count) || 0, 10);
   const noshow  = Math.min(parseInt(w?.noshow_count) || 0, 10);
   // 후기가 없으면 rating 기여 없음 (신규 유저 점수 인플레이션 방지)
   const rating  = reviews > 0 ? (parseFloat(w?.rating) || 0) : 0;
   const score = Math.round(
-    40 +                           // 기본 40점
-    (rating / 5) * 35 +            // 평점 최대 35점
-    Math.min(reviews, 10) * 1.5 -  // 완료횟수 최대 15점
-    noshow * 8                      // 노쇼 패널티 -8점/건
+    40 +                    // 기본 40점
+    (rating / 5) * 40 +     // 평점 최대 40점
+    reviews * 2 -           // 완료횟수 최대 20점 (10건 기준)
+    noshow * 8              // 노쇼 패널티 -8점/건
   );
-  return Math.max(0, Math.min(99, score));
+  return Math.max(0, Math.min(100, score));
 }
 function trustBadgeHtml(w) {
   const s = calcBakalbaScore(w);

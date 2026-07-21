@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로만남 — 바로미팅 · 바로스팟 안내 (2026.07.15)</title>
+<style>
+  :root{--red:#C8102E;--rose:#f43f5e;--violet:#7c3aed;--green:#16a34a;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:20px;--shadow:0 8px 32px rgba(0,0,0,0.10)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--rose)}
+  .nav-badge{background:#fff1f2;color:var(--rose);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:900px;margin:0 auto;padding:80px 5% 60px}
+
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);border-radius:28px;padding:56px 40px;margin-bottom:48px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(124,58,237,0.28),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(244,63,94,0.28),transparent 60%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(244,63,94,0.22);border:1px solid rgba(244,63,94,0.5);color:#ff8fa3;font-size:12px;font-weight:800;padding:5px 16px;border-radius:100px;letter-spacing:1px;margin-bottom:20px}
+  .hero h1{font-size:clamp(24px,4vw,38px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.3;margin-bottom:12px}
+  .hero h1 span{color:var(--rose)}
+  .hero-desc{font-size:14px;color:rgba(255,255,255,0.55);max-width:480px;margin:0 auto}
+
+  .service-section{margin-bottom:56px}
+  .service-header{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+  .service-badge{font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;letter-spacing:0.5px}
+  .badge-violet{background:#f3e8ff;color:var(--violet)}
+  .badge-rose{background:#fff1f2;color:var(--rose)}
+  .service-title{font-size:clamp(20px,3vw,28px);font-weight:900;letter-spacing:-0.5px;margin-bottom:6px}
+  .service-subtitle{font-size:14px;color:var(--gray-500);margin-bottom:24px;font-weight:500}
+
+  .service-desc{font-size:14px;color:var(--gray-700);line-height:1.85;margin-bottom:24px;background:#fff;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--gray-200)}
+  .service-desc p{margin-bottom:10px}
+  .service-desc p:last-child{margin-bottom:0}
+  .service-desc strong{color:var(--gray-900);font-weight:800}
+
+  .feature-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:24px}
+  .feature-card{background:#fff;border-radius:16px;padding:18px;box-shadow:var(--shadow);border:1px solid var(--gray-200)}
+  .feature-icon{font-size:24px;margin-bottom:8px}
+  .feature-title{font-size:13px;font-weight:900;color:var(--gray-900);margin-bottom:4px}
+  .feature-desc{font-size:12px;color:var(--gray-500);line-height:1.6}
+
+  /* 이용안내 : 심플 체크리스트 */
+  .guide-box{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);border:1px solid var(--gray-200);margin-bottom:24px}
+  .guide-box .box-label{font-size:11px;font-weight:800;color:var(--gray-500);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+  .guide-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--gray-100)}
+  .guide-item:first-of-type{border-top:none;padding-top:0}
+  .guide-item .mark{flex-shrink:0;color:var(--green);font-weight:900;font-size:13px;line-height:1.5}
+  .guide-item .txt{font-size:13px;color:var(--gray-700);line-height:1.65}
+  .guide-item .txt strong{color:var(--gray-900)}
+
+  /* Process : 심플 가로/세로 스텝 */
+  .step-box{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);border:1px solid var(--gray-200);margin-bottom:8px}
+  .step-box .box-label{font-size:11px;font-weight:800;color:var(--gray-500);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px}
+  .step-row{display:flex;gap:12px;padding:9px 0}
+  .step-num{flex-shrink:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}
+  .badge-violet ~ .step-box .step-num, .step-num.v{background:var(--violet)}
+  .step-num.r{background:var(--rose)}
+  .step-txt strong{display:block;font-size:13px;font-weight:800;color:var(--gray-900);margin-bottom:1px}
+  .step-txt span{font-size:12px;color:var(--gray-500)}
+
+  .divider{border:none;border-top:2px dashed var(--gray-200);margin:40px 0}
+  footer{text-align:center;padding:36px 0 20px;font-size:12px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로만남</div>
+  <div class="nav-badge">이용 안내 · 2026.07.15</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-tag">BARO MANNAM</div>
+    <h1>같은 프로필로,<br><span>두 가지 방식</span>의 만남</h1>
+    <p class="hero-desc">여럿이 편한 날엔 바로미팅, 한 사람과 조용히가 좋은 날엔 바로스팟</p>
+  </div>
+
+  <!-- ═══ 바로미팅 ═══ -->
+  <div class="service-section">
+    <div class="service-header">
+      <span class="service-badge badge-violet">🤝 바로미팅</span>
+    </div>
+    <div class="service-title">정원이 차야 열리는<br>그룹 소셜 미팅</div>
+    <div class="service-subtitle">정원제 · 관리자 승인제 · 익명 캐릭터 채팅</div>
+
+    <div class="service-desc">
+      <p>3:3, 4:4처럼 정해진 인원이 다 모이면 그 순간 <strong>익명 단체채팅방</strong>이 열립니다. 실명 대신 직접 정한 닉네임과 캐릭터로 먼저 대화하고, 마음이 맞으면 그다음에 실사진을 공개해도 늦지 않아요.</p>
+      <p>신청은 이용권 또는 포인트로 결제되며, 관리자가 신청 내용을 확인한 뒤 정원에 반영합니다. 확정되면 만남까지 남은 시간을 카운트다운·지도가 있는 실시간 추적화면에서 볼 수 있습니다.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">정원제 매칭</div>
+        <div class="feature-desc">남녀 인원이 모두 차야 확정</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✅</div>
+        <div class="feature-title">관리자 승인</div>
+        <div class="feature-desc">신청 확인 후 정원에 반영</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎭</div>
+        <div class="feature-title">익명 캐릭터 채팅</div>
+        <div class="feature-desc">닉네임 + 캐릭터, 실사진은 선택 공개</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <div class="feature-title">실시간 추적</div>
+        <div class="feature-desc">확정 후 카운트다운 + 지도</div>
+      </div>
+    </div>
+
+    <div class="guide-box">
+      <div class="box-label">이용 안내</div>
+      <div class="guide-item"><span class="mark">·</span><span class="txt"><strong>신청 조건</strong> — 바로만남 프로필(직업군·체형·취미)과 대표사진·나이가 있어야 신청 가능</span></div>
+      <div class="guide-item"><span class="mark">·</span><span class="txt"><strong>결제</strong> — 이용권 1회 또는 포인트, 신규가입자 첫 이용 무료체험</span></div>
+      <div class="guide-item"><span class="mark">·</span><span class="txt"><strong>취소</strong> — 채팅방에서 "나가기"로 취소, 노쇼 반복 시 이후 신청 제한</span></div>
+    </div>
+
+    <div class="step-box">
+      <div class="box-label">Process</div>
+      <div class="step-row"><span class="step-num v">1</span><span class="step-txt"><strong>프로필 등록</strong><span> 마이페이지 기본정보에서 진입</span></span></div>
+      <div class="step-row"><span class="step-num v">2</span><span class="step-txt"><strong>미팅 신청</strong><span> 이용권 또는 포인트로 결제</span></span></div>
+      <div class="step-row"><span class="step-num v">3</span><span class="step-txt"><strong>관리자 승인 대기</strong><span> 신청 확인 후 정원 반영</span></span></div>
+      <div class="step-row"><span class="step-num v">4</span><span class="step-txt"><strong>정원 마감 · 확정</strong><span> 남녀 정원이 모두 차면 확정</span></span></div>
+      <div class="step-row"><span class="step-num v">5</span><span class="step-txt"><strong>익명 채팅방 입장</strong><span> 닉네임·캐릭터로 대화 시작</span></span></div>
+      <div class="step-row"><span class="step-num v">6</span><span class="step-txt"><strong>만남</strong><span> 실시간 추적화면으로 장소·시간 확인</span></span></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═══ 바로스팟 ═══ -->
+  <div class="service-section">
+    <div class="service-header">
+      <span class="service-badge badge-rose">📍 바로스팟</span>
+    </div>
+    <div class="service-title">제휴 식당에서<br>1:1로 만나는 자리</div>
+    <div class="service-subtitle">1:1 매칭 · 실시간 위치공유 · 상호수락 후 공개</div>
+
+    <div class="service-desc">
+      <p>여성 1명과 남성 1명을 매니저가 직접 매칭하는 소개팅입니다. 만나본 뒤 서로 <strong>호감을 표시</strong>해 둘 다 수락했을 때만 채팅과 이름·사진이 열립니다.</p>
+      <p>확정 후에는 실시간 위치공유로 서로의 이동 상황을 볼 수 있고, 일정 24시간 전까지는 결제 수단 그대로 전액 환불됩니다.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">💑</div>
+        <div class="feature-title">1:1 매칭</div>
+        <div class="feature-desc">매니저가 여성·남성 각 1명씩 직접 배정</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <div class="feature-title">실시간 위치공유</div>
+        <div class="feature-desc">확정 후 출발·도착 상황 공유</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💌</div>
+        <div class="feature-title">상호수락제</div>
+        <div class="feature-desc">둘 다 호감 표시해야 채팅·프로필 공개</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">↩️</div>
+        <div class="feature-title">24시간 전 취소</div>
+        <div class="feature-desc">일정 24시간 전까지 전액 환불</div>
+      </div>
+    </div>
+
+    <div class="guide-box">
+      <div class="box-label">이용 안내</div>
+      <div class="guide-item"><span class="mark">·</span><span class="txt"><strong>신청 방식</strong> — 여성은 매장·일정 선점, 남성은 열린 자리에 신청</span></div>
+      <div class="guide-item"><span class="mark">·</span><span class="txt"><strong>만남 이후</strong> — 상호 호감 표시 후 채팅 오픈, 별점·태그로 상호 평가</span></div>
+      <div class="guide-item"><span class="mark">·</span><span class="txt"><strong>안전</strong> — 채팅방에서 바로 신고 가능</span></div>
+    </div>
+
+    <div class="step-box">
+      <div class="box-label">Process</div>
+      <div class="step-row"><span class="step-num r">1</span><span class="step-txt"><strong>프로필 등록</strong><span> 직업군·체형·취미·키·MBTI(선택)</span></span></div>
+      <div class="step-row"><span class="step-num r">2</span><span class="step-txt"><strong>신청 · 선점</strong><span> 여성 선점 → 남성 신청</span></span></div>
+      <div class="step-row"><span class="step-num r">3</span><span class="step-txt"><strong>매니저 매칭</strong><span> 신청자 중 매니저가 상대 선택</span></span></div>
+      <div class="step-row"><span class="step-num r">4</span><span class="step-txt"><strong>확정 · 위치공유</strong><span> 매칭 확정 시 실시간 위치공유 오픈</span></span></div>
+      <div class="step-row"><span class="step-num r">5</span><span class="step-txt"><strong>만남</strong><span> 배정된 매장에서 식사</span></span></div>
+      <div class="step-row"><span class="step-num r">6</span><span class="step-txt"><strong>호감 표시 → 채팅</strong><span> 상호 수락 시 이름·사진 공개</span></span></div>
+      <div class="step-row"><span class="step-num r">7</span><span class="step-txt"><strong>상호 평가</strong><span> 별점·태그로 평가, 신뢰 지표 반영</span></span></div>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 by MultiMOVE · 2026.07.15 · 바로만남 이용 안내</footer>
+</body>
+</html>
