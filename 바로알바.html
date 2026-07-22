@@ -56,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=551"></script>
+  <script src="./shared-lang.js?v=552"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=551">
+  <link rel="stylesheet" href="./assets/css/style.css?v=552">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1530,11 +1530,11 @@
          화면을 나가면 저장이 안 되는 문제가 있었음(2026-07-15 피드백) -->
     <div id="profile-photo-savebar" style="display:none;position:sticky;top:0;z-index:40;padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f0;box-shadow:0 4px 12px rgba(0,0,0,0.06)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:800;color:#222">📷 사진이 저장되지 않았어요</span>
+        <span style="font-size:13px;font-weight:800;color:#222">📷 <span data-i18n="mp_photo_not_saved">사진이 저장되지 않았어요</span></span>
       </div>
       <div style="display:flex;gap:8px">
-        <button onclick="discardPendingProfilePhoto()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">나가기</button>
-        <button onclick="saveAllProfileSettings()" style="flex:2;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장하기</button>
+        <button onclick="discardPendingProfilePhoto()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer" data-i18n="mp_exit">나가기</button>
+        <button onclick="saveAllProfileSettings()" style="flex:2;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" data-i18n="save">저장하기</button>
       </div>
     </div>
 
@@ -1569,7 +1569,7 @@
                계정 프로필과 지나치게 갈려있어 헷갈린다는 후속 피드백으로 프로필 편집
                화면 하나로 합치면서 버튼도 하나로 정리 -->
           <div style="flex-shrink:0">
-            <button onclick="openMannamProfilePanel()" style="padding:10px 16px;border:none;border-radius:12px;background:#FFF0F0;color:var(--red);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">프로필 편집</button>
+            <button onclick="openMannamProfilePanel()" style="padding:10px 16px;border:none;border-radius:12px;background:#FFF0F0;color:var(--red);font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap" data-i18n="mp_edit_profile">프로필 편집</button>
           </div>
         </div>
       </div>
@@ -1594,7 +1594,7 @@
       <div id="worker-stats-grid" style="display:none;grid-template-columns:1fr 1fr 1fr 1fr;background:#fff;border-top:1px solid #f0f0f0;border-bottom:8px solid #f5f5f5">
         <div onclick="goToMyApplications()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
           <div style="font-size:20px;font-weight:900;color:var(--red)" id="stat-apply-count">-</div>
-          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px">지원현황</div>
+          <div style="font-size:10px;color:#aaa;font-weight:600;margin-top:3px" data-i18n="mp_applications">지원현황</div>
         </div>
         <div onclick="goToMyApplications()" style="padding:16px 6px;text-align:center;cursor:pointer;border-right:1px solid #f0f0f0">
           <div style="font-size:20px;font-weight:900;color:#16a34a" id="stat-complete-count">-</div>
@@ -1629,7 +1629,7 @@
       <!-- ── 관리자 배너 ── -->
       <div id="admin-banner" style="display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#1e293b,#334155);padding:14px 20px;cursor:pointer;margin-bottom:8px" onclick="location.href='/admin.html'">
         <div style="width:36px;height:36px;border-radius:10px;background:#C8102E;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⚙️</div>
-        <div style="flex:1"><div style="font-size:14px;font-weight:800;color:#fff">관리자 페이지</div><div style="font-size:11px;color:#94a3b8;margin-top:1px">신고관리 · 공고관리 · 회원관리</div></div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:800;color:#fff" data-i18n="mp_admin">관리자 페이지</div><div style="font-size:11px;color:#94a3b8;margin-top:1px" data-i18n="mp_admin_desc">신고관리 · 공고관리 · 회원관리</div></div>
         <span style="color:#94a3b8;font-size:16px">›</span>
       </div>
 
@@ -1641,7 +1641,7 @@
           <div style="background:#fff;border:1.5px solid #ffe0e0;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer" onclick="openMpSub('alba-detail')">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
               <span style="font-size:20px">⚡</span>
-              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로알바</div>
+              <div style="flex:1;font-size:15px;font-weight:900;color:#222" data-i18n="mp_my_alba">MY 바로알바</div>
               <span id="mp-alba-badge" style="font-size:12px;color:#C8102E;font-weight:700"></span>
               <span class="mp-row-arrow">›</span>
             </div>
@@ -1652,7 +1652,7 @@
           <div style="background:#fff;border:1.5px solid #ede9fe;border-radius:16px;padding:14px 16px;margin-bottom:10px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer" onclick="openMoimPanel()">
               <span style="font-size:20px">👥</span>
-              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로모임</div>
+              <div style="flex:1;font-size:15px;font-weight:900;color:#222" data-i18n="mp_my_moim">MY 바로모임</div>
               <span onclick="event.stopPropagation();openMpSub('gatherings')" style="font-size:15px;padding:2px" title="공지사항">🔔</span>
               <span class="mp-row-arrow">›</span>
             </div>
@@ -1663,7 +1663,7 @@
           <div style="background:#fff;border:1.5px solid #fecdd3;border-radius:16px;padding:14px 16px;margin-bottom:10px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer" onclick="openMannnamPanel()">
               <span style="font-size:20px">🤝</span>
-              <div style="flex:1;font-size:15px;font-weight:900;color:#222">MY 바로만남</div>
+              <div style="flex:1;font-size:15px;font-weight:900;color:#222" data-i18n="mp_my_mannam">MY 바로만남</div>
               <span onclick="event.stopPropagation();openMpSub('gatherings')" style="font-size:15px;padding:2px" title="공지사항">🔔</span>
               <span class="mp-row-arrow">›</span>
             </div>
@@ -1680,7 +1680,7 @@
 
       <!-- ── 지갑 (포인트/쿠폰) - 특정 서비스 전용이 아니라 항상 바로 보이게 최상위로 이동 ── -->
       <div class="mp-section">
-        <div class="mp-section-title">지갑</div>
+        <div class="mp-section-title" data-i18n="mp_wallet">지갑</div>
         <div class="mp-rows">
           <div class="mp-row" onclick="openPointHistory()">
             <div class="mp-row-left"><span class="mp-row-icon">💎</span><span data-i18n="row_points">포인트 잔액</span></div>
@@ -1695,7 +1695,7 @@
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openReferralInvite()">
-            <div class="mp-row-left"><span class="mp-row-icon">🎁</span><span>친구 초대하고 포인트 받기</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🎁</span><span data-i18n="mp_invite">친구 초대하고 포인트 받기</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
@@ -1730,19 +1730,19 @@
 
       <!-- ── 신원 인증 (바로패스) ── -->
       <div class="mp-section">
-        <div class="mp-section-title">신원 인증</div>
+        <div class="mp-section-title" data-i18n="mp_identity">신원 인증</div>
         <div class="mp-rows">
           <div class="mp-row" onclick="openBaroPass()">
-            <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span>바로패스 (참석 인증 QR)</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">🎫</span><span data-i18n="mp_baropass">바로패스 (참석 인증 QR)</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openWorkplaceVerify()">
-            <div class="mp-row-left"><span class="mp-row-icon">💼</span><span>직장인증</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">💼</span><span data-i18n="mp_workplace_verify">직장인증</span></div>
             <div class="mp-row-right"><span id="mp-workverify-val" style="font-size:12px;color:#888;font-weight:700"></span><span class="mp-row-arrow">›</span></div>
           </div>
           <div class="mp-row" onclick="openPhoneVerifyStub()">
-            <div class="mp-row-left"><span class="mp-row-icon">📱</span><span>휴대폰 본인인증</span></div>
-            <div class="mp-row-right"><span style="font-size:11px;color:#bbb;font-weight:700">준비중</span><span class="mp-row-arrow">›</span></div>
+            <div class="mp-row-left"><span class="mp-row-icon">📱</span><span data-i18n="mp_phone_verify">휴대폰 본인인증</span></div>
+            <div class="mp-row-right"><span style="font-size:11px;color:#bbb;font-weight:700" data-i18n="coming_soon">준비중</span><span class="mp-row-arrow">›</span></div>
           </div>
         </div>
       </div>
@@ -1799,7 +1799,7 @@
            실제로는 전혀 반영이 안 됐음(2026-07-16, 세 번째 시도) - 대신 JS로 실측 픽셀
            높이를 계산해 margin-top을 직접 지정(아래 IIFE, "_pinProfileFooter" 참고).
            CSS 해석에 전혀 의존하지 않아 훨씬 확실하다 -->
-      <div id="profile-version-footer" style="padding:10px 20px;text-align:center;background:#eee"><div style="font-size:10px;color:#999;font-weight:600">바로알바 v1.4.1</div></div>
+      <div id="profile-version-footer" style="padding:10px 20px;text-align:center;background:#eee"><div id="app-version-text" style="font-size:10px;color:#999;font-weight:600">바로알바</div></div>
 
       <!-- ── 숨김 컨테이너: 업주 프로필 편집 (서브패널에 없는 ID) ── -->
       <div style="display:none">
@@ -1814,9 +1814,9 @@
     <div id="profile-guest" style="display:none">
       <div style="text-align:center;padding:80px 20px 24px">
         <div style="font-size:56px;margin-bottom:14px">⚡</div>
-        <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:6px">로그인하고 바로 지원하세요</div>
-        <div style="font-size:13px;color:#aaa;margin-bottom:28px">카카오, 네이버, 구글로 3초 로그인</div>
-        <button onclick="goToLogin()" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer">로그인 / 회원가입</button>
+        <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:6px" data-i18n="login_cta_title">로그인하고 바로 지원하세요</div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:28px" data-i18n="login_cta_desc">카카오, 네이버, 구글로 3초 로그인</div>
+        <button onclick="goToLogin()" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer" data-i18n="login_signup">로그인 / 회원가입</button>
       </div>
     </div>
 
@@ -1840,20 +1840,20 @@
 <div class="mpsub-panel" id="mpsub-gatherings">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('gatherings')">‹</button>
-    <div class="mpsub-ttl">모임·미팅 공지사항</div>
+    <div class="mpsub-ttl" data-i18n="mp_moim_notice">모임·미팅 공지사항</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
-    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">📢 공지사항</div>
-    <div id="mp-gathering-notices" style="margin-bottom:20px"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px">불러오는 중...</div></div>
-    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">🤝 전체 신청 현황</div>
-    <div id="mp-gathering-list"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px">불러오는 중...</div></div>
+    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">📢 <span data-i18n="mp_notice">공지사항</span></div>
+    <div id="mp-gathering-notices" style="margin-bottom:20px"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px" data-i18n="loading">불러오는 중...</div></div>
+    <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:8px">🤝 <span data-i18n="mp_all_apps">전체 신청 현황</span></div>
+    <div id="mp-gathering-list"><div style="text-align:center;padding:16px;color:#bbb;font-size:12px" data-i18n="loading">불러오는 중...</div></div>
   </div>
 </div>
 
 <div class="mpsub-panel" id="mpsub-alba-detail">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('alba-detail')">‹</button>
-    <div class="mpsub-ttl">MY 바로알바</div>
+    <div class="mpsub-ttl" data-i18n="mp_my_alba">MY 바로알바</div>
   </div>
   <div style="flex:1;overflow-y:auto">
     <div class="mp-rows">
@@ -1878,12 +1878,12 @@
 <div class="mpsub-panel" id="mpsub-income">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('income')">‹</button>
-    <div class="mpsub-ttl">수입 현황</div>
+    <div class="mpsub-ttl" data-i18n="row_income">수입 현황</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
     <div id="income-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:14px;font-weight:900;color:#222">💵 내 수입 현황</div>
+        <div style="font-size:14px;font-weight:900;color:#222">💵 <span data-i18n="mp_my_income">내 수입 현황</span></div>
         <div style="display:flex;gap:5px">
           <select id="income-year-sel" onchange="loadWorkerIncome()" style="font-size:12px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:10px;padding:4px 8px;background:#fff;color:#333;appearance:none;-webkit-appearance:none;cursor:pointer"></select>
           <select id="income-month-sel" onchange="loadWorkerIncome()" style="font-size:12px;font-weight:700;border:1.5px solid #e5e7eb;border-radius:10px;padding:4px 8px;background:#fff;color:#333;appearance:none;-webkit-appearance:none;cursor:pointer"></select>
@@ -1896,11 +1896,11 @@
       </div>
       <div id="income-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
       <div style="background:#f8f9fa;border-radius:16px;padding:16px">
-        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:14px">📊 월별 수입 추이</div>
+        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:14px">📊 <span data-i18n="mp_income_trend">월별 수입 추이</span></div>
         <div id="income-chart" style="display:flex;align-items:flex-end;gap:3px;height:72px;padding:0 2px"></div>
         <div style="display:flex;justify-content:space-between;margin-top:6px" id="income-chart-labels"></div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:11px;color:#888">바로알바 누적 수입</div>
+          <div style="font-size:11px;color:#888" data-i18n="mp_total_income">바로알바 누적 수입</div>
           <div id="income-cumulative" style="font-size:15px;font-weight:900;color:#15803d">-</div>
         </div>
       </div>
@@ -1912,7 +1912,7 @@
 <div class="mpsub-panel" id="mpsub-following">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('following')">‹</button>
-    <div class="mpsub-ttl">팔로잉 업체</div>
+    <div class="mpsub-ttl" data-i18n="row_following">팔로잉 업체</div>
     <div id="following-count" style="margin-left:auto;font-size:13px;color:#aaa;font-weight:700"></div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
@@ -1932,41 +1932,41 @@
 <div class="mpsub-panel" id="mpsub-photos">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('photos')">‹</button>
-    <div class="mpsub-ttl">사진 관리</div>
+    <div class="mpsub-ttl" data-i18n="mp_photo_manage">사진 관리</div>
     <span id="photo-mgr-count" style="margin-left:auto;font-size:13px;color:#aaa;font-weight:600">0/5</span>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
-    <div style="font-size:12px;color:#999;line-height:1.6;margin-bottom:14px">📌 원하는 사진을 <b style="color:#C8102E">위쪽 칸으로 드래그</b>하면 대표 프로필 사진으로 설정돼요. 나머지 칸에는 추가 프로필 사진이나 포트폴리오 사진을 자유롭게 올려주세요.</div>
+    <div style="font-size:12px;color:#999;line-height:1.6;margin-bottom:14px">📌 <span data-i18n="mp_drag_hint_1">원하는 사진을</span> <b style="color:#C8102E" data-i18n="mp_drag_hint_2">위쪽 칸으로 드래그</b>하면 대표 프로필 사진으로 설정돼요. 나머지 칸에는 추가 프로필 사진이나 포트폴리오 사진을 자유롭게 올려주세요.</div>
     <div id="photo-mgr-grid"></div>
-    <div style="font-size:11px;color:#bbb;margin-top:12px;line-height:1.6">최대 5장 · 업주에게 공개됩니다</div>
+    <div style="font-size:11px;color:#bbb;margin-top:12px;line-height:1.6" data-i18n="mp_photo_hint">최대 5장 · 업주에게 공개됩니다</div>
   </div>
   <div style="display:flex;gap:8px;padding:14px 16px;border-top:1px solid #f0f0f0;background:#fff;flex-shrink:0">
-    <button onclick="closeMpSub('photos')" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
-    <button onclick="saveAllProfileSettings()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+    <button onclick="closeMpSub('photos')" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer" data-i18n="cancel">취소</button>
+    <button onclick="saveAllProfileSettings()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="save">저장하기</button>
   </div>
 </div>
 
 <div class="mpsub-panel" id="mpsub-basic">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('basic')">‹</button>
-    <div class="mpsub-ttl">프로필 편집</div>
+    <div class="mpsub-ttl" data-i18n="mp_edit_profile">프로필 편집</div>
   </div>
   <!-- 계정 정보 / 바로만남 프로필을 탭으로 분리 - ON/OFF 토글은 "켜야 보인다"는 개념이
        하나 더 늘어 오히려 헷갈릴 수 있다는 피드백(2026-07-16)으로, 그냥 두 종류 정보가
        있다는 걸 탭으로 자연스럽게 보여주는 방식으로 교체 -->
   <div style="display:flex;background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
-    <button id="basic-tab-btn-account" onclick="switchBasicTab('account')" style="flex:1;padding:13px;border:none;background:none;font-size:14px;font-weight:800;color:var(--red);border-bottom:2.5px solid var(--red);cursor:pointer">⚡ 바로알바 프로필</button>
-    <button id="basic-tab-btn-mannam" onclick="switchBasicTab('mannam')" style="flex:1;padding:13px;border:none;background:none;font-size:14px;font-weight:800;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer">💕 바로만남/모임 프로필</button>
+    <button id="basic-tab-btn-account" onclick="switchBasicTab('account')" style="flex:1;padding:13px;border:none;background:none;font-size:14px;font-weight:800;color:var(--red);border-bottom:2.5px solid var(--red);cursor:pointer">⚡ <span data-i18n="mp_bar_alba_profile">바로알바 프로필</span></button>
+    <button id="basic-tab-btn-mannam" onclick="switchBasicTab('mannam')" style="flex:1;padding:13px;border:none;background:none;font-size:14px;font-weight:800;color:#aaa;border-bottom:2.5px solid transparent;cursor:pointer">💕 <span data-i18n="mp_tab_dating">바로만남/모임 프로필</span></button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px">
     <div id="basic-tab-account" style="display:flex;flex-direction:column;gap:10px">
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:12px;color:#888;font-weight:700">📷 사진 (프로필/포트폴리오)</div>
-        <span style="font-size:11px;color:#C8102E;font-weight:700">편집 ›</span>
+        <div style="font-size:12px;color:#888;font-weight:700">📷 <span data-i18n="mp_photo_slot">사진 (프로필/포트폴리오)</span></div>
+        <span style="font-size:11px;color:#C8102E;font-weight:700"><span data-i18n="mp_edit_arrow">편집</span> ›</span>
       </div>
       <div id="worker-photos-preview" onclick="openMpSub('photos')" style="cursor:pointer"></div>
-      <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6">왼쪽이 대표 프로필 사진, 나머지는 포트폴리오로 노출돼요 · 최대 5장</div>
+      <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6" data-i18n="mp_photo_order_hint">왼쪽이 대표 프로필 사진, 나머지는 포트폴리오로 노출돼요 · 최대 5장</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <label data-i18n="birth_label" style="font-size:12px;color:#888;font-weight:700;width:54px;flex-shrink:0">생년월일</label>
@@ -1992,12 +1992,12 @@
     </div>
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <label style="font-size:12px;color:#888;font-weight:700">📍 주요 활동 지역</label>
-        <span style="font-size:10px;color:#C8102E;font-weight:700;background:#fff0f0;padding:2px 7px;border-radius:6px">업주 지도에 표시</span>
+        <label style="font-size:12px;color:#888;font-weight:700">📍 <span data-i18n="mp_area">주요 활동 지역</span></label>
+        <span style="font-size:10px;color:#C8102E;font-weight:700;background:#fff0f0;padding:2px 7px;border-radius:6px" data-i18n="mp_show_on_map">업주 지도에 표시</span>
       </div>
       <div style="display:flex;gap:6px">
         <input id="activity-area-input" type="text" placeholder="동 이름 입력 (예: 성수동)" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box" onkeydown="if(event.key==='Enter'){event.preventDefault();searchActivityArea()}">
-        <button onclick="searchActivityArea()" style="padding:10px 14px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
+        <button onclick="searchActivityArea()" style="padding:10px 14px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0" data-i18n="search">검색</button>
       </div>
       <div id="activity-area-results" style="display:none;margin-top:4px;border:1.5px solid #eee;border-radius:10px;overflow:hidden;background:#fff"></div>
       <div id="activity-area-selected" style="display:none;margin-top:6px;align-items:center;gap:8px;padding:9px 14px;background:#fff0f0;border-radius:10px;border:1px solid #FFCCCC">
@@ -2011,7 +2011,7 @@
         <div id="worker-bio-counter" style="font-size:11px;color:#bbb">0 / 200</div>
       </div>
       <textarea id="worker-bio" placeholder="간단한 자기소개를 작성해주세요" maxlength="200" oninput="updateBioCounter(this)" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:80px;box-sizing:border-box;font-family:inherit"></textarea>
-      <div id="worker-bio-hint" style="display:none;font-size:11px;color:#C8102E;margin-top:3px">최소 20자 이상 입력해주세요</div>
+      <div id="worker-bio-hint" style="display:none;font-size:11px;color:#C8102E;margin-top:3px" data-i18n="mp_bio_min">최소 20자 이상 입력해주세요</div>
     </div>
     <!-- 스킬·경력/자격증·서류 - 예전엔 MY 바로알바(활동 기록 메뉴) 안에 섞여 있었는데
          실제로는 지원현황·수입현황 같은 활동 기록이 아니라 생년월일·자기소개와 같은
@@ -2019,12 +2019,12 @@
          "편집 ›"으로 기존 mpsub-skills/mpsub-docs 화면을 그대로 재사용 -->
     <div style="display:flex;flex-direction:column;gap:8px">
       <div onclick="openMpSub('skills')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f8;border-radius:10px;cursor:pointer">
-        <div style="font-size:13px;color:#333;font-weight:700">🏷️ 스킬 · 경력</div>
-        <span style="font-size:11px;color:#C8102E;font-weight:700">편집 ›</span>
+        <div style="font-size:13px;color:#333;font-weight:700">🏷️ <span data-i18n="row_skills_career">스킬 · 경력</span></div>
+        <span style="font-size:11px;color:#C8102E;font-weight:700"><span data-i18n="mp_edit_arrow">편집</span> ›</span>
       </div>
       <div onclick="openMpSub('docs')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f8;border-radius:10px;cursor:pointer">
-        <div style="font-size:13px;color:#333;font-weight:700">📋 자격증 · 서류</div>
-        <span style="font-size:11px;color:#C8102E;font-weight:700">편집 ›</span>
+        <div style="font-size:13px;color:#333;font-weight:700">📋 <span data-i18n="row_docs">자격증 · 서류</span></div>
+        <span style="font-size:11px;color:#C8102E;font-weight:700"><span data-i18n="mp_edit_arrow">편집</span> ›</span>
       </div>
     </div>
     </div>
@@ -2038,38 +2038,38 @@
       <div id="mannam-profile-fields" style="display:flex;flex-direction:column;gap:16px">
         <!-- 공개 사진 -->
         <div>
-          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:10px">공개 사진</div>
+          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:10px" data-i18n="mp_public_photo">공개 사진</div>
           <div style="display:flex;gap:14px;align-items:center;margin-bottom:10px">
             <div id="mp-photo-preview" onclick="document.getElementById('mp-dating-photo-file').click()" style="width:72px;height:72px;border-radius:50%;background:#f0f0f0;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;color:#ccc;cursor:pointer;border:1.5px dashed #ddd">📷</div>
             <input id="mp-dating-photo-file" type="file" accept="image/*" style="display:none" onchange="onMannamPhotoSelected(this)">
             <div style="display:flex;flex-direction:column;gap:6px;flex:1">
-              <button type="button" id="mp-photo-mode-avatar" onclick="setMannamPhotoMode('avatar')" style="padding:9px 12px;border-radius:10px;border:1.5px solid #eee;background:#fff;font-size:12.5px;font-weight:700;color:#666;cursor:pointer;text-align:left">🙂 대표사진 그대로 사용</button>
-              <button type="button" id="mp-photo-mode-custom" onclick="document.getElementById('mp-dating-photo-file').click()" style="padding:9px 12px;border-radius:10px;border:1.5px solid #eee;background:#fff;font-size:12.5px;font-weight:700;color:#666;cursor:pointer;text-align:left">🖼️ 바로만남 전용 사진 등록</button>
+              <button type="button" id="mp-photo-mode-avatar" onclick="setMannamPhotoMode('avatar')" style="padding:9px 12px;border-radius:10px;border:1.5px solid #eee;background:#fff;font-size:12.5px;font-weight:700;color:#666;cursor:pointer;text-align:left">🙂 <span data-i18n="mp_use_main_photo">대표사진 그대로 사용</span></button>
+              <button type="button" id="mp-photo-mode-custom" onclick="document.getElementById('mp-dating-photo-file').click()" style="padding:9px 12px;border-radius:10px;border:1.5px solid #eee;background:#fff;font-size:12.5px;font-weight:700;color:#666;cursor:pointer;text-align:left">🖼️ <span data-i18n="mp_dating_photo">바로만남 전용 사진 등록</span></button>
             </div>
           </div>
         </div>
 
         <!-- 직업군 -->
         <div>
-          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">직업군</div>
+          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px" data-i18n="mp_job_group">직업군</div>
           <div id="mp-dating-job-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
         </div>
 
         <!-- 체형 -->
         <div>
-          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">체형</div>
+          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px" data-i18n="mp_body_type">체형</div>
           <div id="mp-dating-body-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
         </div>
 
         <!-- 취미·관심사 -->
         <div>
-          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">취미·관심사 <span style="color:#aaa;font-weight:500">(최대 5개)</span></div>
+          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px"><span data-i18n="mp_interests">취미·관심사</span> <span style="color:#aaa;font-weight:500" data-i18n="max_five">(최대 5개)</span></div>
           <div id="mp-dating-interest-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
         </div>
 
         <!-- 키 -->
         <div>
-          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">키 <span style="color:#aaa;font-weight:500">(선택)</span></div>
+          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px"><span data-i18n="mp_height">키</span> <span style="color:#aaa;font-weight:500" data-i18n="optional">(선택)</span></div>
           <div style="display:flex;align-items:center;gap:8px">
             <input id="mp-dating-height" type="number" inputmode="numeric" placeholder="예: 170" min="130" max="230" style="width:100px;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
             <span style="font-size:13px;color:#999">cm</span>
@@ -2078,7 +2078,7 @@
 
         <!-- MBTI -->
         <div>
-          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">MBTI <span style="color:#aaa;font-weight:500">(선택)</span></div>
+          <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">MBTI <span style="color:#aaa;font-weight:500" data-i18n="optional">(선택)</span></div>
           <div id="mp-dating-mbti" style="display:flex;gap:8px"></div>
         </div>
       </div>
@@ -2089,18 +2089,18 @@
            한 줄 + "편집 ›"으로 접근하게 함(2026-07-16 피드백, 사진/스킬 항목과 동일 패턴).
            성별과 무관하게 항상 노출 -->
       <div style="border-top:1px solid #f0f0f0;padding-top:16px">
-        <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px">바로미팅 익명 채팅 프로필</div>
+        <div style="font-size:12.5px;font-weight:800;color:#333;margin-bottom:8px" data-i18n="mp_baromeet_chat_profile">바로미팅 익명 채팅 프로필</div>
         <div onclick="openBaromeetAnonSetup()" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f8;border-radius:10px;cursor:pointer">
-          <div style="font-size:13px;color:#333;font-weight:700">💬 익명 닉네임 · 프로필 표시 방식</div>
-          <span style="font-size:11px;color:#7C3AED;font-weight:700">편집 ›</span>
+          <div style="font-size:13px;color:#333;font-weight:700">💬 <span data-i18n="mp_nick_label">익명 닉네임 · 프로필 표시 방식</span></div>
+          <span style="font-size:11px;color:#7C3AED;font-weight:700"><span data-i18n="mp_edit_arrow">편집</span> ›</span>
         </div>
-        <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6">바로미팅 채팅방에서 실명 대신 표시할 닉네임과 프로필 사진 공개 여부예요.</div>
+        <div style="font-size:11px;color:#bbb;margin-top:6px;line-height:1.6" data-i18n="mp_nick_desc">바로미팅 채팅방에서 실명 대신 표시할 닉네임과 프로필 사진 공개 여부예요.</div>
       </div>
     </div>
 
     <div style="display:flex;gap:8px;margin-top:6px">
-      <button onclick="closeMpSub('basic')" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">취소</button>
-      <button id="worker-save-profile-btn" onclick="saveCombinedProfile()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+      <button onclick="closeMpSub('basic')" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer" data-i18n="cancel">취소</button>
+      <button id="worker-save-profile-btn" onclick="saveCombinedProfile()" style="flex:2;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="save">저장하기</button>
     </div>
   </div>
 </div>
@@ -2109,48 +2109,48 @@
 <div class="mpsub-panel" id="mpsub-skills">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('skills')">‹</button>
-    <div class="mpsub-ttl">스킬 · 경력</div>
+    <div class="mpsub-ttl" data-i18n="row_skills_career">스킬 · 경력</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
     <div>
-      <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px">경력/특기</div>
+      <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:8px" data-i18n="exp_label">경력/특기</div>
       <textarea id="worker-experience" placeholder="관련 경력이나 보유 스킬을 작성해주세요" maxlength="200" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;height:70px;box-sizing:border-box;font-family:inherit"></textarea>
     </div>
     <div>
-      <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:6px">학력</div>
+      <div style="font-size:12px;color:#888;font-weight:700;margin-bottom:6px" data-i18n="mp_education">학력</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="edu-chips">
-        <button type="button" data-edu="" onclick="setEdu(this)" class="edu-chip" style="grid-column:1/-1;color:#aaa">선택 안함</button>
-        <button type="button" data-edu="중졸이하" onclick="setEdu(this)" class="edu-chip">중졸 이하</button>
-        <button type="button" data-edu="고등학교재학" onclick="setEdu(this)" class="edu-chip">고교 재학</button>
-        <button type="button" data-edu="고졸" onclick="setEdu(this)" class="edu-chip">고졸</button>
-        <button type="button" data-edu="대학교재학" onclick="setEdu(this)" class="edu-chip">대학 재학</button>
-        <button type="button" data-edu="대졸" onclick="setEdu(this)" class="edu-chip">대졸</button>
-        <button type="button" data-edu="대학원이상" onclick="setEdu(this)" class="edu-chip">대학원 이상</button>
+        <button type="button" data-edu="" onclick="setEdu(this)" class="edu-chip" style="grid-column:1/-1;color:#aaa" data-i18n="edu_none">선택 안함</button>
+        <button type="button" data-edu="중졸이하" onclick="setEdu(this)" class="edu-chip" data-i18n="edu_middle">중졸 이하</button>
+        <button type="button" data-edu="고등학교재학" onclick="setEdu(this)" class="edu-chip" data-i18n="edu_high_in">고교 재학</button>
+        <button type="button" data-edu="고졸" onclick="setEdu(this)" class="edu-chip" data-i18n="edu_high">고졸</button>
+        <button type="button" data-edu="대학교재학" onclick="setEdu(this)" class="edu-chip" data-i18n="edu_uni_in">대학 재학</button>
+        <button type="button" data-edu="대졸" onclick="setEdu(this)" class="edu-chip" data-i18n="edu_uni">대졸</button>
+        <button type="button" data-edu="대학원이상" onclick="setEdu(this)" class="edu-chip" data-i18n="edu_grad">대학원 이상</button>
       </div>
     </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:12px">
-      <div style="font-size:12px;font-weight:700;color:#222;margin-bottom:8px">🏷️ 보유 스킬 태그</div>
+      <div style="font-size:12px;font-weight:700;color:#222;margin-bottom:8px">🏷️ <span data-i18n="mp_skill_tags">보유 스킬 태그</span></div>
       <div id="skill-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:28px"></div>
       <div style="display:flex;gap:6px">
         <input id="skill-input" type="text" placeholder="스킬 입력 후 추가" maxlength="20" onkeydown="if(event.key==='Enter'){event.preventDefault();addSkillTag()}" style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
-        <button onclick="addSkillTag()" style="padding:9px 16px;background:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;flex-shrink:0">+ 추가</button>
+        <button onclick="addSkillTag()" style="padding:9px 16px;background:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;flex-shrink:0" data-i18n="lang_other_add">+ 추가</button>
       </div>
     </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:12px">
-      <div style="font-size:12px;font-weight:700;color:#222;margin-bottom:8px">🎯 희망직종</div>
+      <div style="font-size:12px;font-weight:700;color:#222;margin-bottom:8px">🎯 <span data-i18n="mp_pref_job">희망직종</span></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="pref-cat-chips">
         <button type="button" data-cat="F&amp;B" onclick="togglePrefCat(this)" class="pref-cat-chip">🍽 F&amp;B</button>
-        <button type="button" data-cat="물류" onclick="togglePrefCat(this)" class="pref-cat-chip">📦 물류</button>
-        <button type="button" data-cat="판매" onclick="togglePrefCat(this)" class="pref-cat-chip">🛍 판매</button>
-        <button type="button" data-cat="청소" onclick="togglePrefCat(this)" class="pref-cat-chip">🧹 청소</button>
-        <button type="button" data-cat="이벤트" onclick="togglePrefCat(this)" class="pref-cat-chip">🎉 이벤트</button>
-        <button type="button" data-cat="커플알바" onclick="togglePrefCat(this)" class="pref-cat-chip">💑 커플알바</button>
-        <button type="button" data-cat="컨텐츠" onclick="togglePrefCat(this)" class="pref-cat-chip">📱 컨텐츠</button>
-        <button type="button" data-cat="챌린지" onclick="togglePrefCat(this)" class="pref-cat-chip">🏆 챌린지</button>
+        <button type="button" data-cat="물류" onclick="togglePrefCat(this)" class="pref-cat-chip">📦 <span data-i18n="cat_logistics">물류</span></button>
+        <button type="button" data-cat="판매" onclick="togglePrefCat(this)" class="pref-cat-chip">🛍 <span data-i18n="cat_sales">판매</span></button>
+        <button type="button" data-cat="청소" onclick="togglePrefCat(this)" class="pref-cat-chip">🧹 <span data-i18n="cat_cleaning">청소</span></button>
+        <button type="button" data-cat="이벤트" onclick="togglePrefCat(this)" class="pref-cat-chip">🎉 <span data-i18n="cat_event">이벤트</span></button>
+        <button type="button" data-cat="커플알바" onclick="togglePrefCat(this)" class="pref-cat-chip">💑 <span data-i18n="cat_couple">커플알바</span></button>
+        <button type="button" data-cat="컨텐츠" onclick="togglePrefCat(this)" class="pref-cat-chip">📱 <span data-i18n="cat_content">컨텐츠</span></button>
+        <button type="button" data-cat="챌린지" onclick="togglePrefCat(this)" class="pref-cat-chip">🏆 <span data-i18n="cat_challenge">챌린지</span></button>
       </div>
     </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:12px">
-      <div style="font-size:12px;font-weight:700;color:#222;margin-bottom:8px">📅 근무가능 요일/시간대</div>
+      <div style="font-size:12px;font-weight:700;color:#222;margin-bottom:8px">📅 <span data-i18n="mp_avail_time">근무가능 요일/시간대</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="avail-day-btns">
         <button type="button" data-day="월" onclick="toggleAvailDay(this)" class="avail-day-btn">월</button>
         <button type="button" data-day="화" onclick="toggleAvailDay(this)" class="avail-day-btn">화</button>
@@ -2161,15 +2161,15 @@
         <button type="button" data-day="일" onclick="toggleAvailDay(this)" class="avail-day-btn">일</button>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px" id="avail-time-chips">
-        <button type="button" data-time="오전" onclick="toggleAvailTime(this)" class="pref-cat-chip">오전 (06~12)</button>
-        <button type="button" data-time="오후" onclick="toggleAvailTime(this)" class="pref-cat-chip">오후 (12~18)</button>
-        <button type="button" data-time="저녁" onclick="toggleAvailTime(this)" class="pref-cat-chip">저녁 (18~22)</button>
-        <button type="button" data-time="야간" onclick="toggleAvailTime(this)" class="pref-cat-chip">야간 (22~06)</button>
+        <button type="button" data-time="오전" onclick="toggleAvailTime(this)" class="pref-cat-chip" data-i18n="time_morning">오전 (06~12)</button>
+        <button type="button" data-time="오후" onclick="toggleAvailTime(this)" class="pref-cat-chip" data-i18n="time_afternoon">오후 (12~18)</button>
+        <button type="button" data-time="저녁" onclick="toggleAvailTime(this)" class="pref-cat-chip" data-i18n="time_evening">저녁 (18~22)</button>
+        <button type="button" data-time="야간" onclick="toggleAvailTime(this)" class="pref-cat-chip" data-i18n="time_night">야간 (22~06)</button>
       </div>
     </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:12px">
       <div onclick="toggleProfileSection('vehicles')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-        <span style="font-size:12px;font-weight:700;color:#222">🚗 이동수단</span>
+        <span style="font-size:12px;font-weight:700;color:#222">🚗 <span data-i18n="mp_vehicle">이동수단</span></span>
         <div style="display:flex;align-items:center;gap:6px"><span id="vehicles-summary" style="font-size:11px;color:#999"></span><span id="vehicles-arrow" style="font-size:11px;color:#bbb">▼</span></div>
       </div>
       <div id="vehicles-body" style="display:none;margin-top:8px"><div style="display:flex;flex-wrap:wrap;gap:6px" id="vehicle-chips">
@@ -2185,11 +2185,11 @@
     </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:12px">
       <div onclick="toggleProfileSection('strengths')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-        <span style="font-size:12px;font-weight:700;color:#222">⭐ 나의 강점</span>
+        <span style="font-size:12px;font-weight:700;color:#222">⭐ <span data-i18n="mp_strength">나의 강점</span></span>
         <div style="display:flex;align-items:center;gap:6px"><span id="strengths-summary" style="font-size:11px;color:#999"></span><span id="strengths-arrow" style="font-size:11px;color:#bbb">▼</span></div>
       </div>
       <div id="strengths-body" style="display:none;margin-top:8px">
-        <div style="font-size:11px;color:#aaa;margin-bottom:8px">선택 안해도 됩니다 · 업주에게 어필할 매력포인트를 골라보세요</div>
+        <div style="font-size:11px;color:#aaa;margin-bottom:8px" data-i18n="strength_desc">선택 안해도 됩니다 · 업주에게 어필할 매력포인트를 골라보세요</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="strength-chips">
           <button type="button" data-s="strong" onclick="toggleStrength(this)" class="s-chip">힘이 강함</button>
           <button type="button" data-s="speed" onclick="toggleStrength(this)" class="s-chip">스피드</button>
@@ -2216,7 +2216,7 @@
     </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:12px;padding:12px">
       <div onclick="toggleProfileSection('languages')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-        <span style="font-size:12px;font-weight:700;color:#222">🌐 구사 가능 언어</span>
+        <span style="font-size:12px;font-weight:700;color:#222">🌐 <span data-i18n="mp_lang_ability">구사 가능 언어</span></span>
         <div style="display:flex;align-items:center;gap:6px"><span id="languages-summary" style="font-size:11px;color:#999"></span><span id="languages-arrow" style="font-size:11px;color:#bbb">▼</span></div>
       </div>
       <div id="languages-body" style="display:none;margin-top:8px">
@@ -2231,40 +2231,40 @@
         </div>
         <div style="display:flex;gap:6px;margin-top:8px">
           <input type="text" id="lang-other-input" placeholder="기타 언어 직접입력" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;background:#fff" onkeydown="if(event.key==='Enter')addOtherLang()">
-          <button onclick="addOtherLang()" style="padding:9px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">+ 추가</button>
+          <button onclick="addOtherLang()" style="padding:9px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0" data-i18n="lang_other_add">+ 추가</button>
         </div>
         <div id="lang-other-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
         <div id="lang-prof-panel" style="display:none;margin-top:10px;padding:14px;background:#f0fdf4;border-radius:10px;border:1.5px solid #bbf7d0">
-          <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:12px" id="lang-prof-title">언어 숙련도 설정</div>
+          <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:12px" id="lang-prof-title" data-i18n="mp_lang_level">언어 숙련도 설정</div>
           <div style="display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center">
-            <div style="font-size:12px;color:#555;font-weight:600">말하기</div>
+            <div style="font-size:12px;color:#555;font-weight:600" data-i18n="lang_speak">말하기</div>
             <div style="display:flex;gap:4px" id="lang-prof-speak">
-              <button type="button" class="lang-level-btn" data-skill="speak" data-v="상" onclick="setLangLevel(this)">상</button>
-              <button type="button" class="lang-level-btn" data-skill="speak" data-v="중" onclick="setLangLevel(this)">중</button>
-              <button type="button" class="lang-level-btn" data-skill="speak" data-v="하" onclick="setLangLevel(this)">하</button>
+              <button type="button" class="lang-level-btn" data-skill="speak" data-v="상" onclick="setLangLevel(this)" data-i18n="level_high">상</button>
+              <button type="button" class="lang-level-btn" data-skill="speak" data-v="중" onclick="setLangLevel(this)" data-i18n="level_mid">중</button>
+              <button type="button" class="lang-level-btn" data-skill="speak" data-v="하" onclick="setLangLevel(this)" data-i18n="level_low">하</button>
             </div>
-            <div style="font-size:12px;color:#555;font-weight:600">독해</div>
+            <div style="font-size:12px;color:#555;font-weight:600" data-i18n="lang_read">독해</div>
             <div style="display:flex;gap:4px" id="lang-prof-read">
-              <button type="button" class="lang-level-btn" data-skill="read" data-v="상" onclick="setLangLevel(this)">상</button>
-              <button type="button" class="lang-level-btn" data-skill="read" data-v="중" onclick="setLangLevel(this)">중</button>
-              <button type="button" class="lang-level-btn" data-skill="read" data-v="하" onclick="setLangLevel(this)">하</button>
+              <button type="button" class="lang-level-btn" data-skill="read" data-v="상" onclick="setLangLevel(this)" data-i18n="level_high">상</button>
+              <button type="button" class="lang-level-btn" data-skill="read" data-v="중" onclick="setLangLevel(this)" data-i18n="level_mid">중</button>
+              <button type="button" class="lang-level-btn" data-skill="read" data-v="하" onclick="setLangLevel(this)" data-i18n="level_low">하</button>
             </div>
-            <div style="font-size:12px;color:#555;font-weight:600">쓰기</div>
+            <div style="font-size:12px;color:#555;font-weight:600" data-i18n="lang_write">쓰기</div>
             <div style="display:flex;gap:4px" id="lang-prof-write">
-              <button type="button" class="lang-level-btn" data-skill="write" data-v="상" onclick="setLangLevel(this)">상</button>
-              <button type="button" class="lang-level-btn" data-skill="write" data-v="중" onclick="setLangLevel(this)">중</button>
-              <button type="button" class="lang-level-btn" data-skill="write" data-v="하" onclick="setLangLevel(this)">하</button>
+              <button type="button" class="lang-level-btn" data-skill="write" data-v="상" onclick="setLangLevel(this)" data-i18n="level_high">상</button>
+              <button type="button" class="lang-level-btn" data-skill="write" data-v="중" onclick="setLangLevel(this)" data-i18n="level_mid">중</button>
+              <button type="button" class="lang-level-btn" data-skill="write" data-v="하" onclick="setLangLevel(this)" data-i18n="level_low">하</button>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-top:12px">
-            <button type="button" onclick="confirmLangProficiency()" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">확인</button>
-            <button type="button" onclick="cancelLangProficiency()" style="padding:8px 14px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer">취소</button>
-            <button type="button" id="lang-prof-remove-btn" onclick="removeLangProficiency()" style="padding:8px 12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:none">삭제</button>
+            <button type="button" onclick="confirmLangProficiency()" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer" data-i18n="btn_confirm">확인</button>
+            <button type="button" onclick="cancelLangProficiency()" style="padding:8px 14px;background:#f0f0f0;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer" data-i18n="cancel">취소</button>
+            <button type="button" id="lang-prof-remove-btn" onclick="removeLangProficiency()" style="padding:8px 12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:none" data-i18n="delete">삭제</button>
           </div>
         </div>
       </div>
     </div>
-    <button onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+    <button onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="save">저장하기</button>
   </div>
 </div>
 
@@ -2272,19 +2272,19 @@
 <div class="mpsub-panel" id="mpsub-docs">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('docs')">‹</button>
-    <div class="mpsub-ttl">자격증 · 서류</div>
+    <div class="mpsub-ttl" data-i18n="row_docs">자격증 · 서류</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
     <div id="worker-cert-section">
       <div style="font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.8;background:#f8f8f8;border-radius:12px;padding:12px">
-        📋 서류명을 입력하고 <strong style="color:#C8102E">+ 업로드</strong>를 눌러 첨부하세요.<br>
-        등록된 서류는 <strong style="color:#666">지원한 공고의 업주에게만 공개</strong>됩니다.
+        📋 <span data-i18n="mp_doc_hint_1">서류명을 입력하고</span> <strong style="color:#C8102E" data-i18n="upload_btn">+ 업로드</strong data-i18n="mp_doc_hint_2">를 눌러 첨부하세요.<br>
+        <span data-i18n="mp_doc_hint_3">등록된 서류는</span> <strong style="color:#666" data-i18n="mp_doc_hint_4">지원한 공고의 업주에게만 공개</strong><span data-i18n="mp_doc_hint_5">됩니다.</span>
       </div>
       <div id="other-cert-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="other-cert-name" type="text" placeholder="서류명 (예: 보건증, 운전면허)" maxlength="30" style="flex:1;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff">
         <label style="padding:10px 16px;background:#C8102E;color:#fff;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">
-          + 업로드<input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
+          <span data-i18n="upload_btn">+ 업로드</span><input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc('other',this)">
         </label>
       </div>
     </div>
@@ -2295,12 +2295,12 @@
 <div class="mpsub-panel" id="mpsub-noti">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('noti')">‹</button>
-    <div class="mpsub-ttl">알림 설정</div>
+    <div class="mpsub-ttl" data-i18n="noti_section">알림 설정</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
     <div style="background:#fff;border-radius:14px;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
-        <div><div style="font-size:14px;font-weight:700;color:#222">채팅 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">새 메시지 수신 시 알림</div></div>
+        <div><div style="font-size:14px;font-weight:700;color:#222" data-i18n="noti_chat">채팅 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px" data-i18n="noti_chat_desc">새 메시지 수신 시 알림</div></div>
         <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
           <input type="checkbox" id="noti-toggle-chat" onchange="saveNotiSetting('chat',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
           <span id="noti-track-chat" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
@@ -2308,7 +2308,7 @@
         </label>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
-        <div><div style="font-size:14px;font-weight:700;color:#222">합격/거절 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">지원 결과 변경 시 알림</div></div>
+        <div><div style="font-size:14px;font-weight:700;color:#222" data-i18n="noti_status">합격/거절 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px" data-i18n="noti_status_desc">지원 결과 변경 시 알림</div></div>
         <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
           <input type="checkbox" id="noti-toggle-status" onchange="saveNotiSetting('status',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
           <span id="noti-track-status" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
@@ -2316,7 +2316,7 @@
         </label>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
-        <div><div style="font-size:14px;font-weight:700;color:#222">댓글 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">내 게시글에 댓글 달릴 때</div></div>
+        <div><div style="font-size:14px;font-weight:700;color:#222" data-i18n="noti_comment">댓글 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px" data-i18n="noti_comment_desc">내 게시글에 댓글 달릴 때</div></div>
         <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
           <input type="checkbox" id="noti-toggle-comment" onchange="saveNotiSetting('comment',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
           <span id="noti-track-comment" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
@@ -2326,7 +2326,7 @@
     </div>
     <div style="background:#fff;border-radius:14px;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
-        <div><div style="font-size:14px;font-weight:700;color:#222">🤝 바로미팅 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">신청/확정/채팅 등 바로미팅 관련 알림</div></div>
+        <div><div style="font-size:14px;font-weight:700;color:#222">🤝 <span data-i18n="noti_baromeeting">바로미팅 알림</span></div><div style="font-size:12px;color:#aaa;margin-top:2px" data-i18n="noti_baromeeting_desc">신청/확정/채팅 등 바로미팅 관련 알림</div></div>
         <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
           <input type="checkbox" id="noti-toggle-svc-baromeeting" onchange="saveServiceNotiSetting('baromeeting',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
           <span id="noti-track-svc-baromeeting" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
@@ -2334,7 +2334,7 @@
         </label>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f0f0f0">
-        <div><div style="font-size:14px;font-weight:700;color:#222">📍 바로스팟 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">선점/확정/채팅 등 바로스팟 관련 알림</div></div>
+        <div><div style="font-size:14px;font-weight:700;color:#222">📍 <span data-i18n="noti_barospot">바로스팟 알림</span></div><div style="font-size:12px;color:#aaa;margin-top:2px" data-i18n="noti_barospot_desc">선점/확정/채팅 등 바로스팟 관련 알림</div></div>
         <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
           <input type="checkbox" id="noti-toggle-svc-barospot" onchange="saveServiceNotiSetting('barospot',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
           <span id="noti-track-svc-barospot" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
@@ -2342,7 +2342,7 @@
         </label>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
-        <div><div style="font-size:14px;font-weight:700;color:#222">👥 바로모임 알림</div><div style="font-size:12px;color:#aaa;margin-top:2px">모임 채팅 등 바로모임 관련 알림</div></div>
+        <div><div style="font-size:14px;font-weight:700;color:#222">👥 <span data-i18n="noti_moim">바로모임 알림</span></div><div style="font-size:12px;color:#aaa;margin-top:2px" data-i18n="noti_moim_desc">모임 채팅 등 바로모임 관련 알림</div></div>
         <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
           <input type="checkbox" id="noti-toggle-svc-moim" onchange="saveServiceNotiSetting('moim',this.checked)" style="opacity:0;width:0;height:0;position:absolute">
           <span id="noti-track-svc-moim" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
@@ -2352,7 +2352,7 @@
     </div>
     <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:#222">🔔 맞춤 공고 알림</div>
+        <div style="font-size:13px;font-weight:800;color:#222">🔔 <span data-i18n="noti_custom">맞춤 공고 알림</span></div>
         <label style="position:relative;width:44px;height:24px;cursor:pointer;display:inline-block">
           <input type="checkbox" id="notify-enabled-toggle" onchange="onNotifyToggle(this)" style="opacity:0;width:0;height:0;position:absolute">
           <span id="notify-track" style="position:absolute;inset:0;border-radius:12px;background:#ddd;transition:0.2s"></span>
@@ -2360,12 +2360,12 @@
         </label>
       </div>
       <div id="notify-pref-body" style="display:none">
-        <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:8px">원하는 업종 (미선택 = 전체)</div>
+        <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:8px" data-i18n="noti_custom_cat">원하는 업종 (미선택 = 전체)</div>
         <div id="notify-cat-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
-        <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:6px">최소 시급</div>
+        <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:6px" data-i18n="noti_min_wage">최소 시급</div>
         <div style="display:flex;align-items:center;gap:8px">
           <input type="number" id="notify-min-wage" placeholder="0" min="0" step="500" style="flex:1;padding:9px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;outline:none;box-sizing:border-box">
-          <span style="font-size:13px;color:#888;font-weight:700;white-space:nowrap">원 이상</span>
+          <span style="font-size:13px;color:#888;font-weight:700;white-space:nowrap" data-i18n="won_or_more">원 이상</span>
         </div>
       </div>
     </div>
@@ -2373,10 +2373,10 @@
          담겨서 나가는 값이라, 이 화면에 저장 버튼이 없으면 기본정보/스킬 등 다른 서브패널에
          따로 들어가 저장하지 않는 한 설정이 그냥 사라짐 - 여기서 바로 저장 가능하게 함
          (2026-07-15 "저장 버튼 누락" 전수 점검 중 발견) -->
-    <button onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장하기</button>
+    <button onclick="saveAllProfileSettings()" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="save">저장하기</button>
     <!-- 알림 히스토리 버튼 -->
     <button onclick="openNotiHistory()" style="width:100%;padding:14px;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;font-size:14px;font-weight:700;color:#374151;cursor:pointer;display:flex;align-items:center;gap:8px">
-      <span style="font-size:18px">📋</span> 알림 히스토리 보기
+      <span style="font-size:18px">📋</span> <span data-i18n="noti_history_view">알림 히스토리 보기</span>
       <span style="margin-left:auto;color:#bbb">›</span>
     </button>
   </div>
@@ -2386,11 +2386,11 @@
 <div class="mpsub-panel" id="mpsub-noti-history" style="z-index:365">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('noti-history')">‹</button>
-    <div class="mpsub-ttl">알림 히스토리</div>
-    <button onclick="loadNotiHistory()" style="background:none;border:none;font-size:13px;color:#C8102E;font-weight:700;cursor:pointer;padding:4px 8px">새로고침</button>
+    <div class="mpsub-ttl" data-i18n="noti_history">알림 히스토리</div>
+    <button onclick="loadNotiHistory()" style="background:none;border:none;font-size:13px;color:#C8102E;font-weight:700;cursor:pointer;padding:4px 8px" data-i18n="refresh">새로고침</button>
   </div>
   <div id="noti-history-list" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px">
-    <div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">로딩 중...</div>
+    <div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px" data-i18n="loading_short">로딩 중...</div>
   </div>
 </div>
 
@@ -2399,17 +2399,17 @@
 <div class="mpsub-panel" id="mpsub-foreigner-hub" style="z-index:365">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('foreigner-hub')">‹</button>
-    <div class="mpsub-ttl">🌏 외국인 전용 서비스</div>
+    <div class="mpsub-ttl">🌏 <span data-i18n="foreign_section">외국인 전용 서비스</span></div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:20px 16px 60px">
-    <div style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.6">국적·비자 등록부터 근로권리 확인까지 외국인 근로자를 위한 서비스입니다.</div>
+    <div style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.6" data-i18n="foreign_section_desc">국적·비자 등록부터 근로권리 확인까지 외국인 근로자를 위한 서비스입니다.</div>
 
     <!-- 비자·국적 등록 -->
     <div onclick="closeMpSub('foreigner-hub');setTimeout(()=>openMpSub('foreigner'),320)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
       <div style="width:46px;height:46px;border-radius:14px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🛂</div>
       <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:#222">국적 · 비자 등록</div>
-        <div style="font-size:12px;color:#888;margin-top:2px">비자 종류 · 가능 업종 설정</div>
+        <div style="font-size:14px;font-weight:800;color:#222" data-i18n="visa_register">국적 · 비자 등록</div>
+        <div style="font-size:12px;color:#888;margin-top:2px" data-i18n="visa_register_desc">비자 종류 · 가능 업종 설정</div>
       </div>
       <span style="font-size:18px;color:#ccc">›</span>
     </div>
@@ -2418,8 +2418,8 @@
     <div onclick="closeMpSub('foreigner-hub');setTimeout(openWorkerRightsGuide,320)" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #f0f0f0;border-radius:16px;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">
       <div style="width:46px;height:46px;border-radius:14px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">📋</div>
       <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:#222">내 권리 가이드</div>
-        <div style="font-size:12px;color:#888;margin-top:2px">최저임금 · 근로시간 · 신고 방법</div>
+        <div style="font-size:14px;font-weight:800;color:#222" data-i18n="rights_guide">내 권리 가이드</div>
+        <div style="font-size:12px;color:#888;margin-top:2px" data-i18n="rights_guide_desc">최저임금 · 근로시간 · 신고 방법</div>
       </div>
       <span style="font-size:18px;color:#ccc">›</span>
     </div>
@@ -2430,16 +2430,16 @@
 <div class="mpsub-panel" id="mpsub-foreigner" style="z-index:366">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('foreigner')">‹</button>
-    <div class="mpsub-ttl">🛂 비자 정보 · 가능 업종</div>
-    <button onclick="saveVisaProfile()" style="background:#C8102E;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer;padding:6px 14px;border-radius:10px">저장</button>
+    <div class="mpsub-ttl">🛂 <span data-i18n="visa_info_title">비자 정보 · 가능 업종</span></div>
+    <button onclick="saveVisaProfile()" style="background:#C8102E;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer;padding:6px 14px;border-radius:10px" data-i18n="save_short">저장</button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px 16px 60px">
 
     <!-- 국가 선택 -->
     <div style="margin-bottom:20px">
-      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">출신 국가</div>
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px" data-i18n="country_label">출신 국가</div>
       <select id="visa-country" onchange="onVisaCountryChange()" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;color:#111;background:#fff;outline:none;appearance:none">
-        <option value="">국가를 선택하세요</option>
+        <option value="" data-i18n="country_select">국가를 선택하세요</option>
         <option value="KR">🇰🇷 대한민국 (Korea)</option>
         <option value="UZ">🇺🇿 우즈베키스탄 (Uzbekistan)</option>
         <option value="VN">🇻🇳 베트남 (Vietnam)</option>
@@ -2460,47 +2460,47 @@
 
     <!-- 비자 종류 선택 -->
     <div id="visa-type-section" style="margin-bottom:20px">
-      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">체류 비자 종류</div>
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px" data-i18n="visa_type_label">체류 비자 종류</div>
       <select id="visa-type" onchange="onVisaTypeChange()" style="width:100%;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;color:#111;background:#fff;outline:none;appearance:none">
-        <option value="">비자 종류 선택</option>
-        <option value="KR">해당없음 (한국 국적)</option>
-        <option value="H-2">H-2 방문취업</option>
-        <option value="E-9">E-9 비전문취업 (고용허가제)</option>
-        <option value="F-4">F-4 재외동포</option>
-        <option value="F-5">F-5 영주권</option>
-        <option value="F-6">F-6 결혼이민</option>
-        <option value="F-2">F-2 거주</option>
-        <option value="D-2">D-2 유학</option>
-        <option value="D-4">D-4 어학연수</option>
-        <option value="E-7">E-7 특정활동</option>
-        <option value="C-4">C-4 단기취업</option>
-        <option value="OTHER">기타</option>
+        <option value="" data-i18n="visa_type_select">비자 종류 선택</option>
+        <option value="KR" data-i18n="visa_none">해당없음 (한국 국적)</option>
+        <option value="H-2" data-i18n="visa_h2">H-2 방문취업</option>
+        <option value="E-9" data-i18n="visa_e9">E-9 비전문취업 (고용허가제)</option>
+        <option value="F-4" data-i18n="visa_f4">F-4 재외동포</option>
+        <option value="F-5" data-i18n="visa_f5">F-5 영주권</option>
+        <option value="F-6" data-i18n="visa_f6">F-6 결혼이민</option>
+        <option value="F-2" data-i18n="visa_f2">F-2 거주</option>
+        <option value="D-2" data-i18n="visa_d2">D-2 유학</option>
+        <option value="D-4" data-i18n="visa_d4">D-4 어학연수</option>
+        <option value="E-7" data-i18n="visa_e7">E-7 특정활동</option>
+        <option value="C-4" data-i18n="visa_c4">C-4 단기취업</option>
+        <option value="OTHER" data-i18n="cat_etc">기타</option>
       </select>
     </div>
 
     <!-- 비자 가능 업종 안내 -->
     <div id="visa-eligible-section" style="margin-bottom:20px;display:none">
-      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">✅ 취업 가능 업종</div>
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">✅ <span data-i18n="visa_allowed_cat">취업 가능 업종</span></div>
       <div id="visa-eligible-tags" style="display:flex;flex-wrap:wrap;gap:4px"></div>
       <div id="visa-eligible-note" style="margin-top:8px;font-size:11px;color:#6b7280;line-height:1.6;padding:8px 10px;background:#f8f9fa;border-radius:8px"></div>
     </div>
 
     <!-- 비자 사본 업로드 -->
     <div id="visa-doc-section" style="margin-bottom:20px;display:none">
-      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">📎 비자 사본 업로드 <span style="font-weight:500;color:#bbb">(선택)</span></div>
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:8px;letter-spacing:0.5px">📎 <span data-i18n="visa_upload">비자 사본 업로드</span> <span style="font-weight:500;color:#bbb" data-i18n="optional">(선택)</span></div>
       <div style="border:1.5px dashed #e5e7eb;border-radius:12px;padding:16px;text-align:center">
         <input type="file" id="visa-doc-file" accept="image/*,application/pdf" style="display:none" onchange="onVisaDocSelect(event)">
         <div id="visa-doc-preview" style="font-size:13px;color:#aaa">
           <div style="font-size:24px;margin-bottom:6px">📄</div>
-          <button onclick="document.getElementById('visa-doc-file').click()" style="padding:8px 20px;background:#f5f5f5;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#555;cursor:pointer">파일 선택</button>
+          <button onclick="document.getElementById('visa-doc-file').click()" style="padding:8px 20px;background:#f5f5f5;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#555;cursor:pointer" data-i18n="file_select">파일 선택</button>
         </div>
       </div>
-      <div style="font-size:11px;color:#aaa;margin-top:6px">비자 사본을 제출하면 업주에게 ✅ 비자 인증 배지가 표시됩니다.</div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px" data-i18n="visa_upload_desc">비자 사본을 제출하면 업주에게 ✅ 비자 인증 배지가 표시됩니다.</div>
     </div>
 
     <!-- 근무 희망 업종 -->
     <div id="visa-pref-section" style="margin-bottom:20px">
-      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:10px;letter-spacing:0.5px">🎯 근무 희망 업종 <span style="font-weight:500;color:#bbb">(복수 선택)</span></div>
+      <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:10px;letter-spacing:0.5px">🎯 <span data-i18n="pref_cat_title">근무 희망 업종</span> <span style="font-weight:500;color:#bbb" data-i18n="multi_select">(복수 선택)</span></div>
       <div id="pref-job-chips" style="display:flex;flex-wrap:wrap;gap:7px"></div>
     </div>
 
@@ -2511,7 +2511,7 @@
 <div class="mpsub-panel" id="mpsub-wage-history" style="z-index:365">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('wage-history')">‹</button>
-    <div class="mpsub-ttl">💴 급여 수령 확인</div>
+    <div class="mpsub-ttl">💴 <span data-i18n="wage_received_check">급여 수령 확인</span></div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
     <div style="font-size:12px;color:#aaa;margin-bottom:12px;line-height:1.6">완료된 근무의 급여를 직접 확인하세요. 미수령 상태면 업체에 문의하거나 신고할 수 있습니다.</div>
@@ -2523,10 +2523,10 @@
 <div class="mpsub-panel" id="mpsub-lang">
   <div class="mpsub-hdr">
     <button class="mpsub-back" onclick="closeMpSub('lang')">‹</button>
-    <div class="mpsub-ttl">앱 언어</div>
+    <div class="mpsub-ttl" data-i18n="row_app_lang">앱 언어</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:20px 16px 0">
-    <div style="font-size:12px;color:#aaa;margin-bottom:16px" id="lang-desc">현재: 한국어</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:16px" id="lang-desc" data-i18n="lang_desc">현재: 한국어</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button id="lang-ko-btn" onclick="selectLang('ko')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--red);color:#fff;text-align:left;transition:all 0.15s">🇰🇷 한국어</button>
       <button id="lang-en-btn" onclick="selectLang('en')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇺🇸 English</button>
@@ -2539,8 +2539,8 @@
     </div>
   </div>
   <div style="padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));flex-shrink:0;display:flex;gap:10px;background:#f5f5f5;border-top:1px solid #ebebeb">
-    <button onclick="cancelLang()" style="flex:1;padding:15px;background:#fff;color:#555;border:1.5px solid #e5e7eb;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">취소</button>
-    <button onclick="saveLang()" style="flex:2;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장</button>
+    <button onclick="cancelLang()" style="flex:1;padding:15px;background:#fff;color:#555;border:1.5px solid #e5e7eb;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="cancel">취소</button>
+    <button onclick="saveLang()" style="flex:2;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="save_short">저장</button>
   </div>
 </div>
 
@@ -2551,22 +2551,22 @@
     <button onclick="closeAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="font-size:17px;font-weight:900;color:#222">회원정보 변경</div>
+    <div style="font-size:17px;font-weight:900;color:#222" data-i18n="row_account_info">회원정보 변경</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:20px">
     <div id="profile-pw-section" style="display:none;margin-bottom:24px">
-      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">비밀번호 변경</div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px" data-i18n="pw_toggle">비밀번호 변경</div>
       <div id="profile-pw-form" style="background:#fff;border-radius:14px;padding:16px">
         <input id="profile-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box">
         <input id="profile-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
-        <button id="profile-pw-submit-btn" onclick="submitProfilePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+        <button id="profile-pw-submit-btn" onclick="submitProfilePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer" data-i18n="pw_submit">변경하기</button>
       </div>
     </div>
     <div>
-      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">계정 탈퇴</div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px" data-i18n="account_withdraw">계정 탈퇴</div>
       <div style="background:#fff;border-radius:14px;padding:16px">
-        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:14px">탈퇴 시 지원 이력 등 모든 데이터가 삭제되며 복구되지 않습니다.</div>
-        <button id="worker-delete-btn" onclick="deleteUserAccount()" style="width:100%;padding:13px;background:#FFF0F0;color:#C8102E;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:14px" data-i18n="account_withdraw_desc">탈퇴 시 지원 이력 등 모든 데이터가 삭제되며 복구되지 않습니다.</div>
+        <button id="worker-delete-btn" onclick="deleteUserAccount()" style="width:100%;padding:13px;background:#FFF0F0;color:#C8102E;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer" data-i18n="withdraw">회원 탈퇴</button>
       </div>
     </div>
   </div>
@@ -4356,7 +4356,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=551"></script>
+<script src="./assets/js/app.js?v=552"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4514,7 +4514,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=551"></script>
+<script src="./assets/js/app_ui.js?v=552"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
