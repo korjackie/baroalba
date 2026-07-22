@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '556';
+  const _APP_V = '557';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=556').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=557').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -11458,11 +11458,11 @@ function _commIsOwner() {
 
 function _buildCommTabs() {
   const tabs = [
-    { cat: 'all',    label: '전체' },
-    { cat: 'free',   label: '자유' },
-    { cat: 'review', label: '알바' },
-    { cat: 'meetup', label: '모임/만남' },
-    { cat: 'info',   label: '정보공유' },
+    { cat: 'all',    label: t('cat_all') },
+    { cat: 'free',   label: t('comm_cat_free') },
+    { cat: 'review', label: t('comm_cat_review') },
+    { cat: 'meetup', label: t('comm_cat_meetup') },
+    { cat: 'info',   label: t('comm_cat_info') },
   ];
   const el = document.getElementById('community-cat-tabs');
   // flex:1과 flex-shrink:0을 같이 주면 flex-shrink가 나중에 덮어써서 각 탭이
@@ -11484,10 +11484,10 @@ function _buildCommTabs() {
 
 function _buildWriteCats() {
   const cats = [
-    { cat: 'review', label: '알바' },
-    { cat: 'meetup', label: '모임/만남' },
-    { cat: 'info',   label: '정보공유' },
-    { cat: 'free',   label: '자유' },
+    { cat: 'review', label: t('comm_cat_review') },
+    { cat: 'meetup', label: t('comm_cat_meetup') },
+    { cat: 'info',   label: t('comm_cat_info') },
+    { cat: 'free',   label: t('comm_cat_free') },
   ];
   const el = document.getElementById('comm-write-cats');
   el.innerHTML = cats.map((c, i) => {
@@ -11516,10 +11516,10 @@ function closeCommunityPost() {
 // 커뮤니티 게시글 공유하기 - shareBaromeet()과 동일한 패턴(네이티브 공유 > 카카오 > Web Share > 클립보드)
 async function shareCommunityPost() {
   if (!_commCurrentPostId) return;
-  const title = document.getElementById('comm-post-title-h')?.textContent || '게시글';
+  const title = document.getElementById('comm-post-title-h')?.textContent || t('post_title_default');
   const link = `${location.origin}${location.pathname}?post=${_commCurrentPostId}`;
-  const shareTitle = `[바로알바 커뮤니티] ${title}`;
-  const shareBody = `${shareTitle}\n바로알바 커뮤니티에서 확인해보세요`;
+  const shareTitle = `[바로알바 ${t('community_title')}] ${title}`;
+  const shareBody = `${shareTitle}\n${t('comm_share_desc')}`;
   const shareText = `${shareBody}\n${link}`;
 
   // MainActivity.java의 AndroidBridge.share(title,text,url)는 title 인자를 안 쓰고
@@ -11534,11 +11534,11 @@ async function shareCommunityPost() {
         objectType: 'feed',
         content: {
           title: shareTitle,
-          description: '바로알바 커뮤니티에서 확인해보세요',
+          description: t('comm_share_desc'),
           imageUrl: `${location.origin}/icons/og-share.png`,
           link: { mobileWebUrl: link, webUrl: link }
         },
-        buttons: [{ title: '게시글 보기', link: { mobileWebUrl: link, webUrl: link } }]
+        buttons: [{ title: t('view_post_btn'), link: { mobileWebUrl: link, webUrl: link } }]
       });
       return;
     } catch(e) {}
@@ -11547,17 +11547,17 @@ async function shareCommunityPost() {
     navigator.share({ title: shareTitle, text: shareText, url: link }).catch(() => {});
     return;
   }
-  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
+  navigator.clipboard.writeText(link).then(() => showToast('📋 ' + t('link_copied_toast'))).catch(() => showToast(link));
 }
 
 function openCommunityWriteOverlay() {
-  if (!currentUser || isGuest) { showToast('로그인 후 글을 작성할 수 있어요'); return; }
+  if (!currentUser || isGuest) { showToast(t('login_required')); return; }
   _commEditPostId = null;
   document.getElementById('comm-write-title').value = '';
   document.getElementById('comm-write-content').value = '';
   document.getElementById('comm-write-anon').checked = false;
-  document.getElementById('comm-write-title-h').textContent = '글쓰기';
-  document.getElementById('comm-write-submit-btn').textContent = '게시하기';
+  document.getElementById('comm-write-title-h').textContent = t('write_post_btn');
+  document.getElementById('comm-write-submit-btn').textContent = t('post_submit_btn');
   _buildWriteCats();
   document.getElementById('community-write-overlay').classList.add('open');
 }
@@ -11600,23 +11600,23 @@ async function loadCommunityPosts(cat) {
 
   const { data: posts } = await q;
   if (!posts?.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-size:15px;font-weight:700">아직 게시글이 없어요</div><div style="font-size:13px;margin-top:6px">첫 글을 작성해보세요!</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-size:15px;font-weight:700">' + t('comm_empty_title') + '</div><div style="font-size:13px;margin-top:6px">' + t('comm_empty_hint') + '</div></div>';
     return;
   }
 
   const CAT_INFO = {
-    review:{ bg:'#FFF7ED', color:'#EA580C', label:'알바' },
-    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:'모임/만남' },
-    info:  { bg:'#EFF6FF', color:'#3B82F6', label:'정보공유' },
-    free:  { bg:'#F5F3FF', color:'#7C3AED', label:'자유' },
-    owner: { bg:'#FEF3C7', color:'#D97706', label:'업주전용' },
-    worker:{ bg:'#E0F2FE', color:'#0284C7', label:'알바생전용' },
+    review:{ bg:'#FFF7ED', color:'#EA580C', label:t('comm_cat_review') },
+    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:t('comm_cat_meetup') },
+    info:  { bg:'#EFF6FF', color:'#3B82F6', label:t('comm_cat_info') },
+    free:  { bg:'#F5F3FF', color:'#7C3AED', label:t('comm_cat_free') },
+    owner: { bg:'#FEF3C7', color:'#D97706', label:t('comm_cat_owner') },
+    worker:{ bg:'#E0F2FE', color:'#0284C7', label:t('comm_cat_worker') },
   };
-  const fmtRel = iso => { const d = new Date(iso); const now = new Date(); const diffH = (now - d) / 3600000; if (diffH < 1) return Math.floor(diffH * 60) + '분 전'; if (diffH < 24) return Math.floor(diffH) + '시간 전'; return `${d.getMonth()+1}/${d.getDate()}`; };
+  const fmtRel = iso => { const d = new Date(iso); const now = new Date(); const diffH = (now - d) / 3600000; if (diffH < 1) return t('time_min_ago').replace('{n}', Math.floor(diffH * 60)); if (diffH < 24) return t('time_hour_ago').replace('{n}', Math.floor(diffH)); return `${d.getMonth()+1}/${d.getDate()}`; };
 
   el.innerHTML = posts.map(p => {
     const ct = CAT_INFO[p.category] || CAT_INFO.free;
-    const author = p.is_anonymous ? '익명' : (p.workers?.name || p.businesses?.biz_name || '사용자');
+    const author = p.is_anonymous ? t('anon_author') : (p.workers?.name || p.businesses?.biz_name || t('default_user'));
     const preview = (p.content || '').slice(0, 55) + ((p.content || '').length > 55 ? '...' : '');
     return `<div onclick="openCommunityPost('${p.id}')" style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 5px rgba(0,0,0,0.05);cursor:pointer">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
@@ -11647,47 +11647,47 @@ async function openCommunityPost(postId) {
     db.from('community_comments').select('*, workers(name,kakao_uid), businesses(biz_name,kakao_uid)').eq('post_id', postId).order('created_at', { ascending: true })
   ]);
 
-  if (!post) { body.innerHTML = '<div style="padding:20px;color:#aaa">게시글을 불러올 수 없어요</div>'; return; }
+  if (!post) { body.innerHTML = '<div style="padding:20px;color:#aaa">' + t('post_load_failed') + '</div>'; return; }
 
   _commCurrentPostLikes = post.likes || 0;
   document.getElementById('comm-post-title-h').textContent = post.title;
 
   const CAT_INFO = {
-    review:{ bg:'#FFF7ED', color:'#EA580C', label:'알바' },
-    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:'모임/만남' },
-    info:  { bg:'#EFF6FF', color:'#3B82F6', label:'정보공유' },
-    free:  { bg:'#F5F3FF', color:'#7C3AED', label:'자유' },
-    owner: { bg:'#FEF3C7', color:'#D97706', label:'업주전용' },
-    worker:{ bg:'#E0F2FE', color:'#0284C7', label:'알바생전용' },
+    review:{ bg:'#FFF7ED', color:'#EA580C', label:t('comm_cat_review') },
+    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:t('comm_cat_meetup') },
+    info:  { bg:'#EFF6FF', color:'#3B82F6', label:t('comm_cat_info') },
+    free:  { bg:'#F5F3FF', color:'#7C3AED', label:t('comm_cat_free') },
+    owner: { bg:'#FEF3C7', color:'#D97706', label:t('comm_cat_owner') },
+    worker:{ bg:'#E0F2FE', color:'#0284C7', label:t('comm_cat_worker') },
   };
   const ct = CAT_INFO[post.category] || CAT_INFO.free;
-  const author = post.is_anonymous ? '익명' : (post.workers?.name || post.businesses?.biz_name || '사용자');
+  const author = post.is_anonymous ? t('anon_author') : (post.workers?.name || post.businesses?.biz_name || t('default_user'));
   const fmtFull = iso => { const d = new Date(iso); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
-  const fmtRel = iso => { const d = new Date(iso); const now = new Date(); const diffH = (now - d) / 3600000; if (diffH < 1) return Math.floor(diffH * 60) + '분 전'; if (diffH < 24) return Math.floor(diffH) + '시간 전'; return `${d.getMonth()+1}/${d.getDate()}`; };
+  const fmtRel = iso => { const d = new Date(iso); const now = new Date(); const diffH = (now - d) / 3600000; if (diffH < 1) return t('time_min_ago').replace('{n}', Math.floor(diffH * 60)); if (diffH < 24) return t('time_hour_ago').replace('{n}', Math.floor(diffH)); return `${d.getMonth()+1}/${d.getDate()}`; };
 
   const isMyPost = currentUser && (post.workers?.kakao_uid === currentUser.id || post.businesses?.kakao_uid === currentUser.id);
   // 좋아요 버튼과 수정/삭제 버튼이 서로 다른 줄에 따로 떨어져 있어 어색했던 문제 -
   // 좋아요는 왼쪽, 수정/삭제는 오른쪽으로 한 줄에 나란히 배치
   const myPostBtns = isMyPost ? `
     <div style="display:flex;gap:8px">
-      <button onclick="openEditCommPost()" style="padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;background:#fff;font-size:12px;font-weight:700;color:#555;cursor:pointer">✏️ 수정</button>
-      <button onclick="deleteCommPost()" style="padding:7px 14px;border:1.5px solid #fca5a5;border-radius:20px;background:#fff3f3;font-size:12px;font-weight:700;color:#c53030;cursor:pointer">🗑 삭제</button>
+      <button onclick="openEditCommPost()" style="padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;background:#fff;font-size:12px;font-weight:700;color:#555;cursor:pointer">✏️ ${t('edit_btn')}</button>
+      <button onclick="deleteCommPost()" style="padding:7px 14px;border:1.5px solid #fca5a5;border-radius:20px;background:#fff3f3;font-size:12px;font-weight:700;color:#c53030;cursor:pointer">🗑 ${t('delete')}</button>
     </div>` : '';
 
   const commentsHtml = comments?.length
     ? comments.map(c => {
-        const ca = c.is_anonymous ? '익명' : (c.workers?.name || c.businesses?.biz_name || '사용자');
+        const ca = c.is_anonymous ? t('anon_author') : (c.workers?.name || c.businesses?.biz_name || t('default_user'));
         const isMyComment = currentUser && (c.workers?.kakao_uid === currentUser.id || c.businesses?.kakao_uid === currentUser.id);
         return `<div style="padding:12px 0;border-top:1px solid #f5f5f5">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
             <span style="font-size:12px;font-weight:700;color:#555">${ca}</span>
             <span style="font-size:11px;color:#ccc">${fmtRel(c.created_at)}</span>
-            ${isMyComment ? `<button onclick="deleteCommComment('${c.id}')" style="margin-left:auto;padding:3px 8px;border:none;background:none;font-size:11px;color:#ccc;cursor:pointer">삭제</button>` : ''}
+            ${isMyComment ? `<button onclick="deleteCommComment('${c.id}')" style="margin-left:auto;padding:3px 8px;border:none;background:none;font-size:11px;color:#ccc;cursor:pointer">${t('delete')}</button>` : ''}
           </div>
           <div style="font-size:13px;color:#333;line-height:1.6">${c.content}</div>
         </div>`;
       }).join('')
-    : '<div style="color:#bbb;font-size:13px;padding:16px 0">첫 댓글을 달아보세요</div>';
+    : '<div style="color:#bbb;font-size:13px;padding:16px 0">' + t('comm_first_comment_hint') + '</div>';
 
   body.innerHTML = `
     <div style="padding-bottom:12px;border-bottom:1px solid #f0f0f0;margin-bottom:14px">
@@ -11703,7 +11703,7 @@ async function openCommunityPost(postId) {
         ${myPostBtns}
       </div>
     </div>
-    <div style="font-size:12px;font-weight:800;color:#999;margin-bottom:8px">댓글 ${comments?.length || 0}개</div>
+    <div style="font-size:12px;font-weight:800;color:#999;margin-bottom:8px">${t('comment_count_fmt').replace('{n}', comments?.length || 0)}</div>
     <div id="comm-comments-list">${commentsHtml}</div>
     <div style="height:20px"></div>
   `;
@@ -11720,7 +11720,7 @@ function _saveLikedPost(postId) {
 async function likeCommunityPost() {
   if (!_commCurrentPostId || !currentUser) return;
   if (_getLikedPosts().has(_commCurrentPostId)) {
-    showToast('이미 좋아요를 눌렀어요');
+    showToast(t('already_liked_toast'));
     return;
   }
   _commCurrentPostLikes++;
@@ -11734,20 +11734,20 @@ async function likeCommunityPost() {
 }
 
 async function submitCommunityPost() {
-  if (!currentUser || isGuest) { showToast('로그인 후 작성할 수 있어요'); return; }
+  if (!currentUser || isGuest) { showToast(t('login_required')); return; }
   const title = document.getElementById('comm-write-title').value.trim();
   const content = document.getElementById('comm-write-content').value.trim();
   const anon = document.getElementById('comm-write-anon').checked;
-  if (!title) { showToast('제목을 입력해주세요'); return; }
-  if (!content) { showToast('내용을 입력해주세요'); return; }
+  if (!title) { showToast(t('title_required')); return; }
+  if (!content) { showToast(t('post_content_ph')); return; }
 
   // 수정 모드
   if (_commEditPostId) {
     const { error } = await db.from('community_posts')
       .update({ title, content, category: _commWriteCat, is_anonymous: anon })
       .eq('id', _commEditPostId);
-    if (error) { showToast('수정 실패: ' + error.message); return; }
-    showToast('✅ 게시글이 수정됐습니다');
+    if (error) { showToast(t('edit_failed_prefix') + error.message); return; }
+    showToast('✅ ' + t('post_edited_toast'));
     closeCommunityWriteOverlay();
     loadCommunityPosts(_commCurrentCat);
     openCommunityPost(_commCurrentPostId);
@@ -11760,18 +11760,18 @@ async function submitCommunityPost() {
 
   if (role === 'business') {
     const { data: b } = await db.from('businesses').select('id').eq('kakao_uid', currentUser.id).single();
-    if (!b) { showToast('업체 정보를 먼저 등록해주세요'); return; }
+    if (!b) { showToast(t('biz_info_required')); return; }
     insertData.business_id = b.id;
   } else {
     const wid = await _getWorkerId();
-    if (!wid) { showToast('마이페이지 > 내 프로필 > 기본정보를 먼저 등록해주세요'); return; }
+    if (!wid) { showToast(t('profile_basic_required')); return; }
     insertData.worker_id = wid;
   }
 
   const { error } = await db.from('community_posts').insert(insertData);
-  if (error) { showToast('작성 실패: ' + error.message); return; }
+  if (error) { showToast(t('write_failed_prefix') + error.message); return; }
 
-  showToast('✅ 게시글이 등록됐습니다');
+  showToast('✅ ' + t('post_created_toast'));
   closeCommunityWriteOverlay();
   loadCommunityPosts(_commCurrentCat);
 }
@@ -11789,36 +11789,36 @@ function openEditCommPost() {
       document.getElementById('comm-write-content').value = p.content || '';
       document.getElementById('comm-write-anon').checked = !!p.is_anonymous;
       _buildWriteCats();
-      document.getElementById('comm-write-title-h').textContent = '게시글 수정';
-      document.getElementById('comm-write-submit-btn').textContent = '수정하기';
+      document.getElementById('comm-write-title-h').textContent = t('post_edit_title');
+      document.getElementById('comm-write-submit-btn').textContent = t('edit_submit_btn');
       document.getElementById('community-write-overlay').classList.add('open');
     });
 }
 
 function deleteCommPost() {
   if (!_commCurrentPostId) return;
-  showConfirm('댓글도 함께 삭제됩니다.', async () => {
+  showConfirm(t('delete_post_confirm_desc'), async () => {
     const { error } = await db.from('community_posts').delete().eq('id', _commCurrentPostId);
-    if (error) { showToast('삭제 실패'); return; }
-    showToast('🗑 게시글이 삭제됐습니다');
+    if (error) { showToast(t('delete_failed')); return; }
+    showToast('🗑 ' + t('post_deleted_toast'));
     closeCommunityPost();
     loadCommunityPosts(_commCurrentCat);
-  }, {icon:'🗑️', title:'게시글 삭제', okLabel:'삭제', danger:true});
+  }, {icon:'🗑️', title:t('post_delete_confirm_title'), okLabel:t('delete'), danger:true});
 }
 
 function deleteCommComment(commentId) {
   showConfirm('', async () => {
     const { error } = await db.from('community_comments').delete().eq('id', commentId);
-    if (error) { showToast('삭제 실패'); return; }
+    if (error) { showToast(t('delete_failed')); return; }
     const { data: p } = await db.from('community_posts').select('comments_count').eq('id', _commCurrentPostId).single();
     if (p) await db.from('community_posts').update({ comments_count: Math.max(0, (p.comments_count || 1) - 1) }).eq('id', _commCurrentPostId);
-    showToast('댓글이 삭제됐습니다');
+    showToast(t('comment_deleted_toast'));
     openCommunityPost(_commCurrentPostId);
-  }, {icon:'🗑️', title:'댓글 삭제', okLabel:'삭제', danger:true});
+  }, {icon:'🗑️', title:t('comment_delete_confirm_title'), okLabel:t('delete'), danger:true});
 }
 
 async function submitCommunityComment() {
-  if (!currentUser || isGuest) { showToast('로그인 후 댓글을 달 수 있어요'); return; }
+  if (!currentUser || isGuest) { showToast(t('login_required')); return; }
   if (!_commCurrentPostId) return;
   const input = document.getElementById('comm-comment-input');
   const content = input.value.trim();
@@ -11830,16 +11830,16 @@ async function submitCommunityComment() {
 
   if (role === 'business') {
     const { data: b } = await db.from('businesses').select('id').eq('kakao_uid', currentUser.id).single();
-    if (!b) { showToast('업체 정보를 먼저 등록해주세요'); return; }
+    if (!b) { showToast(t('biz_info_required')); return; }
     insertData.business_id = b.id;
   } else {
     const wid = await _getWorkerId();
-    if (!wid) { showToast('마이페이지 > 내 프로필 > 기본정보를 먼저 등록해주세요'); return; }
+    if (!wid) { showToast(t('profile_basic_required')); return; }
     insertData.worker_id = wid;
   }
 
   const { error } = await db.from('community_comments').insert(insertData);
-  if (error) { showToast('댓글 실패: ' + error.message); return; }
+  if (error) { showToast(t('comment_failed_prefix') + error.message); return; }
 
   // 댓글수 직접 증가 (RPC 대신)
   const { data: cur } = await db.from('community_posts').select('comments_count, worker_id, business_id, title, is_anonymous').eq('id', _commCurrentPostId).single();
