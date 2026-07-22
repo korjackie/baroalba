@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '555';
+  const _APP_V = '556';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=555').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=556').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -3401,8 +3401,8 @@ async function _renderHomeLessonHot() {
     });
     section.style.display = 'block';
     list.innerHTML = sorted.map(p => {
-      const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + '원/회' : '협의';
-      const onAir = p.is_available_now ? `<span style="font-size:9px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 5px;border-radius:5px;margin-bottom:4px;display:inline-block">지금가능</span>` : '';
+      const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + t('price_per_session_unit') : t('negotiable_label');
+      const onAir = p.is_available_now ? `<span style="font-size:9px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 5px;border-radius:5px;margin-bottom:4px;display:inline-block">${t('available_now_badge')}</span>` : '';
       const locIcon = p.location_type === '비대면' ? '💻' : p.location_type === '방문레슨' ? '🚗' : '🏫';
       return `<div onclick="openLessonDetail('${p.id}')" style="flex-shrink:0;width:130px;background:#f8faff;border:1.5px solid #dbeafe;border-radius:12px;padding:10px;cursor:pointer">
         ${onAir}
@@ -12567,7 +12567,7 @@ function filterLessonPrice(el, maxPrice) {
 
 async function loadLessons() {
   const el = document.getElementById('lesson-list');
-  el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">🧑‍🏫</div><div class="empty-txt">불러오는 중...</div></div>';
+  el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">🧑‍🏫</div><div class="empty-txt">' + t('loading_generic') + '</div></div>';
   _clearLessonOverlays();
   try {
     let q = db.from('lesson_profiles')
@@ -12594,14 +12594,14 @@ async function loadLessons() {
       }
     }
     if (!lessons.length) {
-      const emptyTxt = _lessonMainFilter === '전문기술' ? '등록된 전문기술 서비스가 없어요' : '등록된 레슨/과외가 없어요';
-      el.innerHTML = `<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">${emptyTxt}<br><span style="font-size:13px;color:#bbb">첫 번째로 등록해보세요!</span></div></div>`;
+      const emptyTxt = _lessonMainFilter === '전문기술' ? t('lesson_empty_tech') : t('lesson_my_empty');
+      el.innerHTML = `<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">${emptyTxt}<br><span style="font-size:13px;color:#bbb">${t('lesson_be_first')}</span></div></div>`;
       return;
     }
     el.innerHTML = lessons.map(p => makeLessonCardHtml(p)).join('');
     _renderLessonMarkers(lessons);
   } catch(e) {
-    el.innerHTML = '<div class="empty"><div class="empty-txt">불러오기 실패</div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-txt">' + t('load_failed') + '</div></div>';
   }
 }
 
@@ -12631,12 +12631,12 @@ function switchLessonManageTab(tab) {
 async function loadMyLessonInquiries() {
   if (!currentUser) return;
   const el = document.getElementById('my-lesson-inquiries');
-  el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">불러오는 중...</div>';
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">' + t('loading_generic') + '</div>';
   try {
     // 내가 강사인 프로필에 들어온 문의
     const { data: profiles } = await db.from('lesson_profiles').select('id,subject,main_category').eq('worker_id', currentUser.id);
     if (!profiles?.length) {
-      el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">등록된 레슨 프로필이 없어요</div>';
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">' + t('lesson_no_profile_for_inquiry') + '</div>';
       return;
     }
     const profileIds = profiles.map(p => p.id);
@@ -12646,7 +12646,7 @@ async function loadMyLessonInquiries() {
       .in('lesson_profile_id', profileIds)
       .order('created_at', { ascending: false });
     if (!inquiries?.length) {
-      el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:13px">아직 문의가 없어요<br><span style="font-size:12px">수강생이 문의하면 여기서 확인할 수 있어요</span></div>';
+      el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:13px">' + t('lesson_inquiry_empty') + '<br><span style="font-size:12px">' + t('lesson_inquiry_empty_hint') + '</span></div>';
       const badge = document.getElementById('lm-inq-badge');
       if (badge) badge.style.display = 'none';
       return;
@@ -12655,7 +12655,7 @@ async function loadMyLessonInquiries() {
     const _seekerUids = [...new Set(inquiries.map(i => i.seeker_kakao_uid).filter(Boolean))];
     const { data: _seekerRows } = await db.from('workers').select('kakao_uid,name,nationality').in('kakao_uid', _seekerUids);
     const _seekerMap = Object.fromEntries((_seekerRows || []).map(w => [w.kakao_uid, w]));
-    const STATUS_MAP = { pending:'대기중', accepted:'수락됨', rejected:'거절됨', closed:'종료' };
+    const STATUS_MAP = { pending:t('inquiry_status_pending'), accepted:t('inquiry_status_accepted'), rejected:t('inquiry_status_rejected'), closed:t('inquiry_status_closed') };
     const STATUS_COLOR = { pending:'#D97706', accepted:'#16a34a', rejected:'#9CA3AF', closed:'#9CA3AF' };
     el.innerHTML = inquiries.map(inq => {
       const seeker = _seekerMap[inq.seeker_kakao_uid] || {};
@@ -12668,18 +12668,18 @@ async function loadMyLessonInquiries() {
       return `<div style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:14px;margin-bottom:10px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
           <div>
-            <div style="font-size:13px;font-weight:800;color:#111">${seeker.name || '수강생'}</div>
+            <div style="font-size:13px;font-weight:800;color:#111">${seeker.name || t('student_default_name')}</div>
             <div style="font-size:11px;color:#888;margin-top:1px">${prof.main_category||'레슨'} · ${prof.subject||''} · ${dateStr}</div>
           </div>
           <span style="font-size:11px;font-weight:800;color:${stColor};background:${stColor}22;padding:3px 9px;border-radius:8px">${stLabel}</span>
         </div>
         ${inq.message ? `<div style="font-size:12px;color:#555;background:#f9fafb;border-radius:8px;padding:9px 11px;margin-bottom:8px;line-height:1.6">"${inq.message}"</div>` : ''}
-        ${inq.proposed_price ? `<div style="font-size:12px;color:#C8102E;font-weight:700;margin-bottom:8px">제안 금액: ${Number(inq.proposed_price).toLocaleString()}원/회</div>` : ''}
+        ${inq.proposed_price ? `<div style="font-size:12px;color:#C8102E;font-weight:700;margin-bottom:8px">${t('proposed_price_prefix')}${Number(inq.proposed_price).toLocaleString()}${t('price_per_session_unit')}</div>` : ''}
         <div style="display:flex;gap:6px">
-          <button onclick="openLessonInquiryChat('${inq.id}')" style="flex:1;padding:8px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 채팅</button>
+          <button onclick="openLessonInquiryChat('${inq.id}')" style="flex:1;padding:8px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 ${t('chat_title')}</button>
           ${isPending ? `
-          <button onclick="decideLessonInquiry('${inq.id}','accepted')" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">✅ 수락</button>
-          <button onclick="decideLessonInquiry('${inq.id}','rejected')" style="flex:1;padding:8px;background:#f3f4f6;color:#6b7280;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">거절</button>
+          <button onclick="decideLessonInquiry('${inq.id}','accepted')" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">✅ ${t('accept_btn')}</button>
+          <button onclick="decideLessonInquiry('${inq.id}','rejected')" style="flex:1;padding:8px;background:#f3f4f6;color:#6b7280;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('reject_btn')}</button>
           ` : ''}
         </div>
       </div>`;
@@ -12689,14 +12689,14 @@ async function loadMyLessonInquiries() {
     const badge = document.getElementById('lm-inq-badge');
     if (badge) { badge.textContent = pendingCnt; badge.style.display = pendingCnt > 0 ? 'inline-block' : 'none'; }
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">불러오기 실패</div>';
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:13px">' + t('load_failed') + '</div>';
   }
 }
 
 async function decideLessonInquiry(inquiryId, decision) {
   const { error } = await db.from('lesson_inquiries').update({ status: decision, decided_at: new Date().toISOString() }).eq('id', inquiryId);
-  if (error) { showToast('처리 실패'); return; }
-  showToast(decision === 'accepted' ? '✅ 문의를 수락했어요' : '문의를 거절했어요');
+  if (error) { showToast(t('process_failed')); return; }
+  showToast(decision === 'accepted' ? ('✅ ' + t('inquiry_accepted_toast')) : t('inquiry_rejected_toast'));
   loadMyLessonInquiries();
 }
 
@@ -12704,9 +12704,9 @@ async function openLessonInquiryChat(inquiryId) {
   const { data: inq } = await db.from('lesson_inquiries')
     .select('id,seeker_kakao_uid,lesson_profile_id')
     .eq('id', inquiryId).single();
-  if (!inq) { showToast('문의 정보를 찾을 수 없어요'); return; }
+  if (!inq) { showToast(t('inquiry_not_found')); return; }
   const { data: _seeker } = await db.from('workers').select('name').eq('kakao_uid', inq.seeker_kakao_uid).maybeSingle();
-  const seekerName = _seeker?.name || '문의자';
+  const seekerName = _seeker?.name || t('inquirer_default');
   _openLessonChatOverlay(inquiryId, seekerName, inq.seeker_kakao_uid);
 }
 
@@ -12733,13 +12733,13 @@ function makeLessonCardHtml(p) {
   const w = p.workers;
   const rating = w?.rating != null ? Number(w.rating).toFixed(1) : '-';
   const reviews = w?.review_count || 0;
-  const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + '원/회' : '-';
+  const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + t('price_per_session_unit') : '-';
   const days = p.available_days?.join(' · ') || '';
   const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터방문', 비대면:'💻 비대면'};
   const locTypeBadge = p.location_type ? `<span style="font-size:10px;background:#f0f9ff;color:#0891b2;padding:2px 6px;border-radius:6px">${locTypeMap[p.location_type]||p.location_type}</span>` : '';
-  const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:#16a34a;border-radius:50%;display:inline-block"></span>지금 가능</span>` : '';
-  const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:800;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:6px">✓ 인증</span>` : '';
-  const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:6px">재수강 ${p._retention}%</span>` : '';
+  const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:#16a34a;border-radius:50%;display:inline-block"></span>${t('available_now_badge')}</span>` : '';
+  const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:800;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:6px">✓ ${t('cert_badge_short')}</span>` : '';
+  const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:6px">${t('retention_badge').replace('{n}', p._retention)}</span>` : '';
   const titleText = `${p.main_category||'레슨'} · ${p.subject||'기타'}`;
   return `
   <div class="lesson-card" onclick="openLessonDetail('${p.id}')">
@@ -12750,7 +12750,7 @@ function makeLessonCardHtml(p) {
       <div class="lesson-price">${price}</div>
       <div style="font-size:12px;color:#888;display:flex;align-items:center;gap:6px">★ ${rating} · ${reviews}건${retentionBadge}</div>
     </div>
-    <div class="lesson-meta">${[p.location_name, days].filter(Boolean).join(' · ') || '위치 협의'}</div>
+    <div class="lesson-meta">${[p.location_name, days].filter(Boolean).join(' · ') || t('location_negotiable')}</div>
   </div>`;
 }
 
@@ -12760,12 +12760,12 @@ async function openLessonDetail(profileId) {
     db.from('lesson_profiles').select('*, workers(name, rating, review_count, noshow_count, phone, kakao_uid)').eq('id', profileId).single(),
     db.from('lesson_bookings').select('student_kakao_uid').eq('profile_id', profileId).eq('status', 'completed'),
   ]);
-  if (!p) { showToast('정보를 불러올 수 없어요'); return; }
+  if (!p) { showToast(t('info_load_failed')); return; }
   const w = p.workers;
   const rating = w?.rating != null ? Number(w.rating).toFixed(1) : '-';
   const reviews = w?.review_count || 0;
   const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() : '-';
-  const days = p.available_days?.join(', ') || '협의';
+  const days = p.available_days?.join(', ') || t('negotiable_label');
   const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터/학원 방문', 비대면:'💻 비대면(온라인)'};
 
   // 재수강률 계산
@@ -12783,13 +12783,13 @@ async function openLessonDetail(profileId) {
 
   // 인증 배지
   const certHtml = p.cert_status === 'verified'
-    ? `<span style="font-size:11px;font-weight:800;background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:8px;margin-left:6px">✓ 자격 인증</span>`
+    ? `<span style="font-size:11px;font-weight:800;background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:8px;margin-left:6px">✓ ${t('cert_verified_full')}</span>`
     : p.cert_status === 'pending'
-    ? `<span style="font-size:11px;background:#f1f5f9;color:#94a3b8;padding:3px 8px;border-radius:8px;margin-left:6px">인증 심사 중</span>` : '';
+    ? `<span style="font-size:11px;background:#f1f5f9;color:#94a3b8;padding:3px 8px;border-radius:8px;margin-left:6px">${t('cert_pending')}</span>` : '';
 
   // 온에어 배지
   const onAirHtml = p.is_available_now
-    ? `<div style="background:#dcfce7;color:#16a34a;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;margin-bottom:10px"><span style="width:7px;height:7px;background:#16a34a;border-radius:50%"></span>지금 바로 레슨 가능</div>` : '';
+    ? `<div style="background:#dcfce7;color:#16a34a;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;margin-bottom:10px"><span style="width:7px;height:7px;background:#16a34a;border-radius:50%"></span>${t('available_now_full')}</div>` : '';
 
   document.getElementById('lesson-detail-body').innerHTML = `
     ${onAirHtml}
@@ -12801,17 +12801,17 @@ async function openLessonDetail(profileId) {
       <div style="font-size:19px;font-weight:900;color:#222;margin-bottom:4px">${p.main_category||'레슨'} · ${p.subject||'기타'}</div>
       ${p.subject_detail ? `<div style="font-size:14px;color:#555;margin-bottom:6px;line-height:1.5">${p.subject_detail}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:13px;color:#888">강사: <strong style="color:#222">${w?.name||'알 수 없음'}</strong></span>
+        <span style="font-size:13px;color:#888">${t('instructor_label')} <strong style="color:#222">${w?.name||t('unknown_label')}</strong></span>
         <span style="font-size:13px">${_renderStars(w?.rating)} <strong>${rating}</strong></span>
-        <span style="font-size:12px;color:#888">후기 ${reviews}건</span>
+        <span style="font-size:12px;color:#888">${t('review_count_fmt').replace('{n}', reviews)}</span>
       </div>
     </div>
     <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:16px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><div style="font-size:11px;color:#aaa;font-weight:600">1회 금액</div><div style="font-size:16px;font-weight:800;color:#C8102E;margin-top:3px">${price}원</div></div>
-        <div><div style="font-size:11px;color:#aaa;font-weight:600">소요 시간</div><div style="font-size:16px;font-weight:800;color:#222;margin-top:3px">${p.session_duration||60}분</div></div>
-        <div><div style="font-size:11px;color:#aaa;font-weight:600">가능 요일</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${days}</div></div>
-        <div><div style="font-size:11px;color:#aaa;font-weight:600">수업 형태</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${locTypeMap[p.location_type]||'협의'}</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('price_per_session_label')}</div><div style="font-size:16px;font-weight:800;color:#C8102E;margin-top:3px">${price}원</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('duration_label')}</div><div style="font-size:16px;font-weight:800;color:#222;margin-top:3px">${p.session_duration||60}분</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('lesson_days_label')}</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${days}</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('class_type_label_plain')}</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${locTypeMap[p.location_type]||t('negotiable_label')}</div></div>
       </div>
       ${p.location_name ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:12px;color:#666">📍 ${p.location_name}</div>` : ''}
       ${p.available_times ? `<div style="margin-top:6px;font-size:12px;color:#666">🕐 ${(()=>{try{return JSON.parse(p.available_times).join(' · ')}catch{return p.available_times}})()}</div>` : ''}
@@ -12822,14 +12822,14 @@ async function openLessonDetail(profileId) {
         const pkgs = p.packages ? JSON.parse(p.packages) : [];
         if (!pkgs.length) return '';
         return `<div style="margin-bottom:16px">
-          <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:8px">패키지 구성</div>
+          <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:8px">${t('lesson_package_label')}</div>
           <div style="display:flex;flex-direction:column;gap:6px">
             ${pkgs.map(pkg=>`
             <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:10px;padding:10px 14px">
               <span style="font-size:14px;font-weight:700;color:#222">${pkg.label}</span>
               <div style="text-align:right">
                 <span style="font-size:15px;font-weight:800;color:#C8102E">${Number(pkg.price).toLocaleString()}원</span>
-                ${pkg.sessions?`<span style="font-size:11px;color:#aaa;margin-left:4px">(${Math.round(pkg.price/pkg.sessions).toLocaleString()}원/회)</span>`:''}
+                ${pkg.sessions?`<span style="font-size:11px;color:#aaa;margin-left:4px">(${Math.round(pkg.price/pkg.sessions).toLocaleString()}${t('price_per_session_unit')})</span>`:''}
               </div>
             </div>`).join('')}
           </div>
@@ -12838,9 +12838,9 @@ async function openLessonDetail(profileId) {
     })()}
     <div style="display:flex;gap:10px;margin-bottom:12px">
       <button onclick="openLessonConsult('${p.id}','${(w?.name||'강사').replace(/'/g,"\\'")}','${w?.kakao_uid||''}')"
-        style="flex:1;padding:14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 무료 상담</button>
+        style="flex:1;padding:14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 ${t('free_consult_btn')}</button>
       <button onclick="document.getElementById('lesson-booking-form').style.display='block';this.style.display='none';document.querySelector('.lesson-cta-row').style.display='none'"
-        style="flex:1;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 예약하기</button>
+        style="flex:1;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 ${t('booking_cta_btn')}</button>
     </div>
     <div class="lesson-cta-row"></div>`;
   document.getElementById('lesson-booking-form').style.display = 'none';
@@ -12931,12 +12931,12 @@ function selectLessonMainCat(el, cat) {
   const priceLbl  = document.getElementById('lr-price-label');
   const detailInp = document.getElementById('lr-detail');
   if (detailLbl) detailLbl.innerHTML = isTech
-    ? '서비스 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">의뢰인에게 보이는 한 줄 설명</span>'
-    : '강의 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">수강생에게 보이는 한 줄 설명</span>';
-  if (priceLbl)  priceLbl.textContent = isTech ? '건당 / 시간당 단가 (원) *' : '1회 기본 단가 (원) *';
+    ? `${t('lesson_intro_label_tech')} <span style="font-size:11px;font-weight:500;color:#aaa">${t('lesson_intro_hint_tech')}</span>`
+    : `${t('lesson_intro_label')} <span style="font-size:11px;font-weight:500;color:#aaa">${t('lesson_intro_hint')}</span>`;
+  if (priceLbl)  priceLbl.textContent = isTech ? t('lesson_price_label_tech') : t('lesson_price_label');
   if (detailInp) detailInp.placeholder = isTech
-    ? '예) 사진 촬영 10년 경력 · 제품/프로필/웨딩 가능'
-    : '예) 골프 국가대표 출신 · 초보 전문 / 중국 10년 거주 원어민급';
+    ? t('lesson_intro_ph_tech')
+    : t('lesson_intro_ph');
 }
 function selectLessonMidCat(el, mid) {
   _selectedMidCategory = mid; _selectedLessonSubject = '';
@@ -12946,10 +12946,10 @@ function selectLessonMidCat(el, mid) {
   document.getElementById('lesson-subject-chips').innerHTML = '';
   if (isEtc) {
     document.getElementById('lr-subject-label').style.display = 'none';
-    document.getElementById('lr-subject-custom').placeholder = '종목/과목 직접 입력';
+    document.getElementById('lr-subject-custom').placeholder = t('lesson_subject_custom_ph_etc');
   } else {
     document.getElementById('lr-subject-label').style.display = '';
-    document.getElementById('lr-subject-custom').placeholder = '직접 입력 (예: 배드민턴, 드럼 등)';
+    document.getElementById('lr-subject-custom').placeholder = t('lesson_subject_custom_ph');
     _renderRegisterSubChips(mid);
   }
 }
@@ -12999,8 +12999,8 @@ const _PKG_SESSION_OPTS = [1,2,3,4,5,6,7,8,9,10,12,16,20];
 function addPackageRow(sessions, price) {
   const idx = _pkgRowIdx++;
   const opts = _PKG_SESSION_OPTS.map(n =>
-    `<option value="${n}" ${sessions === n ? 'selected' : ''}>${n}회</option>`
-  ).join('') + `<option value="0" ${sessions === 0 ? 'selected' : ''}>월정액</option>`;
+    `<option value="${n}" ${sessions === n ? 'selected' : ''}>${n}${t('session_unit')}</option>`
+  ).join('') + `<option value="0" ${sessions === 0 ? 'selected' : ''}>${t('monthly_package_label')}</option>`;
   const row = document.createElement('div');
   row.id = `pkg-row-${idx}`;
   row.style.cssText = 'display:grid;grid-template-columns:100px 1fr auto auto;align-items:center;gap:6px';
@@ -13008,7 +13008,7 @@ function addPackageRow(sessions, price) {
     <select style="padding:9px 6px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;font-weight:700;color:#333;background:#fff;cursor:pointer;width:100%">
       ${opts}
     </select>
-    <input type="number" inputmode="numeric" placeholder="총금액" value="${price||''}"
+    <input type="number" inputmode="numeric" placeholder="${t('total_price_ph')}" value="${price||''}"
       style="padding:9px 10px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none;width:100%;box-sizing:border-box">
     <span style="font-size:11px;color:#aaa;white-space:nowrap">원</span>
     <button type="button" onclick="document.getElementById('pkg-row-${idx}').remove()"
@@ -13025,7 +13025,7 @@ function _collectPackages() {
     const sessions = parseInt(sel.value);
     const price    = parseInt(inp.value);
     if (!price || price <= 0) return;
-    const label = sessions === 0 ? '월정액' : `${sessions}회권`;
+    const label = sessions === 0 ? t('monthly_package_label') : t('session_pass_label').replace('{n}', sessions);
     pkgs.push({ label, sessions: sessions === 0 ? null : sessions, price });
   });
   return pkgs.length ? pkgs : null;
@@ -13038,8 +13038,8 @@ function _renderStars(rating) {
   return `<span style="color:#FBBF24">${'★'.repeat(full)}${'½'.repeat(half)}</span><span style="color:#e5e7eb">${'★'.repeat(empty)}</span>`;
 }
 async function openLessonConsult(profileId, workerName, workerKakaoUid) {
-  if (!currentUser || isGuest) { showToast('로그인 후 상담 가능해요'); return; }
-  if (workerKakaoUid === currentUser.id) { showToast('본인 프로필이에요'); return; }
+  if (!currentUser || isGuest) { showToast(t('consult_login_required')); return; }
+  if (workerKakaoUid === currentUser.id) { showToast(t('own_profile_notice')); return; }
   // lesson_inquiries 테이블에서 기존 상담 조회 또는 생성
   let { data: inq } = await db.from('lesson_inquiries')
     .select('id').eq('lesson_profile_id', profileId).eq('seeker_kakao_uid', currentUser.id).maybeSingle();
@@ -13047,7 +13047,7 @@ async function openLessonConsult(profileId, workerName, workerKakaoUid) {
     const { data: newInq, error } = await db.from('lesson_inquiries').insert({
       lesson_profile_id: profileId, seeker_kakao_uid: currentUser.id, worker_kakao_uid: workerKakaoUid
     }).select('id').single();
-    if (error) { showToast('상담 연결 실패: ' + error.message); return; }
+    if (error) { showToast(t('consult_connect_failed_prefix') + error.message); return; }
     inq = newInq;
   }
   document.getElementById('lesson-detail-modal')?.classList.remove('open');
@@ -13059,7 +13059,7 @@ function _openLessonChatOverlay(inquiryId, workerName, workerKakaoUid) {
   _chatWorkerName = workerName;
   _chatWorkerUserId = workerKakaoUid;
   document.getElementById('chat-title').textContent = t('chat_with_tutor').replace('{name}', workerName);
-  document.getElementById('chat-sub').textContent = '레슨 관련 무료 상담';
+  document.getElementById('chat-sub').textContent = t('lesson_consult_sub');
   const _co1 = document.getElementById('chat-overlay');
   _co1.style.display = 'flex';
   document.getElementById('chat-input').value = '';
@@ -13068,18 +13068,18 @@ function _openLessonChatOverlay(inquiryId, workerName, workerKakaoUid) {
 }
 
 async function saveLessonProfile() {
-  if (!currentUser || isGuest) { showToast('로그인이 필요해요'); return; }
+  if (!currentUser || isGuest) { showToast(t('login_required')); return; }
   const subject  = document.getElementById('lr-subject-custom').value.trim() || _selectedLessonSubject;
   const detail   = document.getElementById('lr-detail').value.trim();
   const price    = parseInt(document.getElementById('lr-price').value);
   const duration = parseInt(document.getElementById('lr-duration').value) || 60;
   const location = document.getElementById('lr-location').value.trim();
-  if (!subject)  { showToast('종목/과목을 선택하거나 입력해주세요'); return; }
-  if (!detail)   { showToast('한 줄 소개를 입력해주세요'); return; }
-  if (!price || price < 1000) { showToast('금액을 올바르게 입력해주세요'); return; }
-  if (!_selectedLrLocType) { showToast('수업 형태를 선택해주세요'); return; }
+  if (!subject)  { showToast(t('lesson_subject_required')); return; }
+  if (!detail)   { showToast(t('lesson_intro_required')); return; }
+  if (!price || price < 1000) { showToast(t('lesson_price_invalid')); return; }
+  if (!_selectedLrLocType) { showToast(t('lesson_type_required')); return; }
   const wid = await _getWorkerId();
-  if (!wid) { showToast('알바생 프로필을 먼저 완성해주세요'); return; }
+  if (!wid) { showToast(t('lesson_my_noworker')); return; }
 
   // 주소 → 좌표 변환
   let lat = mapCenter?.lat || null, lng = mapCenter?.lng || null;
@@ -13107,7 +13107,7 @@ async function saveLessonProfile() {
     const ext = _certFile.name.split('.').pop();
     const path = `${currentUser.id}/${Date.now()}.${ext}`;
     const { data: upData, error: upErr } = await db.storage.from('lesson-certs').upload(path, _certFile, { upsert: true });
-    if (upErr) { showToast('파일 업로드 실패: ' + upErr.message); return; }
+    if (upErr) { showToast(t('file_upload_failed_prefix') + upErr.message); return; }
     const { data: urlData } = db.storage.from('lesson-certs').getPublicUrl(path);
     certFileUrl = urlData?.publicUrl || null;
     certStatus = 'pending';
@@ -13131,32 +13131,32 @@ async function saveLessonProfile() {
     cert_file_url: certFileUrl,
     cert_status: certStatus,
   });
-  if (error) { showToast('등록 실패: ' + error.message); return; }
+  if (error) { showToast(t('register_failed_prefix') + error.message); return; }
   closeLessonRegisterModal();
-  const certMsg = certStatus === 'pending' ? '\n인증 서류는 검토 후 배지가 부여됩니다.' : '';
-  showToast('등록 완료! 수강생 모집이 시작됐어요' + certMsg);
+  const certMsg = certStatus === 'pending' ? ('\n' + t('cert_review_notice')) : '';
+  showToast(t('lesson_register_success') + certMsg);
   loadLessons();
   loadMyLessons();
 }
 
 async function confirmBooking() {
-  if (!currentUser || isGuest) { showToast('로그인이 필요해요'); return; }
+  if (!currentUser || isGuest) { showToast(t('login_required')); return; }
   const date = document.getElementById('bk-date').value;
   const time = document.getElementById('bk-time').value;
   const note = document.getElementById('bk-note').value.trim();
-  if (!date) { showToast('희망 날짜를 선택해주세요'); return; }
-  if (!time) { showToast('희망 시간을 선택해주세요'); return; }
+  if (!date) { showToast(t('booking_date_required')); return; }
+  if (!time) { showToast(t('booking_time_required')); return; }
   const payment = document.querySelector('input[name="bk-payment"]:checked')?.value || 'offline';
-  if (payment === 'toss' && !TOSS_ENABLED) { showToast('토스 결제는 준비 중이에요'); return; }
+  if (payment === 'toss' && !TOSS_ENABLED) { showToast(t('toss_preparing')); return; }
   const { error } = await db.from('lesson_bookings').insert({
     profile_id: _currentLessonProfileId,
     student_kakao_uid: currentUser.id,
     session_date: date, session_time: time,
     note: note || null, payment_method: payment, status: 'pending',
   });
-  if (error) { showToast('예약 실패: ' + error.message); return; }
+  if (error) { showToast(t('booking_failed_prefix') + error.message); return; }
   closeLessonDetailModal();
-  showToast('예약 신청 완료! 제공자가 확인 후 연락드려요');
+  showToast(t('booking_success'));
 }
 
 // ── 내 레슨/과외 관리 ─────────────────────────
@@ -13191,7 +13191,7 @@ async function loadMyLessons() {
   if (!wid) { el.innerHTML = '<div class="empty"><div class="empty-txt">' + t('lesson_my_noworker') + '</div></div>'; return; }
   const { data } = await db.from('lesson_profiles').select('*').eq('worker_id', wid).order('created_at', { ascending: false });
   if (!data?.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">\u{1F9D1}‍\u{1F3EB}</div><div class="empty-txt">' + t('lesson_my_empty') + '<br><span style="font-size:12px;color:#bbb">+ 등록</span></div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">\u{1F9D1}‍\u{1F3EB}</div><div class="empty-txt">' + t('lesson_my_empty') + '<br><span style="font-size:12px;color:#bbb">+ ' + t('lesson_register_btn') + '</span></div></div>';
     return;
   }
   const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터방문', 비대면:'💻 비대면'};
@@ -13203,21 +13203,21 @@ async function loadMyLessons() {
           <span class="lesson-subject-tag">${p.subject}</span>
           ${p.cert_status==='verified'?'<span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px">✓인증</span>':''}
         </div>
-        <span style="font-size:11px;font-weight:700;color:${p.is_active ? '#16a34a' : '#aaa'}">${p.is_active ? '● 활성' : '● 비활성'}</span>
+        <span style="font-size:11px;font-weight:700;color:${p.is_active ? '#16a34a' : '#aaa'}">${p.is_active ? ('● ' + t('active_status')) : ('● ' + t('inactive_status'))}</span>
       </div>
       <div class="lesson-name">${p.main_category||'레슨'} · ${p.subject}</div>
       ${p.subject_detail ? `<div style="font-size:12px;color:#777;margin-top:2px;margin-bottom:4px">${p.subject_detail}</div>` : ''}
-      <div class="lesson-price" style="margin-top:4px">${Number(p.price_per_session).toLocaleString()}원/회 · ${p.session_duration}분 · ${locTypeMap[p.location_type]||''}</div>
+      <div class="lesson-price" style="margin-top:4px">${Number(p.price_per_session).toLocaleString()}${t('price_per_session_unit')} · ${p.session_duration}분 · ${locTypeMap[p.location_type]||''}</div>
       <!-- 지도 표시 + 온에어 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
         <div style="padding:8px 10px;background:#f8fafc;border-radius:10px">
-          <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">지도 표시</div>
-          <div style="font-size:11px;font-weight:800;color:${p.is_active?'#16a34a':'#aaa'}">${p.is_active?'● 수강생에게 노출 중':'● 숨김 상태'}</div>
+          <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">${t('map_display_label')}</div>
+          <div style="font-size:11px;font-weight:800;color:${p.is_active?'#16a34a':'#aaa'}">${p.is_active?('● ' + t('exposed_status')):('● ' + t('hidden_status'))}</div>
         </div>
         <div style="padding:8px 10px;background:${p.is_available_now?'#f0fdf4':'#f8fafc'};border-radius:10px;display:flex;align-items:center;justify-content:space-between">
           <div>
-            <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">지금 가능</div>
-            <div style="font-size:11px;font-weight:800;color:${p.is_available_now?'#16a34a':'#aaa'}">${p.is_available_now?'🟢 ON AIR':'⚫ 오프라인'}</div>
+            <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">${t('available_now_badge')}</div>
+            <div style="font-size:11px;font-weight:800;color:${p.is_available_now?'#16a34a':'#aaa'}">${p.is_available_now?('🟢 ' + t('onair_label')):('⚫ ' + t('offline_label'))}</div>
           </div>
           <label style="position:relative;display:inline-block;width:38px;height:20px;cursor:pointer;flex-shrink:0">
             <input type="checkbox" ${p.is_available_now?'checked':''} onchange="toggleLessonOnAir('${p.id}',this.checked)"
@@ -13229,8 +13229,8 @@ async function loadMyLessons() {
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button onclick="toggleLessonActive('${p.id}',${!p.is_active})" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid ${p.is_active?'#e2e8f0':'#3b82f6'};background:${p.is_active?'#fff':'#eff6ff'};font-size:12px;font-weight:700;color:${p.is_active?'#888':'#3b82f6'};cursor:pointer">${p.is_active ? '지도에서 숨기기' : '지도에 표시하기'}</button>
-        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#C8102E;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+        <button onclick="toggleLessonActive('${p.id}',${!p.is_active})" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid ${p.is_active?'#e2e8f0':'#3b82f6'};background:${p.is_active?'#fff':'#eff6ff'};font-size:12px;font-weight:700;color:${p.is_active?'#888':'#3b82f6'};cursor:pointer">${p.is_active ? t('hide_from_map_btn') : t('show_on_map_btn')}</button>
+        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#C8102E;font-size:12px;font-weight:700;cursor:pointer">${t('delete')}</button>
       </div>
     </div>`).join('');
 }
@@ -13240,15 +13240,15 @@ async function toggleLessonActive(id, val) {
 }
 async function toggleLessonOnAir(id, val) {
   await db.from('lesson_profiles').update({ is_available_now: val }).eq('id', id);
-  showToast(val ? '🟢 온에어! 수강생에게 노출됩니다' : '오프라인으로 전환됐어요');
+  showToast(val ? ('🟢 ' + t('onair_on_toast')) : t('onair_off_toast'));
   loadMyLessons();
   if (document.getElementById('panel-lesson')?.classList.contains('show')) loadLessons();
 }
 function deleteLessonProfile(id) {
   showConfirm('', async () => {
     await db.from('lesson_profiles').delete().eq('id', id);
-    showToast('삭제됐어요'); loadMyLessons();
-  }, {icon:'🗑️', title:'레슨 프로필 삭제', okLabel:'삭제', danger:true});
+    showToast(t('deleted_toast')); loadMyLessons();
+  }, {icon:'🗑️', title:t('lesson_delete_confirm_title'), okLabel:t('delete'), danger:true});
 }
 
 // ── 단골 알바생 (Supabase 연동) ───────────────
