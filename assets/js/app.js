@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '553';
+  const _APP_V = '554';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=553').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=554').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -1821,14 +1821,14 @@ async function _cancelBaromeetApplication(meetingId) {
       await db.from('gatherings').update({ [col]: Math.max(0, cur - 1) }).eq('id', meetingId);
     }
   }
-  showToast('참가 신청이 취소됐어요');
+  showToast(t('moim_leave_toast'));
 }
 
 // 헤더의 명시적 "나가기" 버튼 전용 - 뒤로가기와 달리 실제로 참가를 취소하고 나감
 function leaveBaromeetChat() {
   if (!_baromeetChatId) { closeMoimChat(); return; }
   const meetingId = _baromeetChatId;
-  showConfirm('채팅방에서 나가면 바로미팅 참가 신청이 취소돼요.\n정말 나가시겠어요?', async () => {
+  showConfirm(t('moim_leave_confirm'), async () => {
     await _cancelBaromeetApplication(meetingId);
     closeMoimChat();
   });
@@ -2554,26 +2554,26 @@ async function openMoimChat(gatheringId, title) {
   const _mcHeader = document.getElementById('moim-chat-header');
   if (_mcHeader) _mcHeader.style.background = '#F5F3FF';
   const _mcEyebrow = document.getElementById('moim-chat-eyebrow');
-  if (_mcEyebrow) { _mcEyebrow.textContent = '🍻 바로모임 채팅방'; _mcEyebrow.style.color = '#7C3AED'; }
+  if (_mcEyebrow) { _mcEyebrow.textContent = '🍻 ' + t('moim_chat_room_label'); _mcEyebrow.style.color = '#7C3AED'; }
   const _mcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
   if (_mcSendBtn) _mcSendBtn.style.background = '#7C3AED';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지
   const _mcFab = document.getElementById('posting-fab');
   if (_mcFab) _mcFab.style.display = 'none';
-  document.getElementById('moim-chat-title').textContent = title || '모임 채팅';
-  document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
+  document.getElementById('moim-chat-title').textContent = title || t('moim_chat_default_title');
+  document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">' + t('chat_loading') + '</div>';
   // 날짜 부제목 — _moimDetailData에서 읽음
   const chatSub = document.getElementById('moim-chat-members-text');
   if (_moimDetailData?.gathering_date) {
     const dStr = new Date(_moimDetailData.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' });
-    chatSub.textContent = `📅 ${dStr} · 참가자 로딩 중`;
+    chatSub.textContent = `📅 ${dStr} · ${t('chat_loading')}`;
   }
 
   // 참가자 수
   const { count } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
   const memberCount = (count || 0) + 1; // 주최자 포함
   const dStr2 = _moimDetailData?.gathering_date ? new Date(_moimDetailData.gathering_date).toLocaleDateString('ko-KR', { month:'short', day:'numeric', weekday:'short' }) + ' · ' : '';
-  document.getElementById('moim-chat-members-text').textContent = `${dStr2}참가자 ${memberCount}명`;
+  document.getElementById('moim-chat-members-text').textContent = dStr2 + t('moim_chat_participant_count').replace('{n}', memberCount);
   document.getElementById('moim-chat-participants').style.display = 'none';
   document.getElementById('moim-chat-members-arrow').textContent = '▾';
   // 나가기 링크/내 프로필 배지/유의사항 배너는 바로미팅 익명채팅 전용 - 일반 모임 채팅에서는 숨김
@@ -2601,7 +2601,7 @@ async function openMoimChat(gatheringId, title) {
 
 function _renderMoimChatMessages(msgs) {
   const el = document.getElementById('moim-chat-messages');
-  if (!msgs.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">아직 메시지가 없어요<br>첫 인사를 남겨보세요 👋</div>'; return; }
+  if (!msgs.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">' + t('moim_chat_empty').replace('\n', '<br>') + ' 👋</div>'; return; }
   el.innerHTML = msgs.map(m => _moimChatBubble(m)).join('');
   el.scrollTop = el.scrollHeight;
 }
@@ -2631,7 +2631,7 @@ async function toggleMoimChatParticipants() {
   const applicantIds = [...new Set((apps || []).map(a => a.applicant_id).filter(Boolean))];
   const { data: g } = await db.from('gatherings').select('host_id').eq('id', gatheringId).maybeSingle();
   const allIds = [...new Set([...(g?.host_id ? [g.host_id] : []), ...applicantIds])];
-  if (!allIds.length) { box.innerHTML = '<div style="text-align:center;padding:10px;color:#bbb;font-size:12px">참가자 정보가 없어요</div>'; return; }
+  if (!allIds.length) { box.innerHTML = '<div style="text-align:center;padding:10px;color:#bbb;font-size:12px">' + t('moim_chat_no_participants') + '</div>'; return; }
 
   const selectCols = isBaromeet ? 'kakao_uid, name, gender, baromeet_nick, baromeet_avatar, photo_url' : 'kakao_uid, name, photo_url';
   const { data: workers } = await db.from('workers').select(selectCols).in('kakao_uid', allIds);
@@ -2641,7 +2641,7 @@ async function toggleMoimChatParticipants() {
     const w = workerMap[uid];
     const isHost = uid === g?.host_id;
     if (isBaromeet) {
-      const nick = w?.baromeet_nick || '익명참가자';
+      const nick = w?.baromeet_nick || t('moim_chat_anon_participant');
       const avatarUrl = _resolveBaromeetAvatarUrl(w?.baromeet_avatar, w?.photo_url);
       const avatarHtml = avatarUrl && avatarUrl.startsWith('emoji:')
         ? `<div style="width:32px;height:32px;border-radius:50%;background:#FFF1F2;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${avatarUrl.slice(6)}</div>`
@@ -2651,23 +2651,23 @@ async function toggleMoimChatParticipants() {
       return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px">
         ${avatarHtml}
         <span style="font-size:13px;font-weight:700;color:#333">${nick}</span>
-        ${isHost ? '<span style="font-size:10px;color:#e11d48;font-weight:700">주최</span>' : ''}
+        ${isHost ? `<span style="font-size:10px;color:#e11d48;font-weight:700">${t('moim_chat_host_badge')}</span>` : ''}
       </div>`;
     }
-    const name = w?.name || '참가자';
+    const name = w?.name || t('moim_chat_participant_default');
     const avatarHtml = w?.photo_url
       ? `<img src="${w.photo_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
       : `<div style="width:32px;height:32px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:15px;color:#7C3AED;flex-shrink:0">${name[0]||'?'}</div>`;
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px">
       ${avatarHtml}
       <span style="font-size:13px;font-weight:700;color:#333">${name}</span>
-      ${isHost ? '<span style="font-size:10px;color:#7C3AED;font-weight:700">방장</span>' : ''}
+      ${isHost ? `<span style="font-size:10px;color:#7C3AED;font-weight:700">${t('moim_chat_leader_badge')}</span>` : ''}
     </div>`;
   }).join('');
 }
 function _moimChatBubble(m) {
   const isMine = currentUser && m.sender_id === currentUser.id;
-  const name = m.sender_name || '참가자';
+  const name = m.sender_name || t('moim_chat_participant_default');
   const time = new Date(m.sent_at).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
   // 오픈카톡 스타일 - 실사진(URL) 또는 'emoji:🐱' 형식의 캐릭터 아바타 중 하나
   let avatar = '';
@@ -2696,11 +2696,11 @@ async function _doSendMoimChat(msg) {
   // 바로미팅 채팅방은 익명 - 실명 대신 본인이 설정한 익명 닉네임 사용, 사진공개 설정 시에만 사진 첨부
   const isBaromeet = input.dataset.baromeet === '1';
   const senderName = isBaromeet
-    ? (_baromeetAnonLabel || '참가자')
-    : (currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || '참가자');
+    ? (_baromeetAnonLabel || t('moim_chat_participant_default'))
+    : (currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || t('moim_chat_participant_default'));
   const senderPhotoUrl = isBaromeet ? (_baromeetPhotoUrl || null) : null;
   const { error: _gcErr } = await db.from('gathering_chats').insert({ gathering_id: gatheringId, sender_id: currentUser.id, sender_name: senderName, sender_photo_url: senderPhotoUrl, message: msg });
-  if (_gcErr) { showToast('전송 실패: ' + _gcErr.message); return; }
+  if (_gcErr) { showToast(t('chat_send_failed_prefix') + _gcErr.message); return; }
   _notifyGatheringChat(gatheringId, msg);
 }
 
@@ -2729,7 +2729,7 @@ async function sendMoimChat() {
 let _pendingMoimFiles = [];
 function sendMoimChatImage(inputEl) {
   const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
-  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
+  if (inputEl.files.length && !files.length) { showToast(t('img_send_limit')); }
   inputEl.value = '';
   closeMediaPanel('moim');
   if (!files.length) return;
@@ -2748,12 +2748,12 @@ async function _uploadAndSendMoimChatImage() {
   const files = _pendingMoimFiles;
   _pendingMoimFiles = [];
   document.getElementById('moim-img-preview-bar').style.display = 'none';
-  showToast(files.length > 1 ? `이미지 ${files.length}장 전송 중...` : '이미지 전송 중...');
+  showToast(files.length > 1 ? t('img_sending_multi').replace('{n}', files.length) : t('img_sending_one'));
   for (const file of files) {
     try {
       const url = await uploadChatImage(file);
       await _doSendMoimChat('[img]' + url);
-    } catch(e) { showToast('이미지 전송 실패'); }
+    } catch(e) { showToast(t('img_send_failed')); }
   }
 }
 
@@ -5031,11 +5031,11 @@ function confirmLeaveGatheringChat(rowId, gatheringId, category, name) {
   modal.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
       <div style="font-size:32px;margin-bottom:12px">${isBaromeet ? '💕' : '🤝'}</div>
-      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:8px">채팅방 나가기</div>
-      <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:24px"><b>${name}</b><br>${isBaromeet ? '나가면 참가 신청이 취소돼요.' : '채팅방을 나가시겠어요?<br><span style="font-size:12px;color:#bbb">새 메시지가 오면 자동으로 다시 표시됩니다.</span>'}</div>
+      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:8px">${t('gchat_leave_title')}</div>
+      <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:24px"><b>${name}</b><br>${isBaromeet ? t('gchat_leave_baromeet_desc') : `${t('gchat_leave_moim_desc')}<br><span style="font-size:12px;color:#bbb">${t('gchat_leave_moim_subdesc')}</span>`}</div>
       <div style="display:flex;gap:10px">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
-        <button onclick="_leaveGatheringChatConfirmed('${rowId}','${gatheringId}',${isBaromeet});this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">나가기</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${t('cancel')}</button>
+        <button onclick="_leaveGatheringChatConfirmed('${rowId}','${gatheringId}',${isBaromeet});this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#ef4444;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('mp_exit')}</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -5086,7 +5086,7 @@ async function openWChat(applicationId, bizName) {
     });
   } catch(e) {
     console.error('채팅 로드 실패:', e);
-    document.getElementById('wchat-messages').innerHTML = '<div style="text-align:center;color:#e53e3e;font-size:13px;margin-top:40px">채팅을 불러오지 못했습니다<br>잠시 후 다시 시도해주세요</div>';
+    document.getElementById('wchat-messages').innerHTML = '<div style="text-align:center;color:#e53e3e;font-size:13px;margin-top:40px">' + t('chat_load_failed').replace('\n', '<br>') + '</div>';
   }
 }
 
@@ -6862,7 +6862,7 @@ async function _loadGatheringChatsIntoList(allApps) {
     const lm = gLatest[g.id];
     _latestMsg[rowId] = lm
       ? { content: lm.message, created_at: lm.sent_at, sender_id: lm.sender_id }
-      : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
+      : { content: t('moim_chat_empty').replace('\n', ' · '), created_at: new Date(0).toISOString(), sender_id: null };
   });
 }
 
@@ -6931,7 +6931,7 @@ async function _loadBarospotChatsIntoList(allApps) {
     const lm = bspLatestByRoom[r.id];
     _latestMsg[rowId] = lm
       ? { content: lm.content, created_at: lm.created_at, sender_id: lm.sender_id }
-      : { content: '아직 메시지가 없어요 · 먼저 인사해보세요', created_at: new Date(0).toISOString(), sender_id: null };
+      : { content: t('moim_chat_empty').replace('\n', ' · '), created_at: new Date(0).toISOString(), sender_id: null };
     if (bspUnreadByRoom[r.id]) _unreadCnt[rowId] = bspUnreadByRoom[r.id];
   });
 }
@@ -7196,7 +7196,7 @@ function _chatMsgRow(m, isMine, time, cp, type) {
 function renderWChatMessages(msgs) {
   const el = document.getElementById('wchat-messages');
   if (!msgs.length) {
-    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>업주에게 궁금한 점을 남겨보세요 ✉️</div>';
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">' + t('chat_no_messages_yet') + '<br>' + t('wchat_empty_cta') + ' ✉️</div>';
     return;
   }
   el.innerHTML = msgs.map(m => {
@@ -7269,7 +7269,7 @@ let _pendingChatFiles = [];
 
 function sendWChatImage(inputEl) {
   const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
-  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
+  if (inputEl.files.length && !files.length) { showToast(t('img_send_limit')); }
   inputEl.value = '';
   closeMediaPanel('wchat');
   if (!files.length) return;
@@ -7288,7 +7288,7 @@ function cancelWChatImage() {
 
 function sendChatImage(inputEl) {
   const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
-  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
+  if (inputEl.files.length && !files.length) { showToast(t('img_send_limit')); }
   inputEl.value = '';
   closeMediaPanel('chat');
   if (!files.length) return;
@@ -7331,7 +7331,7 @@ async function _uploadAndSendWChatImage() {
     try {
       const url = await uploadChatImage(file);
       await _doSendWChat('[img]' + url);
-    } catch(e) { showToast('이미지 전송 실패'); }
+    } catch(e) { showToast(t('img_send_failed')); }
   }
 }
 
@@ -7344,14 +7344,14 @@ async function _uploadAndSendChatImage() {
     try {
       const url = await uploadChatImage(file);
       await _doSendChat('[img]' + url);
-    } catch(e) { showToast('이미지 전송 실패'); }
+    } catch(e) { showToast(t('img_send_failed')); }
   }
 }
 
 async function _doSendWChat(content) {
   if (!content || !_wchatAppId) return;
   const { error: _wsendErr } = await db.from('messages').insert({ application_id: _wchatAppId, sender_id: currentUser.id, content });
-  if (_wsendErr) { showToast('메시지 전송 실패: ' + _wsendErr.message); return; }
+  if (_wsendErr) { showToast(t('chat_send_failed_prefix') + _wsendErr.message); return; }
   try {
     const { data: ad } = await db.from('applications')
       .select('job_postings(businesses(kakao_uid))').eq('id', _wchatAppId).single();
@@ -15704,7 +15704,7 @@ async function sendScoutProposal(workerKakaoUid, workerName, btn) {
     showToast('✅ 스카우트 제안을 보냈습니다!');
   } catch(e) {
     btn.disabled = false; btn.textContent = '\u{1F4E8} 제안 보내기';
-    showToast('전송 실패: ' + e.message);
+    showToast(t('chat_send_failed_prefix') + e.message);
   }
 }
 
@@ -16120,7 +16120,7 @@ async function loadChatMessages() {
 function renderChatMessages(msgs) {
   const el = document.getElementById('chat-messages');
   if (!msgs.length) {
-    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">아직 메시지가 없어요<br>지원자에게 먼저 연락해보세요 💬</div>';
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">' + t('chat_no_messages_yet') + '<br>' + t('chat_empty_cta_owner') + ' 💬</div>';
     return;
   }
   el.innerHTML = msgs.map(m => {
@@ -16170,7 +16170,7 @@ async function _doSendChat(content) {
   if (_chatInquiryId) msgRow.inquiry_id = _chatInquiryId;
   else msgRow.application_id = _chatAppId;
   const { error: _sendErr } = await db.from('messages').insert(msgRow);
-  if (_sendErr) { showToast('메시지 전송 실패: ' + _sendErr.message); return; }
+  if (_sendErr) { showToast(t('chat_send_failed_prefix') + _sendErr.message); return; }
   if (_chatWorkerUserId) {
     try {
       const ch = db.channel(`worker-${_chatWorkerUserId}-notify`);
@@ -18899,7 +18899,7 @@ async function openBaromeetChat(gatheringId, title) {
   // "눌러도 아무 반응 없음"으로 보이는 문제 방지 - 실패를 항상 토스트로 노출
   try {
     const { data: w, error } = await db.from('workers').select('baromeet_nick, baromeet_avatar, photo_url').eq('kakao_uid', currentUser.id).maybeSingle();
-    if (error) { showToast('프로필 조회 실패: ' + error.message); return; }
+    if (error) { showToast(t('baromeet_profile_load_failed_prefix') + error.message); return; }
     if (!w?.baromeet_nick) {
       _pendingBaromeetChat = { gatheringId, title };
       openBaromeetAnonSetup();
@@ -18908,7 +18908,7 @@ async function openBaromeetChat(gatheringId, title) {
     const avatarUrl = _resolveBaromeetAvatarUrl(w.baromeet_avatar, w.photo_url);
     await _enterBaromeetChat(gatheringId, title, w.baromeet_nick, !!avatarUrl, avatarUrl);
   } catch (e) {
-    showToast('채팅방 입장 실패: ' + (e?.message || '알 수 없는 오류') + ' - 다시 시도해주세요');
+    showToast(t('baromeet_chat_enter_failed_prefix') + (e?.message || t('unknown_error')) + t('retry_later_suffix'));
   }
 }
 
@@ -18934,7 +18934,7 @@ function closeBaromeetAnonSetup() {
 
 async function saveBaromeetAnonProfile() {
   const nick = document.getElementById('baromeet-nick-input').value.trim();
-  if (!nick) { showToast('닉네임을 입력해주세요'); return; }
+  if (!nick) { showToast(t('baromeet_nick_required')); return; }
   const avatarValue = _baromeetAvatarToColumnValue();
   // 신규가입자는 아직 workers 행이 없을 수 있음 - update만 하면 조용히 0건 처리되던
   // 문제(설정한 성별이 저장 안 되던 버그와 동일 원인)를 여기서도 동일하게 방지
@@ -18947,9 +18947,9 @@ async function saveBaromeetAnonProfile() {
     const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
     ({ error } = await db.from('workers').insert({ kakao_uid: currentUser.id, name, baromeet_nick: nick, baromeet_avatar: avatarValue }));
   }
-  if (error) { showToast('저장 실패: ' + error.message); return; }
+  if (error) { showToast(t('save_failed_prefix') + error.message); return; }
   document.getElementById('baromeet-anon-overlay').style.display = 'none';
-  showToast('✅ 익명 프로필이 저장됐어요');
+  showToast('✅ ' + t('baromeet_anon_saved'));
 
   const pending = _pendingBaromeetChat;
   _pendingBaromeetChat = null;
@@ -19289,21 +19289,21 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   const _bcHeader = document.getElementById('moim-chat-header');
   if (_bcHeader) _bcHeader.style.background = '#FFF1F2';
   const _bcEyebrow = document.getElementById('moim-chat-eyebrow');
-  if (_bcEyebrow) { _bcEyebrow.textContent = '💕 바로만남 채팅방'; _bcEyebrow.style.color = '#e11d48'; }
+  if (_bcEyebrow) { _bcEyebrow.textContent = '💕 ' + t('mannam_chat_room_label'); _bcEyebrow.style.color = '#e11d48'; }
   const _bcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
   if (_bcSendBtn) _bcSendBtn.style.background = '#e11d48';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지 + 키보드 가림 방지
   // (openMoimChat과 동일한 panel-moim-chat DOM을 공유하면서도 이 등록이 빠져있던 게 원인)
   const _bcFab = document.getElementById('posting-fab');
   if (_bcFab) _bcFab.style.display = 'none';
-  document.getElementById('moim-chat-title').innerHTML = `${(title || '바로미팅').replace(/</g,'&lt;')}<span style="font-size:11px;font-weight:400;color:#bbb;margin-left:4px">(익명)</span>`;
-  document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">채팅 불러오는 중...</div>';
+  document.getElementById('moim-chat-title').innerHTML = `${(title || '바로미팅').replace(/</g,'&lt;')}<span style="font-size:11px;font-weight:400;color:#bbb;margin-left:4px">${t('anon_suffix')}</span>`;
+  document.getElementById('moim-chat-messages').innerHTML = '<div style="text-align:center;padding:24px;color:#bbb;font-size:13px">' + t('chat_loading') + '</div>';
   const memberEl = document.getElementById('moim-chat-members-text');
   // 참가자 수를 눈에 보이게 앞에 붙임 - 예전엔 이 자리를 "나는 OO으로 표시돼요"가 통째로
   // 차지해서 참가자 목록을 볼 수 있다는 게 전혀 티가 안 났음(모임 채팅은 그냥 "참가자 N명"이라
   // 바로 보이는데, 익명 바로미팅 채팅만 이 줄이 다른 용도로 바뀌어 있었음)
   const { count: _bcCount } = await db.from('gathering_applications').select('id', { count:'exact', head:true }).eq('gathering_id', gatheringId).eq('status', 'approved');
-  if (memberEl) memberEl.textContent = `👥 ${(_bcCount || 0) + 1}명`;
+  if (memberEl) memberEl.textContent = '👥 ' + t('people_count').replace('{n}', (_bcCount || 0) + 1);
   // 참가자수 옆 "나가기"는 작은 텍스트링크로, 내 프로필(캐릭터+닉네임)은 헤더 우측 상단 배지로 분리
   const leaveLink = document.getElementById('moim-chat-leave-link');
   if (leaveLink) leaveLink.style.display = 'inline-flex';
@@ -20582,7 +20582,7 @@ async function openBarospotChatRoom(eventId) {
       body: JSON.stringify({ context_type: 'barospot', context_id: eventId })
     });
     const ensureData = await ensureRes.json();
-    if (!ensureRes.ok) { showToast('😢 ' + (ensureData.error || '채팅방을 열 수 없어요')); return; }
+    if (!ensureRes.ok) { showToast('😢 ' + (ensureData.error || t('bspchat_room_open_failed'))); return; }
     _bspChatRoomId = ensureData.room_id;
     _bspChatEventId = eventId;
 
@@ -20682,7 +20682,7 @@ async function _doSendBarospotChat(content) {
     room_id: _bspChatRoomId, sender_id: currentUser.id,
     sender_name: _bspChatMyName, sender_photo_url: _bspChatMyPhoto, content,
   }).select().single();
-  if (error) { showToast('전송 실패: ' + error.message); return; }
+  if (error) { showToast(t('chat_send_failed_prefix') + error.message); return; }
   if (data?.id) _bspSentIds.add(data.id);
   _appendBarospotChatMessage(data || { sender_id: currentUser.id, sender_photo_url: _bspChatMyPhoto, content, created_at: new Date().toISOString() });
   _notifyChatMessage(_bspChatRoomId, content);
@@ -20711,7 +20711,7 @@ async function sendBarospotChat() {
 let _pendingBspChatFiles = [];
 function sendBarospotChatImage(inputEl) {
   const files = Array.from(inputEl.files || []).filter(f => f.size <= 10 * 1024 * 1024);
-  if (inputEl.files.length && !files.length) { showToast('10MB 이하 이미지만 전송 가능합니다'); }
+  if (inputEl.files.length && !files.length) { showToast(t('img_send_limit')); }
   inputEl.value = '';
   closeMediaPanel('bspchat');
   if (!files.length) return;
@@ -20730,12 +20730,12 @@ async function _uploadAndSendBarospotChatImage() {
   const files = _pendingBspChatFiles;
   _pendingBspChatFiles = [];
   document.getElementById('bspchat-img-preview-bar').style.display = 'none';
-  showToast(files.length > 1 ? `이미지 ${files.length}장 전송 중...` : '이미지 전송 중...');
+  showToast(files.length > 1 ? t('img_sending_multi').replace('{n}', files.length) : t('img_sending_one'));
   for (const file of files) {
     try {
       const url = await uploadChatImage(file);
       await _doSendBarospotChat('[img]' + url);
-    } catch(e) { showToast('이미지 전송 실패'); }
+    } catch(e) { showToast(t('img_send_failed')); }
   }
 }
 
