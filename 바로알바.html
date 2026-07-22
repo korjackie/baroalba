@@ -56,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=550"></script>
+  <script src="./shared-lang.js?v=551"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=550">
+  <link rel="stylesheet" href="./assets/css/style.css?v=551">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1130,14 +1130,14 @@
     <!-- 검색 결과 -->
     <div id="home-search-results" style="display:none;padding:8px 12px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <div style="font-size:13px;font-weight:800;color:#374151" id="home-search-result-label">검색 결과</div>
-        <button onclick="clearHomeFilter()" style="font-size:12px;color:#C8102E;font-weight:700;background:#fff0f2;border:none;cursor:pointer;padding:4px 8px;border-radius:8px">× 초기화</button>
+        <div style="font-size:13px;font-weight:800;color:#374151" id="home-search-result-label" data-i18n="search_results">검색 결과</div>
+        <button onclick="clearHomeFilter()" style="font-size:12px;color:#C8102E;font-weight:700;background:#fff0f2;border:none;cursor:pointer;padding:4px 8px;border-radius:8px">× <span data-i18n="reset">초기화</span></button>
       </div>
       <!-- 정렬 바 -->
       <div style="display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
-        <button id="home-sort-latest" class="home-sort-btn active" onclick="selectHomeSort('latest')">최신순</button>
-        <button id="home-sort-wage" class="home-sort-btn" onclick="selectHomeSort('wage')">급여순</button>
-        <button id="home-sort-distance" class="home-sort-btn" onclick="selectHomeSort('distance')">거리순</button>
+        <button id="home-sort-latest" class="home-sort-btn active" onclick="selectHomeSort('latest')" data-i18n="sort_latest">최신순</button>
+        <button id="home-sort-wage" class="home-sort-btn" onclick="selectHomeSort('wage')" data-i18n="sort_wage">급여순</button>
+        <button id="home-sort-distance" class="home-sort-btn" onclick="selectHomeSort('distance')" data-i18n="sort_dist">거리순</button>
       </div>
       <div id="home-search-result-list"></div>
     </div>
@@ -1232,18 +1232,18 @@
               <div style="font-size:10px;color:#fda4af;margin-top:1px" data-i18n="mannam_desc">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
             </div>
             <span style="font-size:9px;font-weight:900;background:#e11d48;color:#fff;padding:2px 8px;border-radius:10px">NEW</span>
-            <button onclick="event.stopPropagation();openMannnamPanel()" style="font-size:12px;color:#e11d48;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0">전체 ›</button>
+            <button onclick="event.stopPropagation();openMannnamPanel()" style="font-size:12px;color:#e11d48;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0"><span data-i18n="see_all">전체</span> ›</button>
           </div>
           <div id="home-mannam-preview" style="padding:9px 14px;min-height:44px">
             <div id="home-baromeet-section" style="display:none;margin-bottom:8px">
-              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px">🤝 바로미팅 모집 중</div>
+              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px">🤝 <span data-i18n="baromeeting_recruit">바로미팅 모집 중</span></div>
               <div id="home-baromeet-list" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
             </div>
             <div id="home-barospot-section" style="display:none">
-              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px">📍 바로스팟 참가자 모집 중</div>
+              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px">📍 <span data-i18n="barospot_recruit">바로스팟 참가자 모집 중</span></div>
               <div id="home-barospot-list" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
             </div>
-            <div id="home-mannam-empty" style="display:none;color:#bbb;font-size:12px;padding:10px 0">아직 열린 모임이 없어요</div>
+            <div id="home-mannam-empty" style="display:none;color:#bbb;font-size:12px;padding:10px 0" data-i18n="no_open_moim">아직 열린 모임이 없어요</div>
           </div>
         </div>
       </div>
@@ -1255,8 +1255,8 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         </div>
         <div style="flex:1">
-          <div style="font-size:14px;font-weight:900;color:#222">커뮤니티 게시판</div>
-          <div style="font-size:10px;color:#c99a2e;margin-top:1px">알바 정보공유 · 업체후기 · 자유게시판</div>
+          <div style="font-size:14px;font-weight:900;color:#222" data-i18n="community_title">커뮤니티 게시판</div>
+          <div style="font-size:10px;color:#c99a2e;margin-top:1px" data-i18n="community_subtitle">알바 정보공유 · 업체후기 · 자유게시판</div>
         </div>
         <span style="font-size:12px;color:#94a3b8;font-weight:700">›</span>
       </div>
@@ -1282,7 +1282,7 @@
         <div style="width:30px;height:30px;border-radius:9px;background:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">📈</div>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:900;color:#1e3a8a">바로브랜딩</div>
-          <div style="font-size:10px;color:#60a5fa;margin-top:1px">우리 매장 온라인 순위, 무료로 확인하기</div>
+          <div style="font-size:10px;color:#60a5fa;margin-top:1px" data-i18n="brand_subtitle">우리 매장 온라인 순위, 무료로 확인하기</div>
         </div>
         <span style="font-size:12px;color:#93c5fd;font-weight:700">›</span>
       </a>
@@ -1307,7 +1307,7 @@
           <div style="width:32px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto"></div>
         </div>
         <div style="padding:4px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f5f5f5;flex-shrink:0">
-          <span style="font-size:15px;font-weight:900;color:#111">공고 검색 · 필터</span>
+          <span style="font-size:15px;font-weight:900;color:#111" data-i18n="job_filter_title">공고 검색 · 필터</span>
           <button onclick="closeHomeFilter()" style="background:none;border:none;font-size:22px;color:#bbb;cursor:pointer;line-height:1">&#215;</button>
         </div>
         <div style="overflow-y:auto;flex:1;padding-bottom:4px">
@@ -1320,48 +1320,48 @@
             </div>
           </div>
           <!-- 업종 -->
-          <div style="padding:14px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb">업종</div>
+          <div style="padding:14px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb" data-i18n="form_category_label">업종</div>
           <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
-            <button class="hfc-chip hfc-cat active" data-cat="" onclick="selectHomeFilterCat(this,'')">전체</button>
+            <button class="hfc-chip hfc-cat active" data-cat="" onclick="selectHomeFilterCat(this,'')" data-i18n="chat_tab_all">전체</button>
             <button class="hfc-chip hfc-cat" data-cat="F&B" onclick="selectHomeFilterCat(this,'F&B')">F&amp;B</button>
-            <button class="hfc-chip hfc-cat" data-cat="청소" onclick="selectHomeFilterCat(this,'청소')">청소</button>
-            <button class="hfc-chip hfc-cat" data-cat="물류" onclick="selectHomeFilterCat(this,'물류')">물류·배송</button>
-            <button class="hfc-chip hfc-cat" data-cat="판매" onclick="selectHomeFilterCat(this,'판매')">판매·서비스</button>
-            <button class="hfc-chip hfc-cat" data-cat="이벤트" onclick="selectHomeFilterCat(this,'이벤트')">이벤트·행사</button>
+            <button class="hfc-chip hfc-cat" data-cat="청소" onclick="selectHomeFilterCat(this,'청소')" data-i18n="cat_cleaning">청소</button>
+            <button class="hfc-chip hfc-cat" data-cat="물류" onclick="selectHomeFilterCat(this,'물류')" data-i18n="cat_logistics">물류·배송</button>
+            <button class="hfc-chip hfc-cat" data-cat="판매" onclick="selectHomeFilterCat(this,'판매')" data-i18n="cat_sales">판매·서비스</button>
+            <button class="hfc-chip hfc-cat" data-cat="이벤트" onclick="selectHomeFilterCat(this,'이벤트')" data-i18n="cat_event">이벤트·행사</button>
             <button class="hfc-chip hfc-cat" data-cat="IT" onclick="selectHomeFilterCat(this,'IT')">IT</button>
-            <button class="hfc-chip hfc-cat" data-cat="기타" onclick="selectHomeFilterCat(this,'기타')">기타</button>
+            <button class="hfc-chip hfc-cat" data-cat="기타" onclick="selectHomeFilterCat(this,'기타')" data-i18n="cat_etc">기타</button>
           </div>
           <!-- 공고유형 -->
-          <div style="padding:6px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">공고유형</div>
+          <div style="padding:6px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5" data-i18n="job_type_label">공고유형</div>
           <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
-            <button class="hfc-chip hfc-jtype active" data-jtype="" onclick="selectHomeFilterJobType(this,'')">전체</button>
-            <button class="hfc-chip hfc-jtype" data-jtype="alba" onclick="selectHomeFilterJobType(this,'alba')">일반알바</button>
-            <button class="hfc-chip hfc-jtype" data-jtype="errand" onclick="selectHomeFilterJobType(this,'errand')">심부름</button>
-            <button class="hfc-chip hfc-jtype" data-jtype="technical" onclick="selectHomeFilterJobType(this,'technical')">전문기술</button>
-            <button class="hfc-chip hfc-jtype" data-jtype="care" onclick="selectHomeFilterJobType(this,'care')">돌봄·케어</button>
+            <button class="hfc-chip hfc-jtype active" data-jtype="" onclick="selectHomeFilterJobType(this,'')" data-i18n="chat_tab_all">전체</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="alba" onclick="selectHomeFilterJobType(this,'alba')" data-i18n="job_type_normal">일반알바</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="errand" onclick="selectHomeFilterJobType(this,'errand')" data-i18n="job_type_errand">심부름</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="technical" onclick="selectHomeFilterJobType(this,'technical')" data-i18n="filter_technical">전문기술</button>
+            <button class="hfc-chip hfc-jtype" data-jtype="care" onclick="selectHomeFilterJobType(this,'care')" data-i18n="job_type_care">돌봄·케어</button>
           </div>
           <!-- 근무형태 -->
-          <div style="padding:6px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">근무형태</div>
+          <div style="padding:6px 18px 5px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5" data-i18n="work_type_label">근무형태</div>
           <div style="padding:0 18px 12px;display:flex;gap:6px;flex-wrap:wrap">
-            <button class="hfc-chip hfc-wtype active" data-wtype="" onclick="selectHomeFilterWorkType(this,'')">전체</button>
-            <button class="hfc-chip hfc-wtype" data-wtype="spot" onclick="selectHomeFilterWorkType(this,'spot')">스팟(당일)</button>
-            <button class="hfc-chip hfc-wtype" data-wtype="short" onclick="selectHomeFilterWorkType(this,'short')">단기</button>
-            <button class="hfc-chip hfc-wtype" data-wtype="regular" onclick="selectHomeFilterWorkType(this,'regular')">정기</button>
-            <button class="hfc-chip hfc-wtype" data-wtype="lesson" onclick="selectHomeFilterWorkType(this,'lesson')">레슨·과외</button>
+            <button class="hfc-chip hfc-wtype active" data-wtype="" onclick="selectHomeFilterWorkType(this,'')" data-i18n="chat_tab_all">전체</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="spot" onclick="selectHomeFilterWorkType(this,'spot')" data-i18n="work_type_spot">스팟(당일)</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="short" onclick="selectHomeFilterWorkType(this,'short')" data-i18n="work_type_short">단기</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="regular" onclick="selectHomeFilterWorkType(this,'regular')" data-i18n="work_type_regular">정기</button>
+            <button class="hfc-chip hfc-wtype" data-wtype="lesson" onclick="selectHomeFilterWorkType(this,'lesson')" data-i18n="work_type_lesson">레슨·과외</button>
           </div>
           <!-- 조건 -->
-          <div style="padding:6px 18px 4px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5">조건</div>
+          <div style="padding:6px 18px 4px;font-size:10px;font-weight:900;letter-spacing:1px;color:#bbb;border-top:1px solid #f5f5f5" data-i18n="filter_condition">조건</div>
           <div onclick="toggleHFCond('same_day')" style="display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
             <div style="flex:1">
-              <div style="font-size:13px;font-weight:700;color:#111">당일정산</div>
-              <div style="font-size:11px;color:#aaa;margin-top:1px">근무 당일 급여 지급</div>
+              <div style="font-size:13px;font-weight:700;color:#111" data-i18n="filter_sameday">당일정산</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px" data-i18n="filter_sameday_desc">근무 당일 급여 지급</div>
             </div>
             <div id="hfc-toggle-sd" class="hfc-toggle"></div>
           </div>
           <div onclick="toggleHFCond('foreigner')" style="display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
             <div style="flex:1">
-              <div style="font-size:13px;font-weight:700;color:#111">외국인 환영</div>
-              <div style="font-size:11px;color:#aaa;margin-top:1px">비자 무관 지원 가능</div>
+              <div style="font-size:13px;font-weight:700;color:#111" data-i18n="filter_foreign">외국인 환영</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px" data-i18n="filter_foreign_desc">비자 무관 지원 가능</div>
             </div>
             <div id="hfc-toggle-nat" class="hfc-toggle"></div>
           </div>
@@ -1370,16 +1370,16 @@
                이 행을 display:none으로 숨김 -->
           <div id="hfc-skill-row" onclick="toggleHFSkillMatch()" style="display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #f5f5f5;cursor:pointer">
             <div style="flex:1">
-              <div style="font-size:13px;font-weight:700;color:#111">내 스킬 맞춤</div>
-              <div style="font-size:11px;color:#aaa;margin-top:1px">등록한 보유 스킬과 맞는 공고만</div>
+              <div style="font-size:13px;font-weight:700;color:#111" data-i18n="filter_skill">내 스킬 맞춤</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px" data-i18n="filter_skill_desc">등록한 보유 스킬과 맞는 공고만</div>
             </div>
             <div id="hfc-toggle-skill" class="hfc-toggle"></div>
           </div>
         </div>
         <!-- 하단 버튼 -->
         <div style="padding:12px 16px 22px;display:flex;gap:10px;flex-shrink:0;border-top:1px solid #f5f5f5">
-          <button onclick="resetHomeFilter()" style="flex:1;padding:13px;border:1.5px solid #e5e5e5;border-radius:13px;font-size:14px;font-weight:800;color:#555;background:#fff;cursor:pointer">초기화</button>
-          <button id="home-filter-apply-btn" onclick="applyHomeFilter()" style="flex:2.5;padding:13px;background:#C8102E;border:none;border-radius:13px;font-size:14px;font-weight:900;color:#fff;cursor:pointer">공고보기</button>
+          <button onclick="resetHomeFilter()" data-i18n="reset" style="flex:1;padding:13px;border:1.5px solid #e5e5e5;border-radius:13px;font-size:14px;font-weight:800;color:#555;background:#fff;cursor:pointer">초기화</button>
+          <button id="home-filter-apply-btn" onclick="applyHomeFilter()" data-i18n="view_jobs" style="flex:2.5;padding:13px;background:#C8102E;border:none;border-radius:13px;font-size:14px;font-weight:900;color:#fff;cursor:pointer">공고보기</button>
         </div>
       </div>
     </div>
@@ -4356,7 +4356,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=550"></script>
+<script src="./assets/js/app.js?v=551"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4514,7 +4514,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=550"></script>
+<script src="./assets/js/app_ui.js?v=551"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">

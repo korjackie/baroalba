@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '550';
+  const _APP_V = '551';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -603,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=550').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=551').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -1657,7 +1657,7 @@ function renderList() {
         ${job.meal_included ? '<span class="tag" style="background:#FFF7ED;color:#D97706;border:1px solid #FDE68A;font-weight:800">🍱 식사제공</span>' : ''}
         ${returnBadge}
         ${langBadge}
-        ${job.category ? `<span class="tag ${catClass}">${job.category}</span>` : ''}
+        ${job.category ? `<span class="tag ${catClass}">${tCategory(job.category)}</span>` : ''}
         <span class="tag">${isErrand ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
         ${(() => {
           const rem = job.needed_count - job.filled_count;
@@ -3696,7 +3696,9 @@ function _updateHomeFilterCount() {
   let f = jobs.filter(j => j.status==='open'||j.status==='urgent');
   const q = (document.getElementById('hfc-search-input')?.value || '').trim().toLowerCase();
   if (q) f = f.filter(j => (j.title||'').toLowerCase().includes(q)||(j.biz_name||'').toLowerCase().includes(q)||(j.category||'').toLowerCase().includes(q)||(j.address||'').includes(q));
-  if (_hfPendingCat) f = f.filter(j => j.category===_hfPendingCat);
+  // category가 자유 입력이라 완전일치로는 '물류'·'기타'·'IT' 선택 시 0건이 나왔음
+  // (DB엔 '물류·배달','물건 픽업/전달','기타 심부름' 등으로 저장) - 그룹 매칭으로 교체
+  if (_hfPendingCat) f = f.filter(j => catMatches(j.category, _hfPendingCat));
   if (_hfPendingJobType) f = f.filter(j => j.job_type===_hfPendingJobType);
   if (_hfPendingWorkType) f = f.filter(j => _hfPendingWorkType==='lesson'?(j.work_type==='lesson'||j.job_type==='technical'):(j.work_type||'spot')===_hfPendingWorkType);
   if (_hfPendingWage==='same_day') f = f.filter(j => j.same_day_payment);
@@ -5496,7 +5498,7 @@ async function loadMyApplications() {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;background:${wt.bg};color:${wt.color}">${wt.emoji} ${wt.label}</span>
-          ${job.category ? `<span style="font-size:11px;color:#aaa;font-weight:600">${job.category}</span>` : ''}
+          ${job.category ? `<span style="font-size:11px;color:#aaa;font-weight:600">${tCategory(job.category)}</span>` : ''}
         </div>
         <div style="font-size:12px;font-weight:800;color:${s.color};background:${s.bg};padding:3px 10px;border-radius:20px;white-space:nowrap">${s.label}</div>
       </div>
@@ -5981,7 +5983,7 @@ async function openApplicationJobDetail(jobPostingId) {
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;padding-top:4px;flex-wrap:wrap">
         <span style="font-size:12px;font-weight:800;color:${isUrgent?'#C8102E':'#16a34a'};background:${isUrgent?'#fff0f0':'#f0fdf4'};padding:4px 12px;border-radius:20px">${isUrgent?'\u{1F525} 급구':'모집중'}</span>
         <span style="font-size:12px;font-weight:700;color:#666;background:#f5f5f5;padding:4px 10px;border-radius:20px">${WORK_TYPE[j.work_type]||'스팟'}</span>
-        ${j.category ? `<span style="font-size:12px;color:#999;font-weight:600">${j.category}</span>` : ''}
+        ${j.category ? `<span style="font-size:12px;color:#999;font-weight:600">${tCategory(j.category)}</span>` : ''}
         ${appStatus ? `<span style="font-size:12px;font-weight:800;color:${appStatus.color};background:${appStatus.bg};padding:4px 12px;border-radius:20px;margin-left:auto">${appStatus.label}</span>` : ''}
       </div>
 
