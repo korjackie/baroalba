@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '549';
+  const _APP_V = '550';
   const _lastV = localStorage.getItem('_baroV');
   if (_lastV !== _APP_V) {
     localStorage.setItem('_baroV', _APP_V);
@@ -603,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=549').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=550').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -1841,7 +1841,7 @@ async function loadMoimList(cat = '') {
 
   if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">불러오는 중...</div></div>';
 
-  const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><span style="font-size:22px">🤝</span><span style="font-size:11px;font-weight:800;color:#7C3AED">첫 모임 만들기</span></div>';
+  const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><span style="font-size:22px">🤝</span><span style="font-size:11px;font-weight:800;color:#7C3AED" data-i18n="create_first_moim">첫 모임 만들기</span></div>';
 
   try {
     const _moimNow = new Date().toISOString();
@@ -1876,7 +1876,7 @@ async function loadMoimList(cat = '') {
     if (myVer !== _moimLoadVer) return;
     _moimList = [];
     if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px;line-height:1.6">불러오기에 실패했어요<br>잠시 후 다시 시도해 주세요</div></div>';
-    if (homeList) homeList.innerHTML = MOIM_PLACEHOLDER;
+    if (homeList) { homeList.innerHTML = MOIM_PLACEHOLDER; if (typeof applyLang === 'function') applyLang(); }
     return;
   }
 
@@ -1894,9 +1894,10 @@ async function loadMoimList(cat = '') {
         homeList.innerHTML = _moimList.slice(0, 6).map(m => {
           try { return _moimHomeCard(m); } catch(e) { return ''; }
         }).join('');
-      } catch(e) { homeList.innerHTML = MOIM_PLACEHOLDER; }
+      } catch(e) { homeList.innerHTML = MOIM_PLACEHOLDER; if (typeof applyLang === 'function') applyLang(); }
     } else {
       homeList.innerHTML = MOIM_PLACEHOLDER;
+      if (typeof applyLang === 'function') applyLang();
     }
   }
 }
@@ -3112,14 +3113,18 @@ function _homeJobCard(job) {
 
 // 급구 공고가 실제로 있으면 벤토 배너 내용을 진짜 공고로 교체, 없으면 기본 마케팅 카피 유지
 // (전엔 별도 home-urgent-section이 이 배너와 분리돼 있어서 이 배너 자체는 항상 정적 카피만 보여주고 있었음)
+// 이 배너는 HTML(바로알바.html)에 data-i18n이 제대로 붙어있는데도, 여기서 하드코딩된
+// 한국어로 다시 그리는 바람에 applyLang()이 적용해둔 번역이 지워지고 있었다.
+// ("전체보기"가 화면 한쪽은 번역되고 한쪽은 한국어로 보이던 원인 - 2026-07-22)
+// 재렌더 템플릿에도 data-i18n을 달고, innerHTML 교체 직후 applyLang()을 다시 돌린다.
 const _BENTO_DEFAULT_HTML = `
     <div class="bento-top">
-      <span class="bento-tag">당일 지급</span>
+      <span class="bento-tag" data-i18n="bento_tag">당일 지급</span>
       <span class="bento-urgent">URGENT NOW</span>
     </div>
-    <div class="bento-title">지금 당장 출근하고<br>오늘 바로 일당받기</div>
-    <div class="bento-desc">급하게 일손이 필요한 사장님들이 기다리고 있어요!</div>
-    <div class="bento-btn">전체보기 ➔</div>
+    <div class="bento-title" data-i18n="bento_title">지금 당장 출근하고<br>오늘 바로 일당받기</div>
+    <div class="bento-desc" data-i18n="bento_desc">급하게 일손이 필요한 사장님들이 기다리고 있어요!</div>
+    <div class="bento-btn"><span data-i18n="view_all">전체보기</span> ➔</div>
 `;
 function _applyUrgentBentoContent(urgentJobs) {
   const section = document.getElementById('home-urgent-section');
@@ -3127,6 +3132,7 @@ function _applyUrgentBentoContent(urgentJobs) {
   if (!section || !banner) return;
   if (!urgentJobs.length) {
     banner.innerHTML = _BENTO_DEFAULT_HTML;
+    if (typeof applyLang === 'function') applyLang();
     section.onclick = () => showAllJobs();
     return;
   }
@@ -3134,13 +3140,14 @@ function _applyUrgentBentoContent(urgentJobs) {
   const wageText = top.current_wage > 0 ? `${top.current_wage.toLocaleString('ko-KR')}원 ${_wageLabel(top)}` : '협의';
   banner.innerHTML = `
     <div class="bento-top">
-      <span class="bento-tag">급구 ${urgentJobs.length}건</span>
+      <span class="bento-tag">${t('urgent_n_jobs').replace('{n}', urgentJobs.length)}</span>
       <span class="bento-urgent">URGENT NOW</span>
     </div>
     <div class="bento-title" style="font-size:18px">${top.title || top.category}</div>
     <div class="bento-desc">${wageText}${top.biz_name ? ' · ' + top.biz_name : ''}</div>
-    <div class="bento-btn">전체보기 ➔</div>
+    <div class="bento-btn"><span data-i18n="view_all">전체보기</span> ➔</div>
   `;
+  if (typeof applyLang === 'function') applyLang();
   section.onclick = () => showHomeUrgentList();
 }
 
@@ -10285,7 +10292,8 @@ function renderStrengthChips(arr) {
 }
 
 // ── 언어 숙련도 ─────────────────────────────────────────
-const LANG_LABELS = { ko:'🇰🇷 한국어', en:'🇺🇸 영어', zh:'🇨🇳 중국어', ja:'🇯🇵 일본어', vi:'🇻🇳 베트남어', ru:'🇷🇺 러시아어', mn:'🇲🇳 몽골어' };
+// np(네팔어)가 빠져있어 언어 프로필에 코드값 'np'가 그대로 노출되고 있었음 (2026-07-22 추가)
+const LANG_LABELS = { ko:'🇰🇷 한국어', en:'🇺🇸 영어', zh:'🇨🇳 중국어', ja:'🇯🇵 일본어', vi:'🇻🇳 베트남어', ru:'🇷🇺 러시아어', mn:'🇲🇳 몽골어', np:'🇳🇵 네팔어' };
 let _langProfTarget = null;  // { type:'preset'|'other', code, name }
 let _langProfLevels = { speak:'중', read:'중', write:'중' };
 
