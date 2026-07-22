@@ -56,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=554"></script>
+  <script src="./shared-lang.js?v=555"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=554">
+  <link rel="stylesheet" href="./assets/css/style.css?v=555">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2577,7 +2577,7 @@
   <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button onclick="closeLessonPanel()" style="background:none;border:none;cursor:pointer;padding:0;color:#333;display:flex;align-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div style="font-size:17px;font-weight:900;color:#222" data-i18n="lesson_nearby">내 주변 레슨/과외</div>
-    <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
+    <button onclick="openLessonRegisterModal()" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ <span data-i18n="lesson_register_btn">등록</span></button>
   </div>
   <!-- 메인 카테고리 탭 -->
   <div style="display:flex;gap:0;border-bottom:1px solid #f0f0f0;flex-shrink:0">
@@ -2592,19 +2592,19 @@
   </div>
   <!-- 서브 카테고리 칩 -->
   <div id="lesson-subcat-row" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:10px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
-    <button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">전체</button>
+    <button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')" data-i18n="cat_all">전체</button>
   </div>
   <!-- 가격 필터 -->
   <div id="lesson-price-row" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
-    <button class="lesson-cat-btn active" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,0)">전체 가격</button>
-    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,20000)">2만원 이하</button>
-    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,50000)">5만원 이하</button>
-    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,100000)">10만원 이하</button>
-    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,999999)">10만원+</button>
-    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,-1)">가격 협의</button>
+    <button class="lesson-cat-btn active" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,0)" data-i18n="price_all">전체 가격</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,20000)" data-i18n="price_under_20k">2만원 이하</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,50000)" data-i18n="price_under_50k">5만원 이하</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,100000)" data-i18n="price_under_100k">10만원 이하</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,999999)" data-i18n="price_over_100k">10만원+</button>
+    <button class="lesson-cat-btn" style="font-size:11px;padding:5px 10px" onclick="filterLessonPrice(this,-1)" data-i18n="price_negotiable">가격 협의</button>
   </div>
   <div id="lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
-    <div class="empty"><div class="empty-icon">🎾</div><div class="empty-txt">불러오는 중...</div></div>
+    <div class="empty"><div class="empty-icon">🎾</div><div class="empty-txt" data-i18n="loading_generic">불러오는 중...</div></div>
   </div>
 </div>
 
@@ -2613,86 +2613,86 @@
   <div class="modal" id="lesson-register-sheet" style="max-height:90dvh;overflow-y:auto">
     <div id="lesson-register-handle" style="touch-action:none;cursor:grab;padding:8px 0"><div class="modal-handle" style="margin:4px auto"></div></div>
     <div class="modal-title" data-i18n="lesson_reg_title">레슨/과외 등록</div>
-    <div class="modal-sub">내 서비스를 등록해서 수강생을 모집하세요 (여러 개 등록 가능)</div>
+    <div class="modal-sub" data-i18n="lesson_reg_sub">내 서비스를 등록해서 수강생을 모집하세요 (여러 개 등록 가능)</div>
 
     <!-- 메인 카테고리 -->
-    <label class="lesson-form-label">카테고리 *</label>
+    <label class="lesson-form-label" data-i18n="lesson_category_label">카테고리 *</label>
     <div style="display:flex;gap:8px;margin-bottom:16px" id="lr-main-cat-row">
-      <button type="button" class="booking-day-btn active" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'레슨')">🎾 레슨</button>
-      <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'과외')">📚 과외</button>
-      <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'전문기술')">🔧 전문기술</button>
+      <button type="button" class="booking-day-btn active" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'레슨')" data-i18n="lesson_tab_lesson">🎾 레슨</button>
+      <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'과외')" data-i18n="lesson_tab_tutoring">📚 과외</button>
+      <button type="button" class="booking-day-btn" style="flex:1;padding:11px" onclick="selectLessonMainCat(this,'전문기술')" data-i18n="lesson_tab_technical">🔧 전문기술</button>
     </div>
 
     <!-- 중간 카테고리 (분야) -->
-    <label class="lesson-form-label">분야 *</label>
+    <label class="lesson-form-label" data-i18n="lesson_field_label">분야 *</label>
     <div style="position:relative;margin-bottom:14px">
       <div id="lr-mid-cat-row" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px"></div>
     </div>
 
     <!-- 서브 카테고리 (가로 스크롤) -->
-    <label class="lesson-form-label" id="lr-subject-label" style="display:none">종목 / 과목</label>
+    <label class="lesson-form-label" id="lr-subject-label" style="display:none" data-i18n="lesson_subject_label">종목 / 과목</label>
     <div style="position:relative;margin-bottom:10px">
       <button id="lr-chips-prev" onclick="_scrollChips(-1)" style="display:none;position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.95);box-shadow:0 1px 6px rgba(0,0,0,0.18);font-size:14px;cursor:pointer;line-height:1">‹</button>
       <div id="lesson-subject-chips" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;padding-left:2px;padding-right:2px"></div>
       <button id="lr-chips-next" onclick="_scrollChips(1)" style="display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.95);box-shadow:0 1px 6px rgba(0,0,0,0.18);font-size:14px;cursor:pointer;line-height:1">›</button>
     </div>
-    <input id="lr-subject-custom" class="lesson-form-input" placeholder="직접 입력 (예: 배드민턴, 드럼 등)" style="margin-bottom:14px">
+    <input id="lr-subject-custom" class="lesson-form-input" placeholder="직접 입력 (예: 배드민턴, 드럼 등)" data-i18n-ph="lesson_subject_custom_ph" style="margin-bottom:14px">
 
     <!-- 수업 형태 -->
-    <label class="lesson-form-label">수업 형태 *</label>
+    <label class="lesson-form-label" data-i18n="lesson_class_type_label">수업 형태 *</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="lr-loctype-row">
-      <button type="button" class="booking-day-btn" onclick="selectLrLocType(this,'방문레슨')">🚗 방문 레슨</button>
-      <button type="button" class="booking-day-btn" onclick="selectLrLocType(this,'센터방문')">🏫 센터/학원 방문</button>
-      <button type="button" class="booking-day-btn" onclick="selectLrLocType(this,'비대면')">💻 비대면(온라인)</button>
+      <button type="button" class="booking-day-btn" onclick="selectLrLocType(this,'방문레슨')">🚗 <span data-i18n="lesson_type_visit">방문 레슨</span></button>
+      <button type="button" class="booking-day-btn" onclick="selectLrLocType(this,'센터방문')">🏫 <span data-i18n="lesson_type_center">센터/학원 방문</span></button>
+      <button type="button" class="booking-day-btn" onclick="selectLrLocType(this,'비대면')">💻 <span data-i18n="lesson_type_online">비대면(온라인)</span></button>
     </div>
 
-    <label class="lesson-form-label" id="lr-detail-label">강의 소개 * <span style="font-size:11px;font-weight:500;color:#aaa">수강생에게 보이는 한 줄 설명</span></label>
-    <input id="lr-detail" class="lesson-form-input" placeholder="예) 골프 국가대표 출신 · 초보 전문 / 중국 10년 거주 원어민급">
+    <label class="lesson-form-label" id="lr-detail-label"><span data-i18n="lesson_intro_label">강의 소개 *</span> <span style="font-size:11px;font-weight:500;color:#aaa" data-i18n="lesson_intro_hint">수강생에게 보이는 한 줄 설명</span></label>
+    <input id="lr-detail" class="lesson-form-input" placeholder="예) 골프 국가대표 출신 · 초보 전문 / 중국 10년 거주 원어민급" data-i18n-ph="lesson_intro_ph">
 
-    <label class="lesson-form-label" id="lr-price-label">1회 기본 단가 (원) *</label>
+    <label class="lesson-form-label" id="lr-price-label" data-i18n="lesson_price_label">1회 기본 단가 (원) *</label>
     <div style="display:flex;gap:8px;margin-bottom:16px">
-      <input id="lr-price" class="lesson-form-input" type="number" placeholder="예) 50000" style="flex:2;margin-bottom:0">
+      <input id="lr-price" class="lesson-form-input" type="number" placeholder="예) 50000" data-i18n-ph="lesson_price_ph" style="flex:2;margin-bottom:0">
       <input id="lr-duration" class="lesson-form-input" type="number" placeholder="분" value="60" style="flex:1;margin-bottom:0">
-      <span style="align-self:center;font-size:12px;color:#aaa;white-space:nowrap">분/회</span>
+      <span style="align-self:center;font-size:12px;color:#aaa;white-space:nowrap" data-i18n="lesson_duration_unit">분/회</span>
     </div>
 
-    <label class="lesson-form-label">패키지 구성 <span style="font-size:11px;font-weight:500;color:#aaa">(선택 — 할인 제공 시 설정)</span></label>
+    <label class="lesson-form-label"><span data-i18n="lesson_package_label">패키지 구성</span> <span style="font-size:11px;font-weight:500;color:#aaa" data-i18n="lesson_package_hint">(선택 — 할인 제공 시 설정)</span></label>
     <div style="background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:16px" id="lr-packages-wrap">
       <div id="pkg-rows" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
-      <button type="button" onclick="addPackageRow()" style="width:100%;padding:9px;border:1.5px dashed #bfdbfe;border-radius:10px;background:none;color:#3b82f6;font-size:13px;font-weight:700;cursor:pointer">+ 패키지 추가</button>
+      <button type="button" onclick="addPackageRow()" style="width:100%;padding:9px;border:1.5px dashed #bfdbfe;border-radius:10px;background:none;color:#3b82f6;font-size:13px;font-weight:700;cursor:pointer">+ <span data-i18n="lesson_package_add_btn">패키지 추가</span></button>
     </div>
 
-    <label class="lesson-form-label">장소/지역 (주소 또는 동 단위)</label>
-    <input id="lr-location" class="lesson-form-input" placeholder="예) 강남구 역삼동 근처, 서초구 방배동">
+    <label class="lesson-form-label" data-i18n="lesson_location_label">장소/지역 (주소 또는 동 단위)</label>
+    <input id="lr-location" class="lesson-form-input" placeholder="예) 강남구 역삼동 근처, 서초구 방배동" data-i18n-ph="lesson_location_ph">
 
-    <label class="lesson-form-label">가능 요일</label>
+    <label class="lesson-form-label" data-i18n="lesson_days_label">가능 요일</label>
     <div style="display:flex;gap:6px;margin-bottom:14px" id="lr-days-row">
-      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'월')">월</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'화')">화</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'수')">수</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'목')">목</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'금')">금</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'토')">토</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrDay(this,'일')">일</button>
+      <button type="button" class="booking-day-btn" data-day="월" onclick="toggleLrDay(this,'월')">월</button>
+      <button type="button" class="booking-day-btn" data-day="화" onclick="toggleLrDay(this,'화')">화</button>
+      <button type="button" class="booking-day-btn" data-day="수" onclick="toggleLrDay(this,'수')">수</button>
+      <button type="button" class="booking-day-btn" data-day="목" onclick="toggleLrDay(this,'목')">목</button>
+      <button type="button" class="booking-day-btn" data-day="금" onclick="toggleLrDay(this,'금')">금</button>
+      <button type="button" class="booking-day-btn" data-day="토" onclick="toggleLrDay(this,'토')">토</button>
+      <button type="button" class="booking-day-btn" data-day="일" onclick="toggleLrDay(this,'일')">일</button>
     </div>
 
-    <label class="lesson-form-label">가능 시간대 <span style="font-size:11px;font-weight:500;color:#aaa">(복수 선택 가능)</span></label>
+    <label class="lesson-form-label"><span data-i18n="lesson_time_label">가능 시간대</span> <span style="font-size:11px;font-weight:500;color:#aaa" data-i18n="lesson_multi_select_hint">(복수 선택 가능)</span></label>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px" id="lr-times-row">
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오전')">오전 6~12시</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오후')">오후 12~18시</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'저녁')">저녁 18~22시</button>
-      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'협의')">시간 협의</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오전')" data-i18n="lesson_time_morning">오전 6~12시</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'오후')" data-i18n="lesson_time_afternoon">오후 12~18시</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'저녁')" data-i18n="lesson_time_evening">저녁 18~22시</button>
+      <button type="button" class="booking-day-btn" onclick="toggleLrTime(this,'협의')" data-i18n="lesson_time_negotiable">시간 협의</button>
     </div>
 
     <!-- 자격증 / 경력 인증 -->
     <div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:14px;padding:14px;margin-bottom:20px" id="cert-section">
-      <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:6px">🏅 자격증 / 경력 인증 <span style="font-size:11px;font-weight:500;color:#a16207">(선택)</span></div>
-      <div style="font-size:12px;color:#a16207;margin-bottom:10px">인증 완료 시 프로필에 <strong>✓ 인증 배지</strong>가 표시되어 신뢰도가 높아져요</div>
-      <input id="lr-cert-note" class="lesson-form-input" placeholder="예) 골프 지도사 2급, 체육학사, 프로 라이센스" style="background:#fff;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:6px">🏅 <span data-i18n="cert_section_title">자격증 / 경력 인증</span> <span style="font-size:11px;font-weight:500;color:#a16207" data-i18n="optional">(선택)</span></div>
+      <div style="font-size:12px;color:#a16207;margin-bottom:10px"><span data-i18n="cert_verified_desc_pre">인증 완료 시 프로필에</span> <strong>✓ <span data-i18n="cert_badge_label">인증 배지</span></strong><span data-i18n="cert_verified_desc_post">가 표시되어 신뢰도가 높아져요</span></div>
+      <input id="lr-cert-note" class="lesson-form-input" placeholder="예) 골프 지도사 2급, 체육학사, 프로 라이센스" data-i18n-ph="cert_note_ph" style="background:#fff;margin-bottom:8px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
         <div id="cert-upload-btn" onclick="document.getElementById('lr-cert-file').click()"
           style="flex:1;padding:11px;background:#fff;border:1.5px dashed #fbbf24;border-radius:10px;font-size:13px;color:#a16207;font-weight:600;text-align:center;cursor:pointer">
-          📎 서류 업로드 (사진/PDF)
+          📎 <span data-i18n="cert_upload_btn">서류 업로드 (사진/PDF)</span>
         </div>
         <input id="lr-cert-file" type="file" accept="image/*,.pdf" style="display:none" onchange="onCertFileSelected(this)">
       </label>
@@ -2700,8 +2700,8 @@
     </div>
 
     <div style="display:flex;gap:10px;margin-top:4px">
-      <button onclick="closeLessonRegisterModal()" style="flex:1;padding:15px;background:#f1f5f9;color:#64748b;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">닫기</button>
-      <button onclick="saveLessonProfile()" style="flex:2;padding:15px;background:#3b82f6;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">등록하기</button>
+      <button onclick="closeLessonRegisterModal()" style="flex:1;padding:15px;background:#f1f5f9;color:#64748b;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer" data-i18n="close_btn">닫기</button>
+      <button onclick="saveLessonProfile()" style="flex:2;padding:15px;background:#3b82f6;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer" data-i18n="lesson_register_submit">등록하기</button>
     </div>
   </div>
 </div>
@@ -2717,43 +2717,43 @@
 
     <!-- 예약 폼 (Phase 3 레이아웃) -->
     <div id="lesson-booking-form" style="display:none;margin-top:16px;border-top:1px solid #f0f0f0;padding-top:16px">
-      <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:14px">예약하기</div>
+      <div style="font-size:15px;font-weight:800;color:#222;margin-bottom:14px" data-i18n="booking_title">예약하기</div>
 
-      <label class="lesson-form-label">희망 날짜</label>
+      <label class="lesson-form-label" data-i18n="booking_date_label">희망 날짜</label>
       <input id="bk-date" class="lesson-form-input" type="date">
 
-      <label class="lesson-form-label">희망 시간</label>
+      <label class="lesson-form-label" data-i18n="booking_time_label">희망 시간</label>
       <input id="bk-time" class="lesson-form-input" type="time">
 
-      <label class="lesson-form-label">메모 (선택)</label>
-      <input id="bk-note" class="lesson-form-input" placeholder="수강 목적, 수준 등 간단히 적어주세요">
+      <label class="lesson-form-label" data-i18n="booking_note_label">메모 (선택)</label>
+      <input id="bk-note" class="lesson-form-input" placeholder="수강 목적, 수준 등 간단히 적어주세요" data-i18n-ph="booking_note_ph">
 
       <!-- 결제 방식 — Phase 3 레이아웃 -->
       <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px">결제 방식</div>
+        <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:10px" data-i18n="payment_method_title">결제 방식</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
             <input type="radio" name="bk-payment" value="offline" checked style="accent-color:#C8102E">
             <div>
-              <div style="font-size:13px;font-weight:700;color:#222">현장 결제</div>
-              <div style="font-size:11px;color:#aaa">레슨 당일 직접 결제</div>
+              <div style="font-size:13px;font-weight:700;color:#222" data-i18n="payment_offline_title">현장 결제</div>
+              <div style="font-size:11px;color:#aaa" data-i18n="payment_offline_desc">레슨 당일 직접 결제</div>
             </div>
           </label>
           <label style="display:flex;align-items:center;gap:10px;cursor:not-allowed;opacity:0.5">
             <input type="radio" name="bk-payment" value="toss" disabled style="accent-color:#C8102E">
             <div>
-              <div style="font-size:13px;font-weight:700;color:#222">토스 안전결제 (에스크로) <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px;font-weight:700">준비 중</span></div>
-              <div style="font-size:11px;color:#aaa">레슨 완료 후 자동 정산 · 취소 시 전액 환불 보장</div>
+              <div style="font-size:13px;font-weight:700;color:#222"><span data-i18n="payment_toss_title">토스 안전결제 (에스크로)</span> <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px;font-weight:700" data-i18n="payment_preparing_badge">준비 중</span></div>
+              <div style="font-size:11px;color:#aaa" data-i18n="payment_toss_desc">레슨 완료 후 자동 정산 · 취소 시 전액 환불 보장</div>
             </div>
           </label>
           <div style="margin-top:6px;padding:8px 12px;background:#f0f9ff;border-radius:10px;font-size:11px;color:#0891b2">
-            💡 안전결제 오픈 시 수수료 0% 혜택 제공 예정 (토스 가맹점 심사 진행 중)
+            💡 <span data-i18n="payment_toss_notice">안전결제 오픈 시 수수료 0% 혜택 제공 예정 (토스 가맹점 심사 진행 중)</span>
           </div>
         </div>
       </div>
 
-      <button onclick="confirmBooking()" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer">예약 신청</button>
-      <button onclick="document.getElementById('lesson-booking-form').style.display='none'" style="width:100%;padding:10px;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;margin-top:4px">취소</button>
+      <button onclick="confirmBooking()" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer" data-i18n="booking_submit_btn">예약 신청</button>
+      <button onclick="document.getElementById('lesson-booking-form').style.display='none'" style="width:100%;padding:10px;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;margin-top:4px" data-i18n="cancel">취소</button>
     </div>
   </div>
 </div>
@@ -2763,18 +2763,18 @@
   <div style="display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <button onclick="closeLessonManagePanel()" style="background:none;border:none;cursor:pointer;padding:0;color:#333;display:flex;align-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <div style="font-size:17px;font-weight:900;color:#222" data-i18n="lesson_my_title">내 레슨/과외 프로필</div>
-    <button onclick="openLessonRegisterModal()" id="lm-register-btn" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ 등록</button>
+    <button onclick="openLessonRegisterModal()" id="lm-register-btn" style="margin-left:auto;padding:7px 14px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ <span data-i18n="lesson_register_btn">등록</span></button>
   </div>
   <!-- 탭 -->
   <div style="display:flex;border-bottom:1px solid #f0f0f0;flex-shrink:0">
-    <button id="lm-tab-profile" onclick="switchLessonManageTab('profile')" style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #3b82f6;color:#3b82f6;background:#fff;cursor:pointer">📋 내 프로필</button>
-    <button id="lm-tab-inquiries" onclick="switchLessonManageTab('inquiries')" style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">💬 문의함 <span id="lm-inq-badge" style="display:none;background:#C8102E;color:#fff;font-size:10px;font-weight:900;padding:1px 5px;border-radius:8px;margin-left:3px"></span></button>
+    <button id="lm-tab-profile" onclick="switchLessonManageTab('profile')" style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid #3b82f6;color:#3b82f6;background:#fff;cursor:pointer">📋 <span data-i18n="section_profile">내 프로필</span></button>
+    <button id="lm-tab-inquiries" onclick="switchLessonManageTab('inquiries')" style="flex:1;padding:11px;font-size:13px;font-weight:700;border:none;border-bottom:2px solid transparent;color:#888;background:#fff;cursor:pointer">💬 <span data-i18n="lesson_inquiry_box">문의함</span> <span id="lm-inq-badge" style="display:none;background:#C8102E;color:#fff;font-size:10px;font-weight:900;padding:1px 5px;border-radius:8px;margin-left:3px"></span></button>
   </div>
   <div id="my-lesson-list" style="flex:1;overflow-y:auto;padding:12px 16px 80px">
-    <div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">등록된 레슨/과외가 없어요<br><span style="font-size:12px;color:#bbb">위 + 등록 버튼으로 추가하세요</span></div></div>
+    <div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt"><span data-i18n="lesson_my_empty">등록된 레슨/과외가 없어요</span><br><span style="font-size:12px;color:#bbb" data-i18n="lesson_my_empty_hint">위 + 등록 버튼으로 추가하세요</span></div></div>
   </div>
   <div id="my-lesson-inquiries" style="display:none;flex:1;overflow-y:auto;padding:12px 16px 80px">
-    <div style="text-align:center;padding:40px;color:#bbb;font-size:13px">불러오는 중...</div>
+    <div style="text-align:center;padding:40px;color:#bbb;font-size:13px" data-i18n="loading_generic">불러오는 중...</div>
   </div>
 </div>
 
@@ -4356,7 +4356,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=554"></script>
+<script src="./assets/js/app.js?v=555"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4514,7 +4514,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=554"></script>
+<script src="./assets/js/app_ui.js?v=555"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
