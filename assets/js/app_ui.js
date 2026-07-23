@@ -64,14 +64,14 @@ function showConfirm(msg, onOk, opts = {}) {
   document.getElementById('sc-msg').textContent   = msg;
   document.getElementById('sc-msg').style.display = msg ? 'block' : 'none';
   const okBtn = document.getElementById('sc-ok');
-  okBtn.textContent   = opts.okLabel  || '확인';
+  okBtn.textContent   = opts.okLabel  || t('btn_confirm');
   okBtn.style.background = opts.danger ? '#C8102E' : (opts.okBg || '#374151');
   document.getElementById('sc-cancel').style.display = opts.hideCancel ? 'none' : 'block';
   _scCallback = onOk || null;
   el.style.display = 'flex';
 }
 function showAlert(msg, opts = {}) {
-  showConfirm(msg, null, { ...opts, hideCancel: true, okLabel: opts.okLabel || '확인', okBg: '#374151' });
+  showConfirm(msg, null, { ...opts, hideCancel: true, okLabel: opts.okLabel || t('btn_confirm'), okBg: '#374151' });
 }
 function _scOk() {
   document.getElementById('sc-overlay').style.display = 'none';

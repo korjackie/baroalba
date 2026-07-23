@@ -56,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=559"></script>
+  <script src="./shared-lang.js?v=560"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=559">
+  <link rel="stylesheet" href="./assets/css/style.css?v=560">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -4356,7 +4356,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=559"></script>
+<script src="./assets/js/app.js?v=560"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4514,7 +4514,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=559"></script>
+<script src="./assets/js/app_ui.js?v=560"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
@@ -4689,7 +4689,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div style="font-size:16px;font-weight:900;color:#111;flex:1">바로만남</div>
-      <button onclick="openMannamProfilePanel('mannam')" style="background:#F5F3FF;color:#7C3AED;border:none;border-radius:10px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;flex-shrink:0">👤 내 프로필</button>
+      <button onclick="openMannamProfilePanel('mannam')" style="background:#F5F3FF;color:#7C3AED;border:none;border-radius:10px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;flex-shrink:0">👤 <span data-i18n="section_profile">내 프로필</span></button>
       <span style="font-size:9px;font-weight:900;background:#f43f5e;color:#fff;padding:3px 10px;border-radius:10px;letter-spacing:0.3px;flex-shrink:0">BETA</span>
     </div>
     <!-- 탭: 바로미팅(좌) | 바로스팟(우) -->
@@ -4708,20 +4708,20 @@
         <div style="width:38px;height:38px;background:#ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🤝</div>
         <div>
           <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:3px">바로미팅</div>
-          <div style="font-size:11px;color:#777;line-height:1.65">반경 5km 내 소셜 만남에 참여하세요.<br>목록 탐색은 <b>무료</b> · 신청 시에만 2,000P 차감</div>
+          <div style="font-size:11px;color:#777;line-height:1.65"><span data-i18n="mnm_meeting_desc1">반경 5km 내 소셜 만남에 참여하세요.</span><br><span data-i18n="mnm_meeting_desc2">목록 탐색은 </span><b data-i18n="fee_free">무료</b><span data-i18n="mnm_meeting_desc3"> · 신청 시에만 2,000P 차감</span></div>
         </div>
       </div>
       <!-- 위치 상태 -->
       <div id="mnm-meet-locbar" style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:14px;border:1px solid #f0f0f0;font-size:12px;color:#888">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 12-8 12S4 15.25 4 10a8 8 0 0 1 8-8z"/></svg>
-        <span id="mnm-meet-loctext">위치를 확인해 반경 5km 내 모임을 찾고 있어요…</span>
+        <span id="mnm-meet-loctext" data-i18n="mnm_locating">위치를 확인해 반경 5km 내 모임을 찾고 있어요…</span>
       </div>
       <!-- 미팅 목록 -->
       <div id="mnm-meeting-list">
         <div style="text-align:center;padding:44px 20px">
           <div style="font-size:40px;margin-bottom:10px">🤝</div>
-          <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 바로미팅</div>
-          <div style="font-size:12px;color:#bbb;line-height:1.65">현재 반경 5km 내 진행 중인 미팅이 없어요<br>곧 새 미팅이 오픈될 예정이에요</div>
+          <div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px" data-i18n="mnm_meeting_recruiting_title">모집 중인 바로미팅</div>
+          <div style="font-size:12px;color:#bbb;line-height:1.65;white-space:pre-line" data-i18n="mnm_meeting_empty_desc">현재 반경 5km 내 진행 중인 미팅이 없어요<br>곧 새 미팅이 오픈될 예정이에요</div>
         </div>
       </div>
     </div>
@@ -4733,29 +4733,29 @@
       <!-- 성별 미설정 -->
       <div id="mnm-spot-gender-prompt" style="display:none;text-align:center;padding:40px 20px">
         <div style="font-size:40px;margin-bottom:14px">📍</div>
-        <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:8px">바로스팟 이용을 위해<br>성별을 선택해주세요</div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:28px">이후 변경 불가 · 서비스 운영에만 사용됩니다</div>
+        <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:8px;white-space:pre-line" data-i18n="mnm_spot_gender_prompt_title">바로스팟 이용을 위해<br>성별을 선택해주세요</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:28px" data-i18n="mnm_spot_gender_prompt_desc">이후 변경 불가 · 서비스 운영에만 사용됩니다</div>
         <div style="display:flex;gap:12px;justify-content:center">
-          <button onclick="setSpotGender('female')" style="flex:1;max-width:130px;padding:18px 0;background:#fff0f4;border:2px solid #f43f5e;border-radius:14px;font-size:16px;font-weight:900;color:#f43f5e;cursor:pointer">여성</button>
-          <button onclick="setSpotGender('male')" style="flex:1;max-width:130px;padding:18px 0;background:#eff6ff;border:2px solid #3b82f6;border-radius:14px;font-size:16px;font-weight:900;color:#3b82f6;cursor:pointer">남성</button>
+          <button onclick="setSpotGender('female')" style="flex:1;max-width:130px;padding:18px 0;background:#fff0f4;border:2px solid #f43f5e;border-radius:14px;font-size:16px;font-weight:900;color:#f43f5e;cursor:pointer" data-i18n="gender_female">여성</button>
+          <button onclick="setSpotGender('male')" style="flex:1;max-width:130px;padding:18px 0;background:#eff6ff;border:2px solid #3b82f6;border-radius:14px;font-size:16px;font-weight:900;color:#3b82f6;cursor:pointer" data-i18n="gender_male">남성</button>
         </div>
       </div>
       <!-- 여성 뷰 -->
       <div id="mnm-spot-female" style="display:none">
         <!-- 이용권 카드 -->
         <div style="background:linear-gradient(135deg,#f43f5e,#ec4899);border-radius:16px;padding:18px 20px;margin-bottom:14px;color:#fff">
-          <div style="font-size:11px;opacity:0.8;margin-bottom:4px">내 이용권 잔여</div>
-          <div style="font-size:30px;font-weight:900;margin-bottom:2px"><span id="mnm-f-pass-count">0</span><span style="font-size:15px;font-weight:500;margin-left:5px">회</span></div>
+          <div style="font-size:11px;opacity:0.8;margin-bottom:4px" data-i18n="mnm_my_pass_remaining">내 이용권 잔여</div>
+          <div style="font-size:30px;font-weight:900;margin-bottom:2px"><span id="mnm-f-pass-count">0</span><span style="font-size:15px;font-weight:500;margin-left:5px" data-i18n="session_unit">회</span></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-            <div style="font-size:11px;opacity:0.75">식사비 0.9배 할인 · 매니저 매칭 보장</div>
-            <button onclick="openSpotPassSheet('female')" style="background:rgba(255,255,255,0.25);border:none;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:10px;cursor:pointer">이용권 구매</button>
+            <div style="font-size:11px;opacity:0.75" data-i18n="mnm_female_pass_desc">식사비 0.9배 할인 · 매니저 매칭 보장</div>
+            <button onclick="openSpotPassSheet('female')" style="background:rgba(255,255,255,0.25);border:none;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:10px;cursor:pointer" data-i18n="mnm_buy_pass_btn">이용권 구매</button>
           </div>
         </div>
         <!-- 바로스팟 희망 알림 (반경 5km 내 새 바로스팟 개설 시 푸시) -->
         <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #fce7f3;display:flex;align-items:center;justify-content:space-between;gap:12px">
           <div>
-            <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:2px">🔔 바로스팟 알림 받기</div>
-            <div style="font-size:11px;color:#aaa">내 주변 5km에 바로스팟이 열리면 알려드려요</div>
+            <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:2px">🔔 <span data-i18n="mnm_spot_alert_title">바로스팟 알림 받기</span></div>
+            <div style="font-size:11px;color:#aaa" data-i18n="mnm_spot_alert_desc">내 주변 5km에 바로스팟이 열리면 알려드려요</div>
           </div>
           <div id="mnm-spot-interest-toggle" onclick="toggleBarospotInterest()" style="width:44px;height:24px;border-radius:12px;background:#ddd;position:relative;flex-shrink:0;cursor:pointer">
             <div id="mnm-spot-interest-thumb" style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2)"></div>
@@ -4763,42 +4763,42 @@
         </div>
         <!-- 내 주변에 열려서 선점 가능한 바로스팟 -->
         <div id="mnm-spot-nearby-wrap" style="display:none;margin-bottom:14px">
-          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">📍 내 주변 열린 바로스팟 · 먼저 신청하면 선점돼요</div>
+          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">📍 <span data-i18n="mnm_spot_nearby_title">내 주변 열린 바로스팟 · 먼저 신청하면 선점돼요</span></div>
           <div id="mnm-spot-nearby-list"></div>
         </div>
         <!-- 신청하기 (특정 바로스팟이 아직 없어도 관심 등록 - 매니저가 나중에 수동 배정 가능) -->
         <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #fce7f3">
-          <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:6px">바로스팟 신청</div>
-          <div style="font-size:12px;color:#777;line-height:1.7;margin-bottom:14px">신청 완료 후 매니저가 제휴 식당 · 일정을 배정합니다.<br>확정되면 앱 알림으로 안내드려요.</div>
-          <button onclick="applyBarospot()" style="width:100%;padding:13px;background:#f43f5e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">신청하기 · 이용권 1회 차감</button>
+          <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:6px" data-i18n="mnm_spot_apply_title">바로스팟 신청</div>
+          <div style="font-size:12px;color:#777;line-height:1.7;margin-bottom:14px;white-space:pre-line" data-i18n="mnm_spot_apply_desc">신청 완료 후 매니저가 제휴 식당 · 일정을 배정합니다.<br>확정되면 앱 알림으로 안내드려요.</div>
+          <button onclick="applyBarospot()" style="width:100%;padding:13px;background:#f43f5e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" data-i18n="mnm_spot_apply_btn">신청하기 · 이용권 1회 차감</button>
         </div>
         <!-- 내 신청 현황 -->
-        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">내 신청 현황</div>
-        <div id="mnm-f-apps"><div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div></div>
+        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px" data-i18n="mnm_my_applications_title">내 신청 현황</div>
+        <div id="mnm-f-apps"><div style="text-align:center;padding:32px;color:#bbb;font-size:13px" data-i18n="mnm_no_applications">신청 내역이 없어요</div></div>
       </div>
       <!-- 남성 뷰 -->
       <div id="mnm-spot-male" style="display:none">
         <!-- 이용권 카드 -->
         <div style="background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:16px;padding:18px 20px;margin-bottom:14px;color:#fff">
-          <div style="font-size:11px;opacity:0.8;margin-bottom:4px">내 이용권 잔여</div>
-          <div style="font-size:30px;font-weight:900;margin-bottom:2px"><span id="mnm-m-pass-count">0</span><span style="font-size:15px;font-weight:500;margin-left:5px">회</span></div>
+          <div style="font-size:11px;opacity:0.8;margin-bottom:4px" data-i18n="mnm_my_pass_remaining">내 이용권 잔여</div>
+          <div style="font-size:30px;font-weight:900;margin-bottom:2px"><span id="mnm-m-pass-count">0</span><span style="font-size:15px;font-weight:500;margin-left:5px" data-i18n="session_unit">회</span></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-            <div style="font-size:11px;opacity:0.75">확정된 스팟 참가 · 식사비 별도 정산</div>
-            <button onclick="openSpotPassSheet('male')" style="background:rgba(255,255,255,0.25);border:none;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:10px;cursor:pointer">이용권 구매</button>
+            <div style="font-size:11px;opacity:0.75" data-i18n="mnm_male_pass_desc">확정된 스팟 참가 · 식사비 별도 정산</div>
+            <button onclick="openSpotPassSheet('male')" style="background:rgba(255,255,255,0.25);border:none;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:10px;cursor:pointer" data-i18n="mnm_buy_pass_btn">이용권 구매</button>
           </div>
         </div>
         <!-- 곧 열릴 수 있는 바로스팟(아직 여성 미배정) - 미리 신청해두면 배정 즉시 알려줌 -->
         <div id="mnm-spot-upcoming-wrap" style="display:none;margin-bottom:14px">
-          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">🔔 곧 열릴 수 있는 바로스팟 · 미리 신청하면 열리자마자 알려드려요</div>
+          <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">🔔 <span data-i18n="mnm_spot_upcoming_title">곧 열릴 수 있는 바로스팟 · 미리 신청하면 열리자마자 알려드려요</span></div>
           <div id="mnm-spot-upcoming-list"></div>
         </div>
         <!-- 이벤트 목록 -->
-        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">참가 가능한 스팟 <span id="mnm-spot-event-count" style="color:#3b82f6">0</span>건</div>
-        <div id="mnm-m-events"><div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">모집 중인 스팟</div><div style="font-size:12px;line-height:1.65">현재 남성 참가자를 모집 중인<br>스팟 이벤트가 없어요</div></div></div>
+        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px"><span data-i18n="mnm_available_spots_title">참가 가능한 스팟</span> <span id="mnm-spot-event-count" style="color:#3b82f6">0</span><span data-i18n="count_unit">건</span></div>
+        <div id="mnm-m-events"><div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px" data-i18n="mnm_spot_recruiting_title">모집 중인 스팟</div><div style="font-size:12px;line-height:1.65;white-space:pre-line" data-i18n="mnm_spot_recruiting_empty">현재 남성 참가자를 모집 중인<br>스팟 이벤트가 없어요</div></div></div>
         <!-- 내 신청 현황 - 예전엔 이게 없어서 확정되고 나면(모집 목록에서 빠지니까) 내
              신청 정보를 다시 볼 방법이 아예 없었음(여성 쪽엔 있었는데 남성 쪽만 누락) -->
-        <div style="font-size:12px;font-weight:800;color:#555;margin:18px 0 10px">내 신청 현황</div>
-        <div id="mnm-m-apps"><div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div></div>
+        <div style="font-size:12px;font-weight:800;color:#555;margin:18px 0 10px" data-i18n="mnm_my_applications_title">내 신청 현황</div>
+        <div id="mnm-m-apps"><div style="text-align:center;padding:32px;color:#bbb;font-size:13px" data-i18n="mnm_no_applications">신청 내역이 없어요</div></div>
       </div>
     </div>
 
@@ -4812,7 +4812,7 @@
     <button onclick="closeQrScanner()" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <span style="color:#fff;font-size:15px;font-weight:800">🎫 바로패스 QR 스캔</span>
+    <span style="color:#fff;font-size:15px;font-weight:800">🎫 <span data-i18n="qr_scan_title">바로패스 QR 스캔</span></span>
   </div>
   <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
     <video id="qr-scan-video" playsinline autoplay muted style="width:100%;height:100%;object-fit:cover"></video>
@@ -4820,7 +4820,7 @@
     <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
       <div style="width:230px;height:230px;border:3px solid rgba(255,255,255,0.85);border-radius:20px;box-shadow:0 0 0 2000px rgba(0,0,0,0.45)"></div>
     </div>
-    <div style="position:absolute;bottom:36px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.85);font-size:13px;font-weight:600">상대방의 바로패스 QR을 사각형 안에 맞춰주세요</div>
+    <div style="position:absolute;bottom:36px;left:0;right:0;text-align:center;color:rgba(255,255,255,0.85);font-size:13px;font-weight:600" data-i18n="qr_scan_guide">상대방의 바로패스 QR을 사각형 안에 맞춰주세요</div>
   </div>
   <!-- 스캔 결과 -->
   <div id="qr-scan-result" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:24px;z-index:2">
@@ -4835,7 +4835,7 @@
     <button onclick="closeBaromeetDetail()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="font-size:16px;font-weight:900;color:#111;flex:1">바로미팅 상세</div>
+    <div style="font-size:16px;font-weight:900;color:#111;flex:1" data-i18n="baromeet_detail_title">바로미팅 상세</div>
   </div>
   <div id="baromeet-detail-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
 </div>
@@ -4849,7 +4849,7 @@
     <div id="sc-msg" style="font-size:13px;color:#888;text-align:center;line-height:1.6;margin-bottom:22px;white-space:pre-line;display:none"></div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button id="sc-ok" onclick="_scOk()" style="width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:900;cursor:pointer;color:#fff"></button>
-      <button id="sc-cancel" onclick="_scCancel()" style="width:100%;padding:12px;border-radius:14px;border:none;background:#F5F5F5;color:#777;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+      <button id="sc-cancel" onclick="_scCancel()" style="width:100%;padding:12px;border-radius:14px;border:none;background:#F5F5F5;color:#777;font-size:14px;font-weight:700;cursor:pointer" data-i18n="cancel">취소</button>
     </div>
   </div>
 </div>
@@ -4905,15 +4905,15 @@
     </div>
     <div class="track-detail" id="track-detail">
       <div class="track-detail-row">
-        <div class="track-detail-label">📍 장소</div>
+        <div class="track-detail-label">📍 <span data-i18n="place_label">장소</span></div>
         <div class="track-detail-value" id="track-place">-</div>
       </div>
       <div class="track-detail-row">
-        <div class="track-detail-label">🕐 일정</div>
+        <div class="track-detail-label">🕐 <span data-i18n="track_schedule_label">일정</span></div>
         <div class="track-detail-value" id="track-when">-</div>
       </div>
       <div class="track-detail-row" id="track-participants-row" style="display:none">
-        <div class="track-detail-label">👥 참가 현황</div>
+        <div class="track-detail-label">👥 <span data-i18n="track_participants_label">참가 현황</span></div>
         <div class="track-detail-value" id="track-participants">-</div>
       </div>
       <!-- 바로스팟 사후 호감표시/수락→채팅 - 만남이 끝난(종료 단계) 이후에만 노출 -->
@@ -4921,22 +4921,22 @@
         <div id="track-barospot-interest-text" style="font-size:12.5px;color:#666;margin-bottom:8px;line-height:1.5"></div>
         <div style="display:flex;gap:8px">
           <button id="track-barospot-interest-btn" style="flex:2;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer"></button>
-          <button id="track-barospot-end-btn" style="display:none;flex:1;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#888">종료하기</button>
+          <button id="track-barospot-end-btn" style="display:none;flex:1;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;background:#f1f5f9;color:#888" data-i18n="track_end_btn">종료하기</button>
         </div>
       </div>
       <!-- 바로스팟 만남 후 상호평가 (별점+태그) - 호감표시와 별개로 독립 동작 -->
       <div id="track-barospot-review-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee;text-align:center">
-        <div id="track-barospot-review-done" style="display:none;font-size:12.5px;color:#888">✅ 평가를 남겨주셔서 감사해요</div>
+        <div id="track-barospot-review-done" style="display:none;font-size:12.5px;color:#888">✅ <span data-i18n="track_review_done">평가를 남겨주셔서 감사해요</span></div>
         <div id="track-barospot-review-form">
-          <div style="font-size:12.5px;color:#666;margin-bottom:8px">만남은 어떠셨나요?</div>
+          <div style="font-size:12.5px;color:#666;margin-bottom:8px" data-i18n="track_review_prompt">만남은 어떠셨나요?</div>
           <div id="track-barospot-review-stars" style="display:flex;justify-content:center;gap:4px;font-size:26px;margin-bottom:10px"></div>
           <div id="track-barospot-review-tags" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px"></div>
-          <button id="track-barospot-review-submit" onclick="submitBarospotReview()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer">평가 남기기</button>
+          <button id="track-barospot-review-submit" onclick="submitBarospotReview()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13.5px;font-weight:800;cursor:pointer" data-i18n="track_review_submit_btn">평가 남기기</button>
         </div>
       </div>
       <div id="track-live-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #eee">
         <div id="track-live-note" style="display:none;font-size:12px;color:#bbb;text-align:center;padding:8px 0"></div>
-        <button id="track-live-btn" onclick="_toggleLiveShare()" style="display:none;width:100%;padding:12px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px">🚀 출발했어요</button>
+        <button id="track-live-btn" onclick="_toggleLiveShare()" style="display:none;width:100%;padding:12px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px">🚀 <span data-i18n="track_departed_btn">출발했어요</span></button>
         <div id="track-live-my-distance" style="display:none;font-size:13px;font-weight:700;color:#7C3AED;text-align:center;margin-bottom:6px"></div>
         <div id="track-live-others" style="display:none"></div>
       </div>
@@ -4949,17 +4949,17 @@
 <div class="bottom-sheet" id="couponSheet">
   <div class="bs-handle" id="couponSheetHandle"></div>
   <div>
-    <div class="coupon-modal-title">💜 바로만남 쿠폰 & 티켓</div>
-    <div style="font-size: 13px; color: #64748b; margin-top: 4px;">베타테스터 코드를 입력하고 식사권을 받으세요!</div>
+    <div class="coupon-modal-title">💜 <span data-i18n="coupon_sheet_title">바로만남 쿠폰 & 티켓</span></div>
+    <div style="font-size: 13px; color: #64748b; margin-top: 4px;" data-i18n="coupon_sheet_desc">베타테스터 코드를 입력하고 식사권을 받으세요!</div>
   </div>
   <div class="coupon-input-wrap">
-    <input type="text" class="coupon-input" id="couponInput" placeholder="쿠폰 코드 (예: BARO2026)">
-    <button class="coupon-btn" onclick="registerCoupon()">등록</button>
+    <input type="text" class="coupon-input" id="couponInput" placeholder="쿠폰 코드 (예: BARO2026)" data-i18n-ph="coupon_input_ph">
+    <button class="coupon-btn" onclick="registerCoupon()" data-i18n="lesson_register_btn">등록</button>
   </div>
   <div class="ticket-card">
     <div>
-      <div style="font-size: 15px; font-weight: 800; color: #0f172a;">내 바로만남 이용권</div>
-      <div style="font-size: 12px; color: #64748b;">제휴 매장에서 QR 스캔으로 사용</div>
+      <div style="font-size: 15px; font-weight: 800; color: #0f172a;" data-i18n="mnm_my_ticket_title">내 바로만남 이용권</div>
+      <div style="font-size: 12px; color: #64748b;" data-i18n="mnm_ticket_use_desc">제휴 매장에서 QR 스캔으로 사용</div>
     </div>
     <div class="ticket-count" id="ticketCountDisplay">0장</div>
   </div>
@@ -4977,20 +4977,20 @@
   }
   async function refreshTicketCount() {
     const disp = document.getElementById('ticketCountDisplay');
-    if (!currentSession?.access_token) { disp.textContent = '0장'; return; }
+    if (!currentSession?.access_token) { disp.textContent = t('ticket_count_fmt').replace('{n}', 0); return; }
     try {
       const res = await fetch('/api/coupon?action=my_tickets', {
         headers: { 'Authorization': 'Bearer ' + currentSession.access_token }
       });
       const data = await res.json();
-      disp.textContent = (data.tickets || 0) + '장';
-    } catch(e) { disp.textContent = '0장'; }
+      disp.textContent = t('ticket_count_fmt').replace('{n}', data.tickets || 0);
+    } catch(e) { disp.textContent = t('ticket_count_fmt').replace('{n}', 0); }
   }
   async function registerCoupon() {
     const input = document.getElementById('couponInput');
     const code = input.value.trim();
-    if (!code) { showToast('쿠폰 코드를 입력해주세요'); return; }
-    if (!currentSession?.access_token) { showToast('로그인이 필요합니다'); return; }
+    if (!code) { showToast(t('coupon_code_required')); return; }
+    if (!currentSession?.access_token) { showToast(t('login_required')); return; }
     try {
       const res = await fetch('/api/coupon', {
         method: 'POST',
@@ -4998,17 +4998,17 @@
         body: JSON.stringify({ code })
       });
       const data = await res.json();
-      if (!res.ok) { showToast(data.error || '쿠폰 등록에 실패했습니다'); return; }
+      if (!res.ok) { showToast(data.error || t('coupon_register_failed')); return; }
       input.value = '';
       if (data.referral) {
-        showToast(data.already ? '이미 처리된 추천코드예요' : `🎉 추천코드로 ${data.points.toLocaleString()}P를 받았어요!`);
+        showToast(data.already ? t('referral_already_used') : ('🎉 ' + t('referral_success_toast').replace('{n}', data.points.toLocaleString())));
         if (!data.already) loadUserPoints();
         return;
       }
-      showToast(`✅ 이용권 ${data.granted}장이 지급됐어요!`);
-      document.getElementById('ticketCountDisplay').textContent = data.tickets + '장';
+      showToast('✅ ' + t('ticket_granted_toast').replace('{n}', data.granted));
+      document.getElementById('ticketCountDisplay').textContent = t('ticket_count_fmt').replace('{n}', data.tickets);
     } catch(e) {
-      showToast('오류가 발생했습니다: ' + e.message);
+      showToast(t('error_occurred_prefix') + e.message);
     }
   }
 </script>
