@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '558';
+  const _APP_V = '559';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=558').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=559').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -1775,8 +1775,8 @@ function openMoimCreate(editData = null) {
   if (_mcFab2) _mcFab2.style.display = 'none';
   _resetMoimForm();
   if (_editingMoim) _fillMoimForm(_editingMoim);
-  document.getElementById('moim-create-title').textContent = _editingMoim ? '모임 수정' : '모임 만들기';
-  document.getElementById('moim-submit-btn').textContent = _editingMoim ? '수정 완료' : '모임 개설하기';
+  document.getElementById('moim-create-title').textContent = _editingMoim ? t('moim_edit_title') : t('moim_create_title');
+  document.getElementById('moim-submit-btn').textContent = _editingMoim ? t('edit_complete_label') : t('moim_submit_btn');
 }
 function closeMoimCreate() {
   document.getElementById('panel-moim-create').classList.remove('show');
@@ -1844,7 +1844,7 @@ async function loadMoimList(cat = '') {
   const homeList  = document.getElementById('home-moim-list');
   if (!container && !homeList) return; // 둘 다 없으면 패스
 
-  if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">불러오는 중...</div></div>';
+  if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">' + t('loading_generic') + '</div></div>';
 
   const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><span style="font-size:22px">🤝</span><span style="font-size:11px;font-weight:800;color:#7C3AED" data-i18n="create_first_moim">첫 모임 만들기</span></div>';
 
@@ -1880,7 +1880,7 @@ async function loadMoimList(cat = '') {
   } catch(e) {
     if (myVer !== _moimLoadVer) return;
     _moimList = [];
-    if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px;line-height:1.6">불러오기에 실패했어요<br>잠시 후 다시 시도해 주세요</div></div>';
+    if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px;line-height:1.6">' + t('chat_load_failed').replace('\n', '<br>') + '</div></div>';
     if (homeList) { homeList.innerHTML = MOIM_PLACEHOLDER; if (typeof applyLang === 'function') applyLang(); }
     return;
   }
@@ -1911,9 +1911,9 @@ function _moimHomeCard(m) {
   const catColor = { 스포츠:'#2563eb',취미:'#7c3aed',친목:'#0891b2',기타:'#6b7280' };
   const cat = m.category || '기타';
   const color = catColor[cat] || '#7c3aed';
-  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
   const rem = (m.max_count||10) - (m.current_count||0);
-  
+
   // 모임장(host)의 실제 구독 플랜 기준 PRO/BASIC 뱃지 (loadMoimList에서 조회한 _moimHostPlans 사용)
   const hostPlan = _moimHostPlans[m.host_id] || 'free';
   const isPro = hostPlan === 'pro';
@@ -1923,24 +1923,24 @@ function _moimHomeCard(m) {
 
   return `<div onclick="openMoimDetail('${m.id}')" class="moim-card ${tierClass}" style="flex-shrink:0;width:160px;background:#fff;border-radius:12px;padding:16px;cursor:pointer;">
     ${tierBadge}
-    <div class="mc-cat" style="color:${color}">${cat.toUpperCase()}</div>
+    <div class="mc-cat" style="color:${color}">${tMoimCat(cat).toUpperCase()}</div>
     <div class="mc-title">${m.title}</div>
     <div class="mc-date">${dateStr}</div>
-    <div class="mc-slots">${rem > 0 ? rem + '자리 남음' : '마감'}</div>
-    <div class="mc-fee" style="color:#d97706">각자 분담</div>
+    <div class="mc-slots">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('moim_closed')}</div>
+    <div class="mc-fee" style="color:#d97706">${t('fee_split')}</div>
   </div>`;
 }
 
 function _renderMoimCards(container, list) {
   if (!list.length) {
-    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:12px">🤝</div><div style="font-size:14px;font-weight:600">모임이 없어요<br>첫 번째 모임을 만들어보세요!</div></div>';
+    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:12px">🤝</div><div style="font-size:14px;font-weight:600">' + t('moim_empty_title') + '<br>' + t('moim_empty_hint') + '</div></div>';
     return;
   }
   container.innerHTML = list.map(m => {
     const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
     const dateStr = m.gathering_date
       ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' })
-      : '날짜 미정';
+      : t('moim_date_tbd');
     const rem = (m.max_count || 10) - (m.current_count || 0);
     const pct = Math.min(100, Math.round((m.current_count || 0) / (m.max_count || 10) * 100));
     return `<div class="moim-card" onclick="openMoimDetail('${m.id}')" style="margin-bottom:12px">
@@ -1949,22 +1949,22 @@ function _renderMoimCards(container, list) {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
             <div style="font-size:15px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}${_isAdmin ? _adminBtn('gatherings',m.id,'title',m.title,'모임 제목') : ''}</div>
-            ${m.entry_fee < 0 ? '<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">각자 분담</div>' : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}원</div>` : '<div style="font-size:12px;font-weight:700;color:#16a34a;flex-shrink:0">무료</div>'}
+            ${m.entry_fee < 0 ? `<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">${t('fee_split')}</div>` : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}원</div>` : `<div style="font-size:12px;font-weight:700;color:#16a34a;flex-shrink:0">${t('fee_free')}</div>`}
           </div>
           <div style="font-size:12px;color:#888;margin-top:3px">📅 ${dateStr}</div>
           ${m.location_name ? `<div style="font-size:12px;color:#888;margin-top:1px">📍 ${m.location_name}</div>` : ''}
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:#7C3AED;padding:2px 8px;border-radius:8px">${m.category || '기타'}</span>
+            <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:#7C3AED;padding:2px 8px;border-radius:8px">${tMoimCat(m.category) || t('cat_etc')}</span>
             ${m.sub_category ? `<span style="font-size:10px;font-weight:700;background:#f5f5f5;color:#555;padding:2px 8px;border-radius:8px">${m.sub_category}</span>` : ''}
-            ${m.skill_level && m.skill_level !== '무관' ? `<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#B45309;padding:2px 8px;border-radius:8px">🏅${m.skill_level}</span>` : ''}
-            ${m.gender_req !== 'any' ? `<span style="font-size:10px;font-weight:700;background:#F0F9FF;color:#0369A1;padding:2px 8px;border-radius:8px">${m.gender_req === 'male' ? '남성만' : '여성만'}</span>` : ''}
+            ${m.skill_level && m.skill_level !== '무관' ? `<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#B45309;padding:2px 8px;border-radius:8px">🏅${tSkillLevel(m.skill_level)}</span>` : ''}
+            ${m.gender_req !== 'any' ? `<span style="font-size:10px;font-weight:700;background:#F0F9FF;color:#0369A1;padding:2px 8px;border-radius:8px">${m.gender_req === 'male' ? t('gender_male_only') : t('gender_female_only')}</span>` : ''}
           </div>
         </div>
       </div>
       <div style="padding:0 14px 12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:11px;color:#888">${m.current_count || 0}/${m.max_count || 10}명</span>
-          <span style="font-size:11px;font-weight:800;color:${rem<=2?'#C8102E':rem<=4?'#EA580C':'#7C3AED'}">${rem > 0 ? rem+'자리 남음' : '🔒 마감'}</span>
+          <span style="font-size:11px;color:#888">${t('moim_capacity_fmt').replace('{a}', m.current_count || 0).replace('{b}', m.max_count || 10)}</span>
+          <span style="font-size:11px;font-weight:800;color:${rem<=2?'#C8102E':rem<=4?'#EA580C':'#7C3AED'}">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : ('🔒 ' + t('moim_closed'))}</span>
         </div>
         <div style="height:4px;background:#EDE9FE;border-radius:2px;overflow:hidden">
           <div style="height:100%;width:${pct}%;background:${pct>=90?'#C8102E':'#7C3AED'};border-radius:2px;transition:width 0.4s"></div>
@@ -1985,12 +1985,12 @@ async function openMoimDetail(moimId) {
   _currentMoimId = moimId;
   // 로딩 전 버튼 초기화 — 이전 모임 상태 잔류 방지
   const _apb = document.getElementById('moim-apply-btn');
-  if (_apb) { _apb.textContent = '불러오는 중...'; _apb.style.background = '#9CA3AF'; _apb.disabled = true; _apb.style.display = 'block'; }
+  if (_apb) { _apb.textContent = t('loading_generic'); _apb.style.background = '#9CA3AF'; _apb.disabled = true; _apb.style.display = 'block'; }
   document.getElementById('panel-moim-detail').classList.add('show');
-  document.getElementById('moim-detail-body').innerHTML = '<div style="text-align:center;padding:60px;color:#bbb">불러오는 중...</div>';
+  document.getElementById('moim-detail-body').innerHTML = '<div style="text-align:center;padding:60px;color:#bbb">' + t('loading_generic') + '</div>';
 
   const { data: m } = await db.from('gatherings').select('*').eq('id', moimId).single();
-  if (!m) { showToast('모임 정보를 불러올 수 없어요'); return; }
+  if (!m) { showToast(t('moim_info_load_failed')); return; }
   _moimDetailData = m;
 
   const _mdt = document.getElementById('moim-detail-title');
@@ -2004,7 +2004,7 @@ async function openMoimDetail(moimId) {
   }
   const isHost = currentUser && m.host_id === currentUser.id;
   const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
-  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long', hour:'2-digit', minute:'2-digit' }) : '날짜 미정';
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long', hour:'2-digit', minute:'2-digit' }) : t('moim_date_tbd');
   const rem = (m.max_count || 10) - (m.current_count || 0);
   const pct = Math.min(100, Math.round((m.current_count || 0) / (m.max_count || 10) * 100));
 
@@ -2021,7 +2021,7 @@ async function openMoimDetail(moimId) {
   document.getElementById('moim-detail-body').innerHTML = `
     <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:24px 20px 20px;text-align:center">
       <div style="font-size:56px;margin-bottom:8px">${emoji}</div>
-      <div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:6px">${m.category || ''} ${m.sub_category ? '· '+m.sub_category : ''}</div>
+      <div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:6px">${tMoimCat(m.category)} ${m.sub_category ? '· '+m.sub_category : ''}</div>
       <div style="font-size:20px;font-weight:900;color:#111;line-height:1.3">${m.title}</div>
     </div>
 
@@ -2029,8 +2029,8 @@ async function openMoimDetail(moimId) {
       <!-- 모집 현황 -->
       <div style="background:#F5F3FF;border-radius:14px;padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:13px;font-weight:800;color:#7C3AED">👥 모집 현황</span>
-          <span style="font-size:13px;font-weight:900;color:${rem<=2?'#C8102E':'#7C3AED'}">${m.current_count||0}/${m.max_count||10}명 ${rem>0?'('+rem+'자리 남음)':'(마감)'}</span>
+          <span style="font-size:13px;font-weight:800;color:#7C3AED">👥 ${t('moim_recruit_status')}</span>
+          <span style="font-size:13px;font-weight:900;color:${rem<=2?'#C8102E':'#7C3AED'}">${t('moim_capacity_fmt').replace('{a}', m.current_count||0).replace('{b}', m.max_count||10)} ${rem>0?('('+t('moim_slots_left').replace('{n}', rem)+')'):('('+t('moim_closed')+')')}</span>
         </div>
         <div style="height:8px;background:#DDD6FE;border-radius:4px;overflow:hidden">
           <div style="height:100%;width:${pct}%;background:${pct>=90?'#C8102E':'#7C3AED'};border-radius:4px"></div>
@@ -2038,26 +2038,26 @@ async function openMoimDetail(moimId) {
       </div>
 
       <!-- 기본 정보 -->
-      ${m.gathering_date ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📅</div><div><div style="font-size:12px;font-weight:700;color:#888">일시</div><div style="font-size:14px;font-weight:800;color:#111">${dateStr}</div></div></div>` : ''}
-      ${m.location_name ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📍</div><div><div style="font-size:12px;font-weight:700;color:#888">장소</div><div style="font-size:14px;font-weight:800;color:#111">${m.location_name}</div>${m.location_address?`<div style="font-size:12px;color:#888">${m.location_address}</div>`:''}</div></div>` : ''}
+      ${m.gathering_date ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📅</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('datetime_label')}</div><div style="font-size:14px;font-weight:800;color:#111">${dateStr}</div></div></div>` : ''}
+      ${m.location_name ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📍</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('place_label')}</div><div style="font-size:14px;font-weight:800;color:#111">${m.location_name}</div>${m.location_address?`<div style="font-size:12px;color:#888">${m.location_address}</div>`:''}</div></div>` : ''}
       <div style="display:flex;align-items:flex-start;gap:12px">
         <div style="font-size:20px;flex-shrink:0">💰</div>
-        <div><div style="font-size:12px;font-weight:700;color:#888">참가비</div>
-        <div style="font-size:14px;font-weight:800;color:${m.entry_fee<0?'#D97706':m.entry_fee>0?'#D97706':'#16a34a'}">${m.entry_fee < 0 ? '각자 분담 (현장 N분의1)' : m.entry_fee > 0 ? m.entry_fee.toLocaleString()+'원 (현장 납부)' : '무료'}</div></div>
+        <div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_fee_label')}</div>
+        <div style="font-size:14px;font-weight:800;color:${m.entry_fee<0?'#D97706':m.entry_fee>0?'#D97706':'#16a34a'}">${m.entry_fee < 0 ? t('moim_fee_split_detail') : m.entry_fee > 0 ? t('moim_fee_fixed_detail').replace('{n}', m.entry_fee.toLocaleString()) : t('fee_free')}</div></div>
       </div>
-      ${m.skill_level && m.skill_level !== '무관' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">🏅</div><div><div style="font-size:12px;font-weight:700;color:#888">실력 조건</div><div style="font-size:14px;font-weight:800;color:#B45309">${m.skill_level}${m.skill_desc?' · '+m.skill_desc:''}</div></div></div>` : ''}
-      ${m.gender_req !== 'any' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">👤</div><div><div style="font-size:12px;font-weight:700;color:#888">성별 조건</div><div style="font-size:14px;font-weight:800;color:#0369A1">${m.gender_req==='male'?'남성만':'여성만'}</div></div></div>` : ''}
-      ${m.description ? `<div style="background:#f9fafb;border-radius:14px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 모임 소개</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
+      ${m.skill_level && m.skill_level !== '무관' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">🏅</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_skill_section_title')}</div><div style="font-size:14px;font-weight:800;color:#B45309">${tSkillLevel(m.skill_level)}${m.skill_desc?' · '+m.skill_desc:''}</div></div></div>` : ''}
+      ${m.gender_req !== 'any' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">👤</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_gender_label')}</div><div style="font-size:14px;font-weight:800;color:#0369A1">${m.gender_req==='male'?t('gender_male_only'):t('gender_female_only')}</div></div></div>` : ''}
+      ${m.description ? `<div style="background:#f9fafb;border-radius:14px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 ${t('moim_desc_label')}</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
 
-      ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">💬 단체채팅방 입장</button>` : ''}
-      ${!isHost ? `<button onclick="openReportModal('moim','${m.id}')" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:6px 0;font-weight:600;margin:0 auto">🚨 이 모임 신고하기</button>` : ''}
+      ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">💬 ${t('moim_group_chat_enter')}</button>` : ''}
+      ${!isHost ? `<button onclick="openReportModal('moim','${m.id}')" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:6px 0;font-weight:600;margin:0 auto">🚨 ${t('moim_report_btn')}</button>` : ''}
 
       ${isHost ? `
         <div style="border-top:1px solid #f0f0f0;padding-top:16px">
-          <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🛠️ 주최자 관리</div>
+          <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🛠️ ${t('moim_host_manage_title')}</div>
           <div style="display:flex;gap:8px">
-            <button onclick="_editingMoim=_moimDetailData;openMoimCreate(_moimDetailData)" style="flex:1;padding:10px;border:1.5px solid #7C3AED;color:#7C3AED;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>
-            <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">👥 신청자 관리</button>
+            <button onclick="_editingMoim=_moimDetailData;openMoimCreate(_moimDetailData)" style="flex:1;padding:10px;border:1.5px solid #7C3AED;color:#7C3AED;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ ${t('edit_btn')}</button>
+            <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">👥 ${t('moim_applicants_manage_btn')}</button>
           </div>
         </div>
         <div id="moim-applicants-section" style="display:none"></div>
@@ -2070,67 +2070,67 @@ async function openMoimDetail(moimId) {
     applyBtn.style.display = 'none';
   } else if (myApp) {
     applyBtn.style.display = 'block';
-    if (myApp.status === 'pending')  { applyBtn.textContent = '⏳ 승인 대기 중'; applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
-    if (myApp.status === 'approved') { applyBtn.textContent = '✅ 참가 확정됨'; applyBtn.style.background = '#16a34a'; applyBtn.disabled = true; }
-    if (myApp.status === 'rejected') { applyBtn.textContent = '❌ 신청 거절됨'; applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
+    if (myApp.status === 'pending')  { applyBtn.textContent = '⏳ ' + t('moim_apply_pending'); applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
+    if (myApp.status === 'approved') { applyBtn.textContent = '✅ ' + t('moim_apply_confirmed'); applyBtn.style.background = '#16a34a'; applyBtn.disabled = true; }
+    if (myApp.status === 'rejected') { applyBtn.textContent = '❌ ' + t('moim_apply_rejected'); applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
   } else if (rem <= 0) {
-    applyBtn.textContent = '🔒 마감된 모임'; applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true;
+    applyBtn.textContent = '🔒 ' + t('moim_apply_closed'); applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true;
   } else {
-    applyBtn.textContent = '참가 신청하기'; applyBtn.style.background = '#7C3AED'; applyBtn.disabled = false;
+    applyBtn.textContent = t('moim_apply_btn'); applyBtn.style.background = '#7C3AED'; applyBtn.disabled = false;
   }
 }
 
 async function applyMoim() {
-  if (!currentUser) { showLoginPrompt('로그인 후 신청할 수 있어요', '모임 참가는 로그인이 필요합니다.'); return; }
-  if (currentUser.id === _moimDetailData?.host_id) { showToast('내가 만든 모임이에요'); return; }
+  if (!currentUser) { showLoginPrompt(t('moim_login_required_title'), t('moim_login_required_desc')); return; }
+  if (currentUser.id === _moimDetailData?.host_id) { showToast(t('moim_own_notice')); return; }
   const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', _currentMoimId).eq('applicant_id', currentUser.id).limit(1);
-  if (existing?.length) { showToast('이미 신청한 모임이에요'); return; }
-  showConfirm('이 모임에 참가 신청할까요?\n주최자 승인 후 확정됩니다.', async () => {
+  if (existing?.length) { showToast(t('moim_already_applied')); return; }
+  showConfirm(t('moim_apply_confirm_desc'), async () => {
     const { error } = await db.from('gathering_applications').insert({ gathering_id: _currentMoimId, applicant_id: currentUser.id, status: 'pending' });
-    if (error) { showToast('신청 중 오류가 발생했어요'); return; }
-    showToast('✅ 신청 완료! 주최자 승인을 기다려주세요');
+    if (error) { showToast(t('moim_apply_error')); return; }
+    showToast('✅ ' + t('moim_apply_success'));
     openMoimDetail(_currentMoimId); // 버튼 상태 갱신
-  }, { icon:'🤝', title:'참가 신청', okLabel:'신청하기' });
+  }, { icon:'🤝', title:t('moim_apply_confirm_title'), okLabel:t('moim_apply_confirm_ok') });
 }
 
 async function loadMoimApplicants(gatheringId) {
   const sec = document.getElementById('moim-applicants-section');
   if (!sec) return;
   sec.style.display = 'block';
-  sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">불러오는 중...</div>';
+  sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">' + t('loading_generic') + '</div>';
   const { data } = await db.from('gathering_applications')
     .select('id,gathering_id,applicant_id,status,fee_paid,fee_paid_at,applied_at')
     .eq('gathering_id', gatheringId).order('applied_at', { ascending: false });
-  if (!data?.length) { sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">신청자가 없어요</div>'; return; }
+  if (!data?.length) { sec.innerHTML = '<div style="padding:12px;text-align:center;color:#bbb;font-size:13px">' + t('moim_no_applicants') + '</div>'; return; }
   const { data: profileRows } = await db.from('workers').select('kakao_uid,name,rating,review_count,nationality').in('kakao_uid', data.map(a => a.applicant_id));
   const _pMap = Object.fromEntries((profileRows || []).map(p => [p.kakao_uid, p]));
   const m = _moimDetailData;
   const hasFee = m && (m.entry_fee > 0 || m.entry_fee < 0);
   const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', NP:'🇳🇵', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
-  sec.innerHTML = `<div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding:0 2px">신청자 ${data.length}명</div>` + data.map(app => {
+  sec.innerHTML = `<div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding:0 2px">${t('moim_applicant_count').replace('{n}', data.length)}</div>` + data.map(app => {
     const w = _pMap[app.applicant_id] || {};
     const statusColor = { pending:'#D97706', approved:'#16a34a', rejected:'#9CA3AF' }[app.status] || '#888';
-    const statusLabel = { pending:'대기중', approved:'승인됨', rejected:'거절됨' }[app.status] || app.status;
+    const statusLabel = { pending:t('inquiry_status_pending'), approved:t('moim_status_approved'), rejected:t('inquiry_status_rejected') }[app.status] || app.status;
     const feePaidHtml = (hasFee && app.status === 'approved') ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f5f5f5;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:11px;color:#888">${m.entry_fee > 0 ? '참가비 ' + m.entry_fee.toLocaleString() + '원' : '각자분담'} · 현장납부</span>
+        <span style="font-size:11px;color:#888">${(m.entry_fee > 0 ? t('moim_fee_amount_label').replace('{n}', m.entry_fee.toLocaleString()) : t('fee_split')) + t('onsite_payment_suffix')}</span>
         <button id="fee-btn-${app.id}" onclick="toggleMoimFeePaid('${app.id}','${gatheringId}',${!!app.fee_paid},this)"
           style="padding:5px 12px;border-radius:8px;border:none;font-size:11px;font-weight:800;cursor:pointer;${app.fee_paid ? 'background:#dcfce7;color:#15803d' : 'background:#f3f4f6;color:#6b7280'}">
-          ${app.fee_paid ? '✅ 납부확인' : '□ 미납부'}
+          ${app.fee_paid ? ('✅ ' + t('fee_paid_label')) : ('□ ' + t('fee_unpaid_label'))}
         </button>
       </div>` : '';
     return `<div style="padding:12px;border:1px solid #f0f0f0;border-radius:12px;margin-bottom:6px;background:#fff">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:24px">${_NAT_FLAG[w?.nationality] || '👤'}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:800;color:#111">${w?.name || '익명'}</div>
+          <div style="font-size:13px;font-weight:800;color:#111">${w?.name || t('anon_author')}</div>
           ${w?.rating ? `<div style="font-size:11px;color:#888">⭐ ${Number(w.rating).toFixed(1)} (${w.review_count||0}건)</div>` : ''}
         </div>
         <span style="font-size:11px;font-weight:800;color:${statusColor};background:${statusColor}22;padding:4px 10px;border-radius:10px">${statusLabel}</span>
         ${app.status === 'pending' ? `
           <div style="display:flex;gap:4px">
-            <button onclick="decideMoimApp('${app.id}','approved','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#16a34a;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">승인</button>
-            <button onclick="decideMoimApp('${app.id}','rejected','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#e5e7eb;color:#555;border:none;font-size:11px;font-weight:700;cursor:pointer">거절</button>
+            <button onclick="decideMoimApp('${app.id}','approved','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#16a34a;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">${t('approve_btn')}</button>
+            <button onclick="decideMoimApp('${app.id}','rejected','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#e5e7eb;color:#555;border:none;font-size:11px;font-weight:700;cursor:pointer">${t('reject_btn')}</button>
           </div>` : ''}
       </div>
       ${feePaidHtml}
@@ -2145,33 +2145,33 @@ async function toggleMoimFeePaid(appId, gatheringId, currentPaid, btn) {
     fee_paid: newPaid,
     fee_paid_at: newPaid ? new Date().toISOString() : null
   }).eq('id', appId);
-  if (error) { showToast('저장 실패'); btn.disabled = false; return; }
+  if (error) { showToast(t('save_failed')); btn.disabled = false; return; }
   btn.style.background = newPaid ? '#dcfce7' : '#f3f4f6';
   btn.style.color = newPaid ? '#15803d' : '#6b7280';
-  btn.textContent = newPaid ? '✅ 납부확인' : '□ 미납부';
+  btn.textContent = newPaid ? ('✅ ' + t('fee_paid_label')) : ('□ ' + t('fee_unpaid_label'));
   btn.onclick = () => toggleMoimFeePaid(appId, gatheringId, newPaid, btn);
   btn.disabled = false;
-  showToast(newPaid ? '✅ 참가비 납부 확인' : '납부 확인 취소');
+  showToast(newPaid ? ('✅ ' + t('fee_paid_confirm_toast')) : t('fee_paid_cancel_toast'));
 }
 
 async function decideMoimApp(appId, decision, gatheringId) {
   const { error } = await db.from('gathering_applications').update({ status: decision }).eq('id', appId);
-  if (error) { showToast('처리 중 오류가 발생했어요'); return; }
+  if (error) { showToast(t('process_error_generic')); return; }
   // 승인 시 current_count 증가
   if (decision === 'approved') {
     const { data: g } = await db.from('gatherings').select('current_count').eq('id', gatheringId).single();
     await db.from('gatherings').update({ current_count: (g?.current_count || 0) + 1 }).eq('id', gatheringId);
   }
-  showToast(decision === 'approved' ? '✅ 승인했습니다' : '거절했습니다');
+  showToast(decision === 'approved' ? ('✅ ' + t('approved_toast')) : t('rejected_toast'));
   loadMoimApplicants(gatheringId);
 }
 
 // ── 모임 개설/수정 폼 ─────────────────────────────────────
 async function searchMoimPlace() {
   const query = document.getElementById('f-moim-place-search').value.trim();
-  if (!query) { showToast('장소명을 입력해주세요'); return; }
+  if (!query) { showToast(t('place_name_required')); return; }
   const btn = event?.target;
-  if (btn) { btn.textContent = '검색 중...'; btn.disabled = true; }
+  if (btn) { btn.textContent = t('searching_label'); btn.disabled = true; }
   const results = await new Promise(resolve => {
     try {
       new kakao.maps.services.Places().keywordSearch(query, (r, s) => {
@@ -2179,9 +2179,9 @@ async function searchMoimPlace() {
       });
     } catch { resolve([]); }
   });
-  if (btn) { btn.textContent = '검색'; btn.disabled = false; }
+  if (btn) { btn.textContent = t('search'); btn.disabled = false; }
   const box = document.getElementById('moim-place-results');
-  if (!results.length) { box.style.display = 'none'; showToast('검색 결과가 없어요'); return; }
+  if (!results.length) { box.style.display = 'none'; showToast(t('no_search_results')); return; }
   box.style.display = 'block';
   box.innerHTML = results.slice(0, 5).map(r => `
     <div onclick="selectMoimPlace('${r.place_name.replace(/'/g,"\\'")}','${(r.road_address_name||r.address_name).replace(/'/g,"\\'")}',${r.y},${r.x})"
@@ -2318,8 +2318,8 @@ function selectMoimFee(type, amount) {
   const hintEl = document.getElementById('f-moim-fee-hint');
   const hints = {
     free:  '',
-    split: '금액을 미리 정하지 않아요. 모임 당일 실제 비용(식사비 등)을 참가자끼리 그 자리에서 나눠 냅니다.',
-    fixed: '호스트가 정한 금액을 참가 전 미리 안내합니다. 참가자는 이 금액을 알고 신청해요.',
+    split: t('fee_split_hint'),
+    fixed: t('fee_fixed_hint'),
   };
   if (hintEl) hintEl.textContent = hints[type] || '';
   if (type === 'free')  { if (amtEl) amtEl.style.display = 'none'; if (feeEl) feeEl.value = '0'; }
@@ -2370,12 +2370,12 @@ function selectQuickDuration(btn, minutes) {
 }
 
 async function submitMoimForm() {
-  if (!currentUser) { showLoginPrompt('로그인 후 모임을 만들 수 있어요', ''); return; }
+  if (!currentUser) { showLoginPrompt(t('moim_create_login_required'), ''); return; }
   const cat = document.getElementById('f-moim-cat').value;
   const title = document.getElementById('f-moim-title').value.trim();
   const dateVal = document.getElementById('f-moim-date').value;
-  if (!cat) { showToast('카테고리를 선택해주세요'); return; }
-  if (!title) { showToast('모임 제목을 입력해주세요'); return; }
+  if (!cat) { showToast(t('category_required')); return; }
+  if (!title) { showToast(t('moim_title_required')); return; }
 
   // 무료 플랜 월 1개 제한 체크
   const editId = document.getElementById('f-moim-id').value;
@@ -2386,8 +2386,8 @@ async function submitMoimForm() {
       const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
       const { count } = await db.from('gatherings').select('id', { count:'exact', head:true }).eq('host_id', currentUser.id).gte('created_at', monthStart.toISOString());
       if ((count || 0) >= limit) {
-        const planName = { free:'무료', basic:'베이직', pro:'프로' }[plan] || '현재';
-        showAlert(`${planName} 플랜은 월 ${limit}개까지 모임을 개설할 수 있어요.\n베이직(₩9,900/월)은 월 10개, 프로(₩29,900/월)는 무제한입니다.`, { icon:'⭐', title:'플랜 업그레이드' });
+        const planName = { free:t('fee_free'), basic:t('plan_basic'), pro:t('plan_pro') }[plan] || '';
+        showAlert(t('plan_limit_notice').replace('{plan}', planName).replace('{n}', limit), { icon:'⭐', title:t('plan_upgrade_title') });
         return;
       }
     }
@@ -2425,12 +2425,12 @@ async function submitMoimForm() {
   };
 
   const btn = document.getElementById('moim-submit-btn');
-  btn.disabled = true; btn.textContent = '처리 중...';
+  btn.disabled = true; btn.textContent = t('processing_label');
 
   // 사진 업로드
   const sess = currentSession;
   const _uploadedMoimUrls = [];
-  if (moimImgs.some(img => img.file)) btn.textContent = '사진 업로드 중...';
+  if (moimImgs.some(img => img.file)) btn.textContent = t('photo_uploading_label');
   for (const img of moimImgs) {
     if (!img.file) {
       _uploadedMoimUrls.push(img.src);
@@ -2445,15 +2445,15 @@ async function submitMoimForm() {
         if (r.ok) {
           _uploadedMoimUrls.push(APP_CONFIG.SUPABASE_URL + '/storage/v1/object/public/job-images/' + path);
         } else {
-          showToast('사진 업로드 실패 — 사진 없이 저장됩니다', 5000);
+          showToast(t('photo_upload_failed_notice'), 5000);
         }
       } catch(e) {
-        showToast('사진 업로드 중 오류 — 사진 없이 저장됩니다', 5000);
+        showToast(t('photo_upload_error_notice'), 5000);
       }
     }
   }
   payload.images = _uploadedMoimUrls;
-  btn.textContent = '처리 중...';
+  btn.textContent = t('processing_label');
 
   let error, data;
   if (editId) {
@@ -2462,18 +2462,18 @@ async function submitMoimForm() {
     ({ error, data } = await db.from('gatherings').insert(payload).select().single());
   }
 
-  btn.disabled = false; btn.textContent = editId ? '수정 완료' : '모임 개설하기';
-  if (error) { showToast('오류가 발생했어요: ' + error.message); return; }
+  btn.disabled = false; btn.textContent = editId ? t('edit_complete_label') : t('moim_submit_btn');
+  if (error) { showToast(t('error_occurred_prefix') + error.message); return; }
 
-  showToast(editId ? '✅ 모임을 수정했어요' : '✅ 모임을 개설했어요!');
+  showToast('✅ ' + (editId ? t('moim_edited_toast') : t('moim_created_toast')));
   closeMoimCreate();
 
   // 비공개 모임은 즉시 초대 링크 공유 안내
   if (!isPublic && data?.invite_code) {
     const link = `${location.origin}${location.pathname}?moim=${data.invite_code}`;
-    showConfirm('비공개 모임이 개설됐어요.\n초대 링크를 복사하시겠어요?', () => {
-      navigator.clipboard.writeText(link).then(() => showToast('📋 초대 링크 복사됨')).catch(() => showToast(link));
-    }, { icon:'🔐', title:'초대 링크', okLabel:'복사하기' });
+    showConfirm(t('moim_private_created_confirm'), () => {
+      navigator.clipboard.writeText(link).then(() => showToast('📋 ' + t('link_copied_toast'))).catch(() => showToast(link));
+    }, { icon:'🔐', title:t('invite_link_title'), okLabel:t('copy_btn') });
   }
 
   loadMoimList();
@@ -2490,12 +2490,12 @@ async function shareMoim() {
   // 공유 메시지 구성
   const dateStr = m.gathering_date
     ? new Date(m.gathering_date).toLocaleString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' })
-    : '일정 미정';
-  const feeStr = m.entry_fee < 0 ? '각자 분담' : m.entry_fee > 0 ? `${m.entry_fee.toLocaleString()}원` : '무료';
-  const locationStr = m.location_name || '장소 미정';
+    : t('moim_date_tbd');
+  const feeStr = m.entry_fee < 0 ? t('fee_split') : m.entry_fee > 0 ? `${m.entry_fee.toLocaleString()}원` : t('fee_free');
+  const locationStr = m.location_name || t('moim_location_tbd');
   const shareTitle = `[바로모임] ${m.title}`;
   // 줄바꿈 포맷 메시지
-  const shareText = `[바로모임] ${m.title}\n📅 ${dateStr}\n📍 ${locationStr}\n💰 참가비 ${feeStr}\n같이 참가해요!`;
+  const shareText = `[바로모임] ${m.title}\n📅 ${dateStr}\n📍 ${locationStr}\n💰 ${t('moim_fee_label')} ${feeStr}\n${t('moim_share_cta')}`;
   // Kakao description용 단행 요약
   const descLine = `📅 ${dateStr}  📍 ${locationStr}  💰 ${feeStr}`;
 
@@ -2516,7 +2516,7 @@ async function shareMoim() {
           imageUrl: `${location.origin}/icons/og-share.png`,
           link: { mobileWebUrl: link, webUrl: link }
         },
-        buttons: [{ title: '모임 참여하기', link: { mobileWebUrl: link, webUrl: link } }]
+        buttons: [{ title: t('moim_join_btn'), link: { mobileWebUrl: link, webUrl: link } }]
       });
       return;
     } catch(e) {}
@@ -2529,7 +2529,7 @@ async function shareMoim() {
   }
 
   // 최종 fallback: 링크 복사
-  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
+  navigator.clipboard.writeText(link).then(() => showToast('📋 ' + t('link_copied_toast'))).catch(() => showToast(link));
 }
 
 async function handleMoimDeeplink(codeOrId) {
@@ -2539,7 +2539,7 @@ async function handleMoimDeeplink(codeOrId) {
     const { data: m2 } = await db.from('gatherings').select('*').eq('invite_code', codeOrId).maybeSingle();
     m = m2;
   }
-  if (!m) { showToast('유효하지 않은 모임 링크입니다'); return; }
+  if (!m) { showToast(t('moim_invalid_link')); return; }
   openMoimPanel();
   setTimeout(() => openMoimDetail(m.id), 300);
 }
@@ -2620,7 +2620,7 @@ async function toggleMoimChatParticipants() {
   if (isOpen) { box.style.display = 'none'; arrow.textContent = '▾'; return; }
   box.style.display = 'block';
   arrow.textContent = '▴';
-  box.innerHTML = '<div style="text-align:center;padding:10px;color:#bbb;font-size:12px">불러오는 중...</div>';
+  box.innerHTML = '<div style="text-align:center;padding:10px;color:#bbb;font-size:12px">' + t('loading_generic') + '</div>';
 
   const gatheringId = document.getElementById('moim-chat-input').dataset.gatheringId;
   const isBaromeet = document.getElementById('moim-chat-input').dataset.baromeet === '1';
@@ -2846,14 +2846,14 @@ async function _renderMoimMarkers() {
     if (!m.lat || !m.lng) return;
     const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
     const rem = (m.max_count || 10) - (m.current_count || 0);
-    const titleShort = m.title ? (m.title.length > 11 ? m.title.slice(0, 10) + '…' : m.title) : (m.category || '모임');
+    const titleShort = m.title ? (m.title.length > 11 ? m.title.slice(0, 10) + '…' : m.title) : (m.category ? tMoimCat(m.category) : '바로모임');
     const dateStr = m.gathering_date
       ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' })
       : '';
     const content = `<div onclick="openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:max-content">
       <div style="background:#7C3AED;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(124,58,237,0.4);white-space:nowrap;max-width:150px">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${emoji} ${titleShort}</div>
-        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${dateStr ? dateStr + ' · ' : ''}${rem > 0 ? rem + '자리' : '마감'}</div>
+        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${dateStr ? dateStr + ' · ' : ''}${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('moim_closed')}</div>
       </div>
       <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #7C3AED"></div>
     </div>`;
@@ -2868,12 +2868,12 @@ async function _renderMoimMarkers() {
 function _moimListRow(m) {
   const emoji = MOIM_CAT_EMOJI[m.category] || '🤝';
   const rem = (m.max_count || 10) - (m.current_count || 0);
-  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' }) : '일정 미정';
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' }) : t('moim_date_tbd');
   return `<div onclick="closeBottomSheet();openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)" style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid #f5f5f5;cursor:pointer">
     <div style="width:38px;height:38px;border-radius:10px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${emoji}</div>
     <div style="min-width:0;flex:1">
       <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || '바로모임'}</div>
-      <div style="font-size:12px;color:#7C3AED;font-weight:700;margin-top:2px">${dateStr} · ${rem > 0 ? rem + '자리 남음' : '마감'}</div>
+      <div style="font-size:12px;color:#7C3AED;font-weight:700;margin-top:2px">${dateStr} · ${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('moim_closed')}</div>
     </div>
   </div>`;
 }
@@ -2897,10 +2897,10 @@ function openMapListSheet() {
   if (mode === 'moim') rows = _moimMarkerData.map(_moimListRow).join('');
   else if (mode === 'baromeet') rows = _baromeetMarkerData.map(_baromeetListRow).join('');
   else rows = _moimMarkerData.map(_moimListRow).join('') + _baromeetMarkerData.map(_baromeetListRow).join('');
-  const title = mode === 'moim' ? '🤝 주변 바로모임' : mode === 'baromeet' ? '💕 주변 바로미팅' : '🗺️ 주변 모임·미팅';
+  const title = mode === 'moim' ? ('🤝 ' + t('nearby_moim_title')) : mode === 'baromeet' ? ('💕 ' + t('nearby_baromeet_title')) : ('🗺️ ' + t('nearby_all_title'));
   openBottomSheet(`
     <div style="padding:0 20px 10px;font-size:16px;font-weight:900;color:#111">${title}</div>
-    ${rows || '<div style="padding:32px 20px;text-align:center;color:#bbb;font-size:13px">이 지역엔 아직 없어요</div>'}
+    ${rows || '<div style="padding:32px 20px;text-align:center;color:#bbb;font-size:13px">' + t('area_empty_notice') + '</div>'}
   `);
 }
 
@@ -5588,13 +5588,13 @@ async function loadMyMoimPreview() {
   if (!el || !currentUser) return;
   const { data: apps } = await db.from('gathering_applications').select('gathering_id').eq('applicant_id', currentUser.id);
   const ids = [...new Set((apps || []).map(a => a.gathering_id))];
-  if (!ids.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 모임이 없어요</div>'; return; }
+  if (!ids.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">' + t('moim_no_participation') + '</div>'; return; }
   const { data: gatherings } = await db.from('gatherings')
     .select('id, title, category, gathering_date').in('id', ids).neq('category', 'baromeeting')
     .order('gathering_date', { ascending: true });
-  if (!gatherings?.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">아직 참가한 모임이 없어요</div>'; return; }
+  if (!gatherings?.length) { el.innerHTML = '<div style="font-size:12px;color:#bbb;padding:6px 0">' + t('moim_no_participation') + '</div>'; return; }
   el.innerHTML = gatherings.slice(0, 5).map(g => {
-    const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+    const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
     return `<div onclick="event.stopPropagation();openMoimDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#faf5ff;border-radius:10px;padding:10px 12px;cursor:pointer">
       <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'모임'}</div>
       <div style="font-size:10.5px;color:#7C3AED;margin-top:3px">${dateStr}</div>

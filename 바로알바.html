@@ -56,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=558"></script>
+  <script src="./shared-lang.js?v=559"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=558">
+  <link rel="stylesheet" href="./assets/css/style.css?v=559">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -156,12 +156,12 @@
   </div>
   <!-- 바로모임 지도 모드 전용 - 카테고리 필터 (모임 개설폼과 동일한 4개 카테고리) -->
   <div id="moim-cat-filter-row" style="display:none;align-items:center;gap:6px;padding:7px 0 5px;flex-wrap:wrap">
-    <div class="chip active" data-mcat="" onclick="setMoimCatFilter(this,'')" style="flex-shrink:0">전체</div>
-    <div class="chip" data-mcat="스포츠" onclick="setMoimCatFilter(this,'스포츠')" style="flex-shrink:0">🏃 스포츠</div>
-    <div class="chip" data-mcat="취미" onclick="setMoimCatFilter(this,'취미')" style="flex-shrink:0">🎨 취미</div>
-    <div class="chip" data-mcat="친목" onclick="setMoimCatFilter(this,'친목')" style="flex-shrink:0">🤝 친목</div>
-    <div class="chip" data-mcat="챌린지" onclick="setMoimCatFilter(this,'챌린지')" style="flex-shrink:0">🔥 챌린지</div>
-    <div class="chip" data-mcat="기타" onclick="setMoimCatFilter(this,'기타')" style="flex-shrink:0">💡 기타</div>
+    <div class="chip active" data-mcat="" onclick="setMoimCatFilter(this,'')" style="flex-shrink:0" data-i18n="cat_all">전체</div>
+    <div class="chip" data-mcat="스포츠" onclick="setMoimCatFilter(this,'스포츠')" style="flex-shrink:0">🏃 <span data-i18n="moim_cat_sports">스포츠</span></div>
+    <div class="chip" data-mcat="취미" onclick="setMoimCatFilter(this,'취미')" style="flex-shrink:0">🎨 <span data-i18n="moim_cat_hobby">취미</span></div>
+    <div class="chip" data-mcat="친목" onclick="setMoimCatFilter(this,'친목')" style="flex-shrink:0">🤝 <span data-i18n="moim_cat_social">친목</span></div>
+    <div class="chip" data-mcat="챌린지" onclick="setMoimCatFilter(this,'챌린지')" style="flex-shrink:0">🔥 <span data-i18n="moim_cat_challenge">챌린지</span></div>
+    <div class="chip" data-mcat="기타" onclick="setMoimCatFilter(this,'기타')" style="flex-shrink:0">💡 <span data-i18n="cat_etc">기타</span></div>
   </div>
   <!-- 지역 빠른이동 - 출장 등으로 다른 지역 지도를 봐야 할 때 (모든 지도 모드 공통). 2단계: 대분류 → 세부지역.
        눈에 잘 띄도록 박스로 감쌈 -->
@@ -2864,24 +2864,24 @@
       </button>
       <span style="font-size:18px;font-weight:900;color:#111">🤝 바로모임</span>
     </div>
-    <button onclick="openMoimCreate()" style="background:#7C3AED;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:800;cursor:pointer">+ 모임 만들기</button>
+    <button onclick="openMoimCreate()" style="background:#7C3AED;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:800;cursor:pointer" data-i18n="moim_create_btn">+ 만들기</button>
   </div>
 
   <!-- 카테고리 필터 -->
   <div style="padding:10px 16px;border-bottom:1px solid #f5f5f5;flex-shrink:0">
     <div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px">
-      <button class="moim-cat-chip active" data-cat="" onclick="filterMoimList(this,'')">전체</button>
-      <button class="moim-cat-chip" data-cat="스포츠" onclick="filterMoimList(this,'스포츠')">🏃 스포츠</button>
-      <button class="moim-cat-chip" data-cat="취미" onclick="filterMoimList(this,'취미')">🎨 취미</button>
-      <button class="moim-cat-chip" data-cat="친목" onclick="filterMoimList(this,'친목')">🤝 친목</button>
-      <button class="moim-cat-chip" data-cat="기타" onclick="filterMoimList(this,'기타')">💡 기타</button>
+      <button class="moim-cat-chip active" data-cat="" onclick="filterMoimList(this,'')" data-i18n="cat_all">전체</button>
+      <button class="moim-cat-chip" data-cat="스포츠" onclick="filterMoimList(this,'스포츠')">🏃 <span data-i18n="moim_cat_sports">스포츠</span></button>
+      <button class="moim-cat-chip" data-cat="취미" onclick="filterMoimList(this,'취미')">🎨 <span data-i18n="moim_cat_hobby">취미</span></button>
+      <button class="moim-cat-chip" data-cat="친목" onclick="filterMoimList(this,'친목')">🤝 <span data-i18n="moim_cat_social">친목</span></button>
+      <button class="moim-cat-chip" data-cat="기타" onclick="filterMoimList(this,'기타')">💡 <span data-i18n="cat_etc">기타</span></button>
     </div>
   </div>
 
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 80px" id="moim-list-container">
     <div style="text-align:center;padding:40px 0;color:#bbb">
       <div style="font-size:32px;margin-bottom:8px">🤝</div>
-      <div style="font-size:14px;font-weight:600">모임을 불러오는 중...</div>
+      <div style="font-size:14px;font-weight:600" data-i18n="moim_list_loading">모임을 불러오는 중...</div>
     </div>
   </div>
 </div>
@@ -2892,7 +2892,7 @@
     <button onclick="closeMoimDetail()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <span style="font-size:17px;font-weight:900;color:#111" id="moim-detail-title">모임 상세</span>
+    <span style="font-size:17px;font-weight:900;color:#111" id="moim-detail-title" data-i18n="moim_detail_default_title">모임 상세</span>
     <button id="moim-share-btn" onclick="shareMoim()" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:4px" title="공유">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
     </button>
@@ -2900,7 +2900,7 @@
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px" id="moim-detail-body"></div>
   <!-- 하단 CTA -->
   <div style="position:sticky;bottom:0;background:#fff;border-top:1px solid #f0f0f0;padding:12px 16px;padding-bottom:calc(12px + var(--sab-safe));flex-shrink:0">
-    <button id="moim-apply-btn" onclick="applyMoim()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer">참가 신청하기</button>
+    <button id="moim-apply-btn" onclick="applyMoim()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer" data-i18n="moim_apply_btn">참가 신청하기</button>
   </div>
 </div>
 
@@ -2910,24 +2910,24 @@
     <button onclick="closeMoimCreate()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <span id="moim-create-title" style="font-size:17px;font-weight:900;color:#111">모임 만들기</span>
+    <span id="moim-create-title" style="font-size:17px;font-weight:900;color:#111" data-i18n="moim_create_title">모임 만들기</span>
   </div>
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;padding-bottom:80px">
     <input type="hidden" id="f-moim-id" value="">
 
     <!-- 카테고리 -->
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">카테고리 *</div>
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="lesson_category_label">카테고리 *</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="moim-cat-select">
-        <button type="button" onclick="selectMoimCat(this,'스포츠')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🏃 스포츠</button>
-        <button type="button" onclick="selectMoimCat(this,'취미')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🎨 취미</button>
-        <button type="button" onclick="selectMoimCat(this,'친목')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🤝 친목</button>
-        <button type="button" onclick="selectMoimCat(this,'챌린지')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔥 챌린지</button>
-        <button type="button" onclick="selectMoimCat(this,'기타')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💡 기타</button>
+        <button type="button" onclick="selectMoimCat(this,'스포츠')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🏃 <span data-i18n="moim_cat_sports">스포츠</span></button>
+        <button type="button" onclick="selectMoimCat(this,'취미')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🎨 <span data-i18n="moim_cat_hobby">취미</span></button>
+        <button type="button" onclick="selectMoimCat(this,'친목')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🤝 <span data-i18n="moim_cat_social">친목</span></button>
+        <button type="button" onclick="selectMoimCat(this,'챌린지')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔥 <span data-i18n="moim_cat_challenge">챌린지</span></button>
+        <button type="button" onclick="selectMoimCat(this,'기타')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💡 <span data-i18n="cat_etc">기타</span></button>
       </div>
       <input type="hidden" id="f-moim-cat" value="">
       <div id="moim-subcat-section" style="display:none;margin-top:10px">
-        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px">세부 종목 <span style="font-size:11px;font-weight:400;color:#9CA3AF">(선택)</span></div>
+        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px"><span data-i18n="moim_subcat_label">세부 종목</span> <span style="font-size:11px;font-weight:400;color:#9CA3AF" data-i18n="optional">(선택)</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="moim-subcat-btns"></div>
       </div>
       <input type="hidden" id="f-moim-subcat" value="">
@@ -2935,60 +2935,60 @@
 
     <!-- 제목 -->
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">모임 제목 *</div>
-      <input id="f-moim-title" class="form-input" placeholder="예) 주말 테니스 같이 치실 분!">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_title_label">모임 제목 *</div>
+      <input id="f-moim-title" class="form-input" placeholder="예) 주말 테니스 같이 치실 분!" data-i18n-ph="moim_title_ph">
     </div>
 
     <!-- 설명 -->
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">모임 소개</div>
-      <textarea id="f-moim-desc" class="form-input" rows="4" placeholder="모임 목적, 분위기, 주의사항 등 자유롭게 적어주세요" style="resize:none;min-height:90px;font-family:inherit"></textarea>
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_desc_label">모임 소개</div>
+      <textarea id="f-moim-desc" class="form-input" rows="4" placeholder="모임 목적, 분위기, 주의사항 등 자유롭게 적어주세요" data-i18n-ph="moim_desc_ph" style="resize:none;min-height:90px;font-family:inherit"></textarea>
     </div>
 
     <!-- 모임 사진 -->
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">모임 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></div>
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px"><span data-i18n="moim_photo_label">모임 사진</span> <span style="font-size:11px;color:#aaa;font-weight:500" data-i18n="moim_photo_hint">(최대 3장, 선택)</span></div>
       <div id="moim-img-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px"></div>
       <label id="moim-img-add-btn" style="display:flex;align-items:center;justify-content:center;height:64px;background:#fff;border:2px dashed #DDD6FE;border-radius:12px;cursor:pointer;width:100%;box-sizing:border-box">
         <span style="font-size:26px;color:#c4b5fd;line-height:1">+</span>
         <input type="file" id="moim-img-input" accept="image/*" multiple style="display:none" onchange="addMoimImages(this)">
       </label>
-      <div style="font-size:11px;color:#aaa;margin-top:6px">1번 사진이 대표 이미지</div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px" data-i18n="moim_photo_main_hint">1번 사진이 대표 이미지</div>
     </div>
 
     <!-- 날짜/시간 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">날짜 *</div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_date_label">날짜 *</div>
         <input id="f-moim-date" class="form-input" type="date">
       </div>
       <div>
-        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">시간</div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_time_label">시간</div>
         <input id="f-moim-time" class="form-input" type="time" value="14:00">
       </div>
     </div>
 
     <!-- 장소 -->
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">장소 검색</div>
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_place_search_label">장소 검색</div>
       <div style="display:flex;gap:8px">
-        <input id="f-moim-place-search" class="form-input" placeholder="장소명으로 검색 (예: 잠실 테니스장)" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();searchMoimPlace()}">
-        <button type="button" onclick="searchMoimPlace()" style="padding:10px 14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">검색</button>
+        <input id="f-moim-place-search" class="form-input" placeholder="장소명으로 검색 (예: 잠실 테니스장)" data-i18n-ph="moim_place_search_ph" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();searchMoimPlace()}">
+        <button type="button" onclick="searchMoimPlace()" style="padding:10px 14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0" data-i18n="search">검색</button>
       </div>
       <div id="moim-place-results" style="display:none;border:1.5px solid #EDE9FE;border-radius:10px;overflow:hidden;margin-top:6px;background:#fff;box-shadow:0 4px 12px rgba(124,58,237,0.1)"></div>
       <div id="moim-place-selected" style="display:none;margin-top:8px;background:#F5F3FF;border-radius:10px;padding:10px 12px;border:1.5px solid #DDD6FE">
-        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:2px">선택된 장소</div>
+        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:2px" data-i18n="moim_place_selected_label">선택된 장소</div>
         <div style="font-size:14px;font-weight:800;color:#111" id="moim-place-sel-name"></div>
         <div style="font-size:12px;color:#888;margin-top:2px" id="moim-place-sel-addr"></div>
       </div>
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">장소명 <span style="font-size:11px;font-weight:400;color:#9CA3AF">(직접 입력 또는 검색 자동완성)</span></div>
-      <input id="f-moim-location" class="form-input" placeholder="예) 잠실 실내 테니스장, 강남 와인바 등">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px"><span data-i18n="moim_location_label">장소명</span> <span style="font-size:11px;font-weight:400;color:#9CA3AF" data-i18n="moim_location_hint">(직접 입력 또는 검색 자동완성)</span></div>
+      <input id="f-moim-location" class="form-input" placeholder="예) 잠실 실내 테니스장, 강남 와인바 등" data-i18n-ph="moim_location_ph">
     </div>
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">주소</div>
-      <input id="f-moim-address" class="form-input" placeholder="도로명 주소 (검색 시 자동 입력)">
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_address_label">주소</div>
+      <input id="f-moim-address" class="form-input" placeholder="도로명 주소 (검색 시 자동 입력)" data-i18n-ph="moim_address_ph">
     </div>
     <input type="hidden" id="f-moim-lat">
     <input type="hidden" id="f-moim-lng">
@@ -2996,17 +2996,17 @@
     <!-- 인원/참가비 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">최대 인원 *</div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_maxcount_label">최대 인원 *</div>
         <input id="f-moim-maxcount" class="form-input" type="number" min="2" max="200" value="10">
       </div>
       <div>
-        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">참가비</div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_fee_label">참가비</div>
         <div style="display:flex;gap:5px;margin-bottom:6px">
-          <button type="button" id="fee-btn-free"  onclick="selectMoimFee('free')"  style="flex:1;padding:7px 4px;border-radius:10px;border:2px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:11px;font-weight:800;cursor:pointer">무료</button>
-          <button type="button" id="fee-btn-split" onclick="selectMoimFee('split')" style="flex:1;padding:7px 4px;border-radius:10px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:11px;font-weight:700;cursor:pointer">각자분담</button>
-          <button type="button" id="fee-btn-fixed" onclick="selectMoimFee('fixed')" style="flex:1;padding:7px 4px;border-radius:10px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:11px;font-weight:700;cursor:pointer">금액입력</button>
+          <button type="button" id="fee-btn-free"  onclick="selectMoimFee('free')"  style="flex:1;padding:7px 4px;border-radius:10px;border:2px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:11px;font-weight:800;cursor:pointer" data-i18n="fee_free">무료</button>
+          <button type="button" id="fee-btn-split" onclick="selectMoimFee('split')" style="flex:1;padding:7px 4px;border-radius:10px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:11px;font-weight:700;cursor:pointer" data-i18n="fee_split">각자분담</button>
+          <button type="button" id="fee-btn-fixed" onclick="selectMoimFee('fixed')" style="flex:1;padding:7px 4px;border-radius:10px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:11px;font-weight:700;cursor:pointer" data-i18n="fee_fixed">금액입력</button>
         </div>
-        <input id="f-moim-fee-amt" class="form-input" type="number" min="1" placeholder="1인당 금액 (원)" style="display:none">
+        <input id="f-moim-fee-amt" class="form-input" type="number" min="1" placeholder="1인당 금액 (원)" data-i18n-ph="moim_fee_amt_ph" style="display:none">
         <div id="f-moim-fee-hint" style="font-size:11px;color:#9ca3af;margin-top:4px;line-height:1.4"></div>
         <input type="hidden" id="f-moim-fee" value="0">
       </div>
@@ -3014,37 +3014,37 @@
 
     <!-- 스포츠 실력 조건 -->
     <div id="moim-skill-section" style="display:none;margin-bottom:16px;padding:14px;background:#F5F3FF;border-radius:14px;border:1.5px solid #DDD6FE">
-      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🏅 실력 조건</div>
+      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🏅 <span data-i18n="moim_skill_section_title">실력 조건</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="moim-skill-btns">
-        <button type="button" onclick="selectMoimSkill(this,'무관')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #DDD6FE;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#7C3AED">무관</button>
-        <button type="button" onclick="selectMoimSkill(this,'입문')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">입문</button>
-        <button type="button" onclick="selectMoimSkill(this,'중급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">중급</button>
-        <button type="button" onclick="selectMoimSkill(this,'상급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">상급</button>
+        <button type="button" onclick="selectMoimSkill(this,'무관')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #DDD6FE;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#7C3AED" data-i18n="skill_any">무관</button>
+        <button type="button" onclick="selectMoimSkill(this,'입문')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_beginner">입문</button>
+        <button type="button" onclick="selectMoimSkill(this,'중급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_intermediate">중급</button>
+        <button type="button" onclick="selectMoimSkill(this,'상급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_advanced">상급</button>
       </div>
       <input type="hidden" id="f-moim-skill" value="무관">
       <div style="margin-top:10px">
-        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px">핸디/수준 설명 <span style="font-weight:400;color:#9CA3AF">(선택)</span></div>
-        <input id="f-moim-skill-desc" class="form-input" placeholder="예) 100타 이하, NTRP 3.0 이상 등">
+        <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px"><span data-i18n="moim_skill_desc_label">핸디/수준 설명</span> <span style="font-weight:400;color:#9CA3AF" data-i18n="optional">(선택)</span></div>
+        <input id="f-moim-skill-desc" class="form-input" placeholder="예) 100타 이하, NTRP 3.0 이상 등" data-i18n-ph="moim_skill_desc_ph">
       </div>
     </div>
 
     <!-- 성별 조건 -->
     <div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">성별 조건</div>
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="moim_gender_label">성별 조건</div>
       <div style="display:flex;gap:6px">
-        <button type="button" onclick="selectMoimGender(this,'any')"    style="padding:8px 18px;border-radius:20px;border:2px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:800;cursor:pointer">무관</button>
-        <button type="button" onclick="selectMoimGender(this,'male')"   style="padding:8px 18px;border-radius:20px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">남성만</button>
-        <button type="button" onclick="selectMoimGender(this,'female')" style="padding:8px 18px;border-radius:20px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">여성만</button>
+        <button type="button" onclick="selectMoimGender(this,'any')"    style="padding:8px 18px;border-radius:20px;border:2px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:800;cursor:pointer" data-i18n="skill_any">무관</button>
+        <button type="button" onclick="selectMoimGender(this,'male')"   style="padding:8px 18px;border-radius:20px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer" data-i18n="gender_male_only">남성만</button>
+        <button type="button" onclick="selectMoimGender(this,'female')" style="padding:8px 18px;border-radius:20px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer" data-i18n="gender_female_only">여성만</button>
       </div>
       <input type="hidden" id="f-moim-gender" value="any">
     </div>
 
     <!-- 공개 설정 -->
     <div style="margin-bottom:16px;padding:14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:14px">
-      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🔒 공개 설정</div>
+      <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🔒 <span data-i18n="moim_visibility_title">공개 설정</span></div>
       <div style="display:flex;gap:8px">
-        <button type="button" id="pub-btn-public"  onclick="selectMoimPublic(true)"  style="flex:1;padding:10px;border-radius:12px;border:2px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:12px;font-weight:800;cursor:pointer">🌍 공개 모임<br><span style="font-size:10px;font-weight:400">누구나 검색 가능</span></button>
-        <button type="button" id="pub-btn-private" onclick="selectMoimPublic(false)" style="flex:1;padding:10px;border-radius:12px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">🔐 비공개 모임<br><span style="font-size:10px;font-weight:400">초대 링크로만</span></button>
+        <button type="button" id="pub-btn-public"  onclick="selectMoimPublic(true)"  style="flex:1;padding:10px;border-radius:12px;border:2px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:12px;font-weight:800;cursor:pointer">🌍 <span data-i18n="moim_public_label">공개 모임</span><br><span style="font-size:10px;font-weight:400" data-i18n="moim_public_desc">누구나 검색 가능</span></button>
+        <button type="button" id="pub-btn-private" onclick="selectMoimPublic(false)" style="flex:1;padding:10px;border-radius:12px;border:2px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">🔐 <span data-i18n="moim_private_label">비공개 모임</span><br><span style="font-size:10px;font-weight:400" data-i18n="moim_private_desc">초대 링크로만</span></button>
       </div>
       <input type="hidden" id="f-moim-public" value="true">
     </div>
@@ -3056,8 +3056,8 @@
           <div style="display:flex;align-items:center;gap:10px">
             <div style="width:36px;height:36px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚡</div>
             <div>
-              <div style="font-size:14px;font-weight:900;color:#92400e">번개모임</div>
-              <div style="font-size:11px;color:#b45309;margin-top:1px">설정 시간 후 자동 마감 · 즉흥 단발 모임</div>
+              <div style="font-size:14px;font-weight:900;color:#92400e" data-i18n="quick_moim_label">번개모임</div>
+              <div style="font-size:11px;color:#b45309;margin-top:1px" data-i18n="quick_moim_desc">설정 시간 후 자동 마감 · 즉흥 단발 모임</div>
             </div>
           </div>
           <div id="quick-toggle" style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;position:relative;transition:background 0.2s;flex-shrink:0">
@@ -3065,12 +3065,12 @@
           </div>
         </div>
         <div id="quick-duration-section" style="display:none;margin-top:12px;border-top:1px solid #fde68a;padding-top:10px">
-          <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px">자동 마감 시간</div>
+          <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px" data-i18n="quick_duration_label">자동 마감 시간</div>
           <div style="display:flex;gap:6px">
-            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,30)"  style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #fde68a;background:#fef3c7;color:#92400e;font-size:12px;font-weight:800;cursor:pointer">30분</button>
-            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,60)"  style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">1시간</button>
-            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,120)" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">2시간</button>
-            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,180)" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer">3시간</button>
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,30)"  style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #fde68a;background:#fef3c7;color:#92400e;font-size:12px;font-weight:800;cursor:pointer" data-i18n="duration_30m">30분</button>
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,60)"  style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer" data-i18n="duration_1h">1시간</button>
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,120)" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer" data-i18n="duration_2h">2시간</button>
+            <button type="button" onclick="event.stopPropagation();selectQuickDuration(this,180)" style="flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#555;font-size:12px;font-weight:700;cursor:pointer" data-i18n="duration_3h">3시간</button>
           </div>
         </div>
       </div>
@@ -3078,7 +3078,7 @@
       <input type="hidden" id="f-moim-quick-minutes" value="30">
     </div>
 
-    <button onclick="submitMoimForm()" style="width:100%;padding:15px;background:#7C3AED;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer" id="moim-submit-btn">모임 개설하기</button>
+    <button onclick="submitMoimForm()" style="width:100%;padding:15px;background:#7C3AED;color:#fff;border:none;border-radius:16px;font-size:16px;font-weight:900;cursor:pointer" id="moim-submit-btn" data-i18n="moim_submit_btn">모임 개설하기</button>
   </div>
 </div>
 
@@ -4356,7 +4356,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=558"></script>
+<script src="./assets/js/app.js?v=559"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4514,7 +4514,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=558"></script>
+<script src="./assets/js/app_ui.js?v=559"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
