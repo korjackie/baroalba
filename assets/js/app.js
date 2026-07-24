@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '562';
+  const _APP_V = '563';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=562').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=563').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -19978,8 +19978,9 @@ async function loadNearbyBarospotOffers() {
     wrap.style.display = 'block';
     list.innerHTML = nearby.map(ev => {
       const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
-      return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid #fce7f3;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1.5px solid #fbcfe8;display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div style="min-width:0">
+          <span style="font-size:9.5px;font-weight:800;color:#fff;background:#f43f5e;padding:2px 7px;border-radius:6px;margin-bottom:4px;display:inline-block">선점 가능</span>
           <div style="font-size:13px;font-weight:800;color:#222">${ev.barospot_restaurants?.name || '식당 정보 확인 중'}</div>
           <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · ${ev.distKm.toFixed(1)}km</div>
         </div>
@@ -20068,6 +20069,7 @@ async function loadUpcomingBarospotOffers() {
     const booked = bookedIds.has(ev.id);
     return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;gap:10px">
       <div style="min-width:0">
+        <span style="font-size:9.5px;font-weight:800;color:#3b82f6;background:#eff6ff;padding:2px 7px;border-radius:6px;margin-bottom:4px;display:inline-block">예정</span>
         <div style="font-size:13px;font-weight:800;color:#222">${ev.barospot_restaurants?.name || '식당 정보 확인 중'}</div>
         <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · 여성 배정 대기 중</div>
       </div>
@@ -20262,8 +20264,9 @@ function _renderSpotEventCard(ev, preview) {
   const mapHtml = (ev.lat != null && ev.lng != null)
     ? `<div id="bse-card-map-${ev.id}" style="width:100%;height:180px;border-radius:10px;margin-bottom:6px;background:#eee"></div>`
     : '';
-  return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #e8eaed;overflow:hidden">
+  return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid #bfdbfe;overflow:hidden">
     <div style="margin-bottom:10px">
+      <span style="font-size:9.5px;font-weight:800;color:#fff;background:#3b82f6;padding:2px 7px;border-radius:6px;margin-bottom:5px;display:inline-block">모집중 · 신청 가능</span>
       <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || '식당 정보 확인 중'}</div>
       <div style="font-size:12px;color:#888">${whenText}</div>
       ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">📍 ${ev.address}</div>` : ''}
