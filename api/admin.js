@@ -423,7 +423,7 @@ module.exports = async function handler(req, res) {
     }
     const result = list.map(c => {
       const w = workerMap[c.user_id] || {};
-      let age = w.age || null;
+      let age = (w.age >= 15 && w.age <= 100) ? w.age : null;
       if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
       return {
         application_id: c.id, age, bio: w.bio || null, photo_url: w.dating_photo_url || w.photo_url || null, noshow_count: w.noshow_count || 0,
@@ -456,7 +456,7 @@ module.exports = async function handler(req, res) {
     Object.entries(uidByEvent).forEach(([eventId, uid]) => {
       const w = workerMap[uid];
       if (!w) return;
-      let age = w.age || null;
+      let age = (w.age >= 15 && w.age <= 100) ? w.age : null;
       if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
       result[eventId] = { age, bio: w.bio || null, photo_url: w.dating_photo_url || w.photo_url || null, job_category: w.job_category || null, body_type: w.body_type || null, interests: w.interests || [], height_cm: w.height_cm || null, mbti: w.mbti || null };
     });
@@ -770,7 +770,7 @@ module.exports = async function handler(req, res) {
     const wRows = await sb(`workers?kakao_uid=eq.${otherUid}&select=name,photo_url,dating_photo_url,age,birth_date,job_category,body_type,interests,height_cm,mbti,bio`, svcKey).then(r => r.json()).catch(() => []);
     const w = wRows?.[0];
     if (!w) return res.status(404).json({ error: '프로필을 찾을 수 없어요' });
-    let age = w.age || null;
+    let age = (w.age >= 15 && w.age <= 100) ? w.age : null;
     if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
     // kakao_uid도 함께 반환 - 채팅방 신고하기 버튼이 신고 대상(target_id)으로 사용.
     // dating_photo_url(바로만남 전용 사진)이 있으면 그걸, 없으면 대표사진(photo_url)을 photo_url로 반환
@@ -814,7 +814,7 @@ module.exports = async function handler(req, res) {
       const otherUid = otherUidByEvent[eid];
       const w = otherUid && workerByUid[otherUid];
       if (!w) return;
-      let age = w.age || null;
+      let age = (w.age >= 15 && w.age <= 100) ? w.age : null;
       if (!age && w.birth_date) age = new Date().getFullYear() - new Date(w.birth_date).getFullYear();
       result[eid] = {
         kakao_uid: otherUid, name: w.name, photo_url: w.dating_photo_url || w.photo_url, age,

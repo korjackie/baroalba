@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '561';
+  const _APP_V = '562';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=561').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=562').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -20232,15 +20232,21 @@ async function _loadSpotEvents() {
 function _renderSpotEventCard(ev, preview) {
   const r = ev.barospot_restaurants || {};
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
+  // 예전엔 이 미리보기가 아무 안내 문구 없이 식당 정보 사이에 그냥 끼어있어서, 신청 전인
+  // 사람도 "이미 배정된 여성"인지 "이 스팟에서 만나게 될 상대"인지 구분이 안 된다는
+  // 피드백이 있었음 - 분홍색 배경+라벨로 식당 정보와 시각적으로 분리하고 의미를 명시
   const profileHtml = preview ? `
-    <div style="display:flex;gap:10px;align-items:flex-start;background:#f8f9fa;border-radius:10px;padding:10px;margin-bottom:10px">
-      <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
-        ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:18px">👤</span>`}
-      </div>
-      <div style="min-width:0;flex:1">
-        <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+'세' : null, preview.job_category, preview.body_type].filter(Boolean).join(' · ') || '프로필 준비 중'}</div>
-        ${preview.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${preview.interests.slice(0,4).map(t=>'#'+t).join(' ')}</div>` : ''}
-        ${preview.bio ? `<div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${preview.bio.replace(/</g,'&lt;')}</div>` : ''}
+    <div style="background:#fff5f7;border:1px solid #fecdd3;border-radius:10px;padding:10px;margin-bottom:10px">
+      <div style="font-size:10.5px;font-weight:800;color:#e11d48;margin-bottom:8px">💕 이 스팟에서 만나게 될 상대 (블라인드 미리보기)</div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
+          ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:18px">👤</span>`}
+        </div>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+'세' : null, preview.job_category, preview.body_type].filter(Boolean).join(' · ') || '프로필 준비 중'}</div>
+          ${preview.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${preview.interests.slice(0,4).map(t=>'#'+t).join(' ')}</div>` : ''}
+          ${preview.bio ? `<div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${preview.bio.replace(/</g,'&lt;')}</div>` : ''}
+        </div>
       </div>
     </div>` : '';
   // 등록 시점에 저장해둔 정확한 네이버플레이스 링크가 있으면 그걸 쓰고, 예전에
