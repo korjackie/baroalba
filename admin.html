@@ -2768,13 +2768,18 @@ async function searchBsePlace() {
   }
 }
 
-let _bseNaverLink = null; // 검색 결과의 네이버플레이스 링크 - 저장 시 barospot_restaurants.naver_place_url로 같이 넘김
+let _bseNaverLink = null; // 저장 시 barospot_restaurants.naver_place_url로 같이 넘김
 function selectBsePlace(idx) {
   const item = _bsePlaceItems[idx];
   if (!item) return;
   document.getElementById('bse-location-name').value = item.title || '';
   document.getElementById('bse-address').value = item.roadAddress || item.address || '';
-  _bseNaverLink = item.link || null;
+  // 네이버 지역검색 API의 item.link는 "네이버플레이스 링크"가 아니라 업체가 등록한
+  // 자체 홈페이지 URL(네이버 공식 스펙) - 예전엔 이걸 그대로 저장해서 "네이버지도에서
+  // 자세히 보기"를 누르면 프랜차이즈 홈페이지 등 엉뚱한 곳으로 연결되던 버그가 있었음.
+  // 신뢰 가능한 값이 없으므로 이름+주소로 네이버지도 검색 URL을 직접 만들어 저장한다.
+  const _bseQ = encodeURIComponent(`${item.title || ''} ${item.roadAddress || item.address || ''}`.trim());
+  _bseNaverLink = `https://map.naver.com/v5/search/${_bseQ}`;
   document.getElementById('bse-place-results').style.display = 'none';
   document.getElementById('bse-place-query').value = '';
 }
@@ -3144,14 +3149,17 @@ async function searchRestaurantPlace() {
   }
 }
 
-let _rNaverLink = null; // 검색 결과의 네이버플레이스 링크 - 저장 시 naver_place_url로 같이 넘김
+let _rNaverLink = null; // 저장 시 naver_place_url로 같이 넘김
 function selectRestaurantPlace(idx) {
   const item = _restaurantPlaceItems[idx];
   if (!item) return;
   document.getElementById('r-name').value = item.title || '';
   document.getElementById('r-address').value = item.roadAddress || item.address || '';
   document.getElementById('r-phone').value = item.telephone || '';
-  _rNaverLink = item.link || null;
+  // item.link는 네이버플레이스 링크가 아니라 업체 자체 홈페이지 URL(위 selectBsePlace와
+  // 동일한 이유) - 이름+주소 기반 네이버지도 검색 URL을 직접 만들어 저장한다.
+  const _rQ = encodeURIComponent(`${item.title || ''} ${item.roadAddress || item.address || ''}`.trim());
+  _rNaverLink = `https://map.naver.com/v5/search/${_rQ}`;
   // 네이버 지역검색 오픈API는 예약시스템 연동 매장 등 상당수에서 전화번호를
   // 비워서 줌(실제 네이버 플레이스 페이지엔 있어도) - 그런 경우 검색 링크로 대체
   const phoneHint = document.getElementById('r-phone-hint');
