@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '565';
+  const _APP_V = '566';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=565').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=566').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18781,7 +18781,7 @@ async function _openBaromeetTracking(meetingId, iAmApproved) {
     .select('title, location_name, location_address, gathering_date, lat, lng, baromeeting_male_max, baromeeting_female_max, baromeeting_male_cur, baromeeting_female_cur')
     .eq('id', meetingId).single();
   if (!m) return;
-  const whenText = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 미정';
+  const whenText = m.gathering_date ? new Date(m.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : t('schedule_tbd_short');
 
   // 예전엔 stepIndex가 항상 1(확정)로 고정돼 있어 실제 모임이 진행 중이거나 끝난 뒤에도
   // 계속 "확정"에 멈춰 보였음 - 승인 여부 + 실제 시각을 기준으로 계산한다.
@@ -18800,8 +18800,8 @@ async function _openBaromeetTracking(meetingId, iAmApproved) {
   }
 
   openTrackingSheet({
-    brand: '🤝 바로미팅',
-    title: m.title || '바로미팅',
+    brand: '🤝 ' + t('brand_baromeeting_label'),
+    title: m.title || t('brand_baromeeting_label'),
     place: m.location_name || m.location_address || '-',
     addressQuery: m.location_address,
     placeName: m.location_name,
@@ -18944,7 +18944,7 @@ async function saveBaromeetAnonProfile() {
     ({ error } = await db.from('workers').update({ baromeet_nick: nick, baromeet_avatar: avatarValue }).eq('kakao_uid', currentUser.id));
   } else {
     const meta = currentUser.user_metadata || {};
-    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
+    const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || t('default_worker_name');
     ({ error } = await db.from('workers').insert({ kakao_uid: currentUser.id, name, baromeet_nick: nick, baromeet_avatar: avatarValue }));
   }
   if (error) { showToast(t('save_failed_prefix') + error.message); return; }
@@ -19681,16 +19681,27 @@ async function _tryPayBarospotWithPoints(gender, title) {
 
 async function applyBarospot() {
   if (!currentUser) { showToast(t('login_required_toast')); return; }
+  const btnEl = document.getElementById('mnm-spot-apply-btn');
+  // 처리 중 버튼을 잠가서 느린 네트워크에서 두 번 눌러 이용권/포인트가 중복 차감되거나
+  // 신청이 두 건 생기는 것을 방지 (앱의 다른 신청 버튼들과 동일한 패턴)
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = t('processing_label'); }
+  const resetBtn = () => { if (btnEl) { btnEl.disabled = false; btnEl.textContent = t('mnm_spot_apply_btn'); } };
   const eligibility = await _checkBarospotEligibility();
-  if (!eligibility.ok) { await _handleBarospotIneligible(eligibility); return; }
+  if (!eligibility.ok) { resetBtn(); await _handleBarospotIneligible(eligibility); return; }
+  // 여성은 특정 이벤트가 아니라 일반 대기열에 신청하는 방식이라, 이미 진행 중인(대기/배정/확정)
+  // 신청이 있는데 중복으로 또 신청하는 것을 막는다
+  const { data: existingApp } = await db.from('barospot_applications')
+    .select('id').eq('user_id', currentUser.id).eq('gender', 'female')
+    .in('status', ['pending', 'matched', 'confirmed']).maybeSingle();
+  if (existingApp) { showToast(t('barospot_active_application_exists')); resetBtn(); await _loadBarospotList(); return; }
   const isTrial = await _isBarospotTrialEligible(currentUser.id);
 
   if (!isTrial && _spotPassCount < 1) {
     const pay = await _tryPayBarospotWithPoints('female', t('barospot_apply_title'));
-    if (!pay) return;
+    if (!pay) { resetBtn(); return; }
     const { error: ae } = await db.from('barospot_applications')
       .insert({ user_id: currentUser.id, gender: 'female', status: 'pending', paid_method: 'points', paid_amount: pay.price });
-    if (ae) { await pay.rollback(); showToast(t('apply_error_prefix') + ae.message); return; }
+    if (ae) { await pay.rollback(); showToast(t('apply_error_prefix') + ae.message); resetBtn(); return; }
     showToast(t('barospot_point_apply_success').replace('{n}', pay.price.toLocaleString()));
     await loadUserPoints();
     await _loadBarospotList();
@@ -19706,18 +19717,18 @@ async function applyBarospot() {
     ? `${t('trial_free_apply_notice')}\n${t('meal_cost_bank_transfer_notice')}\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`
     : t('barospot_apply_confirm_desc');
   const confirmed = await showConfirmDialog(t('barospot_apply_title'), confirmMsg, isTrial ? t('free_apply_btn') : t('barospot_apply_btn'), t('cancel'));
-  if (!confirmed) return;
+  if (!confirmed) { resetBtn(); return; }
   if (!isTrial) {
     const { data: passRow } = await db.from('barospot_passes')
       .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'female').eq('status', 'active').maybeSingle();
-    if (!passRow || passRow.remaining_count < 1) { showToast(t('pass_none_notice')); return; }
+    if (!passRow || passRow.remaining_count < 1) { showToast(t('pass_none_notice')); resetBtn(); return; }
     const { error: pe } = await db.from('barospot_passes')
       .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
-    if (pe) { showToast(t('error_prefix_short') + pe.message); return; }
+    if (pe) { showToast(t('error_prefix_short') + pe.message); resetBtn(); return; }
   }
   const { error: ae } = await db.from('barospot_applications')
     .insert({ user_id: currentUser.id, gender: 'female', status: 'pending', paid_method: isTrial ? 'trial' : 'pass', paid_amount: null });
-  if (ae) { showToast(t('apply_error_prefix') + ae.message); return; }
+  if (ae) { showToast(t('apply_error_prefix') + ae.message); resetBtn(); return; }
   showToast(isTrial ? t('trial_apply_complete_notice') : t('apply_complete_manager_review_notice'));
   await _loadBarospotList();
   // 이 시점엔 아직 매니저가 식당/일정을 배정하기 전이라 지도에 표시할 장소가 없음 -
@@ -19776,14 +19787,14 @@ async function _loadFemaleApplications() {
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')} · ${whenText}</div>` : ''}
       ${canPick ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <div style="font-size:11px;color:#7C3AED;font-weight:700">🍽️ 눌러서 후보 보고 선택하기${maleAppCount[a.event_id] ? ` · 남성 ${maleAppCount[a.event_id]}명 신청 중` : ''}</div>
-        <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:700;color:#3b82f6;background:#eff6ff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">📢 공유</button>
+        <div style="font-size:11px;color:#7C3AED;font-weight:700">${t('tap_to_pick_candidate_hint')}${maleAppCount[a.event_id] ? t('male_applicants_count_suffix').replace('{n}', maleAppCount[a.event_id]) : ''}</div>
+        <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:700;color:#3b82f6;background:#eff6ff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">${t('share_short_btn')}</button>
       </div>` : ''}
       ${canTrack ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
         <div style="font-size:11px;color:#7C3AED;font-weight:700">${t('location_distance_hint')}</div>
         ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
           ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
-          : ''}
+          : `<span style="font-size:10.5px;color:#bbb">${t('cancel_deadline_passed_notice')}</span>`}
       </div>` : ''}
     </div>`;
   }).join('');
@@ -19987,20 +19998,24 @@ async function loadNearbyBarospotOffers() {
           <div style="font-size:13px;font-weight:800;color:#222">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')}</div>
           <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · ${ev.distKm.toFixed(1)}km</div>
         </div>
-        <button onclick="claimBarospotEvent('${ev.id}')" style="flex-shrink:0;padding:9px 14px;background:#f43f5e;color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${t('claim_btn')}</button>
+        <button onclick="claimBarospotEvent('${ev.id}', this)" style="flex-shrink:0;padding:9px 14px;background:#f43f5e;color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${t('claim_btn')}</button>
       </div>`;
     }).join('');
   }, () => { wrap.style.display = 'none'; }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 });
 }
 
-async function claimBarospotEvent(eventId) {
+async function claimBarospotEvent(eventId, btnEl) {
   if (!currentUser) { showToast(t('login_required_toast')); return; }
+  // 처리 중 버튼을 잠가서 두 번 눌러도 불필요한 중복 요청(및 포인트 차감→롤백 왕복)이
+  // 발생하지 않게 한다 - 실제 이중 선점 자체는 서버의 조건부 UPDATE가 이미 막고 있음
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = t('processing_label'); }
+  const resetBtn = () => { if (btnEl) { btnEl.disabled = false; btnEl.textContent = t('claim_btn'); } };
   const eligibility = await _checkBarospotEligibility();
-  if (!eligibility.ok) { await _handleBarospotIneligible(eligibility); return; }
+  if (!eligibility.ok) { resetBtn(); await _handleBarospotIneligible(eligibility); return; }
   const isTrial = currentUser && await _isBarospotTrialEligible(currentUser.id);
   if (!isTrial && _spotPassCount < 1) {
     const pay = await _tryPayBarospotWithPoints('female', t('barospot_claim_title'));
-    if (!pay) return;
+    if (!pay) { resetBtn(); return; }
     try {
       const { data: { session } } = await db.auth.getSession();
       const res = await fetch('/api/admin?action=claim_barospot_event', {
@@ -20009,13 +20024,14 @@ async function claimBarospotEvent(eventId) {
         body: JSON.stringify({ event_id: eventId, paid_method: 'points', paid_amount: pay.price })
       });
       const data = await res.json();
-      if (!res.ok) { await pay.rollback(); showToast('😢 ' + (data.error || t('claim_failed_notice'))); await loadNearbyBarospotOffers(); return; }
+      if (!res.ok) { await pay.rollback(); showToast('😢 ' + (data.error || t('claim_failed_notice'))); resetBtn(); await loadNearbyBarospotOffers(); return; }
       showToast(t('barospot_point_claim_success').replace('{n}', pay.price.toLocaleString()));
       await loadUserPoints();
       await _loadBarospotList();
     } catch (e) {
       await pay.rollback();
       showToast(t('generic_error_short'));
+      resetBtn();
     }
     return;
   }
@@ -20023,7 +20039,7 @@ async function claimBarospotEvent(eventId) {
     ? `${t('trial_free_claim_notice')}\n${t('meal_cost_bank_transfer_notice')}\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`
     : t('barospot_claim_pass_confirm_desc');
   const confirmed = await showConfirmDialog(t('barospot_claim_title'), confirmMsg, isTrial ? t('free_claim_btn') : t('claim_btn'), t('cancel'));
-  if (!confirmed) return;
+  if (!confirmed) { resetBtn(); return; }
   try {
     const { data: { session } } = await db.auth.getSession();
     const res = await fetch('/api/admin?action=claim_barospot_event', {
@@ -20032,7 +20048,7 @@ async function claimBarospotEvent(eventId) {
       body: JSON.stringify({ event_id: eventId, paid_method: isTrial ? 'trial' : 'pass' })
     });
     const data = await res.json();
-    if (!res.ok) { showToast('😢 ' + (data.error || t('claim_failed_notice'))); await loadNearbyBarospotOffers(); return; }
+    if (!res.ok) { showToast('😢 ' + (data.error || t('claim_failed_notice'))); resetBtn(); await loadNearbyBarospotOffers(); return; }
     // 선점 성공 후에만 이용권 차감 (실패했는데 먼저 깎으면 안 됨) - 무료체험이면 차감 자체를 건너뜀
     if (!isTrial) {
       const { data: passRow } = await db.from('barospot_passes')
@@ -20045,6 +20061,7 @@ async function claimBarospotEvent(eventId) {
     await _loadBarospotList();
   } catch (e) {
     showToast(t('generic_error_short'));
+    resetBtn();
   }
 }
 
@@ -20160,7 +20177,7 @@ async function _loadMaleApplications() {
         <div style="font-size:11px;color:#3b82f6;font-weight:700">${t('location_distance_hint')}</div>
         ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
           ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
-          : ''}
+          : `<span style="font-size:10.5px;color:#bbb">${t('cancel_deadline_passed_notice')}</span>`}
       </div>` : ''}
     </div>`;
   }).join('');
@@ -20180,11 +20197,20 @@ async function _loadSpotEvents() {
   // 그대로 남아있어 계속 신청 가능한 것처럼 보이는 문제가 있었음(바로모임 loadMoimList와
   // 동일한 패턴으로 event_date가 미래이거나 미정(null)인 것만 노출)
   const _bseNow = new Date().toISOString();
-  const { data, error } = await db.from('barospot_events')
+  const { data: rawData, error } = await db.from('barospot_events')
     .select('id, event_date, address, lat, lng, barospot_restaurants(name, menu_description, base_price, naver_place_url)')
     .eq('status', 'recruiting_male')
     .or(`event_date.is.null,event_date.gte.${_bseNow}`)
     .order('event_date', { ascending: true });
+  // 이미 신청한 스팟은 목록에서 제외 - 그대로 두면 "신청하기"를 눌러 중복 신청이
+  // 생기기 쉬웠음(applySpotEvent의 중복신청 방지 가드와 짝을 이루는 예방 조치)
+  let data = rawData;
+  if (data?.length && currentUser) {
+    const { data: mine } = await db.from('barospot_applications')
+      .select('event_id').eq('user_id', currentUser.id).eq('gender', 'male').in('status', ['pending', 'confirmed']);
+    const appliedIds = new Set((mine || []).map(r => r.event_id));
+    data = data.filter(ev => !appliedIds.has(ev.id));
+  }
   if (error || !data?.length) {
     if (cntEl) cntEl.textContent = '0';
     el.innerHTML = `<div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">${t('recruiting_spot_title')}</div><div style="font-size:12px;line-height:1.65">${t('no_recruiting_barospot_l1')}<br>${t('no_recruiting_barospot_l2')}</div></div>`;
@@ -20283,7 +20309,7 @@ function _renderSpotEventCard(ev, preview) {
     ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:13px;font-weight:800;color:#3b82f6">${(r.base_price||0).toLocaleString()}${t('won_suffix')} <span style="font-size:11px;color:#aaa;font-weight:400">${t('meal_included_suffix')}</span></div>
-      <button onclick="applySpotEvent('${ev.id}')" style="padding:9px 18px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">${t('barospot_apply_btn')}</button>
+      <button onclick="applySpotEvent('${ev.id}', this)" style="padding:9px 18px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">${t('barospot_apply_btn')}</button>
     </div>
   </div>`;
 }
@@ -20357,17 +20383,27 @@ async function _notifyBarospotNewCandidate(eventId) {
   } catch (e) {}
 }
 
-async function applySpotEvent(eventId) {
+async function applySpotEvent(eventId, btnEl) {
   if (!currentUser) { showToast(t('login_required_toast')); return; }
+  // 처리 중 버튼을 잠가서 느린 네트워크에서 두 번 눌러 이용권/포인트가 중복 차감되거나
+  // 신청이 두 건 생기는 것을 방지 (앱의 다른 신청 버튼들과 동일한 패턴)
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = t('processing_label'); }
+  const resetBtn = () => { if (btnEl) { btnEl.disabled = false; btnEl.textContent = t('barospot_apply_btn'); } };
   const eligibility = await _checkBarospotEligibility();
-  if (!eligibility.ok) { await _handleBarospotIneligible(eligibility); return; }
+  if (!eligibility.ok) { resetBtn(); await _handleBarospotIneligible(eligibility); return; }
+  // 목록이 새로고침되기 전 틈에 같은 카드를 다시 눌렀거나, 다른 기기에서 이미 신청한
+  // 경우까지 서버 재확인 없이 막을 순 없지만, 최소한 흔한 더블탭 케이스는 여기서 걸러낸다
+  const { data: existingApp } = await db.from('barospot_applications')
+    .select('id').eq('user_id', currentUser.id).eq('event_id', eventId).eq('gender', 'male')
+    .in('status', ['pending', 'confirmed']).maybeSingle();
+  if (existingApp) { showToast(t('barospot_already_applied_notice')); resetBtn(); await _loadSpotEvents(); return; }
   const isTrial = await _isBarospotTrialEligible(currentUser.id);
   if (!isTrial && _spotPassCount < 1) {
     const pay = await _tryPayBarospotWithPoints('male', t('barospot_join_title'));
-    if (!pay) return;
+    if (!pay) { resetBtn(); return; }
     const { error: ae } = await db.from('barospot_applications')
       .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending', paid_method: 'points', paid_amount: pay.price });
-    if (ae) { await pay.rollback(); showToast(t('apply_error_prefix') + ae.message); return; }
+    if (ae) { await pay.rollback(); showToast(t('apply_error_prefix') + ae.message); resetBtn(); return; }
     showToast(t('barospot_point_join_success').replace('{n}', pay.price.toLocaleString()));
     await loadUserPoints();
     await _loadSpotEvents();
@@ -20379,18 +20415,18 @@ async function applySpotEvent(eventId) {
     ? `${t('trial_free_join_notice')}\n${t('meal_cost_bank_transfer_notice')}\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`
     : t('barospot_join_confirm_desc');
   const confirmed = await showConfirmDialog(t('barospot_join_title'), confirmMsg, isTrial ? t('free_apply_btn') : t('barospot_apply_btn'), t('cancel'));
-  if (!confirmed) return;
+  if (!confirmed) { resetBtn(); return; }
   if (!isTrial) {
     const { data: passRow } = await db.from('barospot_passes')
       .select('id, remaining_count').eq('user_id', currentUser.id).eq('gender', 'male').eq('status', 'active').maybeSingle();
-    if (!passRow || passRow.remaining_count < 1) { showToast(t('pass_none_notice')); return; }
+    if (!passRow || passRow.remaining_count < 1) { showToast(t('pass_none_notice')); resetBtn(); return; }
     const { error: pe } = await db.from('barospot_passes')
       .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
-    if (pe) { showToast(t('error_prefix_short') + pe.message); return; }
+    if (pe) { showToast(t('error_prefix_short') + pe.message); resetBtn(); return; }
   }
   const { error: ae } = await db.from('barospot_applications')
     .insert({ user_id: currentUser.id, event_id: eventId, gender: 'male', status: 'pending', paid_method: isTrial ? 'trial' : 'pass', paid_amount: null });
-  if (ae) { showToast(t('apply_error_prefix') + ae.message); return; }
+  if (ae) { showToast(t('apply_error_prefix') + ae.message); resetBtn(); return; }
   showToast(isTrial ? t('trial_join_complete_notice') : t('join_complete_manager_notice'));
   await _loadSpotEvents();
   _notifyBarospotNewCandidate(eventId);
