@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '563';
+  const _APP_V = '564';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=563').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=564').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -18043,16 +18043,16 @@ function _haversineM(lat1, lng1, lat2, lng2) {
 }
 
 function _fmtDistanceM(m) {
-  if (typeof m !== 'number') return '위치 확인 중';
+  if (typeof m !== 'number') return t('distance_checking');
   return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.round(m) + 'm';
 }
 
 function _renderLiveButton() {
   const btn = document.getElementById('track-live-btn');
   if (!btn) return;
-  if (_liveShareArrived) { btn.textContent = '✅ 도착 완료'; btn.style.background = '#f5f5f5'; btn.style.color = '#999'; btn.disabled = true; }
-  else if (_liveShareCtx) { btn.textContent = '✅ 도착했어요'; btn.style.background = '#f5f5f5'; btn.style.color = '#666'; btn.disabled = false; }
-  else { btn.textContent = '🚀 출발했어요'; btn.style.background = '#7C3AED'; btn.style.color = '#fff'; btn.disabled = false; }
+  if (_liveShareArrived) { btn.textContent = '✅ ' + t('live_arrived_done'); btn.style.background = '#f5f5f5'; btn.style.color = '#999'; btn.disabled = true; }
+  else if (_liveShareCtx) { btn.textContent = '✅ ' + t('live_arrived_btn'); btn.style.background = '#f5f5f5'; btn.style.color = '#666'; btn.disabled = false; }
+  else { btn.textContent = '🚀 ' + t('track_departed_btn'); btn.style.background = '#7C3AED'; btn.style.color = '#fff'; btn.disabled = false; }
 }
 
 // 예전엔 "도착했어요"를 눌러도 그냥 공유만 멈추고(status:'stopped') 아무 확인/피드백 없이
@@ -18062,7 +18062,7 @@ function _renderLiveButton() {
 async function _toggleLiveShare() {
   if (_liveShareArrived) return;
   if (_liveShareCtx) {
-    const confirmed = await showConfirmDialog('🎉 도착 확인', '목적지에 도착하셨나요?\n도착 처리하면 위치 공유가 종료돼요.', '네, 도착했어요', '아직이에요');
+    const confirmed = await showConfirmDialog('🎉 ' + t('live_arrival_confirm_title'), t('live_arrival_confirm_desc'), t('live_arrival_yes'), t('live_arrival_not_yet'));
     if (confirmed) stopLiveShare('arrived');
     return;
   }
@@ -18072,11 +18072,11 @@ async function _toggleLiveShare() {
 
 // 출발 - 목적지 좌표가 있으면 위치 갱신마다 직선거리를 같이 계산해 올림(외부 API 없음)
 function startLiveShare(contextType, contextId, destLat, destLng) {
-  if (!navigator.geolocation || !currentUser) { showToast('위치 공유를 시작할 수 없어요'); return; }
+  if (!navigator.geolocation || !currentUser) { showToast(t('live_share_start_fail')); return; }
   _liveShareCtx = { contextType, contextId };
   _liveShareLastWrite = 0;
   _renderLiveButton();
-  showToast('🚀 위치 공유를 시작했어요');
+  showToast('🚀 ' + t('live_share_started_toast'));
 
   _liveShareWatchId = navigator.geolocation.watchPosition(pos => {
     const { latitude: lat, longitude: lng, accuracy } = pos.coords;
@@ -18096,7 +18096,7 @@ function startLiveShare(contextType, contextId, destLat, destLng) {
     }, { onConflict: 'context_type,gathering_id,barospot_event_id,user_id' }).then(() => {});
     _updateMyLiveDistance(distM);
     if (distM !== null && distM < 150) stopLiveShare('arrived'); // 목적지 150m 이내면 자동 도착 처리
-  }, () => { showToast('위치 정보를 가져올 수 없어요 - 위치 권한을 확인해주세요'); }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+  }, () => { showToast(t('live_location_fail')); }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
 
   clearTimeout(_liveShareTimeoutId);
   _liveShareTimeoutId = setTimeout(() => stopLiveShare('timeout'), 4 * 60 * 60 * 1000); // 4시간 안전장치
@@ -18122,7 +18122,7 @@ function stopLiveShare(reason) {
   if (reason === 'arrived') _liveShareArrived = true;
   _renderLiveButton();
   _updateMyLiveDistance(null);
-  if (reason === 'arrived') showToast('🎉 도착 처리됐어요');
+  if (reason === 'arrived') showToast('🎉 ' + t('live_arrived_toast'));
 }
 
 function _updateMyLiveDistance(distM) {
@@ -18130,7 +18130,7 @@ function _updateMyLiveDistance(distM) {
   if (!el) return;
   if (typeof distM !== 'number') { el.style.display = 'none'; return; }
   el.style.display = 'block';
-  el.textContent = `📍 목적지까지 ${_fmtDistanceM(distM)} 남음`;
+  el.textContent = '📍 ' + t('live_dest_remaining').replace('{n}', _fmtDistanceM(distM));
 }
 
 // 승인된 참가자만 다른 사람 위치를 볼 수 있음 (서버 get_live_locations가 재검증)
@@ -18167,8 +18167,8 @@ function _renderLiveTravelers(travelers) {
   if (!listEl) return;
   if (!travelers.length) { listEl.innerHTML = ''; listEl.style.display = 'none'; return; }
   listEl.style.display = 'block';
-  listEl.innerHTML = travelers.map(t =>
-    `<div class="track-live-row">🚗 참가자가 이동 중이에요 · 목적지까지 ${_fmtDistanceM(t.distance_m)} 남음</div>`
+  listEl.innerHTML = travelers.map(tr =>
+    `<div class="track-live-row">🚗 ${t('live_traveler_moving').replace('{n}', _fmtDistanceM(tr.distance_m))}</div>`
   ).join('');
   if (!_trackMap) return;
   travelers.forEach(t => {
@@ -18194,7 +18194,7 @@ function _renderLiveShareSection() {
   if (typeof p.destLat !== 'number' || typeof p.destLng !== 'number') {
     btn.style.display = 'none';
     note.style.display = 'block';
-    note.textContent = '📍 위치 좌표가 없어 실시간 추적이 어려워요';
+    note.textContent = '📍 ' + t('live_no_coords');
     return;
   }
   note.style.display = 'none';
@@ -18247,10 +18247,10 @@ function _renderTrackSteps(labels, activeIdx) {
 function _tickTrackCountdown(whenISO) {
   const el = document.getElementById('track-countdown'), sub = document.getElementById('track-subtime');
   const diffMs = whenISO ? new Date(whenISO) - new Date() : NaN;
-  if (isNaN(diffMs)) { el.textContent = '일정 확인 중'; sub.textContent = ''; return; }
-  if (diffMs <= 0) { el.textContent = '시작!'; sub.textContent = ''; return; }
+  if (isNaN(diffMs)) { el.textContent = t('track_schedule_checking'); sub.textContent = ''; return; }
+  if (diffMs <= 0) { el.textContent = t('track_starting'); sub.textContent = ''; return; }
   const mins = Math.round(diffMs / 60000);
-  el.textContent = mins >= 60 ? `${Math.floor(mins/60)}시간 ${mins%60}분 남음` : `${mins}분 남음`;
+  el.textContent = mins >= 60 ? t('track_time_left_hm').replace('{h}', Math.floor(mins/60)).replace('{m}', mins%60) : t('track_time_left_m').replace('{m}', mins);
   sub.textContent = new Date(whenISO).toLocaleTimeString('ko-KR', { hour:'numeric', minute:'2-digit' });
 }
 
@@ -18267,10 +18267,10 @@ function _placeVenueMarker(y, x) {
 function _geocodeAndShowVenue(address, name) {
   if (!_trackMap) return;
   const tryKeyword = () => {
-    if (!name) { showToast('📍 정확한 위치를 찾지 못했어요'); return; }
+    if (!name) { showToast('📍 ' + t('location_not_found')); return; }
     new kakao.maps.services.Places().keywordSearch(name, (result, status) => {
       if (status === kakao.maps.services.Status.OK && result.length) _placeVenueMarker(result[0].y, result[0].x);
-      else showToast('📍 정확한 위치를 찾지 못했어요');
+      else showToast('📍 ' + t('location_not_found'));
     });
   };
   if (address) {
@@ -18305,14 +18305,14 @@ function openTrackingSheet(opts) {
     if (partRow) {
       if (opts.participants) {
         const p = opts.participants;
-        document.getElementById('track-participants').textContent = `남성 ${p.maleCur}/${p.maleMax}명 · 여성 ${p.femaleCur}/${p.femaleMax}명`;
+        document.getElementById('track-participants').textContent = t('track_participants_fmt').replace('{a}', p.maleCur).replace('{b}', p.maleMax).replace('{c}', p.femaleCur).replace('{d}', p.femaleMax);
         partRow.style.display = 'block';
       } else {
         partRow.style.display = 'none';
       }
     }
     document.getElementById('track-sheet').classList.remove('expanded');
-    _renderTrackSteps(opts.steps || ['신청완료','확정','진행중','종료'], opts.stepIndex ?? 0);
+    _renderTrackSteps(opts.steps || [t('track_step_applied'), t('track_step_confirmed'), t('track_step_inprogress'), t('track_step_ended')], opts.stepIndex ?? 0);
     bindTrackSheetDrag(document.getElementById('track-sheet-handle'), document.getElementById('track-sheet'));
 
     const chatBtn = document.getElementById('track-chat-btn');
@@ -18807,7 +18807,7 @@ async function _openBaromeetTracking(meetingId, iAmApproved) {
     placeName: m.location_name,
     whenISO: m.gathering_date,
     whenText,
-    steps: ['신청완료','확정','모임 진행','종료'],
+    steps: [t('track_step_applied'), t('track_step_confirmed'), t('track_step_meeting_progress'), t('track_step_ended')],
     stepIndex,
     participants: {
       maleCur: m.baromeeting_male_cur || 0, maleMax: m.baromeeting_male_max || 0,
@@ -19697,7 +19697,7 @@ async function applyBarospot() {
     openTrackingSheet({
       brand: '📍 바로스팟', title: '매니저 배정 대기 중', place: '식당 배정 후 안내됩니다',
       addressQuery: null, whenISO: null, whenText: '배정 대기 중',
-      steps: ['신청완료','매니저 배정 대기','확정','종료'], stepIndex: 0,
+      steps: [t('track_step_applied'), t('track_step_manager_assign_wait'), t('track_step_confirmed'), t('track_step_ended')], stepIndex: 0,
     });
     return;
   }
@@ -19729,7 +19729,7 @@ async function applyBarospot() {
     addressQuery: null,
     whenISO: null,
     whenText: '배정 대기 중',
-    steps: ['신청완료','매니저 배정 대기','확정','종료'],
+    steps: [t('track_step_applied'), t('track_step_manager_assign_wait'), t('track_step_confirmed'), t('track_step_ended')],
     stepIndex: 0,
   });
 }
@@ -19746,8 +19746,8 @@ async function _loadFemaleApplications() {
     .eq('user_id', currentUser.id).eq('gender', 'female')
     .order('applied_at', { ascending: false }).limit(10);
   if (error || !data?.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div>'; return; }
-  const statusLabel = { pending:'검토 중', matched:'식당 배정 완료', confirmed:'일정 확정', cancelled:'취소됨' };
-  const statusColor = { pending:'#f59e0b', matched:'#8b5cf6', confirmed:'#10b981', cancelled:'#9ca3af' };
+  const statusLabel = { pending:'검토 중', matched:'식당 배정 완료', confirmed:'일정 확정', done: t('app_completed'), cancelled:'취소됨' };
+  const statusColor = { pending:'#f59e0b', matched:'#8b5cf6', confirmed:'#10b981', done:'#9ca3af', cancelled:'#9ca3af' };
   // matched(남성 신청 받는 중) 단계는 매니저만 몇 명 신청했는지 알 수 있어서 여성 입장에선
   // 감감무소식으로 느껴지던 문제 - 신청 건수만 노출(신원은 매니저 선택 전까지 비공개 유지)
   const matchedEventIds = data.filter(a => a.status === 'matched' && a.event_id).map(a => a.event_id);
@@ -19759,16 +19759,19 @@ async function _loadFemaleApplications() {
   }
   el.innerHTML = data.map(a => {
     const ev = a.barospot_events;
-    const st = a.status;
+    const isPast = !!(ev?.event_date && new Date(ev.event_date).getTime() < Date.now());
+    // 일정이 이미 지난 건은 matched/confirmed 상태값이 그대로 남아있어도 "완료"로 보여줘야
+    // 이미 끝난 스팟이 아직 진행 중인 것처럼 헷갈리지 않음(취소됨은 그대로 유지)
+    const st = (isPast && a.status !== 'cancelled') ? 'done' : a.status;
     // matched(매장 배정 완료) 단계는 아직 상대가 안 정해졌으니 "후보 보기"(블라인드 선택)를,
-    // confirmed(확정) 단계는 상대가 정해졌으니 위치·거리 트래커를 보여준다
-    const canPick = ev && st === 'matched';
-    const canTrack = ev && st === 'confirmed';
+    // confirmed(확정) 단계는 상대가 정해졌으니 위치·거리 트래커를 보여준다(일정이 지나면 비활성화)
+    const canPick = ev && a.status === 'matched' && !isPast;
+    const canTrack = ev && a.status === 'confirmed' && !isPast;
     const clickAttr = canPick ? `onclick="openBarospotCandidates('${a.id}')"` : canTrack ? `onclick="_openSpotEventTracking('${a.event_id}', true)"` : '';
     const whenText = ev?.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
     return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0;${(canPick||canTrack) ? 'cursor:pointer' : ''}" ${clickAttr}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
-        <div style="font-size:13px;font-weight:800;color:#222">신청 #${a.id.slice(-6).toUpperCase()}</div>
+        <div style="font-size:13px;font-weight:800;color:#222">${t('barospot_app_number')} #${a.id.slice(-6).toUpperCase()}</div>
         <div style="font-size:11px;font-weight:700;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:3px 8px;border-radius:8px">${statusLabel[st]||st}</div>
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || '식당 정보 확인 중'} · ${whenText}</div>` : ''}
@@ -20113,8 +20116,8 @@ async function _loadMaleApplications() {
     .eq('user_id', currentUser.id).eq('gender', 'male')
     .order('applied_at', { ascending: false }).limit(10);
   if (error || !data?.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">신청 내역이 없어요</div>'; return; }
-  const statusLabel = { pending:'검토 중', confirmed:'일정 확정', cancelled:'취소됨' };
-  const statusColor = { pending:'#f59e0b', confirmed:'#10b981', cancelled:'#9ca3af' };
+  const statusLabel = { pending:'검토 중', confirmed:'일정 확정', done: t('app_completed'), cancelled:'취소됨' };
+  const statusColor = { pending:'#f59e0b', confirmed:'#10b981', done:'#9ca3af', cancelled:'#9ca3af' };
 
   // 확정 건의 상대(여성) 블라인드 미리보기를 barospot_event_previews로 한 번에 조회
   const confirmedIds = data.filter(a => a.status === 'confirmed').map(a => a.event_id).filter(Boolean);
@@ -20131,8 +20134,11 @@ async function _loadMaleApplications() {
 
   el.innerHTML = data.map(a => {
     const ev = a.barospot_events;
-    const st = a.status;
-    const canTrack = ev && st === 'confirmed';
+    const isPast = !!(ev?.event_date && new Date(ev.event_date).getTime() < Date.now());
+    // 일정이 이미 지난 건은 confirmed 상태값이 그대로 남아있어도 "완료"로 보여줘야
+    // 이미 끝난 스팟이 아직 진행 중인 것처럼 헷갈리지 않음(취소됨은 그대로 유지)
+    const st = (isPast && a.status !== 'cancelled') ? 'done' : a.status;
+    const canTrack = ev && a.status === 'confirmed' && !isPast;
     const clickAttr = canTrack ? `onclick="_openSpotEventTracking('${a.event_id}', true)"` : '';
     const whenText = ev?.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
     const preview = previews[a.event_id];
@@ -20145,7 +20151,7 @@ async function _loadMaleApplications() {
       </div>` : '';
     return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0;${canTrack ? 'cursor:pointer' : ''}" ${clickAttr}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
-        <div style="font-size:13px;font-weight:800;color:#222">신청 #${a.id.slice(-6).toUpperCase()}</div>
+        <div style="font-size:13px;font-weight:800;color:#222">${t('barospot_app_number')} #${a.id.slice(-6).toUpperCase()}</div>
         <div style="font-size:11px;font-weight:700;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:3px 8px;border-radius:8px">${statusLabel[st]||st}</div>
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || '식당 정보 확인 중'} · ${whenText}</div>` : ''}
@@ -20424,7 +20430,7 @@ async function _openSpotEventTracking(eventId, iAmApproved) {
     placeName: r.name,
     whenISO: ev.event_date,
     whenText,
-    steps: ['신청완료','매니저 확인 중','확정','종료'],
+    steps: [t('track_step_applied'), t('track_step_manager_check'), t('track_step_confirmed'), t('track_step_ended')],
     stepIndex,
     liveShare: { contextType: 'barospot', contextId: eventId, destLat: ev.lat, destLng: ev.lng, iAmApproved: !!iAmApproved },
     barospotInterest: stepIndex >= 3 ? { eventId } : null,
