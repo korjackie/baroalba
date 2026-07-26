@@ -128,7 +128,7 @@ async function loadStaffPanel() {
       const { data: jobs } = await db.from('job_postings').select('id').eq('business_id', bizRecord?.id);
       jobIds = (jobs || []).map(j => j.id);
     }
-    if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">등록된 공고가 없어요</div>'; return; }
+    if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">' + t('ownr_no_postings_registered') + '</div>'; return; }
 
     const { data, error } = await db.from('applications')
       .select('id,status,applied_at,worker_rating,wage_paid,job_posting_id,workers(id,name,rating,review_count,nationality,kakao_uid), job_postings(id,title,current_wage,duration_hours,work_type)')
@@ -137,14 +137,14 @@ async function loadStaffPanel() {
 
     if (error) {
       console.error('[Staff] 조회 실패:', error);
-      el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">불러오기 실패<br><span style="font-size:11px;color:#ccc">${error.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">${t('load_failed')}<br><span style="font-size:11px;color:#ccc">${error.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">${t('retry_short_btn')}</button></div>`;
       return;
     }
     _staffData = data || [];
     renderStaffPanel();
   } catch(e) {
     console.error('[Staff] 예외:', e);
-    el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">오류 발생<br><span style="font-size:11px;color:#ccc">${e.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">${t('error_occurred_short')}<br><span style="font-size:11px;color:#ccc">${e.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">${t('retry_short_btn')}</button></div>`;
   }
 }
 
@@ -177,27 +177,27 @@ function renderStaffPanel() {
       return sum + w * h;
     }, 0);
 
-  document.getElementById('st-active').textContent = activeCount + '명';
-  document.getElementById('st-unpaid').textContent = unpaidCount + '명';
-  document.getElementById('st-total-wage').textContent = monthlyWage ? monthlyWage.toLocaleString() + '원' : '—';
+  document.getElementById('st-active').textContent = activeCount + t('ownr_count_people_suffix');
+  document.getElementById('st-unpaid').textContent = unpaidCount + t('ownr_count_people_suffix');
+  document.getElementById('st-total-wage').textContent = monthlyWage ? monthlyWage.toLocaleString() + t('won_suffix') : '—';
 
   if (!filtered.length) {
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">해당 데이터가 없어요</div>';
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">' + t('ownr_no_matching_data') + '</div>';
     return;
   }
 
-  const STATUS_LABEL = { pending:'접수', reviewing:'검토중', accepted:'근무중', rejected:'탈락', completed:'완료', noshow:'노쇼' };
+  const STATUS_LABEL = { pending: t('ownr_filter_received'), reviewing: t('status_pending'), accepted: t('staff_status_working'), rejected: t('app_rejected'), completed: t('app_completed'), noshow: t('app_noshow') };
   const STATUS_CLS   = { pending:'background:#FEF3C7;color:#92400E', reviewing:'background:#DBEAFE;color:#1e40af', accepted:'background:#D1FAE5;color:#065F46', rejected:'background:#F3F4F6;color:#9CA3AF', completed:'background:#EDE9FE;color:#5b21b6', noshow:'background:#FEE2E2;color:#991B1B' };
 
   el.innerHTML = filtered.map(a => {
     const w = a.workers || {};
     const job = a.job_postings || {};
     const wage = (job.current_wage || 0) * (job.duration_hours || 0);
-    const visaBadge = w.visa_doc_url ? '<span class="staff-visa-badge">✅ 비자인증</span>' : (w.visa_type && w.visa_type !== 'KR' ? `<span class="staff-visa-badge" style="background:#FFF7ED;color:#c2410c">${w.visa_type}</span>` : '');
+    const visaBadge = w.visa_doc_url ? `<span class="staff-visa-badge">${t('visa_verified_badge')}</span>` : (w.visa_type && w.visa_type !== 'KR' ? `<span class="staff-visa-badge" style="background:#FFF7ED;color:#c2410c">${w.visa_type}</span>` : '');
     const startStr  = job.start_time ? new Date(job.start_time).toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
     const sStyle    = STATUS_CLS[a.status] || '';
     const isPaid    = a.wage_paid;
-    const wageStr   = wage ? wage.toLocaleString() + '원' : '-';
+    const wageStr   = wage ? wage.toLocaleString() + t('won_suffix') : '-';
 
     return `<div class="staff-card">
       <div class="staff-card-top">
@@ -210,34 +210,34 @@ function renderStaffPanel() {
       </div>
       <div class="staff-rows">
         <div class="staff-row">
-          <span class="staff-row-label">공고</span>
+          <span class="staff-row-label">${t('job_unit')}</span>
           <span class="staff-row-val" style="font-size:12px">${job.title||'-'}</span>
         </div>
         <div class="staff-row">
-          <span class="staff-row-label">근무일시</span>
+          <span class="staff-row-label">${t('ownr_work_datetime_label')}</span>
           <span class="staff-row-val">${startStr}</span>
         </div>
         <div class="staff-row">
-          <span class="staff-row-label">시급 × 시간</span>
-          <span class="staff-row-val">${(job.current_wage||0).toLocaleString()}원 × ${job.duration_hours||0}h</span>
+          <span class="staff-row-label">${t('ownr_wage_x_hours_label')}</span>
+          <span class="staff-row-val">${(job.current_wage||0).toLocaleString()}${t('won_suffix')} × ${job.duration_hours||0}h</span>
         </div>
         <div class="staff-row">
-          <span class="staff-row-label">예상 급여</span>
+          <span class="staff-row-label">${t('ownr_estimated_wage_label')}</span>
           <span class="staff-row-val" style="color:#C8102E;font-size:14px;font-weight:900">${wageStr}</span>
         </div>
         ${a.status === 'completed' ? `
         <div class="staff-row">
-          <span class="staff-row-label">급여 지급</span>
+          <span class="staff-row-label">${t('ownr_wage_payment_label')}</span>
           <button class="wage-paid-btn ${isPaid?'paid':'unpaid'}" onclick="toggleWagePaid('${a.id}',${isPaid},this)">
-            ${isPaid ? '✅ 지급완료' : '❌ 미지급'}
+            ${isPaid ? t('ownr_paid_complete_badge') : t('ownr_unpaid_badge')}
           </button>
         </div>` : ''}
       </div>
-      ${a.status === 'completed' && !isPaid && wage ? `<div style="margin:4px 0 8px"><button onclick="openWageTransferModal('${a.id}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}',${wage})" style="width:100%;padding:11px;background:linear-gradient(135deg,#0064FF,#0051CC);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💸 토스/카카오페이로 송금하기</button></div>` : ''}
+      ${a.status === 'completed' && !isPaid && wage ? `<div style="margin:4px 0 8px"><button onclick="openWageTransferModal('${a.id}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}',${wage})" style="width:100%;padding:11px;background:linear-gradient(135deg,#0064FF,#0051CC);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_toss_kakaopay_transfer_btn')}</button></div>` : ''}
       <div class="staff-actions">
-        <button class="staff-act-btn" onclick="openChat('${a.id}','${(w.name||'').replace(/'/g,"\\'")}')">💬 채팅</button>
-        ${w.phone ? `<button class="staff-act-btn" onclick="window.location.href='tel:${w.phone}'">📞 전화</button>` : ''}
-        ${a.status === 'completed' ? `<button class="staff-act-btn" style="background:#FFF0F0;color:#C8102E" onclick="relistPosting('${job.id||''}')">🔄 재채용</button>` : ''}
+        <button class="staff-act-btn" onclick="openChat('${a.id}','${(w.name||'').replace(/'/g,"\\'")}')">${t('chat_btn_emoji')}</button>
+        ${w.phone ? `<button class="staff-act-btn" onclick="window.location.href='tel:${w.phone}'">${t('call_btn_emoji')}</button>` : ''}
+        ${a.status === 'completed' ? `<button class="staff-act-btn" style="background:#FFF0F0;color:#C8102E" onclick="relistPosting('${job.id||''}')">${t('ownr_rehire_btn')}</button>` : ''}
       </div>
     </div>`;
   }).join('');

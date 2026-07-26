@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '570';
+  const _APP_V = '571';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=570').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=571').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -11973,7 +11973,7 @@ async function loadPostings() {
     .eq('business_id', bizRecord.id)
     .order('created_at', { ascending: false });
 
-  if (error) { showToast('공고 불러오기 실패'); return; }
+  if (error) { showToast(t('ownr_posting_load_failed')); return; }
   postings = data || [];
 
   // 기간 만료된 open/urgent 공고 자동 마감
@@ -11995,7 +11995,7 @@ async function loadPostings() {
 function renderPostings() {
   const el = document.getElementById('postings-list');
   if (!postings.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">\u{1F4DD}</div><div class="empty-txt">등록한 공고가 없어요<br>+ 버튼을 눌러 첫 공고를 올려보세요</div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">\u{1F4DD}</div><div class="empty-txt">' + t('ownr_no_postings_l1') + '<br>' + t('ownr_no_postings_l2') + '</div></div>';
     return;
   }
   el.innerHTML = postings.map(p => {
@@ -12005,26 +12005,26 @@ function renderPostings() {
     const surge = p.current_wage - p.base_wage;
     const statusLabel = p.status === 'urgent' ? 'ASAP' : p.status === 'open' ? t('status_open_label') : t('status_closed_label');
     const statusCls = p.status === 'urgent' ? 'urgent' : p.status === 'open' ? 'open' : 'closed';
-    const start = p.start_time ? formatTime(p.start_time) : '미정';
+    const start = p.start_time ? formatTime(p.start_time) : t('undecided');
     // 날짜 표시 헬퍼
-    const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}(${['일','월','화','수','목','금','토'][d.getDay()]}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
+    const fmtDate = iso => { const d = new Date(iso); const dayKeys = ['ownr_day_sun','ownr_day_mon','ownr_day_tue','ownr_day_wed','ownr_day_thu','ownr_day_fri','ownr_day_sat']; return `${d.getMonth()+1}/${d.getDate()}(${t(dayKeys[d.getDay()])}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
     const fmtDay  = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}`; };
-    const createdStr = p.created_at ? fmtDay(p.created_at) + ' 등록' : '';
+    const createdStr = p.created_at ? fmtDay(p.created_at) + t('registered_suffix') : '';
     const workTimeStr = p.start_time ? fmtDate(p.start_time) : '';
     const workRangeStr = p.work_end_date ? `~${p.work_end_date.slice(5).replace('-','/')}` : '';
     const workDaysStr = p.work_days || '';
     // 공고 유형 배지
     const cat = p.category || '';
     const jobTypeBadge = cat.startsWith('\u{1F527}')||cat.startsWith('⚡')||cat.startsWith('\u{1F3E0}')||cat.startsWith('\u{1F69A}')||cat.startsWith('\u{1F6CB}')||cat.startsWith('\u{1F511}')||cat.startsWith('\u{1F9FD}')||cat.startsWith('\u{1F528}')
-      ? '<span style="font-size:10px;font-weight:800;background:#EEF2FF;color:#4F46E5;padding:2px 6px;border-radius:6px">\u{1F527} 기술직</span>'
+      ? `<span style="font-size:10px;font-weight:800;background:#EEF2FF;color:#4F46E5;padding:2px 6px;border-radius:6px">${t('technical_job_badge')}</span>`
       : cat.startsWith('\u{1F436}')||cat.startsWith('\u{1F43E}')||cat.startsWith('\u{1F476}')||cat.startsWith('\u{1F474}')||cat.startsWith('\u{1F3E5}')||cat.startsWith('\u{1F3E1}')
-      ? '<span style="font-size:10px;font-weight:800;background:#F0FDF4;color:#16a34a;padding:2px 6px;border-radius:6px">\u{1F91D} 돌봄</span>'
+      ? `<span style="font-size:10px;font-weight:800;background:#F0FDF4;color:#16a34a;padding:2px 6px;border-radius:6px">${t('care_job_badge')}</span>`
       : '';
 
-    const WT = { errand:{bg:'#F3E8FF',color:'#7C3AED',label:'심부름'}, short:{bg:'#EFF6FF',color:'#3B82F6',label:'단기'}, regular:{bg:'#F0FFF4',color:'#16a34a',label:'정기'}, spot:{bg:'#FFF7ED',color:'#F59E0B',label:'스팟'} };
+    const WT = { errand:{bg:'#F3E8FF',color:'#7C3AED',label:t('job_type_errand')}, short:{bg:'#EFF6FF',color:'#3B82F6',label:t('work_type_short')}, regular:{bg:'#F0FFF4',color:'#16a34a',label:t('work_type_regular')}, spot:{bg:'#FFF7ED',color:'#F59E0B',label:t('work_type_spot')} };
     const wtStyle = WT[p.work_type] || null;
     const workTypeBadge = wtStyle ? `<span style="font-size:10px;font-weight:700;background:${wtStyle.bg};color:${wtStyle.color};padding:2px 7px;border-radius:6px">${wtStyle.label}</span>` : '';
-    const statusDot = p.status === 'urgent' ? `<span style="color:#C8102E;font-weight:800;font-size:12px">● ASAP</span>` : p.status === 'open' ? `<span style="color:#555;font-weight:700;font-size:12px">● 모집중</span>` : `<span style="color:#bbb;font-weight:600;font-size:12px">● 마감</span>`;
+    const statusDot = p.status === 'urgent' ? `<span style="color:#C8102E;font-weight:800;font-size:12px">● ASAP</span>` : p.status === 'open' ? `<span style="color:#555;font-weight:700;font-size:12px">● ${t('stat_open')}</span>` : `<span style="color:#bbb;font-weight:600;font-size:12px">● ${t('status_closed_label')}</span>`;
     const timeInfo = workTimeStr ? workTimeStr : workRangeStr ? `~${workRangeStr}` : createdStr;
     return `
     <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}" onclick="openPostingDetail('${p.id}')">
@@ -12034,14 +12034,14 @@ function renderPostings() {
           <span style="font-size:11px;color:#888;font-weight:600">${p.category}</span>
           ${workTypeBadge}
           ${jobTypeBadge}
-          ${p.surge_enabled ? '<span style="font-size:10px;font-weight:800;background:#FFF3E0;color:#FF9500;padding:2px 7px;border-radius:6px">⚡ 번개</span>' : ''}
+          ${p.surge_enabled ? `<span style="font-size:10px;font-weight:800;background:#FFF3E0;color:#FF9500;padding:2px 7px;border-radius:6px">${t('grade_quick_short')}</span>` : ''}
           ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:6px">PRO</span>' : ''}
           ${p.age_limit ? '<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:2px 6px;border-radius:6px">18+</span>' : ''}
-          ${isExpired ? '<span style="font-size:10px;font-weight:700;background:#FEF2F2;color:#EF4444;padding:2px 6px;border-radius:6px">기간만료</span>' : ''}
+          ${isExpired ? `<span style="font-size:10px;font-weight:700;background:#FEF2F2;color:#EF4444;padding:2px 6px;border-radius:6px">${t('status_expired_label')}</span>` : ''}
         </div>
         <!-- 토글 스위치 -->
         <button class="posting-toggle" onclick="event.stopPropagation();quickTogglePosting('${p.id}','${p.status}')"
-          style="background:${isOpen ? '#22c55e' : '#ddd'}" title="${isOpen ? '마감하기' : '재오픈'}">
+          style="background:${isOpen ? '#22c55e' : '#ddd'}" title="${isOpen ? t('close_posting_title') : t('reopen_posting_title')}">
           <div class="posting-toggle-knob" style="left:${isOpen ? '23px' : '3px'}"></div>
         </button>
       </div>
@@ -12051,17 +12051,17 @@ function renderPostings() {
       <div style="border-top:1px solid #f5f5f5;padding-top:10px;display:flex;align-items:flex-end;justify-content:space-between">
         <div>
           <div style="display:flex;align-items:baseline;gap:6px">
-            <span style="font-size:20px;font-weight:900;color:var(--red);line-height:1">${p.current_wage.toLocaleString()}원</span>
-            <span style="font-size:12px;color:#aaa;font-weight:600">/시간</span>
-            ${surge > 0 ? `<span style="font-size:11px;color:#FF9500;font-weight:700">↑${surge.toLocaleString()}원</span>` : ''}
+            <span style="font-size:20px;font-weight:900;color:var(--red);line-height:1">${p.current_wage.toLocaleString()}${t('won_suffix')}</span>
+            <span style="font-size:12px;color:#aaa;font-weight:600">${t('per_hour_suffix')}</span>
+            ${surge > 0 ? `<span style="font-size:11px;color:#FF9500;font-weight:700">↑${surge.toLocaleString()}${t('won_suffix')}</span>` : ''}
           </div>
           <div style="font-size:11px;color:#888;margin-top:4px;font-weight:600">${timeInfo}</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-          ${!isOpen ? `<button onclick="event.stopPropagation();relistPosting('${p.id}')" class="posting-relist-btn">재등록</button>` : ''}
+          ${!isOpen ? `<button onclick="event.stopPropagation();relistPosting('${p.id}')" class="posting-relist-btn">${t('relist_btn')}</button>` : ''}
           <button onclick="event.stopPropagation();toggleApplicantInline('${p.id}')"
             style="display:flex;align-items:center;gap:4px;background:#FFF0F0;border:none;border-radius:20px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:700;color:var(--red);white-space:nowrap;flex-shrink:0">
-            👥 <span id="app-count-${p.id}">...</span>명
+            👥 <span id="app-count-${p.id}">...</span>${t('ownr_count_people_suffix')}
             <span id="chevron-app-${p.id}" style="font-size:10px;transition:transform 0.2s">▼</span>
           </button>
         </div>
@@ -12075,7 +12075,7 @@ function renderPostings() {
 
   // + 새 공고 작성 CTA
   el.innerHTML += `<div class="posting-new-cta" onclick="openPostingForm()">
-    <div style="font-size:14px;color:#bbb;font-weight:700">+ 새 공고 작성</div>
+    <div style="font-size:14px;color:#bbb;font-weight:700">${t('new_posting_cta')}</div>
   </div>`;
 
   postings.forEach(p => loadApplicantCount(p.id));
@@ -12099,22 +12099,22 @@ function openPostingDetail(jobId) {
   const today  = new Date().toISOString().slice(0, 10);
   const isExpired = p.work_end_date && p.work_end_date < today;
   const surge  = p.current_wage - p.base_wage;
-  const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} (${['일','월','화','수','목','금','토'][d.getDay()]}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
+  const fmtDate = iso => { const d = new Date(iso); const dayKeys = ['ownr_day_sun','ownr_day_mon','ownr_day_tue','ownr_day_wed','ownr_day_thu','ownr_day_fri','ownr_day_sat']; return `${d.getMonth()+1}/${d.getDate()} (${t(dayKeys[d.getDay()])}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; };
   const fmtDay  = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()}`; };
 
-  const WORK_TYPE_LABEL = { spot:'스팟', short:'단기', regular:'정기', errand:'심부름' };
-  const typeLabel = WORK_TYPE_LABEL[p.work_type] || '스팟';
+  const WORK_TYPE_LABEL = { spot: t('work_type_spot'), short: t('work_type_short'), regular: t('work_type_regular'), errand: t('job_type_errand') };
+  const typeLabel = WORK_TYPE_LABEL[p.work_type] || t('work_type_spot');
   const statusColor = p.status==='urgent' ? '#C8102E' : p.status==='open' ? '#16a34a' : '#888';
   const statusLabel = p.status==='urgent' ? 'ASAP' : p.status==='open' ? t('status_open_label') : t('status_closed_label');
 
   document.getElementById('pd-body').innerHTML = `
     <div style="padding:0 20px 20px">
-      ${!isOpen ? `<button onclick="reopenWithEdit('${p.id}')" style="width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">공고 재오픈 (내용 수정)</button>` : ''}
+      ${!isOpen ? `<button onclick="reopenWithEdit('${p.id}')" style="width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">${t('ownr_reopen_edit_btn')}</button>` : ''}
       <!-- 상태/유형 -->
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;padding-top:4px">
         <span style="font-size:12px;font-weight:800;color:${statusColor};background:${statusColor}18;padding:4px 12px;border-radius:20px">${statusLabel}</span>
         <span style="font-size:12px;font-weight:700;color:#666;background:#f5f5f5;padding:4px 10px;border-radius:20px">${typeLabel}</span>
-        ${isExpired ? '<span style="font-size:12px;font-weight:800;color:#EF4444;background:#FEF2F2;padding:4px 10px;border-radius:20px">⏰ 기간만료</span>' : ''}
+        ${isExpired ? `<span style="font-size:12px;font-weight:800;color:#EF4444;background:#FEF2F2;padding:4px 10px;border-radius:20px">⏰ ${t('status_expired_label')}</span>` : ''}
       </div>
 
       <!-- 공고명 -->
@@ -12123,10 +12123,10 @@ function openPostingDetail(jobId) {
 
       <!-- 시급 -->
       <div style="background:linear-gradient(135deg,#fff0f0,#fff8f8);border-radius:16px;padding:16px;margin-bottom:16px">
-        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">시급</div>
-        <div style="font-size:28px;font-weight:900;color:var(--red)">${p.current_wage.toLocaleString()}<span style="font-size:16px">원</span></div>
-        ${surge > 0 ? `<div style="font-size:12px;color:#FF9500;font-weight:700;margin-top:4px">⚡ 기본 ${p.base_wage.toLocaleString()}원 → 서지 +${surge.toLocaleString()}원 인상</div>` : ''}
-        ${p.same_day_payment ? '<div style="font-size:12px;color:#16a34a;font-weight:700;margin-top:4px">\u{1F4B4} 근무 당일 현금 지급</div>' : ''}
+        <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${t('wage_label')}</div>
+        <div style="font-size:28px;font-weight:900;color:var(--red)">${p.current_wage.toLocaleString()}<span style="font-size:16px">${t('won_suffix')}</span></div>
+        ${surge > 0 ? `<div style="font-size:12px;color:#FF9500;font-weight:700;margin-top:4px">${t('ownr_surge_wage_detail').replace('{base}', p.base_wage.toLocaleString()).replace('{surge}', surge.toLocaleString())}</div>` : ''}
+        ${p.same_day_payment ? `<div style="font-size:12px;color:#16a34a;font-weight:700;margin-top:4px">${t('ownr_same_day_cash_notice')}</div>` : ''}
       </div>
 
       <!-- 근무 정보 그리드 -->
@@ -12139,8 +12139,8 @@ function openPostingDetail(jobId) {
           return `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
         <div style="background:#f8f8f8;border-radius:12px;padding:12px;grid-column:1/-1">
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 시간</div>
-          <div style="font-size:13px;font-weight:800;color:#333">${startT}${endT ? ' ~ ' + endT : ''}${p.duration_hours ? ` (${p.duration_hours}시간)` : ''}</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${t('ownr_work_hours_label')}</div>
+          <div style="font-size:13px;font-weight:800;color:#333">${startT}${endT ? ' ~ ' + endT : ''}${p.duration_hours ? ` (${p.duration_hours}${t('hour_unit_suffix')})` : ''}</div>
         </div>`;
         }
         const endStr = (p.start_time && p.duration_hours) ? (() => {
@@ -12149,24 +12149,24 @@ function openPostingDetail(jobId) {
         return `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 시작</div>
-          <div style="font-size:13px;font-weight:800;color:#333">${p.start_time ? fmtDate(p.start_time) : '미정'}</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${t('ownr_work_start_label')}</div>
+          <div style="font-size:13px;font-weight:800;color:#333">${p.start_time ? fmtDate(p.start_time) : t('undecided')}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">근무 종료</div>
-          <div style="font-size:13px;font-weight:800;color:#333">${endStr || (p.duration_hours ? p.duration_hours + '시간' : '-')}</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${t('ownr_work_end_label')}</div>
+          <div style="font-size:13px;font-weight:800;color:#333">${endStr || (p.duration_hours ? p.duration_hours + t('hour_unit_suffix') : '-')}</div>
         </div>`;
       })()}
         <div style="background:#f8f8f8;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">필요 인원</div>
-          <div style="font-size:13px;font-weight:800;color:#333">${p.filled_count ?? 0}/${p.needed_count ?? 1}명 (${p.needed_count - p.filled_count}명 모집 중)</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${t('ownr_needed_headcount_label')}</div>
+          <div style="font-size:13px;font-weight:800;color:#333">${t('ownr_headcount_detail').replace('{filled}', p.filled_count ?? 0).replace('{needed}', p.needed_count ?? 1).replace('{remain}', p.needed_count - p.filled_count)}</div>
         </div>
         ${p.work_end_date ? `<div style="background:#EFF6FF;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#3B82F6;font-weight:700;margin-bottom:4px">모집 마감</div>
+          <div style="font-size:11px;color:#3B82F6;font-weight:700;margin-bottom:4px">${t('ownr_recruit_deadline_label')}</div>
           <div style="font-size:13px;font-weight:800;color:#1E3A8A">~${p.work_end_date.slice(5).replace('-','/')}</div>
         </div>` : ''}
         ${p.work_days ? `<div style="background:#F0FDF4;border-radius:12px;padding:12px;grid-column:1/-1">
-          <div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:4px">근무 요일</div>
+          <div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:4px">${t('ownr_work_days_label')}</div>
           <div style="font-size:13px;font-weight:800;color:#166534">${p.work_days}</div>
         </div>` : ''}
       </div>
@@ -12175,25 +12175,25 @@ function openPostingDetail(jobId) {
       ${(p.address || (p.lat && p.lng)) ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px">
         <span style="font-size:20px">\u{1F4CD}</span>
         <div>
-          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:2px">위치</div>
-          <div id="pd-addr-text" style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${p.address || '위치 불러오는 중...'}</div>
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:2px">${t('location_label')}</div>
+          <div id="pd-addr-text" style="font-size:14px;font-weight:700;color:#333;line-height:1.6;white-space:pre-wrap">${p.address || t('ownr_loading_location')}</div>
         </div>
-      </div>` : '<div style="background:#FFF7ED;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#F59E0B;font-weight:700">\u{1F4CD} 위치 정보 없음 — 수정 탭에서 위치를 설정해주세요</div>'}
+      </div>` : `<div style="background:#FFF7ED;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#F59E0B;font-weight:700">${t('ownr_no_location_notice')}</div>`}
 
       <!-- 공고 설명 -->
       ${p.description ? `<div style="background:#fffef0;border-radius:12px;padding:14px;margin-bottom:20px;border-left:3px solid #F59E0B">
-        <div style="font-size:11px;color:#F59E0B;font-weight:700;margin-bottom:6px">공고 내용</div>
+        <div style="font-size:11px;color:#F59E0B;font-weight:700;margin-bottom:6px">${t('ownr_posting_content_label')}</div>
         <div style="font-size:14px;color:#555;line-height:1.6;white-space:pre-wrap">${p.description}</div>
       </div>` : ''}
 
       <!-- 등록일 + 조회수 -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        ${p.created_at ? `<div style="font-size:12px;color:#ccc">\u{1F4CC} ${fmtDay(p.created_at)} 등록</div>` : '<div></div>'}
-        <div style="font-size:12px;color:#bbb;font-weight:700">\u{1F441} ${p.view_count || 0}회 조회</div>
+        ${p.created_at ? `<div style="font-size:12px;color:#ccc">\u{1F4CC} ${fmtDay(p.created_at)}${t('registered_suffix')}</div>` : '<div></div>'}
+        <div style="font-size:12px;color:#bbb;font-weight:700">\u{1F441} ${p.view_count || 0}${t('ownr_view_count_suffix')}</div>
       </div>
 
       <!-- 지원자 -->
-      <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">\u{1F465} 지원자 목록</div>
+      <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:10px">${t('ownr_applicant_list_title')}</div>
       <div id="pd-applicants" style="margin-bottom:20px">
         <div style="text-align:center;padding:16px"><div class="spinner"></div></div>
       </div>
@@ -12201,16 +12201,16 @@ function openPostingDetail(jobId) {
       <!-- 액션 버튼 -->
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
-          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#fff;color:#333;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>수정</button>
-          <button onclick="${isOpen ? `toggleStatus('${p.id}','${p.status}')` : `reopenWithEdit('${p.id}')`}" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? '마감' : '재오픈'}</button>
+          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#fff;color:#333;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${t('edit_btn')}</button>
+          <button onclick="${isOpen ? `toggleStatus('${p.id}','${p.status}')` : `reopenWithEdit('${p.id}')`}" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? t('status_closed_label') : t('reopen_posting_title')}</button>
         </div>
         <div style="display:flex;gap:8px">
-          ${p.status === 'open' ? `<button onclick="setPostingUrgent('${p.id}',true)" style="flex:1;padding:10px;background:#FFF0F0;color:#C8102E;border:1.5px solid #FECACA;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">🔥 급구 설정</button>` : ''}
-          ${p.status === 'urgent' ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">⚡ 서지(시급↑)</button>` : ''}
-          <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#FEE500;color:#3C1E1E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>공유</button>
+          ${p.status === 'open' ? `<button onclick="setPostingUrgent('${p.id}',true)" style="flex:1;padding:10px;background:#FFF0F0;color:#C8102E;border:1.5px solid #FECACA;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">${t('ownr_set_urgent_btn')}</button>` : ''}
+          ${p.status === 'urgent' ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('ownr_surge_btn')}</button>` : ''}
+          <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#FEE500;color:#3C1E1E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>${t('share_tooltip')}</button>
         </div>
-        ${p.status === 'urgent' ? `<button onclick="setPostingUrgent('${p.id}',false)" style="background:none;border:none;color:#aaa;font-size:12px;padding:4px;cursor:pointer;width:100%;text-align:center;font-weight:600">급구 해제 → 일반 모집으로 전환</button>` : ''}
-        <button onclick="deletePosting('${p.id}')" style="background:none;border:none;color:#EF4444;font-size:13px;padding:6px;cursor:pointer;width:100%;text-align:center;font-weight:600">공고 삭제</button>
+        ${p.status === 'urgent' ? `<button onclick="setPostingUrgent('${p.id}',false)" style="background:none;border:none;color:#aaa;font-size:12px;padding:4px;cursor:pointer;width:100%;text-align:center;font-weight:600">${t('ownr_cancel_urgent_btn')}</button>` : ''}
+        <button onclick="deletePosting('${p.id}')" style="background:none;border:none;color:#EF4444;font-size:13px;padding:6px;cursor:pointer;width:100%;text-align:center;font-weight:600">${t('ownr_delete_posting_btn')}</button>
       </div>
     </div>`;
 
@@ -12234,7 +12234,7 @@ function openPostingDetail(jobId) {
         const r = result[0];
         el.textContent = r.road_address ? r.road_address.address_name : r.address.address_name;
       } else {
-        el.textContent = '주소를 불러올 수 없습니다';
+        el.textContent = t('ownr_address_load_failed');
         el.style.color = '#aaa';
       }
     });
@@ -12257,7 +12257,7 @@ async function loadPostingDetailApplicants(jobId) {
       .order('applied_at', { ascending: false });
     if (error) throw error;
     if (!apps?.length) {
-      el.innerHTML = '<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">아직 지원자가 없어요</div>';
+      el.innerHTML = '<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">' + t('ownr_no_applicants_yet') + '</div>';
       return;
     }
     const wids = [...new Set(apps.filter(a => a.worker_id).map(a => a.worker_id))];
@@ -12272,7 +12272,7 @@ async function loadPostingDetailApplicants(jobId) {
     el.innerHTML = enriched.map(a => makeApplicantCardHtml(a, { stopProp: false })).join('');
   } catch(e) {
     console.error('[applicants]', e);
-    el.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">지원자 목록을 불러오지 못했어요<br><span style="font-size:11px;color:#ddd">${e?.message||''}</span><br><button onclick="loadPostingDetailApplicants('${jobId}')" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">↺ 다시 시도</button></div>`;
+    el.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:16px">${t('ownr_applicant_list_load_failed')}<br><span style="font-size:11px;color:#ddd">${e?.message||''}</span><br><button onclick="loadPostingDetailApplicants('${jobId}')" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;font-size:13px">${t('retry_short_btn')}</button></div>`;
   }
 }
 
@@ -12285,7 +12285,7 @@ async function loadInlineApplicants(jobId, targetId) {
     .eq('job_posting_id', jobId)
     .order('applied_at', { ascending: false });
   if (!apps?.length) {
-    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0">아직 지원자가 없어요</div>';
+    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px 0">' + t('ownr_no_applicants_yet') + '</div>';
     return;
   }
   const wids = [...new Set(apps.filter(a => a.worker_id).map(a => a.worker_id))];
@@ -12301,50 +12301,50 @@ async function loadInlineApplicants(jobId, targetId) {
 }
 
 function deleteApplication(appId) {
-  showConfirm('복구할 수 없습니다.', async () => {
+  showConfirm(t('cannot_be_undone_notice'), async () => {
     const { error } = await db.from('applications').delete().eq('id', appId);
-    if (error) { showToast('삭제 실패: ' + error.message); return; }
+    if (error) { showToast(t('delete_failed') + ': ' + error.message); return; }
     document.getElementById('app-card-' + appId)?.remove();
-    showToast('✅ 지원자가 삭제됐습니다');
+    showToast(t('ownr_applicant_deleted_toast'));
     loadPostings();
-  }, {icon:'🗑️', title:'지원자 삭제', okLabel:'삭제', danger:true});
+  }, {icon:'🗑️', title: t('ownr_delete_applicant_title'), okLabel: t('delete'), danger:true});
 }
 
 function deletePosting(jobId) {
-  showConfirm('지원자·채팅 데이터도 함께 삭제됩니다.\n삭제 후 복구가 불가능합니다.', async () => {
+  showConfirm(t('ownr_delete_posting_confirm_desc'), async () => {
     const sess = currentSession;
-    if (!sess) { showToast('로그인 세션이 만료됐습니다. 새로고침 후 재로그인해주세요'); return; }
+    if (!sess) { showToast(t('session_expired_notice')); return; }
     const res = await fetch(
       APP_CONFIG.SUPABASE_URL + '/rest/v1/job_postings?id=eq.' + jobId,
       { method: 'DELETE', headers: { 'apikey': APP_CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + sess.access_token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' } }
     );
     if (!res.ok) {
-      let msg = '삭제 실패';
+      let msg = t('delete_failed');
       try { const err = await res.json(); msg += ': ' + (err.message || err.details || JSON.stringify(err)); } catch {}
       showToast(msg); return;
     }
     const deleted = await res.json();
-    if (!deleted?.length) { showToast('삭제 실패: 권한이 없거나 이미 삭제된 공고입니다'); return; }
-    showToast('✅ 공고가 삭제됐습니다');
+    if (!deleted?.length) { showToast(t('ownr_delete_no_permission_notice')); return; }
+    showToast(t('ownr_posting_deleted_toast'));
     closePostingDetail(); loadPostings();
-  }, {icon:'🗑️', title:'공고 삭제', okLabel:'삭제', danger:true});
+  }, {icon:'🗑️', title: t('ownr_delete_posting_btn'), okLabel: t('delete'), danger:true});
 }
 
 // ── 지원자 카드 공통 생성 함수 ──────────────────────────────
 const _STATUS_BADGE = {
-  pending:   { bg:'#F3F4F6', color:'#6B7280', label:'검토 전' },
-  reviewing: { bg:'#FFF7ED', color:'#D97706', label:'1차합격' },
-  on_hold:   { bg:'#EFF6FF', color:'#3B82F6', label:'보류' },
-  accepted:  { bg:'#D1FAE5', color:'#065F46', label:'✅ 최종합격' },
-  rejected:  { bg:'#F5F5F5', color:'#888',    label:'탈락' },
-  cancelled: { bg:'#F5F5F5', color:'#aaa',    label:'지원취소' },
-  completed: { bg:'#DBEAFE', color:'#1e40af', label:'🏁 근무완료' },
-  noshow:    { bg:'#FEE2E2', color:'#DC2626', label:'노쇼' },
+  pending:   { bg:'#F3F4F6', color:'#6B7280', get label() { return t('ownr_status_pre_review'); } },
+  reviewing: { bg:'#FFF7ED', color:'#D97706', get label() { return t('ownr_status_first_pass'); } },
+  on_hold:   { bg:'#EFF6FF', color:'#3B82F6', get label() { return t('ownr_status_hold'); } },
+  accepted:  { bg:'#D1FAE5', color:'#065F46', get label() { return t('ownr_status_final_pass'); } },
+  rejected:  { bg:'#F5F5F5', color:'#888',    get label() { return t('app_rejected'); } },
+  cancelled: { bg:'#F5F5F5', color:'#aaa',    get label() { return t('ownr_status_cancelled'); } },
+  completed: { bg:'#DBEAFE', color:'#1e40af', get label() { return t('ownr_status_work_completed'); } },
+  noshow:    { bg:'#FEE2E2', color:'#DC2626', get label() { return t('app_noshow'); } },
 };
 
 function _adminBtn(table, id, field, value, label) {
   const safe = (value || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-  return `<button onclick="event.stopPropagation();adminQuickEdit('${table}','${id}','${field}','${safe}','${label}')" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;vertical-align:middle;flex-shrink:0" title="어드민 수정">✏️</button>`;
+  return `<button onclick="event.stopPropagation();adminQuickEdit('${table}','${id}','${field}','${safe}','${label}')" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;vertical-align:middle;flex-shrink:0" title="${t('admin_edit_title')}">✏️</button>`;
 }
 function adminQuickEdit(table, id, field, currentValue, label) {
   const overlay = document.createElement('div');
@@ -12354,13 +12354,13 @@ function adminQuickEdit(table, id, field, currentValue, label) {
     <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:18px">🛡️</span>
-        <div style="font-size:16px;font-weight:900;color:#222">어드민 수정</div>
+        <div style="font-size:16px;font-weight:900;color:#222">${t('admin_edit_title')}</div>
       </div>
       <div style="font-size:12px;color:#aaa;margin-bottom:14px">${label}</div>
       <textarea id="_aqe-input" style="width:100%;box-sizing:border-box;height:72px;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.5;outline:none"></textarea>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
-        <button id="_aqe-save" style="flex:1;padding:12px;background:#1e293b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">저장</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${t('cancel')}</button>
+        <button id="_aqe-save" style="flex:1;padding:12px;background:#1e293b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('save_short')}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -12369,10 +12369,10 @@ function adminQuickEdit(table, id, field, currentValue, label) {
   setTimeout(() => ta.focus(), 80);
   overlay.querySelector('#_aqe-save').onclick = async () => {
     const val = ta.value.trim();
-    if (!val) { showToast('내용을 입력해주세요'); return; }
+    if (!val) { showToast(t('content_required_notice')); return; }
     const { error } = await db.from(table).update({ [field]: val }).eq('id', id);
-    if (error) { showToast('저장 실패: ' + error.message); return; }
-    showToast('✅ 수정됐어요');
+    if (error) { showToast(t('save_failed_prefix') + error.message); return; }
+    showToast(t('edited_toast'));
     overlay.remove();
     if (table === 'job_postings') loadJobs();
     else if (table === 'gatherings') loadMoimList();
@@ -12401,7 +12401,7 @@ function calcBakalbaScore(w) {
 function trustBadgeHtml(w) {
   const s = calcBakalbaScore(w);
   const cls = s >= 80 ? 'trust-high' : s >= 60 ? 'trust-mid' : 'trust-low';
-  return `<span class="trust-badge ${cls}">신뢰 ${s}점</span>`;
+  return `<span class="trust-badge ${cls}">${t('trust_score_badge_text').replace('{n}', s)}</span>`;
 }
 
 function makeApplicantCardHtml(a, opts = {}) {
@@ -12409,13 +12409,13 @@ function makeApplicantCardHtml(a, opts = {}) {
   const sp = 'event.stopPropagation();';
   const w = a.workers;
   const wid = w?.id || '';
-  const name = w?.name || '이름없음';
+  const name = w?.name || t('no_name_label');
   const rating = w?.rating != null ? Number(w.rating).toFixed(1) : '-';
   const reviews = w?.review_count || 0;
   const noshow = w?.noshow_count || 0;
   const total = reviews + noshow;
   const attendanceHtml = total > 0
-    ? ` · <span style="color:${noshow > 0 ? '#dc2626' : '#16a34a'};font-weight:700">출근율 ${Math.round(reviews/total*100)}%</span>${noshow > 0 ? ` <span style="color:#dc2626">⚠️노쇼${noshow}</span>` : ''}`
+    ? ` · <span style="color:${noshow > 0 ? '#dc2626' : '#16a34a'};font-weight:700">${t('attendance_rate_label').replace('{n}', Math.round(reviews/total*100))}</span>${noshow > 0 ? ` <span style="color:#dc2626">${t('noshow_count_warning_short').replace('{n}', noshow)}</span>` : ''}`
     : '';
   const trustBadge = total >= 2 ? trustBadgeHtml(w) : '';
   const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
@@ -12424,39 +12424,39 @@ function makeApplicantCardHtml(a, opts = {}) {
   const avatarSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 
   // 액션 버튼 (상태별로 필요한 것만)
-  let actions = `<button onclick="${sp}openChat('${a.id}','${name}')" class="ac-btn ac-chat">💬 채팅</button>`;
+  let actions = `<button onclick="${sp}openChat('${a.id}','${name}')" class="ac-btn ac-chat">${t('chat_btn_emoji')}</button>`;
   if (a.status === 'pending') {
-    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-pass">⭐ 1차합격</button>`;
-    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">📌 보류</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-pass">${t('ownr_pass_first_round_btn')}</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">${t('ownr_hold_action_btn')}</button>`;
   } else if (a.status === 'reviewing') {
-    actions += `<button onclick="${sp}confirmAccept('${a.id}')" class="ac-btn ac-pass" style="background:#22c55e;color:#fff">✅ 최종합격</button>`;
-    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">📌 보류</button>`;
-    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">✗ 탈락</button>`;
+    actions += `<button onclick="${sp}confirmAccept('${a.id}')" class="ac-btn ac-pass" style="background:#22c55e;color:#fff">${t('ownr_status_final_pass')}</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">${t('ownr_hold_action_btn')}</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">${t('ownr_reject_btn')}</button>`;
   } else if (a.status === 'on_hold') {
-    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">↩ 1차합격으로</button>`;
-    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">✗ 탈락</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','reviewing')" class="ac-btn ac-sub">${t('ownr_back_to_first_pass_btn')}</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">${t('ownr_reject_btn')}</button>`;
   } else if (a.status === 'accepted') {
-    actions += `<button onclick="${sp}showRatingModal('${a.id}','${wid}')" class="ac-btn ac-done">🏁 완료</button>`;
-    actions += `<button onclick="${sp}markNoshow('${a.id}','${wid}')" class="ac-btn ac-fail">노쇼</button>`;
+    actions += `<button onclick="${sp}showRatingModal('${a.id}','${wid}')" class="ac-btn ac-done">${t('ownr_complete_action_btn')}</button>`;
+    actions += `<button onclick="${sp}markNoshow('${a.id}','${wid}')" class="ac-btn ac-fail">${t('app_noshow')}</button>`;
   } else if (a.status === 'rejected') {
-    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">↩ 보류로</button>`;
+    actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">${t('ownr_back_to_hold_btn')}</button>`;
   } else if (a.status === 'completed') {
     const stars = a.worker_rating ? '⭐'.repeat(a.worker_rating) : '';
     if (stars) actions += `<span style="font-size:13px;letter-spacing:1px">${stars}</span>`;
     if (a.worker_review) {
-      actions += `<button onclick="${sp}openReviewReplyModal('${a.id}','${name.replace(/'/g,"\\'")}','${a.worker_review.replace(/'/g,"\\'").replace(/\n/g,' ')}','${(a.review_reply||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')" class="ac-btn ac-sub" style="font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.review_reply ? '💬 답글' : '📝 답글달기'}</button>`;
+      actions += `<button onclick="${sp}openReviewReplyModal('${a.id}','${name.replace(/'/g,"\\'")}','${a.worker_review.replace(/'/g,"\\'").replace(/\n/g,' ')}','${(a.review_reply||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')" class="ac-btn ac-sub" style="font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.review_reply ? t('ownr_reply_btn') : t('ownr_write_reply_btn')}</button>`;
     }
   }
   if (showExtras && wid) {
     const isRec = _recommendedWorkers.has(wid);
     const isBlk = _blockedWorkers.has(wid);
-    actions += `<button onclick="${sp}toggleFavWorker('${wid}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isFav?'#FEF3C7':'#f5f5f5'};color:${isFav?'#D97706':'#aaa'}" title="즐겨찾기">${isFav?'♥':'♡'}</button>`;
-    actions += `<button onclick="${sp}toggleRecommendWorker('${wid}')" class="ac-btn ac-rec" style="flex:0;padding:8px 10px;background:${isRec?'#FEF3C7':'#f5f5f5'};color:${isRec?'#D97706':'#aaa'}" title="추천">${isRec?'👍':'추천'}</button>`;
-    actions += `<button onclick="${sp}toggleBlockWorker('${wid}','${name.replace(/'/g,'&#39;')}')" class="ac-btn ac-blk" style="flex:0;padding:8px 10px;background:${isBlk?'#FFF1F2':'#f5f5f5'};color:${isBlk?'#BE123C':'#aaa'}" title="차단">${isBlk?'🚫':'차단'}</button>`;
-    actions += `<button onclick="${sp}toggleCompare('${a.id}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isCmp?'#EFF6FF':'#f5f5f5'};color:${isCmp?'#3B82F6':'#aaa'}">${isCmp?'✓비교':'비교'}</button>`;
+    actions += `<button onclick="${sp}toggleFavWorker('${wid}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isFav?'#FEF3C7':'#f5f5f5'};color:${isFav?'#D97706':'#aaa'}" title="${t('favorite_title')}">${isFav?'♥':'♡'}</button>`;
+    actions += `<button onclick="${sp}toggleRecommendWorker('${wid}')" class="ac-btn ac-rec" style="flex:0;padding:8px 10px;background:${isRec?'#FEF3C7':'#f5f5f5'};color:${isRec?'#D97706':'#aaa'}" title="${t('recommend_label')}">${isRec?'👍':t('recommend_label')}</button>`;
+    actions += `<button onclick="${sp}toggleBlockWorker('${wid}','${name.replace(/'/g,'&#39;')}')" class="ac-btn ac-blk" style="flex:0;padding:8px 10px;background:${isBlk?'#FFF1F2':'#f5f5f5'};color:${isBlk?'#BE123C':'#aaa'}" title="${t('block_label')}">${isBlk?'🚫':t('block_label')}</button>`;
+    actions += `<button onclick="${sp}toggleCompare('${a.id}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isCmp?'#EFF6FF':'#f5f5f5'};color:${isCmp?'#3B82F6':'#aaa'}">${isCmp?t('compare_selected_label'):t('compare_label')}</button>`;
   }
 
-  const quickBadge = a.is_quick ? `<span style="font-size:10px;font-weight:900;background:#FFF9E6;color:#D97706;padding:2px 6px;border-radius:6px;margin-right:4px">⚡번개</span>` : '';
+  const quickBadge = a.is_quick ? `<span style="font-size:10px;font-weight:900;background:#FFF9E6;color:#D97706;padding:2px 6px;border-radius:6px;margin-right:4px">${t('quick_lightning_badge')}</span>` : '';
   const jobTitle = showExtras && a.job_postings?.title ? `<span style="font-size:10px;color:#bbb;margin-left:4px">· ${a.job_postings.title}</span>` : '';
 
   return `
@@ -12465,20 +12465,20 @@ function makeApplicantCardHtml(a, opts = {}) {
       <div class="applicant-avatar">${avatarSvg}</div>
       <div class="ac-info">
         <div class="ac-name">${quickBadge}${name}${trustBadge}${jobTitle}</div>
-        <div class="ac-meta">★ ${rating} · 완료 ${reviews}건${attendanceHtml}${phone ? ' · '+phone : ''}${showExtras && lastWorked ? ` · <span style="color:#94a3b8">근무 ${formatRelativeDate(lastWorked)}</span>` : ''}</div>
+        <div class="ac-meta">★ ${rating} · ${t('completed_count_label').replace('{n}', reviews)}${attendanceHtml}${phone ? ' · '+phone : ''}${showExtras && lastWorked ? ` · <span style="color:#94a3b8">${t('work_relative_label').replace('{date}', formatRelativeDate(lastWorked))}</span>` : ''}</div>
       </div>
       ${badge}
     </div>
     ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:10px;border-left:3px solid #C8102E;font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     ${a.status === 'completed' && a.worker_review ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#FFF7ED;border-radius:10px;border-left:3px solid #F59E0B">
-      <div style="font-size:10px;font-weight:700;color:#92400E;margin-bottom:3px">⭐ ${name}님의 후기</div>
+      <div style="font-size:10px;font-weight:700;color:#92400E;margin-bottom:3px">⭐ ${t('review_of_name_label').replace('{name}', name)}</div>
       <div style="font-size:12px;color:#78350F;line-height:1.5">"${a.worker_review.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
-      ${a.review_reply ? `<div style="margin-top:6px;padding:6px 8px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E"><span style="font-weight:800">업체 답글:</span> ${a.review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+      ${a.review_reply ? `<div style="margin-top:6px;padding:6px 8px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E"><span style="font-weight:800">${t('ownr_biz_reply_label')}</span> ${a.review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     </div>` : ''}
     ${a.status === 'completed' && a.worker_rating && a.worker_review_reply ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#EFF6FF;border-radius:10px;border-left:3px solid #3b82f6">
-      <div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:3px">💬 ${name}님의 평가 답글</div>
+      <div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:3px">💬 ${t('review_reply_of_name_label').replace('{name}', name)}</div>
       <div style="font-size:12px;color:#1e3a8a;line-height:1.5">"${a.worker_review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
     </div>` : ''}
     <div class="ac-actions" onclick="${sp}">${actions}</div>
@@ -13697,8 +13697,8 @@ function toggleBlockWorker(workerId, name) {
 function updateWorkerShortcutCounts() {
   const rec = document.getElementById('rec-count');
   const blk = document.getElementById('blk-count');
-  if (rec) rec.textContent = _recommendedWorkers.size + '명';
-  if (blk) blk.textContent = _blockedWorkers.size + '명';
+  if (rec) rec.textContent = _recommendedWorkers.size + t('ownr_count_people_suffix');
+  if (blk) blk.textContent = _blockedWorkers.size + t('ownr_count_people_suffix');
 }
 
 function filterFavApplicants() {

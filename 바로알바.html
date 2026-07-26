@@ -56,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=570"></script>
+  <script src="./shared-lang.js?v=571"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=570">
+  <link rel="stylesheet" href="./assets/css/style.css?v=571">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2557,8 +2557,8 @@
     <div id="profile-pw-section" style="display:none;margin-bottom:24px">
       <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px" data-i18n="pw_toggle">비밀번호 변경</div>
       <div id="profile-pw-form" style="background:#fff;border-radius:14px;padding:16px">
-        <input id="profile-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box">
-        <input id="profile-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
+        <input id="profile-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" data-i18n-ph="ownr_ph_new_password" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box">
+        <input id="profile-new-pw2" type="password" placeholder="비밀번호 확인" data-i18n-ph="ownr_ph_password_confirm" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box">
         <button id="profile-pw-submit-btn" onclick="submitProfilePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer" data-i18n="pw_submit">변경하기</button>
       </div>
     </div>
@@ -3430,8 +3430,8 @@
 
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="ownerSwitchTab('postings',this)">내 공고</button>
-  <button class="tab-btn" onclick="ownerSwitchTab('applicants',this)">지원자</button>
+  <button class="tab-btn active" onclick="ownerSwitchTab('postings',this)" data-i18n="tab_my_postings">내 공고</button>
+  <button class="tab-btn" onclick="ownerSwitchTab('applicants',this)" data-i18n="ownr_tab_applicants">지원자</button>
   <button class="tab-btn" onclick="ownerSwitchTab('staff',this)">👥 Staff</button>
 </div>
 
@@ -3457,19 +3457,19 @@
   <div style="display:flex;gap:10px;margin:0 16px 8px">
     <div class="worker-shortcut" onclick="showRecommendedWorkers()">
       <div style="font-size:24px;margin-bottom:4px">👍</div>
-      <div style="font-size:12px;font-weight:700;color:#333">추천 알바생</div>
+      <div style="font-size:12px;font-weight:700;color:#333" data-i18n="ownr_rec_workers_label">추천 알바생</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="rec-count">0명</div>
     </div>
     <div class="worker-shortcut" onclick="showBlockedWorkers()">
       <div style="font-size:24px;margin-bottom:4px">🚫</div>
-      <div style="font-size:12px;font-weight:700;color:#333">차단한 지원자</div>
+      <div style="font-size:12px;font-weight:700;color:#333" data-i18n="ownr_blocked_applicants_label">차단한 지원자</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px" id="blk-count">0명</div>
     </div>
   </div>
 
   <div style="margin:0 16px 10px">
     <button onclick="openOwnerSettings()" style="width:100%;padding:14px 16px;background:#C8102E;border:none;border-radius:12px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;text-align:center;box-sizing:border-box;letter-spacing:-0.3px">
-      ⚙️ 업체 설정 / 장소 관리
+      <span data-i18n="ownr_biz_settings_places_btn">⚙️ 업체 설정 / 장소 관리</span>
     </button>
   </div>
   <div class="section-head">
@@ -3485,14 +3485,14 @@
   </div>
   <!-- 필터 칩 -->
   <div class="filter-chips" id="applicant-filter-chips">
-    <button class="filter-chip active" id="fchip-all"       onclick="filterApplicants('all')">전체</button>
-    <button class="filter-chip"        id="fchip-pending"   onclick="filterApplicants('pending')">접수</button>
-    <button class="filter-chip"        id="fchip-reviewing" onclick="filterApplicants('reviewing')">검토중</button>
-    <button class="filter-chip"        id="fchip-accepted"  onclick="filterApplicants('accepted')">연락중</button>
-    <button class="filter-chip"        id="fchip-rejected"  onclick="filterApplicants('rejected')">탈락</button>
-    <button class="filter-chip"        id="fchip-completed" onclick="filterApplicants('completed')">완료</button>
-    <button class="filter-chip" style="border-color:#FEF3C7;color:#D97706" id="fchip-fav" onclick="filterFavApplicants()">⭐ 즐겨찾기</button>
-    <button class="filter-chip" style="border-color:#FFF1F2;color:#BE123C" id="fchip-blocked" onclick="showBlockedWorkers()">🚫 차단</button>
+    <button class="filter-chip active" id="fchip-all"       onclick="filterApplicants('all')" data-i18n="cat_all">전체</button>
+    <button class="filter-chip"        id="fchip-pending"   onclick="filterApplicants('pending')" data-i18n="ownr_filter_received">접수</button>
+    <button class="filter-chip"        id="fchip-reviewing" onclick="filterApplicants('reviewing')" data-i18n="status_pending">검토중</button>
+    <button class="filter-chip"        id="fchip-accepted"  onclick="filterApplicants('accepted')" data-i18n="ownr_filter_contacting">연락중</button>
+    <button class="filter-chip"        id="fchip-rejected"  onclick="filterApplicants('rejected')" data-i18n="app_rejected">탈락</button>
+    <button class="filter-chip"        id="fchip-completed" onclick="filterApplicants('completed')" data-i18n="app_completed">완료</button>
+    <button class="filter-chip" style="border-color:#FEF3C7;color:#D97706" id="fchip-fav" onclick="filterFavApplicants()" data-i18n="ownr_favorites_filter">⭐ 즐겨찾기</button>
+    <button class="filter-chip" style="border-color:#FFF1F2;color:#BE123C" id="fchip-blocked" onclick="showBlockedWorkers()" data-i18n="ownr_blocked_filter">🚫 차단</button>
   </div>
   <div id="applicants-list"><div style="text-align:center;padding:32px"><div class="spinner"></div></div></div>
 </div>
@@ -3500,16 +3500,16 @@
 <!-- Staff 관리 탭 -->
 <div class="tab-content" id="tab-staff">
   <div class="staff-summary">
-    <div class="staff-stat"><div class="staff-stat-val" id="st-active">-</div><div class="staff-stat-lbl">현재 근무중</div></div>
-    <div class="staff-stat"><div class="staff-stat-val" id="st-unpaid">-</div><div class="staff-stat-lbl">급여 미지급</div></div>
-    <div class="staff-stat"><div class="staff-stat-val" id="st-total-wage" style="font-size:14px">-</div><div class="staff-stat-lbl">이달 예상급여</div></div>
+    <div class="staff-stat"><div class="staff-stat-val" id="st-active">-</div><div class="staff-stat-lbl" data-i18n="ownr_staff_active_now">현재 근무중</div></div>
+    <div class="staff-stat"><div class="staff-stat-val" id="st-unpaid">-</div><div class="staff-stat-lbl" data-i18n="ownr_staff_unpaid">급여 미지급</div></div>
+    <div class="staff-stat"><div class="staff-stat-val" id="st-total-wage" style="font-size:14px">-</div><div class="staff-stat-lbl" data-i18n="ownr_staff_monthly_est">이달 예상급여</div></div>
   </div>
   <div class="staff-filter">
-    <div class="staff-chip active" id="sc-all" onclick="filterStaff('all',this)">전체</div>
-    <div class="staff-chip" id="sc-accepted" onclick="filterStaff('accepted',this)">🔄 근무중</div>
-    <div class="staff-chip" id="sc-completed" onclick="filterStaff('completed',this)">✅ 완료</div>
-    <div class="staff-chip" id="sc-pending" onclick="filterStaff('pending',this)">📋 지원자</div>
-    <div class="staff-chip" id="sc-unpaid" onclick="filterStaff('unpaid',this)">💰 미지급</div>
+    <div class="staff-chip active" id="sc-all" onclick="filterStaff('all',this)" data-i18n="cat_all">전체</div>
+    <div class="staff-chip" id="sc-accepted" onclick="filterStaff('accepted',this)" data-i18n="ownr_staff_filter_working">🔄 근무중</div>
+    <div class="staff-chip" id="sc-completed" onclick="filterStaff('completed',this)" data-i18n="ownr_staff_filter_completed">✅ 완료</div>
+    <div class="staff-chip" id="sc-pending" onclick="filterStaff('pending',this)">📋 <span data-i18n="ownr_tab_applicants">지원자</span></div>
+    <div class="staff-chip" id="sc-unpaid" onclick="filterStaff('unpaid',this)" data-i18n="ownr_staff_filter_unpaid">💰 미지급</div>
   </div>
   <div class="staff-list" id="staff-list"><div style="text-align:center;padding:32px"><div class="spinner"></div></div></div>
 </div>
@@ -3518,7 +3518,7 @@
 <div class="full-panel" id="panel-posting-detail" style="z-index:510;background:#fff;bottom:0">
   <div class="panel-header" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <button onclick="closePostingDetail()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px 0 0;line-height:1">‹</button>
-    공고 상세
+    <span data-i18n="posting_detail_title">공고 상세</span>
   </div>
   <div id="pd-body" style="overflow-y:auto;flex:1;padding-bottom:80px"></div>
 </div>
@@ -3527,10 +3527,10 @@
 <div class="full-panel" id="panel-owner-chats" style="z-index:510">
   <div class="panel-header" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <button onclick="document.getElementById('panel-owner-chats').classList.remove('show');ownerSwitchTab('postings',document.querySelectorAll('.tab-btn')[0])" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px 0 0;line-height:1">‹</button>
-    채팅
+    <span data-i18n="nav_chats">채팅</span>
   </div>
   <div id="owner-chats-list" style="overflow-y:auto;flex:1;padding:12px 16px 80px">
-    <div style="text-align:center;padding:32px;color:#bbb;font-size:14px">채팅 목록을 불러오는 중...</div>
+    <div style="text-align:center;padding:32px;color:#bbb;font-size:14px" data-i18n="ownr_chat_list_loading">채팅 목록을 불러오는 중...</div>
   </div>
 </div>
 
@@ -3538,11 +3538,11 @@
 <div class="full-panel" id="panel-owner-map" style="z-index:510;overflow:hidden">
   <div style="padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;flex-shrink:0">
     <button onclick="document.getElementById('panel-owner-map').classList.remove('show');ownerSwitchTab('postings',document.querySelectorAll('.tab-btn')[0])" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
-    <input id="owner-map-search" type="text" placeholder="지역 검색 (예: 부산 해운대)" onkeydown="if(event.key==='Enter')searchOwnerLocation(this.value)" style="flex:1;border:1.5px solid #eee;border-radius:10px;padding:8px 12px;font-size:14px;outline:none">
-    <button id="map-tab-jobs" onclick="setOwnerMapMode('jobs')" style="background:#C8102E;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">공고</button>
-    <button id="map-tab-workers" onclick="setOwnerMapMode('workers')" style="background:#fff;color:#888;border:1.5px solid #eee;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">알바생</button>
+    <input id="owner-map-search" type="text" placeholder="지역 검색 (예: 부산 해운대)" data-i18n-ph="ownr_ph_region_search" onkeydown="if(event.key==='Enter')searchOwnerLocation(this.value)" style="flex:1;border:1.5px solid #eee;border-radius:10px;padding:8px 12px;font-size:14px;outline:none">
+    <button id="map-tab-jobs" onclick="setOwnerMapMode('jobs')" style="background:#C8102E;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0" data-i18n="job_unit">공고</button>
+    <button id="map-tab-workers" onclick="setOwnerMapMode('workers')" style="background:#fff;color:#888;border:1.5px solid #eee;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0" data-i18n="default_worker_name">알바생</button>
   </div>
-  <div id="owner-radius-badge" style="display:none;position:absolute;top:62px;right:16px;z-index:20;background:#fff;border:1.5px solid #eee;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:#555;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)" onclick="toggleOwnerRadiusPopup()">반경 <span id="owner-radius-txt">10km</span> ▾</div>
+  <div id="owner-radius-badge" style="display:none;position:absolute;top:62px;right:16px;z-index:20;background:#fff;border:1.5px solid #eee;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:#555;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08)" onclick="toggleOwnerRadiusPopup()"><span data-i18n="ownr_map_radius_label">반경</span> <span id="owner-radius-txt">10km</span> ▾</div>
   <div id="owner-radius-popup" style="display:none;position:absolute;top:96px;right:16px;z-index:25;background:#fff;border:1.5px solid #eee;border-radius:14px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,0.12)">
     <div style="display:flex;flex-direction:column;gap:4px">
       <button onclick="setOwnerRadius(1000)"  style="padding:7px 20px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#f5f5f5;color:#555;text-align:left">1km</button>
@@ -3559,7 +3559,7 @@
     <div id="owner-sheet-handle-area" style="cursor:pointer;flex-shrink:0">
       <div style="display:flex;justify-content:center;padding:8px 0 2px"><div id="owner-sheet-handle-bar" style="width:36px;height:4px;background:#e0e0e0;border-radius:2px"></div></div>
       <div id="owner-sheet-summary" style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px 10px;width:100%">
-        <div id="owner-sheet-count" style="font-size:15px;font-weight:800;color:#222">주변 공고 <span>0</span>개</div>
+        <div id="owner-sheet-count" style="font-size:15px;font-weight:800;color:#222"><span data-i18n="ownr_map_nearby_postings">주변 공고</span> <span>0</span data-i18n="ownr_count_unit">개</div>
       </div>
     </div>
     <div id="owner-sheet-list" style="overflow-y:auto;padding:0 16px 80px"></div>
@@ -3570,13 +3570,13 @@
 <div class="full-panel" id="panel-owner-settings" style="z-index:510;background:#f8f8f8">
   <div class="panel-header" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <button onclick="document.getElementById('panel-owner-settings').classList.remove('show');ownerSwitchTab('postings',document.querySelectorAll('.tab-btn')[0])" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px 0 0;line-height:1">‹</button>
-    업체 설정
+    <span data-i18n="row_biz_settings">업체 설정</span>
   </div>
   <div style="overflow-y:auto;flex:1;padding:16px 16px 80px">
 
     <!-- 관리자 배너 -->
     <div id="owner-admin-banner" style="display:none;background:linear-gradient(135deg,#1e3a8a,#3730a3);border-radius:16px;padding:14px 16px;margin-bottom:12px;color:#fff">
-      <div style="font-size:13px;font-weight:800">🛡️ 관리자 계정</div>
+      <div style="font-size:13px;font-weight:800" data-i18n="ownr_admin_account_badge">🛡️ 관리자 계정</div>
     </div>
 
     <!-- 프로필 카드 -->
@@ -3592,22 +3592,22 @@
           <input id="owner-avatar-file" type="file" accept="image/*" style="display:none" onchange="uploadOwnerAvatar(this)">
         </label>
         <div style="flex:1;min-width:0">
-          <div id="settings-name" style="font-size:16px;font-weight:900;color:#222">업주</div>
+          <div id="settings-name" style="font-size:16px;font-weight:900;color:#222" data-i18n="ownr_role_label">업주</div>
           <div id="settings-email" style="font-size:12px;color:#aaa;margin-top:2px"></div>
           <span id="owner-provider-badge" style="display:none;margin-top:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-block"></span>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #f5f5f5;padding-top:12px">
-        <div style="text-align:center"><div id="owner-stat-postings" style="font-size:20px;font-weight:900;color:var(--red)">-</div><div style="font-size:11px;color:#aaa;margin-top:2px">모집중</div></div>
-        <div style="text-align:center;border-left:1px solid #f5f5f5;border-right:1px solid #f5f5f5"><div id="owner-stat-rating" style="font-size:20px;font-weight:900;color:#F59E0B">-</div><div style="font-size:11px;color:#aaa;margin-top:2px">평점</div></div>
-        <div style="text-align:center"><div id="owner-stat-hired" style="font-size:20px;font-weight:900;color:#22c55e">-</div><div style="font-size:11px;color:#aaa;margin-top:2px">완료</div></div>
+        <div style="text-align:center"><div id="owner-stat-postings" style="font-size:20px;font-weight:900;color:var(--red)">-</div><div style="font-size:11px;color:#aaa;margin-top:2px" data-i18n="stat_open">모집중</div></div>
+        <div style="text-align:center;border-left:1px solid #f5f5f5;border-right:1px solid #f5f5f5"><div id="owner-stat-rating" style="font-size:20px;font-weight:900;color:#F59E0B">-</div><div style="font-size:11px;color:#aaa;margin-top:2px" data-i18n="ownr_rating_label">평점</div></div>
+        <div style="text-align:center"><div id="owner-stat-hired" style="font-size:20px;font-weight:900;color:#22c55e">-</div><div style="font-size:11px;color:#aaa;margin-top:2px" data-i18n="app_completed">완료</div></div>
       </div>
     </div>
 
     <!-- 프로필 완성도 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:800;color:#222">프로필 완성도</div>
+        <div style="font-size:13px;font-weight:800;color:#222" data-i18n="profile_completion_label">프로필 완성도</div>
         <div id="owner-completion-pct" style="font-size:15px;font-weight:900;color:var(--red)">0%</div>
       </div>
       <div style="height:6px;background:#f5f5f5;border-radius:3px;margin-bottom:10px"><div id="owner-completion-bar" style="height:100%;background:linear-gradient(90deg,#C8102E,#FF8C42);border-radius:3px;width:0%;transition:width 0.4s"></div></div>
@@ -3616,42 +3616,42 @@
 
     <!-- 등급 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
-      <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:8px">내 등급</div>
-      <div id="owner-grade-badge" style="font-size:14px;font-weight:800;color:#555;margin-bottom:6px">🏪 일반 업주</div>
+      <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:8px" data-i18n="row_my_grade">내 등급</div>
+      <div id="owner-grade-badge" style="font-size:14px;font-weight:800;color:#555;margin-bottom:6px" data-i18n="ownr_grade_general">🏪 일반 업주</div>
       <div id="owner-grade-desc" style="font-size:12px;color:#aaa;line-height:1.6"></div>
     </div>
 
     <!-- 업체 기본 정보 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
-      <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:12px">🏢 업체 기본 정보</div>
+      <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:12px" data-i18n="ownr_biz_basic_info_title">🏢 업체 기본 정보</div>
       <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:5px">업체명</label>
-        <input id="settings-biz-name" type="text" placeholder="업체명을 입력해주세요" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:5px" data-i18n="biz_name_label">업체명</label>
+        <input id="settings-biz-name" type="text" placeholder="업체명을 입력해주세요" data-i18n-ph="ownr_ph_biz_name_required" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
       </div>
       <div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:5px">연락처</label>
+        <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:5px" data-i18n="phone_label">연락처</label>
         <input id="settings-biz-phone" type="tel" placeholder="010-0000-0000" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
       </div>
       <div style="margin-bottom:6px">
-        <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:5px">업체 소개 <span style="color:#bbb;font-weight:400">(최소 20자)</span></label>
-        <textarea id="settings-biz-desc" placeholder="업체/매장을 소개해주세요. 알바생들이 신뢰를 갖고 지원하게 됩니다." oninput="updateBizDescCounter(this)" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;resize:none;height:100px;box-sizing:border-box;line-height:1.5"></textarea>
+        <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:5px"><span data-i18n="biz_desc_label">업체 소개</span> <span style="color:#bbb;font-weight:400" data-i18n="ownr_bio_min_hint">(최소 20자)</span></label>
+        <textarea id="settings-biz-desc" placeholder="업체/매장을 소개해주세요. 알바생들이 신뢰를 갖고 지원하게 됩니다." data-i18n-ph="ownr_ph_biz_intro" oninput="updateBizDescCounter(this)" style="width:100%;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;resize:none;height:100px;box-sizing:border-box;line-height:1.5"></textarea>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-          <div id="biz-desc-hint" style="display:none;font-size:11px;color:#C8102E;font-weight:700">최소 20자 이상 입력해주세요</div>
+          <div id="biz-desc-hint" style="display:none;font-size:11px;color:#C8102E;font-weight:700" data-i18n="mp_bio_min">최소 20자 이상 입력해주세요</div>
           <div id="biz-desc-counter" style="font-size:11px;color:#bbb;text-align:right;flex:1">0 / 200</div>
         </div>
       </div>
-      <button onclick="saveBizInfo()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-top:6px">저장</button>
+      <button onclick="saveBizInfo()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-top:6px" data-i18n="save_short">저장</button>
     </div>
 
     <!-- 업체 사진 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:800;color:#222">📸 업체 사진</div>
-        <span style="font-size:11px;color:#aaa">최대 5장 · 드래그 순서 변경</span>
+        <div style="font-size:13px;font-weight:800;color:#222" data-i18n="ownr_biz_photo_title">📸 업체 사진</div>
+        <span style="font-size:11px;color:#aaa" data-i18n="ownr_photo_max_drag_hint">최대 5장 · 드래그 순서 변경</span>
       </div>
       <div id="biz-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
       <label id="biz-add-photo-btn" style="display:block;width:100%;padding:12px;background:#f8f8f8;border:2px dashed #eee;border-radius:12px;text-align:center;font-size:13px;font-weight:700;color:#aaa;cursor:pointer;box-sizing:border-box">
-        + 사진 추가
+        <span data-i18n="biz_add_photo">+ 사진 추가</span>
         <input type="file" accept="image/*" style="display:none" onchange="addBizPhoto(this)">
       </label>
     </div>
@@ -3659,40 +3659,40 @@
     <!-- 📍 업체 장소 관리 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:800;color:#222">📍 업체 장소 관리</div>
-        <button onclick="showAddPlaceForm()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">+ 장소 추가</button>
+        <div style="font-size:13px;font-weight:800;color:#222" data-i18n="ownr_biz_place_mgmt_title">📍 업체 장소 관리</div>
+        <button onclick="showAddPlaceForm()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer" data-i18n="ownr_add_place_btn">+ 장소 추가</button>
       </div>
       <div id="my-places-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
-        <div style="font-size:12px;color:#bbb;text-align:center;padding:8px">등록된 장소가 없습니다</div>
+        <div style="font-size:12px;color:#bbb;text-align:center;padding:8px" data-i18n="ownr_no_places_registered">등록된 장소가 없습니다</div>
       </div>
       <!-- 장소 추가 폼 -->
       <div id="add-place-form" style="display:none;background:#f8f8f8;border-radius:12px;padding:14px;margin-top:10px">
-        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px">새 장소 추가</div>
+        <div style="font-size:12px;font-weight:800;color:#555;margin-bottom:10px" data-i18n="ownr_new_place_title">새 장소 추가</div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input id="place-search-q" type="text" placeholder="업체명 검색 (예: 부산 해운대 스타벅스)" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;min-width:0">
-          <button id="place-search-add-btn" onclick="searchNaverPlaceForAdd()" style="background:var(--red);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔍 검색</button>
+          <input id="place-search-q" type="text" placeholder="업체명 검색 (예: 부산 해운대 스타벅스)" data-i18n-ph="ownr_ph_biz_name_search" style="flex:1;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;min-width:0">
+          <button id="place-search-add-btn" onclick="searchNaverPlaceForAdd()" style="background:var(--red);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap" data-i18n="ownr_search_btn_short">🔍 검색</button>
         </div>
         <div style="margin-bottom:8px">
-          <input id="place-naver-url" type="url" placeholder="또는 네이버 플레이스 URL 붙여넣기" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
+          <input id="place-naver-url" type="url" placeholder="또는 네이버 플레이스 URL 붙여넣기" data-i18n-ph="ownr_ph_naver_url_paste" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
         </div>
         <div id="place-add-results" style="display:none;background:#fff;border-radius:10px;border:1.5px solid #eee;margin-bottom:8px;overflow:hidden"></div>
         <div id="place-add-selected" style="display:none;background:#FFF5F5;border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1.5px solid #FFD5D5;font-size:13px;font-weight:700;color:#333"></div>
         <div style="margin-bottom:8px">
-          <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:4px">장소명</label>
-          <input id="place-name" type="text" placeholder="매장명 또는 장소명" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
+          <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:4px" data-i18n="moim_location_label">장소명</label>
+          <input id="place-name" type="text" placeholder="매장명 또는 장소명" data-i18n-ph="ownr_ph_store_or_place_name" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
         </div>
         <div style="margin-bottom:8px">
-          <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:4px">주소</label>
-          <input id="place-address" type="text" placeholder="도로명 주소" readonly style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;background:#fafafa;box-sizing:border-box">
+          <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:4px" data-i18n="moim_address_label">주소</label>
+          <input id="place-address" type="text" placeholder="도로명 주소" data-i18n-ph="ownr_ph_road_address" readonly style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;background:#fafafa;box-sizing:border-box">
         </div>
         <div style="margin-bottom:8px">
-          <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:4px">상세 주소</label>
-          <input id="place-address-detail" type="text" placeholder="동/호수, 층수 등" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
+          <label style="font-size:11px;font-weight:700;color:#888;display:block;margin-bottom:4px" data-i18n="ownr_detail_address_label">상세 주소</label>
+          <input id="place-address-detail" type="text" placeholder="동/호수, 층수 등" data-i18n-ph="ownr_ph_unit_floor" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
         </div>
-        <div id="place-coords-preview" style="display:none;font-size:11px;color:#16a34a;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#f0fff4;border-radius:8px">📍 위치 좌표 확인됨</div>
+        <div id="place-coords-preview" style="display:none;font-size:11px;color:#16a34a;font-weight:700;margin-bottom:8px;padding:6px 10px;background:#f0fff4;border-radius:8px" data-i18n="ownr_coords_confirmed">📍 위치 좌표 확인됨</div>
         <div style="display:flex;gap:8px">
-          <button onclick="document.getElementById('add-place-form').style.display='none'" style="flex:1;padding:11px;background:#f5f5f5;color:#888;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
-          <button onclick="savePlaceToList()" style="flex:2;padding:11px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">장소 저장</button>
+          <button onclick="document.getElementById('add-place-form').style.display='none'" style="flex:1;padding:11px;background:#f5f5f5;color:#888;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer" data-i18n="cancel">취소</button>
+          <button onclick="savePlaceToList()" style="flex:2;padding:11px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer" data-i18n="ownr_save_place_btn">장소 저장</button>
         </div>
       </div>
     </div>
@@ -3700,60 +3700,60 @@
     <!-- 💜 바로만남 미팅 스팟 등록 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:13px;font-weight:800;color:#222">💜 바로만남 미팅 스팟</div>
+        <div style="font-size:13px;font-weight:800;color:#222" data-i18n="ownr_mannam_spot_title">💜 바로만남 미팅 스팟</div>
         <span id="mannam-spot-status-badge" style="display:none;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px"></span>
       </div>
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">우리 매장을 바로만남(바로스팟·바로미팅) 미팅 장소로 등록하세요. 관리자 승인 후 노출됩니다.</div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px" data-i18n="ownr_mannam_spot_desc">우리 매장을 바로만남(바로스팟·바로미팅) 미팅 장소로 등록하세요. 관리자 승인 후 노출됩니다.</div>
       <div id="mannam-spot-form" style="display:flex;flex-direction:column;gap:8px">
-        <input id="mspot-name" type="text" placeholder="매장명" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
-        <input id="mspot-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
-        <input id="mspot-phone" type="text" placeholder="연락처" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
-        <textarea id="mspot-menu" placeholder="메뉴/분위기 소개" rows="2" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;resize:none;font-family:inherit;box-sizing:border-box"></textarea>
-        <div style="font-size:11px;color:#94a3b8">아래 식사비·할인율은 선택 입력입니다. 매장 상세에 참고용으로 표시됩니다.</div>
+        <input id="mspot-name" type="text" placeholder="매장명" data-i18n-ph="ownr_ph_store_name" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input id="mspot-address" type="text" placeholder="주소" data-i18n-ph="moim_address_label" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input id="mspot-phone" type="text" placeholder="연락처" data-i18n-ph="phone_label" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <textarea id="mspot-menu" placeholder="메뉴/분위기 소개" data-i18n-ph="ownr_ph_menu_atmosphere" rows="2" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;resize:none;font-family:inherit;box-sizing:border-box"></textarea>
+        <div style="font-size:11px;color:#94a3b8" data-i18n="ownr_mannam_price_note">아래 식사비·할인율은 선택 입력입니다. 매장 상세에 참고용으로 표시됩니다.</div>
         <div style="display:flex;gap:8px">
-          <input id="mspot-female-price" type="number" min="0" placeholder="여성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none">
-          <input id="mspot-male-price" type="number" min="0" placeholder="남성 식사비(선택,원)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none">
+          <input id="mspot-female-price" type="number" min="0" placeholder="여성 식사비(선택,원)" data-i18n-ph="ownr_ph_female_meal_cost" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none">
+          <input id="mspot-male-price" type="number" min="0" placeholder="남성 식사비(선택,원)" data-i18n-ph="ownr_ph_male_meal_cost" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none">
         </div>
-        <input id="mspot-discount" type="number" min="0" max="100" placeholder="할인율%(선택)" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
-        <button onclick="submitMannamSpot()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">저장</button>
+        <input id="mspot-discount" type="number" min="0" max="100" placeholder="할인율%(선택)" data-i18n-ph="ownr_ph_discount_pct" style="padding:11px 14px;border:1.5px solid #eee;border-radius:12px;font-size:14px;outline:none;box-sizing:border-box">
+        <button onclick="submitMannamSpot()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px" data-i18n="save_short">저장</button>
       </div>
     </div>
 
     <!-- 플랜 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:800;color:#222">💳 플랜</div>
-        <span id="plan-badge" style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:#e5e7eb;color:#555">무료 플랜</span>
+        <div style="font-size:13px;font-weight:800;color:#222" data-i18n="ownr_plan_section_title">💳 플랜</div>
+        <span id="plan-badge" style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:#e5e7eb;color:#555" data-i18n="plan_free_name">무료 플랜</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <div id="plan-free" onclick="selectPlan('free')" style="border:2px solid #C8102E;background:#FFF5F5;border-radius:12px;padding:12px 14px;cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:13px;font-weight:800;color:#222">무료 플랜</div>
+            <div style="font-size:13px;font-weight:800;color:#222" data-i18n="plan_free_name">무료 플랜</div>
             <div style="font-size:16px;font-weight:900;color:#222">₩0</div>
           </div>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px">💼 공고 1개</span>
-            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px">🤝 모임 월1개</span>
+            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px" data-i18n="ownr_plan_free_jobs">💼 공고 1개</span>
+            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px" data-i18n="ownr_plan_free_moim">🤝 모임 월1개</span>
           </div>
         </div>
         <div id="plan-basic" onclick="selectPlan('basic')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:13px;font-weight:800;color:#222">베이직 플랜</div>
-            <div style="font-size:16px;font-weight:900;color:#C8102E">₩9,900/월</div>
+            <div style="font-size:13px;font-weight:800;color:#222" data-i18n="plan_basic_name">베이직 플랜</div>
+            <div style="font-size:16px;font-weight:900;color:#C8102E" data-i18n="ownr_plan_basic_price">₩9,900/월</div>
           </div>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px">💼 공고 5개 · 서지자동화</span>
-            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px">🤝 모임 월10개</span>
+            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px" data-i18n="ownr_plan_basic_jobs">💼 공고 5개 · 서지자동화</span>
+            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px" data-i18n="ownr_plan_basic_moim">🤝 모임 월10개</span>
           </div>
         </div>
         <div id="plan-pro" onclick="selectPlan('pro')" style="border:2px solid #eee;background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer">
           <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:13px;font-weight:800;color:#222">프로 플랜</div>
-            <div style="font-size:16px;font-weight:900;color:#7C3AED">₩29,900/월</div>
+            <div style="font-size:13px;font-weight:800;color:#222" data-i18n="plan_pro_name">프로 플랜</div>
+            <div style="font-size:16px;font-weight:900;color:#7C3AED" data-i18n="ownr_plan_pro_price">₩29,900/월</div>
           </div>
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px">💼 공고 무제한 · 프리미엄 노출</span>
-            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px">🤝 모임 무제한</span>
+            <span style="font-size:10px;font-weight:700;background:#FFF0F0;color:#C8102E;padding:3px 8px;border-radius:8px" data-i18n="ownr_plan_pro_jobs">💼 공고 무제한 · 프리미엄 노출</span>
+            <span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:3px 8px;border-radius:8px" data-i18n="ownr_plan_pro_moim">🤝 모임 무제한</span>
           </div>
         </div>
       </div>
@@ -3761,10 +3761,10 @@
 
     <!-- 알림 설정 -->
     <div style="background:#fff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid #f0f0f0">
-      <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:12px">🔔 알림 설정</div>
+      <div style="font-size:13px;font-weight:800;color:#222;margin-bottom:12px" data-i18n="ownr_noti_settings_title">🔔 알림 설정</div>
       <div style="display:flex;flex-direction:column;gap:2px">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5">
-          <span style="font-size:14px;color:#333">새 채팅 알림</span>
+          <span style="font-size:14px;color:#333" data-i18n="ownr_noti_new_chat">새 채팅 알림</span>
           <div onclick="const cb=document.getElementById('owner-noti-toggle-chat');cb.checked=!cb.checked;saveOwnerNotiSetting('chat',cb.checked)" style="cursor:pointer;position:relative;width:44px;height:24px;flex-shrink:0">
             <div id="owner-noti-track-chat" style="width:44px;height:24px;border-radius:12px;background:#ddd;transition:background 0.2s;position:absolute;inset:0"></div>
             <div id="owner-noti-thumb-chat" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s"></div>
@@ -3772,7 +3772,7 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5">
-          <span style="font-size:14px;color:#333">새 지원 알림</span>
+          <span style="font-size:14px;color:#333" data-i18n="ownr_noti_new_applicant">새 지원 알림</span>
           <div onclick="const cb=document.getElementById('owner-noti-toggle-apply');cb.checked=!cb.checked;saveOwnerNotiSetting('apply',cb.checked)" style="cursor:pointer;position:relative;width:44px;height:24px;flex-shrink:0">
             <div id="owner-noti-track-apply" style="width:44px;height:24px;border-radius:12px;background:#ddd;transition:background 0.2s;position:absolute;inset:0"></div>
             <div id="owner-noti-thumb-apply" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s"></div>
@@ -3780,7 +3780,7 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">
-          <span style="font-size:14px;color:#333">댓글 알림</span>
+          <span style="font-size:14px;color:#333" data-i18n="noti_comment">댓글 알림</span>
           <div onclick="const cb=document.getElementById('owner-noti-toggle-comment');cb.checked=!cb.checked;saveOwnerNotiSetting('comment',cb.checked)" style="cursor:pointer;position:relative;width:44px;height:24px;flex-shrink:0">
             <div id="owner-noti-track-comment" style="width:44px;height:24px;border-radius:12px;background:#ddd;transition:background 0.2s;position:absolute;inset:0"></div>
             <div id="owner-noti-thumb-comment" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform 0.2s"></div>
@@ -3795,25 +3795,25 @@
 
     <!-- 일반 -->
     <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">일반</div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px" data-i18n="ownr_general_section_title">일반</div>
       <div style="background:#fff;border-radius:14px;border:1px solid #f0f0f0;overflow:hidden">
         <div onclick="document.getElementById('modal-owner-lang').style.display='flex';applyLang()" style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">
-          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">🌐</span><span style="font-size:15px;font-weight:700;color:#222">앱 언어</span></div>
-          <div style="display:flex;align-items:center;gap:6px"><span id="owner-mp-lang-val" style="font-size:13px;color:#aaa">한국어</span><span style="color:#ccc">›</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">🌐</span><span style="font-size:15px;font-weight:700;color:#222" data-i18n="row_app_lang">앱 언어</span></div>
+          <div style="display:flex;align-items:center;gap:6px"><span id="owner-mp-lang-val" style="font-size:13px;color:#aaa" data-i18n="ownr_korean_label">한국어</span><span style="color:#ccc">›</span></div>
         </div>
       </div>
     </div>
 
     <!-- 계정 관리 -->
     <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">계정</div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px" data-i18n="section_account">계정</div>
       <div style="background:#fff;border-radius:14px;border:1px solid #f0f0f0;overflow:hidden;display:flex">
         <div onclick="openOwnerAccountInfoModal()" style="flex:1;display:flex;align-items:center;justify-content:center;padding:15px 16px;cursor:pointer;border-right:1px solid #f0f0f0;-webkit-tap-highlight-color:transparent">
-          <div style="font-size:15px;font-weight:700;color:#222;text-align:center">회원정보 변경</div>
+          <div style="font-size:15px;font-weight:700;color:#222;text-align:center" data-i18n="row_account_info">회원정보 변경</div>
         </div>
         <div onclick="showConfirm('언제든 다시 로그인할 수 있어요.',doLogout,{icon:'🚪',title:'로그아웃',okLabel:'로그아웃',okBg:'#374151'})" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:15px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;font-size:15px;font-weight:700;color:#666">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          로그아웃</div>
+          <span data-i18n="logout">로그아웃</span></div>
       </div>
     </div>
 
@@ -3826,12 +3826,12 @@
     <button onclick="cancelLang();document.getElementById('modal-owner-lang').style.display='none'" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="font-size:17px;font-weight:900;color:#222">앱 언어</div>
+    <div style="font-size:17px;font-weight:900;color:#222" data-i18n="row_app_lang">앱 언어</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:20px 16px 0">
-    <div style="font-size:12px;color:#aaa;margin-bottom:16px" id="owner-lang-desc">현재: 한국어</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:16px" id="owner-lang-desc" data-i18n="lang_desc">현재: 한국어</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button id="owner-lang-ko" onclick="selectLang('ko')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--red);color:#fff;text-align:left;transition:all 0.15s">🇰🇷 한국어</button>
+      <button id="owner-lang-ko" onclick="selectLang('ko')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--red);color:#fff;text-align:left;transition:all 0.15s">🇰🇷 <span data-i18n="ownr_korean_label">한국어</span></button>
       <button id="owner-lang-en" onclick="selectLang('en')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇺🇸 English</button>
       <button id="owner-lang-zh" onclick="selectLang('zh')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇨🇳 中文</button>
       <button id="owner-lang-ja" onclick="selectLang('ja')" style="padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:#f0f0f0;color:#666;text-align:left;transition:all 0.15s">🇯🇵 日本語</button>
@@ -3842,8 +3842,8 @@
     </div>
   </div>
   <div style="padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));flex-shrink:0;display:flex;gap:10px;background:#f5f5f5;border-top:1px solid #ebebeb">
-    <button onclick="cancelLang();document.getElementById('modal-owner-lang').style.display='none'" style="flex:1;padding:15px;background:#fff;color:#555;border:1.5px solid #e5e7eb;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">취소</button>
-    <button onclick="saveLang();document.getElementById('modal-owner-lang').style.display='none'" style="flex:2;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">저장</button>
+    <button onclick="cancelLang();document.getElementById('modal-owner-lang').style.display='none'" style="flex:1;padding:15px;background:#fff;color:#555;border:1.5px solid #e5e7eb;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="cancel">취소</button>
+    <button onclick="saveLang();document.getElementById('modal-owner-lang').style.display='none'" style="flex:2;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" data-i18n="save_short">저장</button>
   </div>
 </div>
 
@@ -3854,22 +3854,22 @@
     <button onclick="closeOwnerAccountInfoModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#333;display:flex;align-items:center">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="font-size:17px;font-weight:900;color:#222">회원정보 변경</div>
+    <div style="font-size:17px;font-weight:900;color:#222" data-i18n="row_account_info">회원정보 변경</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:20px">
     <div style="margin-bottom:24px">
-      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">비밀번호 변경</div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px" data-i18n="pw_toggle">비밀번호 변경</div>
       <div style="background:#fff;border-radius:14px;padding:16px">
-        <input id="owner-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:8px">
-        <input id="owner-new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px">
-        <button onclick="changeOwnerPassword()" style="width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">변경하기</button>
+        <input id="owner-new-pw" type="password" placeholder="새 비밀번호 (6자 이상)" data-i18n-ph="ownr_ph_new_password" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <input id="owner-new-pw2" type="password" placeholder="비밀번호 확인" data-i18n-ph="ownr_ph_password_confirm" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px">
+        <button onclick="changeOwnerPassword()" style="width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer" data-i18n="pw_submit">변경하기</button>
       </div>
     </div>
     <div>
-      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">계정 탈퇴</div>
+      <div style="font-size:11px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px" data-i18n="account_withdraw">계정 탈퇴</div>
       <div style="background:#fff;border-radius:14px;padding:16px">
-        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:14px">탈퇴 시 등록한 공고와 지원자 데이터가 모두 삭제되며 복구가 불가능합니다.</div>
-        <button onclick="deleteOwnerAccount()" style="width:100%;padding:13px;background:#FFF0F0;color:#C8102E;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">회원 탈퇴</button>
+        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:14px" data-i18n="ownr_withdraw_warning">탈퇴 시 등록한 공고와 지원자 데이터가 모두 삭제되며 복구가 불가능합니다.</div>
+        <button onclick="deleteOwnerAccount()" style="width:100%;padding:13px;background:#FFF0F0;color:#C8102E;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer" data-i18n="withdraw">회원 탈퇴</button>
       </div>
     </div>
   </div>
@@ -3883,11 +3883,11 @@
 </button>
 
 <!-- FAB -->
-<button class="fab" id="posting-fab" onclick="openPostingForm()" title="공고 등록" style="display:none"><span style="font-size:22px;font-weight:300;line-height:1">+</span><span style="font-size:14px;font-weight:800">공고등록</span></button>
+<button class="fab" id="posting-fab" onclick="openPostingForm()" title="공고 등록" style="display:none"><span style="font-size:22px;font-weight:300;line-height:1">+</span><span style="font-size:14px;font-weight:800" data-i18n="ownr_posting_reg_title">공고등록</span></button>
 
 <!-- 비교 FAB -->
 <div id="compare-fab" onclick="openCompareModal()" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#3B82F6;color:#fff;border-radius:30px;padding:12px 24px;font-size:14px;font-weight:800;cursor:pointer;z-index:200;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(59,130,246,0.4)">
-  &#128269; 선택한 2명 비교하기
+  &#128269; <span data-i18n="ownr_compare_two_btn">선택한 2명 비교하기</span>
   <button onclick="event.stopPropagation();_compareSet.clear();renderApplicants(_allApplicants)" style="background:rgba(255,255,255,0.3);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;padding:0">✕</button>
 </div>
 
@@ -3915,15 +3915,15 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" id="f-title-label">직무명 *</label>
-        <input class="form-input" id="f-title" placeholder="예: 홀 서빙 보조, 물류 입출고">
+        <label class="form-label" id="f-title-label" data-i18n="ownr_job_title_label">직무명 *</label>
+        <input class="form-input" id="f-title" placeholder="예: 홀 서빙 보조, 물류 입출고" data-i18n-ph="ownr_ph_job_title_example">
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" data-i18n="form_category_label">업종</label>
           <select class="form-select" id="f-category">
-            <option value="">불러오는 중...</option>
+            <option value="" data-i18n="loading_generic">불러오는 중...</option>
           </select>
         </div>
         <div class="form-group">
@@ -3936,8 +3936,8 @@
       <div style="margin-bottom:12px;padding:14px;background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div>
-            <div style="font-size:13px;font-weight:800;color:#7C3AED">👥 팀 모집</div>
-            <div style="font-size:11px;color:#8B5CF6;margin-top:2px">여러 명이 함께 팀으로 근무하는 공고</div>
+            <div style="font-size:13px;font-weight:800;color:#7C3AED" data-i18n="ownr_team_recruit_title">👥 팀 모집</div>
+            <div style="font-size:11px;color:#8B5CF6;margin-top:2px" data-i18n="ownr_team_recruit_desc">여러 명이 함께 팀으로 근무하는 공고</div>
           </div>
           <div id="team-job-track" onclick="toggleTeamJob()"
             style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
@@ -3947,42 +3947,42 @@
         <input type="hidden" id="f-team-job" value="false">
         <!-- 팀 구성 설명 (팀 모집 ON일 때 표시) -->
         <div id="team-job-detail" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #EDE9FE">
-          <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px">팀 구성 설명 <span style="font-weight:400;color:#9CA3AF">(예: 오전 4명, 오후 3명 등)</span></div>
-          <textarea id="f-team-desc" placeholder="예) 총 4명 팀으로 입주청소&#10;오전 33평 화성 / 오후 32평 화성" style="width:100%;box-sizing:border-box;border:1.5px solid #DDD6FE;border-radius:10px;padding:10px;font-size:13px;min-height:70px;resize:none;outline:none;font-family:inherit;background:#fff"></textarea>
+          <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px"><span data-i18n="ownr_team_composition_label">팀 구성 설명</span> <span style="font-weight:400;color:#9CA3AF" data-i18n="ownr_team_composition_ph">(예: 오전 4명, 오후 3명 등)</span></div>
+          <textarea id="f-team-desc" placeholder="예) 총 4명 팀으로 입주청소&#10;오전 33평 화성 / 오후 32평 화성" data-i18n-ph="ownr_ph_team_desc_example" style="width:100%;box-sizing:border-box;border:1.5px solid #DDD6FE;border-radius:10px;padding:10px;font-size:13px;min-height:70px;resize:none;outline:none;font-family:inherit;background:#fff"></textarea>
         </div>
       </div>
 
       <!-- 급여 유형 선택 -->
       <div class="form-group">
-        <label class="form-label">급여 유형 *</label>
+        <label class="form-label" data-i18n="ownr_wage_type_label">급여 유형 *</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="wage-type-btns">
-          <button type="button" onclick="setWageType('hourly')"  id="wt-hourly"  style="padding:8px 14px;border-radius:20px;border:2px solid #C8102E;background:#C8102E;color:#fff;font-size:13px;font-weight:800;cursor:pointer">시급</button>
-          <button type="button" onclick="setWageType('daily')"   id="wt-daily"   style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">일급</button>
-          <button type="button" onclick="setWageType('per-job')" id="wt-per-job" style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">건당</button>
-          <button type="button" onclick="setWageType('monthly')" id="wt-monthly" style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">월급</button>
-          <button type="button" onclick="setWageType('other')"   id="wt-other"   style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer">기타</button>
+          <button type="button" onclick="setWageType('hourly')"  id="wt-hourly"  style="padding:8px 14px;border-radius:20px;border:2px solid #C8102E;background:#C8102E;color:#fff;font-size:13px;font-weight:800;cursor:pointer" data-i18n="wage_label">시급</button>
+          <button type="button" onclick="setWageType('daily')"   id="wt-daily"   style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer" data-i18n="ownr_wage_daily">일급</button>
+          <button type="button" onclick="setWageType('per-job')" id="wt-per-job" style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer" data-i18n="ownr_wage_per_job">건당</button>
+          <button type="button" onclick="setWageType('monthly')" id="wt-monthly" style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer" data-i18n="ownr_wage_monthly">월급</button>
+          <button type="button" onclick="setWageType('other')"   id="wt-other"   style="padding:8px 14px;border-radius:20px;border:2px solid #eee;background:#fff;color:#888;font-size:13px;font-weight:800;cursor:pointer" data-i18n="cat_etc">기타</button>
         </div>
         <input type="hidden" id="f-wage-type" value="hourly">
-        <label class="form-label" id="f-wage-label">금액 (원) *</label>
+        <label class="form-label" id="f-wage-label" data-i18n="ownr_amount_won_label">금액 (원) *</label>
         <div style="display:flex;align-items:center;gap:10px">
           <input class="form-input" id="f-wage" type="number" min="0" placeholder="10030" style="flex:1" oninput="checkMinWage(this.value);document.getElementById('f-wage-preview').textContent=this.value?parseInt(this.value).toLocaleString()+'원':'—'">
           <div id="f-wage-preview" style="font-size:20px;font-weight:900;color:#C8102E;min-width:90px;text-align:right;white-space:nowrap">—</div>
         </div>
         <!-- 기타 직접 입력 -->
-        <input class="form-input" id="f-wage-other" type="text" placeholder="예) 협의 후 결정, 건당 50,000원" style="display:none;margin-top:8px">
-        <div id="wage-warn" style="display:none;font-size:11px;color:#EF4444;font-weight:700;margin-top:4px">⚠️ 2025년 최저시급(10,030원) 미만입니다</div>
+        <input class="form-input" id="f-wage-other" type="text" placeholder="예) 협의 후 결정, 건당 50,000원" data-i18n-ph="ownr_ph_wage_negotiable_example" style="display:none;margin-top:8px">
+        <div id="wage-warn" style="display:none;font-size:11px;color:#EF4444;font-weight:700;margin-top:4px" data-i18n="ownr_below_min_wage_warning">⚠️ 2025년 최저시급(10,030원) 미만입니다</div>
       </div>
 
       <!-- 근무형태 -->
       <div class="form-group" id="work-type-group">
         <label class="form-label" data-i18n="work_type_label">근무형태</label>
         <div style="display:flex;gap:6px;background:#f5f5f5;border-radius:12px;padding:4px" id="work-type-tabs">
-          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#C8102E;box-shadow:0 1px 4px rgba(0,0,0,0.1)">스팟</button>
-          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">단기</button>
-          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888">정기</button>
+          <button type="button" onclick="setWorkType('spot')"    id="wt-spot"      style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:#fff;color:#C8102E;box-shadow:0 1px 4px rgba(0,0,0,0.1)" data-i18n="work_type_spot">스팟</button>
+          <button type="button" onclick="setWorkType('short')"   id="wt-short"     style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888" data-i18n="work_type_short">단기</button>
+          <button type="button" onclick="setWorkType('regular')" id="wt-regular"   style="flex:1;padding:9px 4px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;background:transparent;color:#888" data-i18n="work_type_regular">정기</button>
         </div>
         <input type="hidden" id="f-work-type" value="spot">
-        <div style="font-size:11px;color:#aaa;margin-top:6px" id="wt-desc">1회성 단발 근무 (날짜·시간 1회 지정)</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px" id="wt-desc" data-i18n="ownr_onetime_work_desc">1회성 단발 근무 (날짜·시간 1회 지정)</div>
       </div>
 
       <!-- 단기/정기: 근무 요일 + 기간 -->
@@ -3990,13 +3990,13 @@
         <div class="form-group">
           <label class="form-label" data-i18n="form_days_label">근무 요일</label>
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="f-days-wrap">
-            <button type="button" data-day="월" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">월</button>
-            <button type="button" data-day="화" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">화</button>
-            <button type="button" data-day="수" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">수</button>
-            <button type="button" data-day="목" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">목</button>
-            <button type="button" data-day="금" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer">금</button>
-            <button type="button" data-day="토" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer;color:#3B82F6">토</button>
-            <button type="button" data-day="일" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;cursor:pointer;color:#C8102E">일</button>
+            <button type="button" data-day="월" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer" data-i18n="ownr_day_mon">월</button>
+            <button type="button" data-day="화" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer" data-i18n="ownr_day_tue">화</button>
+            <button type="button" data-day="수" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer" data-i18n="ownr_day_wed">수</button>
+            <button type="button" data-day="목" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer" data-i18n="ownr_day_thu">목</button>
+            <button type="button" data-day="금" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer" data-i18n="ownr_day_fri">금</button>
+            <button type="button" data-day="토" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;color:#888;cursor:pointer;color:#3B82F6" data-i18n="ownr_day_sat">토</button>
+            <button type="button" data-day="일" onclick="toggleDay(this)" style="width:40px;height:40px;border-radius:10px;border:2px solid #eee;background:#fff;font-size:14px;font-weight:800;cursor:pointer;color:#C8102E" data-i18n="ownr_day_sun">일</button>
           </div>
           <input type="hidden" id="f-work-days" value="">
         </div>
@@ -4006,15 +4006,15 @@
             <input class="form-input" id="f-period-start" type="date">
           </div>
           <div class="form-group" id="f-period-end-wrap">
-            <label class="form-label"><span data-i18n="form_end_date">종료일</span> <span id="f-period-end-label" style="color:#aaa;font-size:11px">(단기만)</span></label>
+            <label class="form-label"><span data-i18n="form_end_date">종료일</span> <span id="f-period-end-label" style="color:#aaa;font-size:11px" data-i18n="ownr_shortterm_only_hint">(단기만)</span></label>
             <input class="form-input" id="f-period-end" type="date">
           </div>
         </div>
         <div class="form-group" id="f-holiday-pay-wrap" style="display:none">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:12px;cursor:pointer" onclick="toggleHolidayPay()">
             <div>
-              <div style="font-size:13px;font-weight:800;color:#16a34a">&#128176; 주휴수당 포함</div>
-              <div style="font-size:11px;color:#888;margin-top:1px">주 15시간 이상 시 법적 지급 의무</div>
+              <div style="font-size:13px;font-weight:800;color:#16a34a">&#128176; <span data-i18n="ownr_weekly_allowance_incl">주휴수당 포함</span></div>
+              <div style="font-size:11px;color:#888;margin-top:1px" data-i18n="ownr_weekly_allowance_desc">주 15시간 이상 시 법적 지급 의무</div>
             </div>
             <div id="holiday-pay-track" style="width:40px;height:22px;background:#ddd;border-radius:11px;position:relative;transition:background 0.2s">
               <div style="position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left 0.2s" id="holiday-pay-knob"></div>
@@ -4026,11 +4026,11 @@
 
       <!-- 근무 시간 (공통) -->
       <div class="form-group">
-        <label class="form-label" id="f-time-label">시작 시간 *</label>
+        <label class="form-label" id="f-time-label" data-i18n="ownr_start_time_label">시작 시간 *</label>
         <div style="display:flex;gap:8px;align-items:center">
           <div id="f-start-date-wrap" style="flex:1.6;min-width:0;position:relative">
             <input class="form-input" id="f-start-date" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:5;width:100%;height:100%" onchange="updateStartDateDisplay()">
-            <div id="f-start-date-display" class="form-input" style="cursor:pointer;color:#333;pointer-events:none">날짜 선택</div>
+            <div id="f-start-date-display" class="form-input" style="cursor:pointer;color:#333;pointer-events:none" data-i18n="ownr_date_select_label">날짜 선택</div>
           </div>
           <select class="form-select" id="f-start-hour" style="flex:1;min-width:0"></select>
           <select class="form-select" id="f-start-min" style="flex:0.9;min-width:0"></select>
@@ -4050,13 +4050,13 @@
       <div class="form-group" id="f-errand-section" style="display:none">
         <label class="form-label" data-i18n="form_duration_label">예상 소요시간</label>
         <select class="form-select" id="f-errand-duration">
-          <option value="0.5">30분 이내</option>
-          <option value="1" selected>약 1시간</option>
-          <option value="2">약 2시간</option>
-          <option value="3">약 3시간</option>
-          <option value="0">미정 / 협의</option>
+          <option value="0.5" data-i18n="ownr_duration_within_30m">30분 이내</option>
+          <option value="1" selected data-i18n="ownr_duration_about_1h">약 1시간</option>
+          <option value="2" data-i18n="ownr_duration_about_2h">약 2시간</option>
+          <option value="3" data-i18n="ownr_duration_about_3h">약 3시간</option>
+          <option value="0" data-i18n="ownr_duration_negotiable">미정 / 협의</option>
         </select>
-        <div style="font-size:11px;color:#aaa;margin-top:6px">&#127939; 심부름은 건당 금액 기준으로 매칭돼요</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">&#127939; <span data-i18n="ownr_errand_hint">심부름은 건당 금액 기준으로 매칭돼요</span></div>
       </div>
 
       <!-- ⚡ 번개 알바 설정 -->
@@ -4064,7 +4064,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#FFFBF0;border:1.5px solid #FFE082;border-radius:14px;cursor:pointer" onclick="toggleSurge()">
           <div>
             <div style="font-size:14px;font-weight:800;color:#E65100">⚡ <span data-i18n="surge_mode_label">번개 알바 모드</span></div>
-            <div style="font-size:11px;color:#888;margin-top:2px">미충원 시 시급 자동 인상 예고 — 알바생 긴장감 ↑</div>
+            <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_auto_raise_desc">미충원 시 시급 자동 인상 예고 — 알바생 긴장감 ↑</div>
           </div>
           <div id="surge-toggle" style="width:44px;height:24px;background:#ddd;border-radius:12px;position:relative;transition:background 0.2s">
             <div style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:left 0.2s" id="surge-knob"></div>
@@ -4075,26 +4075,26 @@
         <div id="surge-settings" style="display:none;margin-top:10px;background:#f8f8f8;border-radius:14px;padding:14px">
           <div class="form-row" style="margin-bottom:10px">
             <div class="form-group">
-              <label class="form-label">최대 시급 (원)</label>
+              <label class="form-label" data-i18n="ownr_max_wage_won_label">최대 시급 (원)</label>
               <input class="form-input" id="f-surge-max" type="number" placeholder="15000">
             </div>
             <div class="form-group">
-              <label class="form-label">인상 금액</label>
+              <label class="form-label" data-i18n="ownr_raise_amount_label">인상 금액</label>
               <select class="form-select" id="f-surge-amount">
-                <option value="500">+500원</option>
-                <option value="1000" selected>+1,000원</option>
-                <option value="2000">+2,000원</option>
-                <option value="3000">+3,000원</option>
+                <option value="500" data-i18n="ownr_raise_500">+500원</option>
+                <option value="1000" selected data-i18n="ownr_raise_1000">+1,000원</option>
+                <option value="2000" data-i18n="ownr_raise_2000">+2,000원</option>
+                <option value="3000" data-i18n="ownr_raise_3000">+3,000원</option>
               </select>
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">인상 주기</label>
+            <label class="form-label" data-i18n="ownr_raise_cycle_label">인상 주기</label>
             <select class="form-select" id="f-surge-interval">
-              <option value="10">10분마다</option>
-              <option value="15">15분마다</option>
-              <option value="30" selected>30분마다</option>
-              <option value="60">1시간마다</option>
+              <option value="10" data-i18n="ownr_every_10min">10분마다</option>
+              <option value="15" data-i18n="ownr_every_15min">15분마다</option>
+              <option value="30" selected data-i18n="ownr_every_30min">30분마다</option>
+              <option value="60" data-i18n="ownr_every_1h">1시간마다</option>
             </select>
           </div>
           <div style="font-size:11px;color:#FF9500;font-weight:600;margin-top:8px" id="surge-preview"></div>
@@ -4105,8 +4105,8 @@
       <div class="form-group">
         <div class="remote-wrap" onclick="toggleRemoteMode(document.getElementById('f-is-remote').value !== 'true')">
           <div>
-            <div style="font-size:14px;font-weight:800;color:#0369A1">🖥️ 비대면 근무</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">재택·PC작업 등 현장 방문 불필요 — 전국 알바생 지원 가능</div>
+            <div style="font-size:14px;font-weight:800;color:#0369A1" data-i18n="ownr_remote_work_title">🖥️ 비대면 근무</div>
+            <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_remote_work_desc">재택·PC작업 등 현장 방문 불필요 — 전국 알바생 지원 가능</div>
           </div>
           <div class="remote-track" id="remote-track">
             <div class="remote-knob" id="remote-knob"></div>
@@ -4120,7 +4120,7 @@
 
         <!-- 등록된 내 장소에서 선택 -->
         <div id="my-places-quick" style="display:none;margin-bottom:10px">
-          <div style="font-size:11px;font-weight:800;color:#888;margin-bottom:6px">&#128205; 내 등록 장소에서 선택</div>
+          <div style="font-size:11px;font-weight:800;color:#888;margin-bottom:6px">&#128205; <span data-i18n="ownr_select_from_my_places">내 등록 장소에서 선택</span></div>
           <div id="my-places-quick-list" style="display:flex;flex-direction:column;gap:5px"></div>
           <div style="margin-top:6px;height:1px;background:#f0f0f0"></div>
         </div>
@@ -4128,21 +4128,21 @@
         <!-- 위치 입력 방식 탭 -->
         <div style="display:flex;gap:4px;background:#f5f5f5;border-radius:10px;padding:3px;margin-bottom:10px">
           <button type="button" id="loc-tab-1" onclick="setLocTab(1)"
-            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#C8102E;box-shadow:0 1px 3px rgba(0,0,0,0.1)">&#127978; 플레이스</button>
+            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:#fff;color:#C8102E;box-shadow:0 1px 3px rgba(0,0,0,0.1)">&#127978; <span data-i18n="ownr_naver_place_label">플레이스</span></button>
           <button type="button" id="loc-tab-2" onclick="setLocTab(2)"
-            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">&#128506; 주소 검색</button>
+            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">&#128506; <span data-i18n="ownr_address_search_label">주소 검색</span></button>
           <button type="button" id="loc-tab-3" onclick="setLocTab(3)"
-            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888">✏️ 직접 입력</button>
+            style="flex:1;padding:7px 4px;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;background:transparent;color:#888" data-i18n="ownr_manual_input_label">✏️ 직접 입력</button>
         </div>
 
         <!-- 탭1: 네이버 플레이스 검색 -->
         <div id="loc-panel-1">
           <div class="location-search">
-            <input class="form-input" id="f-address" placeholder="업체명 입력 (예: 부산 사하구 스타벅스)">
-            <button class="search-addr-btn" onclick="searchNaverPlace()">&#128269; 검색</button>
+            <input class="form-input" id="f-address" placeholder="업체명 입력 (예: 부산 사하구 스타벅스)" data-i18n-ph="ownr_ph_biz_name_input_example">
+            <button class="search-addr-btn" onclick="searchNaverPlace()">&#128269; <span data-i18n="search">검색</span></button>
           </div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
-            <input class="form-input" id="f-naver-url-input" placeholder="또는 네이버 플레이스 URL 붙여넣기" oninput="handleNaverUrl(this.value)" style="flex:1;font-size:13px">
+            <input class="form-input" id="f-naver-url-input" placeholder="또는 네이버 플레이스 URL 붙여넣기" data-i18n-ph="ownr_ph_naver_url_paste" oninput="handleNaverUrl(this.value)" style="flex:1;font-size:13px">
           </div>
           <div id="naver-url-status" style="font-size:11px;font-weight:700;padding:4px 2px;display:none"></div>
           <div id="place-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;"></div>
@@ -4151,20 +4151,20 @@
         <!-- 탭2: 주소 검색 (도로명/지번) -->
         <div id="loc-panel-2" style="display:none">
           <div style="display:flex;gap:6px">
-            <input class="form-input" id="f-addr-search" placeholder="도로명 또는 지번 주소 입력 (예: 마포구 합정동 123)">
-            <button type="button" onclick="searchAddress()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">검색</button>
+            <input class="form-input" id="f-addr-search" placeholder="도로명 또는 지번 주소 입력 (예: 마포구 합정동 123)" data-i18n-ph="ownr_ph_road_addr_input_example">
+            <button type="button" onclick="searchAddress()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap" data-i18n="search">검색</button>
           </div>
           <div id="addr-results" style="display:none;background:#f8f8f8;border-radius:12px;margin-top:6px;overflow:hidden;max-height:200px;overflow-y:auto"></div>
-          <div style="font-size:11px;color:#aaa;margin-top:4px">도로명·지번 주소를 입력하면 자동으로 좌표를 찾아요</div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px" data-i18n="ownr_address_autocoord_hint">도로명·지번 주소를 입력하면 자동으로 좌표를 찾아요</div>
         </div>
 
         <!-- 탭3: 직접 텍스트 입력 -->
         <div id="loc-panel-3" style="display:none">
           <div style="display:flex;gap:6px">
-            <input class="form-input" id="f-direct-addr" placeholder="예: 2호선 합정역 3번출구 앞, 처음하우스 동암역점">
-            <button type="button" onclick="applyDirectAddr()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">적용</button>
+            <input class="form-input" id="f-direct-addr" placeholder="예: 2호선 합정역 3번출구 앞, 처음하우스 동암역점" data-i18n-ph="ownr_ph_meeting_point_example">
+            <button type="button" onclick="applyDirectAddr()" style="padding:10px 14px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap" data-i18n="ownr_apply_btn">적용</button>
           </div>
-          <div style="font-size:11px;color:#aaa;margin-top:4px">키워드로 위치를 찾아 지도에 표시해요. 찾지 못하면 업체 위치로 등록돼요.</div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px" data-i18n="ownr_keyword_map_hint">키워드로 위치를 찾아 지도에 표시해요. 찾지 못하면 업체 위치로 등록돼요.</div>
         </div>
 
         <!-- 공통: 선택된 위치 표시 -->
@@ -4177,34 +4177,34 @@
 
       <div class="form-group">
         <label class="form-label" data-i18n="form_desc_label">상세 설명</label>
-        <textarea class="form-textarea" id="f-desc" placeholder="업무 내용, 우대사항, 제공 혜택 등"></textarea>
+        <textarea class="form-textarea" id="f-desc" placeholder="업무 내용, 우대사항, 제공 혜택 등" data-i18n-ph="ownr_ph_job_detail_general"></textarea>
       </div>
 
       <!-- 공고 사진 (최대 3장) -->
       <div class="form-group">
-        <label class="form-label">공고 사진 <span style="font-size:11px;color:#aaa;font-weight:500">(최대 3장, 선택)</span></label>
+        <label class="form-label"><span data-i18n="ownr_posting_photo_label">공고 사진</span> <span style="font-size:11px;color:#aaa;font-weight:500" data-i18n="moim_photo_hint">(최대 3장, 선택)</span></label>
         <div id="job-img-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px"></div>
         <label id="job-img-add-btn" style="display:flex;align-items:center;justify-content:center;height:64px;background:#fff;border:2px dashed #ddd;border-radius:12px;cursor:pointer;width:100%;box-sizing:border-box">
           <span style="font-size:26px;color:#ccc;line-height:1">+</span>
           <input type="file" id="job-img-input" accept="image/*" multiple style="display:none" onchange="addJobImages(this)">
         </label>
         <input type="hidden" id="f-main-img-idx" value="0">
-        <div style="font-size:11px;color:#aaa;margin-top:6px">사진 탭하면 크롭 편집 · 1번이 대표</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px" data-i18n="ownr_photo_crop_hint">사진 탭하면 크롭 편집 · 1번이 대표</div>
       </div>
 
       <!-- 픽업 장소 (집합 장소) -->
       <div class="form-group" id="f-pickup-wrap">
-        <label class="form-label">🚌 집합(픽업) 장소 <span style="color:#aaa;font-size:11px;font-weight:500">(선택 · 입주청소/현장업무)</span></label>
-        <input class="form-input" id="f-pickup-location" type="text" placeholder="예) 수유역 2번출구 오전 10:00">
-        <div style="font-size:11px;color:#aaa;margin-top:4px">업주가 워커를 픽업하는 장소 · 시간을 입력하면 지원자에게 안내됩니다</div>
+        <label class="form-label"><span data-i18n="ownr_gather_place_title">🚌 집합(픽업) 장소</span> <span style="color:#aaa;font-size:11px;font-weight:500" data-i18n="ownr_gather_place_optional">(선택 · 입주청소/현장업무)</span></label>
+        <input class="form-input" id="f-pickup-location" type="text" placeholder="예) 수유역 2번출구 오전 10:00" data-i18n-ph="ownr_ph_pickup_time_example">
+        <div style="font-size:11px;color:#aaa;margin-top:4px" data-i18n="ownr_gather_place_desc">업주가 워커를 픽업하는 장소 · 시간을 입력하면 지원자에게 안내됩니다</div>
       </div>
 
       <!-- 초보 가능 여부 -->
       <div class="form-group">
         <div onclick="setBeginnerOk(document.getElementById('f-beginner-ok').value !== 'true')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:12px;cursor:pointer">
           <div>
-            <div style="font-size:14px;font-weight:800;color:#16a34a">🌱 초보 가능</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">초보자도 지원할 수 있는 공고 — 지원자 수 ↑</div>
+            <div style="font-size:14px;font-weight:800;color:#16a34a" data-i18n="ownr_beginner_ok_title">🌱 초보 가능</div>
+            <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_beginner_ok_desc">초보자도 지원할 수 있는 공고 — 지원자 수 ↑</div>
           </div>
           <div id="beginner-ok-track" style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;position:relative;transition:background 0.2s;flex-shrink:0">
             <div id="beginner-ok-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.2s"></div>
@@ -4217,8 +4217,8 @@
       <div class="form-group">
         <div onclick="setMealIncluded(document.getElementById('f-meal-included').value !== 'true')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#FFF7ED;border:1.5px solid #FDE68A;border-radius:12px;cursor:pointer">
           <div>
-            <div style="font-size:14px;font-weight:800;color:#D97706">🍱 식사/음료 제공</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">근무 중 식사 또는 음료 제공 — 어필 효과 ↑</div>
+            <div style="font-size:14px;font-weight:800;color:#D97706" data-i18n="ownr_meal_provided_title">🍱 식사/음료 제공</div>
+            <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_meal_provided_desc">근무 중 식사 또는 음료 제공 — 어필 효과 ↑</div>
           </div>
           <div id="meal-included-track" style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;position:relative;transition:background 0.2s;flex-shrink:0">
             <div id="meal-included-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.2s"></div>
@@ -4232,7 +4232,7 @@
         <div class="same-day-wrap" onclick="setSameDay(document.getElementById('f-same-day-on').value !== 'true')">
           <div>
             <div style="font-size:14px;font-weight:800;color:#16a34a">&#128180; <span data-i18n="same_day_label">당일 정산</span></div>
-            <div style="font-size:11px;color:#888;margin-top:2px">근무 당일 현금 지급 — 알바생 지원율 ↑</div>
+            <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_same_day_pay_desc">근무 당일 현금 지급 — 알바생 지원율 ↑</div>
           </div>
           <div class="same-day-track" id="same-day-track">
             <div class="same-day-knob" id="same-day-knob"></div>
@@ -4245,8 +4245,8 @@
       <div class="form-group">
         <div class="deposit-wrap" onclick="setDeposit(document.getElementById('f-deposit-on').value !== 'true')">
           <div>
-            <div style="font-size:14px;font-weight:800;color:#C8102E">&#128737; 노쇼 보증금</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">지원자 사전 동의 — 노쇼 시 업주에게 보상</div>
+            <div style="font-size:14px;font-weight:800;color:#C8102E">&#128737; <span data-i18n="ownr_noshow_deposit_title">노쇼 보증금</span></div>
+            <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_noshow_deposit_desc">지원자 사전 동의 — 노쇼 시 업주에게 보상</div>
           </div>
           <div class="deposit-track" id="deposit-track">
             <div class="deposit-knob" id="deposit-knob"></div>
@@ -4255,14 +4255,14 @@
         <input type="hidden" id="f-deposit-on" value="false">
         <input type="hidden" id="f-deposit-amount" value="0">
         <div id="deposit-amount-row" style="display:none;margin-top:10px">
-          <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">보증금액 선택</div>
+          <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px" data-i18n="ownr_deposit_amount_select">보증금액 선택</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" class="deposit-amt-btn" data-amt="5000" onclick="setDepositAmount(5000)">5,000원</button>
-            <button type="button" class="deposit-amt-btn" data-amt="10000" onclick="setDepositAmount(10000)">10,000원</button>
-            <button type="button" class="deposit-amt-btn" data-amt="20000" onclick="setDepositAmount(20000)">20,000원</button>
-            <button type="button" class="deposit-amt-btn" data-amt="30000" onclick="setDepositAmount(30000)">30,000원</button>
+            <button type="button" class="deposit-amt-btn" data-amt="5000" onclick="setDepositAmount(5000)" data-i18n="ownr_deposit_5000">5,000원</button>
+            <button type="button" class="deposit-amt-btn" data-amt="10000" onclick="setDepositAmount(10000)" data-i18n="ownr_deposit_10000">10,000원</button>
+            <button type="button" class="deposit-amt-btn" data-amt="20000" onclick="setDepositAmount(20000)" data-i18n="ownr_deposit_20000">20,000원</button>
+            <button type="button" class="deposit-amt-btn" data-amt="30000" onclick="setDepositAmount(30000)" data-i18n="ownr_deposit_30000">30,000원</button>
           </div>
-          <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.5">&#128274; 실결제 기능은 준비 중입니다. 현재는 지원자가 동의 후 구두 약속 방식으로 운영됩니다.</div>
+          <div style="font-size:11px;color:#aaa;margin-top:8px;line-height:1.5">&#128274; <span data-i18n="ownr_deposit_payment_notice">실결제 기능은 준비 중입니다. 현재는 지원자가 동의 후 구두 약속 방식으로 운영됩니다.</span></div>
         </div>
       </div>
 
@@ -4270,8 +4270,8 @@
       <div class="form-group">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fffbeb;border:1.5px solid #FDE68A;border-radius:12px;cursor:pointer" onclick="toggleReturnBonus()">
           <div>
-            <div style="font-size:14px;font-weight:800;color:#D97706">⭐ 재방문 인센티브</div>
-            <div style="font-size:11px;color:#888;margin-top:2px">두 번째부터 추가 지급 — 단골 알바생 확보</div>
+            <div style="font-size:14px;font-weight:800;color:#D97706" data-i18n="ownr_return_incentive_title">⭐ 재방문 인센티브</div>
+            <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_return_incentive_desc">두 번째부터 추가 지급 — 단골 알바생 확보</div>
           </div>
           <div id="return-bonus-track" style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;position:relative;transition:background 0.2s;flex-shrink:0">
             <div id="return-bonus-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.2s"></div>
@@ -4279,12 +4279,12 @@
         </div>
         <input type="hidden" id="f-return-bonus-on" value="false">
         <div id="return-bonus-row" style="display:none;margin-top:10px">
-          <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">인센티브 금액 선택</div>
+          <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px" data-i18n="ownr_incentive_amount_select">인센티브 금액 선택</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" class="deposit-amt-btn" id="rb-btn-1000" onclick="setReturnBonus(1000)">1,000원</button>
-            <button type="button" class="deposit-amt-btn" id="rb-btn-2000" onclick="setReturnBonus(2000)">2,000원</button>
-            <button type="button" class="deposit-amt-btn" id="rb-btn-3000" onclick="setReturnBonus(3000)">3,000원</button>
-            <button type="button" class="deposit-amt-btn" id="rb-btn-5000" onclick="setReturnBonus(5000)">5,000원</button>
+            <button type="button" class="deposit-amt-btn" id="rb-btn-1000" onclick="setReturnBonus(1000)" data-i18n="ownr_incentive_1000">1,000원</button>
+            <button type="button" class="deposit-amt-btn" id="rb-btn-2000" onclick="setReturnBonus(2000)" data-i18n="ownr_incentive_2000">2,000원</button>
+            <button type="button" class="deposit-amt-btn" id="rb-btn-3000" onclick="setReturnBonus(3000)" data-i18n="ownr_incentive_3000">3,000원</button>
+            <button type="button" class="deposit-amt-btn" id="rb-btn-5000" onclick="setReturnBonus(5000)" data-i18n="ownr_deposit_5000">5,000원</button>
           </div>
           <input type="hidden" id="f-return-bonus" value="0">
         </div>
@@ -4294,7 +4294,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8f8f8;border-radius:12px">
         <div>
           <div style="font-size:14px;font-weight:800;color:#7C3AED">⭐ <span data-i18n="premium_label">프리미엄 노출</span></div>
-          <div style="font-size:11px;color:#888;margin-top:2px">검색 상단 고정 · 지원율 3배 상승 (프로 플랜)</div>
+          <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_top_pin_pro_desc">검색 상단 고정 · 지원율 3배 상승 (프로 플랜)</div>
         </div>
         <div onclick="togglePremiumPosting(this)" data-on="false"
           style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
@@ -4307,7 +4307,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff8f0;border:1.5px solid #FED7AA;border-radius:12px">
         <div>
           <div style="font-size:14px;font-weight:800;color:#EA580C">&#128286; <span data-i18n="age_limit_label">만 18세 이상만 지원 가능</span></div>
-          <div style="font-size:11px;color:#888;margin-top:2px">주류·심야·유해업종 등 연소자 취업 금지 공고</div>
+          <div style="font-size:11px;color:#888;margin-top:2px" data-i18n="ownr_minor_restricted_desc">주류·심야·유해업종 등 연소자 취업 금지 공고</div>
         </div>
         <div id="age-limit-toggle" onclick="toggleAgeLimit(this)" data-on="false"
           style="width:44px;height:24px;border-radius:12px;background:#e5e7eb;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
@@ -4318,26 +4318,26 @@
 
       <!-- 언어 우대 -->
       <div style="margin-top:8px;padding:12px 14px;background:#f0f9ff;border:1.5px solid #BAE6FD;border-radius:12px">
-        <div style="font-size:13px;font-weight:800;color:#0369A1;margin-bottom:8px">&#127760; 언어 우대 <span style="font-size:11px;font-weight:400;color:#64748B">해당 언어 구사 알바생 우대</span></div>
+        <div style="font-size:13px;font-weight:800;color:#0369A1;margin-bottom:8px">&#127760; <span data-i18n="ownr_lang_pref_title">언어 우대</span> <span style="font-size:11px;font-weight:400;color:#64748B" data-i18n="ownr_lang_pref_desc">해당 언어 구사 알바생 우대</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="f-lang-chips">
-          <button type="button" data-l="ko" onclick="toggleJobLang(this)" class="l-chip">&#127472;&#127479; 한국어</button>
-          <button type="button" data-l="en" onclick="toggleJobLang(this)" class="l-chip">&#127482;&#127480; 영어</button>
-          <button type="button" data-l="zh" onclick="toggleJobLang(this)" class="l-chip">&#127464;&#127475; 중국어</button>
-          <button type="button" data-l="ja" onclick="toggleJobLang(this)" class="l-chip">&#127471;&#127477; 일본어</button>
-          <button type="button" data-l="vi" onclick="toggleJobLang(this)" class="l-chip">&#127483;&#127475; 베트남어</button>
-          <button type="button" data-l="ru" onclick="toggleJobLang(this)" class="l-chip">&#127479;&#127482; 러시아어</button>
+          <button type="button" data-l="ko" onclick="toggleJobLang(this)" class="l-chip">&#127472;&#127479; <span data-i18n="ownr_lang_korean_flag">한국어</span></button>
+          <button type="button" data-l="en" onclick="toggleJobLang(this)" class="l-chip">&#127482;&#127480; <span data-i18n="ownr_lang_english_flag">영어</span></button>
+          <button type="button" data-l="zh" onclick="toggleJobLang(this)" class="l-chip">&#127464;&#127475; <span data-i18n="ownr_lang_chinese_flag">중국어</span></button>
+          <button type="button" data-l="ja" onclick="toggleJobLang(this)" class="l-chip">&#127471;&#127477; <span data-i18n="ownr_lang_japanese_flag">일본어</span></button>
+          <button type="button" data-l="vi" onclick="toggleJobLang(this)" class="l-chip">&#127483;&#127475; <span data-i18n="ownr_lang_vietnamese_flag">베트남어</span></button>
+          <button type="button" data-l="ru" onclick="toggleJobLang(this)" class="l-chip">&#127479;&#127482; <span data-i18n="ownr_lang_russian_flag">러시아어</span></button>
         </div>
       </div>
       <input type="hidden" id="f-pref-langs" value="[]">
 
       <!-- 국적 조건 -->
       <div style="margin-top:8px;padding:14px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:12px">
-        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🌍 지원 자격 (국적 조건)</div>
+        <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px" data-i18n="ownr_nationality_req_title">🌍 지원 자격 (국적 조건)</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-          <button type="button" id="nreq-any"               onclick="setNatReq('any')"               style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">🌍 국적 무관</button>
-          <button type="button" id="nreq-korean_only"       onclick="setNatReq('korean_only')"       style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">🇰🇷 한국인만</button>
-          <button type="button" id="nreq-korean_lang"       onclick="setNatReq('korean_lang')"       style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">💬 외국인가능·한국어필수</button>
-          <button type="button" id="nreq-foreigner_welcome" onclick="setNatReq('foreigner_welcome')" style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer">🌏 외국인 환영</button>
+          <button type="button" id="nreq-any"               onclick="setNatReq('any')"               style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer" data-i18n="ownr_nationality_any">🌍 국적 무관</button>
+          <button type="button" id="nreq-korean_only"       onclick="setNatReq('korean_only')"       style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer" data-i18n="ownr_nationality_korean_only">🇰🇷 한국인만</button>
+          <button type="button" id="nreq-korean_lang"       onclick="setNatReq('korean_lang')"       style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer" data-i18n="ownr_nationality_foreigner_korean_req">💬 외국인가능·한국어필수</button>
+          <button type="button" id="nreq-foreigner_welcome" onclick="setNatReq('foreigner_welcome')" style="padding:9px 6px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;color:#374151;cursor:pointer" data-i18n="ownr_nationality_foreigner_welcome">🌏 외국인 환영</button>
         </div>
       </div>
       <input type="hidden" id="f-nat-req" value="any">
@@ -4356,7 +4356,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=570"></script>
+<script src="./assets/js/app.js?v=571"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4514,7 +4514,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=570"></script>
+<script src="./assets/js/app_ui.js?v=571"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
