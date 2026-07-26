@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '566';
+  const _APP_V = '567';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=566').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=567').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -19417,6 +19417,26 @@ const DATING_INTERESTS = [
   '와인','맥주','요리','베이킹','카페',
   '독서','영화','게임','사진','반려동물'
 ];
+// DB에는 한국어 원문을 그대로 저장(필터링/매칭용)하고, 화면 표시만 tCategory류 헬퍼로
+// 번역한다 - 값 자체를 언어별로 바꾸면 DB 저장값과 어긋나므로 표시 전용
+const DATING_JOB_KEYS = {
+  '대기업 / 외국계기업':'dj_bigcorp', '중견 / 중소기업':'dj_smb', '공기업 / 공공기관 / 공무원':'dj_public',
+  '전문직 (의료/법조 등)':'dj_professional', '스타트업 / IT':'dj_startup', '자영업 / F&B':'dj_selfemployed', '프리랜서 / 기타':'dj_freelance',
+};
+function tDatingJob(v) { const key = DATING_JOB_KEYS[v]; return key ? t(key) : (v || ''); }
+const DATING_BODY_KEYS = {
+  '슬림':'db_slim', '슬림탄탄':'db_slim_toned', '보통':'db_average', '글래머':'db_glamour',
+  '통통한 편':'db_chubby', '마른 편':'db_skinny', '근육질':'db_muscular',
+};
+function tDatingBody(v) { const key = DATING_BODY_KEYS[v]; return key ? t(key) : (v || ''); }
+const DATING_INTEREST_KEYS = {
+  '여행':'di_travel', '캠핑':'di_camping', '등산':'di_hiking', '산책':'di_walk', '자전거':'di_cycling', '러닝':'di_running',
+  '헬스':'di_gym', '크로스핏':'di_crossfit', '필라테스':'di_pilates', '요가':'di_yoga', '클라이밍':'di_climbing',
+  '골프':'di_golf', '테니스':'di_tennis', '배드민턴':'di_badminton', '볼링':'di_bowling',
+  '와인':'di_wine', '맥주':'di_beer', '요리':'di_cooking', '베이킹':'di_baking', '카페':'di_cafe',
+  '독서':'di_reading', '영화':'di_movie', '게임':'di_gaming', '사진':'di_photo', '반려동물':'di_pet',
+};
+function tDatingInterest(v) { const key = DATING_INTEREST_KEYS[v]; return key ? t(key) : (v || ''); }
 // 바로만남 공개 프로필 - 계정 프로필과 별개로 저장되는 데이터(블라인드 상대에게만 공개)지만,
 // 화면은 2026-07-16부터 마이페이지 "프로필 편집"(mpsub-basic) 하단 섹션에 통합돼 있다.
 // 사진(대표사진 재사용 또는 전용 사진)/직업군/체형/취미·관심사/키/MBTI를 관리한다.
@@ -19488,9 +19508,9 @@ function _renderMannamProfilePanel() {
   const sel = _mpDatingProfile;
   const bodyTypes = sel.gender === 'male' ? DATING_BODY_TYPES_MALE : DATING_BODY_TYPES_FEMALE;
   const chip = (label, active, onclick) => `<button type="button" onclick="${onclick}" style="padding:7px 13px;border-radius:20px;border:1.5px solid ${active?'#7C3AED':'#eee'};font-size:12.5px;font-weight:700;background:${active?'#F5F3FF':'#fff'};color:${active?'#7C3AED':'#888'};cursor:pointer">${label}</button>`;
-  document.getElementById('mp-dating-job-chips').innerHTML = DATING_JOB_CATEGORIES.map(v => chip(v, sel.job_category===v, `_mpSelectDatingJob('${v.replace(/'/g,"\\'")}')`)).join('');
-  document.getElementById('mp-dating-body-chips').innerHTML = bodyTypes.map(v => chip(v, sel.body_type===v, `_mpSelectDatingBody('${v}')`)).join('');
-  document.getElementById('mp-dating-interest-chips').innerHTML = DATING_INTERESTS.map(v => chip(v, sel.interests.includes(v), `_mpToggleDatingInterest('${v}')`)).join('');
+  document.getElementById('mp-dating-job-chips').innerHTML = DATING_JOB_CATEGORIES.map(v => chip(tDatingJob(v), sel.job_category===v, `_mpSelectDatingJob('${v.replace(/'/g,"\\'")}')`)).join('');
+  document.getElementById('mp-dating-body-chips').innerHTML = bodyTypes.map(v => chip(tDatingBody(v), sel.body_type===v, `_mpSelectDatingBody('${v}')`)).join('');
+  document.getElementById('mp-dating-interest-chips').innerHTML = DATING_INTERESTS.map(v => chip(tDatingInterest(v), sel.interests.includes(v), `_mpToggleDatingInterest('${v}')`)).join('');
   document.getElementById('mp-dating-height').value = sel.height_cm || '';
 
   const pairs = [['E','I'],['S','N'],['T','F'],['J','P']];
@@ -19896,8 +19916,8 @@ async function openBarospotCandidates(applicationId) {
               ${c.photo_url ? `<img src="${c.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(4px);transform:scale(1.15)">` : `<span style="font-size:22px">👤</span>`}
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:800;color:#222">${[c.age ? t('age_full_years').replace('{n}', c.age) : null, c.height_cm?c.height_cm+'cm':null, c.job_category, c.body_type, c.mbti].filter(Boolean).join(' · ') || t('age_unknown_label')}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">${t('noshow_count_suffix').replace('{n}', c.noshow_count)}</span>` : ''}</div>
-              ${c.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${c.interests.slice(0,5).map(tag=>'#'+tag).join(' ')}</div>` : ''}
+              <div style="font-size:13px;font-weight:800;color:#222">${[c.age ? t('age_full_years').replace('{n}', c.age) : null, c.height_cm?c.height_cm+'cm':null, tDatingJob(c.job_category), tDatingBody(c.body_type), c.mbti].filter(Boolean).join(' · ') || t('age_unknown_label')}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">${t('noshow_count_suffix').replace('{n}', c.noshow_count)}</span>` : ''}</div>
+              ${c.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${c.interests.slice(0,5).map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
               <div style="font-size:12px;color:#666;margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.bio ? c.bio.replace(/</g,'&lt;') : t('bio_empty_notice')}</div>
             </div>
             <button onclick="selectBarospotCandidate('${applicationId}','${c.application_id}')" style="flex-shrink:0;padding:9px 14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${t('select_btn')}</button>
@@ -20164,7 +20184,7 @@ async function _loadMaleApplications() {
         <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
           ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:14px">👤</span>`}
         </div>
-        <div style="font-size:11px;color:#666;min-width:0">${[preview.age?preview.age+t('years_old_suffix'):null, preview.height_cm?preview.height_cm+'cm':null, preview.job_category, preview.body_type, preview.mbti].filter(Boolean).join(' · ') || t('profile_preparing_notice')}</div>
+        <div style="font-size:11px;color:#666;min-width:0">${[preview.age?preview.age+t('years_old_suffix'):null, preview.height_cm?preview.height_cm+'cm':null, tDatingJob(preview.job_category), tDatingBody(preview.body_type), preview.mbti].filter(Boolean).join(' · ') || t('profile_preparing_notice')}</div>
       </div>` : '';
     return `<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #f0f0f0;${canTrack ? 'cursor:pointer' : ''}" ${clickAttr}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
@@ -20277,8 +20297,8 @@ function _renderSpotEventCard(ev, preview) {
           ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:18px">👤</span>`}
         </div>
         <div style="min-width:0;flex:1">
-          <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+t('years_old_suffix') : null, preview.job_category, preview.body_type].filter(Boolean).join(' · ') || t('profile_preparing_notice')}</div>
-          ${preview.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${preview.interests.slice(0,4).map(tag=>'#'+tag).join(' ')}</div>` : ''}
+          <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+t('years_old_suffix') : null, tDatingJob(preview.job_category), tDatingBody(preview.body_type)].filter(Boolean).join(' · ') || t('profile_preparing_notice')}</div>
+          ${preview.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${preview.interests.slice(0,4).map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
           ${preview.bio ? `<div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${preview.bio.replace(/</g,'&lt;')}</div>` : ''}
         </div>
       </div>
@@ -20834,8 +20854,8 @@ function openBarospotProfileReveal() {
         ${p.photo_url ? `<img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}
       </div>
       <div style="font-size:18px;font-weight:900;color:#111;margin-bottom:4px">${p.name || t('name_unknown_label')}</div>
-      <div style="font-size:13px;color:#888;margin-bottom:14px">${[p.age?p.age+t('years_old_suffix'):null, p.height_cm?p.height_cm+'cm':null, p.job_category, p.body_type, p.mbti].filter(Boolean).join(' · ')}</div>
-      ${p.interests?.length ? `<div style="font-size:12.5px;color:#7C3AED;margin-bottom:14px">${p.interests.map(tag=>'#'+tag).join(' ')}</div>` : ''}
+      <div style="font-size:13px;color:#888;margin-bottom:14px">${[p.age?p.age+t('years_old_suffix'):null, p.height_cm?p.height_cm+'cm':null, tDatingJob(p.job_category), tDatingBody(p.body_type), p.mbti].filter(Boolean).join(' · ')}</div>
+      ${p.interests?.length ? `<div style="font-size:12.5px;color:#7C3AED;margin-bottom:14px">${p.interests.map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
       ${p.bio ? `<div style="text-align:left;background:#f8f9fa;border-radius:12px;padding:14px;font-size:13px;color:#444;line-height:1.6">${p.bio.replace(/</g,'&lt;')}</div>` : ''}
     </div>`;
   openBottomSheet(html);
