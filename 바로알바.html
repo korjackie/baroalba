@@ -56,7 +56,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=569"></script>
+  <script src="./shared-lang.js?v=570"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -65,7 +65,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=569">
+  <link rel="stylesheet" href="./assets/css/style.css?v=570">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -2919,11 +2919,11 @@
     <div style="margin-bottom:16px">
       <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px" data-i18n="lesson_category_label">카테고리 *</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="moim-cat-select">
-        <button type="button" onclick="selectMoimCat(this,'스포츠')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🏃 <span data-i18n="moim_cat_sports">스포츠</span></button>
-        <button type="button" onclick="selectMoimCat(this,'취미')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🎨 <span data-i18n="moim_cat_hobby">취미</span></button>
-        <button type="button" onclick="selectMoimCat(this,'친목')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🤝 <span data-i18n="moim_cat_social">친목</span></button>
-        <button type="button" onclick="selectMoimCat(this,'챌린지')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔥 <span data-i18n="moim_cat_challenge">챌린지</span></button>
-        <button type="button" onclick="selectMoimCat(this,'기타')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💡 <span data-i18n="cat_etc">기타</span></button>
+        <button type="button" data-val="스포츠" onclick="selectMoimCat(this,'스포츠')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🏃 <span data-i18n="moim_cat_sports">스포츠</span></button>
+        <button type="button" data-val="취미" onclick="selectMoimCat(this,'취미')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🎨 <span data-i18n="moim_cat_hobby">취미</span></button>
+        <button type="button" data-val="친목" onclick="selectMoimCat(this,'친목')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🤝 <span data-i18n="moim_cat_social">친목</span></button>
+        <button type="button" data-val="챌린지" onclick="selectMoimCat(this,'챌린지')" style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔥 <span data-i18n="moim_cat_challenge">챌린지</span></button>
+        <button type="button" data-val="기타" onclick="selectMoimCat(this,'기타')"   style="padding:12px 8px;border-radius:12px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">💡 <span data-i18n="cat_etc">기타</span></button>
       </div>
       <input type="hidden" id="f-moim-cat" value="">
       <div id="moim-subcat-section" style="display:none;margin-top:10px">
@@ -3016,10 +3016,10 @@
     <div id="moim-skill-section" style="display:none;margin-bottom:16px;padding:14px;background:#F5F3FF;border-radius:14px;border:1.5px solid #DDD6FE">
       <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">🏅 <span data-i18n="moim_skill_section_title">실력 조건</span></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="moim-skill-btns">
-        <button type="button" onclick="selectMoimSkill(this,'무관')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #DDD6FE;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#7C3AED" data-i18n="skill_any">무관</button>
-        <button type="button" onclick="selectMoimSkill(this,'입문')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_beginner">입문</button>
-        <button type="button" onclick="selectMoimSkill(this,'중급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_intermediate">중급</button>
-        <button type="button" onclick="selectMoimSkill(this,'상급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_advanced">상급</button>
+        <button type="button" data-val="무관" onclick="selectMoimSkill(this,'무관')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #DDD6FE;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:#7C3AED" data-i18n="skill_any">무관</button>
+        <button type="button" data-val="입문" onclick="selectMoimSkill(this,'입문')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_beginner">입문</button>
+        <button type="button" data-val="중급" onclick="selectMoimSkill(this,'중급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_intermediate">중급</button>
+        <button type="button" data-val="상급" onclick="selectMoimSkill(this,'상급')"   style="padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555" data-i18n="skill_advanced">상급</button>
       </div>
       <input type="hidden" id="f-moim-skill" value="무관">
       <div style="margin-top:10px">
@@ -4356,7 +4356,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=569"></script>
+<script src="./assets/js/app.js?v=570"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4514,7 +4514,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=569"></script>
+<script src="./assets/js/app_ui.js?v=570"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">

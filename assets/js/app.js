@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '569';
+  const _APP_V = '570';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=569').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=570').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -1955,7 +1955,7 @@ function _renderMoimCards(container, list) {
           ${m.location_name ? `<div style="font-size:12px;color:#888;margin-top:1px">📍 ${m.location_name}</div>` : ''}
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
             <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:#7C3AED;padding:2px 8px;border-radius:8px">${tMoimCat(m.category) || t('cat_etc')}</span>
-            ${m.sub_category ? `<span style="font-size:10px;font-weight:700;background:#f5f5f5;color:#555;padding:2px 8px;border-radius:8px">${m.sub_category}</span>` : ''}
+            ${m.sub_category ? `<span style="font-size:10px;font-weight:700;background:#f5f5f5;color:#555;padding:2px 8px;border-radius:8px">${tMoimSubcat(m.sub_category)}</span>` : ''}
             ${m.skill_level && m.skill_level !== '무관' ? `<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#B45309;padding:2px 8px;border-radius:8px">🏅${tSkillLevel(m.skill_level)}</span>` : ''}
             ${m.gender_req !== 'any' ? `<span style="font-size:10px;font-weight:700;background:#F0F9FF;color:#0369A1;padding:2px 8px;border-radius:8px">${m.gender_req === 'male' ? t('gender_male_only') : t('gender_female_only')}</span>` : ''}
           </div>
@@ -2021,7 +2021,7 @@ async function openMoimDetail(moimId) {
   document.getElementById('moim-detail-body').innerHTML = `
     <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:24px 20px 20px;text-align:center">
       <div style="font-size:56px;margin-bottom:8px">${emoji}</div>
-      <div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:6px">${tMoimCat(m.category)} ${m.sub_category ? '· '+m.sub_category : ''}</div>
+      <div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:6px">${tMoimCat(m.category)} ${m.sub_category ? '· '+tMoimSubcat(m.sub_category) : ''}</div>
       <div style="font-size:20px;font-weight:900;color:#111;line-height:1.3">${m.title}</div>
     </div>
 
@@ -2227,7 +2227,7 @@ function _resetMoimForm() {
   document.getElementById('f-moim-public').value = 'true';
   // 버튼 상태 초기화
   document.querySelectorAll('#moim-cat-select button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
-  document.querySelectorAll('#moim-skill-btns button').forEach(b => { b.style.background=(b.textContent==='무관'?'#fff':'#f9fafb'); b.style.borderColor=(b.textContent==='무관'?'#DDD6FE':'#e5e7eb'); b.style.color=(b.textContent==='무관'?'#7C3AED':'#555'); });
+  document.querySelectorAll('#moim-skill-btns button').forEach(b => { const isAny = b.dataset.val==='무관'; b.style.background=(isAny?'#fff':'#f9fafb'); b.style.borderColor=(isAny?'#DDD6FE':'#e5e7eb'); b.style.color=(isAny?'#7C3AED':'#555'); });
   selectMoimPublic(true);
   document.getElementById('moim-skill-section').style.display = 'none';
   document.getElementById('moim-subcat-section').style.display = 'none';
@@ -2251,9 +2251,12 @@ function _fillMoimForm(m) {
   document.getElementById('f-moim-maxcount').value = m.max_count || 10;
   selectMoimFee(m.entry_fee < 0 ? 'split' : m.entry_fee > 0 ? 'fixed' : 'free', m.entry_fee > 0 ? m.entry_fee : '');
   selectMoimPublic(m.is_public !== false);
-  if (m.category) { const btn = [...document.querySelectorAll('#moim-cat-select button')].find(b => b.textContent.includes(m.category)); if (btn) selectMoimCat(btn, m.category); }
-  if (m.sub_category) { const subBtn = [...document.querySelectorAll('#moim-subcat-btns button')].find(b => b.textContent.trim().includes(m.sub_category)); if (subBtn) selectMoimSubcat(subBtn, m.sub_category); }
-  if (m.skill_level) { const btn = [...document.querySelectorAll('#moim-skill-btns button')].find(b => b.textContent === m.skill_level); if (btn) selectMoimSkill(btn, m.skill_level); }
+  // 카테고리/세부종목/실력조건 버튼은 화면엔 번역된 텍스트가 표시되므로, DB에는 항상
+  // 한국어 원문으로 저장되는 m.category 등과 textContent를 직접 비교하면 한국어가 아닌
+  // 언어에서는 절대 매칭이 안 되는 버그가 있었음 - 버튼의 data-val(원본 한국어 값)로 매칭
+  if (m.category) { const btn = [...document.querySelectorAll('#moim-cat-select button')].find(b => b.dataset.val === m.category); if (btn) selectMoimCat(btn, m.category); }
+  if (m.sub_category) { const subBtn = [...document.querySelectorAll('#moim-subcat-btns button')].find(b => b.dataset.val === m.sub_category); if (subBtn) selectMoimSubcat(subBtn, m.sub_category); }
+  if (m.skill_level) { const btn = [...document.querySelectorAll('#moim-skill-btns button')].find(b => b.dataset.val === m.skill_level); if (btn) selectMoimSkill(btn, m.skill_level); }
   if (m.gender_req) {
     const genderBtn = [...document.querySelectorAll('[onclick*=selectMoimGender]')].find(b => b.getAttribute('onclick').includes(`'${m.gender_req}'`));
     if (genderBtn) selectMoimGender(genderBtn, m.gender_req);
@@ -2268,6 +2271,17 @@ const _MOIM_SUBCATS = {
   '친목':   ['와인','위스키','맥주/펍','커피/카페','맛집탐방','여행','기타 친목'],
   '기타':   [],
 };
+// DB엔 한국어 원문을 그대로 저장(필터링/매칭용)하고 화면 표시만 번역
+const _MOIM_SUBCAT_KEYS = {
+  '스크린골프':'msc_screen_golf', '테니스':'di_tennis', '라운딩':'msc_rounding', '탁구':'ls_table_tennis',
+  '배드민턴':'di_badminton', '수영':'ls_swimming', '클라이밍':'di_climbing', '헬스/PT':'msc_gym_pt',
+  '자전거':'di_cycling', '러닝':'di_running', '요가/필라테스':'msc_yoga_pilates', '기타 스포츠':'msc_etc_sports',
+  '보드게임':'msc_board_game', '게임':'di_gaming', '그림/드로잉':'msc_drawing', '영화':'di_movie', '요리':'di_cooking',
+  '등산/트레킹':'msc_hiking_trekking', '독서':'di_reading', '기타 취미':'msc_etc_hobby',
+  '와인':'di_wine', '위스키':'msc_whisky', '맥주/펍':'msc_beer_pub', '커피/카페':'msc_coffee_cafe',
+  '맛집탐방':'msc_food_tour', '여행':'di_travel', '기타 친목':'msc_etc_social',
+};
+function tMoimSubcat(v) { const key = _MOIM_SUBCAT_KEYS[v]; return key ? t(key) : (v || ''); }
 const _MOIM_SUBCAT_EMOJI = {
   '스크린골프':'⛳','테니스':'🎾','라운딩':'🏌️','탁구':'🏓','배드민턴':'🏸','수영':'🏊',
   '클라이밍':'🧗','헬스/PT':'💪','자전거':'🚴','러닝':'🏃','요가/필라테스':'🧘','기타 스포츠':'🏅',
@@ -2287,7 +2301,7 @@ function selectMoimCat(btn, cat) {
   if (subs.length) {
     btnsEl.innerHTML = subs.map(s => {
       const em = _MOIM_SUBCAT_EMOJI[s] || '';
-      return `<button type="button" onclick="selectMoimSubcat(this,'${s}')" style="padding:7px 12px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">${em} ${s}</button>`;
+      return `<button type="button" data-val="${s}" onclick="selectMoimSubcat(this,'${s}')" style="padding:7px 12px;border-radius:20px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:12px;font-weight:700;cursor:pointer;color:#555">${em} ${tMoimSubcat(s)}</button>`;
     }).join('');
     sec.style.display = 'block';
   } else {
