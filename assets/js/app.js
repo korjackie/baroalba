@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '568';
+  const _APP_V = '569';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=568').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=569').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -3406,7 +3406,7 @@ async function _renderHomeLessonHot() {
       const locIcon = p.location_type === '비대면' ? '💻' : p.location_type === '방문레슨' ? '🚗' : '🏫';
       return `<div onclick="openLessonDetail('${p.id}')" style="flex-shrink:0;width:130px;background:#f8faff;border:1.5px solid #dbeafe;border-radius:12px;padding:10px;cursor:pointer">
         ${onAir}
-        <div style="font-size:11px;font-weight:800;color:#1d4ed8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.main_category||'레슨'} · ${p.subject||'기타'}</div>
+        <div style="font-size:11px;font-weight:800;color:#1d4ed8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
         <div style="font-size:10px;color:#888;margin:3px 0">${locIcon} ${p.location_type||''}</div>
         <div style="font-size:13px;font-weight:900;color:#C8102E">${price}</div>
         <div style="font-size:10px;color:#aaa;margin-top:3px">⭐ ${(p.workers?.rating||0).toFixed(1)}</div>
@@ -12501,6 +12501,33 @@ const LESSON_SUBS = {
   '뷰티·케어':   [{v:'헤어',e:'💇'},{v:'메이크업·네일',e:'💅'},{v:'피부 관리',e:'✨'}],
   '언어·기타':   [{v:'번역·통역',e:'🌐'},{v:'행사·MC',e:'🎤'},{v:'음식·케이터링',e:'🍽️'},{v:'기타 전문',e:'⭐'}],
 };
+// DB엔 한국어 원문을 그대로 저장(필터링/매칭용)하고 화면 표시만 번역한다. 중간분류(mid)의
+// '기타'와 하위분류(sub, 음악 항목의 '기타'=기타(악기))는 같은 글자지만 뜻이 달라 맵을
+// 따로 둬야 충돌하지 않음 - mid의 '기타'는 기존 cat_etc 키를 그대로 재사용
+const LESSON_MID_KEYS = {
+  '스포츠':'lm_sports', '음악':'lm_music', '댄스':'lm_dance', '미술':'lm_art', '기타':'cat_etc',
+  '어학':'lm_language', '수학/과학':'lm_math_science', '국어/인문':'lm_korean_humanities', '기타(과외)':'lm_etc_tutoring',
+  '현장·시설':'lm_field_facility', '크리에이티브':'lm_creative', 'IT·개발':'lm_it_dev', '뷰티·케어':'lm_beauty_care', '언어·기타':'lm_language_etc',
+};
+function tLessonMid(v) { const key = LESSON_MID_KEYS[v]; return key ? t(key) : (v || ''); }
+const LESSON_SUB_KEYS = {
+  '골프':'di_golf', '테니스':'di_tennis', '탁구':'ls_table_tennis', '수영':'ls_swimming', 'PT/필라테스':'ls_pt_pilates',
+  '배드민턴':'di_badminton', '클라이밍':'di_climbing', '요가':'di_yoga',
+  '보컬':'ls_vocal', '기타':'ls_guitar', '피아노':'ls_piano', '드럼':'ls_drum', '바이올린':'ls_violin', '우쿨렐레':'ls_ukulele',
+  'K-pop댄스':'ls_kpop_dance', '발레':'ls_ballet', '힙합':'ls_hiphop', '현대무용':'ls_contemporary_dance', '재즈댄스':'ls_jazz_dance',
+  '그림/수채화':'ls_drawing_watercolor', '디자인':'ls_design', '공예':'ls_craft', '캘리그라피':'ls_calligraphy',
+  '영어':'ls_english', '중국어':'ls_chinese', '일본어':'ls_japanese', '스페인어':'ls_spanish', '기타외국어':'ls_other_foreign_lang',
+  '수학':'ls_math', '과학':'ls_science', '물리':'ls_physics', '화학':'ls_chemistry', '생물':'ls_biology',
+  '국어':'ls_korean_lang', '역사':'ls_history', '논술':'ls_essay', '한국사':'ls_korean_history', '사회':'ls_social_studies',
+  '설비·수리':'ls_facility_repair', '전기·전자':'ls_electrical', '인테리어':'ls_interior', '청소·방역':'ls_cleaning_pest', '이사·운반':'ls_moving', '조경·정원':'ls_landscaping',
+  '사진 촬영':'ls_photo_shoot', '영상 촬영·편집':'ls_video_edit', '그래픽·디자인':'ls_graphic_design', '웹디자인·UI':'ls_web_ui_design', 'SNS·마케팅':'ls_sns_marketing', '3D·모션':'ls_3d_motion',
+  '웹·앱 개발':'ls_web_app_dev', '데이터 분석':'ls_data_analysis', '자동화·스크립트':'ls_automation_script', '기타 IT':'ls_other_it',
+  '헤어':'ls_hair', '메이크업·네일':'ls_makeup_nail', '피부 관리':'ls_skincare',
+  '번역·통역':'ls_translation', '행사·MC':'ls_event_mc', '음식·케이터링':'ls_catering', '기타 전문':'ls_other_professional',
+};
+function tLessonSub(v) { const key = LESSON_SUB_KEYS[v]; return key ? t(key) : (v || ''); }
+const LESSON_MAIN_KEYS = { '레슨':'lm_main_lesson', '과외':'lm_main_tutoring', '전문기술':'lm_main_technical' };
+function tLessonMain(v) { const key = LESSON_MAIN_KEYS[v]; return key ? t(key) : (v || ''); }
 
 function openLessonPanel() {
   _lessonMainFilter = ''; _lessonSubFilter = '';
@@ -12543,11 +12570,11 @@ function _updateLessonSubcatRow() {
   const row = document.getElementById('lesson-subcat-row');
   const mids = _lessonMainFilter ? (LESSON_MIDS[_lessonMainFilter] || []) : [];
   if (!mids.length) {
-    row.innerHTML = `<button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">전체</button>`;
+    row.innerHTML = `<button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">${t('cat_all')}</button>`;
     return;
   }
-  row.innerHTML = `<button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">전체</button>`
-    + mids.map(m => `<button class="lesson-cat-btn" data-sub="${m.v}" onclick="filterLessonSub(this,'${m.v}')">${m.e} ${m.v}</button>`).join('');
+  row.innerHTML = `<button class="lesson-cat-btn active" data-sub="" onclick="filterLessonSub(this,'')">${t('cat_all')}</button>`
+    + mids.map(m => `<button class="lesson-cat-btn" data-sub="${m.v}" onclick="filterLessonSub(this,'${m.v}')">${m.e} ${tLessonMid(m.v)}</button>`).join('');
 }
 
 function filterLessonSub(el, sub) {
@@ -12669,7 +12696,7 @@ async function loadMyLessonInquiries() {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
           <div>
             <div style="font-size:13px;font-weight:800;color:#111">${seeker.name || t('student_default_name')}</div>
-            <div style="font-size:11px;color:#888;margin-top:1px">${prof.main_category||'레슨'} · ${prof.subject||''} · ${dateStr}</div>
+            <div style="font-size:11px;color:#888;margin-top:1px">${tLessonMain(prof.main_category||'레슨')} · ${prof.subject ? tLessonSub(prof.subject) : ''} · ${dateStr}</div>
           </div>
           <span style="font-size:11px;font-weight:800;color:${stColor};background:${stColor}22;padding:3px 9px;border-radius:8px">${stLabel}</span>
         </div>
@@ -12719,7 +12746,7 @@ function _renderLessonMarkers(data) {
     const onAir = p.is_available_now;
     const glow = onAir ? 'box-shadow:0 0 0 3px #22c55e,0 2px 12px rgba(34,197,94,0.5);' : 'box-shadow:0 2px 8px rgba(0,0,0,0.18);';
     const onAirDot = onAir ? '<span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;margin-right:4px"></span>' : '';
-    const content = `<div onclick="openLessonDetail('${p.id}')" style="background:${catColor};color:#fff;font-size:11px;font-weight:800;padding:5px 9px;border-radius:20px;white-space:nowrap;cursor:pointer;${glow}display:flex;align-items:center">${onAirDot}${p.subject} ${price}원</div>`;
+    const content = `<div onclick="openLessonDetail('${p.id}')" style="background:${catColor};color:#fff;font-size:11px;font-weight:800;padding:5px 9px;border-radius:20px;white-space:nowrap;cursor:pointer;${glow}display:flex;align-items:center">${onAirDot}${p.subject ? tLessonSub(p.subject) : ''} ${price}${t('won_suffix')}</div>`;
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
       content, yAnchor: 1.2
@@ -12735,12 +12762,12 @@ function makeLessonCardHtml(p) {
   const reviews = w?.review_count || 0;
   const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + t('price_per_session_unit') : '-';
   const days = p.available_days?.join(' · ') || '';
-  const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터방문', 비대면:'💻 비대면'};
+  const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit_short'), 센터방문:'🏫 '+t('lesson_type_center_short'), 비대면:'💻 '+t('lesson_type_online_short')};
   const locTypeBadge = p.location_type ? `<span style="font-size:10px;background:#f0f9ff;color:#0891b2;padding:2px 6px;border-radius:6px">${locTypeMap[p.location_type]||p.location_type}</span>` : '';
   const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:#16a34a;border-radius:50%;display:inline-block"></span>${t('available_now_badge')}</span>` : '';
   const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:800;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:6px">✓ ${t('cert_badge_short')}</span>` : '';
   const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:6px">${t('retention_badge').replace('{n}', p._retention)}</span>` : '';
-  const titleText = `${p.main_category||'레슨'} · ${p.subject||'기타'}`;
+  const titleText = `${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}`;
   return `
   <div class="lesson-card" onclick="openLessonDetail('${p.id}')">
     <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">${onAirBadge}${certBadge}${locTypeBadge}</div>
@@ -12766,7 +12793,7 @@ async function openLessonDetail(profileId) {
   const reviews = w?.review_count || 0;
   const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() : '-';
   const days = p.available_days?.join(', ') || t('negotiable_label');
-  const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터/학원 방문', 비대면:'💻 비대면(온라인)'};
+  const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit'), 센터방문:'🏫 '+t('lesson_type_center'), 비대면:'💻 '+t('lesson_type_online')};
 
   // 재수강률 계산
   let retentionHtml = '';
@@ -12777,7 +12804,7 @@ async function openLessonDetail(profileId) {
     const total = Object.keys(freq).length;
     if (total > 0) {
       const pct = Math.round(returning / total * 100);
-      retentionHtml = `<div style="background:#f0fdf4;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:#16a34a;font-weight:700">🔄 재수강률 ${pct}% (${bookings.length}회 완료)</div>`;
+      retentionHtml = `<div style="background:#f0fdf4;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:#16a34a;font-weight:700">${t('retention_rate_detail').replace('{n}', pct).replace('{m}', bookings.length)}</div>`;
     }
   }
 
@@ -12795,10 +12822,10 @@ async function openLessonDetail(profileId) {
     ${onAirHtml}
     <div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'#7c3aed':'#0891b2'};padding:3px 8px;border-radius:8px">${p.main_category||'레슨'}</span>
-        <span class="lesson-subject-tag">${p.subject||'기타'}</span>${certHtml}
+        <span style="font-size:11px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'#7c3aed':'#0891b2'};padding:3px 8px;border-radius:8px">${tLessonMain(p.main_category||'레슨')}</span>
+        <span class="lesson-subject-tag">${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</span>${certHtml}
       </div>
-      <div style="font-size:19px;font-weight:900;color:#222;margin-bottom:4px">${p.main_category||'레슨'} · ${p.subject||'기타'}</div>
+      <div style="font-size:19px;font-weight:900;color:#222;margin-bottom:4px">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
       ${p.subject_detail ? `<div style="font-size:14px;color:#555;margin-bottom:6px;line-height:1.5">${p.subject_detail}</div>` : ''}
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-size:13px;color:#888">${t('instructor_label')} <strong style="color:#222">${w?.name||t('unknown_label')}</strong></span>
@@ -12893,7 +12920,7 @@ function openLessonRegisterModal() {
   // 분야(중간카테고리) 초기화
   const mids = LESSON_MIDS['레슨'] || [];
   document.getElementById('lr-mid-cat-row').innerHTML =
-    mids.map(m => `<button type="button" class="booking-day-btn" style="flex-shrink:0" onclick="selectLessonMidCat(this,'${m.v}')">${m.e} ${m.v}</button>`).join('');
+    mids.map(m => `<button type="button" class="booking-day-btn" style="flex-shrink:0" onclick="selectLessonMidCat(this,'${m.v}')">${m.e} ${tLessonMid(m.v)}</button>`).join('');
   document.getElementById('lesson-subject-chips').innerHTML = '';
   document.getElementById('lr-subject-label').style.display = 'none';
   ['lr-subject-custom','lr-detail','lr-price','lr-location'].forEach(id => {
@@ -12921,7 +12948,7 @@ function selectLessonMainCat(el, cat) {
   el.classList.add('active');
   const mids = LESSON_MIDS[cat] || [];
   document.getElementById('lr-mid-cat-row').innerHTML =
-    mids.map(m => `<button type="button" class="booking-day-btn" style="flex-shrink:0" onclick="selectLessonMidCat(this,'${m.v}')">${m.e} ${m.v}</button>`).join('');
+    mids.map(m => `<button type="button" class="booking-day-btn" style="flex-shrink:0" onclick="selectLessonMidCat(this,'${m.v}')">${m.e} ${tLessonMid(m.v)}</button>`).join('');
   document.getElementById('lesson-subject-chips').innerHTML = '';
   document.getElementById('lr-subject-label').style.display = 'none';
   document.getElementById('lr-subject-custom').value = '';
@@ -12956,7 +12983,7 @@ function selectLessonMidCat(el, mid) {
 function _renderRegisterSubChips(key) {
   const subs = LESSON_SUBS[key] || [];
   document.getElementById('lesson-subject-chips').innerHTML =
-    subs.map(s => `<button type="button" class="booking-day-btn" style="flex-shrink:0;white-space:nowrap" onclick="selectLessonSubject(this,'${s.v}')">${s.e} ${s.v}</button>`).join('');
+    subs.map(s => `<button type="button" class="booking-day-btn" style="flex-shrink:0;white-space:nowrap" onclick="selectLessonSubject(this,'${s.v}')">${s.e} ${tLessonSub(s.v)}</button>`).join('');
   _updateChipsArrows();
 }
 function _scrollChips(dir) {
@@ -13194,20 +13221,20 @@ async function loadMyLessons() {
     el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">\u{1F9D1}‍\u{1F3EB}</div><div class="empty-txt">' + t('lesson_my_empty') + '<br><span style="font-size:12px;color:#bbb">+ ' + t('lesson_register_btn') + '</span></div></div>';
     return;
   }
-  const locTypeMap = {방문레슨:'🚗 방문레슨', 센터방문:'🏫 센터방문', 비대면:'💻 비대면'};
+  const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit_short'), 센터방문:'🏫 '+t('lesson_type_center_short'), 비대면:'💻 '+t('lesson_type_online_short')};
   el.innerHTML = data.map(p => `
     <div class="lesson-card" style="border-left:3px solid ${p.is_active ? '#3b82f6' : '#ddd'}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:10px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'#7c3aed':'#0891b2'};padding:2px 7px;border-radius:6px">${p.main_category||'레슨'}</span>
-          <span class="lesson-subject-tag">${p.subject}</span>
-          ${p.cert_status==='verified'?'<span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px">✓인증</span>':''}
+          <span style="font-size:10px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'#7c3aed':'#0891b2'};padding:2px 7px;border-radius:6px">${tLessonMain(p.main_category||'레슨')}</span>
+          <span class="lesson-subject-tag">${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</span>
+          ${p.cert_status==='verified'?`<span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px">✓${t('cert_badge_short')}</span>`:''}
         </div>
         <span style="font-size:11px;font-weight:700;color:${p.is_active ? '#16a34a' : '#aaa'}">${p.is_active ? ('● ' + t('active_status')) : ('● ' + t('inactive_status'))}</span>
       </div>
-      <div class="lesson-name">${p.main_category||'레슨'} · ${p.subject}</div>
+      <div class="lesson-name">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
       ${p.subject_detail ? `<div style="font-size:12px;color:#777;margin-top:2px;margin-bottom:4px">${p.subject_detail}</div>` : ''}
-      <div class="lesson-price" style="margin-top:4px">${Number(p.price_per_session).toLocaleString()}${t('price_per_session_unit')} · ${p.session_duration}분 · ${locTypeMap[p.location_type]||''}</div>
+      <div class="lesson-price" style="margin-top:4px">${Number(p.price_per_session).toLocaleString()}${t('price_per_session_unit')} · ${p.session_duration}${t('minute_unit_short')} · ${locTypeMap[p.location_type]||''}</div>
       <!-- 지도 표시 + 온에어 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
         <div style="padding:8px 10px;background:#f8fafc;border-radius:10px">
