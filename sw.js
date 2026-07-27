@@ -1,11 +1,12 @@
-const CACHE = 'baroalba-v582';
+const CACHE = 'baroalba-v583';
 const SHELL = [
   './manifest.json',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/logo-share.png',
-  './icons/og-share.png',
+  // og 이미지는 프리캐시에서 뺐다(2026-07-28). 카톡·페북 서버가 가져가는 파일이라
+  // 사용자 브라우저엔 한 번도 안 쓰이는데, 설치 때마다 715KB를 받게 하고 있었음.
 ];
 
 const SB_URL  = 'https://onwvbmllpycgswfzywjv.supabase.co';

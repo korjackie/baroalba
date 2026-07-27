@@ -15,7 +15,9 @@
 <meta property="og:site_name" content="바로알바">
 <meta property="og:title" content="바로알바 — 지금 일하고 오늘 받는 초단기 알바">
 <meta property="og:description" content="지도 위에서 내 주변 단기·당일 알바를 바로 찾고 바로 지원. 급구 알림 · 당일 정산 · 6개 언어 지원.">
-<meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share.png">
+<meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share-wide.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -46,6 +48,18 @@
       }
     } catch (e) { /* 프라이빗 모드 등 localStorage 차단 — 랜딩 노출 */ }
   })();
+</script>
+
+<!-- GA4 - 앱(바로알바.html)과 같은 측정 ID를 쓴다. 속성을 나누면 "랜딩에서 앱으로 몇 명이
+     넘어갔나"를 한 리포트에서 못 보는데, 랜딩의 존재 이유가 바로 그 전환이라 같이 묶는다.
+     위 리다이렉트 스크립트보다 반드시 뒤에 둘 것 — 앞에 두면 앱으로 튕겨나가는 기존
+     이용자까지 랜딩 방문자로 잡혀 신규 유입 수치가 부풀려진다. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5SB5VVP5ZB"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-5SB5VVP5ZB');
 </script>
 
 <style>

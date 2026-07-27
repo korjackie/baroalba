@@ -1310,6 +1310,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'(예: 오전 4명, 오후 3명 등)',
     ownr_wage_type_label:'급여 유형 *',
     ownr_wage_daily:'일급',
+    wage_hourly_label:'시급', wage_weekly_label:'주급',
     ownr_wage_per_job:'건당',
     ownr_wage_monthly:'월급',
     ownr_amount_won_label:'금액 (원) *',
@@ -1865,6 +1866,7 @@ const TRANSLATIONS = {
     rank_title_worker:'우수 알바생 RANK',
     display_error_label:'표시 오류',
     login_nav_label:'로그인',
+    guest_banner_text:'로그인하면 바로 지원할 수 있어요', guest_browse_btn:'✨ 둘러보기',
     toast_link_copied_short:'📋 링크 복사됨',
     ios_share_install_hint:'Safari에서 공유 → 홈 화면에 추가를 선택하세요',
     moim_default_title:'바로모임',
@@ -3056,6 +3058,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'(e.g. 4 people morning, 3 people afternoon)',
     ownr_wage_type_label:'Wage Type *',
     ownr_wage_daily:'Daily',
+    wage_hourly_label:'Hourly', wage_weekly_label:'Weekly',
     ownr_wage_per_job:'Per Job',
     ownr_wage_monthly:'Monthly',
     ownr_amount_won_label:'Amount (KRW) *',
@@ -3611,6 +3614,7 @@ const TRANSLATIONS = {
     rank_title_worker:'Top Workers RANK',
     display_error_label:'Display error',
     login_nav_label:'Login',
+    guest_banner_text:'Log in to apply instantly', guest_browse_btn:'✨ Take a look',
     toast_link_copied_short:'📋 Link copied',
     ios_share_install_hint:'In Safari, tap Share → Add to Home Screen',
     moim_default_title:'바로모임',
@@ -4802,6 +4806,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'（例：上午4人，下午3人等）',
     ownr_wage_type_label:'薪资类型 *',
     ownr_wage_daily:'日薪',
+    wage_hourly_label:'时薪', wage_weekly_label:'周薪',
     ownr_wage_per_job:'按件',
     ownr_wage_monthly:'月薪',
     ownr_amount_won_label:'金额（韩元）*',
@@ -5357,6 +5362,7 @@ const TRANSLATIONS = {
     rank_title_worker:'优秀打工者 RANK',
     display_error_label:'显示错误',
     login_nav_label:'登录',
+    guest_banner_text:'登录后即可立即申请', guest_browse_btn:'✨ 随便看看',
     toast_link_copied_short:'📋 链接已复制',
     ios_share_install_hint:'在Safari中点击分享→添加到主屏幕',
     moim_default_title:'바로모임',
@@ -6548,6 +6554,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'（例：午前4人、午後3人など）',
     ownr_wage_type_label:'給与タイプ *',
     ownr_wage_daily:'日給',
+    wage_hourly_label:'時給', wage_weekly_label:'週給',
     ownr_wage_per_job:'件当たり',
     ownr_wage_monthly:'月給',
     ownr_amount_won_label:'金額（ウォン）*',
@@ -7103,6 +7110,7 @@ const TRANSLATIONS = {
     rank_title_worker:'優秀アルバイト RANK',
     display_error_label:'表示エラー',
     login_nav_label:'ログイン',
+    guest_banner_text:'ログインするとすぐに応募できます', guest_browse_btn:'✨ 見てみる',
     toast_link_copied_short:'📋 リンクをコピーしました',
     ios_share_install_hint:'Safariで共有→ホーム画面に追加を選択してください',
     moim_default_title:'바로모임',
@@ -8294,6 +8302,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'(VD: sáng 4 người, chiều 3 người)',
     ownr_wage_type_label:'Loại lương *',
     ownr_wage_daily:'Lương ngày',
+    wage_hourly_label:'Lương giờ', wage_weekly_label:'Lương tuần',
     ownr_wage_per_job:'Theo công việc',
     ownr_wage_monthly:'Lương tháng',
     ownr_amount_won_label:'Số tiền (KRW) *',
@@ -8849,6 +8858,7 @@ const TRANSLATIONS = {
     rank_title_worker:'RANK người làm xuất sắc',
     display_error_label:'Lỗi hiển thị',
     login_nav_label:'Đăng nhập',
+    guest_banner_text:'Đăng nhập để ứng tuyển ngay', guest_browse_btn:'✨ Xem thử',
     toast_link_copied_short:'📋 Đã sao chép liên kết',
     ios_share_install_hint:'Trong Safari, chọn Chia sẻ → Thêm vào màn hình chính',
     moim_default_title:'바로모임',
@@ -10040,6 +10050,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'(Жишээ нь: өглөө 4 хүн, өдөр 3 хүн)',
     ownr_wage_type_label:'Цалингийн төрөл *',
     ownr_wage_daily:'Өдрийн цалин',
+    wage_hourly_label:'Цагийн цалин', wage_weekly_label:'Долоо хоногийн цалин',
     ownr_wage_per_job:'Даалгавраар',
     ownr_wage_monthly:'Сарын цалин',
     ownr_amount_won_label:'Дүн (вон) *',
@@ -10595,6 +10606,7 @@ const TRANSLATIONS = {
     rank_title_worker:'Шилдэг ажилтан RANK',
     display_error_label:'Харуулах алдаа',
     login_nav_label:'Нэвтрэх',
+    guest_banner_text:'Нэвтэрвэл шууд өргөдөл гаргах боломжтой', guest_browse_btn:'✨ Танилцах',
     toast_link_copied_short:'📋 Холбоос хуулагдлаа',
     ios_share_install_hint:'Safari дээр Хуваалцах → Нүүр дэлгэцэнд нэмэхийг сонгоно уу',
     moim_default_title:'바로모임',
@@ -11786,6 +11798,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'(напр., утром 4 чел., днём 3 чел.)',
     ownr_wage_type_label:'Тип оплаты *',
     ownr_wage_daily:'Дневная оплата',
+    wage_hourly_label:'Почасовая', wage_weekly_label:'Понедельная',
     ownr_wage_per_job:'За заказ',
     ownr_wage_monthly:'Месячная оплата',
     ownr_amount_won_label:'Сумма (вон) *',
@@ -12341,6 +12354,7 @@ const TRANSLATIONS = {
     rank_title_worker:'Рейтинг работников',
     display_error_label:'Ошибка отображения',
     login_nav_label:'Войти',
+    guest_banner_text:'Войдите, чтобы сразу откликнуться', guest_browse_btn:'✨ Осмотреться',
     toast_link_copied_short:'📋 Ссылка скопирована',
     ios_share_install_hint:'В Safari нажмите Поделиться → На экран «Домой»',
     moim_default_title:'바로모임',
@@ -13191,7 +13205,7 @@ const TRANSLATIONS = {
     pass_purchase_title:'पास खरिद',
     discount_suffix:'% छुट',
     won_per_use_suffix:'वन/पटक',
-    won_suffix:'वन',
+    won_suffix:'वोन',
     pay_btn:'भुक्तानी गर्नुहोस्',
     payment_processing:'भुक्तानी प्रक्रियामा...',
     pass_register_failed_prefix:'पास दर्ता असफल: ',
@@ -13532,6 +13546,7 @@ const TRANSLATIONS = {
     ownr_team_composition_ph:'(जस्तै: बिहान ४ जना, दिउँसो ३ जना)',
     ownr_wage_type_label:'तलब प्रकार *',
     ownr_wage_daily:'दैनिक ज्याला',
+    wage_hourly_label:'घण्टाको ज्याला', wage_weekly_label:'साप्ताहिक ज्याला',
     ownr_wage_per_job:'काम अनुसार',
     ownr_wage_monthly:'मासिक तलब',
     ownr_amount_won_label:'रकम (वन) *',
@@ -14087,6 +14102,7 @@ const TRANSLATIONS = {
     rank_title_worker:'उत्कृष्ट कामदार RANK',
     display_error_label:'देखाउने त्रुटि',
     login_nav_label:'लगइन',
+    guest_banner_text:'लगइन गर्नुभयो भने तुरुन्तै आवेदन दिन सक्नुहुन्छ', guest_browse_btn:'✨ हेर्नुहोस्',
     toast_link_copied_short:'📋 लिंक कपी भयो',
     ios_share_install_hint:'Safari मा सेयर → होम स्क्रिनमा थप्नुहोस् छनोट गर्नुहोस्',
     moim_default_title:'바로모임',
@@ -14349,6 +14365,14 @@ function applyLang() {
     // 5탭: 지도/스와이프/바로알바/채팅/마이페이지
     const navKeys = ['nav_home','nav_map','nav_applications','nav_chats','nav_profile'];
     navLabels.forEach((el, i) => { if (navKeys[i]) el.textContent = t(navKeys[i]); });
+    // 2026-07-28: 게스트는 마지막 탭이 "마이페이지"가 아니라 "로그인"이어야 한다.
+    // app.js 부팅부에서 그렇게 바꿔놓지만 그 직후 applyLang()이 돌면서 위 forEach가
+    // nav_profile로 되돌려놨다(아이콘 🔑만 남고 라벨은 "마이페이지"로 보이던 원인).
+    // 언어를 바꿀 때도 같은 일이 반복되므로, 되돌리는 쪽인 여기서 다시 씌운다.
+    if (typeof isGuest !== 'undefined' && isGuest) {
+      const _last = navLabels[navLabels.length - 1];
+      if (_last) { _last.textContent = t('login_nav_label'); _last.style.color = 'var(--red)'; }
+    }
     // 서브탭
     si('subtab-status', 'tab_status');
     const sbm = document.getElementById('subtab-bookmarks');

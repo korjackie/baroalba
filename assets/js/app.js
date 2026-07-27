@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '582';
+  const _APP_V = '583';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -3103,18 +3103,23 @@ function _jobEarning(j) {
   const w = j?.current_wage || 0;
   return _isHourlyJob(j) ? w * (j?.duration_hours || 0) : w;
 }
+// 2026-07-28: 급여 유형 라벨이 한국어로 박혀 있어, 네팔어로 보든 영어로 보든 카드에
+// "시급"만 한국어로 남아 있었다(공고 카드에서 가장 눈에 띄는 배지인데도).
+// daily/건당/월급은 ownr_wage_* 키가 이미 8개 언어에 다 있어 그대로 재사용하고,
+// 빠져 있던 시급·주급만 wage_hourly_label/wage_weekly_label로 새로 만들었다.
+// 인자명이 j인 이유: 이 파일엔 번역 함수 t()가 전역이라 지역변수 t로 가리면 안 된다.
 function _wageLabel(j) {
-  const t = j?.wage_type;
-  if (t === 'daily')                       return '일급';
-  if (t === 'per_unit' || t === 'per-job') return '건당';
-  if (t === 'monthly')                     return '월급';
-  if (t === 'weekly')                      return '주급';
-  return '시급';
+  const wt = j?.wage_type;
+  if (wt === 'daily')                       return t('ownr_wage_daily');
+  if (wt === 'per_unit' || wt === 'per-job') return t('ownr_wage_per_job');
+  if (wt === 'monthly')                     return t('ownr_wage_monthly');
+  if (wt === 'weekly')                      return t('wage_weekly_label');
+  return t('wage_hourly_label');
 }
 function _wageStr(j, color) {
   const w = j?.current_wage || 0;
   const lbl = _wageLabel(j);
-  const amt = w > 0 ? w.toLocaleString('ko-KR') + '원' : '협의';
+  const amt = w > 0 ? w.toLocaleString('ko-KR') + t('won_suffix') : t('negotiable_label');
   const c = color || 'var(--red)';
   return `<span style="font-weight:900;color:${c}">${amt}</span><span style="font-size:10px;font-weight:800;background:rgba(200,16,46,0.08);color:${c};padding:2px 6px;border-radius:5px;margin-left:5px">${lbl}</span>`;
 }
@@ -3177,7 +3182,7 @@ function _homeJobCard(job) {
   const label = _wageLabel(job);
   return `<div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:152px;background:#fff;border-radius:15px;overflow:hidden;cursor:pointer;border:1.5px solid #f0f0f0;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
     <div style="padding:13px 13px 8px">
-      <div style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#d0d0d0;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.category||''}</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#d0d0d0;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tCategory(job.category)}</div>
       <div style="font-size:13px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${job.title || job.biz_name}</div>
       ${job.biz_name ? `<div style="font-size:10px;color:#c8c8c8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${job.biz_name}</div>` : ''}
     </div>
@@ -3304,8 +3309,8 @@ function _renderHomeAI() {
     section.innerHTML = `
       <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:5px">AI PICKS</div>
       <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
-      <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
-      <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:var(--red)">${top.current_wage>0?top.current_wage.toLocaleString('ko-KR')+'원':'협의'}</span>${top.current_wage>0?`<span style="font-size:10px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:5px">${_wageLabel(top)}</span>`:''}</div>
+      <div style="font-size:11px;color:#bbb;margin-top:2px">${tCategory(top.category)}</div>
+      <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:var(--red)">${top.current_wage>0?top.current_wage.toLocaleString('ko-KR')+t('won_suffix'):t('negotiable_label')}</span>${top.current_wage>0?`<span style="font-size:10px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:5px">${_wageLabel(top)}</span>`:''}</div>
     `;
     section.onclick = () => openDetail(top.id);
   } catch(e) {
@@ -3350,10 +3355,10 @@ function _renderHomeSameDay() {
   const hourly = toHourly(top);
   section.style.display = 'flex';
   section.innerHTML = `
-    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:5px">높은 시급</div>
+    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:5px">${t('high_wage_label')}</div>
     <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
-    <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
-    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:var(--red)">${hourly.toLocaleString('ko-KR')}${t('won_suffix')}</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:5px">시급</span></div>
+    <div style="font-size:11px;color:#bbb;margin-top:2px">${tCategory(top.category)}</div>
+    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:var(--red)">${hourly.toLocaleString('ko-KR')}${t('won_suffix')}</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:5px">${t('wage_hourly_label')}</span></div>
   `;
   section.onclick = () => openDetail(top.id);
 }
