@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/job/:id", "destination": "/api/job?id=:id" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -26,6 +30,13 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
         { "key": "Vercel-CDN-Cache-Control", "value": "max-age=600" }
+      ]
+    },
+    {
+      "source": "/job/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "max-age=300" }
       ]
     },
     {
