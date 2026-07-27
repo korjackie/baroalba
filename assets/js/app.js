@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '571';
+  const _APP_V = '572';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=571').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=572').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -13357,7 +13357,7 @@ function checkMinWage(val) {
 
 function setWageType(type) {
   document.getElementById('f-wage-type').value = type;
-  const labels = { hourly:'시급', daily:'일급', 'per-job':'건당', monthly:'월급', other:'기타' };
+  const labels = { hourly: t('wage_label'), daily: t('ownr_wage_daily'), 'per-job': t('ownr_wage_per_job'), monthly: t('ownr_wage_monthly'), other: t('cat_etc') };
   const placeholders = { hourly:'10030', daily:'80000', 'per-job':'50000', monthly:'2500000', other:'' };
   // 버튼 스타일 갱신
   ['hourly','daily','per-job','monthly','other'].forEach(t => {
@@ -13378,7 +13378,7 @@ function setWageType(type) {
     if (otherInp) otherInp.style.display = 'block';
     document.getElementById('wage-warn').style.display = 'none';
   } else {
-    if (lbl) { lbl.style.display = ''; lbl.textContent = labels[type] + ' (원) *'; }
+    if (lbl) { lbl.style.display = ''; lbl.textContent = t('ownr_wage_amount_label').replace('{label}', labels[type]); }
     if (inp) { inp.style.display = ''; inp.placeholder = placeholders[type] || '0'; inp.min = type === 'hourly' ? 10030 : 0; }
     if (otherInp) otherInp.style.display = 'none';
     checkMinWage(inp?.value);
@@ -13391,8 +13391,8 @@ async function surgeWage(jobId, currentWage) {
   const { error } = await db.from('job_postings')
     .update({ current_wage: newWage })
     .eq('id', jobId);
-  if (error) { showToast('시급 인상 실패: ' + error.message); return; }
-  showToast(`⚡ 시급 ${newWage.toLocaleString()}원으로 인상!`);
+  if (error) { showToast(t('ownr_wage_raise_failed_prefix') + error.message); return; }
+  showToast(t('ownr_wage_raised_toast').replace('{n}', newWage.toLocaleString()));
   loadPostings();
 }
 
@@ -13400,8 +13400,8 @@ async function surgeWage(jobId, currentWage) {
 async function setPostingUrgent(jobId, makeUrgent) {
   const newStatus = makeUrgent ? 'urgent' : 'open';
   const { error } = await db.from('job_postings').update({ status: newStatus }).eq('id', jobId);
-  if (error) { showToast('상태 변경 실패: ' + error.message); return; }
-  showToast(makeUrgent ? '🔥 급구 설정됐습니다 — 홈 급구 섹션에 노출돼요' : '일반 모집으로 전환됐습니다');
+  if (error) { showToast(t('status_change_failed_prefix') + error.message); return; }
+  showToast(makeUrgent ? t('ownr_urgent_set_toast') : t('ownr_switched_normal_toast'));
   loadPostings();
   closePostingDetail();
 }
@@ -13430,24 +13430,24 @@ function openSurgeScheduler(jobId, currentWage) {
   const existing = getSurgeSchedule(jobId);
   if (existing) {
     const rem = Math.max(0, Math.round((existing.triggerAt - Date.now()) / 60000));
-    showConfirm(`${rem}분 후 +${existing.amount.toLocaleString()}원 자동 인상 예약이 취소됩니다.`, () => {
+    showConfirm(t('ownr_surge_cancel_confirm_desc').replace('{min}', rem).replace('{amount}', existing.amount.toLocaleString()), () => {
       cancelSurgeSchedule(jobId);
-      showToast('자동 서지 예약이 취소됐습니다');
+      showToast(t('ownr_surge_cancelled_toast'));
       loadPostings();
-    }, {icon:'⏰', title:'서지 예약 취소', okLabel:'예약 취소', okBg:'#EA580C'});
+    }, {icon:'⏰', title: t('ownr_surge_cancel_title'), okLabel: t('ownr_cancel_reservation_btn'), okBg:'#EA580C'});
     return;
   }
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;display:flex;align-items:flex-end';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 40px;width:100%" onclick="event.stopPropagation()">
-      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">⏰ 자동 시급 서지 예약</div>
-      <div style="font-size:12px;color:#aaa;margin-bottom:20px">현재 시급 ${currentWage.toLocaleString()}원 → N시간 후 자동으로 +1,000원</div>
+      <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">${t('ownr_surge_reserve_title')}</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:20px">${t('ownr_surge_reserve_desc').replace('{n}', currentWage.toLocaleString())}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
         ${[2,4,8,12,24].map(h => `<button onclick="scheduleSurge('${jobId}',${currentWage},${h},this.closest('[style*=fixed]'))"
-          style="padding:14px;background:#FFF7ED;color:#D97706;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${h}시간 후</button>`).join('')}
+          style="padding:14px;background:#FFF7ED;color:#D97706;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${h}${t('ownr_hours_later_suffix')}</button>`).join('')}
       </div>
-      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${t('cancel')}</button>
     </div>`;
   overlay.addEventListener('click', () => overlay.remove());
   document.body.appendChild(overlay);
@@ -13457,7 +13457,7 @@ function scheduleSurge(jobId, currentWage, hours, overlayEl) {
   const triggerAt = Date.now() + hours * 3600000;
   saveSurgeSchedule(jobId, triggerAt, 1000);
   overlayEl.remove();
-  showToast(`⏰ ${hours}시간 후 시급이 자동으로 +1,000원 인상됩니다`);
+  showToast(t('ownr_surge_scheduled_toast').replace('{h}', hours));
   loadPostings();
 }
 
@@ -13470,7 +13470,7 @@ async function checkSurgeSchedules() {
       if (p && p.status === 'urgent') {
         const newWage = (p.current_wage || 0) + sched.amount;
         await db.from('job_postings').update({ current_wage: newWage }).eq('id', jobId);
-        showToast(`⚡ 예약된 시급 서지 실행! ${newWage.toLocaleString()}원`);
+        showToast(t('ownr_surge_executed_toast').replace('{n}', newWage.toLocaleString()));
       }
       cancelSurgeSchedule(jobId);
     }
@@ -13502,7 +13502,7 @@ async function checkSurgeIntervals() {
       .update({ current_wage: newWage, updated_at: new Date().toISOString() })
       .eq('id', p.id);
     anyUpdated = true;
-    showToast(`⚡ 시급 자동 인상 → ${newWage.toLocaleString()}원 (+${(newWage - currentWage).toLocaleString()}원)`);
+    showToast(t('ownr_wage_auto_raised_toast').replace('{n}', newWage.toLocaleString()).replace('{diff}', (newWage - currentWage).toLocaleString()));
   }
   if (anyUpdated) loadPostings();
 }
@@ -13512,8 +13512,8 @@ async function toggleStatus(jobId, currentStatus) {
   const isOpen = currentStatus === 'open' || currentStatus === 'urgent';
   const newStatus = isOpen ? 'closed' : 'open';
   const { error } = await db.from('job_postings').update({ status: newStatus }).eq('id', jobId);
-  if (error) { showToast('상태 변경 실패'); return; }
-  showToast(isOpen ? '공고가 마감됐습니다' : '공고가 재오픈됐습니다');
+  if (error) { showToast(t('status_change_failed_short')); return; }
+  showToast(isOpen ? t('ownr_posting_closed_toast') : t('ownr_posting_reopened_toast'));
   loadPostings();
 }
 
@@ -13527,13 +13527,13 @@ function showRatingModal(appId, workerId) {
 
   overlay.innerHTML = `
     <div id="rating-modal-inner" style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-sizing:border-box" onclick="event.stopPropagation()">
-      <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">\u{1F3C1} 근무 완료 처리</div>
-      <div style="font-size:13px;color:#aaa;margin-bottom:20px">세부 항목별 평점을 남겨주세요</div>
+      <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:4px">${t('ownr_work_complete_title')}</div>
+      <div style="font-size:13px;color:#aaa;margin-bottom:20px">${t('ownr_rate_each_item_desc')}</div>
 
       ${[
-        { key:'sincerity',     label:'성실도', emoji:'\u{1F4AA}', desc:'시간 준수, 책임감' },
-        { key:'skill',         label:'실력',   emoji:'⭐', desc:'업무 숙련도, 퀄리티' },
-        { key:'communication', label:'소통',   emoji:'\u{1F4AC}', desc:'지시 이해, 의사소통' }
+        { key:'sincerity',     label: t('ownr_rating_sincerity'), emoji:'\u{1F4AA}', desc: t('ownr_rating_sincerity_desc') },
+        { key:'skill',         label: t('ownr_rating_skill'),   emoji:'⭐', desc: t('ownr_rating_skill_desc') },
+        { key:'communication', label: t('ownr_rating_communication'), emoji:'\u{1F4AC}', desc: t('ownr_rating_communication_desc') }
       ].map(({ key, label, emoji, desc }) => `
         <div style="margin-bottom:16px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -13545,15 +13545,15 @@ function showRatingModal(appId, workerId) {
           </div>
         </div>`).join('')}
 
-      <div id="sub-avg-label" style="text-align:center;font-size:14px;font-weight:800;color:#aaa;margin:12px 0 16px">항목별 평점의 평균이 최종 점수입니다</div>
+      <div id="sub-avg-label" style="text-align:center;font-size:14px;font-weight:800;color:#aaa;margin:12px 0 16px">${t('ownr_avg_rating_notice')}</div>
 
-      <textarea id="review-text" placeholder="종합 후기를 남겨주세요 (선택)" maxlength="200"
+      <textarea id="review-text" placeholder="${t('ownr_overall_review_ph')}" maxlength="200"
         style="width:100%;padding:12px;border:1.5px solid #eee;border-radius:12px;font-size:14px;resize:none;height:80px;box-sizing:border-box;font-family:inherit;outline:none"></textarea>
 
       <div style="display:flex;gap:8px;margin-top:16px">
-        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${t('cancel')}</button>
         <button id="submit-rating-btn" onclick="submitRating('${appId}','${workerId}')"
-          style="flex:2;padding:14px;background:#3B82F6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">완료 처리</button>
+          style="flex:2;padding:14px;background:#3B82F6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('ownr_complete_process_btn')}</button>
       </div>
     </div>`;
 
@@ -13570,18 +13570,18 @@ function selectSubRating(key, n) {
   const vals = Object.values(window._subRatings).filter(v => v > 0);
   const avg = vals.length ? (vals.reduce((a,b)=>a+b,0) / vals.length).toFixed(1) : null;
   const lbl = document.getElementById('sub-avg-label');
-  if (lbl && avg) { lbl.textContent = `최종 평점: ⭐ ${avg}`; lbl.style.color = '#F59E0B'; }
+  if (lbl && avg) { lbl.textContent = t('ownr_final_rating_label').replace('{n}', avg); lbl.style.color = '#F59E0B'; }
 }
 
 async function submitRating(appId, workerId) {
   const sub = window._subRatings || {};
   const vals = Object.values(sub).filter(v => v > 0);
-  if (vals.length < 3) { showToast('3개 항목 모두 평점을 선택해주세요'); return; }
+  if (vals.length < 3) { showToast(t('ownr_rate_all_items_notice')); return; }
   const rating = Math.round(vals.reduce((a,b)=>a+b,0) / vals.length * 10) / 10;
   const review = document.getElementById('review-text')?.value.trim() || '';
 
   const btn = document.getElementById('submit-rating-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+  if (btn) { btn.disabled = true; btn.textContent = t('processing_label'); }
 
   // 1. 지원서 완료 처리
   const { error: appErr } = await db.from('applications').update({
@@ -13591,8 +13591,8 @@ async function submitRating(appId, workerId) {
     completed_at: new Date().toISOString()
   }).eq('id', appId);
   if (appErr) {
-    if (btn) { btn.disabled = false; btn.textContent = '완료 처리'; }
-    showToast('처리 실패: ' + appErr.message);
+    if (btn) { btn.disabled = false; btn.textContent = t('ownr_complete_process_btn'); }
+    showToast(t('ownr_process_failed_prefix') + appErr.message);
     return;
   }
 
@@ -13621,27 +13621,27 @@ async function submitRating(appId, workerId) {
 
   document.querySelector('[style*="fixed"][style*="3000"]')?.remove();
   window._subRatings = {};
-  showToast('\u{1F3C1} 근무 완료 처리됐습니다');
+  showToast(t('ownr_work_complete_processed_toast'));
   loadApplicants(); loadPostings();
   if (window._pdJobId) loadPostingDetailApplicants(window._pdJobId);
 }
 
 function markNoshow(appId, workerId) {
-  showConfirm('해당 알바생의 번개등급이 박탈됩니다.\n신중하게 처리해주세요.', async () => {
+  showConfirm(t('ownr_noshow_confirm_desc'), async () => {
   const { error } = await db.from('applications').update({
     status: 'noshow', noshow: true
   }).eq('id', appId);
-  if (error) { showToast('처리 실패: ' + error.message); return; }
+  if (error) { showToast(t('ownr_process_failed_prefix') + error.message); return; }
 
   // 워커 노쇼 카운트 증가
     if (workerId) {
       const { data: w } = await db.from('workers').select('noshow_count').eq('id', workerId).single();
       await db.from('workers').update({ noshow_count: (w?.noshow_count || 0) + 1 }).eq('id', workerId);
     }
-    showToast('\u{1F613} 노쇼 처리됐습니다');
+    showToast(t('ownr_noshow_processed_toast'));
     loadApplicants(); loadPostings();
     if (window._pdJobId) loadPostingDetailApplicants(window._pdJobId);
-  }, {icon:'⚠️', title:'노쇼 처리', okLabel:'처리', danger:true});
+  }, {icon:'⚠️', title: t('ownr_noshow_process_title'), okLabel: t('process_btn'), danger:true});
 }
 
 // ── 지원자 필터 (대시보드 클릭) ──────────────────────────
@@ -13664,7 +13664,7 @@ function toggleFavWorker(workerId) {
   localStorage.setItem('baro_fav_' + (bizRecord?.id||'guest'), JSON.stringify([..._favWorkers]));
   syncFavWorkerToSupabase(workerId, adding);
   renderApplicants(_allApplicants);
-  showToast(adding ? '♥ 단골 등록됐어요' : '단골 해제됐어요');
+  showToast(adding ? t('ownr_fav_added_toast') : t('ownr_fav_removed_toast'));
 }
 
 function toggleRecommendWorker(workerId) {
@@ -13678,15 +13678,15 @@ function toggleRecommendWorker(workerId) {
 function toggleBlockWorker(workerId, name) {
   if (_blockedWorkers.has(workerId)) {
     _blockedWorkers.delete(workerId);
-    showToast('차단이 해제됐습니다');
+    showToast(t('ownr_block_removed_toast'));
   } else {
-    showConfirm('내 공고 검색 결과에서 제외됩니다.', () => {
+    showConfirm(t('ownr_block_confirm_desc'), () => {
       _blockedWorkers.add(workerId);
-      showToast('🚫 차단됐습니다');
+      showToast(t('ownr_blocked_toast'));
       localStorage.setItem('baro_blk_' + bizRecord.id, JSON.stringify([..._blockedWorkers]));
       updateWorkerShortcutCounts();
       renderApplicants(_allApplicants);
-    }, {icon:'🚫', title:`${name}님 차단`, okLabel:'차단', danger:true});
+    }, {icon:'🚫', title: t('ownr_block_name_title').replace('{name}', name), okLabel: t('block_label'), danger:true});
     return;
   }
   localStorage.setItem('baro_blk_' + bizRecord.id, JSON.stringify([..._blockedWorkers]));
@@ -13706,16 +13706,16 @@ function filterFavApplicants() {
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   document.getElementById('fchip-fav')?.classList.add('active');
   renderApplicants(filtered);
-  showToast(`즐겨찾기 ${filtered.length}명`);
+  showToast(t('ownr_favorites_count_toast').replace('{n}', filtered.length));
 }
 
 function showRecommendedWorkers() {
   ownerSwitchTab('applicants', document.querySelectorAll('.tab-btn')[1]);
   const filtered = _allApplicants.filter(a => _recommendedWorkers.has(a.workers?.id));
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  if (!filtered.length) { showToast('추천한 알바생이 없어요'); return; }
+  if (!filtered.length) { showToast(t('ownr_no_recommended_notice')); return; }
   renderApplicants(filtered);
-  showToast(`추천 알바생 ${filtered.length}명`);
+  showToast(t('ownr_recommended_count_toast').replace('{n}', filtered.length));
 }
 
 function showBlockedWorkers() {
@@ -13723,23 +13723,23 @@ function showBlockedWorkers() {
   const filtered = _allApplicants.filter(a => _blockedWorkers.has(a.workers?.id));
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   document.getElementById('fchip-blocked')?.classList.add('active');
-  if (!filtered.length) { showToast('차단한 지원자가 없어요'); renderApplicants([]); return; }
+  if (!filtered.length) { showToast(t('ownr_no_blocked_notice')); renderApplicants([]); return; }
   renderApplicants(filtered);
-  showToast(`차단한 지원자 ${filtered.length}명`);
+  showToast(t('ownr_blocked_count_toast').replace('{n}', filtered.length));
 }
 
 async function quickTogglePosting(jobId, currentStatus) {
   const newStatus = (currentStatus === 'open' || currentStatus === 'urgent') ? 'closed' : 'open';
   const { error } = await db.from('job_postings').update({ status: newStatus }).eq('id', jobId);
-  if (error) { showToast('상태 변경 실패'); return; }
-  showToast(newStatus === 'open' ? '✅ 공고 모집 재개' : '⏹ 공고 마감');
+  if (error) { showToast(t('status_change_failed_short')); return; }
+  showToast(newStatus === 'open' ? t('ownr_posting_resumed_toast') : t('ownr_posting_closed_short_toast'));
   loadPostings();
 }
 
 function relistPosting(jobId) {
   const p = postings.find(x => x.id === jobId);
   if (!p) return;
-  showConfirm('기존 지원자 데이터가 초기화되고\n새로 모집을 시작합니다.', async () => {
+  showConfirm(t('ownr_relist_confirm_desc'), async () => {
     // 기존 지원자를 cancelled로 전환 (재공고 시 새 라운드) - hard delete는 RLS상
     // 업주 권한으로 조용히 0건 처리될 수 있어, 재지원이 이미 가능한 cancelled 상태로 통일
     await db.from('applications').update({ status: 'cancelled' }).eq('job_posting_id', jobId);
@@ -13750,15 +13750,15 @@ function relistPosting(jobId) {
       filled_count: 0,
       work_end_date: null
     }).eq('id', jobId);
-    if (error) { showToast('재등록 실패: ' + error.message); return; }
-    showToast('✅ 공고가 재등록됐습니다');
+    if (error) { showToast(t('ownr_relist_failed_prefix') + error.message); return; }
+    showToast(t('ownr_relisted_toast'));
     closePostingDetail(); loadPostings();
-  }, {icon:'🔄', title:`"${p.title}" 재등록`, okLabel:'재등록'});
+  }, {icon:'🔄', title: t('ownr_relist_title_template').replace('{title}', p.title), okLabel: t('relist_btn')});
 }
 function toggleCompare(appId) {
   if (_compareSet.has(appId)) { _compareSet.delete(appId); }
   else if (_compareSet.size < 2) { _compareSet.add(appId); }
-  else { showToast('최대 2명까지 선택 가능합니다'); return; }
+  else { showToast(t('ownr_max_2_compare_notice')); return; }
   renderApplicants(_allApplicants);
   const btn = document.getElementById('compare-fab');
   if (btn) btn.style.display = _compareSet.size === 2 ? 'flex' : 'none';
@@ -13766,40 +13766,40 @@ function toggleCompare(appId) {
 function openCompareModal() {
   const ids = [..._compareSet];
   const apps = ids.map(id => _allApplicants.find(a => a.id === id)).filter(Boolean);
-  if (apps.length < 2) { showToast('2명을 선택해주세요'); return; }
+  if (apps.length < 2) { showToast(t('ownr_select_2_notice')); return; }
   const col = (a) => {
     const w = a.workers || {};
     const isFav = _favWorkers.has(w.id);
     return `<div style="flex:1;min-width:0;padding:0 8px">
       <div style="text-align:center;margin-bottom:12px">
         <div style="width:56px;height:56px;border-radius:50%;background:#f0f0f0;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:24px">\u{1F464}</div>
-        <div style="font-size:15px;font-weight:900;color:#222">${w.name||'이름없음'}</div>
+        <div style="font-size:15px;font-weight:900;color:#222">${w.name||t('no_name_label')}</div>
         <div style="font-size:11px;color:#aaa;margin-top:2px">${a.job_postings?.title||''}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-          <div style="color:#aaa;font-weight:700;margin-bottom:2px">평점</div>
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('ownr_rating_label')}</div>
           <div style="font-weight:900;color:#F59E0B;font-size:15px">★ ${w.rating?.toFixed(1)||'-'}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-          <div style="color:#aaa;font-weight:700;margin-bottom:2px">완료 알바</div>
-          <div style="font-weight:900;color:#333;font-size:15px">${w.review_count||0}회</div>
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('ownr_completed_jobs_label')}</div>
+          <div style="font-weight:900;color:#333;font-size:15px">${w.review_count||0}${t('ownr_times_suffix')}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-          <div style="color:#aaa;font-weight:700;margin-bottom:2px">노쇼</div>
-          <div style="font-weight:900;color:${w.noshow_count>0?'#EF4444':'#16a34a'};font-size:15px">${w.noshow_count||0}회</div>
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('app_noshow')}</div>
+          <div style="font-weight:900;color:${w.noshow_count>0?'#EF4444':'#16a34a'};font-size:15px">${w.noshow_count||0}${t('ownr_times_suffix')}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-          <div style="color:#aaa;font-weight:700;margin-bottom:4px">스킬</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px">${(w.skills||[]).map(s=>`<span style="background:#EFF6FF;color:#3B82F6;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700">${s}</span>`).join('')||'<span style="color:#aaa">없음</span>'}</div>
+          <div style="color:#aaa;font-weight:700;margin-bottom:4px">${t('skills_label')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${(w.skills||[]).map(s=>`<span style="background:#EFF6FF;color:#3B82F6;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700">${s}</span>`).join('')||`<span style="color:#aaa">${t('no_data_label')}</span>`}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
-          <div style="color:#aaa;font-weight:700;margin-bottom:2px">연락처</div>
+          <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('phone_label')}</div>
           <div style="font-weight:700;color:#333">${w.phone||'-'}</div>
         </div>
       </div>
       <div style="display:flex;gap:6px;margin-top:12px">
-        <button onclick="openChat('${a.id}','${w.name||'지원자'}')" style="flex:1;padding:8px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">\u{1F4AC} 채팅</button>
+        <button onclick="openChat('${a.id}','${w.name||t('ownr_applicant_fallback_label')}')" style="flex:1;padding:8px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('chat_btn_emoji')}</button>
         <button onclick="toggleFavWorker('${w.id}')" style="padding:8px 12px;background:${isFav?'#FEF3C7':'#f0f0f0'};color:${isFav?'#D97706':'#888'};border:none;border-radius:10px;font-size:14px;cursor:pointer">${isFav?'♥':'♡'}</button>
       </div>
     </div>`;
@@ -13809,7 +13809,7 @@ function openCompareModal() {
   ov.onclick=e=>{if(e.target===ov)ov.remove();};
   ov.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 16px 36px;max-height:85vh;overflow-y:auto" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-size:17px;font-weight:900">\u{1F50D} 지원자 비교</div>
+      <div style="font-size:17px;font-weight:900">${t('ownr_compare_applicants_title')}</div>
       <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:20px;background:none;border:none;color:#aaa;cursor:pointer">✕</button>
     </div>
     <div style="display:flex;gap:0;border-top:1px solid #f0f0f0;padding-top:16px">${apps.map(col).join('<div style="width:1px;background:#f0f0f0;margin:0 4px"></div>')}</div>
@@ -13824,8 +13824,8 @@ function filterApplicants(status) {
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   const chipMap = { all:'fchip-all', pending:'fchip-pending', reviewing:'fchip-reviewing', accepted:'fchip-accepted', rejected:'fchip-rejected', completed:'fchip-completed' };
   if (chipMap[status]) document.getElementById(chipMap[status])?.classList.add('active');
-  const labels = { all:'전체 지원자', accepted:'연락중', pending:'검토 전', reviewing:'검토중', rejected:'탈락', cancelled:'지원취소', completed:'근무완료' };
-  showToast(`${labels[status] || status} ${filtered.length}명`);
+  const labels = { all: t('section_all_applicants'), accepted: t('ownr_filter_contacting'), pending: t('ownr_status_pre_review'), reviewing: t('status_pending'), rejected: t('app_rejected'), cancelled: t('ownr_status_cancelled'), completed: t('ownr_status_work_completed_bare') };
+  showToast(t('ownr_filter_count_toast').replace('{label}', labels[status] || status).replace('{n}', filtered.length));
 }
 
 // ── 지원자 불러오기 ──────────────────────────────────────
@@ -13841,7 +13841,7 @@ async function loadApplicants() {
 
   if (!jobIds.length) {
     document.getElementById('applicants-list').innerHTML =
-      '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">지원자가 없어요</div></div>';
+      '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">' + t('ownr_no_applicants_notice') + '</div></div>';
     return;
   }
 
@@ -13850,7 +13850,7 @@ async function loadApplicants() {
     .in('job_posting_id', jobIds)
     .order('applied_at', { ascending: false });
 
-  if (error) { showToast('지원자 불러오기 실패'); return; }
+  if (error) { showToast(t('ownr_applicants_load_failed')); return; }
   const apps = (data || []).sort((a, b) => (b.is_quick ? 1 : 0) - (a.is_quick ? 1 : 0));
   // 마지막 근무일 배치 조회
   const wIds = apps.map(a => a.workers?.id).filter(Boolean);
@@ -13871,7 +13871,7 @@ async function loadApplicants() {
 function renderApplicants(apps) {
   const el = document.getElementById('applicants-list');
   if (!apps.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">아직 지원자가 없어요</div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">' + t('ownr_no_applicants_yet') + '</div></div>';
     return;
   }
   // 즐겨찾기 → 노쇼 없는 사람 → 출근율 높은 순 → 최신순
@@ -13914,7 +13914,7 @@ function calcCancelDeadline(workType, startTime) {
 }
 
 async function confirmAccept(appId) {
-  const confirmed = await showConfirmDialog('최종합격 확정', '최종합격하면 근무 확정 메시지가 발송됩니다.\n인원이 다 채워지면 공고도 자동 마감됩니다.\n\n진행하시겠습니까?', '✅ 최종합격', '취소');
+  const confirmed = await showConfirmDialog(t('ownr_confirm_accept_title'), t('ownr_confirm_accept_desc'), t('ownr_final_accept_btn'), t('cancel'));
   if (!confirmed) return;
   updateApplication(appId, 'accepted');
 }
@@ -13958,7 +13958,7 @@ async function updateApplication(appId, status) {
     if (dl) updateData.cancel_deadline = dl;
 
     const { error } = await db.from('applications').update(updateData).eq('id', appId);
-    if (error) { showToast('처리 실패'); loadApplicants(); return; }
+    if (error) { showToast(t('ownr_process_failed_short')); loadApplicants(); return; }
 
     // filled_count 증가 + 자동마감
     if (appData?.job_posting_id) {
@@ -13969,7 +13969,7 @@ async function updateApplication(appId, status) {
         const updJob = { filled_count: newFilled };
         if (newFilled >= (jp.needed_count || 1) && jp.status !== 'closed') {
           updJob.status = 'closed';
-          showToast('🏁 인원 충족 — 공고가 자동 마감됐습니다');
+          showToast(t('ownr_headcount_filled_toast'));
         }
         await db.from('job_postings').update(updJob).eq('id', appData.job_posting_id);
       }
@@ -13977,7 +13977,7 @@ async function updateApplication(appId, status) {
 
     await sendAcceptMessage(appId);
     sendAppStatusPush(appId, 'accepted');
-    showToast('✅ 최종합격 확정! 합격 메시지를 전송했습니다');
+    showToast(t('ownr_final_accept_confirmed_toast'));
     _track('hire_accepted', { application_id: appId });
     setTimeout(() => showContractModal(appId), 500);
     loadPostings();
@@ -13985,17 +13985,17 @@ async function updateApplication(appId, status) {
   }
 
   const { error } = await db.from('applications').update(updateData).eq('id', appId);
-  if (error) { showToast('처리 실패'); loadApplicants(); return; }
+  if (error) { showToast(t('ownr_process_failed_short')); loadApplicants(); return; }
 
   if (status === 'reviewing') {
-    showToast('⭐ 1차합격 처리됐습니다');
+    showToast(t('ownr_first_pass_processed_toast'));
   } else if (status === 'on_hold') {
-    showToast('📌 보류 처리됐습니다');
+    showToast(t('ownr_hold_processed_toast'));
   } else if (status === 'rejected') {
     sendAppStatusPush(appId, 'rejected');
-    showToast('탈락 처리됐습니다');
+    showToast(t('ownr_rejected_processed_toast'));
   } else {
-    showToast('처리됐습니다');
+    showToast(t('ownr_processed_toast'));
   }
   loadPostings();
 }
@@ -14132,10 +14132,10 @@ function setWorkType(type) {
   document.getElementById('f-work-type').value = type;
   const btns = { spot:'wt-spot', short:'wt-short', regular:'wt-regular', errand:'wt-errand' };
   const descs = {
-    spot:    '⚡ 1회성 단발 근무 (날짜·시간 1회 지정)',
-    short:   '\u{1F4C5} 기간제 단기 근무 (시작일~종료일 + 요일 지정)',
-    regular: '\u{1F504} 장기 정기 근무 (요일 고정 + 주휴수당 설정)',
-    errand:  '\u{1F3C3} 단순 심부름 (건당 금액, 예상 소요시간 지정)',
+    spot:    t('ownr_worktype_spot_desc'),
+    short:   t('ownr_worktype_short_desc'),
+    regular: t('ownr_worktype_regular_desc'),
+    errand:  t('ownr_worktype_errand_desc'),
   };
   Object.keys(btns).forEach(k => {
     const el = document.getElementById(btns[k]);
@@ -14150,7 +14150,7 @@ function setWorkType(type) {
   document.getElementById('f-schedule-section').style.display = showSched ? 'block' : 'none';
   document.getElementById('f-start-date').style.display = showSched ? 'none' : '';
   document.getElementById('f-start-date-wrap').style.display = showSched ? 'none' : '';
-  document.getElementById('f-time-label').textContent = showSched ? '근무 시작 시간 (시/분) *' : (isErrand ? '심부름 가능 시간 *' : '시작 시간 *');
+  document.getElementById('f-time-label').textContent = showSched ? t('ownr_work_start_time_hm_label') : (isErrand ? t('ownr_errand_available_time_label') : t('ownr_start_time_label'));
   document.getElementById('f-end-time-group').style.display = isErrand ? 'none' : 'block';
   document.getElementById('f-errand-section').style.display = isErrand ? 'block' : 'none';
   document.getElementById('f-holiday-pay-wrap').style.display = type === 'regular' ? 'block' : 'none';
@@ -14187,7 +14187,7 @@ function openEditForm(jobId) {
   setWageType(p.wage_type || 'hourly');
   document.getElementById('f-category').value = p.category;
   document.getElementById('f-wage').value = p.base_wage;
-  document.getElementById('f-wage-preview').textContent = p.base_wage ? parseInt(p.base_wage).toLocaleString() + '원' : '—';
+  document.getElementById('f-wage-preview').textContent = p.base_wage ? parseInt(p.base_wage).toLocaleString() + t('won_suffix') : '—';
   document.getElementById('f-needed').value = p.needed_count;
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat || '';
@@ -14303,20 +14303,20 @@ function closeFormIfBg(e) { if (e.target === document.getElementById('form-overl
 
 function addJobImages(input) {
   const fileList = input.files;
-  if (!fileList || !fileList.length) { showToast('선택된 파일이 없습니다'); return; }
+  if (!fileList || !fileList.length) { showToast(t('ownr_no_file_selected')); return; }
   const remaining = 3 - jobImgs.length;
-  if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); return; }
+  if (remaining <= 0) { showToast(t('ownr_max_3_photos_notice')); return; }
   const files = Array.from(fileList).slice(0, remaining);
   let added = 0;
   files.forEach(f => {
     try {
       jobImgs.push({ src: URL.createObjectURL(f), file: f });
       added++;
-    } catch(e) { showToast('사진 오류: ' + (f.name || f.type || '알 수 없음')); }
+    } catch(e) { showToast(t('ownr_photo_error_prefix') + (f.name || f.type || t('unknown_label'))); }
   });
   // iOS WebKit: value 초기화는 항상 비동기로
   setTimeout(() => { try { input.value = ''; } catch(e) {} }, 200);
-  if (added > 0) { renderJobImgPreview(); showToast('📷 ' + added + '장 추가됨'); }
+  if (added > 0) { renderJobImgPreview(); showToast(t('ownr_photos_added_toast').replace('{n}', added)); }
 }
 
 
@@ -14345,7 +14345,7 @@ function renderJobImgPreview() {
       ${img.file ? `<button onclick="event.stopPropagation();editJobImg(${i})" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✏</button>` : ''}
       <!-- 순서 번호 뱃지 -->
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i === 0 ? 'var(--red)' : 'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i + 1}</div>
-      ${i === 0 ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">대표</div>' : ''}
+      ${i === 0 ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">${t('ownr_main_photo_badge')}</div>` : ''}
       <button onclick="event.stopPropagation();removeJobImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
     </div>`).join('');
   const addBtn = document.getElementById('job-img-add-btn');
@@ -14368,17 +14368,17 @@ function removeJobImg(idx) {
 // ── 모임 사진 ────────────────────────────────────────────
 function addMoimImages(input) {
   const fileList = input.files;
-  if (!fileList || !fileList.length) { showToast('선택된 파일이 없습니다'); return; }
+  if (!fileList || !fileList.length) { showToast(t('ownr_no_file_selected')); return; }
   const remaining = 3 - moimImgs.length;
-  if (remaining <= 0) { showToast('사진은 최대 3장까지 가능합니다'); return; }
+  if (remaining <= 0) { showToast(t('ownr_max_3_photos_notice')); return; }
   const files = Array.from(fileList).slice(0, remaining);
   let added = 0;
   files.forEach(f => {
     try { moimImgs.push({ src: URL.createObjectURL(f), file: f }); added++; }
-    catch(e) { showToast('사진 오류: ' + (f.name || f.type || '알 수 없음')); }
+    catch(e) { showToast(t('ownr_photo_error_prefix') + (f.name || f.type || t('unknown_label'))); }
   });
   setTimeout(() => { try { input.value = ''; } catch(e) {} }, 200);
-  if (added > 0) { renderMoimImgPreview(); showToast('📷 ' + added + '장 추가됨'); }
+  if (added > 0) { renderMoimImgPreview(); showToast(t('ownr_photos_added_toast').replace('{n}', added)); }
 }
 function renderMoimImgPreview() {
   const container = document.getElementById('moim-img-preview');
@@ -14387,7 +14387,7 @@ function renderMoimImgPreview() {
     <div style="position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:${i===0?'3px solid #7C3AED':'2px solid #eee'}">
       <img src="${img.src}" onclick="openImgViewer('${img.src}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer">
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i===0?'#7C3AED':'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i+1}</div>
-      ${i===0?'<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">대표</div>':''}
+      ${i===0?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">${t('ownr_main_photo_badge')}</div>`:''}
       <button onclick="event.stopPropagation();removeMoimImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
     </div>`).join('');
   const addBtn = document.getElementById('moim-img-add-btn');
@@ -14432,7 +14432,7 @@ function calcWage() {
   const monthly = Math.round((weekly + holidayPay) * 4.345);
   const net     = Math.round(monthly * (1 - tax));
 
-  const fmt = n => n.toLocaleString('ko-KR') + '원';
+  const fmt = n => n.toLocaleString('ko-KR') + t('won_suffix');
 
   document.getElementById('wc-daily').textContent   = fmt(Math.round(daily));
   document.getElementById('wc-weekly').textContent  = fmt(Math.round(weekly));
@@ -14443,17 +14443,15 @@ function calcWage() {
   const hlEl = document.getElementById('wc-holiday');
   if (hasHoliday) {
     hrEl.style.display = 'flex';
-    hlEl.textContent = '+' + fmt(holidayPay) + ' / 주';
-    document.getElementById('wc-holiday-notice').textContent =
-      '✅ 주 ' + weeklyH + '시간 근무 → 주휴수당 대상 (주 15시간 이상). 월급에 포함됨.';
+    hlEl.textContent = t('ownr_holiday_pay_per_week').replace('{n}', '+' + fmt(holidayPay));
+    document.getElementById('wc-holiday-notice').textContent = t('ownr_holiday_eligible_notice').replace('{n}', weeklyH);
   } else {
     hrEl.style.display = 'none';
-    document.getElementById('wc-holiday-notice').textContent =
-      '⚠️ 주 ' + weeklyH + '시간 근무 → 주휴수당 미해당 (주 15시간 미만).';
+    document.getElementById('wc-holiday-notice').textContent = t('ownr_holiday_ineligible_notice').replace('{n}', weeklyH);
   }
 
-  const taxPct = tax > 0 ? (tax * 100).toFixed(1) + '% 공제 후' : '공제 없음';
-  document.getElementById('wc-net').parentElement.children[0].textContent = '실수령액 (' + taxPct + ')';
+  const taxPct = tax > 0 ? (tax * 100).toFixed(1) + t('ownr_tax_deducted_suffix') : t('ownr_no_deduction');
+  document.getElementById('wc-net').parentElement.children[0].textContent = t('ownr_net_pay_label').replace('{pct}', taxPct);
 }
 
 // 뒤로가기 핸들러(위쪽 popstate 리스너)에 등록되지 않은 오버레이라, 사진을 보고
@@ -14499,9 +14497,9 @@ function setLocationResult(lat, lng, label) {
 // 탭2: 주소 검색
 async function searchAddress() {
   const query = document.getElementById('f-addr-search').value.trim();
-  if (!query) { showToast('주소를 입력해주세요'); return; }
+  if (!query) { showToast(t('ownr_enter_address_notice')); return; }
   const btn = event.target;
-  btn.textContent = '검색 중...'; btn.disabled = true;
+  btn.textContent = t('searching_label'); btn.disabled = true;
   const results = await new Promise(resolve => {
     try {
       new kakao.maps.services.Geocoder().addressSearch(query, (r, s) => {
@@ -14509,8 +14507,8 @@ async function searchAddress() {
       });
     } catch { resolve([]); }
   });
-  btn.textContent = '검색'; btn.disabled = false;
-  if (!results.length) { showToast('주소를 찾을 수 없어요. 더 자세히 입력해주세요'); return; }
+  btn.textContent = t('search'); btn.disabled = false;
+  if (!results.length) { showToast(t('ownr_address_not_found_notice')); return; }
   const box = document.getElementById('addr-results');
   box.style.display = 'block';
   box.innerHTML = results.slice(0, 5).map((r, i) => `
@@ -14525,9 +14523,9 @@ async function searchAddress() {
 // 탭3: 직접 텍스트 입력 (키워드 검색으로 근사 좌표)
 async function applyDirectAddr() {
   const text = document.getElementById('f-direct-addr').value.trim();
-  if (!text) { showToast('위치를 입력해주세요'); return; }
+  if (!text) { showToast(t('ownr_enter_location_notice')); return; }
   const btn = event.target;
-  btn.textContent = '검색 중...'; btn.disabled = true;
+  btn.textContent = t('searching_label'); btn.disabled = true;
   // 키워드 검색으로 근사 좌표 시도
   const found = await new Promise(resolve => {
     try {
@@ -14536,19 +14534,19 @@ async function applyDirectAddr() {
       });
     } catch { resolve(null); }
   });
-  btn.textContent = '적용'; btn.disabled = false;
+  btn.textContent = t('ownr_apply_btn'); btn.disabled = false;
   if (found) {
     setLocationResult(parseFloat(found.y), parseFloat(found.x), text);
   } else if (bizRecord?.lat && bizRecord?.lng) {
     document.getElementById('f-lat').value = bizRecord.lat;
     document.getElementById('f-lng').value = bizRecord.lng;
     document.getElementById('f-address').value = text;
-    document.getElementById('location-result').textContent = '\u{1F4CD} ' + text + ' (업체 위치 기준)';
+    document.getElementById('location-result').textContent = '\u{1F4CD} ' + text + t('ownr_biz_location_based_suffix');
     document.getElementById('location-result').style.display = 'block';
     showMiniMap(bizRecord.lat, bizRecord.lng);
-    showToast('\u{1F4CD} 정확한 좌표를 못 찾아 업체 위치로 등록해요');
+    showToast(t('ownr_fallback_biz_location_toast'));
   } else {
-    showToast('위치를 찾을 수 없어요. 더 구체적으로 입력해주세요');
+    showToast(t('ownr_location_not_found_notice'));
   }
 }
 
@@ -14559,10 +14557,10 @@ function handleNaverUrl(val) {
   if (!val) { status.style.display = 'none'; document.getElementById('f-naver-link').value = ''; return; }
   if (isNaverUrl) {
     document.getElementById('f-naver-link').value = val;
-    status.textContent = '✅ 네이버 플레이스 URL 인식됨 — 위 검색창에서 업체명도 검색해 좌표를 설정해주세요';
+    status.textContent = t('ownr_naver_url_recognized_notice');
     status.style.cssText = 'display:block;color:#1a7d3b;font-size:11px;font-weight:700;padding:4px 2px';
   } else {
-    status.textContent = '⚠️ 네이버 플레이스 URL 형식이 아닙니다';
+    status.textContent = t('ownr_naver_url_invalid_notice');
     status.style.cssText = 'display:block;color:#FF9500;font-size:11px;font-weight:700;padding:4px 2px';
   }
 }
@@ -14570,24 +14568,24 @@ function handleNaverUrl(val) {
 // ── 네이버 플레이스 검색 (5개씩 start 페이징) ──────────
 async function searchNaverPlace(start = 1) {
   const query = document.getElementById('f-address').value.trim();
-  if (!query) { showToast('시·구·업체명을 입력해주세요\n예: 부산 사하구 스타벅스'); return; }
+  if (!query) { showToast(t('ownr_search_query_required_notice')); return; }
 
   const btn = document.querySelector('.search-addr-btn');
-  btn.textContent = '검색 중...'; btn.disabled = true;
+  btn.textContent = t('searching_label'); btn.disabled = true;
 
   try {
     const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}&start=${start}`);
     const data = await res.json();
     if (!res.ok || !data.items?.length) {
-      if (start === 1) showToast('검색 결과가 없어요.\n지역명+업체명으로 검색해보세요\n예: 서울 신라스테이');
-      else showToast('마지막 페이지입니다');
+      if (start === 1) showToast(t('ownr_no_search_results_notice'));
+      else showToast(t('ownr_last_page_notice'));
       return;
     }
     renderPlaceResults(data.items, query, start, data.total || 0);
   } catch(e) {
-    showToast('검색 중 오류가 발생했어요');
+    showToast(t('ownr_search_error_notice'));
   } finally {
-    btn.textContent = '\u{1F50D} 검색'; btn.disabled = false;
+    btn.textContent = t('ownr_search_short_btn'); btn.disabled = false;
   }
 }
 
@@ -14600,18 +14598,18 @@ function renderPlaceResults(items, usedQuery, start = 1, total = 0) {
   const hasPrev = start > 1;
   const hasNext = total > end;
   const tip = total > 20
-    ? `<div style="padding:6px 14px;font-size:11px;color:#F59E0B;background:#FFFBEB;border-bottom:1px solid #FDE68A">\u{1F4A1} 결과가 많아요. 지역+업체명으로 검색하면 더 정확해요 (예: 서울 ${usedQuery})</div>`
+    ? `<div style="padding:6px 14px;font-size:11px;color:#F59E0B;background:#FFFBEB;border-bottom:1px solid #FDE68A">${t('ownr_too_many_results_tip').replace('{query}', usedQuery)}</div>`
     : '';
-  const header = `<div style="padding:8px 14px;font-size:11px;color:#888;border-bottom:1px solid #eee">"${usedQuery}" 총 ${total}개 · ${start}~${end}번째</div>`;
+  const header = `<div style="padding:8px 14px;font-size:11px;color:#888;border-bottom:1px solid #eee">${t('ownr_search_result_header').replace('{query}', usedQuery).replace('{total}', total).replace('{start}', start).replace('{end}', end)}</div>`;
 
   const pageBar = (hasPrev || hasNext) ? `
     <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-top:1px solid #eee;background:#fafafa">
       ${hasPrev
-        ? `<button onclick="searchNaverPlace(${Math.max(1, start - 5)})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">◀ 이전</button>`
+        ? `<button onclick="searchNaverPlace(${Math.max(1, start - 5)})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">${t('prev_page_btn')}</button>`
         : `<div style="flex:1"></div>`}
       <span style="font-size:11px;color:#bbb;flex-shrink:0">${Math.ceil(start/5)} / ${Math.ceil(total/5)}p</span>
       ${hasNext
-        ? `<button onclick="searchNaverPlace(${start + 5})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">다음 ▶</button>`
+        ? `<button onclick="searchNaverPlace(${start + 5})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff">${t('next_page_btn')}</button>`
         : `<div style="flex:1"></div>`}
     </div>` : '';
 
@@ -14619,7 +14617,7 @@ function renderPlaceResults(items, usedQuery, start = 1, total = 0) {
     <div onclick="selectPlace(${i})" data-idx="${i}" style="padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
         <span style="font-size:13px;font-weight:800;color:#222">${item.title}</span>
-        ${item.link ? '<span style="font-size:10px;font-weight:700;background:#E6F4EA;color:#1a7d3b;padding:2px 6px;border-radius:6px">N 플레이스</span>' : ''}
+        ${item.link ? `<span style="font-size:10px;font-weight:700;background:#E6F4EA;color:#1a7d3b;padding:2px 6px;border-radius:6px">${t('ownr_n_place_badge')}</span>` : ''}
       </div>
       <div style="font-size:11px;color:#aaa">${item.roadAddress || item.address}</div>
     </div>`).join('') + pageBar;
@@ -14629,7 +14627,7 @@ function selectPlace(idx) {
   const item = window._naverPlaceItems[idx];
   const pLat = parseFloat(item.lat), pLng = parseFloat(item.lng);
   if (isNaN(pLat) || isNaN(pLng) || pLat < 33 || pLat > 38.6 || pLng < 124.6 || pLng > 131.9) {
-    showToast('⚠️ 이 장소의 좌표가 올바르지 않아요. 다른 결과를 선택하거나 주소를 직접 검색해주세요');
+    showToast(t('ownr_invalid_coords_notice'));
     return;
   }
   document.getElementById('f-lat').value = pLat;
@@ -14657,7 +14655,7 @@ function searchKakaoFallback(query) {
       document.getElementById('place-results').style.display = 'none';
       showMiniMap(parseFloat(r.y), parseFloat(r.x));
     } else {
-      showToast('장소를 찾을 수 없어요. 다시 입력해주세요.');
+      showToast(t('ownr_place_not_found_notice'));
     }
   });
 }
@@ -14693,7 +14691,7 @@ async function submitPosting() {
   const isErrand = wt === 'errand';
   const isScheduled = wt !== 'spot' && !isErrand;
   if (isScheduled && !document.getElementById('f-period-start').value) {
-    showToast('시작일을 입력해주세요'); return;
+    showToast(t('ownr_enter_start_date_notice')); return;
   }
   const startTime = getTimeValue('start');
   let endTime = isErrand ? null : getTimeValue('end');
@@ -14703,19 +14701,19 @@ async function submitPosting() {
   const errandDuration = isErrand ? (parseFloat(document.getElementById('f-errand-duration').value) || null) : null;
   const duration = isErrand ? errandDuration : (startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null);
 
-  if (!title) { showToast('직무명을 입력해주세요'); return; }
-  if (_hasBadWord(title) || (desc && _hasBadWord(desc))) { showToast('금지된 표현이 포함되어 있습니다'); return; }
-  if (_hasBadWord(title) || _hasBadWord(desc)) { showToast('제목 또는 설명에 사용할 수 없는 단어가 포함되어 있어요'); return; }
+  if (!title) { showToast(t('ownr_enter_job_title_notice')); return; }
+  if (_hasBadWord(title) || (desc && _hasBadWord(desc))) { showToast(t('ownr_forbidden_expression_notice')); return; }
+  if (_hasBadWord(title) || _hasBadWord(desc)) { showToast(t('ownr_forbidden_word_notice')); return; }
   if (wageType === 'other') {
-    if (!wageOther) { showToast('급여 조건을 입력해주세요'); return; }
+    if (!wageOther) { showToast(t('ownr_enter_wage_condition_notice')); return; }
   } else if (wageType === 'hourly' && (!wage || wage < 10030)) {
-    showToast('시급은 2025 최저임금(10,030원) 이상이어야 해요'); return;
+    showToast(t('ownr_min_wage_notice')); return;
   } else if (wageType !== 'hourly' && !wage) {
-    showToast('금액을 입력해주세요'); return;
+    showToast(t('ownr_enter_amount_notice')); return;
   }
-  if (!startTime || isNaN(startTime.getTime())) { showToast('시작 시간을 입력해주세요'); return; }
-  if (!isErrand && startTime < new Date()) { showToast('이미 지난 시간은 선택할 수 없어요'); return; }
-  if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast('종료 시간은 시작 시간보다 늦어야 해요'); return; }
+  if (!startTime || isNaN(startTime.getTime())) { showToast(t('ownr_enter_start_time_notice')); return; }
+  if (!isErrand && startTime < new Date()) { showToast(t('ownr_past_time_notice')); return; }
+  if (!isErrand && (!endTime || isNaN(endTime.getTime()) || endTime <= startTime)) { showToast(t('ownr_end_after_start_notice')); return; }
   // 비대면 공고는 위치 불필요
   const _isRemote = document.getElementById('f-is-remote').value === 'true';
   const finalLat = _isRemote ? null : parseFloat(document.getElementById('f-lat').value);
@@ -14724,16 +14722,16 @@ async function submitPosting() {
     const locEl = document.getElementById('location-result');
     locEl.style.display = 'block';
     locEl.style.color = 'var(--red)';
-    locEl.textContent = '⚠️ 위치 탭에서 장소를 검색하고 미니맵을 확인한 후 등록해주세요';
+    locEl.textContent = t('ownr_location_tab_notice');
     locEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setTimeout(() => { locEl.style.color = ''; if (locEl.textContent.startsWith('⚠️')) locEl.style.display = 'none'; }, 4000);
-    showToast('\u{1F4CD} 위치를 먼저 설정해주세요');
+    showToast(t('ownr_set_location_first_toast'));
     return;
   }
 
   // 세션 체크 — btn 비활성화 전에 먼저 (동기 즉시 확인)
   const sess = currentSession;
-  if (!sess) { showToast('로그인이 만료됐습니다. 새로고침 후 다시 로그인해주세요.'); return; }
+  if (!sess) { showToast(t('ownr_login_expired_notice')); return; }
 
   const surgeEnabled  = document.getElementById('f-surge-enabled').value === 'true';
   const surgeMax      = parseInt(document.getElementById('f-surge-max').value) || null;
@@ -14749,10 +14747,10 @@ async function submitPosting() {
   const _todayChk = new Date().toISOString().slice(0, 10);
   const _startDateVal = document.getElementById('f-start-date')?.value;
   if (_startDateVal && _startDateVal < _todayChk) {
-    showToast('시작 날짜는 오늘 이후여야 합니다'); return;
+    showToast(t('ownr_start_date_future_notice')); return;
   }
   if (workType === 'short' && periodEnd && periodEnd < _todayChk) {
-    showToast('단기 공고 종료일은 오늘 이후여야 합니다'); return;
+    showToast(t('ownr_end_date_future_notice')); return;
   }
 
   const addrText = document.getElementById('f-address')?.value.trim()
@@ -14795,11 +14793,11 @@ async function submitPosting() {
 
   const btn = document.getElementById('submit-btn');
   const btnOrigText = editingId ? t('form_submit_edit') : t('form_submit_post');
-  btn.disabled = true; btn.textContent = '저장 중...';
+  btn.disabled = true; btn.textContent = t('ownr_saving_label');
 
   // 이미지 업로드 (새 파일만, 기존 URL은 그대로 유지)
   const _uploadedUrls = [];
-  if (jobImgs.some(img => img.file)) btn.textContent = '사진 업로드 중...';
+  if (jobImgs.some(img => img.file)) btn.textContent = t('ownr_uploading_photo_label');
   for (const img of jobImgs) {
     if (!img.file) {
       _uploadedUrls.push(img.src); // 기존 URL 유지
@@ -14816,17 +14814,17 @@ async function submitPosting() {
         } else {
           const errTxt = await r.text().catch(() => r.status);
           console.error('[job-image] 업로드 실패:', r.status, errTxt);
-          showToast('사진 업로드 실패 (' + r.status + ') — 사진 없이 저장됩니다', 5000);
+          showToast(t('ownr_photo_upload_failed_toast').replace('{code}', r.status), 5000);
         }
       } catch(e) {
         console.error('[job-image] 업로드 네트워크 오류:', e);
-        showToast('사진 업로드 중 오류가 발생했습니다 — 사진 없이 저장됩니다', 5000);
+        showToast(t('ownr_photo_upload_error_toast'), 5000);
       }
     }
   }
   payload.images = _uploadedUrls;
   payload.main_image_idx = 0; // 배열 첫 번째가 항상 대표
-  btn.textContent = '저장 중...';
+  btn.textContent = t('ownr_saving_label');
 
   try {
 
@@ -14859,7 +14857,7 @@ async function submitPosting() {
     } catch(fetchErr) {
       clearTimeout(tid);
       console.error('fetch error:', fetchErr);
-      showToast('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+      showToast(t('ownr_save_error_retry_notice'));
       return;
     }
 
@@ -14868,8 +14866,8 @@ async function submitPosting() {
       console.error('save failed', res.status, errBody);
       let errDetail = errBody;
       try { const j = JSON.parse(errBody); errDetail = j.message || j.hint || errBody; } catch(e) {}
-      showAlert('저장 실패 (' + res.status + ')\n' + errDetail, {icon:'❌', title:'공고 저장 실패'});
-      showToast('저장 실패 (' + res.status + ')', 4000);
+      showAlert(t('ownr_save_failed_alert_desc').replace('{code}', res.status).replace('{detail}', errDetail), {icon:'❌', title: t('ownr_save_failed_title')});
+      showToast(t('ownr_save_failed_toast').replace('{code}', res.status), 4000);
       return;
     }
 
@@ -14884,7 +14882,7 @@ async function submitPosting() {
       _notifyFollowers(fresh?.id, title, wage).catch(() => {});
       _notifyFavWorkers(fresh?.id, title, wage).catch(() => {});
     } else {
-      showToast('✅ 공고가 수정됐습니다');
+      showToast(t('ownr_posting_edited_toast'));
     }
   } finally {
     btn.disabled = false;
