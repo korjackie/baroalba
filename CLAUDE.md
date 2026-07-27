@@ -479,12 +479,19 @@ Android 빌드
 | 항목 | 값 |
 |------|-----|
 | 카카오맵 JS 키 | ffcea2fab508898c168f043100b4d550 |
+| 토스 클라이언트 키 | `test_ck_24xLea5zVA660wge91nyrQAMYNwW` — **아직 테스트 키다.** 결제가 되는 것처럼 보여도 실제 입금은 없음. 라이브 전환은 `docs/PROGRESS.md` 단기 항목 참고 |
 | Supabase URL | onwvbmllpycgswfzywjv.supabase.co |
 | 네이버 Client ID | 9DotifcIhyF4lq8bQLU9 |
 | 도메인 | baroalba.multimove.co.kr |
 | GitHub | github.com/korjackie/baroalba |
 | 기본 위치 | 37.5445, 127.0556 (성수역) |
 | 기본 반경 | 10km |
+
+**도메인을 추가하면 카카오 콘솔에도 등록해야 지도가 뜬다.** 카카오맵 JS SDK는
+[내 애플리케이션] → [앱 설정] → [플랫폼] → 웹 사이트 도메인에 등록된 출처에서만 동작한다.
+새 도메인(예: `바로알바.kr`)을 붙이거나 프리뷰 URL에서 테스트할 때 **지도만 안 나오면
+코드가 아니라 여기부터 볼 것.** 무료 한도는 지도·키워드검색 각 월 30만 건이라 현재 규모에선
+문제되지 않는다.
 
 ---
 
