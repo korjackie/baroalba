@@ -920,6 +920,8 @@
 
     .empty-state { text-align:center; padding:32px 20px; color:#bbb; }
     .empty-icon { font-size:48px; margin-bottom:12px; display:inline-block; animation:emptyFloat 2.5s ease-in-out infinite; }
+    /* SVG 아이콘은 font-size로 크기가 안 정해지므로 여기서 직접 지정한다 (2026-07-27) */
+    .empty-icon svg { width:40px; height:40px; color:var(--ink-200); }
     .empty-txt  { font-size:14px; font-weight:600; }
     @keyframes emptyFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }

@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '579';
+  const _APP_V = '580';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1091,7 +1091,7 @@ function dismissInstall() {
     const el = document.createElement('div');
     el.id = 'ios-install-banner';
     el.style.cssText = 'position:fixed;bottom:calc(var(--nav-h) + var(--sab-safe) + 10px);left:12px;right:12px;background:#1a1a1a;color:#fff;border-radius:16px;padding:14px 16px;z-index:400;box-shadow:0 4px 20px rgba(0,0,0,0.35);display:flex;align-items:center;gap:12px;animation:slideUp 0.3s ease';
-    el.innerHTML = `<span style="font-size:22px">📲</span><div style="flex:1"><div style="font-size:13px;font-weight:800;margin-bottom:2px">앱처럼 사용하기</div><div style="font-size:11px;color:#bbb">하단 <b style="color:#fff">공유 버튼</b> → <b style="color:#fff">홈 화면에 추가</b></div></div><button onclick="document.getElementById('ios-install-banner').remove();localStorage.setItem('ios_install_dismissed','1')" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px 6px;line-height:1">✕</button>`;
+    el.innerHTML = `<span style="font-size:22px">📲</span><div style="flex:1"><div style="font-size:13px;font-weight:800;margin-bottom:2px">앱처럼 사용하기</div><div style="font-size:11px;color:#bbb">하단 <b style="color:#fff">공유 버튼</b> → <b style="color:#fff">홈 화면에 추가</b></div></div><button onclick="document.getElementById('ios-install-banner').remove();localStorage.setItem('ios_install_dismissed','1')" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:4px 6px;line-height:1">${icon('close',16)}</button>`;
     document.body.appendChild(el);
   }, 3000);
 })();
@@ -1341,7 +1341,7 @@ async function loadJobs() {
     // 에러 내용 표시 (디버깅용)
     const el = document.getElementById('job-cards-container');
     if (el) el.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">⚠️</div>
+      <div class="empty-icon">${icon('warn')}</div>
       <div class="empty-txt" style="font-size:12px;color:#e53935">${t('job_load_fail_label')}<br><span style="font-size:10px;color:#aaa;word-break:break-all">${e.message || JSON.stringify(e)}</span></div>
     </div>`;
   }
@@ -1355,6 +1355,58 @@ function showMockBanner() {
   banner.textContent = t('mock_data_banner');
   document.body.appendChild(banner);
   setTimeout(() => banner.remove(), 6000);
+}
+
+// ── 아이콘 (2026-07-27) ────────────────────────────────────────────
+// 이모지를 아이콘으로 바꾸는 이유: OS(안드로이드/iOS/윈도우)마다 다르게 그려지고
+// 색을 못 맞춰서 브랜드가 안 잡혔다. currentColor를 따르므로 글자 색·크기를
+// 그대로 물려받아 다크모드와 브랜드색에 자동으로 맞는다.
+//
+// ⚠ 주의: showToast()는 textContent를 쓰므로 SVG를 넣으면 태그가 글자로 보인다.
+//         토스트/알림 문구의 이모지는 그대로 두고, HTML 렌더 자리에만 쓸 것.
+// ⚠ 주의: 레슨 과목·모임 종목·업종·평점 얼굴의 이모지는 '장식'이 아니라
+//         항목을 구별하는 '정보'라 바꾸지 않는다(단색 선으로는 구별이 안 됨).
+const ICON_PATHS = {
+  check:  { d:'<path d="M20 6 9 17l-5-5"/>' },
+  close:  { d:'<path d="M18 6 6 18M6 6l12 12"/>' },
+  star:   { d:'<path d="M12 2.6l2.72 5.5 6.08.89-4.4 4.28 1.04 6.05L12 16.46l-5.44 2.86 1.04-6.05-4.4-4.28 6.08-.89L12 2.6z"/>', fill:1 },
+  starO:  { d:'<path d="M12 2.6l2.72 5.5 6.08.89-4.4 4.28 1.04 6.05L12 16.46l-5.44 2.86 1.04-6.05-4.4-4.28 6.08-.89L12 2.6z"/>' },
+  pin:    { d:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1116 0z"/><circle cx="12" cy="10" r="2.8"/>' },
+  chat:   { d:'<path d="M20.5 11.5a7.9 7.9 0 01-8.5 8 9 9 0 01-3.6-.8L3.5 20.5l1.8-4.9a8 8 0 01-.8-3.6 7.9 7.9 0 018-8.5h.5a8 8 0 017.5 7.5v.5z"/>' },
+  bolt:   { d:'<path d="M13.5 2 4 13.4h6.2L9.8 22 20 10.4h-6.4L13.5 2z"/>', fill:1 },
+  user:   { d:'<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0115 0"/>' },
+  users:  { d:'<circle cx="9.5" cy="8" r="3.2"/><path d="M3 20a6.5 6.5 0 0113 0"/><path d="M16.5 5.2a3.2 3.2 0 010 5.6M17.5 14.2a6.5 6.5 0 013.5 5.8"/>' },
+  warn:   { d:'<path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4"/><circle cx="12" cy="17" r=".6" fill="currentColor"/>' },
+  trash:  { d:'<path d="M3.5 6.5h17M9 6.5V4.2h6v2.3M6 6.5l1 13.3h10l1-13.3"/>' },
+  clip:   { d:'<path d="M9 4.5H6.5A1.5 1.5 0 005 6v14a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 20V6a1.5 1.5 0 00-1.5-1.5H15"/><rect x="9" y="2.5" width="6" height="4" rx="1.2"/>' },
+  cal:    { d:'<rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
+  clock:  { d:'<circle cx="12" cy="12" r="9"/><path d="M12 6.8V12l3.4 2"/>' },
+  brief:  { d:'<rect x="2.5" y="7" width="19" height="13" rx="2"/><path d="M8.5 7V5a1.5 1.5 0 011.5-1.5h4A1.5 1.5 0 0115.5 5v2"/>' },
+  car:    { d:'<path d="M4 12.5l1.6-5A2 2 0 017.5 6h9a2 2 0 011.9 1.5l1.6 5"/><path d="M3.5 12.5h17v5h-17z"/><circle cx="7.5" cy="19" r="1.3"/><circle cx="16.5" cy="19" r="1.3"/>' },
+  money:  { d:'<circle cx="12" cy="12" r="9"/><path d="M8.5 8.5l3.5 5 3.5-5M8.5 13h7M8.5 15.5h7"/>' },
+  shield: { d:'<path d="M12 2.8l7.5 3v6c0 4.6-3.2 8.4-7.5 9.5-4.3-1.1-7.5-4.9-7.5-9.5v-6l7.5-3z"/>' },
+  ban:    { d:'<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>' },
+  camera: { d:'<rect x="2.5" y="6.5" width="19" height="13.5" rx="2.5"/><circle cx="12" cy="13.2" r="3.6"/><path d="M8.5 6.5l1.2-2.5h4.6l1.2 2.5"/>' },
+  megaph: { d:'<path d="M4 10v4a1.5 1.5 0 001.5 1.5H8l6 4.5V5.5L8 10H5.5A1.5 1.5 0 004 11.5z"/><path d="M17.5 9a4.5 4.5 0 010 6"/>' },
+  school: { d:'<path d="M12 3.5L2.5 8.5 12 13.5l9.5-5L12 3.5z"/><path d="M6 11v5.5c0 1.7 2.7 3 6 3s6-1.3 6-3V11"/>' },
+  subway: { d:'<rect x="5" y="3" width="14" height="13" rx="3"/><path d="M5 10h14M7.5 16.5h9M8.5 20l-1.5 1.8M15.5 20l1.5 1.8"/>' },
+  search: { d:'<circle cx="11" cy="11" r="7"/><path d="M16.2 16.2L21 21"/>' },
+  bell:   { d:'<path d="M18 8.5a6 6 0 10-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5z"/><path d="M13.7 19.5a2 2 0 01-3.4 0"/>' },
+  home:   { d:'<path d="M3.5 10.5L12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/>' },
+  edit:   { d:'<path d="M16.5 3.2a2.55 2.55 0 013.6 3.6L7.4 19.5 2.8 21l1.5-4.6L16.5 3.2z"/>' },
+  phone:  { d:'<path d="M21 16.5v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 011.1 3.7 2 2 0 013.1 1.5h3a2 2 0 012 1.7c.12.9.35 1.8.67 2.6a2 2 0 01-.45 2.1L7.1 9.2a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.45c.84.32 1.72.55 2.6.67a2 2 0 011.7 2.05z"/>' },
+  globe:  { d:'<circle cx="12" cy="12" r="9"/><path d="M3.2 12h17.6M12 3a14 14 0 010 18 14 14 0 010-18z"/>' },
+};
+// 색을 지정하지 않는 게 핵심 — 부모 글자색(currentColor)을 그대로 따른다.
+function icon(name, size) {
+  const p = ICON_PATHS[name];
+  if (!p) return '';
+  const s = size || 13;
+  return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" aria-hidden="true"'
+       + ' fill="' + (p.fill ? 'currentColor' : 'none') + '"'
+       + ' stroke="' + (p.fill ? 'none' : 'currentColor') + '"'
+       + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
+       + ' style="flex-shrink:0;vertical-align:-2px">' + p.d + '</svg>';
 }
 
 // 시급 축약 표기 - 한국어는 "1.2만" 관례 유지, 그 외 언어는 보편적인 "12k" 표기 사용
@@ -1414,7 +1466,7 @@ function renderMarkers() {
     const mkTypeChr = _mtc[job.work_type] || _mtc.spot;
     const catShort  = catName.length > 5 ? catName.slice(0,5) : catName;
 
-    const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:var(--purple);color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:8px;white-space:nowrap">👥${_r}자리</div>` : ''; })();
+    const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:var(--purple);color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:8px;white-space:nowrap">${icon('users')}${_r}자리</div>` : ''; })();
     const content = `
       <div class="marker-wrap" onclick="openDetail('${job.id}')" style="position:relative">
         ${surgeHtml}
@@ -1590,7 +1642,7 @@ function renderList() {
     const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('expand_radius').replace('{n}', nextRadius)}</button>` : '';
     const guestBtn = isGuest ? `<button onclick="_guestPostJobPrompt()" style="margin-top:8px;padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:block;width:100%">${t('guest_post_job_btn')}</button>` : '';
     list.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📭</div>
+      <div class="empty-icon">${icon('search')}</div>
       <div class="empty-txt">${t('home_empty_radius_desc_fmt').replace('{n}', (currentRadius/1000).toFixed(0))}</div>
       <div style="font-size:12px;color:#bbb;margin-top:6px">${t('home_empty_explore_hint')}</div>
       ${expandBtn}
@@ -1698,7 +1750,7 @@ function renderList() {
         <span><b>${dist}</b></span>
         <span>${startStr}</span>
         ${subwaySpan}
-        <span class="card-star">${job.biz_rating || '-'} ★</span>
+        <span class="card-star">${job.biz_rating || '-'} ${icon('star')}</span>
       </div>
     </div>`;
   }).join('');
@@ -1730,7 +1782,7 @@ function renderUrgentFeed() {
       </div>
       <div style="padding:8px 10px">
         <div style="font-size:14px;font-weight:900;color:var(--red)">${_shortWage(job.current_wage)}${currentLang==='ko' ? '원' : ''}</div>
-        <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">📍 ${dist}</div>
+        <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">${icon('pin')} ${dist}</div>
       </div>
     </div>`;
   }).join('');
@@ -1958,8 +2010,8 @@ function _renderMoimCards(container, list) {
             <div style="font-size:15px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}${_isAdmin ? _adminBtn('gatherings',m.id,'title',m.title,'모임 제목') : ''}</div>
             ${m.entry_fee < 0 ? `<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">${t('fee_split')}</div>` : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}${t('won_suffix')}</div>` : `<div style="font-size:12px;font-weight:700;color:var(--green);flex-shrink:0">${t('fee_free')}</div>`}
           </div>
-          <div style="font-size:12px;color:#888;margin-top:3px">📅 ${dateStr}</div>
-          ${m.location_name ? `<div style="font-size:12px;color:#888;margin-top:1px">📍 ${m.location_name}</div>` : ''}
+          <div style="font-size:12px;color:#888;margin-top:3px">${icon('cal')} ${dateStr}</div>
+          ${m.location_name ? `<div style="font-size:12px;color:#888;margin-top:1px">${icon('pin')} ${m.location_name}</div>` : ''}
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
             <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:var(--purple);padding:2px 8px;border-radius:8px">${tMoimCat(m.category) || t('cat_etc')}</span>
             ${m.sub_category ? `<span style="font-size:10px;font-weight:700;background:#f5f5f5;color:#555;padding:2px 8px;border-radius:8px">${tMoimSubcat(m.sub_category)}</span>` : ''}
@@ -2036,7 +2088,7 @@ async function openMoimDetail(moimId) {
       <!-- 모집 현황 -->
       <div style="background:#F5F3FF;border-radius:14px;padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:13px;font-weight:800;color:var(--purple)">👥 ${t('moim_recruit_status')}</span>
+          <span style="font-size:13px;font-weight:800;color:var(--purple)">${icon('users')} ${t('moim_recruit_status')}</span>
           <span style="font-size:13px;font-weight:900;color:${rem<=2?'var(--red)':'var(--purple)'}">${t('moim_capacity_fmt').replace('{a}', m.current_count||0).replace('{b}', m.max_count||10)} ${rem>0?('('+t('moim_slots_left').replace('{n}', rem)+')'):('('+t('moim_closed')+')')}</span>
         </div>
         <div style="height:8px;background:#DDD6FE;border-radius:4px;overflow:hidden">
@@ -2045,26 +2097,26 @@ async function openMoimDetail(moimId) {
       </div>
 
       <!-- 기본 정보 -->
-      ${m.gathering_date ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📅</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('datetime_label')}</div><div style="font-size:14px;font-weight:800;color:#111">${dateStr}</div></div></div>` : ''}
-      ${m.location_name ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">📍</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('place_label')}</div><div style="font-size:14px;font-weight:800;color:#111">${m.location_name}</div>${m.location_address?`<div style="font-size:12px;color:#888">${m.location_address}</div>`:''}</div></div>` : ''}
+      ${m.gathering_date ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">${icon('cal',16)}</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('datetime_label')}</div><div style="font-size:14px;font-weight:800;color:#111">${dateStr}</div></div></div>` : ''}
+      ${m.location_name ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">${icon('pin',16)}</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('place_label')}</div><div style="font-size:14px;font-weight:800;color:#111">${m.location_name}</div>${m.location_address?`<div style="font-size:12px;color:#888">${m.location_address}</div>`:''}</div></div>` : ''}
       <div style="display:flex;align-items:flex-start;gap:12px">
-        <div style="font-size:20px;flex-shrink:0">💰</div>
+        <div style="font-size:20px;flex-shrink:0">${icon('money',16)}</div>
         <div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_fee_label')}</div>
         <div style="font-size:14px;font-weight:800;color:${m.entry_fee<0?'#D97706':m.entry_fee>0?'#D97706':'var(--green)'}">${m.entry_fee < 0 ? t('moim_fee_split_detail') : m.entry_fee > 0 ? t('moim_fee_fixed_detail').replace('{n}', m.entry_fee.toLocaleString()) : t('fee_free')}</div></div>
       </div>
       ${m.skill_level && m.skill_level !== '무관' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">🏅</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_skill_section_title')}</div><div style="font-size:14px;font-weight:800;color:#B45309">${tSkillLevel(m.skill_level)}${m.skill_desc?' · '+m.skill_desc:''}</div></div></div>` : ''}
-      ${m.gender_req !== 'any' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">👤</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_gender_label')}</div><div style="font-size:14px;font-weight:800;color:#0369A1">${m.gender_req==='male'?t('gender_male_only'):t('gender_female_only')}</div></div></div>` : ''}
+      ${m.gender_req !== 'any' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">${icon('user',16)}</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_gender_label')}</div><div style="font-size:14px;font-weight:800;color:#0369A1">${m.gender_req==='male'?t('gender_male_only'):t('gender_female_only')}</div></div></div>` : ''}
       ${m.description ? `<div style="background:#f9fafb;border-radius:14px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 ${t('moim_desc_label')}</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
 
-      ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:var(--purple);border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">💬 ${t('moim_group_chat_enter')}</button>` : ''}
+      ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:var(--purple);border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">${icon('chat')} ${t('moim_group_chat_enter')}</button>` : ''}
       ${!isHost ? `<button onclick="openReportModal('moim','${m.id}')" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:6px 0;font-weight:600;margin:0 auto">🚨 ${t('moim_report_btn')}</button>` : ''}
 
       ${isHost ? `
         <div style="border-top:1px solid #f0f0f0;padding-top:16px">
           <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🛠️ ${t('moim_host_manage_title')}</div>
           <div style="display:flex;gap:8px">
-            <button onclick="_editingMoim=_moimDetailData;openMoimCreate(_moimDetailData)" style="flex:1;padding:10px;border:1.5px solid var(--purple);color:var(--purple);background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ ${t('edit_btn')}</button>
-            <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">👥 ${t('moim_applicants_manage_btn')}</button>
+            <button onclick="_editingMoim=_moimDetailData;openMoimCreate(_moimDetailData)" style="flex:1;padding:10px;border:1.5px solid var(--purple);color:var(--purple);background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">${icon('edit')} ${t('edit_btn')}</button>
+            <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">${icon('users')} ${t('moim_applicants_manage_btn')}</button>
           </div>
         </div>
         <div id="moim-applicants-section" style="display:none"></div>
@@ -2128,10 +2180,10 @@ async function loadMoimApplicants(gatheringId) {
       </div>` : '';
     return `<div style="padding:12px;border:1px solid #f0f0f0;border-radius:12px;margin-bottom:6px;background:#fff">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:24px">${_NAT_FLAG[w?.nationality] || '👤'}</div>
+        <div style="font-size:24px">${_NAT_FLAG[w?.nationality] || '' + icon('user',20) + ''}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:800;color:#111">${w?.name || t('anon_author')}</div>
-          ${w?.rating ? `<div style="font-size:11px;color:#888">⭐ ${Number(w.rating).toFixed(1)} (${w.review_count||0}건)</div>` : ''}
+          ${w?.rating ? `<div style="font-size:11px;color:#888">${icon('star')} ${Number(w.rating).toFixed(1)} (${w.review_count||0}건)</div>` : ''}
         </div>
         <span style="font-size:11px;font-weight:800;color:${statusColor};background:${statusColor}22;padding:4px 10px;border-radius:10px">${statusLabel}</span>
         ${app.status === 'pending' ? `
@@ -3431,7 +3483,7 @@ async function _renderHomeLessonHot() {
         <div style="font-size:11px;font-weight:800;color:#1d4ed8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
         <div style="font-size:10px;color:#888;margin:3px 0">${locIcon} ${p.location_type||''}</div>
         <div style="font-size:13px;font-weight:900;color:var(--red)">${price}</div>
-        <div style="font-size:10px;color:#aaa;margin-top:3px">⭐ ${(p.workers?.rating||0).toFixed(1)}</div>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${icon('star')} ${(p.workers?.rating||0).toFixed(1)}</div>
       </div>`;
     }).join('');
   } catch(e) { section.style.display = 'none'; }
@@ -3513,7 +3565,7 @@ async function _renderRankPanel() {
         ${avatar}
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isEmployer?(d.name||t('biz_default_label')):sub}</div>
-          <div style="font-size:11px;color:#aaa;margin-top:1px">${isEmployer?sub:''} ⭐ ${(d.rating||0).toFixed(1)} <span style="color:#ddd">(${d.review_count}건)</span></div>
+          <div style="font-size:11px;color:#aaa;margin-top:1px">${isEmployer?sub:''} ${icon('star')} ${(d.rating||0).toFixed(1)} <span style="color:#ddd">(${d.review_count}건)</span></div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:12px;font-weight:900;color:${isEmployer?'#b45309':'#15803d'}">${trust}점</div>
@@ -3580,7 +3632,7 @@ async function _loadHomeTopPartners() {
               <span style="font-size:13px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${e.name||t('biz_default_label')}</span>
               ${typeTag}
             </div>
-            <div style="font-size:12px;color:#b45309;font-weight:700;margin-top:2px">⭐ ${(e.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${e.review_count}건)</span></div>
+            <div style="font-size:12px;color:#b45309;font-weight:700;margin-top:2px">${icon('star')} ${(e.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${e.review_count}건)</span></div>
           </div>
         </div>`;
       }).join('');
@@ -3618,7 +3670,7 @@ async function _loadHomeTopPartners() {
               <span style="font-size:13px;font-weight:800;color:#111">${anonName}</span>
               ${specTag}
             </div>
-            <div style="font-size:12px;color:#15803d;font-weight:700;margin-top:2px">⭐ ${(w.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${w.review_count}건)</span></div>
+            <div style="font-size:12px;color:#15803d;font-weight:700;margin-top:2px">${icon('star')} ${(w.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${w.review_count}건)</span></div>
           </div>
         </div>`;
       }).join('');
@@ -3855,7 +3907,7 @@ function _renderHomeSearchList(filtered) {
   // 정렬 적용
   filtered = _sortHomeJobs(filtered);
   if (!filtered.length) {
-    list.innerHTML = '<div style="text-align:center;padding:32px 0;color:#bbb"><div style="font-size:28px;margin-bottom:8px">🔍</div><div style="font-size:13px;font-weight:600">검색 결과가 없어요</div></div>';
+    list.innerHTML = '<div style="text-align:center;padding:32px 0;color:#bbb"><div style="font-size:28px;margin-bottom:8px">' + icon('search',24) + '</div><div style="font-size:13px;font-weight:600">검색 결과가 없어요</div></div>';
     return;
   }
   list.innerHTML = filtered.slice(0, 20).map(job => {
@@ -4345,7 +4397,7 @@ function _renderDetailSubway(el, infoStr) {
   }
   const cleanText = infoStr.replace(/\s+(?:\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선|인천\d+호선)/g,'').replace(/\s+/g,' ').trim();
   el.innerHTML = `<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;font-size:12px;color:#555;font-weight:600;padding:0 20px 12px">
-    <span style="font-size:14px;margin-right:4px">🚇</span>${badges}<span>${cleanText}</span>
+    <span style="font-size:14px;margin-right:4px">${icon('subway')}</span>${badges}<span>${cleanText}</span>
   </div>`;
   el.style.display = 'block';
 }
@@ -4686,7 +4738,7 @@ function openQRModal() {
     '<div><b>업체명</b> ' + job.biz_name + '</div>' +
     (job.category ? '<div><b>직종</b> ' + job.category + '</div>' : '') +
     '<div><b>' + wLabel + '</b> ' + (job.current_wage || 0).toLocaleString() + '원</div>' +
-    (job.same_day_payment ? '<div style="color:#15803d;font-weight:700">💰 당일정산</div>' : '') +
+    (job.same_day_payment ? '<div style="color:#15803d;font-weight:700">' + icon('money') + ' 당일정산</div>' : '') +
     '<div><b>근무시간</b> ' + timeStr + ' / ' + (job.duration_hours || '-') + '시간</div>' +
     (daysStr ? '<div><b>근무요일</b> ' + daysStr + '</div>' : '') +
     '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:11px;color:#999;text-align:center">QR 코드를 스캔하면 공고로 바로 이동합니다</div>';
@@ -4704,7 +4756,7 @@ function printQR() {
   const qrDataUrl = canvas ? canvas.toDataURL('image/png') : '';
   const jobInfo = document.getElementById('qr-job-info').innerHTML;
   _printInPage(
-    `<h2 style="text-align:center;font-size:20px;margin-bottom:20px">📋 알바 공고 모집</h2>` +
+    `<h2 style="text-align:center;font-size:20px;margin-bottom:20px">${icon('clip',16)} 알바 공고 모집</h2>` +
     (qrDataUrl ? `<img src="${qrDataUrl}" style="display:block;margin:0 auto 16px;width:200px;height:200px">` : '') +
     `<div style="background:#f8f9fa;border-radius:12px;padding:16px;line-height:1.9;font-size:14px">${jobInfo}</div>`,
     `#_ps_content { font-family:'Apple SD Gothic Neo',sans-serif; padding:40px; max-width:500px; margin:0 auto; }`
@@ -4861,12 +4913,12 @@ async function openWorkerProfileDirect(appId) {
   let statusActions = '';
   if (app.status === 'pending') {
     statusActions = `
-      <button onclick="${close}updateApplication('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⭐ 1차합격</button>
-      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>`;
+      <button onclick="${close}updateApplication('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('star')} 1차합격</button>
+      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('pin')} 보류</button>`;
   } else if (app.status === 'reviewing') {
     statusActions = `
-      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 최종합격</button>
-      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('check')} 최종합격</button>
+      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('pin')} 보류</button>
       <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
   } else if (app.status === 'on_hold') {
     statusActions = `
@@ -4884,7 +4936,7 @@ async function openWorkerProfileDirect(appId) {
   const avatarHtml = `
     <div style="position:relative;width:52px;height:52px;flex-shrink:0">
       ${w.photo_url ? `<img src="${w.photo_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-      <div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;display:${w.photo_url ? 'none' : 'flex'};align-items:center;justify-content:center;font-size:24px;position:absolute;top:0;left:0">👤</div>
+      <div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;display:${w.photo_url ? 'none' : 'flex'};align-items:center;justify-content:center;font-size:24px;position:absolute;top:0;left:0">${icon('user',20)}</div>
     </div>`;
   el.innerHTML = `<div id="wd-sheet-panel" style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 20px 40px;max-height:80vh;overflow-y:auto">
     <div id="wd-sheet-handle" style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 16px"></div>
@@ -4895,10 +4947,10 @@ async function openWorkerProfileDirect(appId) {
       <div style="flex:1;min-width:0">
         <div style="font-size:18px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
-          <span style="font-size:12px;color:#666">★ ${rating}</span>
+          <span style="font-size:12px;color:#666">${icon('star')} ${rating}</span>
           <span style="font-size:11px;color:#aaa">·</span>
           <span style="font-size:12px;color:#666">완료 ${reviews}건</span>
-          ${noshow > 0 ? `<span style="font-size:11px;font-weight:800;color:#DC2626">⚠️ 노쇼 ${noshow}</span>` : ''}
+          ${noshow > 0 ? `<span style="font-size:11px;font-weight:800;color:#DC2626">${icon('warn')} 노쇼 ${noshow}</span>` : ''}
           ${attendRate !== null ? `<span style="font-size:11px;font-weight:700;color:${attendRate >= 80 ? 'var(--green)' : '#D97706'}">출근율 ${attendRate}%</span>` : ''}
         </div>
         <div style="margin-top:4px;display:flex;gap:5px;flex-wrap:wrap">
@@ -4912,31 +4964,31 @@ async function openWorkerProfileDirect(appId) {
 
     <!-- 지원 공고 -->
     <div style="background:#f8fafc;border-radius:10px;padding:10px 12px;margin-bottom:10px">
-      <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:2px">📋 지원 공고</div>
+      <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:2px">${icon('clip')} 지원 공고</div>
       <div style="font-size:13px;font-weight:700;color:#222">${app.job_postings?.title || '-'}</div>
     </div>
 
     <!-- 실시간 위치 공유 (알바생이 공유 시작한 경우에만) -->
     ${app.status === 'accepted' ? `
     <div style="margin-bottom:10px">
-      <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">📍 실시간 위치</div>
+      <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">${icon('pin')} 실시간 위치</div>
       <div id="wd-loc-map" style="width:100%;height:170px;border-radius:12px;background:#f0f0f0"></div>
       <div id="wd-loc-status" style="font-size:11px;color:#bbb;margin-top:4px;text-align:center">위치 공유 대기 중...</div>
     </div>` : ''}
 
     <!-- 지원 메시지 -->
-    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;border-left:3px solid #cbd5e1;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#64748b;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;border-left:3px solid #cbd5e1;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#64748b;display:block;margin-bottom:3px">${icon('chat')} 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
 
     <!-- 전화 버튼 -->
-    ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:var(--green);border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone} 전화하기</a>` : ''}
+    ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:var(--green);border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">${icon('phone')} ${phone} 전화하기</a>` : ''}
 
     <!-- 상태별 액션 -->
     ${statusActions ? `<div style="display:flex;gap:8px;margin-bottom:8px">${statusActions}</div>` : ''}
 
     <!-- 채팅 + 지원서 보기 -->
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">💬 채팅</button>
-      <button onclick="${close}_chatAppId='${app.id}';openWorkerProfile()" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📋 지원서 보기</button>
+      <button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('chat')} 채팅</button>
+      <button onclick="${close}_chatAppId='${app.id}';openWorkerProfile()" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('clip')} 지원서 보기</button>
     </div>
 
     <!-- 닫기 -->
@@ -5021,7 +5073,7 @@ function confirmLeaveChat(appId, name) {
   modal.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:24px';
   modal.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
-      <div style="font-size:32px;margin-bottom:12px">💬</div>
+      <div style="font-size:32px;margin-bottom:12px">${icon('chat',24)}</div>
       <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:8px">채팅방 나가기</div>
       <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:24px"><b>${name}</b>님과의 채팅방을<br>나가시겠어요?<br><span style="font-size:12px;color:#bbb">새 메시지가 오면 자동으로 다시 표시됩니다.</span></div>
       <div style="display:flex;gap:10px">
@@ -5565,11 +5617,11 @@ async function loadMyApplications() {
             <button onclick="event.stopPropagation();openJobReview('${a.id}','${(job.title||'').replace(/'/g,"\\'")}','${(biz.name||'').replace(/'/g,"\\'")}',${a.employer_rating||0},'${(a.employer_review||'').replace(/'/g,"\\'")}')" style="margin-top:6px;font-size:11px;color:#92400E;background:none;border:none;text-decoration:underline;cursor:pointer;padding:0">수정</button>
           </div>`;
         }
-        return `<button onclick="event.stopPropagation();openJobReview('${a.id}','${(job.title||'').replace(/'/g,"\\'")}','${(biz.name||'').replace(/'/g,"\\'")}',0,'')" style="margin-top:10px;width:100%;padding:10px;background:linear-gradient(135deg,#FFF7ED,#FEF3C7);color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">⭐ ${t('leave_feedback')}</button>`;
+        return `<button onclick="event.stopPropagation();openJobReview('${a.id}','${(job.title||'').replace(/'/g,"\\'")}','${(biz.name||'').replace(/'/g,"\\'")}',0,'')" style="margin-top:10px;width:100%;padding:10px;background:linear-gradient(135deg,#FFF7ED,#FEF3C7);color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">${icon('star')} ${t('leave_feedback')}</button>`;
       })() : ''}
       <!-- 액션 버튼 -->
       ${canChat ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:var(--blue);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} ${t('ask_employer')}</button>` : ''}
-      ${isAccepted ? `<button id="loc-btn-${a.id}" class="loc-share-btn" onclick="event.stopPropagation();toggleLocationShare('${a.id}',this)">📍 ${t('share_location')}</button>` : ''}
+      ${isAccepted ? `<button id="loc-btn-${a.id}" class="loc-share-btn" onclick="event.stopPropagation();toggleLocationShare('${a.id}',this)">${icon('pin')} ${t('share_location')}</button>` : ''}
       ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:var(--red);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">${t('cancel_application')}</button>` : ''}
     </div>`;
   }).join('');
@@ -5670,7 +5722,7 @@ async function loadMyBaromeetPreview() {
     items.push({
       sortDate: ev?.event_date ? new Date(ev.event_date).getTime() : 0,
       html: `<div onclick="event.stopPropagation();_openSpotEventTracking('${a.event_id}', ${iAmApproved})" style="flex-shrink:0;width:140px;background:#fff0f4;border-radius:10px;padding:10px 12px;cursor:pointer">
-        <div style="font-size:10px;font-weight:800;color:#be123c;margin-bottom:2px">📍 바로스팟</div>
+        <div style="font-size:10px;font-weight:800;color:#be123c;margin-bottom:2px">${icon('pin')} 바로스팟</div>
         <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev?.barospot_restaurants?.name||'바로스팟'}</div>
         <div style="font-size:10.5px;color:#be123c;margin-top:3px">${dateStr}${statusTag}</div>
       </div>`,
@@ -5788,10 +5840,10 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div>
-          <div style="font-size:17px;font-weight:900;color:#222">⭐ 업체 후기 남기기</div>
+          <div style="font-size:17px;font-weight:900;color:#222">${icon('star')} 업체 후기 남기기</div>
           <div style="font-size:12px;color:#aaa;margin-top:2px">${bizName} · ${jobTitle}</div>
         </div>
-        <button onclick="this.closest('div[style*=fixed]').remove();delete window._reviewSetStar" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px">✕</button>
+        <button onclick="this.closest('div[style*=fixed]').remove();delete window._reviewSetStar" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px">${icon('close',20)}</button>
       </div>
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:12px;font-weight:700;color:#aaa;margin-bottom:10px">근무 만족도</div>
@@ -5889,7 +5941,7 @@ async function showMyTrustScore() {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div style="font-size:17px;font-weight:900">내 신뢰점수</div>
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">${icon('close',20)}</button>
       </div>
       <div style="text-align:center;padding:18px 0 22px">
         <div style="font-size:44px;font-weight:900;color:${color};line-height:1">${score}<span style="font-size:18px;color:#bbb">점</span></div>
@@ -5932,8 +5984,8 @@ async function showMyRatings() {
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:70vh;overflow-y:auto;padding:20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div style="font-size:17px;font-weight:900">⭐ 내 평점 리뷰</div>
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+        <div style="font-size:17px;font-weight:900">${icon('star')} 내 평점 리뷰</div>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">${icon('close',20)}</button>
       </div>
       ${reviews.length === 0
         ? '<div style="text-align:center;padding:32px;color:#aaa">아직 받은 평점이 없어요</div>'
@@ -5941,7 +5993,7 @@ async function showMyRatings() {
           <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:10px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
               <div style="font-size:13px;font-weight:800;color:#222">${a.job_postings?.businesses?.name || '업체'} · ${a.job_postings?.title || ''}</div>
-              <div style="font-size:14px;font-weight:900;color:#F59E0B">${'★'.repeat(Math.round(a.worker_rating))} ${a.worker_rating?.toFixed(1)}</div>
+              <div style="font-size:14px;font-weight:900;color:#F59E0B">${icon('star').repeat(Math.round(a.worker_rating))} ${a.worker_rating?.toFixed(1)}</div>
             </div>
             ${a.worker_review ? `<div style="font-size:13px;color:#555;line-height:1.6">"${a.worker_review}"</div>` : ''}
             ${a.worker_review ? `
@@ -6025,7 +6077,7 @@ async function openApplicationJobDetail(jobPostingId) {
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span style="font-size:17px;font-weight:900;color:#222">${biz.name || '업체명 없음'}</span>
-              ${biz.is_verified ? '<span style="font-size:10px;font-weight:800;background:#DCFCE7;color:var(--green);padding:2px 7px;border-radius:8px;white-space:nowrap">✓ 인증</span>' : ''}
+              ${biz.is_verified ? '<span style="font-size:10px;font-weight:800;background:#DCFCE7;color:var(--green);padding:2px 7px;border-radius:8px;white-space:nowrap">' + icon('check') + ' 인증</span>' : ''}
             </div>
             ${biz.id && !bizRecord ? `<div style="margin-top:5px"><button id="detail-follow-btn" onclick="_toggleDetailFollow('${biz.id}','${(biz.name||'').replace(/'/g,'')}')" style="padding:4px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:#555;transition:all .15s">...</button></div>` : ''}
           </div>
@@ -6033,7 +6085,7 @@ async function openApplicationJobDetail(jobPostingId) {
         <!-- 평점 -->
         <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:4px">
-            <span style="font-size:16px">⭐</span>
+            <span style="font-size:16px">${icon('star')}</span>
             <span style="font-size:14px;font-weight:800;color:#F59E0B">${biz.rating ? biz.rating.toFixed(1) : '-'}</span>
             <span style="font-size:12px;color:#aaa">(${biz.review_count || 0}개 리뷰)</span>
           </div>
@@ -6373,7 +6425,7 @@ async function loadBookmarks() {
     const _bn = document.createElement('div');
     _bn.id = 'bm-reopen-banner';
     _bn.style.cssText = 'background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px';
-    _bn.innerHTML = `<div style="font-size:20px;flex-shrink:0">🔔</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:#1E40AF">북마크 공고가 다시 열렸어요!</div><div style="font-size:12px;color:var(--blue);margin-top:3px;line-height:1.5">${_reopened.slice(0,3).join(', ')}${_reopened.length > 3 ? ' 외 ' + (_reopened.length-3) + '개' : ''}</div></div><button onclick="this.closest('#bm-reopen-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1">✕</button>`;
+    _bn.innerHTML = `<div style="font-size:20px;flex-shrink:0">${icon('bell',16)}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:#1E40AF">북마크 공고가 다시 열렸어요!</div><div style="font-size:12px;color:var(--blue);margin-top:3px;line-height:1.5">${_reopened.slice(0,3).join(', ')}${_reopened.length > 3 ? ' 외 ' + (_reopened.length-3) + '개' : ''}</div></div><button onclick="this.closest('#bm-reopen-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1">${icon('close',16)}</button>`;
     el.before(_bn);
   }
 
@@ -6450,7 +6502,7 @@ function filterJobsByKeyword(keyword) {
   document.getElementById('job-count').textContent = filtered.length;
   const list = document.getElementById('job-cards-container');
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">\u{1F50D}</div><div class="empty-txt">"${q}" 검색 결과가 없어요</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${icon('search')}</div><div class="empty-txt">"${q}" 검색 결과가 없어요</div></div>`;
     return;
   }
   jobs = filtered;
@@ -6701,7 +6753,7 @@ function _renderChatList() {
 
   if (!display.length) {
     const msg = _chatTab === 'fav' ? '즐겨찾기한 채팅이 없어요' : _chatTab === 'unread' ? '읽지 않은 채팅이 없어요' : '아직 대화가 없어요';
-    el.innerHTML = `<div style="text-align:center;padding:56px 20px;color:#ccc"><div style="font-size:32px;margin-bottom:12px">${_chatTab==='fav'?'⭐':_chatTab==='unread'?'💬':'🗨️'}</div><div style="font-size:15px;font-weight:700;color:#aaa">${msg}</div></div>`;
+    el.innerHTML = `<div style="text-align:center;padding:56px 20px;color:#ccc"><div style="margin-bottom:12px">${_chatTab==='fav'?icon('star',30):icon('chat',30)}</div><div style="font-size:15px;font-weight:700;color:#aaa">${msg}</div></div>`;
     return;
   }
 
@@ -6764,7 +6816,7 @@ function _renderChatList() {
   const favItems = _chatTab === 'all' ? display.filter(a => favs.includes(a.id)) : [];
   const normalItems = _chatTab === 'all' ? display.filter(a => !favs.includes(a.id)) : display;
   const favSection = favItems.length
-    ? `<div style="padding:10px 16px 4px;font-size:11px;font-weight:800;color:#F59E0B;letter-spacing:0.3px">⭐ 즐겨찾기</div>${favItems.map(_makeChatRow).join('')}<div style="height:8px;background:#f7f7f7;margin:4px 0"></div><div style="padding:6px 16px 4px;font-size:11px;font-weight:800;color:#aaa;letter-spacing:0.3px">전체</div>`
+    ? `<div style="padding:10px 16px 4px;font-size:11px;font-weight:800;color:#F59E0B;letter-spacing:0.3px">${icon('star')} 즐겨찾기</div>${favItems.map(_makeChatRow).join('')}<div style="height:8px;background:#f7f7f7;margin:4px 0"></div><div style="padding:6px 16px 4px;font-size:11px;font-weight:800;color:#aaa;letter-spacing:0.3px">전체</div>`
     : '';
   el.innerHTML = favSection + normalItems.map(_makeChatRow).join('');
 
@@ -7056,9 +7108,9 @@ async function _showDetailBizProfile(bizId) {
       ${showFollow ? `<button id="detail-biz-follow-btn" style="padding:8px 28px;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:#555">...</button>` : ''}
     </div>
     <div style="font-size:13px;color:#555;line-height:1.7;padding:0 4px">
-      ${biz.rating ? `<div style="margin-bottom:8px">⭐ ${biz.rating.toFixed(1)} (${biz.review_count||0}개 리뷰)</div>` : ''}
+      ${biz.rating ? `<div style="margin-bottom:8px">${icon('star')} ${biz.rating.toFixed(1)} (${biz.review_count||0}개 리뷰)</div>` : ''}
       ${biz.description ? `<div style="padding:12px;background:#f8f9fa;border-radius:12px">${biz.description}</div>` : ''}
-      ${biz.region ? `<div style="margin-top:8px;color:#aaa">📍 ${biz.region}</div>` : ''}
+      ${biz.region ? `<div style="margin-top:8px;color:#aaa">${icon('pin')} ${biz.region}</div>` : ''}
     </div>
   </div>`;
   if (showFollow) {
@@ -8108,7 +8160,7 @@ function renderFilteredList(filtered) {
   document.getElementById('job-count').textContent = filtered.length;
   const list = document.getElementById('job-cards-container');
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">\u{1F50D}</div><div class="empty-txt">검색 결과가 없어요</div></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${icon('search')}</div><div class="empty-txt">검색 결과가 없어요</div></div>`;
     return;
   }
   // renderList와 동일 로직이지만 filtered 배열 사용
@@ -8698,7 +8750,7 @@ function makeSwipeCard(job, isTop) {
               <div style="font-size:11px;font-weight:800;color:#555">${job.category}</div>
               <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
                 <div style="font-size:15px;font-weight:900;color:#111">${job.biz_name || ''}</div>
-                ${job.biz_rating ? `<span style="background:#FEF3C7;color:#D97706;font-size:10px;font-weight:900;padding:1px 6px;border-radius:20px">★${job.biz_rating}</span>` : ''}
+                ${job.biz_rating ? `<span style="background:#FEF3C7;color:#D97706;font-size:10px;font-weight:900;padding:1px 6px;border-radius:20px">${icon('star')}${job.biz_rating}</span>` : ''}
                 ${isUrgent ? '<span style="background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">\u{1F525} 급구</span>' : ''}
               </div>
             </div>
@@ -8771,7 +8823,7 @@ function makeSwipeCard(job, isTop) {
       <div style="font-size:48px;font-weight:900;color:#10B981;border:4px solid #10B981;border-radius:12px;padding:8px 16px;transform:rotate(-15deg)">지원!</div>
     </div>
     <div class="sw-overlay-up" style="position:absolute;inset:0;background:rgba(255,149,0,0.15);display:flex;align-items:flex-end;justify-content:center;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
-      <div style="font-size:36px;font-weight:900;color:#FF9500;border:4px solid #FF9500;border-radius:12px;padding:8px 20px">⚡ 번개지원</div>
+      <div style="font-size:36px;font-weight:900;color:#FF9500;border:4px solid #FF9500;border-radius:12px;padding:8px 20px">${icon('bolt',30)} 번개지원</div>
     </div>`;
   return card;
 }
@@ -8900,14 +8952,14 @@ function showQuickGradeModal(type, data = {}) {
   let content = '';
   if (type === 'limit') {
     content = `
-      <div style="font-size:40px;margin-bottom:12px">⚡</div>
+      <div style="font-size:40px;margin-bottom:12px">${icon('bolt',30)}</div>
       <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:8px">오늘 번개지원을 이미 사용했어요</div>
       <div style="font-size:13px;color:#888;line-height:1.7">번개지원은 하루 1회만 사용 가능합니다.<br>내일 다시 사용할 수 있어요.</div>`;
   } else {
     const rOk = data.rating >= QUICK_GRADE.minRating;
     const rCnt = data.reviews >= QUICK_GRADE.minReviews;
     content = `
-      <div style="font-size:40px;margin-bottom:12px">⚡</div>
+      <div style="font-size:40px;margin-bottom:12px">${icon('bolt',30)}</div>
       <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:12px">번개등급 자격이 필요해요</div>
       <div style="background:#f8f8f8;border-radius:14px;padding:14px;margin-bottom:16px;text-align:left;width:100%">
         <div style="font-size:12px;color:#aaa;font-weight:700;margin-bottom:8px">번개등급 달성 조건</div>
@@ -9682,7 +9734,7 @@ function _slotHtml(idx, p, readonly) {
       onclick="openImgViewer('${p.photo_url}')"
       style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#e5e7eb;cursor:pointer">
       <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
-      <button onclick="event.stopPropagation();deleteSlotPhoto(${idx})" style="position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+      <button onclick="event.stopPropagation();deleteSlotPhoto(${idx})" style="position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:13px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">${icon('close')}</button>
       <span style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${num}</span>
     </div>`;
 }
@@ -10054,7 +10106,7 @@ const _OB_SLIDES = [
         <div class="ob-shape-circle" style="width:100px;height:100px;background:var(--red);opacity:0.1;animation-delay:0.1s"></div>
       </div>
       <div class="ob-anim-layer" style="animation: obFloat 3s ease-in-out infinite">
-        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(200,16,46,0.3));">💼</div>
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(200,16,46,0.3));">${icon('brief',36)}</div>
       </div>
       <div class="ob-anim-layer">
         <div style="position:absolute; top:20px; left:20px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.3s; opacity:0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🇰🇷</div>
@@ -10078,7 +10130,7 @@ const _OB_SLIDES = [
         <div style="position:absolute; top:35px; left:30px; font-size:28px; animation: obPop 0.5s forwards; animation-delay:0.2s; opacity:0">🍷</div>
         <div style="position:absolute; top:20px; right:40px; font-size:24px; animation: obPop 0.5s forwards; animation-delay:0.4s; opacity:0">⚽</div>
         <div style="position:absolute; bottom:25px; right:30px; font-size:32px; animation: obPop 0.5s forwards; animation-delay:0.6s; opacity:0">🎸</div>
-        <div style="position:absolute; bottom:40px; left:20px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:0.8s; opacity:0">💬</div>
+        <div style="position:absolute; bottom:40px; left:20px; font-size:20px; animation: obPop 0.5s forwards; animation-delay:0.8s; opacity:0">${icon('chat',16)}</div>
       </div>
     </div>`
   },
@@ -10108,7 +10160,7 @@ const _OB_SLIDES = [
         <div class="ob-shape-circle" style="width:100px;height:100px;background:#ea580c;opacity:0.1;animation-delay:0.1s"></div>
       </div>
       <div class="ob-anim-layer" style="animation: obFloat 2.5s ease-in-out infinite">
-        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(234,88,12,0.3));">📍</div>
+        <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(234,88,12,0.3));">${icon('pin',36)}</div>
       </div>
       <div class="ob-anim-layer">
         <div style="position:absolute; top:25px; left:35px; font-size:28px; animation: obPop 0.5s forwards; animation-delay:0.3s; opacity:0">🍻</div>
@@ -10447,7 +10499,7 @@ function renderOtherLangChips() {
   container.innerHTML = others.map(e => {
     const p = parseLangEntry(e);
     const key = e.replace(/'/g, "\\'");
-    return `<span class="l-chip active" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer" onclick="editOtherLang('${key}')">🌐 ${p.name} · ${p.speak}/${p.read}/${p.write}<button type="button" onclick="event.stopPropagation();removeOtherLangByName('${p.name.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:inherit;padding:0;line-height:1;margin-left:2px">✕</button></span>`;
+    return `<span class="l-chip active" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer" onclick="editOtherLang('${key}')">${icon('globe')} ${p.name} · ${p.speak}/${p.read}/${p.write}<button type="button" onclick="event.stopPropagation();removeOtherLangByName('${p.name.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:inherit;padding:0;line-height:1;margin-left:2px">${icon('close')}</button></span>`;
   }).join('');
 }
 
@@ -10517,7 +10569,7 @@ function updateProfileCompletion() {
   document.getElementById('completion-pct').textContent = pct + '%';
   document.getElementById('completion-bar').style.width = pct + '%';
   document.getElementById('completion-items').innerHTML = checks.map(c =>
-    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'var(--green)':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
+    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'var(--green)':'#aaa'}">${c.ok?'' + icon('check') + '':'+'}${c.label}</span>`
   ).join('');
 }
 
@@ -10951,7 +11003,7 @@ let surgeTimerHandles = [];
 function buildSurgeTimer(job) {
   if (!job.surge_enabled || !job.surge_interval_min) return '';
   return `<div class="surge-timer" id="stimer-${job.id}">
-    <span class="surge-timer-label">⚡ +${(job.surge_amount||1000).toLocaleString()}원</span>
+    <span class="surge-timer-label">${icon('bolt')} +${(job.surge_amount||1000).toLocaleString()}원</span>
     <div class="surge-timer-bar-wrap"><div class="surge-timer-bar" id="sbar-${job.id}" style="width:100%"></div></div>
     <span class="surge-timer-count" id="scnt-${job.id}">--:--</span>
   </div>`;
@@ -11281,7 +11333,7 @@ async function runSearch() {
     document.getElementById('srch-count').textContent = list.length;
     renderSearchResults(list);
   } catch (e) {
-    document.getElementById('srch-result-list').innerHTML = `<div class="srch-empty"><div class="srch-empty-icon">⚠️</div><div class="srch-empty-txt">검색 중 오류가 발생했습니다.<br>${e.message}</div></div>`;
+    document.getElementById('srch-result-list').innerHTML = `<div class="srch-empty"><div class="srch-empty-icon">${icon('warn')}</div><div class="srch-empty-txt">검색 중 오류가 발생했습니다.<br>${e.message}</div></div>`;
   }
 }
 
@@ -11309,7 +11361,7 @@ function renderSearchResults(list) {
     const typeColor = TYPE_COLOR[wt] || 'var(--red)';
 
     const urgentBadge = isUrgent
-      ? `<span style="font-size:10px;font-weight:700;color:#DC2626;background:#FEF2F2;padding:2px 7px;border-radius:20px">⚡ ASAP</span>` : '';
+      ? `<span style="font-size:10px;font-weight:700;color:#DC2626;background:#FEF2F2;padding:2px 7px;border-radius:20px">${icon('bolt')} ASAP</span>` : '';
     const typeBadge = `<span style="font-size:10px;font-weight:700;color:${typeColor};background:${typeColor}18;padding:2px 7px;border-radius:20px">${typeLabel}</span>`;
 
     return `<div class="srch-card" onclick="closeSearchOverlay();openDetail('${job.id}')">
@@ -11372,7 +11424,7 @@ async function openNotifications() {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column">
       <div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
         <div style="font-size:17px;font-weight:900">\u{1F514} 알림</div>
-        <button onclick="document.getElementById('noti-overlay').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+        <button onclick="document.getElementById('noti-overlay').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">${icon('close',20)}</button>
       </div>
       <div id="noti-list-inner" style="overflow-y:auto;padding:10px 16px 40px;flex:1">
         <div style="text-align:center;padding:24px"><div class="spinner"></div></div>
@@ -11623,7 +11675,7 @@ async function loadCommunityPosts(cat) {
 
   const { data: posts } = await q;
   if (!posts?.length) {
-    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">💬</div><div style="font-size:15px;font-weight:700">' + t('comm_empty_title') + '</div><div style="font-size:13px;margin-top:6px">' + t('comm_empty_hint') + '</div></div>';
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#aaa"><div style="font-size:40px;margin-bottom:12px">' + icon('chat',30) + '</div><div style="font-size:15px;font-weight:700">' + t('comm_empty_title') + '</div><div style="font-size:13px;margin-top:6px">' + t('comm_empty_hint') + '</div></div>';
     return;
   }
 
@@ -11651,7 +11703,7 @@ async function loadCommunityPosts(cat) {
       <div style="display:flex;align-items:center;gap:12px">
         <span style="font-size:12px;color:#aaa;font-weight:600">${author}</span>
         <span style="font-size:12px;color:#aaa">❤️ ${p.likes || 0}</span>
-        <span style="font-size:12px;color:#aaa">💬 ${p.comments_count || 0}</span>
+        <span style="font-size:12px;color:#aaa">${icon('chat')} ${p.comments_count || 0}</span>
       </div>
     </div>`;
   }).join('');
@@ -11693,8 +11745,8 @@ async function openCommunityPost(postId) {
   // 좋아요는 왼쪽, 수정/삭제는 오른쪽으로 한 줄에 나란히 배치
   const myPostBtns = isMyPost ? `
     <div style="display:flex;gap:8px">
-      <button onclick="openEditCommPost()" style="padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;background:#fff;font-size:12px;font-weight:700;color:#555;cursor:pointer">✏️ ${t('edit_btn')}</button>
-      <button onclick="deleteCommPost()" style="padding:7px 14px;border:1.5px solid #fca5a5;border-radius:20px;background:#fff3f3;font-size:12px;font-weight:700;color:#c53030;cursor:pointer">🗑 ${t('delete')}</button>
+      <button onclick="openEditCommPost()" style="padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;background:#fff;font-size:12px;font-weight:700;color:#555;cursor:pointer">${icon('edit')} ${t('edit_btn')}</button>
+      <button onclick="deleteCommPost()" style="padding:7px 14px;border:1.5px solid #fca5a5;border-radius:20px;background:#fff3f3;font-size:12px;font-weight:700;color:#c53030;cursor:pointer">${icon('trash')} ${t('delete')}</button>
     </div>` : '';
 
   const commentsHtml = comments?.length
@@ -11938,7 +11990,7 @@ async function initOwnerFeatures() {
       .insert({ kakao_uid: currentUser.id, name: newName })
       .select().single();
     if (createErr || !created) {
-      document.getElementById('postings-list').innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:32px;margin-bottom:8px">⚠️</div><div>업주 프로필 생성 실패<br>로그아웃 후 다시 로그인해주세요</div></div>';
+      document.getElementById('postings-list').innerHTML = '<div style="text-align:center;padding:32px;color:#aaa"><div style="font-size:32px;margin-bottom:8px">' + icon('warn',24) + '️</div><div>업주 프로필 생성 실패<br>로그아웃 후 다시 로그인해주세요</div></div>';
       document.getElementById('applicants-list').innerHTML = '';
       return;
     }
@@ -12004,7 +12056,7 @@ async function loadPostings() {
 function renderPostings() {
   const el = document.getElementById('postings-list');
   if (!postings.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">\u{1F4DD}</div><div class="empty-txt">' + t('ownr_no_postings_l1') + '<br>' + t('ownr_no_postings_l2') + '</div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">' + icon('clip') + '</div><div class="empty-txt">' + t('ownr_no_postings_l1') + '<br>' + t('ownr_no_postings_l2') + '</div></div>';
     return;
   }
   el.innerHTML = postings.map(p => {
@@ -12070,7 +12122,7 @@ function renderPostings() {
           ${!isOpen ? `<button onclick="event.stopPropagation();relistPosting('${p.id}')" class="posting-relist-btn">${t('relist_btn')}</button>` : ''}
           <button onclick="event.stopPropagation();toggleApplicantInline('${p.id}')"
             style="display:flex;align-items:center;gap:4px;background:#FFF0F0;border:none;border-radius:20px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:700;color:var(--red);white-space:nowrap;flex-shrink:0">
-            👥 <span id="app-count-${p.id}">...</span>${t('ownr_count_people_suffix')}
+            ${icon('users')} <span id="app-count-${p.id}">...</span>${t('ownr_count_people_suffix')}
             <span id="chevron-app-${p.id}" style="font-size:10px;transition:transform 0.2s">▼</span>
           </button>
         </div>
@@ -12353,7 +12405,7 @@ const _STATUS_BADGE = {
 
 function _adminBtn(table, id, field, value, label) {
   const safe = (value || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-  return `<button onclick="event.stopPropagation();adminQuickEdit('${table}','${id}','${field}','${safe}','${label}')" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;vertical-align:middle;flex-shrink:0" title="${t('admin_edit_title')}">✏️</button>`;
+  return `<button onclick="event.stopPropagation();adminQuickEdit('${table}','${id}','${field}','${safe}','${label}')" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;vertical-align:middle;flex-shrink:0" title="${t('admin_edit_title')}">${icon('edit')}</button>`;
 }
 function adminQuickEdit(table, id, field, currentValue, label) {
   const overlay = document.createElement('div');
@@ -12362,7 +12414,7 @@ function adminQuickEdit(table, id, field, currentValue, label) {
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span style="font-size:18px">🛡️</span>
+        <span style="font-size:18px">${icon('shield',16)}</span>
         <div style="font-size:16px;font-weight:900;color:#222">${t('admin_edit_title')}</div>
       </div>
       <div style="font-size:12px;color:#aaa;margin-bottom:14px">${label}</div>
@@ -12461,7 +12513,7 @@ function makeApplicantCardHtml(a, opts = {}) {
     const isBlk = _blockedWorkers.has(wid);
     actions += `<button onclick="${sp}toggleFavWorker('${wid}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isFav?'#FEF3C7':'#f5f5f5'};color:${isFav?'#D97706':'#aaa'}" title="${t('favorite_title')}">${isFav?'♥':'♡'}</button>`;
     actions += `<button onclick="${sp}toggleRecommendWorker('${wid}')" class="ac-btn ac-rec" style="flex:0;padding:8px 10px;background:${isRec?'#FEF3C7':'#f5f5f5'};color:${isRec?'#D97706':'#aaa'}" title="${t('recommend_label')}">${isRec?'👍':t('recommend_label')}</button>`;
-    actions += `<button onclick="${sp}toggleBlockWorker('${wid}','${name.replace(/'/g,'&#39;')}')" class="ac-btn ac-blk" style="flex:0;padding:8px 10px;background:${isBlk?'#FFF1F2':'#f5f5f5'};color:${isBlk?'#BE123C':'#aaa'}" title="${t('block_label')}">${isBlk?'🚫':t('block_label')}</button>`;
+    actions += `<button onclick="${sp}toggleBlockWorker('${wid}','${name.replace(/'/g,'&#39;')}')" class="ac-btn ac-blk" style="flex:0;padding:8px 10px;background:${isBlk?'#FFF1F2':'#f5f5f5'};color:${isBlk?'#BE123C':'#aaa'}" title="${t('block_label')}">${isBlk?'' + icon('ban') + '':t('block_label')}</button>`;
     actions += `<button onclick="${sp}toggleCompare('${a.id}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isCmp?'#EFF6FF':'#f5f5f5'};color:${isCmp?'var(--blue)':'#aaa'}">${isCmp?t('compare_selected_label'):t('compare_label')}</button>`;
   }
 
@@ -12474,20 +12526,20 @@ function makeApplicantCardHtml(a, opts = {}) {
       <div class="applicant-avatar">${avatarSvg}</div>
       <div class="ac-info">
         <div class="ac-name">${quickBadge}${name}${trustBadge}${jobTitle}</div>
-        <div class="ac-meta">★ ${rating} · ${t('completed_count_label').replace('{n}', reviews)}${attendanceHtml}${phone ? ' · '+phone : ''}${showExtras && lastWorked ? ` · <span style="color:#94a3b8">${t('work_relative_label').replace('{date}', formatRelativeDate(lastWorked))}</span>` : ''}</div>
+        <div class="ac-meta">${icon('star')} ${rating} · ${t('completed_count_label').replace('{n}', reviews)}${attendanceHtml}${phone ? ' · '+phone : ''}${showExtras && lastWorked ? ` · <span style="color:#94a3b8">${t('work_relative_label').replace('{date}', formatRelativeDate(lastWorked))}</span>` : ''}</div>
       </div>
       ${badge}
     </div>
     ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:10px;border-left:3px solid var(--red);font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     ${a.status === 'completed' && a.worker_review ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#FFF7ED;border-radius:10px;border-left:3px solid #F59E0B">
-      <div style="font-size:10px;font-weight:700;color:#92400E;margin-bottom:3px">⭐ ${t('review_of_name_label').replace('{name}', name)}</div>
+      <div style="font-size:10px;font-weight:700;color:#92400E;margin-bottom:3px">${icon('star')} ${t('review_of_name_label').replace('{name}', name)}</div>
       <div style="font-size:12px;color:#78350F;line-height:1.5">"${a.worker_review.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
       ${a.review_reply ? `<div style="margin-top:6px;padding:6px 8px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E"><span style="font-weight:800">${t('ownr_biz_reply_label')}</span> ${a.review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     </div>` : ''}
     ${a.status === 'completed' && a.worker_rating && a.worker_review_reply ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#EFF6FF;border-radius:10px;border-left:3px solid var(--blue)">
-      <div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:3px">💬 ${t('review_reply_of_name_label').replace('{name}', name)}</div>
+      <div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:3px">${icon('chat')} ${t('review_reply_of_name_label').replace('{name}', name)}</div>
       <div style="font-size:12px;color:#1e3a8a;line-height:1.5">"${a.worker_review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
     </div>` : ''}
     <div class="ac-actions" onclick="${sp}">${actions}</div>
@@ -12617,7 +12669,7 @@ function filterLessonPrice(el, maxPrice) {
 
 async function loadLessons() {
   const el = document.getElementById('lesson-list');
-  el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">🧑‍🏫</div><div class="empty-txt">' + t('loading_generic') + '</div></div>';
+  el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:32px">' + icon('school',24) + '</div><div class="empty-txt">' + t('loading_generic') + '</div></div>';
   _clearLessonOverlays();
   try {
     let q = db.from('lesson_profiles')
@@ -12645,7 +12697,7 @@ async function loadLessons() {
     }
     if (!lessons.length) {
       const emptyTxt = _lessonMainFilter === '전문기술' ? t('lesson_empty_tech') : t('lesson_my_empty');
-      el.innerHTML = `<div class="empty"><div class="empty-icon" style="font-size:36px">🧑‍🏫</div><div class="empty-txt">${emptyTxt}<br><span style="font-size:13px;color:#bbb">${t('lesson_be_first')}</span></div></div>`;
+      el.innerHTML = `<div class="empty"><div class="empty-icon" style="font-size:36px">${icon('school',30)}</div><div class="empty-txt">${emptyTxt}<br><span style="font-size:13px;color:#bbb">${t('lesson_be_first')}</span></div></div>`;
       return;
     }
     el.innerHTML = lessons.map(p => makeLessonCardHtml(p)).join('');
@@ -12726,9 +12778,9 @@ async function loadMyLessonInquiries() {
         ${inq.message ? `<div style="font-size:12px;color:#555;background:#f9fafb;border-radius:8px;padding:9px 11px;margin-bottom:8px;line-height:1.6">"${inq.message}"</div>` : ''}
         ${inq.proposed_price ? `<div style="font-size:12px;color:var(--red);font-weight:700;margin-bottom:8px">${t('proposed_price_prefix')}${Number(inq.proposed_price).toLocaleString()}${t('price_per_session_unit')}</div>` : ''}
         <div style="display:flex;gap:6px">
-          <button onclick="openLessonInquiryChat('${inq.id}')" style="flex:1;padding:8px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 ${t('chat_title')}</button>
+          <button onclick="openLessonInquiryChat('${inq.id}')" style="flex:1;padding:8px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${icon('chat')} ${t('chat_title')}</button>
           ${isPending ? `
-          <button onclick="decideLessonInquiry('${inq.id}','accepted')" style="flex:1;padding:8px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">✅ ${t('accept_btn')}</button>
+          <button onclick="decideLessonInquiry('${inq.id}','accepted')" style="flex:1;padding:8px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${icon('check')} ${t('accept_btn')}</button>
           <button onclick="decideLessonInquiry('${inq.id}','rejected')" style="flex:1;padding:8px;background:#f3f4f6;color:#6b7280;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('reject_btn')}</button>
           ` : ''}
         </div>
@@ -12788,7 +12840,7 @@ function makeLessonCardHtml(p) {
   const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit_short'), 센터방문:'🏫 '+t('lesson_type_center_short'), 비대면:'💻 '+t('lesson_type_online_short')};
   const locTypeBadge = p.location_type ? `<span style="font-size:10px;background:#f0f9ff;color:#0891b2;padding:2px 6px;border-radius:6px">${locTypeMap[p.location_type]||p.location_type}</span>` : '';
   const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:800;background:#dcfce7;color:var(--green);padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block"></span>${t('available_now_badge')}</span>` : '';
-  const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:800;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:6px">✓ ${t('cert_badge_short')}</span>` : '';
+  const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:800;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:6px">${icon('check')} ${t('cert_badge_short')}</span>` : '';
   const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:var(--green);padding:2px 6px;border-radius:6px">${t('retention_badge').replace('{n}', p._retention)}</span>` : '';
   const titleText = `${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}`;
   return `
@@ -12798,7 +12850,7 @@ function makeLessonCardHtml(p) {
     ${p.subject_detail ? `<div style="font-size:12px;color:#777;margin-top:2px;margin-bottom:2px;line-height:1.4">${p.subject_detail}</div>` : ''}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
       <div class="lesson-price">${price}</div>
-      <div style="font-size:12px;color:#888;display:flex;align-items:center;gap:6px">★ ${rating} · ${reviews}건${retentionBadge}</div>
+      <div style="font-size:12px;color:#888;display:flex;align-items:center;gap:6px">${icon('star')} ${rating} · ${reviews}건${retentionBadge}</div>
     </div>
     <div class="lesson-meta">${[p.location_name, days].filter(Boolean).join(' · ') || t('location_negotiable')}</div>
   </div>`;
@@ -12833,7 +12885,7 @@ async function openLessonDetail(profileId) {
 
   // 인증 배지
   const certHtml = p.cert_status === 'verified'
-    ? `<span style="font-size:11px;font-weight:800;background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:8px;margin-left:6px">✓ ${t('cert_verified_full')}</span>`
+    ? `<span style="font-size:11px;font-weight:800;background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:8px;margin-left:6px">${icon('check')} ${t('cert_verified_full')}</span>`
     : p.cert_status === 'pending'
     ? `<span style="font-size:11px;background:#f1f5f9;color:#94a3b8;padding:3px 8px;border-radius:8px;margin-left:6px">${t('cert_pending')}</span>` : '';
 
@@ -12863,8 +12915,8 @@ async function openLessonDetail(profileId) {
         <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('lesson_days_label')}</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${days}</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('class_type_label_plain')}</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${locTypeMap[p.location_type]||t('negotiable_label')}</div></div>
       </div>
-      ${p.location_name ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:12px;color:#666">📍 ${p.location_name}</div>` : ''}
-      ${p.available_times ? `<div style="margin-top:6px;font-size:12px;color:#666">🕐 ${(()=>{try{return JSON.parse(p.available_times).join(' · ')}catch{return p.available_times}})()}</div>` : ''}
+      ${p.location_name ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:12px;color:#666">${icon('pin')} ${p.location_name}</div>` : ''}
+      ${p.available_times ? `<div style="margin-top:6px;font-size:12px;color:#666">${icon('clock')} ${(()=>{try{return JSON.parse(p.available_times).join(' · ')}catch{return p.available_times}})()}</div>` : ''}
       ${retentionHtml}
     </div>
     ${(()=>{
@@ -13081,11 +13133,11 @@ function _collectPackages() {
   return pkgs.length ? pkgs : null;
 }
 function _renderStars(rating) {
-  if (!rating && rating !== 0) return '<span style="color:#ccc">★★★★★</span>';
+  if (!rating && rating !== 0) return '<span style="color:#ccc">' + icon('star') + '' + icon('star') + '' + icon('star') + '' + icon('star') + '' + icon('star') + '</span>';
   const full = Math.floor(rating);
   const half = rating - full >= 0.5 ? 1 : 0;
   const empty = 5 - full - half;
-  return `<span style="color:#FBBF24">${'★'.repeat(full)}${'½'.repeat(half)}</span><span style="color:#e5e7eb">${'★'.repeat(empty)}</span>`;
+  return `<span style="color:#FBBF24">${icon('star').repeat(full)}${'½'.repeat(half)}</span><span style="color:#e5e7eb">${icon('starO').repeat(empty)}</span>`;
 }
 async function openLessonConsult(profileId, workerName, workerKakaoUid) {
   if (!currentUser || isGuest) { showToast(t('consult_login_required')); return; }
@@ -13241,7 +13293,7 @@ async function loadMyLessons() {
   if (!wid) { el.innerHTML = '<div class="empty"><div class="empty-txt">' + t('lesson_my_noworker') + '</div></div>'; return; }
   const { data } = await db.from('lesson_profiles').select('*').eq('worker_id', wid).order('created_at', { ascending: false });
   if (!data?.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon" style="font-size:36px">\u{1F9D1}‍\u{1F3EB}</div><div class="empty-txt">' + t('lesson_my_empty') + '<br><span style="font-size:12px;color:#bbb">+ ' + t('lesson_register_btn') + '</span></div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">' + icon('school') + '</div><div class="empty-txt">' + t('lesson_my_empty') + '<br><span style="font-size:12px;color:#bbb">+ ' + t('lesson_register_btn') + '</span></div></div>';
     return;
   }
   const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit_short'), 센터방문:'🏫 '+t('lesson_type_center_short'), 비대면:'💻 '+t('lesson_type_online_short')};
@@ -13251,7 +13303,7 @@ async function loadMyLessons() {
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span style="font-size:10px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'var(--purple)':'#0891b2'};padding:2px 7px;border-radius:6px">${tLessonMain(p.main_category||'레슨')}</span>
           <span class="lesson-subject-tag">${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</span>
-          ${p.cert_status==='verified'?`<span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px">✓${t('cert_badge_short')}</span>`:''}
+          ${p.cert_status==='verified'?`<span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px">${icon('check')}${t('cert_badge_short')}</span>`:''}
         </div>
         <span style="font-size:11px;font-weight:700;color:${p.is_active ? 'var(--green)' : '#aaa'}">${p.is_active ? ('● ' + t('active_status')) : ('● ' + t('inactive_status'))}</span>
       </div>
@@ -13550,7 +13602,7 @@ function showRatingModal(appId, workerId) {
             <span style="font-size:11px;color:#aaa">${desc}</span>
           </div>
           <div style="display:flex;gap:6px" id="sub-stars-${key}">
-            ${[1,2,3,4,5].map(i => `<span onclick="selectSubRating('${key}',${i})" style="font-size:28px;cursor:pointer;transition:transform 0.1s">☆</span>`).join('')}
+            ${[1,2,3,4,5].map(i => `<span onclick="selectSubRating('${key}',${i})" style="font-size:28px;cursor:pointer;transition:transform 0.1s">${icon('starO',24)}</span>`).join('')}
           </div>
         </div>`).join('')}
 
@@ -13788,7 +13840,7 @@ function openCompareModal() {
       <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
           <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('ownr_rating_label')}</div>
-          <div style="font-weight:900;color:#F59E0B;font-size:15px">★ ${w.rating?.toFixed(1)||'-'}</div>
+          <div style="font-weight:900;color:#F59E0B;font-size:15px">${icon('star')} ${w.rating?.toFixed(1)||'-'}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
           <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('ownr_completed_jobs_label')}</div>
@@ -13819,7 +13871,7 @@ function openCompareModal() {
   ov.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:20px 16px 36px;max-height:85vh;overflow-y:auto" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div style="font-size:17px;font-weight:900">${t('ownr_compare_applicants_title')}</div>
-      <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:20px;background:none;border:none;color:#aaa;cursor:pointer">✕</button>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:20px;background:none;border:none;color:#aaa;cursor:pointer">${icon('close',16)}</button>
     </div>
     <div style="display:flex;gap:0;border-top:1px solid #f0f0f0;padding-top:16px">${apps.map(col).join('<div style="width:1px;background:#f0f0f0;margin:0 4px"></div>')}</div>
   </div>`;
@@ -13850,7 +13902,7 @@ async function loadApplicants() {
 
   if (!jobIds.length) {
     document.getElementById('applicants-list').innerHTML =
-      '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">' + t('ownr_no_applicants_notice') + '</div></div>';
+      '<div class="empty"><div class="empty-icon">' + icon('users') + '</div><div class="empty-txt">' + t('ownr_no_applicants_notice') + '</div></div>';
     return;
   }
 
@@ -13880,7 +13932,7 @@ async function loadApplicants() {
 function renderApplicants(apps) {
   const el = document.getElementById('applicants-list');
   if (!apps.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">\u{1F465}</div><div class="empty-txt">' + t('ownr_no_applicants_yet') + '</div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">' + icon('users') + '</div><div class="empty-txt">' + t('ownr_no_applicants_yet') + '</div></div>';
     return;
   }
   // 즐겨찾기 → 노쇼 없는 사람 → 출근율 높은 순 → 최신순
@@ -14351,11 +14403,11 @@ function renderJobImgPreview() {
       ondrop="event.preventDefault();this.style.outline='';this.style.outlineOffset='';if(_jobImgDragSrc!==null&&_jobImgDragSrc!==${i})jobImgSwap(_jobImgDragSrc,${i});_jobImgDragSrc=null"
       style="position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:${i === 0 ? '3px solid var(--red)' : '2px solid #eee'};cursor:grab">
       <img src="${img.src}" onclick="openImgViewer('${img.src}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer">
-      ${img.file ? `<button onclick="event.stopPropagation();editJobImg(${i})" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✏</button>` : ''}
+      ${img.file ? `<button onclick="event.stopPropagation();editJobImg(${i})" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('edit')}</button>` : ''}
       <!-- 순서 번호 뱃지 -->
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i === 0 ? 'var(--red)' : 'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i + 1}</div>
       ${i === 0 ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">${t('ownr_main_photo_badge')}</div>` : ''}
-      <button onclick="event.stopPropagation();removeJobImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
+      <button onclick="event.stopPropagation();removeJobImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('close')}</button>
     </div>`).join('');
   const addBtn = document.getElementById('job-img-add-btn');
   if (addBtn) addBtn.style.display = jobImgs.length >= 3 ? 'none' : 'flex';
@@ -14397,7 +14449,7 @@ function renderMoimImgPreview() {
       <img src="${img.src}" onclick="openImgViewer('${img.src}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer">
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i===0?'var(--purple)':'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i+1}</div>
       ${i===0?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">${t('ownr_main_photo_badge')}</div>`:''}
-      <button onclick="event.stopPropagation();removeMoimImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
+      <button onclick="event.stopPropagation();removeMoimImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('close')}</button>
     </div>`).join('');
   const addBtn = document.getElementById('moim-img-add-btn');
   if (addBtn) addBtn.style.display = moimImgs.length >= 3 ? 'none' : 'flex';
@@ -15873,7 +15925,7 @@ function renderOwnerSheetJobs(jobs) {
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:14px;font-weight:800;color:#111">${j.title || ''}</div>
-          <div style="font-size:11px;color:#aaa;margin-top:2px">${j.biz_name || ''} &middot; 📍 ${dist}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">${j.biz_name || ''} &middot; ${icon('pin')} ${dist}</div>
         </div>
         <div style="font-size:15px;font-weight:900;color:var(--red);white-space:nowrap">${wage}</div>
       </div>
@@ -15948,7 +16000,7 @@ async function openWorkerProfile() {
         <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${w.age ? `<span style="background:#FFF0F0;color:var(--red);font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">만 ${w.age}세</span>` : '<span style="background:#f5f5f5;color:#bbb;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">나이 미입력</span>'}
           ${w.gender ? `<span style="background:#EFF6FF;color:var(--blue);font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
-          <span style="background:#f5f5f5;color:#888;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">★ ${w.rating || '-'} · ${w.review_count || 0}건</span>
+          <span style="background:#f5f5f5;color:#888;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">${icon('star')} ${w.rating || '-'} · ${w.review_count || 0}건</span>
         </div>
       </div>
     </div>
@@ -15961,7 +16013,7 @@ async function openWorkerProfile() {
     </div>
 
     <!-- 지원 메시지 -->
-    ${app.apply_message ? `<div style="margin-bottom:12px;padding:12px;background:#FFFBEB;border-radius:12px;border-left:3px solid #F59E0B;font-size:13px;color:#444;line-height:1.6"><span style="font-size:10px;font-weight:800;color:#D97706;display:block;margin-bottom:4px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;')}</div>` : ''}
+    ${app.apply_message ? `<div style="margin-bottom:12px;padding:12px;background:#FFFBEB;border-radius:12px;border-left:3px solid #F59E0B;font-size:13px;color:#444;line-height:1.6"><span style="font-size:10px;font-weight:800;color:#D97706;display:block;margin-bottom:4px">${icon('chat')} 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;')}</div>` : ''}
 
     <!-- 연락처 -->
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
@@ -15980,17 +16032,17 @@ async function openWorkerProfile() {
 
     <!-- 액션 버튼 -->
     ${app.status === 'pending' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⭐ 1차합격</button>
-      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('star')} 1차합격</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('pin')} 보류</button>
     </div>` : ''}
     ${app.status === 'reviewing' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 최종합격</button>
-      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
-      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${icon('check')} 최종합격</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('pin')} 보류</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${icon('close')} 탈락</button>
     </div>` : ''}
     ${app.status === 'on_hold' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
       <button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">↩ 1차합격으로</button>
-      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${icon('close')} 탈락</button>
     </div>` : ''}
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
@@ -16169,7 +16221,7 @@ async function loadChatMessages() {
 function renderChatMessages(msgs) {
   const el = document.getElementById('chat-messages');
   if (!msgs.length) {
-    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">' + t('chat_no_messages_yet') + '<br>' + t('chat_empty_cta_owner') + ' 💬</div>';
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;margin-top:40px">' + t('chat_no_messages_yet') + '<br>' + t('chat_empty_cta_owner') + ' ' + icon('chat') + '</div>';
     return;
   }
   el.innerHTML = msgs.map(m => {
@@ -16531,7 +16583,7 @@ async function renderAdminSection() {
   const adminRows = (admins || []).map(a => {
     const isSelf = a.email.toLowerCase() === _selfEmail;
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px;margin-bottom:4px">
-      <span style="font-size:14px">🛡️</span>
+      <span style="font-size:14px">${icon('shield')}</span>
       <span style="flex:1;font-size:13px;font-weight:700;color:#222;word-break:break-all">${a.email}</span>
       ${isSelf
         ? '<span style="font-size:11px;color:#aaa;flex-shrink:0">(본인)</span>'
@@ -16541,13 +16593,13 @@ async function renderAdminSection() {
 
   const catRows = categories.map(c => `
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px;margin-bottom:4px">
-      <span style="font-size:18px">${c.icon || '📋'}</span>
+      <span style="font-size:18px">${c.icon || '' + icon('clip',16) + ''}</span>
       <span style="flex:1;font-size:14px;font-weight:700">${c.name}</span>
       <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:var(--red);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
     </div>`).join('');
 
   sec.innerHTML = `
-    <div style="font-size:12px;font-weight:800;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:6px">🛡️ 어드민 계정 관리</div>
+    <div style="font-size:12px;font-weight:800;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:6px">${icon('shield')} 어드민 계정 관리</div>
     <div id="admin-email-list">${adminRows}</div>
     <div style="display:flex;gap:6px;margin-top:8px">
       <input id="new-admin-email" type="email" placeholder="추가할 이메일" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;font-family:inherit">
@@ -16701,14 +16753,14 @@ async function openOwnerSettings() {
     const gradeDesc = document.getElementById('owner-grade-desc');
     if (gradeBadge && gradeDesc) {
       if (hiredCount >= 30 && rating >= 4.5) {
-        gradeBadge.innerHTML = '⭐ 프리미엄 업주';
-        gradeDesc.innerHTML = '✅ 완료 알바 30회 이상<br>✅ 평점 4.5 이상';
+        gradeBadge.innerHTML = '' + icon('star') + ' 프리미엄 업주';
+        gradeDesc.innerHTML = '' + icon('check') + ' 완료 알바 30회 이상<br>' + icon('check') + ' 평점 4.5 이상';
       } else if (hiredCount >= 10 && rating >= 4.0) {
         gradeBadge.innerHTML = '\u{1F31F} 우수 업주';
         gradeDesc.innerHTML = `${hiredCount>=30?'✅':'❌'} 완료 알바 30회 이상 (현재 ${hiredCount}회)<br>${rating>=4.5?'✅':'❌'} 평점 4.5 이상 (현재 ${rating>0?rating.toFixed(1):'없음'})`;
       } else {
         gradeBadge.innerHTML = '\u{1F3EA} 일반 업주';
-        gradeDesc.innerHTML = `❌ 완료 알바 10회 이상 (현재 ${hiredCount}회)<br>❌ 평점 4.0 이상 (현재 ${rating>0?rating.toFixed(1):'없음'})`;
+        gradeDesc.innerHTML = `${icon('close')} 완료 알바 10회 이상 (현재 ${hiredCount}회)<br>${icon('close')} 평점 4.0 이상 (현재 ${rating>0?rating.toFixed(1):'없음'})`;
       }
     }
 
@@ -16749,7 +16801,7 @@ function _updateOwnerCompletion() {
   if (pctEl) pctEl.textContent = pct + '%';
   if (barEl) barEl.style.width = pct + '%';
   if (itemsEl) itemsEl.innerHTML = checks.map(c =>
-    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'var(--green)':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
+    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'var(--green)':'#aaa'}">${c.ok?'' + icon('check') + '':'+'}${c.label}</span>`
   ).join('');
 }
 
@@ -16841,7 +16893,7 @@ async function showCompletedWorkers() {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:75vh;display:flex;flex-direction:column">
       <div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:17px;font-weight:900">&#127937; 완료 알바 목록</div>
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">${icon('close',20)}</button>
       </div>
       <div id="completed-workers-list" style="overflow-y:auto;padding:10px 16px 40px;flex:1">
         <div style="text-align:center;padding:24px"><div class="spinner"></div></div>
@@ -16884,7 +16936,7 @@ async function showCompletedWorkers() {
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-size:12px;color:#aaa">${dateStr}</div>
-        ${w.rating ? `<div style="font-size:12px;color:#F59E0B;font-weight:700">★ ${parseFloat(w.rating).toFixed(1)}</div>` : ''}
+        ${w.rating ? `<div style="font-size:12px;color:#F59E0B;font-weight:700">${icon('star')} ${parseFloat(w.rating).toFixed(1)}</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -16988,7 +17040,7 @@ function renderMyPlacesQuick() {
       style="width:100%;text-align:left;padding:9px 12px;background:${isActive?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${isActive?'var(--red)':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
       <span style="font-size:16px">\u{1F4CD}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:var(--red)">(기본)</span>':''}${isActive?' <span style="font-size:10px;color:var(--red)">✓ 선택됨</span>':''}</div>
+        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:var(--red)">(기본)</span>':''}${isActive?' <span style="font-size:10px;color:var(--red)">' + icon('check') + ' 선택됨</span>':''}</div>
         <div style="font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.address||''}</div>
       </div>
     </button>`;
@@ -17090,7 +17142,7 @@ function renderMyPlacesList() {
         <div style="font-size:11px;color:#aaa;margin-top:2px">${p.address||''}</div>
       </div>
       ${p.is_default ? '<span style="font-size:10px;font-weight:800;color:var(--red);background:#FFF0F0;padding:2px 6px;border-radius:6px;white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:#888;background:#f5f5f5;border:none;border-radius:6px;padding:3px 7px;cursor:pointer">기본 설정</button>`}
-      <button onclick="deletePlace('${p.id}')" style="font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;line-height:1;flex-shrink:0">✕</button>
+      <button onclick="deletePlace('${p.id}')" style="font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;line-height:1;flex-shrink:0">${icon('close')}</button>
     </div>`).join('');
 }
 
@@ -17297,8 +17349,8 @@ const PLAN_DETAILS = {
     color: 'var(--red)',
     badge: '베이직',
     features: [
-      '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">💼 업주 혜택</strong>',
-      '📢 공고 등록 슬롯 <strong>5개</strong> (무료: 1개)',
+      '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">' + icon('brief') + ' 업주 혜택</strong>',
+      '' + icon('megaph') + ' 공고 등록 슬롯 <strong>5개</strong> (무료: 1개)',
       '⚡ 시급 서지 자동 스케줄 설정',
       '👥 지원자 2명 나란히 비교',
       '📋 공고 복사 1클릭 재등록',
@@ -17314,9 +17366,9 @@ const PLAN_DETAILS = {
     color: 'var(--purple)',
     badge: '프로',
     features: [
-      '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">💼 업주 혜택</strong>',
+      '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">' + icon('brief') + ' 업주 혜택</strong>',
       '🔥 프리미엄 노출 — 검색 상단 고정 (지원율 3배)',
-      '📢 공고 등록 슬롯 <strong>무제한</strong>',
+      '' + icon('megaph') + ' 공고 등록 슬롯 <strong>무제한</strong>',
       '⚡ 시급 서지 자동 스케줄 설정',
       '👥 지원자 2명 나란히 비교',
       '📋 공고 복사 1클릭 재등록',
@@ -17749,7 +17801,7 @@ async function openOwnerNotifications() {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column">
       <div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
         <div style="font-size:17px;font-weight:900">\u{1F514} 알림</div>
-        <button onclick="document.getElementById('owner-noti-overlay').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+        <button onclick="document.getElementById('owner-noti-overlay').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">${icon('close',20)}</button>
       </div>
       <div id="owner-noti-list" style="overflow-y:auto;padding:10px 16px 40px;flex:1">
         <div style="text-align:center;padding:24px"><div class="spinner"></div></div>
@@ -18217,14 +18269,14 @@ function _renderLiveTravelers(travelers) {
   if (!travelers.length) { listEl.innerHTML = ''; listEl.style.display = 'none'; return; }
   listEl.style.display = 'block';
   listEl.innerHTML = travelers.map(tr =>
-    `<div class="track-live-row">🚗 ${t('live_traveler_moving').replace('{n}', _fmtDistanceM(tr.distance_m))}</div>`
+    `<div class="track-live-row">${icon('car')} ${t('live_traveler_moving').replace('{n}', _fmtDistanceM(tr.distance_m))}</div>`
   ).join('');
   if (!_trackMap) return;
   travelers.forEach(t => {
     if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(t.lat, t.lng),
-      content: `<div style="background:var(--purple);color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.25)">🚗 ${_fmtDistanceM(t.distance_m)}</div>`,
+      content: `<div style="background:var(--purple);color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.25)">${icon('car')} ${_fmtDistanceM(t.distance_m)}</div>`,
       yAnchor: 1,
     });
     overlay.setMap(_trackMap);
@@ -18551,7 +18603,7 @@ function _renderBaromeetCard(m, myStatus) {
         <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#888">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 12-8 12S4 15.25 4 10a8 8 0 0 1 8-8z"/></svg>${m.location_name||m.location_address||'장소 확인 후 안내'}
         </div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px">🕐 ${dtStr}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${icon('clock')} ${dtStr}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         <button onclick="event.stopPropagation();shareBaromeet('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="background:#f5f5f5;border:none;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" title="공유">
@@ -18576,7 +18628,7 @@ function _renderBaromeetCard(m, myStatus) {
     </div>
     ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:#f5f5f5;color:#666;padding:3px 8px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
     ${myStatus === 'approved'
-      ? `<button onclick="event.stopPropagation();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+      ? `<button onclick="event.stopPropagation();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${icon('chat')} 익명 단체채팅방 입장</button>`
       : myStatus === 'pending'
       ? `<button disabled style="width:100%;padding:12px;background:#f5f5f5;color:#aaa;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:default">⏳ 관리자 승인 대기중</button>`
       : `<button onclick="event.stopPropagation();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'var(--purple)'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
@@ -18605,8 +18657,8 @@ function openBaromeetDetail(id) {
   body.innerHTML = `
     <div style="padding:20px 20px 4px">
       <div style="font-size:19px;font-weight:900;color:#111;margin-bottom:8px">${m.title||'바로미팅'}</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-bottom:4px">📍 ${m.location_name||m.location_address||'장소 확인 후 안내'}</div>
-      <div style="font-size:13px;color:#666">🕐 ${dtStr}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#666;margin-bottom:4px">${icon('pin')} ${m.location_name||m.location_address||'장소 확인 후 안내'}</div>
+      <div style="font-size:13px;color:#666">${icon('clock')} ${dtStr}</div>
     </div>
     <button onclick="_openBaromeetTracking('${m.id}', ${myStatus === 'approved'})" style="display:flex;align-items:center;gap:10px;width:calc(100% - 40px);margin:14px 20px 0;padding:12px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:12px;cursor:pointer;text-align:left">
       <span style="font-size:18px">🗺️</span>
@@ -18638,7 +18690,7 @@ function openBaromeetDetail(id) {
     </div>
     <div style="padding:0 20px 8px">
       ${myStatus === 'approved'
-        ? `<button onclick="closeBaromeetDetail();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:14px;background:var(--purple);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+        ? `<button onclick="closeBaromeetDetail();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:14px;background:var(--purple);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">${icon('chat')} 익명 단체채팅방 입장</button>`
         : myStatus === 'pending'
         ? `<button disabled style="width:100%;padding:14px;background:#f5f5f5;color:#aaa;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:default">⏳ 관리자 승인 대기중</button>`
         : `<button onclick="closeBaromeetDetail();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:14px;background:${isFull?'#f5f5f5':'var(--purple)'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
@@ -19043,11 +19095,11 @@ async function openBaroPass() {
     ? `<div style="width:64px;height:64px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 10px">${avatarUrl.slice(6)}</div>`
     : avatarUrl
     ? `<img src="${avatarUrl}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block">`
-    : `<div style="width:64px;height:64px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px">👤</div>`;
+    : `<div style="width:64px;height:64px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px">${icon('user',24)}</div>`;
 
   const dateStr = pick?.gathering_date ? new Date(pick.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }) : null;
   const genderLabel = w?.gender === 'male' ? t('gender_male') : w?.gender === 'female' ? t('gender_female') : null;
-  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:800;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px">✅ ${t('workverify_completed_title')}</span>` : '';
+  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:800;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px">${icon('check')} ${t('workverify_completed_title')}</span>` : '';
 
   const qrPayload = `BAROPASS|${currentUser.id}|${pick?.id || ''}|${Date.now()}`;
   const qrSvg = _renderQrSvg(qrPayload, 160);
@@ -19065,8 +19117,8 @@ async function openBaroPass() {
         <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:16px">${qrSvg}</div>
         ${pick ? `
           <div style="font-size:14px;font-weight:800;color:#222;margin-bottom:2px">${pick.title || t('brand_baromannam')}</div>
-          ${dateStr ? `<div style="font-size:12px;color:#888">🕐 ${dateStr}</div>` : ''}
-          ${pick.location_name ? `<div style="font-size:12px;color:#888">📍 ${pick.location_name}</div>` : ''}
+          ${dateStr ? `<div style="font-size:12px;color:#888">${icon('clock')} ${dateStr}</div>` : ''}
+          ${pick.location_name ? `<div style="font-size:12px;color:#888">${icon('pin')} ${pick.location_name}</div>` : ''}
         ` : `<div style="font-size:12px;color:#aaa;line-height:1.6">${t('baropass_no_schedule_line1')}<br>${t('baropass_no_schedule_line2')}</div>`}
       </div>
       <div style="font-size:11px;color:#bbb;margin:14px 0 16px;line-height:1.6">${t('baropass_show_hint_line1')}<br>${t('baropass_show_hint_line2')}</div>
@@ -19149,7 +19201,7 @@ async function _handleBaroPassScan(payload) {
   resultBox.style.display = 'flex';
 
   if (!scannedUserId) {
-    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">⚠️</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">${t('qr_unrecognized')}</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>`;
+    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">${icon('warn',30)}</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">${t('qr_unrecognized')}</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>`;
     return;
   }
   if (scannedUserId === currentUser?.id) {
@@ -19167,11 +19219,11 @@ async function _handleBaroPassScan(payload) {
 
   const nick = w?.baromeet_nick || w?.name || t('unknown_label');
   const genderLabel = w?.gender === 'male' ? t('gender_male') : w?.gender === 'female' ? t('gender_female') : '';
-  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:800;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px;margin-left:4px">✅ ${t('workverify_completed_title')}</span>` : '';
+  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:800;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px;margin-left:4px">${icon('check')} ${t('workverify_completed_title')}</span>` : '';
 
   if (approved) {
     resultBody.innerHTML = `
-      <div style="font-size:40px;margin-bottom:8px">✅</div>
+      <div style="font-size:40px;margin-bottom:8px">${icon('check',30)}</div>
       <div style="font-size:16px;font-weight:900;color:var(--green);margin-bottom:10px">${t('qr_verified_participant')}</div>
       <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">${nick}${genderLabel ? ` · ${genderLabel}` : ''}${verifiedBadge}</div>
       ${gatheringTitle ? `<div style="font-size:13px;color:#888;margin-bottom:20px">${t('qr_approved_participant_of').replace('{name}', gatheringTitle)}</div>` : '<div style="font-size:13px;color:#888;margin-bottom:20px"></div>'}
@@ -19180,7 +19232,7 @@ async function _handleBaroPassScan(payload) {
     `;
   } else {
     resultBody.innerHTML = `
-      <div style="font-size:40px;margin-bottom:8px">❌</div>
+      <div style="font-size:40px;margin-bottom:8px">${icon('close',30)}</div>
       <div style="font-size:16px;font-weight:900;color:#dc2626;margin-bottom:10px">${t('qr_not_verified')}</div>
       <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">${t('qr_invalid_or_cancelled_line1')}<br>${t('qr_invalid_or_cancelled_line2')}</div>
       <button onclick="_retryQrScan()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>
@@ -19209,7 +19261,7 @@ async function openWorkplaceVerify() {
   if (status === 'verified') {
     openBottomSheet(`
       <div style="text-align:center;padding:24px 20px">
-        <div style="font-size:40px;margin-bottom:10px">✅</div>
+        <div style="font-size:40px;margin-bottom:10px">${icon('check',30)}</div>
         <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:6px">${t('workverify_completed_title')}</div>
         <div style="font-size:13px;color:#888">${w?.workplace_name || ''}</div>
       </div>
@@ -19573,7 +19625,7 @@ function _renderMannamProfilePanel() {
   const previewUrl = _mpPendingDatingPhotoBlob ? URL.createObjectURL(_mpPendingDatingPhotoBlob)
     : _mpDatingPhotoMode === 'custom' ? sel._existingDatingPhotoUrl
     : _mpAvatarPhotoUrl;
-  preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover">` : '📷';
+  preview.innerHTML = previewUrl ? `<img src="${previewUrl}" style="width:100%;height:100%;object-fit:cover">` : '' + icon('camera') + '';
   const avatarBtn = document.getElementById('mp-photo-mode-avatar');
   const customBtn = document.getElementById('mp-photo-mode-custom');
   const isAvatar = _mpDatingPhotoMode === 'avatar';
@@ -19962,7 +20014,7 @@ async function openBarospotCandidates(applicationId) {
         ${candidates.map(c => `
           <div style="display:flex;gap:12px;align-items:center;background:#f8f9fa;border-radius:14px;padding:14px;margin-bottom:10px">
             <div style="width:56px;height:56px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
-              ${c.photo_url ? `<img src="${c.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(4px);transform:scale(1.15)">` : `<span style="font-size:22px">👤</span>`}
+              ${c.photo_url ? `<img src="${c.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(4px);transform:scale(1.15)">` : `<span style="font-size:22px">${icon('user',20)}</span>`}
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:800;color:#222">${[c.age ? t('age_full_years').replace('{n}', c.age) : null, c.height_cm?c.height_cm+'cm':null, tDatingJob(c.job_category), tDatingBody(c.body_type), c.mbti].filter(Boolean).join(' · ') || t('age_unknown_label')}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">${t('noshow_count_suffix').replace('{n}', c.noshow_count)}</span>` : ''}</div>
@@ -20231,7 +20283,7 @@ async function _loadMaleApplications() {
     const previewHtml = (canTrack && preview) ? `
       <div style="display:flex;gap:8px;align-items:center;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-top:6px">
         <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
-          ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:14px">👤</span>`}
+          ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:14px">${icon('user')}</span>`}
         </div>
         <div style="font-size:11px;color:#666;min-width:0">${[preview.age?preview.age+t('years_old_suffix'):null, preview.height_cm?preview.height_cm+'cm':null, tDatingJob(preview.job_category), tDatingBody(preview.body_type), preview.mbti].filter(Boolean).join(' · ') || t('profile_preparing_notice')}</div>
       </div>` : '';
@@ -20282,7 +20334,7 @@ async function _loadSpotEvents() {
   }
   if (error || !data?.length) {
     if (cntEl) cntEl.textContent = '0';
-    el.innerHTML = `<div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">📍</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">${t('recruiting_spot_title')}</div><div style="font-size:12px;line-height:1.65">${t('no_recruiting_barospot_l1')}<br>${t('no_recruiting_barospot_l2')}</div></div>`;
+    el.innerHTML = `<div style="text-align:center;padding:44px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:10px">${icon('pin',30)}</div><div style="font-size:14px;font-weight:800;color:#999;margin-bottom:6px">${t('recruiting_spot_title')}</div><div style="font-size:12px;line-height:1.65">${t('no_recruiting_barospot_l1')}<br>${t('no_recruiting_barospot_l2')}</div></div>`;
     return;
   }
   if (cntEl) cntEl.textContent = data.length;
@@ -20343,7 +20395,7 @@ function _renderSpotEventCard(ev, preview) {
       <div style="font-size:10.5px;font-weight:800;color:#e11d48;margin-bottom:8px">${t('blind_preview_partner_label')}</div>
       <div style="display:flex;gap:10px;align-items:flex-start">
         <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
-          ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:18px">👤</span>`}
+          ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:18px">${icon('user',16)}</span>`}
         </div>
         <div style="min-width:0;flex:1">
           <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+t('years_old_suffix') : null, tDatingJob(preview.job_category), tDatingBody(preview.body_type)].filter(Boolean).join(' · ') || t('profile_preparing_notice')}</div>
@@ -20370,7 +20422,7 @@ function _renderSpotEventCard(ev, preview) {
       <span style="font-size:9.5px;font-weight:800;color:#fff;background:var(--blue);padding:2px 7px;border-radius:6px;margin-bottom:5px;display:inline-block">${t('recruiting_apply_available_badge')}</span>
       <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || t('restaurant_info_confirming')}</div>
       <div style="font-size:12px;color:#888">${whenText}</div>
-      ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">📍 ${ev.address}</div>` : ''}
+      ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">${icon('pin')} ${ev.address}</div>` : ''}
     </div>
     ${mapHtml}
     ${(ev.lat != null && ev.lng != null) ? `<div onclick="window.open('${naverUrl}','_blank')" style="text-align:center;font-size:11.5px;font-weight:700;color:#03C75A;margin-bottom:10px;cursor:pointer;padding:2px 0">${t('naver_map_view_detail_link')}</div>` : ''}
@@ -20636,7 +20688,7 @@ function _renderBarospotReviewStars() {
   const el = document.getElementById('track-barospot-review-stars');
   if (!el) return;
   el.innerHTML = [1, 2, 3, 4, 5].map(n =>
-    `<span onclick="_setBarospotReviewRating(${n})" style="cursor:pointer;color:${n <= _bspReviewRating ? '#f59e0b' : '#e5e7eb'}">★</span>`
+    `<span onclick="_setBarospotReviewRating(${n})" style="cursor:pointer;color:${n <= _bspReviewRating ? '#f59e0b' : '#e5e7eb'}">${icon('star')}</span>`
   ).join('');
 }
 function _setBarospotReviewRating(n) {
@@ -20736,7 +20788,7 @@ async function openBarospotChatRoom(eventId) {
     // 훨씬 느리게 느껴졌음 - 인가 확인(ensure_chat_room)만 끝나면 패널부터 바로 보여주고,
     // 프로필/내 정보/메시지는 그 뒤에 병렬로 채운다
     document.getElementById('bspchat-title').textContent = t('brand_barospot_plain');
-    document.getElementById('bspchat-cp-avatar').innerHTML = '👤';
+    document.getElementById('bspchat-cp-avatar').innerHTML = '' + icon('user') + '';
     document.getElementById('bspchat-messages').innerHTML = '<div style="text-align:center;padding:24px"><div class="spinner" style="margin:0 auto"></div></div>';
     document.getElementById('panel-barospot-chat').style.display = 'flex';
     history.pushState({ panel: 'barospot-chat' }, '');
@@ -20808,7 +20860,7 @@ function _barospotChatBubbleHtml(m) {
   const bubbleContent = isImg
     ? `<img src="${m.content.slice(5)}" style="max-width:200px;border-radius:12px;display:block">`
     : `<div style="max-width:240px;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;word-break:break-word;background:${isMine?'var(--purple)':'#fff'};color:${isMine?'#fff':'#222'};border:${isMine?'none':'1px solid #eee'}">${(m.content||'').replace(/</g,'&lt;')}</div>`;
-  const avatar = !isMine ? `<div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:13px">${m.sender_photo_url ? `<img src="${m.sender_photo_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}</div>` : '';
+  const avatar = !isMine ? `<div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:13px">${m.sender_photo_url ? `<img src="${m.sender_photo_url}" style="width:100%;height:100%;object-fit:cover">` : '' + icon('user') + ''}</div>` : '';
   return `<div style="display:flex;flex-direction:column;${isMine?'align-items:flex-end':'align-items:flex-start'};margin-bottom:10px">
     <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:${isMine?'row-reverse':'row'}">
       ${avatar}
