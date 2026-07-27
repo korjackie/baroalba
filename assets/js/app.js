@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '577';
+  const _APP_V = '578';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1516,7 +1516,7 @@ function loadSubwayInfo(jobsList) {
     if (_subwayCache[job.id] !== undefined) {
       const el = document.getElementById(`subway-${job.id}`);
       if (el) {
-        if (_subwayCache[job.id]) el.textContent = '🚇 ' + _subwayCache[job.id];
+        if (_subwayCache[job.id]) el.textContent = _subwayCache[job.id];
         else el.remove();
       }
       return;
@@ -1544,7 +1544,7 @@ function loadSubwayInfo(jobsList) {
         const info = `${sName}${lines.length ? ' ' + lines.join(' ') : ''} 도보 ${walkMin}분`;
         _subwayCache[job.id] = info;
         const _stripL = s => s.replace(/\s+(?:\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선)/g,'');
-        if (el) el.textContent = '🚇 ' + _stripL(info);
+        if (el) el.textContent = _stripL(info);
       } else {
         _subwayCache[job.id] = null;
         if (el) el.remove();
@@ -1604,98 +1604,101 @@ function renderList() {
   list.innerHTML = displayJobs.map(job => {
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
-    const catClass = getCatClass(job.category);
     const isErrand = job.work_type === 'errand';
     const _ap0 = (job.address||'').split('\n');
     const _da0 = _ap0[0] ? (_ap0[1] ? _ap0[0] + ' · ' + _ap0[1].split(' ').slice(0,3).join(' ') : _ap0[0]) : null;
-    const dist = job.is_remote ? `<span style="color:#0369A1;font-weight:700;font-size:11px">🖥️ ${t('remote_work_label')}</span>` : _distStr(job.distance_m, job.lat, job.lng, _da0);
+    const dist = job.is_remote ? t('remote_work_label') : _distStr(job.distance_m, job.lat, job.lng, _da0);
     const startStr = job.start_time ? formatTime(job.start_time) : t('undecided');
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
     const appSt = job.applied_status;
-    const APP_LABEL = { pending:t('app_reviewing'), reviewing:'\u{1F50D} ' + t('app_reviewing'), accepted:'✅ ' + t('app_accepted'), completed:'\u{1F3C1} ' + t('app_completed') };
-    const appliedBadge = appSt ? `<span style="font-size:11px;font-weight:800;color:#888;background:#f0f0f0;padding:2px 8px;border-radius:10px;margin-left:auto">${APP_LABEL[appSt] || t('applied_badge_label')}</span>` : '';
-    // ① 반복 주기 라벨
+    const APP_LABEL = { pending:t('app_reviewing'), reviewing:t('app_reviewing'), accepted:t('app_accepted'), completed:t('app_completed') };
+    // 반복 주기는 별도 줄이 아니라 업체명 옆으로 합친다(줄 수는 줄고 정보량은 그대로)
     const cycleLabel = getJobCycleLabel(job);
-    const cycleLabelHtml = cycleLabel ? `<span style="font-size:10px;font-weight:800;color:#3B82F6;margin-right:4px">${cycleLabel}</span>` : '';
-    // ② 총액 표시 (시급 × 시간)
-    const totalWageHtml = (!isErrand && job.duration_hours > 0 && job.current_wage > 0)
-      ? `<div style="font-size:10px;color:#aaa;font-weight:600;margin-top:1px">${t('job_total_wage_fmt').replace('{n}', (job.current_wage * job.duration_hours).toLocaleString())}</div>`
+    // 근무시간 + 총액도 시급 아래 한 줄로 합침 (예전엔 총액/최대시급/시간뱃지가 따로 흩어져 있었음)
+    const durTxt = isErrand
+      ? (job.duration_hours ? t('errand_duration_approx_fmt').replace('{n}', job.duration_hours) : t('errand_duration_negotiable'))
+      : (job.duration_hours > 0 ? job.duration_hours + t('hours_unit') : '');
+    const totalTxt = (!isErrand && job.duration_hours > 0 && job.current_wage > 0)
+      ? t('job_total_wage_fmt').replace('{n}', (job.current_wage * job.duration_hours).toLocaleString())
       : '';
-    // ③ 재방문 인센티브 배지
-    const returnBadge = (job.return_bonus > 0)
-      ? `<span class="tag" style="background:#FFF8E1;color:#F59E0B;border:1px solid #FDE68A;font-weight:800">&#11088; ${t('return_bonus_badge_fmt').replace('{n}', job.return_bonus.toLocaleString())}</span>`
-      : '';
-    // ⑤ 언어 우대 배지
-    const _LANG_FLAG = {ko:'&#127472;&#127479;',en:'&#127482;&#127480;',zh:'&#127464;&#127475;',ja:'&#127471;&#127477;',vi:'&#127483;&#127475;',ru:'&#127479;&#127482;',mn:'&#127474;&#127475;'};
-    const langBadge = (job.preferred_languages && job.preferred_languages.length)
-      ? job.preferred_languages.map(l => `<span class="tag" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-weight:700">${_LANG_FLAG[l]||''} ${t('lang_pref_badge_fmt').replace('{lang}', t('lang_name_'+l) || l)}</span>`).join('')
-      : '';
-    // ④ 지하철역 span (loadSubwayInfo가 비동기로 채워줌)
+    const subLine = [durTxt, totalTxt].filter(Boolean).join(' · ');
+
+    // ── 칩: 우선순위대로 모아 상위 3개만 노출, 나머지는 +N ──────────────
+    // 예전엔 최대 18개가 전부 붙어서 정작 중요한 '마감임박'이 맨 끝에 묻혔다.
+    // 여기 순서가 곧 "무엇을 보고 누르는가"의 우선순위다.
+    const _rem = (job.needed_count ?? 0) - (job.filled_count ?? 0);
+    const chips = [];
+    const _chip = (label, isAlert) => { if (label) chips.push({ label, alert: !!isAlert }); };
+    if (appSt)                    _chip(APP_LABEL[appSt] || t('applied_badge_label'));
+    if (_rem === 1)               _chip(t('almost_full_badge'), true);
+    if (isUrgent)                 _chip('ASAP', true);
+    if (job.same_day_payment)     _chip(t('filter_sameday'));
+    if (job.return_bonus > 0)     _chip(t('return_bonus_badge_fmt').replace('{n}', job.return_bonus.toLocaleString()));
+    if (_rem >= 2)                _chip(t('moim_slots_left').replace('{n}', _rem));
+    if (job.beginner_ok === true) _chip(t('beginner_ok_badge'));
+    if (job.meal_included)        _chip(t('meal_included_badge'));
+    if (job.nationality_requirement === 'foreigner_welcome') _chip(t('foreigner_welcome_badge'));
+    if (job.is_remote)            _chip(t('remote_work_label'));
+    if (job.surge_enabled)        _chip(t('surge_badge_label'));
+    if (job.is_team_job)          _chip(t('team_recruit_badge'));
+    if (job.nationality_requirement === 'korean_only') _chip(t('korean_only_badge'));
+    if (job.nationality_requirement === 'korean_lang') _chip(t('korean_lang_required_badge'));
+    if (job.beginner_ok === false) _chip(t('experienced_only_badge'));
+    (job.preferred_languages || []).forEach(l =>
+      _chip(t('lang_pref_badge_fmt').replace('{lang}', t('lang_name_' + l) || l)));
+    if (isErrand)                          _chip(t('job_type_errand'));
+    else if (job.work_type === 'short')    _chip(t('work_type_short'));
+    else if (job.work_type === 'regular')  _chip(t('work_type_regular'));
+    if (job.category)             _chip(tCategory(job.category));
+    const _shown = chips.slice(0, 3);
+    const _hidden = chips.length - _shown.length;
+    // 빨강은 카드당 하나만. 둘 이상이면(마감임박 + ASAP 동시) 다시 신호가 죽는다.
+    let _alertUsed = false;
+    const chipHtml = _shown.map(c => {
+      const on = c.alert && !_alertUsed;
+      if (on) _alertUsed = true;
+      return `<span class="jc-chip${on ? ' is-alert' : ''}">${c.label}</span>`;
+    }).join('') + (_hidden > 0 ? `<span class="jc-chip is-more">+${_hidden}</span>` : '');
+
+    // 지하철역 span (loadSubwayInfo가 비동기로 채워줌)
     const subwaySpan = (job.lat && job.lng)
-      ? `<span id="subway-${job.id}" style="color:#888;font-size:11px">🚇 ...</span>`
+      ? `<span id="subway-${job.id}"></span>`
       : '';
     return `
-    <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')" style="${appSt ? 'opacity:0.65;' : ''}">
-      ${cycleLabelHtml ? `<div style="margin-bottom:2px">${cycleLabelHtml}</div>` : ''}
+    <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')" style="${appSt ? 'opacity:0.6;' : ''}">
       <div class="card-top">
         <div class="card-left">
-          <div class="card-biz">${job.biz_name}${appliedBadge}</div>
+          <div class="card-biz">${job.biz_name}${cycleLabel ? ' · ' + cycleLabel : ''}</div>
           <div class="card-title">${job.title}${_isAdmin ? _adminBtn('job_postings',job.id,'title',job.title,'공고 제목') : ''}</div>
         </div>
         <div class="card-right">
-          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}${t('won_suffix')}${isErrand ? `<span style="font-size:10px;font-weight:700;color:#aaa">${t('per_job_suffix')}</span>` : ''}</div>
+          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}${t('won_suffix')}${isErrand ? `<span class="cw-unit">${t('per_job_suffix')}</span>` : ''}</div>
+          ${subLine ? `<div class="card-sub">${subLine}</div>` : ''}
           <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</div>` : ''}</div>
-          ${totalWageHtml}
-          ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">${t('job_max_wage_fmt').replace('{n}', job.surge_max_wage.toLocaleString())}</div>` : ''}
         </div>
       </div>
       ${surgeTimer}
-      <div class="card-tags">
-        ${job.is_remote ? `<span class="tag" style="background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD;font-weight:700">🖥️ ${t('remote_work_label')}</span>` : ''}
-        ${isErrand ? `<span class="tag" style="background:#F3E8FF;color:#7C3AED;font-weight:700">${t('job_type_errand')}</span>` : ''}
-        ${job.work_type === 'short'   ? `<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:700">${t('work_type_short')}</span>` : ''}
-        ${job.work_type === 'regular' ? `<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:700">${t('work_type_regular')}</span>` : ''}
-        ${isUrgent ? '<span class="tag urgent-tag">ASAP</span>' : ''}
-        ${job.surge_enabled ? `<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">${t('surge_badge_label')}</span>` : ''}
-        ${job.is_team_job ? `<span class="tag" style="background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE;font-weight:800">👥 ${t('team_recruit_badge')}</span>` : ''}
-        ${job.same_day_payment ? `<span class="tag payday-tag">💰 ${t('filter_sameday')}</span>` : ''}
-        ${job.nationality_requirement === 'korean_only'       ? `<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">${t('ownr_nationality_korean_only')}</span>` : ''}
-        ${job.nationality_requirement === 'foreigner_welcome' ? `<span class="tag" style="background:#F0FFF4;color:#166534;border:1px solid #86EFAC;font-weight:800">🌏 ${t('foreigner_welcome_badge')}</span>` : ''}
-        ${job.nationality_requirement === 'korean_lang'       ? `<span class="tag" style="background:#FFF7ED;color:#B45309;border:1px solid #FDE68A;font-weight:800">💬 ${t('korean_lang_required_badge')}</span>` : ''}
-        ${job.beginner_ok === true ? `<span class="tag" style="background:#F0FFF4;color:#16a34a;border:1px solid #86EFAC;font-weight:800">🌱 ${t('beginner_ok_badge')}</span>` : (job.beginner_ok === false ? `<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">🔰 ${t('experienced_only_badge')}</span>` : '')}
-        ${job.meal_included ? `<span class="tag" style="background:#FFF7ED;color:#D97706;border:1px solid #FDE68A;font-weight:800">🍱 ${t('meal_included_badge')}</span>` : ''}
-        ${returnBadge}
-        ${langBadge}
-        ${job.category ? `<span class="tag ${catClass}">${tCategory(job.category)}</span>` : ''}
-        <span class="tag">${isErrand ? (job.duration_hours ? t('errand_duration_approx_fmt').replace('{n}', job.duration_hours) : t('errand_duration_negotiable')) : (job.duration_hours ?? '-') + t('hours_unit')}</span>
-        ${(() => {
-          const rem = job.needed_count - job.filled_count;
-          if (rem <= 0) return '';
-          if (rem === 1) return `<span class="tag" style="background:#FFF0F0;color:#C8102E;border:1px solid #FCA5A5;font-weight:800">🔥 ${t('almost_full_badge')}</span>`;
-          if (rem <= 2) return `<span class="tag" style="background:#FFF7ED;color:#EA580C;font-weight:800">⚡ ${t('moim_slots_left').replace('{n}', rem)}</span>`;
-          return `<span class="tag">${t('moim_slots_left').replace('{n}', rem)}</span>`;
-        })()}
-      </div>
+      <div class="jc-chips">${chipHtml}</div>
       ${job.is_team_job && job.needed_count > 0 ? (() => {
         const filled = job.filled_count || 0;
         const needed = job.needed_count || 1;
         const pct = Math.min(100, Math.round(filled / needed * 100));
         const rem = needed - filled;
-        return `<div style="padding:0 14px 10px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:10px;font-weight:700;color:#7C3AED">👥 ${t('team_recruit_count_fmt').replace('{n}', needed)}</span>
-            <span style="font-size:10px;font-weight:800;color:${rem<=1?'#C8102E':rem<=2?'#EA580C':'#7C3AED'}">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('recruit_complete_label')}</span>
+        return `<div style="margin-top:11px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;font-size:11.5px;color:var(--ink-400)">
+            <span>${t('team_recruit_count_fmt').replace('{n}', needed)}</span>
+            <span style="font-weight:600;color:${rem<=1?'var(--red)':'var(--ink-600)'}">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('recruit_complete_label')}</span>
           </div>
-          <div style="height:5px;background:#EDE9FE;border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:${pct>=80?'#C8102E':'#7C3AED'};border-radius:3px;transition:width 0.4s"></div>
+          <div style="height:4px;background:var(--line);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${rem<=1?'var(--red)':'var(--ink-400)'};border-radius:2px;transition:width 0.4s"></div>
           </div>
         </div>`;
       })() : ''}
       <div class="card-meta">
-        <span>${dist}</span>
+        <span><b>${dist}</b></span>
         <span>${startStr}</span>
         ${subwaySpan}
-        <span class="card-star">★ ${job.biz_rating || '-'}</span>
+        <span class="card-star">${job.biz_rating || '-'} ★</span>
       </div>
     </div>`;
   }).join('');
@@ -10997,8 +11000,9 @@ function startSurgeTimers() {
           const wageEl = document.getElementById(`wage-${job.id}`);
           const deltaWrap = document.getElementById(`wagedelta-${job.id}`);
           if (wageEl) {
-            wageEl.innerHTML = newWage.toLocaleString() + '원' +
-              (job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : '');
+            // 카드 마크업(renderList)과 같은 구조로 다시 그려야 서지 인상 후에도 스타일이 유지된다
+            wageEl.innerHTML = newWage.toLocaleString() + t('won_suffix') +
+              (job.work_type === 'errand' ? `<span class="cw-unit">${t('per_job_suffix')}</span>` : '');
           }
           if (deltaWrap) {
             deltaWrap.innerHTML = `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</div>`;

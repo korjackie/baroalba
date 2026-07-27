@@ -23,6 +23,20 @@
       --sab: env(safe-area-inset-bottom, 0px);
       --sat-safe: max(var(--sat), env(safe-area-inset-top, 0px));
       --sab-safe: max(var(--sab), env(safe-area-inset-bottom, 0px));
+
+      /* 2026-07-27 디자인 토큰 — 공고 카드부터 단계 적용.
+         실측 결과 인라인 hex가 244종인데 토큰 채택률이 4%(var 63회 vs 리터럴 1594회)라
+         화면마다 규칙이 달라지고 한 곳을 고쳐도 다른 곳이 안 따라오는 상태였음.
+         먹색 4단계 + 선 + 브랜드 워시로 좁히고, 여기서부터 참조로 통일해 나간다. */
+      --ink-900: #15181E;   /* 제목 */
+      --ink-600: #4E5661;   /* 본문 */
+      --ink-400: #838C98;   /* 보조·메타 */
+      --ink-200: #C3CAD3;   /* 비활성·호버 테두리 */
+      --line:    #E3E7EC;   /* 테두리·구분선 */
+      --surface-2: #FBFCFD; /* 중립 칩 배경 */
+      --brand-wash: #FCF1F2;/* 브랜드 연한 배경 (긴급 전용) */
+      --r: 12px;            /* 기본 모서리 */
+      --r-sm: 8px;          /* 칩·작은 요소 */
     }
     html, body { height: 100%; overflow: hidden; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; letter-spacing: -0.01em; background: #f5f5f5; }
 
@@ -432,43 +446,74 @@
     }
 
     /* ── 공고 카드 ── */
+    /* ── 공고 카드 (2026-07-27 재설계) ───────────────────────────────
+       바꾼 이유(실측): 한 장에 뱃지가 최대 18개까지 붙어 정작 중요한 '마감임박'이
+       맨 끝에 묻혔고, font-weight의 58%가 800~900이라 전부 소리쳐서 위계가 없었다.
+       → 빨강은 '긴급'에만, 나머지 칩은 중립 회색. 굵기는 600/700 두 단계.
+         이모지는 OS마다 다르게 렌더링돼 브랜드가 안 잡히므로 카드에서 제외.
+       정보는 버리지 않고 접었다(우선순위 3개 + "+N", 나머지는 상세에서 확인). */
     .job-card {
       background: #fff;
-      border: 1.5px solid #f0f0f0;
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 15px;
+      margin-bottom: 8px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: border-color .15s, box-shadow .15s, transform .12s;
       position: relative;
-      overflow: hidden;
     }
-    .job-card:hover  { box-shadow:0 4px 18px rgba(0,0,0,0.10); transform:translateY(-2px); }
-    .job-card:active { transform: scale(0.98); background: #fafafa; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-    .job-card.urgent-card { border-color: #FFE0E0; background: #FFFAFA; }
+    .job-card:hover  { border-color: var(--ink-200); box-shadow: 0 4px 16px -8px rgba(21,24,30,0.18); }
+    .job-card:active { transform: scale(0.99); background: #FAFBFC; }
+    .job-card.urgent-card { border-color: #F6CBD2; }
 
     .card-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 8px;
+      gap: 12px;
     }
-    .card-left { flex: 1; }
-    .card-biz { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 3px; }
-    .card-title { font-size: 15px; font-weight: 800; color: #222; line-height: 1.3; }
-    .card-right { text-align: right; flex-shrink: 0; margin-left: 10px; }
-    .card-wage { font-size: 17px; font-weight: 900; color: var(--red); }
+    .card-left { flex: 1; min-width: 0; }
+    .card-biz {
+      font-size: 11.5px; color: var(--ink-400); font-weight: 400;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 700; color: var(--ink-900);
+      line-height: 1.35; margin-top: 3px; letter-spacing: -0.01em;
+    }
+    .card-right { text-align: right; flex-shrink: 0; }
+    .card-wage {
+      font-size: 19px; font-weight: 700; color: var(--red);
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1.2;
+    }
+    /* 목록에서 시급을 세로로 비교할 수 있게 자릿수를 맞춘다 */
+    .card-wage .cw-unit { font-size: 11px; font-weight: 600; color: var(--ink-400); }
+    .card-sub {
+      font-size: 11.5px; color: var(--ink-400);
+      font-variant-numeric: tabular-nums; margin-top: 2px;
+    }
     .wage-delta {
-      display: inline-flex;
-      align-items: center;
-      font-size: 10px;
-      font-weight: 800;
-      color: #FF9500;
-      background: #FFF3E0;
-      padding: 1px 5px;
-      border-radius: 6px;
-      margin-top: 2px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--red);
+      background: var(--brand-wash);
+      padding: 1px 6px;
+      border-radius: var(--r-sm);
+      margin-top: 3px;
     }
+
+    /* 접히는 칩 — 우선순위 상위 3개만 노출하고 나머지는 +N */
+    .jc-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .jc-chip {
+      font-size: 11.5px; font-weight: 600; padding: 3px 9px;
+      border-radius: var(--r-sm); background: var(--surface-2);
+      border: 1px solid var(--line); color: var(--ink-600);
+      white-space: nowrap;
+    }
+    /* 빨강은 여기서만 쓴다. 빨강이 보이면 곧 '서둘러야 한다'는 뜻이 되도록. */
+    .jc-chip.is-alert { background: var(--brand-wash); border-color: transparent; color: var(--red); }
+    .jc-chip.is-more  { background: transparent; border-style: dashed; color: var(--ink-400); }
 
     .card-tags {
       display: flex;
@@ -493,14 +538,20 @@
 
     .card-meta {
       display: flex;
-      gap: 10px;
-      font-size: 11px;
-      color: #aaa;
-      font-weight: 600;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid var(--line);
+      font-size: 11.5px;
+      color: var(--ink-400);
+      font-weight: 400;
     }
     .card-meta span { display: flex; align-items: center; gap: 3px; }
+    .card-meta b { color: var(--ink-600); font-weight: 600; }
 
-    .card-star { color: #F59E0B; font-size: 11px; }
+    .card-star { color: var(--ink-600); font-size: 11.5px; font-weight: 600; }
 
     /* ── 공통 모달 오버레이 ── */
     .modal-overlay {
