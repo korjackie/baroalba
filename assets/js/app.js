@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '572';
+  const _APP_V = '573';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -608,7 +608,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=572').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js?v=573').catch(()=>{});
     // controllerchange 리스너 없음: 앱 사용 중 새 SW 배포 시 강제 리로드 방지
   }
 
@@ -15073,7 +15073,7 @@ function copyPosting(jobId) {
   if (!p) return;
   editingId = null;
   document.getElementById('editing-id').value = '';
-  document.getElementById('form-title').textContent = t('form_post_new') + ' (복사)';
+  document.getElementById('form-title').textContent = t('form_post_new') + t('ownr_copy_suffix');
   document.getElementById('submit-btn').textContent = t('form_submit_post');
   document.getElementById('f-title').value = p.title;
   document.getElementById('f-category').value = p.category;
@@ -15126,8 +15126,8 @@ function reopenWithEdit(jobId) {
   if (!p) return;
   editingId = jobId;
   document.getElementById('editing-id').value = jobId;
-  document.getElementById('form-title').textContent = '공고 재오픈 (내용 수정)';
-  document.getElementById('submit-btn').textContent = '수정하고 재오픈';
+  document.getElementById('form-title').textContent = t('ownr_reopen_edit_btn');
+  document.getElementById('submit-btn').textContent = t('ownr_edit_and_reopen_btn');
   document.getElementById('f-title').value = p.title;
   document.getElementById('f-category').value = p.category;
   document.getElementById('f-wage').value = p.base_wage;
@@ -15175,8 +15175,9 @@ function updateSurgePreview() {
   if (!wage) return;
   const steps    = max ? Math.floor((max - wage) / amount) : 3;
   const maxWage  = max || wage + amount * 3;
-  document.getElementById('surge-preview').textContent =
-    `${interval}분마다 +${amount.toLocaleString()}원 → 최대 ${maxWage.toLocaleString()}원 (최대 ${steps}회 인상)`;
+  document.getElementById('surge-preview').textContent = t('ownr_surge_preview_text')
+    .replace('{interval}', interval).replace('{amount}', amount.toLocaleString())
+    .replace('{max}', maxWage.toLocaleString()).replace('{steps}', steps);
 }
 
 // ── Realtime ──────────────────────────────────────────────
@@ -15225,7 +15226,7 @@ async function autoCloseExpiredPostings() {
 function setupOwnerRealtimeChannels() {
   db.channel('owner-updates')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'applications' }, () => {
-      showToast('\u{1F514} 새 지원자가 있습니다!');
+      showToast(t('ownr_new_applicant_notify_toast'));
       loadApplicants();
       loadPostings();
       updateOwnerNotiBadge();
@@ -15268,7 +15269,7 @@ async function setupOwnerChatNotify() {
       const chatOpen = document.getElementById('chat-overlay')?.style.display === 'flex';
       if (chatOpen) return;
 
-      showToast('\u{1F4AC} 새 메시지: ' + msg.content.slice(0, 20) + (msg.content.length > 20 ? '…' : ''));
+      showToast(t('ownr_new_message_toast_prefix') + msg.content.slice(0, 20) + (msg.content.length > 20 ? '…' : ''));
 
       // 채팅 탭 nav badge 업데이트
       const badge = document.getElementById('owner-msg-badge');
