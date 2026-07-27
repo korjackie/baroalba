@@ -466,41 +466,43 @@
     .job-card:active { transform: scale(0.99); background: #FAFBFC; }
     .job-card.urgent-card { border-color: #F6CBD2; }
 
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
-    .card-left { flex: 1; min-width: 0; }
-    .card-biz {
-      font-size: 11.5px; color: var(--ink-400); font-weight: 400;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* 줄마다 '무게가 같은 것끼리' 짝지어 배치한다 (2026-07-27 C안).
+       이전 구조는 첫 줄이 [작은 회색 업체명] + [큰 빨간 시급]이라 무게가 안 맞아
+       어수선했고, 제목이 둘째 줄로 밀려 주인공이 흐려졌다.
+         1줄 = 제목 + 시급      (둘 다 굵게 - 가장 중요한 둘)
+         2줄 = 업체명 + 총액    (둘 다 작은 회색 - 보조 정보) */
+    .card-r1 {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; gap: 10px;
     }
     .card-title {
       font-size: 15px; font-weight: 700; color: var(--ink-900);
-      line-height: 1.35; margin-top: 3px; letter-spacing: -0.01em;
+      line-height: 1.35; letter-spacing: -0.01em; min-width: 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-    .card-right { text-align: right; flex-shrink: 0; }
     .card-wage {
       font-size: 19px; font-weight: 700; color: var(--red);
-      font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1.2;
+      font-variant-numeric: tabular-nums;  /* 목록에서 시급 자릿수를 세로로 맞춤 */
+      letter-spacing: -0.02em; line-height: 1.35; flex-shrink: 0;
     }
-    /* 목록에서 시급을 세로로 비교할 수 있게 자릿수를 맞춘다 */
     .card-wage .cw-unit { font-size: 11px; font-weight: 600; color: var(--ink-400); }
+    .card-r2 {
+      display: flex; justify-content: space-between;
+      align-items: baseline; gap: 10px; margin-top: 3px;
+    }
+    .card-biz {
+      font-size: 11.5px; color: var(--ink-400); font-weight: 400; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .card-sub {
       font-size: 11.5px; color: var(--ink-400);
-      font-variant-numeric: tabular-nums; margin-top: 2px;
+      font-variant-numeric: tabular-nums; flex-shrink: 0; text-align: right;
     }
     .wage-delta {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--red);
-      background: var(--brand-wash);
-      padding: 1px 6px;
-      border-radius: var(--r-sm);
-      margin-top: 3px;
+      display: inline-block; font-size: 11px; font-weight: 600;
+      color: var(--red); background: var(--brand-wash);
+      padding: 0 5px; border-radius: var(--r-sm); margin-right: 4px;
     }
 
     /* 접히는 칩 — 우선순위 상위 3개만 노출하고 나머지는 +N */

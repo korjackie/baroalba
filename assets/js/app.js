@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '580';
+  const _APP_V = '581';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1718,16 +1718,13 @@ function renderList() {
       : '';
     return `
     <div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')" style="${appSt ? 'opacity:0.6;' : ''}">
-      <div class="card-top">
-        <div class="card-left">
-          <div class="card-biz">${job.biz_name}${cycleLabel ? ' · ' + cycleLabel : ''}</div>
-          <div class="card-title">${job.title}${_isAdmin ? _adminBtn('job_postings',job.id,'title',job.title,'공고 제목') : ''}</div>
-        </div>
-        <div class="card-right">
-          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}${t('won_suffix')}${isErrand ? `<span class="cw-unit">${t('per_job_suffix')}</span>` : ''}</div>
-          ${subLine ? `<div class="card-sub">${subLine}</div>` : ''}
-          <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</div>` : ''}</div>
-        </div>
+      <div class="card-r1">
+        <div class="card-title">${job.title}${_isAdmin ? _adminBtn('job_postings',job.id,'title',job.title,'공고 제목') : ''}</div>
+        <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}${t('won_suffix')}${isErrand ? `<span class="cw-unit">${t('per_job_suffix')}</span>` : ''}</div>
+      </div>
+      <div class="card-r2">
+        <div class="card-biz">${job.biz_name}${cycleLabel ? ' · ' + cycleLabel : ''}</div>
+        <div class="card-sub"><span id="wagedelta-${job.id}">${hasSurge ? `<span class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</span>` : ''}</span>${subLine}</div>
       </div>
       ${surgeTimer}
       <div class="jc-chips">${chipHtml}</div>
@@ -11057,7 +11054,8 @@ function startSurgeTimers() {
               (job.work_type === 'errand' ? `<span class="cw-unit">${t('per_job_suffix')}</span>` : '');
           }
           if (deltaWrap) {
-            deltaWrap.innerHTML = `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</div>`;
+            // 카드 마크업(card-r2)과 같은 태그여야 줄 안에 자연스럽게 들어간다
+            deltaWrap.innerHTML = `<span class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</span>`;
           }
           // 타이머 배경 잠깐 강조
           const timerEl = document.getElementById(`stimer-${job.id}`);
@@ -11347,38 +11345,49 @@ function renderSearchResults(list) {
   list.forEach(j => { if (!jobs.find(e => e.id === j.id)) jobs.push(j); });
 
   const TYPE_LABEL = { regular:'정기', short:'단기', errand:'심부름', spot:'스팟' };
-  const TYPE_COLOR = { regular:'var(--green)', short:'var(--blue)', errand:'var(--purple)', spot:'var(--red)' };
 
   el.innerHTML = list.map(job => {
     const isUrgent = job.status === 'urgent';
     const isErrand = job.work_type === 'errand';
-    const wageUnit = isErrand ? '/건' : '/시간';
     const bizName  = job.businesses?.name || '';
     const addrPart = (job.address || '').split('\n')[1] || (job.address || '');
     const regionShort = addrPart.split(' ').slice(0, 3).join(' ');
     const wt = job.work_type || 'spot';
     const typeLabel = TYPE_LABEL[wt] || '스팟';
-    const typeColor = TYPE_COLOR[wt] || 'var(--red)';
 
-    const urgentBadge = isUrgent
-      ? `<span style="font-size:10px;font-weight:700;color:#DC2626;background:#FEF2F2;padding:2px 7px;border-radius:20px">${icon('bolt')} ASAP</span>` : '';
-    const typeBadge = `<span style="font-size:10px;font-weight:700;color:${typeColor};background:${typeColor}18;padding:2px 7px;border-radius:20px">${typeLabel}</span>`;
 
-    return `<div class="srch-card" onclick="closeSearchOverlay();openDetail('${job.id}')">
-      <div class="srch-card-top">
-        <div class="srch-card-badges">${urgentBadge}${typeBadge}</div>
+    // 공고 카드(renderList)와 같은 구조·클래스를 쓴다. 지도에서 카드를 보다가
+    // 검색을 누르면 바로 이어지는 화면이라, 서로 다르면 다른 앱처럼 보인다. (2026-07-27)
+    const _srchChips = [
+      isUrgent ? { label:'ASAP', alert:true } : null,
+      { label: typeLabel },
+      regionShort ? { label: regionShort } : null,
+      job.category ? { label: tCategory(job.category) } : null,
+    ].filter(Boolean);
+    const _srchShown = _srchChips.slice(0, 3);
+    const _srchHidden = _srchChips.length - _srchShown.length;
+    let _sAlert = false;
+    const _srchChipHtml = _srchShown.map(c => {
+      const on = c.alert && !_sAlert;
+      if (on) _sAlert = true;
+      return `<span class="jc-chip${on ? ' is-alert' : ''}">${c.label}</span>`;
+    }).join('') + (_srchHidden > 0 ? `<span class="jc-chip is-more">+${_srchHidden}</span>` : '');
+    const _srchSub = [
+      job.duration_hours ? job.duration_hours + t('hours_unit') : '',
+      (!isErrand && job.duration_hours > 0 && job.current_wage > 0)
+        ? t('job_total_wage_fmt').replace('{n}', (job.current_wage * job.duration_hours).toLocaleString()) : '',
+    ].filter(Boolean).join(' · ');
+
+    return `<div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="closeSearchOverlay();openDetail('${job.id}')">
+      <div class="card-r1">
+        <div class="card-title">${job.title || t('job_unit')}</div>
+        <div class="card-wage">${(job.current_wage||0).toLocaleString()}${t('won_suffix')}<span class="cw-unit">${isErrand ? t('per_job_suffix') : t('per_hour_suffix')}</span></div>
       </div>
-      <div class="srch-card-title">${job.title || '공고'}</div>
-      <div class="srch-card-biz">${bizName}</div>
-      <div class="srch-card-wage-row">
-        <span class="srch-card-wage">${(job.current_wage||0).toLocaleString()}</span>
-        <span class="srch-card-wage-unit">원${wageUnit}</span>
+      <div class="card-r2">
+        <div class="card-biz">${bizName}</div>
+        <div class="card-sub">${_srchSub}</div>
       </div>
-      <div class="srch-card-info">
-        ${regionShort ? `<span class="srch-card-chip">${regionShort}</span>` : ''}
-        ${job.duration_hours ? `<span class="srch-card-chip">${job.duration_hours}시간</span>` : ''}
-        ${job.category ? `<span class="srch-card-chip">${job.category}</span>` : ''}
-      </div>
+      <div class="jc-chips">${_srchChipHtml}</div>
     </div>`;
   }).join('');
 }
@@ -15547,17 +15556,18 @@ async function loadOwnerMapJobs() {
     const isUrgent = job.status === 'urgent';
     const isErrand = job.work_type === 'errand' || ERRAND_CATS.has(job.category);
     const wageStr  = (job.current_wage / 10000).toFixed(1) + '만';
-    const wageUnit = isErrand ? '/건' : '/시간';
     const catName  = CAT_SHORT_O[job.category] || (isErrand ? '심부름' : (job.category || '알바'));
     const catShort = catName.length > 5 ? catName.slice(0,5) : catName;
 
     const bubbleCls = isErrand ? 'mk-errand' : (isUrgent ? 'mk-asap' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : '')));
     const tailCls   = isErrand ? 'mk-errand' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : ''));
     const { str: ddayStr, cls: ddayCls } = calcOwnerDDay(job.start_time);
+    const wageUnit  = isErrand ? t('per_job_suffix') : t('per_hour_suffix');
     const _OT_CLS = { regular:'mt-reg', short:'mt-short', errand:'mt-errnd' };
-    const _OT_CHR = { regular:'정', short:'단', errand:'심' };
+    // 업주 지도 마커도 알바생 지도(MARKER_TYPE_CHAR)와 같은 언어별 약자를 쓴다
+    const _mtcO = MARKER_TYPE_CHAR[currentLang] || MARKER_TYPE_CHAR.ko;
     const mkTypeCls = _OT_CLS[job.work_type] || 'mt-spot';
-    const mkTypeChr = _OT_CHR[job.work_type] || '스';
+    const mkTypeChr = _mtcO[job.work_type] || _mtcO.spot;
 
     const content = `
       <div class="marker-wrap" onclick="ownerMapInfo('${job.id}')">
