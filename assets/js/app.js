@@ -175,13 +175,13 @@ async function submitGatheringRequest() {
   const region = document.getElementById('greq-region').value.trim();
   const description = document.getElementById('greq-desc').value.trim();
   const request_type = document.getElementById('greq-type').value;
-  if (!region) { showToast('희망 지역을 입력해주세요'); return; }
+  if (!region) { showToast(t('toast_hope_region_required')); return; }
   const { error } = await db.from('gathering_requests').insert({
     requester_id: currentUser.id, request_type, region, description: description || null,
   });
-  if (error) { showToast('요청 실패: ' + error.message); return; }
+  if (error) { showToast(t('toast_request_failed_prefix') + error.message); return; }
   closeBottomSheet();
-  showToast('✅ 요청이 접수됐어요. 검토 후 개설해드릴게요!');
+  showToast(t('toast_moim_request_received'));
 }
 
 history.pushState({ panel: null }, ''); // 초기 기준점
@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '575';
+  const _APP_V = '576';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -834,15 +834,15 @@ window.addEventListener('DOMContentLoaded', async () => {
             const { data: { session: _s } } = await db.auth.getSession();
             uid = _s?.user?.id;
           }
-          if (!uid) { showToast('답장 전송 실패 — 다시 로그인 후 시도해주세요'); return; }
+          if (!uid) { showToast(t('toast_reply_send_failed')); return; }
           const { error } = await db.from('messages').insert({
             application_id: e.data.appId,
             sender_id: uid,
             content: e.data.content,
             is_read: false,
           });
-          if (!error) showToast('답장을 전송했습니다 ✓');
-          else showToast(`답장 전송 실패 (${error.code || error.message}) — 채팅창에서 확인해주세요`);
+          if (!error) showToast(t('toast_reply_sent'));
+          else showToast(t('toast_reply_send_failed_code_fmt').replace('{code}', error.code || error.message));
         })();
       }
     });
@@ -907,7 +907,7 @@ async function _processReferralSignup(newUserId) {
     });
     const result = await res.json();
     if (result?.credited) {
-      showToast(`🎉 추천인 코드로 가입해 ${REFERRAL_REWARD_POINTS.toLocaleString()}P를 받았어요!`);
+      showToast(t('toast_referral_signup_reward_fmt').replace('{n}', REFERRAL_REWARD_POINTS.toLocaleString()));
       loadUserPoints();
       return;
     }
@@ -921,7 +921,7 @@ async function _processReferralSignup(newUserId) {
       });
       const couponResult = await couponRes.json();
       if (couponRes.ok && couponResult?.granted) {
-        showToast(`✅ 이용권 ${couponResult.granted}장이 지급됐어요!`);
+        showToast(t('toast_coupon_granted_fmt').replace('{n}', couponResult.granted));
       }
     }
   } catch (e) { /* 추천 처리 실패는 조용히 무시 - 가입 자체를 막으면 안 됨 */ }
@@ -954,7 +954,7 @@ async function openReferralInvite() {
   if (!currentUser || isGuest) { showLoginPrompt('로그인 후 이용할 수 있어요','친구 초대는 로그인이 필요합니다.'); return; }
   openBottomSheet('<div style="text-align:center;padding:32px"><div class="spinner" style="margin:0 auto"></div></div>');
   const code = await _getMyReferralCode();
-  if (!code) { closeBottomSheet(); showToast('코드 발급에 실패했어요. 다시 시도해주세요'); return; }
+  if (!code) { closeBottomSheet(); showToast(t('toast_code_issue_failed')); return; }
   const { count } = await db.from('workers').select('id', { count: 'exact', head: true }).eq('referred_by', currentUser.id);
   const link = `${location.origin}${location.pathname}?ref=${code}`;
   openBottomSheet(`
@@ -1033,7 +1033,7 @@ function headerInstallClick() {
     // iOS / 설치 불가 브라우저 → 안내 토스트
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isIOS) showToast('Safari에서 공유 → 홈 화면에 추가를 선택하세요', 4000);
-    else showToast('브라우저 메뉴 → 앱 설치(홈 화면에 추가)를 선택하세요', 4000);
+    else showToast(t('toast_browser_install_hint'), 4000);
   }
 }
 
@@ -1109,7 +1109,7 @@ async function openDeepLink(jobId) {
                work_type, same_day_payment, noshow_deposit, is_remote,
                businesses(name, rating, kindness_rating, review_count)`)
       .eq('id', jobId).single();
-    if (!data) { showToast('해당 공고를 찾을 수 없어요' + (dlErr ? ': ' + dlErr.message : '')); return; }
+    if (!data) { showToast(t('toast_job_not_found') + (dlErr ? ': ' + dlErr.message : '')); return; }
     const b = data.businesses || {};
     job = {
       ...data,
@@ -2962,7 +2962,7 @@ function jumpMapRegion(lat, lng, name, el) {
   }
   kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
   kakaoMap.setLevel(6);
-  showToast(`📍 ${name}(으)로 이동했어요`);
+  showToast(t('toast_moved_to_fmt').replace('{name}', name));
   toggleMapFilterPanel(); // 패널을 닫아야 지도가 이동한 게 바로 보임
 }
 
@@ -3699,7 +3699,7 @@ async function toggleHFSkillMatch() {
   if (_hfPendingSkillMatch && !_myWorkerSkills) {
     const skills = await _getMySkills();
     if (!skills.length) {
-      showToast('마이페이지 > 프로필 편집에서 보유 스킬을 먼저 등록해주세요');
+      showToast(t('toast_register_skills_first'));
       _hfPendingSkillMatch = false;
       if (el) el.classList.remove('on');
     }
@@ -4349,10 +4349,10 @@ function _renderDetailSubway(el, infoStr) {
 
 function copyDetailAddress() {
   const raw = _detailJob?.address || '';
-  if (!raw) { showToast('주소 정보가 없어요'); return; }
+  if (!raw) { showToast(t('toast_no_address_info')); return; }
   const parts = raw.split('\n');
   const addr = parts.length > 1 ? parts[1] : parts[0];
-  navigator.clipboard?.writeText(addr).then(() => showToast('주소가 복사됐어요')).catch(() => showToast(addr));
+  navigator.clipboard?.writeText(addr).then(() => showToast(t('toast_address_copied'))).catch(() => showToast(addr));
 }
 
 function openKakaoMapApp() {
@@ -4366,7 +4366,7 @@ function openKakaoMapApp() {
   } else if (addrLine) {
     window.open(`https://map.kakao.com/link/search/${encodeURIComponent(addrLine)}`, '_blank');
   } else {
-    showToast('위치 정보가 없어요');
+    showToast(t('toast_no_location_info'));
   }
 }
 
@@ -4608,7 +4608,7 @@ async function submitApplyWithMsg(skipMsg) {
       const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
       const { data: created, error: ce } = await db.from('workers')
         .insert({ kakao_uid: currentUser.id, name }).select('id').single();
-      if (ce || !created) { showToast('프로필 생성 실패'); btn.textContent = '⚡ ' + t('apply_now'); btn.disabled = false; return; }
+      if (ce || !created) { showToast(t('toast_profile_create_failed')); btn.textContent = '⚡ ' + t('apply_now'); btn.disabled = false; return; }
       window._myWorkerId = created.id;
       wid = created.id;
     }
@@ -4627,30 +4627,30 @@ async function submitApplyWithMsg(skipMsg) {
           .update({ status: 'pending', apply_message: msg || null, cancel_deadline: null })
           .eq('id', existing.id).select('id').single();
         if (reviveErr) {
-          showToast('재지원 처리 중 오류가 발생했습니다');
+          showToast(t('toast_reapply_error'));
           btn.textContent = '⚡ ' + t('apply_now'); btn.disabled = false;
         } else {
-          showToast('✅ 지원 완료!');
+          showToast(t('toast_apply_done'));
           showAppliedState(revived.id);
           _track('job_apply', { job_id: selectedJobId, re_apply: true });
           _notifyOwnerNewApplicant(selectedJobId);
         }
       } else {
         if (existing) showAppliedState(existing.id);
-        showToast('이미 지원한 공고입니다');
+        showToast(t('toast_already_applied_job'));
       }
     } else if (error) {
-      showToast('오류가 발생했습니다: ' + error.message);
+      showToast(t('toast_error_occurred_prefix') + error.message);
       btn.textContent = '⚡ ' + t('apply_now'); btn.disabled = false;
     } else {
-      showToast('✅ 지원 완료!');
+      showToast(t('toast_apply_done'));
       showAppliedState(appData.id);
       _track('job_apply', { job_id: selectedJobId, re_apply: false });
       // 업주에게 새 지원자 Push 알림
       _notifyOwnerNewApplicant(selectedJobId);
     }
   } catch(e) {
-    showToast('오류: ' + e.message);
+    showToast(t('toast_error_prefix') + e.message);
     btn.textContent = '⚡ ' + t('apply_now'); btn.disabled = false;
   }
 }
@@ -4740,11 +4740,11 @@ function setBizStar(val) {
 
 async function submitBizRating() {
   const rating = parseFloat(document.getElementById('biz-rating-val').value);
-  if (!rating || rating < 1) { showToast('별점을 선택해주세요'); return; }
-  if (!_bizRatingAppId) { showToast('오류: 지원 정보가 없습니다'); return; }
+  if (!rating || rating < 1) { showToast(t('toast_select_star_rating')); return; }
+  if (!_bizRatingAppId) { showToast(t('toast_error_no_app_info')); return; }
   const review = document.getElementById('biz-review-text').value.trim();
   const sess = currentSession;
-  if (!sess) { showToast('로그인이 필요합니다'); return; }
+  if (!sess) { showToast(t('toast_login_required_formal')); return; }
   const btn = document.getElementById('biz-rating-submit-btn');
   btn.disabled = true; btn.textContent = '등록 중...';
   try {
@@ -4755,7 +4755,7 @@ async function submitBizRating() {
     });
     if (!res.ok) throw new Error('status ' + res.status);
     closeBizRatingModal();
-    showToast('✅ 평점이 등록됐습니다!');
+    showToast(t('toast_rating_registered'));
     // 버튼 상태 업데이트
     const rateRow = document.getElementById('d-rate-row');
     const rateBtn = document.getElementById('d-rate-btn');
@@ -4765,7 +4765,7 @@ async function submitBizRating() {
       rateBtn.onclick = null; rateBtn.style.cursor = 'default';
     }
   } catch(e) {
-    showToast('등록 실패: ' + e.message);
+    showToast(t('toast_register_failed_prefix') + e.message);
   } finally {
     btn.disabled = false; btn.textContent = '평점 등록';
   }
@@ -5068,7 +5068,7 @@ async function _leaveGatheringChatConfirmed(rowId, gatheringId, isBaromeet) {
 }
 
 async function openWChat(applicationId, bizName) {
-  if (!applicationId) { showToast('채팅을 열 수 없습니다 (ID 없음)'); return; }
+  if (!applicationId) { showToast(t('toast_chat_open_failed_no_id')); return; }
   const name = bizName || (window._chatBizNames && window._chatBizNames[applicationId]) || '업주';
   _wchatAppId = applicationId;
   window._wchatCounterpart = { name, photoUrl: null, type: 'business' };
@@ -5836,7 +5836,7 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
   if (_selectedRating) { window._reviewSetStar(_selectedRating); }
 
   window._submitReview = async (appId) => {
-    if (!_selectedRating) { showToast('별점을 선택해주세요'); return; }
+    if (!_selectedRating) { showToast(t('toast_select_star_rating')); return; }
     const content = (overlay.querySelector('#review-content')?.value || '').trim();
     const btn = overlay.querySelector('#review-submit-btn');
     if (btn) { btn.textContent = '저장 중...'; btn.disabled = true; }
@@ -5845,8 +5845,8 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
       employer_review: content || null,
       employer_reviewed_at: new Date().toISOString()
     }).eq('id', appId);
-    if (error) { showToast('저장 실패: ' + error.message); if (btn) { btn.textContent = '후기 등록하기'; btn.disabled = false; } return; }
-    showToast('✅ 후기가 등록됐어요!');
+    if (error) { showToast(t('toast_save_failed_prefix') + error.message); if (btn) { btn.textContent = '후기 등록하기'; btn.disabled = false; } return; }
+    showToast(t('toast_review_registered'));
     overlay.remove();
     delete window._reviewSetStar;
     delete window._submitReview;
@@ -5966,7 +5966,7 @@ async function openApplicationJobDetail(jobPostingId) {
   const { data: j } = await db.from('job_postings')
     .select('*, businesses(id, name, rating, kindness_rating, review_count, phone, description, is_verified, photo_url)')
     .eq('id', jobPostingId).single();
-  if (!j) { showToast('공고 정보를 불러올 수 없어요'); panel.classList.remove('show'); return; }
+  if (!j) { showToast(t('toast_job_info_load_failed')); panel.classList.remove('show'); return; }
 
   // 내 지원 상태 조회
   let myApp = null;
@@ -6138,7 +6138,7 @@ function showConfirm(message, onOk) {
 async function cancelApplication(appId) {
   const { data: appCheck } = await db.from('applications').select('status, cancel_deadline').eq('id', appId).single();
   if (appCheck?.status === 'accepted' && appCheck?.cancel_deadline && new Date(appCheck.cancel_deadline) <= new Date()) {
-    showToast('취소 마감일이 지났습니다. 업주에게 직접 연락해주세요.');
+    showToast(t('toast_cancel_deadline_passed'));
     return;
   }
   showConfirm('지원을 취소하시겠어요?', async () => {
@@ -6146,13 +6146,13 @@ async function cancelApplication(appId) {
       .update({ status: 'cancelled' })
       .eq('id', appId)
       .select('id');
-    if (error) { showToast('취소 실패: ' + error.message); return; }
+    if (error) { showToast(t('toast_cancel_failed_prefix') + error.message); return; }
     if (!data?.length) {
       // RLS silent failure: 0행 업데이트 → 권한 없음
-      showToast('취소 실패: 권한이 없거나 이미 처리됐습니다');
+      showToast(t('toast_cancel_failed_no_permission'));
       return;
     }
-    showToast('✅ 지원이 취소됐습니다');
+    showToast(t('toast_application_cancelled'));
     loadMyApplications();
   });
 }
@@ -6394,7 +6394,7 @@ async function loadBookmarks() {
 }
 
 async function toggleBookmark(jobId) {
-  if (isGuest || !currentUser) { showToast('로그인 후 북마크할 수 있어요'); return; }
+  if (isGuest || !currentUser) { showToast(t('toast_login_to_bookmark')); return; }
   if (!jobId || !isRealJobId(jobId)) { showToast('\u{1F9EA} 테스트 공고는 북마크할 수 없어요'); return; }
   try {
     let wid = await _getWorkerId();
@@ -6402,7 +6402,7 @@ async function toggleBookmark(jobId) {
       const meta = currentUser.user_metadata || {};
       const name = meta.full_name || meta.name || currentUser.email?.split('@')[0] || '알바생';
       const { data: created, error: cerr } = await db.from('workers').insert({ kakao_uid: currentUser.id, name }).select('id').maybeSingle();
-      if (cerr || !created) { showToast('프로필 생성 실패'); return; }
+      if (cerr || !created) { showToast(t('toast_profile_create_failed')); return; }
       window._myWorkerId = created.id;
       wid = created.id;
     }
@@ -6412,15 +6412,15 @@ async function toggleBookmark(jobId) {
 
     if (existing) {
       await db.from('bookmarks').delete().eq('id', existing.id);
-      showToast('북마크가 해제됐어요');
+      showToast(t('toast_bookmark_removed'));
       document.getElementById('d-bookmark-btn').textContent = '\u{1F516}';
     } else {
       const { error } = await db.from('bookmarks').insert({ worker_id: wid, job_posting_id: jobId });
-      if (error) { showToast('북마크 실패: ' + error.message); return; }
+      if (error) { showToast(t('toast_bookmark_failed_prefix') + error.message); return; }
       showToast('\u{1F516} 북마크에 추가됐어요');
       document.getElementById('d-bookmark-btn').textContent = '\u{1F516}✅';
     }
-  } catch(e) { showToast('북마크 오류: ' + e.message); }
+  } catch(e) { showToast(t('toast_bookmark_error_prefix') + e.message); }
 }
 
 async function checkBookmarkState(jobId) {
@@ -6497,28 +6497,28 @@ async function _loadMyFollows() {
 }
 
 async function _toggleFollow(businessId, bizName) {
-  if (!currentUser) { showToast('로그인이 필요해요'); return; }
+  if (!currentUser) { showToast(t('toast_login_required')); return; }
   if (!window._myWorkerId) {
     await _loadMyFollows();
-    if (!window._myWorkerId) { showToast('알바생 계정에서만 사용할 수 있어요'); return; }
+    if (!window._myWorkerId) { showToast(t('toast_worker_account_only')); return; }
   }
   const isFollowing = window._myFollows.has(businessId);
   try {
     if (isFollowing) {
       await db.from('follows').delete().eq('worker_id', window._myWorkerId).eq('business_id', businessId);
       window._myFollows.delete(businessId);
-      showToast(`${bizName} 팔로우를 취소했어요`);
+      showToast(t('toast_unfollow_biz_fmt').replace('{name}', bizName));
     } else {
       await db.from('follows').insert({ worker_id: window._myWorkerId, business_id: businessId });
       window._myFollows.add(businessId);
-      showToast(`${bizName}을 팔로우했어요 🔔`);
+      showToast(t('toast_follow_biz_fmt').replace('{name}', bizName));
     }
     // 프로필 모달 버튼 갱신
     const btn = document.getElementById('follow-modal-btn');
     if (btn) _updateFollowBtn(btn, businessId, bizName);
     // 마이페이지 팔로잉 섹션 갱신
     _renderFollowingSection();
-  } catch(e) { showToast('처리 중 오류가 발생했어요'); console.error(e); }
+  } catch(e) { showToast(t('toast_process_error')); console.error(e); }
 }
 
 function _updateFollowBtn(btn, businessId, bizName) {
@@ -6531,10 +6531,10 @@ function _updateFollowBtn(btn, businessId, bizName) {
 }
 
 async function _toggleDetailFollow(businessId, bizName) {
-  if (!currentUser) { showToast('로그인이 필요해요'); return; }
+  if (!currentUser) { showToast(t('toast_login_required')); return; }
   if (!window._myWorkerId) {
     await _loadMyFollows();
-    if (!window._myWorkerId) { showToast('알바생 계정에서만 팔로우할 수 있어요'); return; }
+    if (!window._myWorkerId) { showToast(t('toast_worker_account_follow_only')); return; }
   }
   await _toggleFollow(businessId, bizName);
   // 공고 상세 버튼도 갱신
@@ -6582,7 +6582,7 @@ async function toggleAvailableNow() {
   const { error } = await db.from('workers').update({ is_available_now: next }).eq('kakao_uid', currentUser.id);
   if (error) {
     _setAvailableNowUI(!next); // 롤백
-    showToast('저장 실패: ' + error.message);
+    showToast(t('toast_save_failed_prefix') + error.message);
     return;
   }
   showToast(next ? '✅ 바로출근 가능 상태가 됐어요' : '바로출근 상태가 해제됐어요');
@@ -6600,20 +6600,20 @@ async function _loadFavWorkers() {
 }
 
 async function _toggleWorkerFav(workerId, workerName) {
-  if (!bizRecord?.id) { showToast('업주 계정에서만 사용 가능해요'); return; }
+  if (!bizRecord?.id) { showToast(t('toast_business_account_only')); return; }
   const isFav = window._myFavWorkers.has(workerId);
   try {
     if (isFav) {
       await db.from('fav_workers').delete().eq('business_id', bizRecord.id).eq('worker_id', workerId);
       window._myFavWorkers.delete(workerId);
-      showToast(`${workerName} 즐겨찾기 해제`);
+      showToast(t('toast_worker_favorite_removed_fmt').replace('{name}', workerName));
     } else {
       await db.from('fav_workers').insert({ business_id: bizRecord.id, worker_id: workerId });
       window._myFavWorkers.add(workerId);
-      showToast(`${workerName} 즐겨찾기 추가`);
+      showToast(t('toast_worker_favorite_added_fmt').replace('{name}', workerName));
     }
     _updateFavWorkerBtn(workerId);
-  } catch(e) { showToast('처리 중 오류가 발생했어요'); }
+  } catch(e) { showToast(t('toast_process_error')); }
 }
 
 function _updateFavWorkerBtn(workerId) {
@@ -7033,7 +7033,7 @@ async function _showDetailBizProfile(bizId) {
   const { data: biz } = await db.from('businesses')
     .select('id, name, description, rating, review_count, photo_url, is_verified')
     .eq('id', bizId).single();
-  if (!biz) { showToast('업체 정보를 불러올 수 없어요'); return; }
+  if (!biz) { showToast(t('toast_biz_info_load_failed')); return; }
   const existing = document.getElementById('cp-profile-modal');
   if (existing) existing.remove();
   const ac = avatarColor(biz.name || '?');
@@ -7411,7 +7411,7 @@ async function sendWChatMessage() {
   const input = document.getElementById('wchat-input');
   const content = input.value.trim();
   if (!content || !_wchatAppId) return;
-  if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
+  if (_hasBadWord(content)) { showToast(t('toast_profanity_blocked')); return; }
   input.value = '';
   input.focus();
   if (window.AndroidBridge?.showKeyboard && window._lastKbDp < 80) window.AndroidBridge.showKeyboard();
@@ -7460,7 +7460,7 @@ async function checkAlreadyApplied(jobId) {
 
 // ── 내 위치로 이동 ────────────────────────────────────────
 function moveToMyLocation(silent = false) {
-  if (!navigator.geolocation) { if (!silent) showToast('위치 정보를 사용할 수 없습니다'); return; }
+  if (!navigator.geolocation) { if (!silent) showToast(t('toast_location_unavailable')); return; }
   // 기존 추적 중단 후 재시작
   if (_locationWatchId !== null) { navigator.geolocation.clearWatch(_locationWatchId); _locationWatchId = null; }
   let firstFix = true;
@@ -7477,7 +7477,7 @@ function moveToMyLocation(silent = false) {
       _persistLastKnownLocation(pos.coords.latitude, pos.coords.longitude);
     }
   }, () => {
-    if (!silent) showToast('위치 권한이 필요합니다');
+    if (!silent) showToast(t('toast_location_permission_required'));
   }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
 }
 
@@ -7901,7 +7901,7 @@ async function shareJob() {
   if (!job) {
     // jobs 배열에 없으면 DB에서 직접 조회 (새 공고 등)
     const { data } = await db.from('job_postings').select('id, title, address, current_wage').eq('id', selectedJobId).single();
-    if (!data) { showToast('공고 정보를 불러올 수 없어요.'); return; }
+    if (!data) { showToast(t('toast_job_info_load_failed_period')); return; }
     job = data;
   }
   _shareJobData = job;
@@ -7916,12 +7916,12 @@ function closeWorkerShare() {
 }
 function copyWorkerShareUrl() {
   const url = `${location.origin}${location.pathname}?job=${_shareJobData?.id || ''}`;
-  navigator.clipboard.writeText(url).then(() => { showToast('링크 복사 완료!'); closeWorkerShare(); })
-    .catch(() => { showToast('복사 실패. URL을 직접 선택해 복사해주세요.'); });
+  navigator.clipboard.writeText(url).then(() => { showToast(t('toast_link_copy_done')); closeWorkerShare(); })
+    .catch(() => { showToast(t('toast_copy_failed_manual')); });
 }
 function shareJobKakao() {
   const job = _shareJobData;
-  if (!job) { showToast('공고 정보를 불러올 수 없어요.'); return; }
+  if (!job) { showToast(t('toast_job_info_load_failed_period')); return; }
   const url = `${location.href.split('?')[0]}?job=${job.id}`;
 
   if (/Android/i.test(navigator.userAgent)) {
@@ -7934,7 +7934,7 @@ function shareJobKakao() {
     }
     // Kakao SDK로 kakaolink:// URL 추출 후 직접 이동
     navigator.clipboard?.writeText(url);
-    showToast('링크가 복사됐습니다');
+    showToast(t('toast_link_copied'));
     closeWorkerShare();
     return;
   }
@@ -7943,7 +7943,7 @@ function shareJobKakao() {
   if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
   if (!window.Kakao?.isInitialized?.()) {
     if (navigator.share) navigator.share({ title: job.title || '바로알바 공고', url }).catch(() => {});
-    else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
+    else { navigator.clipboard?.writeText(url); showToast(t('toast_link_copied')); }
     closeWorkerShare();
     return;
   }
@@ -7962,7 +7962,7 @@ function shareJobKakao() {
     closeWorkerShare();
   } catch(e) {
     if (navigator.share) navigator.share({ title: job.title || '바로알바 공고', url }).catch(() => {});
-    else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
+    else { navigator.clipboard?.writeText(url); showToast(t('toast_link_copied')); }
     closeWorkerShare();
   }
 }
@@ -8085,16 +8085,16 @@ async function searchLocation(q) {
   try {
     const res = await fetch(`/api/naver-search?query=${encodeURIComponent(q)}`);
     const data = await res.json();
-    if (!res.ok || !data.items?.length) { showToast('검색 결과가 없어요'); return; }
+    if (!res.ok || !data.items?.length) { showToast(t('toast_no_search_results')); return; }
     const first = data.items[0];
     saveMapCenter(first.lat, first.lng);
     kakaoMap.setCenter(new kakao.maps.LatLng(first.lat, first.lng));
     kakaoMap.setLevel(5);
-    showToast(`\u{1F4CD} ${first.title} 근처로 이동`);
+    showToast(t('toast_moved_near_fmt').replace('{title}', first.title));
     document.getElementById('search-input').blur();
     loadJobs();
   } catch(e) {
-    showToast('검색 중 오류가 발생했어요');
+    showToast(t('toast_search_error'));
   }
 }
 
@@ -8129,7 +8129,7 @@ function setupRealtime() {
         renderList();
         if (updated.current_wage > updated.base_wage) {
           const job = jobs[idx];
-          showToast(`\u{1F525} ${job.title} 시급 ${updated.current_wage.toLocaleString()}원으로 인상!`);
+          showToast(t('toast_wage_raised_job_fmt').replace('{title}', job.title).replace('{n}', updated.current_wage.toLocaleString()));
         }
       }
     })
@@ -8842,13 +8842,13 @@ async function flyCard(card, dir) {
   card.style.opacity = '0';
 
   if (dir === 'right') {
-    applySwipeJob(job, false).then(ok => { if (ok) showToast('✅ 지원됐습니다!'); });
+    applySwipeJob(job, false).then(ok => { if (ok) showToast(t('toast_applied_exclaim')); });
     if (job?.category) aiRecordSignal(job.category, job.current_wage, 2);
   } else if (dir === 'up') {
-    applySwipeJob(job, true).then(ok => { if (ok) showToast('⚡ 번개 지원!'); });
+    applySwipeJob(job, true).then(ok => { if (ok) showToast(t('toast_flash_apply')); });
     if (job?.category) aiRecordSignal(job.category, job.current_wage, 3);
   } else {
-    showToast('패스');
+    showToast(t('toast_pass_short'));
     if (job?.category) aiRecordSignal(job.category, job.current_wage, -1);
   }
 
@@ -8864,7 +8864,7 @@ function swipeAction(dir) {
 const QUICK_GRADE = { minRating: 4.3, minReviews: 3 };
 
 async function checkQuickApplyEligible() {
-  if (isGuest || !currentUser) { showToast('로그인 후 이용 가능합니다'); return false; }
+  if (isGuest || !currentUser) { showToast(t('toast_login_to_use')); return false; }
 
   // 오늘 이미 사용했는지 확인 (localStorage)
   const today = new Date().toISOString().slice(0, 10);
@@ -8964,7 +8964,7 @@ async function applySwipeJob(job, isQuick = false) {
   }
   const { error } = await db.from('applications').insert({ job_posting_id: job.id, worker_id: wid });
   if (error && error.code !== '23505') {
-    showToast('지원 처리 중 오류가 발생했습니다');
+    showToast(t('toast_apply_process_error'));
     return false;
   }
   if (isQuick) {
@@ -9512,7 +9512,7 @@ function openCropModal(file, callback, aspectRatio = 1) {
   // ("사진 선택하면 먹통" 신고, 2026-07-16) - 실패를 눈에 보이게 알려주도록 추가
   reader.onerror = () => {
     console.error('[crop] FileReader 실패:', reader.error);
-    showToast('❌ 사진을 불러오지 못했어요. 다른 사진으로 다시 시도해주세요.', 5000);
+    showToast(t('toast_photo_load_failed_retry'), 5000);
   };
   reader.onload = e => {
     window._cropSourceUrl = e.target.result; // 원본 dataURL 저장 (applyCrop 직접 그리기용)
@@ -9536,13 +9536,13 @@ function openCropModal(file, callback, aspectRatio = 1) {
         });
       } catch (e2) {
         console.error('[crop] Cropper 초기화 실패:', e2);
-        showToast('❌ 사진 편집 도구를 여는 데 실패했어요', 5000);
+        showToast(t('toast_photo_editor_open_failed'), 5000);
         closeCropModal();
       }
     };
     img.onerror = () => {
       console.error('[crop] 이미지 렌더링 실패');
-      showToast('❌ 사진을 표시하지 못했어요. 다른 사진으로 시도해주세요.', 5000);
+      showToast(t('toast_photo_display_failed_retry'), 5000);
       closeCropModal();
     };
     _cropCallback = callback;
@@ -9562,9 +9562,9 @@ function applyCrop() {
   const d = _cropper.getData(true);
   closeCropModal();
   const src = window._cropSourceUrl;
-  if (!src) { showToast('❌ 원본 이미지 없음'); return; }
+  if (!src) { showToast(t('toast_no_original_image')); return; }
   const img2 = new Image();
-  img2.onerror = () => showToast('❌ 이미지 로드 실패');
+  img2.onerror = () => showToast(t('toast_image_load_failed'));
   img2.onload = () => {
     try {
       console.log('[crop] 이미지 로드됨, 크기:', img2.naturalWidth, 'x', img2.naturalHeight, '크롭:', d);
@@ -9572,13 +9572,13 @@ function applyCrop() {
       c.width = 400; c.height = 400;
       c.getContext('2d').drawImage(img2, d.x, d.y, d.width, d.height, 0, 0, 400, 400);
       c.toBlob(blob => {
-        if (!blob) { console.error('[crop] toBlob 결과 null'); showToast('이미지 변환 실패', 5000); return; }
+        if (!blob) { console.error('[crop] toBlob 결과 null'); showToast(t('toast_image_convert_failed'), 5000); return; }
         console.log('[crop] blob 생성 성공, 크기:', blob.size);
         cb(blob);
       }, 'image/jpeg', 0.88);
     } catch(e) {
       console.error('[crop] onload 오류:', e);
-      showToast('크롭 처리 실패: ' + e.message, 5000);
+      showToast(t('toast_crop_process_failed_prefix') + e.message, 5000);
     }
   };
   img2.src = src;
@@ -9637,7 +9637,7 @@ function _updateProfilePhotoSaveBar() {
 async function discardPendingProfilePhoto() {
   _wPhotos.filter(p => p.blob).forEach(p => URL.revokeObjectURL(p.photo_url));
   await loadWorkerProfileForm();
-  showToast('변경사항을 취소했어요');
+  showToast(t('toast_changes_cancelled'));
 }
 
 function _paintHeaderAvatar() {
@@ -9795,7 +9795,7 @@ async function addProfilePhoto(input) {
   const file = input.files[0];
   input.value = '';
   if (!file || !currentUser) return;
-  if (_wPhotos.length >= 5) { showToast('최대 5장까지 등록 가능합니다'); return; }
+  if (_wPhotos.length >= 5) { showToast(t('toast_max_5_photos')); return; }
   openCropModal(file, blob => {
     _renderWorkerPhotos([..._wPhotos, { id: 'pending_' + Date.now(), photo_url: URL.createObjectURL(blob), blob }]);
     showToast(_wPhotos.length === 1 ? '✅ 대표 프로필 사진 준비됨 — 저장하기를 눌러주세요' : '사진 준비됨 — 저장하기를 눌러주세요');
@@ -9812,7 +9812,7 @@ async function deleteSlotPhoto(idx) {
   }
   const path = `${currentUser.id}/${photo.id}`;
   const { error } = await db.storage.from('biz-photos').remove([path]);
-  if (error) { showToast('삭제 실패: ' + error.message); return; }
+  if (error) { showToast(t('toast_delete_failed_prefix') + error.message); return; }
   const next = _wPhotos.filter((_, i) => i !== idx);
   if (idx === 0) {
     // 대표사진을 지웠으니 DB의 workers.photo_url도 즉시 갱신 - 안 그러면 저장하기 전까지
@@ -9835,7 +9835,7 @@ function searchActivityArea() {
       const ps = new kakao.maps.services.Places();
       ps.keywordSearch(q, (data, pStatus) => {
         if (pStatus !== kakao.maps.services.Status.OK || !data.length) {
-          showToast('검색 결과가 없습니다'); return;
+          showToast(t('toast_no_search_results_formal')); return;
         }
         _showActivityResults(data.slice(0, 5).map(p => ({ name: p.address_name || p.place_name, lat: parseFloat(p.y), lng: parseFloat(p.x) })));
       }, { size: 5 });
@@ -9942,14 +9942,14 @@ async function renameOtherCert(filename) {
   await setDocMeta(meta);
   const el = document.querySelector(`[data-path="${filename}"] a`);
   if (el) { el.textContent = newName.trim(); el.title = newName.trim(); }
-  showToast('✅ 이름이 변경됐습니다');
+  showToast(t('toast_name_changed'));
 }
 
 async function reuploadOtherCert(filename, input) {
   const file = input.files[0];
   if (!file || !currentUser) return;
   if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 파일만 가능합니다'); return; }
-  showToast('업로드 중...');
+  showToast(t('toast_uploading'));
   const ext = file.name.split('.').pop();
   const meta = await getDocMeta();
   const displayName = meta[filename] || filename;
@@ -9958,12 +9958,12 @@ async function reuploadOtherCert(filename, input) {
   // Upload new file with same display name but new timestamp
   const newFilename = `other-${Date.now()}.${ext}`;
   const { error } = await db.storage.from('health-certs').upload(`${currentUser.id}/${newFilename}`, file, { upsert:false });
-  if (error) { showToast('업로드 실패: ' + error.message); return; }
+  if (error) { showToast(t('toast_upload_failed_prefix') + error.message); return; }
   delete meta[filename];
   meta[newFilename] = displayName;
   await setDocMeta(meta);
   await loadOtherCerts();
-  showToast('✅ 파일이 변경됐습니다');
+  showToast(t('toast_file_changed'));
 }
 
 function deleteOtherCert(filename) {
@@ -9974,7 +9974,7 @@ function deleteOtherCert(filename) {
     await setDocMeta(meta);
     const el = document.querySelector(`[data-path="${filename}"]`);
     if (el) el.remove();
-    showToast('삭제됐습니다');
+    showToast(t('toast_deleted_formal'));
   }, {icon:'🗑️', title:'서류 삭제', okLabel:'삭제', danger:true});
 }
 
@@ -9982,23 +9982,23 @@ async function uploadDoc(certType, input) {
   const file = input.files[0];
   if (!file || !currentUser) return;
   if (file.size > 10 * 1024 * 1024) { showToast('10MB 이하 파일만 업로드 가능합니다'); return; }
-  showToast('업로드 중...');
+  showToast(t('toast_uploading'));
   const ext = file.name.split('.').pop();
 
   if (certType === 'other') {
     const nameInput = document.getElementById('other-cert-name');
     const certName = nameInput?.value.trim();
-    if (!certName) { showToast('서류명을 먼저 입력해주세요'); input.value = ''; return; }
+    if (!certName) { showToast(t('toast_doc_name_required')); input.value = ''; return; }
     const filename = `other-${Date.now()}.${ext}`;
     const { error } = await db.storage.from('health-certs').upload(`${currentUser.id}/${filename}`, file, { upsert:false });
-    if (error) { showToast('업로드 실패: ' + error.message); return; }
+    if (error) { showToast(t('toast_upload_failed_prefix') + error.message); return; }
     const meta = await getDocMeta();
     meta[filename] = certName;
     await setDocMeta(meta);
     const { data: urlData } = await db.storage.from('health-certs').createSignedUrl(`${currentUser.id}/${filename}`, 3600);
     renderOtherCertItem(filename, certName, urlData?.signedUrl || '');
     if (nameInput) nameInput.value = '';
-    showToast(`✅ ${certName} 등록됐습니다`);
+    showToast(t('toast_cert_registered_fmt').replace('{name}', certName));
     return;
   }
 
@@ -10006,10 +10006,10 @@ async function uploadDoc(certType, input) {
   if (!meta) return;
   const path = `${currentUser.id}/${meta.file}.${ext}`;
   const { error } = await db.storage.from('health-certs').upload(path, file, { upsert: true });
-  if (error) { showToast('업로드 실패: ' + error.message); return; }
+  if (error) { showToast(t('toast_upload_failed_prefix') + error.message); return; }
   const statusEl = document.getElementById(meta.statusId);
   if (statusEl) { statusEl.textContent = '✅ 등록됨'; statusEl.style.color = '#16a34a'; }
-  showToast(`✅ ${meta.label} 등록됐습니다`);
+  showToast(t('toast_cert_registered_fmt').replace('{name}', meta.label));
 }
 
 // ── 이동수단 & 강점 & 언어 태그 ──────────────────────────
@@ -10259,7 +10259,7 @@ function toggleStrength(el) {
     _workerStrengths = _workerStrengths.filter(x => x !== s);
     el.classList.remove('active');
   } else {
-    if (_workerStrengths.length >= 5) { showToast('강점은 최대 5개까지 선택 가능합니다'); return; }
+    if (_workerStrengths.length >= 5) { showToast(t('toast_max_5_strengths')); return; }
     _workerStrengths.push(s);
     el.classList.add('active');
   }
@@ -10357,7 +10357,7 @@ function addOtherLang() {
   const val = input.value.trim();
   if (!val) return;
   const exists = _workerLanguages.some(e => { const p = parseLangEntry(e); return p.type === 'other' && p.name === val; });
-  if (exists) { showToast('이미 추가된 언어입니다'); return; }
+  if (exists) { showToast(t('toast_lang_already_added')); return; }
   _langProfTarget = { type:'other', name:val };
   _langProfLevels = { speak:'중', read:'중', write:'중' };
   openLangProfPanel('🌐 ' + val, false);
@@ -10535,13 +10535,13 @@ async function saveWorkerProfile() {
   if (!currentUser) return;
   const birthVal = document.getElementById('worker-birth').value.trim();
   if (birthVal && !calcAgeFromBirth(birthVal)) {
-    showToast('생년월일을 올바르게 입력해주세요 (예: 990115)');
+    showToast(t('toast_birthdate_format_hint'));
     return;
   }
   const age = calcAgeFromBirth(birthVal) || null;
   const phone = document.getElementById('worker-phone').value.trim().replace(/-/g, '');
   const bio = document.getElementById('worker-bio').value.trim();
-  if (bio.length > 0 && bio.length < 20) { showToast('자기소개는 20자 이상 입력해주세요'); return false; }
+  if (bio.length > 0 && bio.length < 20) { showToast(t('toast_bio_min20')); return false; }
   const experience = document.getElementById('worker-experience').value.trim();
   const region = document.getElementById('worker-region').value.trim();
   const meta = currentUser.user_metadata || {};
@@ -10562,11 +10562,11 @@ async function saveWorkerProfile() {
     const { languages: _l, ...payloadNoLang } = payload;
     const res = await db.from('workers').upsert(payloadNoLang, { onConflict: 'kakao_uid' });
     error = res.error;
-    if (!error) showToast('✅ 저장됐습니다 (언어는 DB 설정 후 적용됩니다)');
+    if (!error) showToast(t('toast_saved_lang_pending'));
   } else if (!error) {
-    showToast('✅ 프로필이 저장됐습니다');
+    showToast(t('toast_profile_saved'));
   }
-  if (error) { showToast('저장 실패: ' + error.message); return false; }
+  if (error) { showToast(t('toast_save_failed_prefix') + error.message); return false; }
   loadWorkerGrade();
   updateProfileCompletion();
   return true;
@@ -10596,7 +10596,7 @@ async function saveOwnerProfile() {
   if (!name) return true; // 업체명 없으면 조용히 통과 (비업주 계정)
   const { error } = await db.from('businesses')
     .update({ name, phone, description }).eq('kakao_uid', currentUser.id);
-  if (error) { showToast('저장 실패: ' + error.message); return false; }
+  if (error) { showToast(t('toast_save_failed_prefix') + error.message); return false; }
   return true;
 }
 
@@ -10631,7 +10631,7 @@ async function _doSaveAllProfileSettings() {
         if (item.blob) {
           const path = `${currentUser.id}/${wantPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}.jpg`;
           const { error: upErr } = await db.storage.from('biz-photos').upload(path, item.blob, { contentType: 'image/jpeg' });
-          if (upErr) { console.error('[photo] 업로드 실패:', upErr); showToast('사진 업로드 실패: ' + upErr.message, 6000); continue; }
+          if (upErr) { console.error('[photo] 업로드 실패:', upErr); showToast(t('toast_photo_upload_failed_prefix') + upErr.message, 6000); continue; }
           URL.revokeObjectURL(item.photo_url);
           const newUrl = db.storage.from('biz-photos').getPublicUrl(path).data.publicUrl;
           if (i === 0) finalAvatarUrl = newUrl;
@@ -10657,14 +10657,14 @@ async function _doSaveAllProfileSettings() {
       { kakao_uid: currentUser.id, photo_url: finalAvatarUrl },
       { onConflict: 'kakao_uid' }
     );
-    if (avatarDbErr) { console.error('[photo] DB 저장 실패:', avatarDbErr); showToast('사진 저장 실패: ' + avatarDbErr.message, 6000); }
+    if (avatarDbErr) { console.error('[photo] DB 저장 실패:', avatarDbErr); showToast(t('toast_photo_save_failed_prefix') + avatarDbErr.message, 6000); }
     if (bizRecord) await db.from('businesses').update({ photo_url: finalAvatarUrl }).eq('kakao_uid', currentUser.id);
 
     await saveWorkerProfile();
     await saveOwnerProfile();
     location.reload();
   } catch(e) {
-    showToast('❌ 저장 오류: ' + e.message);
+    showToast(t('toast_save_error_x_prefix') + e.message);
     console.error('[doSave]', e);
   }
 }
@@ -10699,12 +10699,12 @@ async function _submitGenderGate(gender) {
   if (el) el.querySelectorAll('button').forEach(b => b.disabled = true);
   const { error } = await db.from('workers').upsert({ kakao_uid: currentUser.id, gender }, { onConflict: 'kakao_uid' });
   if (error) {
-    showToast('저장 실패: ' + error.message);
+    showToast(t('toast_save_failed_prefix') + error.message);
     if (el) el.querySelectorAll('button').forEach(b => b.disabled = false);
     return;
   }
   if (el) el.remove();
-  showToast('✅ 성별이 저장됐어요');
+  showToast(t('toast_gender_saved'));
   _track('profile_complete', { gender });
   // 마이페이지 성별 버튼이 이미 그려져 있었다면 즉시 반영
   if (typeof setGender === 'function') setGender(gender);
@@ -10747,11 +10747,11 @@ function closeOwnerAccountInfoModal() { document.getElementById('modal-owner-acc
 async function submitProfilePw() {
   const pw  = document.getElementById('profile-new-pw').value;
   const pw2 = document.getElementById('profile-new-pw2').value;
-  if (pw.length < 6) { showToast('비밀번호는 6자 이상이어야 해요'); return; }
-  if (pw !== pw2)    { showToast('비밀번호가 일치하지 않아요'); return; }
+  if (pw.length < 6) { showToast(t('toast_password_min6')); return; }
+  if (pw !== pw2)    { showToast(t('toast_password_mismatch')); return; }
   const { error } = await db.auth.updateUser({ password: pw });
-  if (error) { showToast('변경 실패: ' + error.message); return; }
-  showToast('✅ 비밀번호가 변경됐어요');
+  if (error) { showToast(t('toast_change_failed_prefix') + error.message); return; }
+  showToast(t('toast_password_changed_casual'));
   document.getElementById('profile-new-pw').value = '';
   document.getElementById('profile-new-pw2').value = '';
   closeAccountInfoModal();
@@ -10766,7 +10766,7 @@ async function changePassword() {
   if (pw.length < 6) { msg.textContent = '비밀번호는 6자 이상이어야 합니다.'; msg.style.color = '#C8102E'; msg.style.display = 'block'; return; }
   if (pw !== pw2)    { msg.textContent = '비밀번호가 일치하지 않습니다.'; msg.style.color = '#C8102E'; msg.style.display = 'block'; return; }
   const { error } = await db.auth.updateUser({ password: pw });
-  if (error) { msg.textContent = '변경 실패: ' + error.message; msg.style.color = '#C8102E'; }
+  if (error) { msg.textContent = t('toast_change_failed_prefix') + error.message; msg.style.color = '#C8102E'; }
   else {
     msg.textContent = '✅ 비밀번호가 변경됐습니다.'; msg.style.color = '#16a34a';
     document.getElementById('pw-change-new').value = '';
@@ -10798,7 +10798,7 @@ function deleteUserAccount() {
       bio: null,
     }).eq('kakao_uid', uid);
     const { error } = await db.rpc('delete_user_account', { uid });
-    if (error) { showToast('탈퇴 실패: ' + error.message); return; }
+    if (error) { showToast(t('toast_withdraw_failed_prefix') + error.message); return; }
     await db.auth.signOut();
     localStorage.removeItem('baroalba_guest');
     location.href = '/login.html';
@@ -10875,7 +10875,7 @@ async function saveServiceNotiSetting(key, val) {
   _renderServiceNotiToggle(key, val);
   if (!currentUser) return;
   const { error } = await db.from('workers').update({ ['notify_' + key]: val }).eq('kakao_uid', currentUser.id);
-  if (error) showToast('저장 실패: ' + error.message);
+  if (error) showToast(t('toast_save_failed_prefix') + error.message);
 }
 
 async function doLogout() {
@@ -11414,7 +11414,7 @@ const REPORT_REASONS_MOIM = ['허위/과장 모임', '노쇼/무단이탈', '부
 const REPORT_REASONS_GATHERING = ['허위/과장 정보', '노쇼/무단이탈', '부적절한 언행', '안전 문제', '기타'];
 
 function openReportModal(targetType, targetId) {
-  if (!currentUser) { showToast('로그인 후 신고할 수 있습니다'); return; }
+  if (!currentUser) { showToast(t('toast_login_to_report')); return; }
   if (!targetId) return;
   _reportTargetType = targetType;
   _reportTargetId = targetId;
@@ -11439,7 +11439,7 @@ function closeReportModal() {
 
 async function submitReport() {
   const reason = document.querySelector('input[name="report-reason"]:checked')?.value;
-  if (!reason) { showToast('신고 사유를 선택해주세요'); return; }
+  if (!reason) { showToast(t('toast_select_report_reason')); return; }
   const detail = document.getElementById('report-detail').value.trim();
   try {
     const { error } = await db.from('reports').insert({
@@ -11456,10 +11456,10 @@ async function submitReport() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reporter_id: currentUser.id, target_id: _reportTargetId, target_type: _reportTargetType, reason, detail: detail || null })
     }).catch(() => {});
-    showToast('신고가 접수됐습니다. 검토 후 조치하겠습니다');
+    showToast(t('toast_report_received'));
   } catch(e) {
     console.error('report error:', e);
-    showToast('신고 접수 중 오류가 발생했습니다');
+    showToast(t('toast_report_submit_error'));
   }
   closeReportModal();
 }
@@ -14496,7 +14496,7 @@ function setLocationResult(lat, lng, label) {
   document.getElementById('location-result').style.display = 'block';
   document.getElementById('addr-results').style.display = 'none';
   showMiniMap(lat, lng);
-  showToast('✅ 위치가 설정됐어요');
+  showToast(t('toast_location_set'));
 }
 
 // 탭2: 주소 검색
@@ -15731,7 +15731,7 @@ async function sendScoutProposal(workerKakaoUid, workerName, btn) {
   const extraMsg = (document.getElementById('scout-msg-text')?.value || '').trim();
   const postingId = sel?.value;
   const posting = (postings || []).find(p => p.id === postingId);
-  if (!posting) { showToast('공고를 선택해주세요'); return; }
+  if (!posting) { showToast(t('toast_select_job')); return; }
 
   const biz = (businesses || []).find(b => b.owner_id === currentUser?.id);
   const bizName = biz?.name || '업체';
@@ -15746,7 +15746,7 @@ async function sendScoutProposal(workerKakaoUid, workerName, btn) {
       body: JSON.stringify({ user_id: workerKakaoUid, title, body, url: '/바로알바.html' })
     });
     btn.closest('div[style*=fixed]')?.remove();
-    showToast('✅ 스카우트 제안을 보냈습니다!');
+    showToast(t('toast_scout_sent'));
   } catch(e) {
     btn.disabled = false; btn.textContent = '\u{1F4E8} 제안 보내기';
     showToast(t('chat_send_failed_prefix') + e.message);
@@ -15758,15 +15758,15 @@ async function searchOwnerLocation(q) {
   try {
     const res  = await fetch(`/api/naver-search?query=${encodeURIComponent(q)}`);
     const data = await res.json();
-    if (!res.ok || !data.items?.length) { showToast('검색 결과가 없어요'); return; }
+    if (!res.ok || !data.items?.length) { showToast(t('toast_no_search_results')); return; }
     const first = data.items[0];
     _ownerMap.setCenter(new kakao.maps.LatLng(first.lat, first.lng));
     _ownerMap.setLevel(5);
-    showToast(`\u{1F4CD} ${first.title} 근처로 이동`);
+    showToast(t('toast_moved_near_fmt').replace('{title}', first.title));
     document.getElementById('owner-map-search').blur();
     loadOwnerMapJobs();
   } catch(e) {
-    showToast('검색 중 오류가 발생했어요');
+    showToast(t('toast_search_error'));
   }
 }
 
@@ -15783,13 +15783,13 @@ function setOwnerLocationMarker(latlng) {
 }
 
 function ownerMapMyLocation() {
-  if (!navigator.geolocation) { showToast('위치 정보를 사용할 수 없습니다'); return; }
+  if (!navigator.geolocation) { showToast(t('toast_location_unavailable')); return; }
   navigator.geolocation.getCurrentPosition(pos => {
     const latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
     _ownerMap.setCenter(latlng);
     setOwnerLocationMarker(latlng);
     loadOwnerMapJobs();
-  }, () => showToast('위치 권한이 필요합니다'));
+  }, () => showToast(t('toast_location_permission_required')));
 }
 
 // ── 업주 지도 바텀시트 (워커 맵 setupSheet 동일 구조) ──────
@@ -15884,7 +15884,7 @@ function ownerMapInfo(jobId) {
     .eq('id', jobId).single().then(({ data: j }) => {
       if (!j) return;
       const isErrand = j.work_type === 'errand';
-      showToast(`${j.biz_name||''} · ${j.title} · ${j.current_wage.toLocaleString()}원/${isErrand?'건':'시간'}`);
+      showToast(`${j.biz_name||''} · ${j.title} · ${j.current_wage.toLocaleString()}원/${isErrand?t('per_job_suffix'):t('per_hour_suffix')}`);
     });
 }
 
@@ -16239,7 +16239,7 @@ async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const content = input.value.trim();
   if (!content) return;
-  if (_hasBadWord(content)) { showToast('비속어가 포함된 메시지는 전송할 수 없어요'); return; }
+  if (_hasBadWord(content)) { showToast(t('toast_profanity_blocked')); return; }
   input.value = '';
   input.focus();
   if (window.AndroidBridge?.showKeyboard && window._lastKbDp < 80) window.AndroidBridge.showKeyboard();
@@ -16289,7 +16289,7 @@ function openShareModal(jobId, showPostedToast) {
   document.getElementById('share-url-text').textContent = url;
   document.getElementById('share-native-btn').style.display = navigator.share ? 'block' : 'none';
   document.getElementById('share-overlay').classList.add('open');
-  if (showPostedToast) showToast('✅ 공고가 등록됐습니다');
+  if (showPostedToast) showToast(t('toast_job_registered'));
 }
 function closeShareModal() {
   document.getElementById('share-overlay').classList.remove('open');
@@ -16301,7 +16301,7 @@ function shareNative() {
 
 function copyShareUrl() {
   const url = document.getElementById('share-url-text').textContent;
-  navigator.clipboard.writeText(url).then(() => showToast('✅ 링크가 복사됐습니다'));
+  navigator.clipboard.writeText(url).then(() => showToast(t('toast_link_copied_check')));
 }
 
 function shareKakao() {
@@ -16313,7 +16313,7 @@ function shareKakao() {
       return;
     }
     navigator.clipboard?.writeText(url);
-    showToast('링크가 복사됐습니다');
+    showToast(t('toast_link_copied'));
     return;
   }
 
@@ -16321,7 +16321,7 @@ function shareKakao() {
   if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
   if (!window.Kakao?.isInitialized?.()) {
     if (navigator.share) navigator.share({ title: '바로알바 공고', url }).catch(() => {});
-    else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
+    else { navigator.clipboard?.writeText(url); showToast(t('toast_link_copied')); }
     return;
   }
   try {
@@ -16337,7 +16337,7 @@ function shareKakao() {
     });
   } catch(e) {
     if (navigator.share) navigator.share({ title: '바로알바 공고', url }).catch(() => {});
-    else { navigator.clipboard?.writeText(url); showToast('링크가 복사됐습니다'); }
+    else { navigator.clipboard?.writeText(url); showToast(t('toast_link_copied')); }
   }
 }
 
@@ -16599,11 +16599,11 @@ function renderAdminCatList() {
 async function addAdminEmail() {
   const input = document.getElementById('new-admin-email');
   const email = (input?.value || '').trim().toLowerCase();
-  if (!email || !email.includes('@')) { showToast('올바른 이메일을 입력해주세요'); return; }
+  if (!email || !email.includes('@')) { showToast(t('toast_valid_email_required')); return; }
   const { error } = await db.from('app_admins').insert({ email });
-  if (error) { showToast(error.code === '23505' ? '이미 등록된 이메일이에요' : '저장 실패: ' + error.message); return; }
+  if (error) { showToast(error.code === '23505' ? '이미 등록된 이메일이에요' : t('toast_save_failed_prefix') + error.message); return; }
   if (input) input.value = '';
-  showToast('✅ 어드민 추가됐어요');
+  showToast(t('toast_admin_added'));
   // 본인 이메일을 추가한 경우 즉시 어드민 권한 활성화 (재로그인 불필요)
   const _myEmail = (currentUser?.email || '').toLowerCase();
   if (email === _myEmail && !_isAdmin) {
@@ -16621,7 +16621,7 @@ async function addAdminEmail() {
 async function removeAdminEmail(email) {
   showConfirm('', async () => {
     await db.from('app_admins').delete().eq('email', email);
-    showToast('삭제됐어요');
+    showToast(t('toast_deleted'));
     renderAdminSection();
   }, { icon:'🛡️', title:`${email} 어드민 삭제`, okLabel:'삭제', danger:true });
 }
@@ -16629,8 +16629,8 @@ async function removeAdminEmail(email) {
 async function addCategory() {
   const icon = document.getElementById('admin-cat-icon')?.value.trim() || '📋';
   const name = document.getElementById('admin-cat-name')?.value.trim();
-  if (!name) { showToast('카테고리명을 입력해주세요'); return; }
-  if (categories.find(c => c.name === name)) { showToast('이미 있는 카테고리예요'); return; }
+  if (!name) { showToast(t('toast_category_name_required')); return; }
+  if (categories.find(c => c.name === name)) { showToast(t('toast_category_exists')); return; }
   const newOrder = Math.max(...categories.map(c => c.display_order || 0), 0) + 1;
   const { error } = await db.from('job_categories').insert({ name, icon, display_order: newOrder, active: true });
   if (!error) categories.push({ name, icon, display_order: newOrder });
@@ -16640,7 +16640,7 @@ async function addCategory() {
   if (nameEl) nameEl.value = '';
   renderCategorySelect();
   renderAdminCatList();
-  showToast(`✅ '${name}' 추가됨`);
+  showToast(t('toast_item_added_fmt').replace('{name}', name));
 }
 
 function deleteCategory(name) {
@@ -16933,16 +16933,16 @@ async function uploadOwnerAvatar(input) {
   if (!file || !currentUser || !bizRecord?.id) { if (input) input.value = ''; return; }
   input.value = '';
   openBizCropModal(file, async blob => {
-    showToast('업로드 중...');
+    showToast(t('toast_uploading'));
     const path = `${currentUser.id}/biz-logo_${Date.now()}.jpg`;
     const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
-    if (error) { showToast('업로드 실패: ' + error.message); return; }
+    if (error) { showToast(t('toast_upload_failed_prefix') + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
     await db.from('businesses').update({ photo_url: publicUrl }).eq('id', bizRecord.id);
     bizRecord = { ...bizRecord, photo_url: publicUrl };
     const inner = document.getElementById('owner-header-avatar-inner');
     if (inner) inner.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`;
-    showToast('✅ 업체 프로필 사진이 업데이트됐습니다');
+    showToast(t('toast_biz_profile_photo_updated'));
   });
 }
 
@@ -16950,17 +16950,17 @@ async function uploadBizPhoto(input) {
   const file = input.files[0];
   if (!file || !currentUser) return;
   if (file.size > 5 * 1024 * 1024) { showToast('5MB 이하 이미지만 업로드 가능합니다'); return; }
-  showToast('업로드 중...');
+  showToast(t('toast_uploading'));
   const path = `${currentUser.id}/biz-photo.jpg`;
   await db.storage.from('biz-photos').remove([path]);
   const { error } = await db.storage.from('biz-photos').upload(path, file, { contentType: 'image/jpeg' });
-  if (error) { showToast('업로드 실패: ' + error.message); return; }
+  if (error) { showToast(t('toast_upload_failed_prefix') + error.message); return; }
   const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
   await db.from('businesses').update({ photo_url: publicUrl }).eq('id', bizRecord.id);
   bizRecord = { ...bizRecord, photo_url: publicUrl };
   const p = document.getElementById('biz-photo-preview');
   if (p) p.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover">`;
-  showToast('✅ 업체 사진이 업데이트됐습니다');
+  showToast(t('toast_biz_photo_updated'));
 }
 
 // ── 내 업체 장소 관리 ─────────────────────────────────────
@@ -17005,7 +17005,7 @@ function applyPlaceToForm(placeId) {
   document.getElementById('location-result').textContent = '\u{1F4CD} ' + p.name + (shortAddr ? ' · ' + shortAddr : '');
   document.getElementById('location-result').style.display = 'block';
   renderMyPlacesQuick(); // 선택 상태(✓ 선택됨 하이라이트)를 즉시 갱신 - 이게 빠져서 클릭해도 리스트 표시가 안 바뀌던 버그
-  showToast(`\u{1F4CD} ${p.name} 선택됨`);
+  showToast(t('toast_place_selected_fmt').replace('{name}', p.name));
 }
 
 // ── 바로만남 미팅 스팟 셀프 등록 (업주) ──────────────────────
@@ -17038,11 +17038,11 @@ async function loadMannamSpotStatus() {
 }
 
 async function submitMannamSpot() {
-  if (!currentSession?.access_token) { showToast('로그인이 필요합니다'); return; }
+  if (!currentSession?.access_token) { showToast(t('toast_login_required_formal')); return; }
   const name = document.getElementById('mspot-name').value.trim();
   const address = document.getElementById('mspot-address').value.trim();
-  if (!name) { showToast('매장명을 입력해주세요'); return; }
-  if (!address) { showToast('주소를 입력해주세요'); return; }
+  if (!name) { showToast(t('toast_store_name_required')); return; }
+  if (!address) { showToast(t('toast_address_required')); return; }
   const payload = {
     name, address,
     phone: document.getElementById('mspot-phone').value.trim(),
@@ -17059,9 +17059,9 @@ async function submitMannamSpot() {
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || '등록에 실패했습니다'); return; }
-    showToast('✅ 신청 완료! 관리자 승인 후 노출됩니다');
+    showToast(t('toast_apply_pending_admin'));
     loadMannamSpotStatus();
-  } catch (e) { showToast('등록 중 오류가 발생했어요'); }
+  } catch (e) { showToast(t('toast_register_error')); }
 }
 
 async function loadMyPlaces() {
@@ -17105,20 +17105,20 @@ function showAddPlaceForm() {
 
 async function searchNaverPlaceForAdd(start = 1) {
   const query = document.getElementById('place-search-q').value.trim();
-  if (!query) { showToast('업체명을 입력해주세요\n예: 부산 사하구 스타벅스'); return; }
+  if (!query) { showToast(t('toast_biz_name_required_hint')); return; }
   const btn = document.getElementById('place-search-add-btn');
   btn.textContent = '검색 중...'; btn.disabled = true;
   try {
     const res = await fetch(`/api/naver-search?query=${encodeURIComponent(query)}&start=${start}`, { cache: 'no-store' });
     const data = await res.json();
     if (!res.ok || !data.items?.length) {
-      if (start === 1) showToast('검색 결과가 없어요.\n지역명+업체명으로 검색해보세요\n예: 서울 강남 스타벅스');
-      else showToast('마지막 페이지입니다');
+      if (start === 1) showToast(t('toast_no_search_results_hint'));
+      else showToast(t('toast_last_page'));
       return;
     }
     renderPlaceAddResults(data.items, query, start, data.total || 0);
   } catch(e) {
-    showToast('검색 중 오류가 발생했어요');
+    showToast(t('toast_search_error'));
   } finally {
     btn.textContent = '\u{1F50D} 검색'; btn.disabled = false;
   }
@@ -17166,7 +17166,7 @@ function selectPlaceForAdd(idx) {
 }
 
 function geocodePlaceAddress() {
-  if (!window.daum?.Postcode) { showToast('주소 검색 서비스 로딩 중...'); return; }
+  if (!window.daum?.Postcode) { showToast(t('toast_address_service_loading')); return; }
   new daum.Postcode({
     oncomplete(data) {
       // 도로명 주소 우선, 없으면 지번 주소
@@ -17175,9 +17175,9 @@ function geocodePlaceAddress() {
       document.getElementById('place-address-detail').focus();
 
       // 카카오 지오코딩으로 위도/경도 자동 획득
-      if (!window.kakao?.maps?.services) { showToast('좌표 변환 서비스 로딩 중...'); return; }
+      if (!window.kakao?.maps?.services) { showToast(t('toast_coord_service_loading')); return; }
       new kakao.maps.services.Geocoder().addressSearch(addr, (result, status) => {
-        if (status !== kakao.maps.services.Status.OK) { showToast('좌표 변환 실패. 다시 시도해주세요'); return; }
+        if (status !== kakao.maps.services.Status.OK) { showToast(t('toast_coord_convert_failed')); return; }
         _addPlaceLat = parseFloat(result[0].y);
         _addPlaceLng = parseFloat(result[0].x);
         const preview = document.getElementById('place-coords-preview');
@@ -17194,8 +17194,8 @@ async function savePlaceToList() {
   const detailAddr = document.getElementById('place-address-detail').value.trim();
   const address    = detailAddr ? `${baseAddr} ${detailAddr}` : baseAddr;
   const naverUrl   = document.getElementById('place-naver-url').value.trim();
-  if (!name) { showToast('장소 이름을 입력해주세요'); return; }
-  if (!_addPlaceLat || !_addPlaceLng) { showToast('업체명 검색으로 장소를 선택하거나\n기본주소 \u{1F4CD}찾기를 해주세요'); return; }
+  if (!name) { showToast(t('toast_place_name_required')); return; }
+  if (!_addPlaceLat || !_addPlaceLng) { showToast(t('toast_search_or_find_address')); return; }
 
   const isFirst = _bizPlaces.length === 0;
   const { error } = await db.from('business_places').insert({
@@ -17204,9 +17204,9 @@ async function savePlaceToList() {
     naver_url: naverUrl || null,
     is_default: isFirst
   });
-  if (error) { showToast('저장 실패: ' + error.message); return; }
+  if (error) { showToast(t('toast_save_failed_prefix') + error.message); return; }
   document.getElementById('add-place-form').style.display = 'none';
-  showToast('✅ 장소가 추가됐습니다');
+  showToast(t('toast_place_added'));
   await loadMyPlaces();
 }
 
@@ -17228,11 +17228,11 @@ async function saveOwnerSettingsProfile() {
   const name  = document.getElementById('settings-biz-name').value.trim();
   const phone = document.getElementById('settings-biz-phone').value.trim();
   const desc  = document.getElementById('settings-biz-desc').value.trim();
-  if (desc.length > 0 && desc.length < 20) { showToast('업체 소개는 20자 이상 입력해주세요'); return; }
+  if (desc.length > 0 && desc.length < 20) { showToast(t('toast_biz_intro_min20')); return; }
   const { error } = await db.from('businesses')
     .update({ name: name || bizRecord.name, phone, description: desc })
     .eq('id', bizRecord.id);
-  if (error) { showToast('저장 실패: ' + error.message); return; }
+  if (error) { showToast(t('toast_save_failed_prefix') + error.message); return; }
   localStorage.setItem('baroalba_lang', _pendingLang);
   location.reload();
 }
@@ -17245,11 +17245,11 @@ function toggleOwnerPwForm() {
 async function submitOwnerPw() {
   const pw  = document.getElementById('owner-new-pw').value;
   const pw2 = document.getElementById('owner-new-pw2').value;
-  if (pw.length < 6) { showToast('비밀번호는 6자 이상이어야 합니다'); return; }
-  if (pw !== pw2)    { showToast('비밀번호가 일치하지 않습니다'); return; }
+  if (pw.length < 6) { showToast(t('toast_password_min6_formal')); return; }
+  if (pw !== pw2)    { showToast(t('toast_password_mismatch_formal')); return; }
   const { error } = await db.auth.updateUser({ password: pw });
-  if (error) { showToast('변경 실패: ' + error.message); return; }
-  showToast('✅ 비밀번호가 변경됐습니다');
+  if (error) { showToast(t('toast_change_failed_prefix') + error.message); return; }
+  showToast(t('toast_password_changed_formal'));
   document.getElementById('owner-pw-form').style.display = 'none';
   document.getElementById('panel-owner-settings').classList.remove('show');
 }
@@ -17260,7 +17260,7 @@ function deleteOwnerAccount() {
       if (bizRecord) await db.from('businesses').delete().eq('id', bizRecord.id);
       await db.auth.signOut();
       localStorage.removeItem('baroalba_guest');
-      showAlert('탈퇴가 완료됐습니다.\n로그인 화면으로 이동합니다.', {icon:'👋'});
+      showAlert(t('toast_withdraw_complete'), {icon:'👋'});
       setTimeout(() => location.href = '/login.html', 1800);
     }, {icon:'⚠️', title:'마지막 확인', okLabel:'탈퇴 확정', danger:true});
   }, {icon:'🚫', title:'정말 탈퇴하시겠어요?', okLabel:'계속', danger:true});
@@ -17361,7 +17361,7 @@ function renderPlanUI() {
 function togglePremiumPosting(el) {
   const isOn = el.dataset.on === 'true';
   if (!isOn && _currentPlan === 'free') {
-    showToast('⭐ 프리미엄 노출은 프로 플랜 전용 기능입니다\n마이페이지에서 플랜을 업그레이드해 보세요!');
+    showToast(t('toast_premium_pro_only'));
     return;
   }
   const next = !isOn;
@@ -17418,8 +17418,8 @@ function toggleLangFilter() {
 }
 
 async function selectPlan(plan) {
-  if (plan === _currentPlan) { showToast('현재 이용 중인 플랜입니다'); return; }
-  if (plan === 'free') { showToast('무료 플랜은 언제든 해지 시 자동 전환됩니다'); return; }
+  if (plan === _currentPlan) { showToast(t('toast_current_plan')); return; }
+  if (plan === 'free') { showToast(t('toast_free_plan_auto_switch')); return; }
   if (!currentUser) { showLoginPrompt('로그인이 필요해요', '플랜 구독은 로그인 후 이용 가능합니다.'); return; }
   _selectedPlan = plan;
   _selectedPayMethod = '카드';
@@ -17448,7 +17448,7 @@ window.addEventListener('pageshow', () => {
 
 async function requestTossPayment() {
   if (!_selectedPlan) return;
-  if (typeof TossPayments === 'undefined') { showToast('결제 모듈 로드 실패. 페이지를 새로고침 해주세요.'); return; }
+  if (typeof TossPayments === 'undefined') { showToast(t('toast_payment_module_load_failed')); return; }
   const btn = document.getElementById('payment-confirm-btn');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
   const info = PLAN_INFO[_selectedPlan];
@@ -17467,7 +17467,7 @@ async function requestTossPayment() {
     });
   } catch (e) {
     console.error('Toss requestPayment error:', e);
-    if (e.code !== 'USER_CANCEL') showToast('결제 오류: ' + (e.message || JSON.stringify(e)));
+    if (e.code !== 'USER_CANCEL') showToast(t('toast_payment_error_prefix') + (e.message || JSON.stringify(e)));
     if (btn) { btn.disabled = false; btn.textContent = '결제하기'; }
   }
 }
@@ -17479,14 +17479,14 @@ async function handlePaymentResult() {
   if (!result) return;
   // URL 파라미터 제거
   window.history.replaceState({}, '', window.location.pathname);
-  if (result === 'fail') { showToast('결제가 취소됐습니다'); return; }
+  if (result === 'fail') { showToast(t('toast_payment_cancelled')); return; }
   if (result !== 'success') return;
   const paymentKey = params.get('paymentKey');
   const orderId = params.get('orderId');
   const amount = params.get('amount');
   const plan = params.get('plan');
   if (!paymentKey || !orderId || !amount) return;
-  showToast('결제 확인 중...');
+  showToast(t('toast_payment_confirming'));
   try {
     const res = await fetch('/api/toss-confirm', {
       method: 'POST',
@@ -17495,14 +17495,14 @@ async function handlePaymentResult() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast('✅ 결제가 완료됐습니다! ' + PLAN_INFO[plan]?.name + ' 이용을 시작합니다.');
+      showToast(t('toast_payment_complete_prefix') + PLAN_INFO[plan]?.name + t('toast_payment_complete_suffix'));
       _currentPlan = plan;
       renderPlanUI();
     } else {
-      showToast('결제 확인 실패: ' + (data.error || '오류'));
+      showToast(t('toast_payment_confirm_failed_prefix') + (data.error || t('toast_generic_error')));
     }
   } catch (e) {
-    showToast('결제 확인 중 오류가 발생했습니다');
+    showToast(t('toast_payment_confirm_error'));
   }
 }
 
@@ -17804,7 +17804,7 @@ function closeOwnerReport() {
 
 async function submitOwnerReport() {
   const reason = document.querySelector('input[name="owner-report-reason"]:checked')?.value;
-  if (!reason) { showToast('신고 사유를 선택해주세요'); return; }
+  if (!reason) { showToast(t('toast_select_report_reason')); return; }
   const detail = document.getElementById('owner-report-detail').value.trim();
   try {
     const sess = (await db.auth.getSession()).data.session;
@@ -17814,9 +17814,9 @@ async function submitOwnerReport() {
       body: JSON.stringify({ reporter_id: currentUser.id, target_id: _ownerReportTargetId, target_type: _ownerReportType, reason, detail })
     });
     if (!res.ok) throw new Error(await res.text());
-    showToast('신고가 접수됐습니다. 검토 후 조치하겠습니다');
+    showToast(t('toast_report_received'));
   } catch(e) {
-    showToast('신고 접수 중 오류가 발생했습니다');
+    showToast(t('toast_report_submit_error'));
   }
   closeOwnerReport();
 }
@@ -17983,10 +17983,10 @@ async function addBizPhoto(input) {
   input.value = '';
   if (!file || !bizRecord?.id) return;
   openBizCropModal(file, async (blob) => {
-    showToast('업로드 중...');
+    showToast(t('toast_uploading'));
     const path = `${currentUser.id}/biz-${Date.now()}.jpg`;
     const { error } = await db.storage.from('biz-photos').upload(path, blob, { contentType: 'image/jpeg' });
-    if (error) { showToast('업로드 실패: ' + error.message); return; }
+    if (error) { showToast(t('toast_upload_failed_prefix') + error.message); return; }
     const { data: { publicUrl } } = db.storage.from('biz-photos').getPublicUrl(path);
     await db.from('business_photos').insert({
       business_id: bizRecord.id,
@@ -17995,7 +17995,7 @@ async function addBizPhoto(input) {
       sort_order: _bizPhotos.length
     });
     await loadBizPhotos();
-    showToast('✅ 사진이 추가됐습니다');
+    showToast(t('toast_photo_added'));
   });
 }
 
@@ -18003,7 +18003,7 @@ function deleteBizPhoto(photoId) {
   showConfirm('', async () => {
     await db.from('business_photos').delete().eq('id', photoId);
     await loadBizPhotos();
-    showToast('사진이 삭제됐습니다');
+    showToast(t('toast_photo_deleted'));
   }, {icon:'🗑️', title:'사진 삭제', okLabel:'삭제', danger:true});
 }
 
@@ -18692,9 +18692,9 @@ async function shareBaromeet(id, title) {
 
 async function handleBaromeetDeeplink(id) {
   const { data: m } = await db.from('gatherings').select('id, status').eq('id', id).eq('category', 'baromeeting').maybeSingle();
-  if (!m) { showToast('유효하지 않은 바로미팅 링크입니다'); return; }
+  if (!m) { showToast(t('toast_invalid_baromeeting_link')); return; }
   openMannnamPanel();
-  if (m.status !== 'open') showToast('이미 마감되었거나 종료된 바로미팅이에요');
+  if (m.status !== 'open') showToast(t('toast_baromeeting_closed'));
 }
 
 // 관리자가 "공유하기"로 만든 바로스팟 홍보 링크 - 아직 여성 모집중이고 본인이 여성이면
@@ -18704,20 +18704,20 @@ async function handleBarospotDeeplink(eventId) {
   const { data: ev } = await db.from('barospot_events')
     .select('id, status, event_date, barospot_restaurants(name)')
     .eq('id', eventId).maybeSingle();
-  if (!ev) { showToast('유효하지 않은 바로스팟 링크예요'); return; }
-  if (ev.status !== 'recruiting_female' && ev.status !== 'recruiting_male') { showToast('이미 선점됐거나 종료된 바로스팟이에요'); return; }
-  if (!currentUser) { showToast('로그인 후 확인할 수 있어요'); return; }
+  if (!ev) { showToast(t('toast_invalid_barospot_link')); return; }
+  if (ev.status !== 'recruiting_female' && ev.status !== 'recruiting_male') { showToast(t('toast_barospot_taken')); return; }
+  if (!currentUser) { showToast(t('toast_login_to_check')); return; }
   const { data: w } = await db.from('workers').select('gender').eq('kakao_uid', currentUser.id).maybeSingle();
   const name = ev.barospot_restaurants?.name || '바로스팟';
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'numeric', minute:'2-digit' }) : '일정 확인 중';
   if (ev.status === 'recruiting_female') {
-    if (w?.gender !== 'female') { showToast('바로스팟 선점은 여성 회원만 가능해요'); return; }
+    if (w?.gender !== 'female') { showToast(t('toast_barospot_female_only')); return; }
     const confirmed = await showConfirmDialog('🍽️ 바로스팟 선점', `${name}\n${whenText}\n\n지금 선점하시겠어요?\n먼저 누르는 분에게 기회가 있어요.`, '선점하기', '나중에');
     if (confirmed) await claimBarospotEvent(eventId);
     return;
   }
   // recruiting_male: 여성이 이미 선점 확정, 남성 신청을 받는 단계
-  if (w?.gender !== 'male') { showToast('현재 남성 신청을 받고 있는 바로스팟이에요'); return; }
+  if (w?.gender !== 'male') { showToast(t('toast_barospot_accepting_male')); return; }
   await _loadSpotEvents();
   await applySpotEvent(eventId);
 }
@@ -18751,12 +18751,12 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   if (!currentUser || isGuest) { showLoginPrompt('로그인 후 신청할 수 있어요','바로미팅 참가는 로그인이 필요합니다.'); return; }
 
   const { data: existing } = await db.from('gathering_applications').select('id').eq('gathering_id', meetingId).eq('applicant_id', currentUser.id).limit(1);
-  if (existing?.length) { showToast('이미 신청한 바로미팅이에요'); return; }
+  if (existing?.length) { showToast(t('toast_already_applied_baromeeting')); return; }
 
   const { data: wRow } = await db.from('workers')
     .select('gender, photo_url, age, birth_date, job_category, body_type').eq('kakao_uid', currentUser.id).maybeSingle();
   const gender = wRow?.gender;
-  if (!gender) { showToast('바로만남 > 바로스팟에서 성별을 먼저 등록해주세요'); return; }
+  if (!gender) { showToast(t('toast_register_gender_first')); return; }
   // 블라인드 매칭이라 프로필(사진/나이/직업군/체형)이 비어있으면 상대가 신청 여부를 판단할
   // 수 없음 - 바로스팟과 동일한 기준으로 신청 전에 먼저 채우도록 안내
   const profileGap = _datingProfileGap(wRow);
@@ -18766,8 +18766,8 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
   if (await _isBaromeetTrialEligible(currentUser.id)) {
     showConfirm(`🎉 첫 이용 무료체험으로 포인트 차감 없이 신청할 수 있어요!\n식사비만 아래 계좌로 입금해주세요.\n${BANK_INFO.bank} ${BANK_INFO.account} (${BANK_INFO.holder})`, async () => {
       const ae = await _finalizeBaromeetJoin(meetingId, gender);
-      if (ae) { showToast('신청 중 오류가 발생했어요'); return; }
-      showToast('✅ 무료 체험 신청 완료! 관리자 승인 후 채팅방을 이용할 수 있어요');
+      if (ae) { showToast(t('toast_apply_error')); return; }
+      showToast(t('toast_free_trial_applied'));
       await _loadBaromeetList();
     }, { icon:'🎉', title:'바로미팅 무료체험 신청', okLabel:'무료로 신청하기' });
     return;
@@ -18781,15 +18781,15 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
     showConfirm('이용권 1회가 차감됩니다.\n신청하시겠어요?', async () => {
       const { error: pe } = await db.from('barospot_passes')
         .update({ remaining_count: passRow.remaining_count - 1 }).eq('id', passRow.id);
-      if (pe) { showToast('오류: ' + pe.message); return; }
+      if (pe) { showToast(t('toast_error_prefix') + pe.message); return; }
       const ae = await _finalizeBaromeetJoin(meetingId, gender);
       if (ae) {
         // 신청 실패 시 차감된 이용권 롤백
         await db.from('barospot_passes').update({ remaining_count: passRow.remaining_count }).eq('id', passRow.id);
-        showToast('신청 중 오류가 발생했어요');
+        showToast(t('toast_apply_error'));
         return;
       }
-      showToast('✅ 이용권으로 신청 완료! 관리자 승인 후 채팅방을 이용할 수 있어요');
+      showToast(t('toast_pass_applied'));
       await _loadBaromeetList();
     }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:'이용권 사용하고 신청' });
     return;
@@ -18803,18 +18803,18 @@ async function applyBaromeet(meetingId, maleLeft, femaleLeft) {
 
   showConfirm(`이용권이 없어 포인트로 결제합니다.\n참가 신청 시 ${price.toLocaleString()}P가 차감됩니다.`, async () => {
     const pts = await loadUserPoints();
-    if (pts < price) { closeMannnamPanel(); openPointCharge(); showToast('포인트가 부족해요. 충전 후 신청해주세요'); return; }
+    if (pts < price) { closeMannnamPanel(); openPointCharge(); showToast(t('toast_insufficient_points_topup')); return; }
     const { data: acct } = await db.from('point_accounts').select('id, balance').eq('user_id', currentUser.id).single();
-    if (!acct || acct.balance < price) { showToast('포인트가 부족해요'); return; }
+    if (!acct || acct.balance < price) { showToast(t('toast_insufficient_points')); return; }
     const { error: pe } = await db.from('point_accounts').update({ balance: acct.balance - price }).eq('id', acct.id);
-    if (pe) { showToast('포인트 차감 실패: ' + pe.message); return; }
+    if (pe) { showToast(t('toast_point_deduct_failed_prefix') + pe.message); return; }
     const ae = await _finalizeBaromeetJoin(meetingId, gender);
     if (ae) {
       await db.from('point_accounts').update({ balance: acct.balance }).eq('id', acct.id); // 롤백
-      showToast('신청 중 오류가 발생했어요');
+      showToast(t('toast_apply_error'));
       return;
     }
-    showToast(`✅ ${price.toLocaleString()}P 차감 후 신청 완료! 관리자 승인 후 채팅방을 이용할 수 있어요`);
+    showToast(t('toast_points_deducted_applied_fmt').replace('{n}', price.toLocaleString()));
     await loadUserPoints();
     await _loadBaromeetList();
   }, { icon:'🤝', title:'바로미팅 참가 신청', okLabel:`${price.toLocaleString()}P 차감하고 신청` });
@@ -21073,12 +21073,12 @@ function onCustomAmtInput(inp) {
 function copyBankAccount() {
   const acc = BANK_INFO.account;
   if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(acc).then(() => showToast('계좌번호가 복사됐습니다 ✓'));
+    navigator.clipboard.writeText(acc).then(() => showToast(t('toast_account_number_copied')));
   } else {
     const ta = document.createElement('textarea');
     ta.value = acc; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); showToast('계좌번호가 복사됐습니다 ✓'); } catch(_) {}
+    try { document.execCommand('copy'); showToast(t('toast_account_number_copied')); } catch(_) {}
     document.body.removeChild(ta);
   }
 }
@@ -21107,7 +21107,7 @@ function proceedFromAmount() {
 
 async function requestTossPointPayment() {
   if (!_selectedChargeAmt) return;
-  if (typeof TossPayments === 'undefined') { showToast('결제 모듈 로드 실패. 새로고침 후 시도해주세요.'); return; }
+  if (typeof TossPayments === 'undefined') { showToast(t('toast_payment_module_load_failed2')); return; }
   const btn = document.getElementById('pc-amt-proceed');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
   const totalPts = _currentChargeTotalPts();
@@ -21125,7 +21125,7 @@ async function requestTossPointPayment() {
       customerName: currentUser.user_metadata?.full_name || '사용자',
     });
   } catch (e) {
-    if (e.code !== 'USER_CANCEL') showToast('결제 오류: ' + (e.message || '다시 시도해주세요'));
+    if (e.code !== 'USER_CANCEL') showToast(t('toast_payment_error_prefix') + (e.message || t('toast_try_again_generic')));
     if (btn) { btn.disabled = false; _updateAmtProceedBtn(); }
   }
 }
@@ -21135,13 +21135,13 @@ async function handlePointPaymentResult() {
   const result = params.get('point_payment');
   if (!result) return;
   window.history.replaceState({}, '', window.location.pathname);
-  if (result === 'fail') { showToast('포인트 충전이 취소됐습니다'); return; }
+  if (result === 'fail') { showToast(t('toast_point_topup_cancelled')); return; }
   if (result !== 'success') return;
   const paymentKey = params.get('paymentKey');
   const orderId    = params.get('orderId');
   const amount     = params.get('amount');
   if (!paymentKey || !orderId || !amount) return;
-  showToast('포인트 충전 확인 중...');
+  showToast(t('toast_point_topup_confirming'));
   try {
     const res = await fetch('/api/toss-points', {
       method: 'POST',
@@ -21150,13 +21150,13 @@ async function handlePointPaymentResult() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(`✅ ${(data.totalPoints || Number(amount)).toLocaleString()}P 충전 완료!`);
+      showToast(t('toast_points_charged_fmt').replace('{n}', (data.totalPoints || Number(amount)).toLocaleString()));
       loadUserPoints();
     } else {
-      showToast('충전 확인 실패: ' + (data.error || '오류'));
+      showToast(t('toast_topup_confirm_failed_prefix') + (data.error || t('toast_generic_error')));
     }
   } catch (e) {
-    showToast('충전 확인 중 오류 발생');
+    showToast(t('toast_topup_confirm_error'));
   }
 }
 
@@ -21173,7 +21173,7 @@ function _updateCashBtn() {
 
 async function submitCashDeposit() {
   const depositorName = document.getElementById('pc-depositor-name')?.value.trim();
-  if (!depositorName) { showToast('입금자명을 입력해주세요'); return; }
+  if (!depositorName) { showToast(t('toast_depositor_name_required')); return; }
   if (!_selectedChargeAmt) return;
   const btn = document.getElementById('pc-cash-submit');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
@@ -21192,9 +21192,9 @@ async function submitCashDeposit() {
     });
     if (error) throw error;
     closePointCharge();
-    showToast(`✅ 입금 신청 완료! 확인 후 ${totalPts.toLocaleString()}P가 지급됩니다.`);
+    showToast(t('toast_deposit_applied_fmt').replace('{n}', totalPts.toLocaleString()));
   } catch (e) {
-    showToast('신청 중 오류: ' + (e.message || '다시 시도해주세요'));
+    showToast(t('toast_apply_error_prefix2') + (e.message || t('toast_try_again_generic')));
     if (btn) { btn.disabled = false; btn.textContent = '입금 완료 알림 보내기'; }
   }
 }
