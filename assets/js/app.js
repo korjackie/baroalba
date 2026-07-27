@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '574';
+  const _APP_V = '575';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1357,6 +1357,13 @@ function showMockBanner() {
   setTimeout(() => banner.remove(), 6000);
 }
 
+// 시급 축약 표기 - 한국어는 "1.2만" 관례 유지, 그 외 언어는 보편적인 "12k" 표기 사용
+// (한국식 '만' 단위는 다른 언어권에 안 읽혀서 2026-07-27 분리. surge-badge가 이미 쓰던 k 표기와 통일)
+function _shortWage(amount) {
+  if (currentLang === 'ko') return (amount / 10000).toFixed(1) + '만';
+  return Math.round(amount / 1000) + 'k';
+}
+
 // ── 마커 렌더링 ───────────────────────────────────────────
 function renderMarkers() {
   // 기존 마커/오버레이 제거
@@ -1381,29 +1388,21 @@ function renderMarkers() {
   };
   const ERRAND_CAT_NAMES = new Set(Object.keys(ERRAND_ICON_MAP));
 
-  // 카테고리 → 마커 짧은 이름
-  const CAT_SHORT = {
-    'F&B':'F&B', '물류':'운송', '판매':'판매', '청소':'청소',
-    '이벤트':'이벤트', '커플알바':'커플', '컨텐츠':'촬영', '챌린지':'챌린지',
-    '물건 픽업/전달':'픽업', '대리 줄서기':'줄서기', '서류/우편':'서류',
-    '쇼핑 대행':'쇼핑', '벌레 퇴치':'해충', '반려동물 산책':'펫돌봄',
-    '이사/짐 보조':'이사', '이사도우미':'이사', '음식 배달':'배달',
-    '차량 이동/주차':'주차대행', '약국/병원 대행':'병원대행',
-    '장보기 대행':'장보기', '기타 심부름':'심부름',
-    '운반/짐 이동':'운반', '퀵배달':'퀵', '청소 대행':'청소'
-  };
+  // 카테고리 → 마커 짧은 이름 (언어별 사전은 shared-lang.js MARKER_CAT_SHORT)
+  const CAT_SHORT = MARKER_CAT_SHORT[currentLang] || MARKER_CAT_SHORT.ko;
+  const _mtc = MARKER_TYPE_CHAR[currentLang] || MARKER_TYPE_CHAR.ko;
 
   jobs.forEach(job => {
     if (!job.lat || !job.lng) return;
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
-    const wageStr = (job.current_wage / 10000).toFixed(1) + '만';
+    const wageStr = _shortWage(job.current_wage);
 
     // work_type 없는 구공고는 카테고리로 심부름 판별
     const isErrand = job.work_type === 'errand' || ERRAND_CAT_NAMES.has(job.category);
 
-    const wageUnit = isErrand ? '/건' : '/시간';
-    const catName  = CAT_SHORT[job.category] || (isErrand ? '심부름' : (job.category || '알바'));
+    const wageUnit = isErrand ? t('per_job_suffix') : t('per_hour_suffix');
+    const catName  = CAT_SHORT[job.category] || (isErrand ? t('job_type_errand') : (job.category || t('job_type_alba')));
 
     const bubbleCls = isErrand ? 'mk-errand' : (isUrgent ? 'mk-asap' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : '')));
     const tailCls   = isErrand ? 'mk-errand' : (job.work_type === 'regular' ? 'mk-regular' : (job.work_type === 'short' ? 'mk-short' : ''));
@@ -1411,9 +1410,8 @@ function renderMarkers() {
       ? `<div class="surge-badge">↑${(job.wage_delta/1000).toFixed(0)}k</div>` : '';
     const { str: ddayStr, cls: ddayCls } = calcDDay(job.start_time);
     const _TYPE_CLS = { regular:'mt-reg', short:'mt-short', errand:'mt-errnd' };
-    const _TYPE_CHR = { regular:'정', short:'단', errand:'심' };
     const mkTypeCls = _TYPE_CLS[job.work_type] || 'mt-spot';
-    const mkTypeChr = _TYPE_CHR[job.work_type] || '스';
+    const mkTypeChr = _mtc[job.work_type] || _mtc.spot;
     const catShort  = catName.length > 5 ? catName.slice(0,5) : catName;
 
     const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:#7C3AED;color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:8px;white-space:nowrap">👥${_r}자리</div>` : ''; })();
@@ -1645,7 +1643,7 @@ function renderList() {
           <div class="card-title">${job.title}${_isAdmin ? _adminBtn('job_postings',job.id,'title',job.title,'공고 제목') : ''}</div>
         </div>
         <div class="card-right">
-          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${isErrand ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
+          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${isErrand ? `<span style="font-size:10px;font-weight:700;color:#aaa">${t('per_job_suffix')}</span>` : ''}</div>
           <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}</div>
           ${totalWageHtml}
           ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">${t('job_max_wage_fmt').replace('{n}', job.surge_max_wage.toLocaleString())}</div>` : ''}
@@ -1725,10 +1723,10 @@ function renderUrgentFeed() {
       <div style="background:${bg};padding:10px 12px 8px;position:relative">
         <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
         <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title || job.biz_name}</div>
-        <span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥급구</span>
+        <span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥${t('urgent_label')}</span>
       </div>
       <div style="padding:8px 10px">
-        <div style="font-size:14px;font-weight:900;color:#C8102E">${(job.current_wage/10000).toFixed(1)}만원</div>
+        <div style="font-size:14px;font-weight:900;color:#C8102E">${_shortWage(job.current_wage)}${currentLang==='ko' ? '원' : ''}</div>
         <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">📍 ${dist}</div>
       </div>
     </div>`;
@@ -3365,7 +3363,7 @@ function showForeignerInHome() {
   const srEl = document.getElementById('home-search-results');
   const defEl = document.getElementById('home-default-content');
   const label = document.getElementById('home-search-result-label');
-  if (label) label.textContent = `🌏 외국인 환영 공고 ${filtered.length}개`;
+  if (label) label.textContent = t('foreigner_welcome_jobs_fmt').replace('{n}', filtered.length);
   if (srEl) srEl.style.display = 'block';
   if (defEl) defEl.style.display = 'none';
   _renderHomeSearchList(filtered);
@@ -3382,23 +3380,24 @@ function closeForeignerLangPanel() {
 function applyForeignerLangFilter(langCode) {
   closeForeignerLangPanel();
   window._homeFilterApplied = true;
-  const langNames = {vi:'베트남어',ru:'러시아어',zh:'중국어',mn:'몽골어',np:'네팔어',en:'영어',uz:'중앙아시아',ja:'일본어',ko:'한국어 가능'};
+  const langNameKeys = {vi:'lang_name_vi',ru:'lang_name_ru',zh:'lang_name_zh',mn:'lang_name_mn',np:'lang_name_np',en:'lang_name_en',uz:'lang_name_uz',ja:'lang_name_ja'};
   const flags = {vi:'🇻🇳',ru:'🇷🇺',zh:'🇨🇳',mn:'🇲🇳',en:'🇺🇸',uz:'🇺🇿',ja:'🇯🇵',ko:'🇰🇷'};
   let filtered, labelText;
   if (langCode === 'any') {
     filtered = (jobs||[]).filter(j => (j.status==='open'||j.status==='urgent') && j.nationality_requirement==='foreigner_welcome');
-    labelText = '🌏 외국인 환영 공고';
+    labelText = t('foreigner_welcome_jobs_fmt').replace('{n}', filtered.length);
   } else if (langCode === 'ko') {
     filtered = (jobs||[]).filter(j => (j.status==='open'||j.status==='urgent') && (j.nationality_requirement==='korean_only'||j.nationality_requirement==='korean_lang'));
-    labelText = '🇰🇷 한국어 가능 공고';
+    labelText = t('korean_capable_jobs_fmt').replace('{n}', filtered.length);
   } else {
     filtered = (jobs||[]).filter(j => (j.status==='open'||j.status==='urgent') && (j.preferred_languages||[]).includes(langCode));
-    labelText = `${flags[langCode]||''} ${langNames[langCode]||langCode} 우대 공고`;
+    const langName = langNameKeys[langCode] ? t(langNameKeys[langCode]) : langCode;
+    labelText = `${flags[langCode]||''} ` + t('lang_pref_jobs_fmt').replace('{lang}', langName).replace('{n}', filtered.length);
   }
   const srEl = document.getElementById('home-search-results');
   const defEl = document.getElementById('home-default-content');
   const label = document.getElementById('home-search-result-label');
-  if (label) label.textContent = `${labelText} ${filtered.length}개`;
+  if (label) label.textContent = labelText;
   if (srEl) srEl.style.display = 'block';
   if (defEl) defEl.style.display = 'none';
   _renderHomeSearchList(filtered);

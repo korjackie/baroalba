@@ -664,22 +664,18 @@ ALTER TABLE workers ADD COLUMN IF NOT EXISTS workplace_verify_token TEXT;
 | 레슨/과외 등록·상세 모달 핸들바 드래그 안 됨 | ✅ 해결 (v496, 2026-07-15) | `.modal-handle` 두 곳(lesson-register-modal/lesson-detail-modal)이 시각적 핸들만 있고 드래그 바인딩이 전혀 없었음 - bindSheetDragClose 연결 |
 | 단체채팅 키보드 여백 과다 | ✅ 해결됨 (문서만 미갱신) | `#moim-chat-messages`에 이미 `justify-content:flex-end`가 적용돼 있어 짧은 대화도 하단에 붙음 - 2026-07-13 시점 이후 누군가 수정했으나 이 표만 갱신이 안 돼있었음 |
 
-### 8-1. i18n 스윕 4차 (2026-07-27, v574 완료)
+### 8-1. i18n 스윕 4차 (2026-07-27, v575 완료 — 전체 스코프 종료)
 
-v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었던 **홈 화면 공고 카드 렌더링**(`assets/js/app.js`의 `renderDateSlider`/`renderDistrictFilter`/`getJobCycleLabel`/`renderList`/`showMockBanner`, 대략 1350~1731줄)을 아래 매핑대로 완료함(v574). 재사용 키 13개 + 신규 키 34개(8개국어) 전부 적용, `node --check` 통과, `_APP_V`/`sw.js`/HTML 4개 `?v=` 전부 574로 동기화. `getJobCycleLabel`의 요일 약자는 하드코딩 대신 기존 `DAY_LABELS[currentLang]`를 재사용해 언어별 요일 표기까지 반영함(기존에 존재하던 인프라를 재발견해 재사용 — 새 테이블 안 만듦).
+v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었던 **홈 화면 공고 카드 렌더링**(`renderDateSlider`/`renderDistrictFilter`/`getJobCycleLabel`/`renderList`/`showMockBanner`)을 v574로 완료. 이어서 처음엔 5차 이후로 미뤘던 3건(마커 카테고리/타입 축약, 만원 표기, 외국인 언어필터 패널)도 같은 세션에서 마저 완료해 v575로 배포함. 재사용 키 다수 + 신규 키 약 45개(8개국어) 적용, `node --check` 통과, `_APP_V`/`sw.js`/HTML 4개 `?v=` 전부 575로 동기화.
 
-아래는 착수 전 세션이 남긴 원래 스코핑 메모(참고용, 실제 구현과 100% 일치):
+**v574 (홈 화면 공고 카드)**: `getJobCycleLabel`의 요일 약자는 하드코딩 대신 기존 `DAY_LABELS[currentLang]`를 재사용(새 테이블 안 만듦). 나머지는 신규 키(`today_label`/`cycle_regular_*`/`applied_badge_label`/`job_total_wage_fmt`/`return_bonus_badge_fmt`/`lang_name_ko~mn`/`surge_badge_label`/`team_recruit_*`/`almost_full_badge`/`errand_duration_*`/`home_empty_*`/`guest_post_job_*`/`job_load_fail_label`/외국인환영·한국어필수·초보OK·경력자·식사제공 배지 5종) 전부 적용.
 
-**재사용 가능한 기존 키(새로 안 만들어도 됨)**:
-`cat_all`(전체버튼), `undecided`(미정), `job_type_errand`(심부름), `work_type_short`(단기), `work_type_regular`(정기), `remote_work_label`(비대면), `hours_unit`(시간), `per_hour_suffix`(/시간), `app_reviewing`/`app_accepted`/`app_completed`(지원상태), `expand_radius`(반경 {n}km로 늘리기), `filter_sameday`(당일정산), `ownr_nationality_korean_only`(🇰🇷 한국인만, 이모지 포함), `moim_slots_left`({n}자리 남음)
+**v575 (남은 3건 완료)**:
+- `renderMarkers`의 `CAT_SHORT`(마커 카테고리 짧은이름, 23종)와 타입 한글자(정/단/스/심)를 `shared-lang.js`의 `MARKER_CAT_SHORT`/`MARKER_TYPE_CHAR` 신규 사전(WORK_TYPE_LABELS/VEHICLE_LABELS와 동일 패턴)으로 분리 — `tCategory()`(대분류)와 달리 심부름 세부종목 구분을 유지해야 해서 별도 사전 유지, 그룹핑으로 정보손실 안 나게 함.
+- 만원 축약 표기: **한국어는 "1.2만원" 유지, 나머지 7개 언어는 "12k" 통일**(대표님 확정, 2026-07-27) — `_shortWage(amount)` 헬퍼로 분리해 `renderMarkers`/`renderUrgentFeed`에서 공용. surge-badge가 이미 쓰던 `↑5k` 표기와 통일. `/건`·`/시간` 단위도 `per_job_suffix`/`per_hour_suffix`로 마저 번역.
+- `applyForeignerLangFilter`/`showForeignerLangPanel`/`showForeignerInHome`: `uz`(중앙아시아)/`np`(네팔어) 포함해 `lang_name_np`/`lang_name_uz` 신규 키 추가, `foreigner_welcome_jobs_fmt`/`korean_capable_jobs_fmt`/`lang_pref_jobs_fmt`로 라벨+건수 통합 번역.
 
-**새로 만들어야 하는 키(대략 30개, ko/en/zh/ja/vi/ru/mn/np 8개국어 전부)**:
-`today_label`(오늘), `mock_data_banner`(테스트 데이터 표시 중...), `cycle_regular_label`(정기 반복), `cycle_regular_days_fmt`(매주 반복 ({days})), `cycle_short_days_fmt`(단기 ({days})), `applied_badge_label`(지원완료), `job_total_wage_fmt`(총 {n}원), `job_max_wage_fmt`(최대 {n}원), `return_bonus_badge_fmt`(재방문 +{n}원), `lang_name_ko/en/zh/ja/vi/ru/mn`(언어이름 — 현재 `_LANG_NAME`이 한국어 하드코딩, app.js:1625), `lang_pref_badge_fmt`({lang} 우대), `surge_badge_label`(번개), `team_recruit_badge`(팀모집), `team_recruit_count_fmt`({n}명 팀 모집), `recruit_complete_label`(모집완료), `almost_full_badge`(마감임박 1자리), `errand_duration_approx_fmt`(약 {n}시간), `errand_duration_negotiable`(소요시간 협의), `home_empty_radius_desc_fmt`(주변 {n}km 내 공고가 없어요), `home_empty_explore_hint`(다른 지역을 탐색하거나 반경을 늘려보세요), `guest_post_job_title`(공고를 올려보세요!), `guest_post_job_desc`(업주로 로그인하면...), `guest_post_job_btn`(공고 올리기 (업주)), `job_load_fail_label`(공고 로드 실패). 외국인환영/한국어필수/초보OK/경력자/식사제공 배지는 정확 일치 기존 키 없어서 그대로 새 키 필요 — 최종 확정 전이었음.
-
-**의도적으로 스코프 제외(다음 4차 아닌 5차 이후로 미룸)**:
-- `renderMarkers`의 `CAT_SHORT`/`ERRAND_ICON_MAP`(지도 마커 짧은 카테고리명) — `tCategory()`와 별도의 하드코딩 한국어 짧은이름 테이블이라 마커 라벨이 안 번역됨. `WORK_TYPE_LABELS`/`VEHICLE_LABELS`처럼 언어별 테이블+헬퍼함수 패턴으로 새로 만들어야 함(약 20개 항목×8개국어).
-- `renderUrgentFeed`/지도 마커의 "X.X만원" 축약 표기 — 다른 이미 번역된 화면들은 전부 축약 없이 전체 숫자+원/won으로 표시하는 관례라(`ownr_wage_raised_toast` 등 참고), "만" 축약을 언어별로 어떻게 처리할지는 순수 번역이 아니라 디자인 판단이 필요함. 사용자 확인 필요.
-- `applyForeignerLangFilter`/`showForeignerLangPanel`(app.js:3368~3399) — 별도 패널이고 `uz`(중앙아시아) 등 8개 언어 밖의 값도 섞여있어 별개 작업.
+이로써 CLAUDE.md에 남아있던 i18n 스윕 관련 기지정 작업은 전부 종료. 향후 새 미번역 항목 발견 시 5차로 새로 스코핑할 것.
 
 **체크리스트 재확인**: 편집 후 `_APP_V` / `sw.js` CACHE / 바로알바.html의 4개 `?v=` 쿼리(app.js/shared-lang.js/style.css/app_ui.js) 전부 동일 번호로 올리고 커밋할 것 (13-5 참고).
 
