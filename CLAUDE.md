@@ -656,6 +656,12 @@ ALTER TABLE workers ADD COLUMN IF NOT EXISTS workplace_verify_token TEXT;
   `/assets` 1일 · `/icons` 1년 immutable · `/` CDN 10분.
 - **교훈**: 랜딩·마케팅 페이지를 붙일 때는 **CTA가 실제로 열리는지**를 앱 부팅 분기까지 따라가
   확인할 것. 링크가 200을 주는 것과 사용자가 그 화면을 볼 수 있는 것은 다르다.
+- **앱 셸·로그인 noindex 후속**(cd91ec1): `/`가 색인 대상이 되면서 랜딩이 링크하는
+  `바로알바.html`·`login.html`도 같이 크롤링된다. 둘 다 크롤러 시점엔 내용 없는 껍데기라
+  색인되면 검색결과에서 랜딩과 경쟁하며 빈 페이지가 뜬다. → `noindex, follow` meta.
+  **robots.txt로 막지 않은 이유**: 크롤링을 막으면 noindex 태그 자체를 못 읽어 URL만 색인된
+  상태가 남는다(제외하려면 오히려 읽히게 둬야 함). login.html은 카톡 공유 미리보기(OG)를
+  살려야 해서도 크롤링 허용이 맞다. 라이브에서 두 파일 모두 meta 반영 확인 완료.
 
 **남은 작업**: 공고별 URL(`/job/:id`)이 생기면 sitemap.xml을 서버리스 자동생성으로 교체하고
 JobPosting 스키마를 붙일 것. 현재 sitemap은 정적 3개(`/`, terms, privacy)뿐이라
