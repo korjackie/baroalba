@@ -300,6 +300,11 @@ currentUser.user_metadata.baroalba_role
 
 ### 3-3. DB 테이블 구조
 
+> **주요 5개 테이블의 형태만 보여주는 발췌본이다.** 전체 스키마(chat_messages,
+> notifications, follows, coupons, push_subscriptions 등 포함)는 `CLAUDE.md` 3장에 있고
+> 그쪽이 정본이다. 컬럼을 실제로 확인해야 할 때는 `CLAUDE.md` 13장의 스키마 점검
+> 명령으로 Supabase에 직접 물어볼 것 — 문서만 믿고 쿼리를 짜면 조용히 실패한다.
+
 #### workers
 ```
 id UUID PK | kakao_uid UUID UNIQUE | name TEXT | phone TEXT
@@ -669,27 +674,13 @@ CSS ↔ JS 혼재 금지 — CSS는 <style>, JS는 <script>에서만
 
 ## 6. 현재 상태 및 미결 과제
 
-### 6-1. 확인된 버그 / 미결 항목
-
-| 항목 | 상태 | 처리 방법 |
-|------|------|-----------|
-| 공고 저장 오류 | 🔴 미결 | 저장 실패 시 alert으로 에러 표시 중, 근본 원인 불명확 |
-| Android 키보드 SHOW_FORCED | 🟡 리빌드 필요 | 현재 코드는 준비됨, versionCode 24로 빌드 필요 |
-| 커뮤니티 글/댓글 수정·삭제 UI | 🟡 기능 미구현 | 본인 글에 수정/삭제 버튼 추가 필요 |
-| 커뮤니티 댓글 익명 토글 | 🟡 기능 미구현 | `is_anonymous: false` 하드코딩 상태 |
-| `cancel_deadline` DDL | ✅ 완료 | 컬럼 운영 중 |
-| businesses.plan 미영속화 | 🔴 미결 (P0) | `_currentPlan`이 결제 직후에만 세팅되고 새로고침/재로그인 시 항상 'free'로 리셋됨. 로그인/앱 진입 시 businesses.plan을 조회해 초기화하는 로직 필요 |
-| 스와이프 지원 연령게이트 UX | ✅ 완료 (2026-07-08) | flyCard가 applySwipeJob 결과 대기 없이 성공 토스트를 띄우던 버그 수정 |
-| 스와이프 '다시 보기' 중복노출 | ✅ 완료 (2026-07-08) | 버튼이 swipeIdx만 리셋하고 swipeJobs를 재구성 안 하던 버그 → initSwipe() 호출로 수정 |
-| 지원취소 후 재지원 불가 | ✅ 완료 (2026-07-08) | cancelled 상태를 '이미 지원'으로 오인 + DB 유니크 충돌로 막히던 것 수정 (재지원 시 기존 행 update로 부활) |
-| MOIM_PLAN_LIMITS 키 오타 | ✅ 완료 (2026-07-08) | `standard`→`basic`. 베이직 결제자가 월 10개가 아닌 1개로 제한되던 버그 |
-| 바로모임 PRO/BASIC 뱃지 랜덤 배정 | ✅ 완료 (2026-07-08) | Math.random() → 실제 host의 businesses.plan 조회로 수정 |
-| admin 공고 강제마감 → 신고카드 미갱신 | ✅ 완료 (2026-07-08) | 신고관리 탭에서 강제마감 클릭 시 해당 report도 함께 '조치완료' 처리하도록 수정 |
-
-### 6-2. Play Console 현황
-
-- 현재 업로드: versionCode 23 / 1.4.2
-- 검토 중 또는 배포 완료 상태 확인 필요
+> **이 장은 `CLAUDE.md` 8장 「현재 버그 / 미완료」로 옮겼다. 여기에 다시 쓰지 말 것.**
+>
+> 예전에는 같은 버그 목록이 두 문서에 따로 있었고, 이쪽이 2026-07-08에서 멈춘 채로
+> 남아 이미 고친 버그(스와이프 중복노출, MOIM_PLAN_LIMITS 오타 등)를 계속 "미결"로
+> 보여주고 있었다. 버그 목록은 코드와 함께 움직여야 하므로 정본을 한쪽으로 모았다.
+>
+> Android versionCode / Play Console 현황도 마찬가지로 `CLAUDE.md`에서 관리한다.
 
 ---
 
