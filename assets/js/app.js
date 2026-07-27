@@ -18526,14 +18526,17 @@ async function _loadHomeBarospotTeaser() {
 }
 function _barospotHomeCard(ev) {
   const r = ev.barospot_restaurants || {};
-  const dateStr = ev.event_date ? new Date(ev.event_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+  // 2026-07-28: 이 카드는 _moimHomeCard를 복사해 만들었는데 t() 호출만 빠져 있었다.
+  // 그래서 바로모임 카드는 번역되는데 바로만남 카드만 한국어로 남아 있었음.
+  // 쓰는 키는 전부 이미 8개 언어에 있던 것(새로 만들지 않음).
+  const dateStr = ev.event_date ? new Date(ev.event_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
   // 바로모임 홈카드(_moimHomeCard)와 동일한 구성/아이콘(.mc-cat/.mc-title/.mc-date/.mc-slots/.mc-fee) 재사용
   return `<div onclick="openMannnamPanel()" class="moim-card" style="flex-shrink:0;width:160px;padding:16px">
     <div class="mc-cat" style="color:#e11d48">바로스팟</div>
     <div class="mc-title">${r.name || '바로스팟'}</div>
     <div class="mc-date">${dateStr}</div>
-    <div class="mc-slots">남성 신청 중</div>
-    <div class="mc-fee" style="color:#e11d48">자리있음</div>
+    <div class="mc-slots">${t('baromeet_home_recruit_male')}</div>
+    <div class="mc-fee" style="color:#e11d48">${t('spot_available')}</div>
   </div>`;
 }
 // 바로미팅/바로스팟 둘 다 없을 때도 바로모임 카드와 높이가 맞도록 빈 상태 문구를 채워둠
@@ -18550,14 +18553,16 @@ function _baromeetHomeCard(m) {
   const femaleLeft = (m.baromeeting_female_max || 4) - (m.baromeeting_female_cur || 0);
   const isFull = maleLeft <= 0 && femaleLeft <= 0;
   const remTotal = Math.max(0, maleLeft) + Math.max(0, femaleLeft);
-  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : '일정 미정';
+  // 2026-07-28: _barospotHomeCard와 같은 이유로 t() 호출이 빠져 있던 자리.
+  // '{n}자리 남음'은 moim_slots_left에 이미 보간 자리표시자가 있어 그대로 쓴다.
+  const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
   // 바로모임 홈카드(_moimHomeCard)와 동일한 구성/아이콘(.mc-cat/.mc-title/.mc-date/.mc-slots/.mc-fee)을 재사용
   return `<div onclick="openMannnamPanel()" class="moim-card" style="flex-shrink:0;width:160px;padding:16px">
     <div class="mc-cat" style="color:#e11d48">바로미팅</div>
     <div class="mc-title">${m.title||'바로미팅'}</div>
     <div class="mc-date">${dateStr}</div>
-    <div class="mc-slots">${isFull ? '마감' : remTotal+'자리 남음'}</div>
-    <div class="mc-fee" style="color:${isFull?'#94a3b8':'#e11d48'}">${isFull?'마감':'자리있음'}</div>
+    <div class="mc-slots">${isFull ? t('moim_closed') : t('moim_slots_left').replace('{n}', remTotal)}</div>
+    <div class="mc-fee" style="color:${isFull?'#94a3b8':'#e11d48'}">${isFull?t('moim_closed'):t('spot_available')}</div>
   </div>`;
 }
 
@@ -18630,21 +18635,21 @@ function _renderBaromeetCard(m, myStatus) {
         <button onclick="event.stopPropagation();shareBaromeet('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="background:#f5f5f5;border:none;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" title="공유">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </button>
-        <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:var(--purple)'}">${isFull?'마감':'자리있음'}</span>
+        <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:var(--purple)'}">${isFull?t('moim_closed'):t('spot_available')}</span>
       </div>
     </div>
     <!-- 모집현황 -->
     <div style="display:flex;gap:10px;background:#fafafa;border-radius:10px;padding:10px 12px;margin-bottom:10px">
       <div style="flex:1;text-align:center">
-        <div style="font-size:10px;color:#f43f5e;font-weight:800;margin-bottom:4px">여성 ${femaleCur}/${femaleMax}명</div>
+        <div style="font-size:10px;color:#f43f5e;font-weight:800;margin-bottom:4px">${t('gender_female_count_fmt').replace('{a}',femaleCur).replace('{b}',femaleMax)}</div>
         <div style="letter-spacing:1px">${_femaleSlots}</div>
-        <div style="font-size:10px;color:#bbb;margin-top:2px">${femaleLeft>0?femaleLeft+'자리 남음':'마감'}</div>
+        <div style="font-size:10px;color:#bbb;margin-top:2px">${femaleLeft>0?t('moim_slots_left').replace('{n}',femaleLeft):t('moim_closed')}</div>
       </div>
       <div style="width:1px;background:#eee"></div>
       <div style="flex:1;text-align:center">
-        <div style="font-size:10px;color:var(--blue);font-weight:800;margin-bottom:4px">남성 ${maleCur}/${maleMax}명</div>
+        <div style="font-size:10px;color:var(--blue);font-weight:800;margin-bottom:4px">${t('gender_male_count_fmt').replace('{a}',maleCur).replace('{b}',maleMax)}</div>
         <div style="letter-spacing:1px">${_maleSlots}</div>
-        <div style="font-size:10px;color:#bbb;margin-top:2px">${maleLeft>0?maleLeft+'자리 남음':'마감'}</div>
+        <div style="font-size:10px;color:#bbb;margin-top:2px">${maleLeft>0?t('moim_slots_left').replace('{n}',maleLeft):t('moim_closed')}</div>
       </div>
     </div>
     ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:#f5f5f5;color:#666;padding:3px 8px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
