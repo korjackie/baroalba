@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '573';
+  const _APP_V = '574';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1342,7 +1342,7 @@ async function loadJobs() {
     const el = document.getElementById('job-cards-container');
     if (el) el.innerHTML = `<div class="empty-state">
       <div class="empty-icon">⚠️</div>
-      <div class="empty-txt" style="font-size:12px;color:#e53935">공고 로드 실패<br><span style="font-size:10px;color:#aaa;word-break:break-all">${e.message || JSON.stringify(e)}</span></div>
+      <div class="empty-txt" style="font-size:12px;color:#e53935">${t('job_load_fail_label')}<br><span style="font-size:10px;color:#aaa;word-break:break-all">${e.message || JSON.stringify(e)}</span></div>
     </div>`;
   }
 }
@@ -1352,7 +1352,7 @@ function showMockBanner() {
   const banner = document.createElement('div');
   banner.id = 'mock-banner';
   banner.style.cssText = 'position:fixed;top:88px;left:50%;transform:translateX(-50%);background:#FF9500;color:#fff;font-size:11px;font-weight:800;padding:6px 14px;border-radius:20px;z-index:350;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15)';
-  banner.textContent = '\u{1F9EA} 테스트 데이터 표시 중 — 실제 공고가 없습니다';
+  banner.textContent = t('mock_data_banner');
   document.body.appendChild(banner);
   setTimeout(() => banner.remove(), 6000);
 }
@@ -1448,8 +1448,10 @@ function renderDateSlider() {
   const wrap = document.getElementById('date-slider-wrap');
   if (!wrap) return;
   const today = new Date();
-  const dayNames = ['일','월','화','수','목','금','토'];
-  let html = `<button onclick="selectDate(null)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:${selectedDate===null?'#C8102E':'#f0f0f0'};color:${selectedDate===null?'#fff':'#777'}">전체</button>`;
+  const dayNamesKo = ['일','월','화','수','목','금','토'];
+  const _dl = DAY_LABELS[currentLang] || DAY_LABELS.ko;
+  const dayNames = dayNamesKo.map(d => _dl[d] || d);
+  let html = `<button onclick="selectDate(null)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:${selectedDate===null?'#C8102E':'#f0f0f0'};color:${selectedDate===null?'#fff':'#777'}">${t('cat_all')}</button>`;
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
@@ -1459,7 +1461,7 @@ function renderDateSlider() {
     const labelColor = isSel ? 'rgba(255,255,255,0.75)' : (isSun ? '#E53935' : isSat ? '#1976D2' : '#999');
     const numColor   = isSel ? '#fff'                    : (isSun ? '#E53935' : isSat ? '#1976D2' : '#111');
     html += `<button onclick="selectDate('${dateStr}')" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:5px 11px;border-radius:14px;border:${isSel?'none':'1.5px solid #eee'};cursor:pointer;min-width:40px;background:${isSel?'#C8102E':'#fff'}">
-      <span style="font-size:10px;font-weight:700;color:${labelColor}">${i===0?'오늘':dayNames[d.getDay()]}</span>
+      <span style="font-size:10px;font-weight:700;color:${labelColor}">${i===0?t('today_label'):dayNames[d.getDay()]}</span>
       <span style="font-size:16px;font-weight:900;color:${numColor}">${d.getDate()}</span>
     </button>`;
   }
@@ -1483,7 +1485,7 @@ function renderDistrictFilter() {
   const districts = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   if (!districts.length) { wrap.style.display='none'; return; }
   wrap.style.display = 'flex';
-  let html = `<button onclick="selectDistrict(null)" style="flex-shrink:0;padding:5px 12px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:${selectedDistrict===null?'#222':'#f0f0f0'};color:${selectedDistrict===null?'#fff':'#666'}">전체</button>`;
+  let html = `<button onclick="selectDistrict(null)" style="flex-shrink:0;padding:5px 12px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:${selectedDistrict===null?'#222':'#f0f0f0'};color:${selectedDistrict===null?'#fff':'#666'}">${t('cat_all')}</button>`;
   districts.forEach(([d,cnt]) => {
     const isA = selectedDistrict === d;
     html += `<button onclick="selectDistrict('${d}')" style="flex-shrink:0;padding:5px 12px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;background:${isA?'#222':'#f0f0f0'};color:${isA?'#fff':'#555'}">${d} <span style="font-size:10px;opacity:0.65">${cnt}</span></button>`;
@@ -1500,9 +1502,10 @@ function selectDistrict(d) {
 function getJobCycleLabel(job) {
   if (job.work_type === 'errand') return null;
   const DAY = {mon:'월',tue:'화',wed:'수',thu:'목',fri:'금',sat:'토',sun:'일'};
-  const days = (job.work_days||'').split(',').map(d=>DAY[d.trim()]||d).filter(Boolean).join('·');
-  if (job.work_type === 'regular') return days ? `매주 반복 (${days})` : '정기 반복';
-  if (job.work_type === 'short')   return days ? `단기 (${days})` : '단기';
+  const _dl = DAY_LABELS[currentLang] || DAY_LABELS.ko;
+  const days = (job.work_days||'').split(',').map(d=>{ const k = DAY[d.trim()]; return k ? (_dl[k]||k) : d; }).filter(Boolean).join('·');
+  if (job.work_type === 'regular') return days ? t('cycle_regular_days_fmt').replace('{days}', days) : t('cycle_regular_label');
+  if (job.work_type === 'short')   return days ? t('cycle_short_days_fmt').replace('{days}', days) : t('work_type_short');
   return t('cycle_spot'); // spot
 }
 
@@ -1552,6 +1555,10 @@ function loadSubwayInfo(jobsList) {
   });
 }
 
+function _guestPostJobPrompt() {
+  showLoginPrompt(t('guest_post_job_title'), t('guest_post_job_desc'));
+}
+
 // ── 목록 렌더링 ───────────────────────────────────────────
 function renderList() {
   // 날짜/구 슬라이더 필터 (displayJobs = 화면에 보이는 공고)
@@ -1582,12 +1589,12 @@ function renderList() {
 
   if (displayJobs.length === 0) {
     const nextRadius = currentRadius < 3000 ? 3 : currentRadius < 5000 ? 5 : currentRadius < 10000 ? 10 : null;
-    const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">반경 ${nextRadius}km로 늘리기</button>` : '';
-    const guestBtn = isGuest ? `<button onclick="showLoginPrompt('공고를 올려보세요!','업주로 로그인하면 직접 알바 공고를 올릴 수 있어요.')" style="margin-top:8px;padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:block;width:100%">공고 올리기 (업주)</button>` : '';
+    const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('expand_radius').replace('{n}', nextRadius)}</button>` : '';
+    const guestBtn = isGuest ? `<button onclick="_guestPostJobPrompt()" style="margin-top:8px;padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:block;width:100%">${t('guest_post_job_btn')}</button>` : '';
     list.innerHTML = `<div class="empty-state">
       <div class="empty-icon">📭</div>
-      <div class="empty-txt">주변 ${(currentRadius/1000).toFixed(0)}km 내<br>공고가 없어요</div>
-      <div style="font-size:12px;color:#bbb;margin-top:6px">다른 지역을 탐색하거나 반경을 늘려보세요</div>
+      <div class="empty-txt">${t('home_empty_radius_desc_fmt').replace('{n}', (currentRadius/1000).toFixed(0))}</div>
+      <div style="font-size:12px;color:#bbb;margin-top:6px">${t('home_empty_explore_hint')}</div>
       ${expandBtn}
       ${guestBtn}
     </div>`;
@@ -1603,28 +1610,27 @@ function renderList() {
     const isErrand = job.work_type === 'errand';
     const _ap0 = (job.address||'').split('\n');
     const _da0 = _ap0[0] ? (_ap0[1] ? _ap0[0] + ' · ' + _ap0[1].split(' ').slice(0,3).join(' ') : _ap0[0]) : null;
-    const dist = job.is_remote ? '<span style="color:#0369A1;font-weight:700;font-size:11px">🖥️ 비대면</span>' : _distStr(job.distance_m, job.lat, job.lng, _da0);
-    const startStr = job.start_time ? formatTime(job.start_time) : '미정';
+    const dist = job.is_remote ? `<span style="color:#0369A1;font-weight:700;font-size:11px">🖥️ ${t('remote_work_label')}</span>` : _distStr(job.distance_m, job.lat, job.lng, _da0);
+    const startStr = job.start_time ? formatTime(job.start_time) : t('undecided');
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
     const appSt = job.applied_status;
-    const APP_LABEL = { pending:'검토중', reviewing:'\u{1F50D} 검토중', accepted:'✅ 합격', completed:'\u{1F3C1} 완료' };
-    const appliedBadge = appSt ? `<span style="font-size:11px;font-weight:800;color:#888;background:#f0f0f0;padding:2px 8px;border-radius:10px;margin-left:auto">${APP_LABEL[appSt] || '지원완료'}</span>` : '';
+    const APP_LABEL = { pending:t('app_reviewing'), reviewing:'\u{1F50D} ' + t('app_reviewing'), accepted:'✅ ' + t('app_accepted'), completed:'\u{1F3C1} ' + t('app_completed') };
+    const appliedBadge = appSt ? `<span style="font-size:11px;font-weight:800;color:#888;background:#f0f0f0;padding:2px 8px;border-radius:10px;margin-left:auto">${APP_LABEL[appSt] || t('applied_badge_label')}</span>` : '';
     // ① 반복 주기 라벨
     const cycleLabel = getJobCycleLabel(job);
     const cycleLabelHtml = cycleLabel ? `<span style="font-size:10px;font-weight:800;color:#3B82F6;margin-right:4px">${cycleLabel}</span>` : '';
     // ② 총액 표시 (시급 × 시간)
     const totalWageHtml = (!isErrand && job.duration_hours > 0 && job.current_wage > 0)
-      ? `<div style="font-size:10px;color:#aaa;font-weight:600;margin-top:1px">총 ${(job.current_wage * job.duration_hours).toLocaleString()}원</div>`
+      ? `<div style="font-size:10px;color:#aaa;font-weight:600;margin-top:1px">${t('job_total_wage_fmt').replace('{n}', (job.current_wage * job.duration_hours).toLocaleString())}</div>`
       : '';
     // ③ 재방문 인센티브 배지
     const returnBadge = (job.return_bonus > 0)
-      ? `<span class="tag" style="background:#FFF8E1;color:#F59E0B;border:1px solid #FDE68A;font-weight:800">&#11088; 재방문 +${job.return_bonus.toLocaleString()}원</span>`
+      ? `<span class="tag" style="background:#FFF8E1;color:#F59E0B;border:1px solid #FDE68A;font-weight:800">&#11088; ${t('return_bonus_badge_fmt').replace('{n}', job.return_bonus.toLocaleString())}</span>`
       : '';
     // ⑤ 언어 우대 배지
     const _LANG_FLAG = {ko:'&#127472;&#127479;',en:'&#127482;&#127480;',zh:'&#127464;&#127475;',ja:'&#127471;&#127477;',vi:'&#127483;&#127475;',ru:'&#127479;&#127482;',mn:'&#127474;&#127475;'};
-    const _LANG_NAME = {ko:'한국어',en:'영어',zh:'중국어',ja:'일본어',vi:'베트남어',ru:'러시아어',mn:'몽골어'};
     const langBadge = (job.preferred_languages && job.preferred_languages.length)
-      ? job.preferred_languages.map(l => `<span class="tag" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-weight:700">${_LANG_FLAG[l]||''} ${_LANG_NAME[l]||l} 우대</span>`).join('')
+      ? job.preferred_languages.map(l => `<span class="tag" style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-weight:700">${_LANG_FLAG[l]||''} ${t('lang_pref_badge_fmt').replace('{lang}', t('lang_name_'+l) || l)}</span>`).join('')
       : '';
     // ④ 지하철역 span (loadSubwayInfo가 비동기로 채워줌)
     const subwaySpan = (job.lat && job.lng)
@@ -1642,34 +1648,34 @@ function renderList() {
           <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${isErrand ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : ''}</div>
           <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}</div>
           ${totalWageHtml}
-          ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">최대 ${job.surge_max_wage.toLocaleString()}원</div>` : ''}
+          ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">${t('job_max_wage_fmt').replace('{n}', job.surge_max_wage.toLocaleString())}</div>` : ''}
         </div>
       </div>
       ${surgeTimer}
       <div class="card-tags">
-        ${job.is_remote ? '<span class="tag" style="background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD;font-weight:700">🖥️ 비대면</span>' : ''}
-        ${isErrand ? '<span class="tag" style="background:#F3E8FF;color:#7C3AED;font-weight:700">심부름</span>' : ''}
-        ${job.work_type === 'short'   ? '<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:700">단기</span>' : ''}
-        ${job.work_type === 'regular' ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:700">정기</span>' : ''}
+        ${job.is_remote ? `<span class="tag" style="background:#F0F9FF;color:#0369A1;border:1px solid #BAE6FD;font-weight:700">🖥️ ${t('remote_work_label')}</span>` : ''}
+        ${isErrand ? `<span class="tag" style="background:#F3E8FF;color:#7C3AED;font-weight:700">${t('job_type_errand')}</span>` : ''}
+        ${job.work_type === 'short'   ? `<span class="tag" style="background:#EFF6FF;color:#3B82F6;font-weight:700">${t('work_type_short')}</span>` : ''}
+        ${job.work_type === 'regular' ? `<span class="tag" style="background:#F0FFF4;color:#16a34a;font-weight:700">${t('work_type_regular')}</span>` : ''}
         ${isUrgent ? '<span class="tag urgent-tag">ASAP</span>' : ''}
-        ${job.surge_enabled ? '<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">번개</span>' : ''}
-        ${job.is_team_job ? '<span class="tag" style="background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE;font-weight:800">👥 팀모집</span>' : ''}
-        ${job.same_day_payment ? '<span class="tag payday-tag">💰 당일정산</span>' : ''}
-        ${job.nationality_requirement === 'korean_only'       ? '<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">🇰🇷 한국인만</span>' : ''}
-        ${job.nationality_requirement === 'foreigner_welcome' ? '<span class="tag" style="background:#F0FFF4;color:#166534;border:1px solid #86EFAC;font-weight:800">🌏 외국인환영</span>' : ''}
-        ${job.nationality_requirement === 'korean_lang'       ? '<span class="tag" style="background:#FFF7ED;color:#B45309;border:1px solid #FDE68A;font-weight:800">💬 한국어필수</span>' : ''}
-        ${job.beginner_ok === true ? '<span class="tag" style="background:#F0FFF4;color:#16a34a;border:1px solid #86EFAC;font-weight:800">🌱 초보OK</span>' : (job.beginner_ok === false ? '<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">🔰 경력자</span>' : '')}
-        ${job.meal_included ? '<span class="tag" style="background:#FFF7ED;color:#D97706;border:1px solid #FDE68A;font-weight:800">🍱 식사제공</span>' : ''}
+        ${job.surge_enabled ? `<span class="tag" style="background:#FFF3E0;color:#FF9500;font-weight:700">${t('surge_badge_label')}</span>` : ''}
+        ${job.is_team_job ? `<span class="tag" style="background:#F5F3FF;color:#7C3AED;border:1px solid #DDD6FE;font-weight:800">👥 ${t('team_recruit_badge')}</span>` : ''}
+        ${job.same_day_payment ? `<span class="tag payday-tag">💰 ${t('filter_sameday')}</span>` : ''}
+        ${job.nationality_requirement === 'korean_only'       ? `<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">${t('ownr_nationality_korean_only')}</span>` : ''}
+        ${job.nationality_requirement === 'foreigner_welcome' ? `<span class="tag" style="background:#F0FFF4;color:#166534;border:1px solid #86EFAC;font-weight:800">🌏 ${t('foreigner_welcome_badge')}</span>` : ''}
+        ${job.nationality_requirement === 'korean_lang'       ? `<span class="tag" style="background:#FFF7ED;color:#B45309;border:1px solid #FDE68A;font-weight:800">💬 ${t('korean_lang_required_badge')}</span>` : ''}
+        ${job.beginner_ok === true ? `<span class="tag" style="background:#F0FFF4;color:#16a34a;border:1px solid #86EFAC;font-weight:800">🌱 ${t('beginner_ok_badge')}</span>` : (job.beginner_ok === false ? `<span class="tag" style="background:#FFF1F2;color:#9f1239;border:1px solid #FECDD3;font-weight:800">🔰 ${t('experienced_only_badge')}</span>` : '')}
+        ${job.meal_included ? `<span class="tag" style="background:#FFF7ED;color:#D97706;border:1px solid #FDE68A;font-weight:800">🍱 ${t('meal_included_badge')}</span>` : ''}
         ${returnBadge}
         ${langBadge}
         ${job.category ? `<span class="tag ${catClass}">${tCategory(job.category)}</span>` : ''}
-        <span class="tag">${isErrand ? (job.duration_hours ? `약 ${job.duration_hours}시간` : '소요시간 협의') : (job.duration_hours ?? '-') + '시간'}</span>
+        <span class="tag">${isErrand ? (job.duration_hours ? t('errand_duration_approx_fmt').replace('{n}', job.duration_hours) : t('errand_duration_negotiable')) : (job.duration_hours ?? '-') + t('hours_unit')}</span>
         ${(() => {
           const rem = job.needed_count - job.filled_count;
           if (rem <= 0) return '';
-          if (rem === 1) return `<span class="tag" style="background:#FFF0F0;color:#C8102E;border:1px solid #FCA5A5;font-weight:800">🔥 마감임박 1자리</span>`;
-          if (rem <= 2) return `<span class="tag" style="background:#FFF7ED;color:#EA580C;font-weight:800">⚡ ${rem}자리 남음</span>`;
-          return `<span class="tag">${rem}자리 남음</span>`;
+          if (rem === 1) return `<span class="tag" style="background:#FFF0F0;color:#C8102E;border:1px solid #FCA5A5;font-weight:800">🔥 ${t('almost_full_badge')}</span>`;
+          if (rem <= 2) return `<span class="tag" style="background:#FFF7ED;color:#EA580C;font-weight:800">⚡ ${t('moim_slots_left').replace('{n}', rem)}</span>`;
+          return `<span class="tag">${t('moim_slots_left').replace('{n}', rem)}</span>`;
         })()}
       </div>
       ${job.is_team_job && job.needed_count > 0 ? (() => {
@@ -1679,8 +1685,8 @@ function renderList() {
         const rem = needed - filled;
         return `<div style="padding:0 14px 10px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <span style="font-size:10px;font-weight:700;color:#7C3AED">👥 ${needed}명 팀 모집</span>
-            <span style="font-size:10px;font-weight:800;color:${rem<=1?'#C8102E':rem<=2?'#EA580C':'#7C3AED'}">${rem > 0 ? rem+'자리 남음' : '모집완료'}</span>
+            <span style="font-size:10px;font-weight:700;color:#7C3AED">👥 ${t('team_recruit_count_fmt').replace('{n}', needed)}</span>
+            <span style="font-size:10px;font-weight:800;color:${rem<=1?'#C8102E':rem<=2?'#EA580C':'#7C3AED'}">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('recruit_complete_label')}</span>
           </div>
           <div style="height:5px;background:#EDE9FE;border-radius:3px;overflow:hidden">
             <div style="height:100%;width:${pct}%;background:${pct>=80?'#C8102E':'#7C3AED'};border-radius:3px;transition:width 0.4s"></div>

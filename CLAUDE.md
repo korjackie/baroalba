@@ -664,9 +664,11 @@ ALTER TABLE workers ADD COLUMN IF NOT EXISTS workplace_verify_token TEXT;
 | 레슨/과외 등록·상세 모달 핸들바 드래그 안 됨 | ✅ 해결 (v496, 2026-07-15) | `.modal-handle` 두 곳(lesson-register-modal/lesson-detail-modal)이 시각적 핸들만 있고 드래그 바인딩이 전혀 없었음 - bindSheetDragClose 연결 |
 | 단체채팅 키보드 여백 과다 | ✅ 해결됨 (문서만 미갱신) | `#moim-chat-messages`에 이미 `justify-content:flex-end`가 적용돼 있어 짧은 대화도 하단에 붙음 - 2026-07-13 시점 이후 누군가 수정했으나 이 표만 갱신이 안 돼있었음 |
 
-### 8-1. i18n 스윕 4차 계획 (2026-07-27, 착수 전 세션 종료로 미착수 — 다음 세션에서 이어서 할 것)
+### 8-1. i18n 스윕 4차 (2026-07-27, v574 완료)
 
-v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟으로 **홈 화면 공고 카드 렌더링**(`assets/js/app.js`의 `renderDateSlider`/`renderDistrictFilter`/`getJobCycleLabel`/`renderList`/`showMockBanner`, 대략 1350~1731줄)을 스코핑만 해두고 세션이 끊김. 실제 코드 수정은 아직 전혀 안 됨(git clean). 다음 세션은 아래 매핑 그대로 진행하면 리서치 다시 안 해도 됨:
+v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었던 **홈 화면 공고 카드 렌더링**(`assets/js/app.js`의 `renderDateSlider`/`renderDistrictFilter`/`getJobCycleLabel`/`renderList`/`showMockBanner`, 대략 1350~1731줄)을 아래 매핑대로 완료함(v574). 재사용 키 13개 + 신규 키 34개(8개국어) 전부 적용, `node --check` 통과, `_APP_V`/`sw.js`/HTML 4개 `?v=` 전부 574로 동기화. `getJobCycleLabel`의 요일 약자는 하드코딩 대신 기존 `DAY_LABELS[currentLang]`를 재사용해 언어별 요일 표기까지 반영함(기존에 존재하던 인프라를 재발견해 재사용 — 새 테이블 안 만듦).
+
+아래는 착수 전 세션이 남긴 원래 스코핑 메모(참고용, 실제 구현과 100% 일치):
 
 **재사용 가능한 기존 키(새로 안 만들어도 됨)**:
 `cat_all`(전체버튼), `undecided`(미정), `job_type_errand`(심부름), `work_type_short`(단기), `work_type_regular`(정기), `remote_work_label`(비대면), `hours_unit`(시간), `per_hour_suffix`(/시간), `app_reviewing`/`app_accepted`/`app_completed`(지원상태), `expand_radius`(반경 {n}km로 늘리기), `filter_sameday`(당일정산), `ownr_nationality_korean_only`(🇰🇷 한국인만, 이모지 포함), `moim_slots_left`({n}자리 남음)
