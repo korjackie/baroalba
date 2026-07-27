@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '576';
+  const _APP_V = '577';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -694,7 +694,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     // 프로필 탭을 "로그인"으로 강조
     const profileNav = document.querySelector('.nav-item:last-child');
     profileNav.querySelector('.nav-icon').textContent = '\u{1F511}';
-    profileNav.querySelector('.nav-label').textContent = '로그인';
+    profileNav.querySelector('.nav-label').textContent = t('login_nav_label');
     profileNav.querySelector('.nav-label').style.color = 'var(--red)';
   } else {
     goToLogin();
@@ -971,7 +971,7 @@ async function openReferralInvite() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
         카카오톡으로 초대하기
       </button>
-      <button onclick="navigator.clipboard.writeText('${link}').then(()=>showToast('📋 링크 복사됨'))" style="width:100%;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">🔗 링크 복사하기</button>
+      <button onclick="navigator.clipboard.writeText('${link}').then(()=>showToast(t('toast_link_copied_short')))" style="width:100%;padding:14px;background:#f5f5f5;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">🔗 링크 복사하기</button>
     </div>
   `);
 }
@@ -1012,7 +1012,7 @@ async function shareReferralLink(code) {
     navigator.share({ title: shareTitle, text: shareText, url: link }).catch(() => {});
     return;
   }
-  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
+  navigator.clipboard.writeText(link).then(() => showToast(t('toast_link_copied_short'))).catch(() => showToast(link));
 }
 
 // ── 브라우저 접속 여부 감지 → 헤더 "앱 설치" 버튼 표시 ──────
@@ -1032,7 +1032,7 @@ function headerInstallClick() {
   } else {
     // iOS / 설치 불가 브라우저 → 안내 토스트
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isIOS) showToast('Safari에서 공유 → 홈 화면에 추가를 선택하세요', 4000);
+    if (isIOS) showToast(t('ios_share_install_hint'), 4000);
     else showToast(t('toast_browser_install_hint'), 4000);
   }
 }
@@ -1643,8 +1643,8 @@ function renderList() {
           <div class="card-title">${job.title}${_isAdmin ? _adminBtn('job_postings',job.id,'title',job.title,'공고 제목') : ''}</div>
         </div>
         <div class="card-right">
-          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}원${isErrand ? `<span style="font-size:10px;font-weight:700;color:#aaa">${t('per_job_suffix')}</span>` : ''}</div>
-          <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>` : ''}</div>
+          <div class="card-wage" id="wage-${job.id}">${job.current_wage.toLocaleString()}${t('won_suffix')}${isErrand ? `<span style="font-size:10px;font-weight:700;color:#aaa">${t('per_job_suffix')}</span>` : ''}</div>
+          <div id="wagedelta-${job.id}">${hasSurge ? `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</div>` : ''}</div>
           ${totalWageHtml}
           ${job.surge_max_wage ? `<div style="font-size:10px;color:#aaa">${t('job_max_wage_fmt').replace('{n}', job.surge_max_wage.toLocaleString())}</div>` : ''}
         </div>
@@ -1893,7 +1893,7 @@ async function loadMoimList(cat = '') {
 
   if (container) {
     try { _renderMoimCards(container, _moimList); }
-    catch(e) { container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb">표시 오류</div>'; }
+    catch(e) { container.innerHTML = `<div style="text-align:center;padding:40px;color:#bbb">${t('display_error_label')}</div>`; }
   }
 
   // 홈 패널 미리보기 갱신 (모임 패널 컨테이너 존재 여부와 무관)
@@ -1953,7 +1953,7 @@ function _renderMoimCards(container, list) {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
             <div style="font-size:15px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}${_isAdmin ? _adminBtn('gatherings',m.id,'title',m.title,'모임 제목') : ''}</div>
-            ${m.entry_fee < 0 ? `<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">${t('fee_split')}</div>` : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}원</div>` : `<div style="font-size:12px;font-weight:700;color:#16a34a;flex-shrink:0">${t('fee_free')}</div>`}
+            ${m.entry_fee < 0 ? `<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">${t('fee_split')}</div>` : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}${t('won_suffix')}</div>` : `<div style="font-size:12px;font-weight:700;color:#16a34a;flex-shrink:0">${t('fee_free')}</div>`}
           </div>
           <div style="font-size:12px;color:#888;margin-top:3px">📅 ${dateStr}</div>
           ${m.location_name ? `<div style="font-size:12px;color:#888;margin-top:1px">📍 ${m.location_name}</div>` : ''}
@@ -2890,7 +2890,7 @@ function _moimListRow(m) {
   return `<div onclick="closeBottomSheet();openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)" style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid #f5f5f5;cursor:pointer">
     <div style="width:38px;height:38px;border-radius:10px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${emoji}</div>
     <div style="min-width:0;flex:1">
-      <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || '바로모임'}</div>
+      <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || t('moim_default_title')}</div>
       <div style="font-size:12px;color:#7C3AED;font-weight:700;margin-top:2px">${dateStr} · ${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('moim_closed')}</div>
     </div>
   </div>`;
@@ -2904,8 +2904,8 @@ function _baromeetListRow(m) {
     <div style="width:38px;height:38px;border-radius:10px;background:#FFF1F2;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💕</div>
     <div style="min-width:0;flex:1">
       <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || '바로미팅'}</div>
-      <div style="font-size:12px;color:#e11d48;font-weight:700;margin-top:2px">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr} · ${isFull ? '마감' : '모집중'}</div>
-      <div style="font-size:11px;color:#999;margin-top:1px">${m.location_name || '장소 미정'}</div>
+      <div style="font-size:12px;color:#e11d48;font-weight:700;margin-top:2px">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr} · ${isFull ? t('closed_label') : t('recruiting_label')}</div>
+      <div style="font-size:11px;color:#999;margin-top:1px">${m.location_name || t('place_undecided_label')}</div>
     </div>
   </div>`;
 }
@@ -2996,7 +2996,7 @@ async function _renderBaromeetMarkers() {
     const content = `<div onclick="openBaromeetDetail('${m.id}')" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:max-content">
       <div style="background:#e11d48;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(225,29,72,0.4);white-space:nowrap;max-width:150px">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">💕 ${titleShort}</div>
-        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr ? dateStr + ' · ' : ''}${isFull ? '마감' : '모집중'}</div>
+        <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr ? dateStr + ' · ' : ''}${isFull ? t('closed_label') : t('recruiting_label')}</div>
       </div>
       <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #e11d48"></div>
     </div>`;
@@ -3124,10 +3124,10 @@ function _homeJobCard(job) {
       ${job.biz_name ? `<div style="font-size:10px;color:#c8c8c8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${job.biz_name}</div>` : ''}
     </div>
     <div style="padding:8px 13px 12px;border-top:1px solid #f5f5f5">
-      <div style="font-size:18px;font-weight:900;color:#C8102E;line-height:1.1;letter-spacing:-0.5px">${wage > 0 ? wage.toLocaleString('ko-KR')+'원' : '협의'}</div>
+      <div style="font-size:18px;font-weight:900;color:#C8102E;line-height:1.1;letter-spacing:-0.5px">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</div>
       <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center">
         <span style="font-size:9px;font-weight:800;background:#fff0f2;color:#C8102E;padding:3px 7px;border-radius:6px">${label}</span>
-        ${job.same_day_payment ? '<span style="font-size:9px;font-weight:800;background:#f0fdf4;color:#15803d;padding:3px 7px;border-radius:6px">당일</span>' : ''}
+        ${job.same_day_payment ? `<span style="font-size:9px;font-weight:800;background:#f0fdf4;color:#15803d;padding:3px 7px;border-radius:6px">${t('same_day_short')}</span>` : ''}
         ${job.status === 'urgent' ? `<span style="font-size:9px;font-weight:800;background:#fff0f2;color:#C8102E;padding:3px 7px;border-radius:6px">${t('urgent_label')}</span>` : ''}
       </div>
     </div>
@@ -3160,7 +3160,7 @@ function _applyUrgentBentoContent(urgentJobs) {
     return;
   }
   const top = urgentJobs[0];
-  const wageText = top.current_wage > 0 ? `${top.current_wage.toLocaleString('ko-KR')}원 ${_wageLabel(top)}` : '협의';
+  const wageText = top.current_wage > 0 ? `${top.current_wage.toLocaleString('ko-KR')}${t('won_suffix')} ${_wageLabel(top)}` : t('negotiable_label');
   banner.innerHTML = `
     <div class="bento-top">
       <span class="bento-tag">${t('urgent_n_jobs').replace('{n}', urgentJobs.length)}</span>
@@ -3202,7 +3202,7 @@ function showHomeUrgentList() {
   srEl.style.display = 'block';
   defaultEl.style.display = 'none';
   const label = document.getElementById('home-search-result-label');
-  if (label) label.textContent = `급구 공고 ${urgentJobs.length}개`;
+  if (label) label.textContent = t('urgent_jobs_count_fmt').replace('{n}', urgentJobs.length);
   _renderHomeSearchList(urgentJobs);
 }
 
@@ -3284,7 +3284,7 @@ function _renderHomeSameDay() {
       section.style.display = 'none'; // GPS 미확보 상태 - 카드 숨김
     } else {
       section.style.display = 'flex';
-      section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div><div style="font-size:12px;color:#ddd;margin-top:auto">공고 없음</div>`;
+      section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">${t('high_wage_label')}</div><div style="font-size:12px;color:#ddd;margin-top:auto">${t('no_jobs_label')}</div>`;
     }
     return;
   }
@@ -3295,7 +3295,7 @@ function _renderHomeSameDay() {
     <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div>
     <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
     <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
-    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#C8102E">${hourly.toLocaleString('ko-KR')}원</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px">시급</span></div>
+    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#C8102E">${hourly.toLocaleString('ko-KR')}${t('won_suffix')}</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px">시급</span></div>
   `;
   section.onclick = () => openDetail(top.id);
 }
@@ -3320,7 +3320,7 @@ function openWageFilter() {
   const srEl = document.getElementById('home-search-results');
   const defEl = document.getElementById('home-default-content');
   const label = document.getElementById('home-search-result-label');
-  if (label) label.textContent = `💰 높은 시급 공고 ${wageJobs.length}개`;
+  if (label) label.textContent = t('high_wage_jobs_count_fmt').replace('{n}', wageJobs.length);
   if (srEl) srEl.style.display = 'block';
   if (defEl) defEl.style.display = 'none';
   _renderHomeSearchList(wageJobs);
@@ -3338,18 +3338,18 @@ function openAIFilter() {
     const raw = localStorage.getItem(_aiKey());
     const prefs = raw ? JSON.parse(raw) : null;
     if (!prefs || (prefs.totalSignals || 0) < 3) {
-      if (label) label.textContent = '🤖 AI 추천 공고';
-      if (list) list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:12px">🤖</div><div style="font-size:13px;font-weight:700;line-height:1.7">공고를 더 둘러볼수록<br>맞춤 추천이 시작돼요!</div></div>';
+      if (label) label.textContent = t('ai_rec_jobs_label');
+      if (list) list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#bbb"><div style="font-size:40px;margin-bottom:12px">🤖</div><div style="font-size:13px;font-weight:700;line-height:1.7">${t('ai_rec_empty_desc')}</div></div>`;
       return;
     }
     const scored = (jobs||[]).filter(j=>j.status==='open'||j.status==='urgent')
       .map(j=>({job:j,score:_aiScoreJob(j,prefs)})).filter(x=>x.score>0)
       .sort((a,b)=>b.score-a.score).map(x=>x.job);
-    if (label) label.textContent = `🤖 AI 추천 공고 ${scored.length}개`;
+    if (label) label.textContent = t('ai_rec_jobs_count_fmt').replace('{n}', scored.length);
     _renderHomeSearchList(scored);
   } catch(e) {
-    if (label) label.textContent = '🤖 AI 추천 공고';
-    if (list) list.innerHTML = '<div style="text-align:center;padding:32px 0;color:#bbb;font-size:13px">잠시 후 다시 시도해주세요</div>';
+    if (label) label.textContent = t('ai_rec_jobs_label');
+    if (list) list.innerHTML = `<div style="text-align:center;padding:32px 0;color:#bbb;font-size:13px">${t('retry_later_label')}</div>`;
   }
 }
 
@@ -3456,7 +3456,7 @@ function switchRankTab(tab) {
 
 async function _renderRankPanel() {
   const isEmployer = _rankCurrentTab === 'employer';
-  document.getElementById('rank-panel-title').textContent = isEmployer ? '추천 업체 RANK' : '우수 알바생 RANK';
+  document.getElementById('rank-panel-title').textContent = isEmployer ? t('rank_title_employer') : t('rank_title_worker');
   const et = document.getElementById('rank-tab-employer');
   const wt = document.getElementById('rank-tab-worker');
   if (et) { et.style.background = isEmployer ? '#b45309' : '#fff'; et.style.color = isEmployer ? '#fff' : '#888'; et.style.borderColor = isEmployer ? '#b45309' : '#e5e7eb'; }
@@ -3469,7 +3469,7 @@ async function _renderRankPanel() {
   if (catEl) catEl.innerHTML = cats.map(c => `<button onclick="_setRankCat('${c}')" style="flex-shrink:0;padding:5px 12px;border-radius:20px;border:1.5px solid ${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#b45309':'#e5e7eb'};background:${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#b45309':'#fff'};color:${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#fff':'#888'};font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">${c}</button>`).join('');
 
   const listEl = document.getElementById('rank-list');
-  listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#ddd">불러오는 중...</div>';
+  listEl.innerHTML = `<div style="text-align:center;padding:32px;color:#ddd">${t('loading_generic')}</div>`;
   try {
     let data;
     if (isEmployer) {
@@ -3490,7 +3490,7 @@ async function _renderRankPanel() {
       });
     }
     const sorted = data.sort((a,b) => _trustScore(b.rating,b.review_count) - _trustScore(a.rating,a.review_count)).slice(0,20);
-    if (!sorted.length) { listEl.innerHTML = '<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">해당 업종 데이터가 없어요</div>'; return; }
+    if (!sorted.length) { listEl.innerHTML = `<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">${t('no_category_data')}</div>`; return; }
     const _NAT = {KR:'🇰🇷',MN:'🇲🇳',NP:'🇳🇵',VN:'🇻🇳',RU:'🇷🇺',CN:'🇨🇳',UZ:'🇺🇿',KZ:'🇰🇿',JP:'🇯🇵',US:'🇺🇸'};
     const medalColors = ['#FFD700','#C0C0C0','#CD7F32'];
     listEl.innerHTML = sorted.map((d,i) => {
@@ -3509,7 +3509,7 @@ async function _renderRankPanel() {
         <div style="width:24px;display:flex;justify-content:center;flex-shrink:0">${medal}</div>
         ${avatar}
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isEmployer?(d.name||'업체'):sub}</div>
+          <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isEmployer?(d.name||t('biz_default_label')):sub}</div>
           <div style="font-size:11px;color:#aaa;margin-top:1px">${isEmployer?sub:''} ⭐ ${(d.rating||0).toFixed(1)} <span style="color:#ddd">(${d.review_count}건)</span></div>
         </div>
         <div style="text-align:right;flex-shrink:0">
@@ -3518,7 +3518,7 @@ async function _renderRankPanel() {
         </div>
       </div>`;
     }).join('');
-  } catch(e) { listEl.innerHTML = `<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">불러오기 실패<br>${e.message}</div>`; }
+  } catch(e) { listEl.innerHTML = `<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">${t('load_failed_label')}<br>${e.message}</div>`; }
 }
 function _setRankCat(cat) {
   _rankCurrentCat = cat === '전체' ? '' : cat;
@@ -3532,7 +3532,7 @@ function _renderHomeRecent() {
   const available = (jobs || []).filter(j => j.status === 'open' || j.status === 'urgent').slice(0, 10);
   if (!available.length) {
     if (!_jobsLoaded) return; // 아직 로딩 중 → 스켈레톤 유지
-    list.innerHTML = '<div style="color:#bbb;font-size:12px;padding:4px 0 8px;white-space:nowrap">주변 공고가 없어요</div>';
+    list.innerHTML = `<div style="color:#bbb;font-size:12px;padding:4px 0 8px;white-space:nowrap">${t('no_nearby_jobs_short')}</div>`;
     return;
   }
   list.innerHTML = available.map(j => _homeJobCard(j)).join('');
@@ -3548,7 +3548,7 @@ function showAllJobs() {
   defaultEl.style.display = 'none';
   const label = document.getElementById('home-search-result-label');
   const allJobs = (jobs || []).filter(j => j.status === 'open' || j.status === 'urgent');
-  if (label) label.textContent = `전체 공고 ${allJobs.length}개`;
+  if (label) label.textContent = t('all_jobs_count_fmt').replace('{n}', allJobs.length);
   _renderHomeSearchList(allJobs);
 }
 
@@ -3574,7 +3574,7 @@ async function _loadHomeTopPartners() {
           ${avatarHtml}${fallback}
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-              <span style="font-size:13px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${e.name||'업체'}</span>
+              <span style="font-size:13px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px">${e.name||t('biz_default_label')}</span>
               ${typeTag}
             </div>
             <div style="font-size:12px;color:#b45309;font-weight:700;margin-top:2px">⭐ ${(e.rating||0).toFixed(1)} <span style="color:#ccc;font-weight:500">(${e.review_count}건)</span></div>
@@ -3729,7 +3729,7 @@ function _updateHomeFilterCount() {
   if (_hfPendingNat==='foreigner') f = f.filter(j => j.nationality_requirement==='foreigner_welcome');
   if (_hfPendingSkillMatch && _myWorkerSkills?.length) f = f.filter(j => _myWorkerSkills.includes(j.category));
   const btn = document.getElementById('home-filter-apply-btn');
-  if (btn) btn.textContent = `공고보기 ${f.length}개`;
+  if (btn) btn.textContent = t('view_jobs_count_fmt').replace('{n}', f.length);
 }
 function applyHomeFilter() {
   _homeFilterSearch = (document.getElementById('hfc-search-input')?.value || '').trim();
@@ -3795,7 +3795,7 @@ function _doHomeFilterRender() {
   if (_homeFilterWage === 'same_day') parts.push('당일정산');
   if (_homeFilterNat === 'foreigner') parts.push('외국인환영');
   if (_homeFilterSkillMatch) parts.push('내 스킬 맞춤');
-  if (label) label.textContent = `${parts.join(' · ')} 공고 ${filtered.length}개`;
+  if (label) label.textContent = t('filtered_jobs_count_fmt').replace('{parts}', parts.join(' · ')).replace('{n}', filtered.length);
   _renderHomeSearchList(filtered);
 }
 
@@ -3865,9 +3865,9 @@ function _renderHomeSearchList(filtered) {
         <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:2px">${job.biz_name || ''}</div>
         <div style="font-size:14px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title}</div>
         <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
-          <span style="font-size:13px;font-weight:900;color:#C8102E">${wage > 0 ? wage.toLocaleString('ko-KR')+'원' : '협의'}</span>
+          <span style="font-size:13px;font-weight:900;color:#C8102E">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</span>
           ${wage > 0 ? `<span style="font-size:9px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:4px">${_wageLabel(job)}</span>` : ''}
-          ${job.same_day_payment ? '<span style="font-size:9px;font-weight:900;background:#f0fdf4;color:#15803d;padding:2px 6px;border-radius:4px">당일</span>' : ''}
+          ${job.same_day_payment ? `<span style="font-size:9px;font-weight:900;background:#f0fdf4;color:#15803d;padding:2px 6px;border-radius:4px">${t('same_day_short')}</span>` : ''}
         </div>
       </div>
       ${rem > 0 && rem <= 3 ? `<div style="font-size:11px;font-weight:800;color:#C8102E;white-space:nowrap">🔥${rem}자리</div>` : ''}
@@ -8723,7 +8723,7 @@ function makeSwipeCard(job, isTop) {
           <span style="font-size:16px;font-weight:700;color:var(--red)">원/시간</span>
           ${hasSurge ? `<span style="font-size:12px;font-weight:800;color:#FF9500;background:#FFF3E0;padding:3px 8px;border-radius:8px;margin-left:4px">↑ ${job.wage_delta.toLocaleString()}원</span>` : ''}
         </div>
-        ${job.duration_hours ? `<div style="font-size:13px;color:#888;font-weight:700;margin-top:4px">총 ${Math.round(job.current_wage * job.duration_hours).toLocaleString()}원 예상</div>` : ''}
+        ${job.duration_hours ? `<div style="font-size:13px;color:#888;font-weight:700;margin-top:4px">${t('est_total_wage_fmt').replace('{n}', Math.round(job.current_wage * job.duration_hours).toLocaleString())}</div>` : ''}
       </div>
 
       <!-- 날짜/시간/거리/인원 그리드 -->
@@ -11001,7 +11001,7 @@ function startSurgeTimers() {
               (job.work_type === 'errand' ? '<span style="font-size:10px;font-weight:700;color:#aaa">/건</span>' : '');
           }
           if (deltaWrap) {
-            deltaWrap.innerHTML = `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}원</div>`;
+            deltaWrap.innerHTML = `<div class="wage-delta">↑${job.wage_delta.toLocaleString()}${t('won_suffix')}</div>`;
           }
           // 타이머 배경 잠깐 강조
           const timerEl = document.getElementById(`stimer-${job.id}`);
@@ -15736,7 +15736,7 @@ async function sendScoutProposal(workerKakaoUid, workerName, btn) {
   const biz = (businesses || []).find(b => b.owner_id === currentUser?.id);
   const bizName = biz?.name || '업체';
   const title = `\u{1F3AF} ${bizName}에서 스카우트 제안이 왔어요!`;
-  const body = `"${posting.title}" · ${posting.current_wage?.toLocaleString()}원/시간${extraMsg ? '\n' + extraMsg : ''}`;
+  const body = `"${posting.title}" · ${t('wage_per_hour_fmt').replace('{n}', posting.current_wage?.toLocaleString())}${extraMsg ? '\n' + extraMsg : ''}`;
 
   btn.disabled = true; btn.textContent = '전송 중...';
   try {
@@ -18521,7 +18521,7 @@ async function _loadBaromeetList() {
     el.innerHTML = data.map(m => _renderBaromeetCard(m, m._myStatus)).join('');
     document.getElementById('mnm-meet-loctext').textContent = `${data.length}개 미팅 모집 중`;
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:44px 20px;color:#bbb;font-size:13px">불러오기 실패<br>잠시 후 다시 시도해주세요</div>';
+    el.innerHTML = `<div style="text-align:center;padding:44px 20px;color:#bbb;font-size:13px">${t('load_failed_label')}<br>${t('retry_later_label')}</div>`;
   }
 }
 function _renderBaromeetCard(m, myStatus) {
@@ -18687,7 +18687,7 @@ async function shareBaromeet(id, title) {
     navigator.share({ title: shareTitle, text: shareText, url: link }).catch(() => {});
     return;
   }
-  navigator.clipboard.writeText(link).then(() => showToast('📋 링크 복사됨')).catch(() => showToast(link));
+  navigator.clipboard.writeText(link).then(() => showToast(t('toast_link_copied_short'))).catch(() => showToast(link));
 }
 
 async function handleBaromeetDeeplink(id) {
@@ -21020,7 +21020,7 @@ function _buildChargeAmtGrid() {
   }).join('');
   // 기타금액 (10% + 2만원당 1,000P 보너스 자동 계산)
   const customHtml = `<div style="grid-column:1/-1;margin-top:4px">
-    <div style="font-size:11px;color:#aaa;margin-bottom:5px;font-weight:700">기타 금액 (최소 5,000원 · 10% + 2만원당 1,000P 보너스)</div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:5px;font-weight:700">${t('topup_other_amount_hint')}</div>
     <div style="display:flex;gap:8px;align-items:center">
       <input id="pc-custom-amt" type="number" min="5000" max="500000" step="1000" placeholder="직접 입력"
         oninput="onCustomAmtInput(this)"
@@ -21065,7 +21065,7 @@ function onCustomAmtInput(inp) {
   } else {
     _selectedChargeTier = null;
     _selectedChargeAmt  = 0;
-    if (preview) preview.textContent = v > 0 && v < 5000 ? '최소 5,000원 이상 입력해주세요' : '';
+    if (preview) preview.textContent = v > 0 && v < 5000 ? t('topup_min_amount_warn') : '';
     _updateAmtProceedBtn();
   }
 }
