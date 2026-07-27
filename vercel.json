@@ -1,5 +1,4 @@
 {
-  "_comment": "Hobby 플랜은 배포당 서버리스 함수 12개가 상한이고 api/ 가 정확히 12개로 꽉 차 있다. 새 함수를 추가하려면 기존 하나를 먼저 없애야 한다(자세한 경위는 api/seo.js 상단 주석). 루트 middleware.js 로 우회하는 건 이 프로젝트에선 배포 에러가 나므로 다시 시도하지 말 것.",
   "rewrites": [
     { "source": "/job/:id", "destination": "/api/seo?kind=job&id=:id" },
     { "source": "/sitemap.xml", "destination": "/api/seo?kind=sitemap" },

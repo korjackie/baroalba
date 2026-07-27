@@ -10,14 +10,24 @@
  *
  * ⚠️ 두 기능을 굳이 한 파일에 넣은 이유 (2026-07-28)
  *    Vercel Hobby 플랜은 배포당 서버리스 함수 12개가 상한이고 api/ 가 꽉 차 있었다.
- *    job.js·sitemap.js 로 따로 만들었더니 14개가 되어 배포가 거부됐고("No more than
- *    12 Serverless Functions..."), 루트 middleware.js(Edge)로 우회하는 것도 이
- *    프로젝트에선 배포 에러가 났다. 결국 welcome-email + report-notify 를 api/email.js
- *    로 합쳐 슬롯 하나를 비우고, 이 둘도 한 파일에 담아 12개를 맞췄다.
+ *    job.js·sitemap.js 로 따로 만들었더니 14개가 되어 배포가 거부됐다
+ *    ("No more than 12 Serverless Functions can be added to a Deployment on the
+ *    Hobby plan"). 그래서 welcome-email + report-notify 를 api/email.js 로 합쳐
+ *    슬롯 하나를 비우고, 이 둘도 한 파일에 담아 12개를 맞췄다.
  *    ⇒ api/ 에 새 파일을 추가하려면 반드시 기존 하나를 먼저 없애야 한다.
  *
  * ⚠️ 빌드 로그가 "Build Completed" 여도 성공이 아니다. 함수 상한은 그 다음 배포
  *    단계에서 걸린다. 배포 후 실제 URL을 curl 해서 확인할 것.
+ *
+ * 📌 같은 날 헛다리 짚은 기록 (다음 세션이 반복하지 않도록)
+ *    함수 상한을 우회하려고 루트 middleware.js(Edge Function은 12개에 안 들어감)를
+ *    시도했다가 배포가 실패해서 "이 프로젝트는 미들웨어를 지원하지 않는다"고 잘못
+ *    결론냈다. 실제 원인은 미들웨어가 아니라 그때 vercel.json 에 같이 넣은
+ *    `"_comment"` 키였다 — Vercel 스키마 검증이 모르는 최상위 키를 거부한다:
+ *      "The vercel.json schema validation failed with the following message:
+ *       should NOT have additional property `_comment`"
+ *    즉 vercel.json 에는 주석용 키를 넣을 수 없다(JSON이라 // 주석도 불가).
+ *    설명은 이렇게 코드 주석에 남길 것. 미들웨어 자체는 미검증 상태다.
  */
 
 const SUPABASE_URL = 'https://onwvbmllpycgswfzywjv.supabase.co';
