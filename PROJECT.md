@@ -1,7 +1,11 @@
 # 바로알바 — 프로젝트 마스터 문서
 
-> 최종 업데이트: 2026-06-29  
+> 최종 업데이트: 2026-07-28  
 > 담당: 박근욱 (jackie@multimove.co.kr) — 멀티무브 주식회사
+
+> **이 문서의 위치**: 서비스가 *무엇인지* 설명하는 소개·구조 문서다.
+> 날짜별 작업이력과 개발 규칙은 `CLAUDE.md`가 정본이고, 여기 4장은 요약본이다.
+> 둘이 어긋나면 `CLAUDE.md`를 믿을 것.
 
 ---
 
@@ -36,7 +40,9 @@
 
 | 구분 | URL |
 |------|-----|
-| 메인 앱 | https://baroalba.multimove.co.kr |
+| 랜딩페이지 (비로그인 진입점) | https://baroalba.multimove.co.kr/ → `index.html` |
+| 메인 앱 | https://baroalba.multimove.co.kr/바로알바.html |
+| 공고 상세 (SEO 서버렌더링) | https://baroalba.multimove.co.kr/job/:id → `api/seo.js` |
 | GitHub | https://github.com/korjackie/baroalba |
 | Supabase | onwvbmllpycgswfzywjv.supabase.co |
 
@@ -52,7 +58,7 @@
 - 업주 팔로우 → 신규 공고 알림
 - 스카우트 제안 수락/거절
 - 커뮤니티 (후기/정보공유/자유게시판)
-- 다국어 UI (한국어/영어/중국어/일본어/베트남어/러시아어)
+- 다국어 UI 8개 언어 (한국어/영어/중국어/일본어/베트남어/러시아어/몽골어/네팔어)
 - 프로필: 포트폴리오 5장, 스킬, 경력, 자격서류
 - 급여계산기 (주휴수당 + 실수령액)
 - 수입 달력 (월별 수입 정리)
@@ -176,18 +182,41 @@ _onFCMToken(token)    : FCM 토큰 전달 콜백
 
 ### 2-3. 파일별 역할
 
+*(2026-07-28 갱신. 버전·크기는 그때그때 바뀌므로 정확한 값은 파일을 직접 볼 것)*
+
 | 파일 | 역할 | 크기 |
 |------|------|------|
-| `바로알바.html` | 알바생+업주 통합 앱 전체 | ~450KB |
-| `login.html` | 로그인/회원가입 + 웹 스플래시 | ~28KB |
+| `index.html` | **공개 랜딩페이지**(`/`) + SEO + 8개 언어 전환 | ~60KB |
+| `바로알바.html` | 알바생+업주 통합 앱 전체 | ~440KB |
+| `login.html` | 로그인/회원가입 + 웹 스플래시 | ~73KB |
 | `owner.html` | redirect only → `/바로알바.html?tab=postings` | ~0.1KB |
-| `admin.html` | 관리자 대시보드 (신고/회원관리) | ~30KB |
-| `shared-lang.js` | 번역 데이터 + applyLang() | ~18KB |
-| `sw.js` | PWA 서비스워커 (현재 v270) | ~3KB |
+| `admin.html` | 관리자 대시보드 (신고/회원관리) | ~225KB |
+| `assets/js/app.js` | 앱 로직 본체 (`_APP_V` 가 여기 있다) | ~1.2MB |
+| `assets/js/app_ui.js` | UI 보조 로직 (app.js와 락스텝) | ~56KB |
+| `shared-lang.js` | 번역 데이터 8개 언어 × 1922키 + `applyLang()` | ~1MB |
+| `sw.js` | PWA 서비스워커 (배포마다 CACHE 버전 갱신) | ~7KB |
 | `manifest.json` | PWA 설정 (start_url: login.html) | ~1KB |
 | `config.js` | DEFAULT_LAT/LNG, RADIUS 등 | ~2KB |
-| `terms.html` | 이용약관 + 개인정보처리방침 | - |
-| `api/send-push.js` | Vercel 서버리스, Web Push 발송 | ~2KB |
+| `terms.html` / `privacy.html` | 이용약관 / 개인정보처리방침 | - |
+| `robots.txt` | 크롤러 차단 규칙 (admin·api·docs·시안) | ~1KB |
+
+**`api/` 서버리스 함수 (12개 — 상한이 12개라 꽉 찬 상태)**
+
+| 파일 | 역할 |
+|------|------|
+| `api/seo.js` | `/job/:id` 서버렌더링 + `/sitemap.xml` 자동생성 |
+| `api/email.js` | Resend 메일 발송 (`?kind=welcome` / `?kind=report`) |
+| `api/send-push.js` | Web Push 발송 |
+| `api/admin.js` | 관리자 액션 라우터 (`?action=`) |
+| `api/coupon.js` · `api/toss-confirm.js` · `api/toss-points.js` | 쿠폰 / 결제 |
+| `api/naver-auth.js` · `api/naver-search.js` | 네이버 로그인 / 장소검색 |
+| `api/role-notify.js` · `api/mannam-owner.js` | 역할변경 알림 / 바로만남 장소 |
+| `api/surge-check.js` | 시급 자동인상 크론 (cron-job.org가 호출) |
+
+⚠️ **Vercel Hobby 플랜은 배포당 서버리스 함수 12개가 상한**이고 지금 정확히 12개다.
+새 파일을 추가하면 배포가 거부되므로, **먼저 기존 하나를 없애야 한다**(자세한 경위는
+`api/seo.js` 상단 주석과 CLAUDE.md Phase 62). 옛 주소를 살리는 리라이트를 쓰면 함수를
+합쳐도 호출하는 쪽 코드는 바꾸지 않아도 된다.
 
 ### 2-4. 마이페이지 서브패널 구조
 
@@ -219,12 +248,13 @@ panel-profile (마이페이지 전체화면)
 ### 2-5. 번역 시스템 (shared-lang.js)
 
 ```
-6개국어: ko / en / zh / ja / vi / ru
+8개 언어: ko / en / zh / ja / vi / ru / mn / np
+  → 정본은 shared-lang.js 의 const _LANGS 배열 하나뿐. 언어 추가 시 여기부터 고칠 것
 
 WORK_TYPE_LABELS   근무형태 레이블
 VEHICLE_LABELS     이동수단 8종
 STRENGTH_LABELS    강점 20종
-TRANSLATIONS       UI 전반 70+개
+TRANSLATIONS       UI 전반 (언어당 1,900키 이상 — 랜딩 index.html 은 자체 사전을 따로 씀)
 
 HTML 속성:
   data-i18n="key"      textContent 번역
@@ -354,9 +384,15 @@ worker_id IS NOT NULL AND EXISTS(
 
 ```
 코드 수정
+  → 버전 4곳을 같은 숫자로 올린다 (락스텝 — 하나라도 빠지면 캐시가 안 지워진다)
+      1. sw.js         const CACHE  = 'baroalba-vNNN'
+      2. assets/js/app.js  const _APP_V = 'NNN'
+      3. 바로알바.html   app.js?v=NNN / app_ui.js?v=NNN / shared-lang.js?v=NNN
+      (현재 585 — 정확한 값은 위 파일들을 직접 볼 것)
   → git push origin main
   → Vercel 자동 빌드 + 배포 (약 30초)
   → baroalba.multimove.co.kr 즉시 반영
+  → 라이브에서 실제로 NNN이 나오는지 확인하고 나서 완료 보고
 
 Android 빌드
   → build.gradle 버전 업
