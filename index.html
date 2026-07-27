@@ -39,11 +39,21 @@
           인쇄된 QR과 과거 공유링크가 여기로 들어온다.
        2) 이미 로그인한 사용자 — '/'를 북마크해둔 기존 이용자가 랜딩을 거치지 않게.
      검색엔진 크롤러와 신규 방문자는 둘 다 해당 없어 랜딩을 그대로 본다.
-     판정에 실패하면 그냥 랜딩이 보일 뿐이라 실패해도 안전하다. */
+     판정에 실패하면 그냥 랜딩이 보일 뿐이라 실패해도 안전하다.
+
+     ⚠️ ?lang= 은 예외다(2026-07-28 랜딩 다국어화). 이걸 빼먹으면 "영어로 된 랜딩"
+        공유링크(/?lang=en)가 랜딩을 못 보여주고 통째로 앱으로 튕겨서, 다국어화의
+        목적 자체가 사라진다. lang 만 있으면 랜딩을 보여주고, 다른 파라미터가
+        섞여 있으면 lang 을 뺀 나머지를 들고 예전처럼 앱으로 넘긴다. */
   (function () {
     if (location.search) {
-      location.replace('/바로알바.html' + location.search + location.hash);
-      return;
+      var _p = new URLSearchParams(location.search);
+      _p.delete('lang');
+      var _rest = _p.toString();
+      if (_rest) {
+        location.replace('/바로알바.html?' + _rest + location.hash);
+        return;
+      }
     }
     try {
       for (var i = 0; i < localStorage.length; i++) {
@@ -91,6 +101,19 @@
   .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;color:var(--ink);text-decoration:none;letter-spacing:-.02em}
   .brand img{width:28px;height:28px;border-radius:7px}
   .hnav{display:flex;align-items:center;gap:8px}
+  /* 언어 선택 — 한국어를 못 읽는 사람이 찾아야 하는 컨트롤이라 지구본 아이콘을 같이 둔다.
+     (앱에서 "읽지도 못하는 한국어 화면에서 언어 버튼을 먼저 찾아야 했던" 문제가 Phase 61의
+     최대 발견이었다. 랜딩에서도 같은 실수를 하지 않기 위해 헤더 최상단에 노출한다) */
+  .langsel{position:relative;display:flex;align-items:center}
+  .langsel svg{position:absolute;left:9px;pointer-events:none;color:var(--muted)}
+  .langsel select{
+    appearance:none;-webkit-appearance:none;
+    padding:9px 26px 9px 30px;border:1px solid var(--line);border-radius:9px;background:#fff;
+    font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;
+    max-width:132px;text-overflow:ellipsis;
+  }
+  .langsel::after{content:"";position:absolute;right:11px;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
+  .langsel select:hover{border-color:#c9ccd3}
   .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
   .btn-primary{background:var(--red);color:#fff}
   .btn-primary:hover{background:var(--red-dark)}
@@ -182,8 +205,21 @@
       바로알바
     </a>
     <nav class="hnav">
-      <a class="btn btn-ghost" href="/login.html">로그인</a>
-      <a class="btn btn-primary" href="/바로알바.html?guest=1">알바 찾기</a>
+      <div class="langsel">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <select id="lang-select" aria-label="Language">
+          <option value="ko" lang="ko">한국어</option>
+          <option value="en" lang="en">English</option>
+          <option value="zh" lang="zh">中文</option>
+          <option value="ja" lang="ja">日本語</option>
+          <option value="vi" lang="vi">Tiếng Việt</option>
+          <option value="ru" lang="ru">Русский</option>
+          <option value="mn" lang="mn">Монгол</option>
+          <option value="ne" lang="ne">नेपाली</option>
+        </select>
+      </div>
+      <a class="btn btn-ghost" href="/login.html" data-i18n="nav_login">로그인</a>
+      <a class="btn btn-primary" href="/바로알바.html?guest=1" data-i18n="nav_find">알바 찾기</a>
     </nav>
   </div>
 </header>
@@ -192,22 +228,22 @@
 
   <div class="hero">
     <div class="wrap">
-      <span class="eyebrow">지도 기반 실시간 알바 매칭</span>
-      <h1>지금 일하고,<br><span class="accent">오늘 받는</span> 초단기 알바</h1>
-      <p class="lede">
+      <span class="eyebrow" data-i18n="hero_eyebrow">지도 기반 실시간 알바 매칭</span>
+      <h1 data-i18n-html="hero_title">지금 일하고,<br><span class="accent">오늘 받는</span> 초단기 알바</h1>
+      <p class="lede" data-i18n="hero_lede">
         내 주변 단기·당일 알바를 지도 위에서 바로 찾고, 바로 지원하세요.
         급구 공고는 실시간 알림으로 먼저 받아보고, 일이 끝나면 당일 정산까지.
       </p>
       <div class="cta">
-        <a class="btn btn-primary btn-lg" href="/바로알바.html?guest=1">내 주변 알바 보기</a>
-        <a class="btn btn-ghost btn-lg" href="/login.html">업주로 공고 등록</a>
+        <a class="btn btn-primary btn-lg" href="/바로알바.html?guest=1" data-i18n="hero_cta1">내 주변 알바 보기</a>
+        <a class="btn btn-ghost btn-lg" href="/login.html" data-i18n="hero_cta2">업주로 공고 등록</a>
       </div>
       <div class="chips">
-        <span class="chip">지도에서 바로 탐색</span>
-        <span class="chip">급구 실시간 알림</span>
-        <span class="chip">당일 정산</span>
-        <span class="chip">8개 언어 지원</span>
-        <span class="chip">설치 없이 웹에서</span>
+        <span class="chip" data-i18n="chip1">지도에서 바로 탐색</span>
+        <span class="chip" data-i18n="chip2">급구 실시간 알림</span>
+        <span class="chip" data-i18n="chip3">당일 정산</span>
+        <span class="chip" data-i18n="chip4">8개 언어 지원</span>
+        <span class="chip" data-i18n="chip5">설치 없이 웹에서</span>
       </div>
     </div>
   </div>
@@ -215,33 +251,33 @@
   <section>
     <div class="wrap">
       <div class="shead">
-        <h2>바로알바가 다른 이유</h2>
-        <p>목록을 넘기는 대신, 지도에서 내 위치 기준으로 찾습니다.</p>
+        <h2 data-i18n="s1_t">바로알바가 다른 이유</h2>
+        <p data-i18n="s1_s">목록을 넘기는 대신, 지도에서 내 위치 기준으로 찾습니다.</p>
       </div>
       <div class="grid">
         <div class="card">
-          <h3>지도 기반 탐색</h3>
-          <p>현재 위치 반경 1~30km 안의 공고를 지도 위 마커로 확인합니다. 집·학교에서 가까운 일자리부터 눈으로 바로 고를 수 있습니다.</p>
+          <h3 data-i18n="c1t">지도 기반 탐색</h3>
+          <p data-i18n="c1d">현재 위치 반경 1~30km 안의 공고를 지도 위 마커로 확인합니다. 집·학교에서 가까운 일자리부터 눈으로 바로 고를 수 있습니다.</p>
         </div>
         <div class="card">
-          <h3>스와이프로 빠르게</h3>
-          <p>공고를 한 장씩 넘기며 관심·패스만 고르면 됩니다. 고른 기록을 학습해 취향에 맞는 공고를 위로 올려줍니다.</p>
+          <h3 data-i18n="c2t">스와이프로 빠르게</h3>
+          <p data-i18n="c2d">공고를 한 장씩 넘기며 관심·패스만 고르면 됩니다. 고른 기록을 학습해 취향에 맞는 공고를 위로 올려줍니다.</p>
         </div>
         <div class="card">
-          <h3>급구 공고 실시간 알림</h3>
-          <p>선호 업종과 최저 시급 조건을 저장해두면 조건에 맞는 새 공고가 올라오는 즉시 알림이 갑니다. 팔로우한 업체는 우선 알림.</p>
+          <h3 data-i18n="c3t">급구 공고 실시간 알림</h3>
+          <p data-i18n="c3d">선호 업종과 최저 시급 조건을 저장해두면 조건에 맞는 새 공고가 올라오는 즉시 알림이 갑니다. 팔로우한 업체는 우선 알림.</p>
         </div>
         <div class="card">
-          <h3>합격 후 바로 채팅</h3>
-          <p>업주와 앱 안에서 1:1로 대화합니다. 전화번호를 주고받지 않아도 출근 시간·준비물을 바로 확인할 수 있습니다.</p>
+          <h3 data-i18n="c4t">합격 후 바로 채팅</h3>
+          <p data-i18n="c4d">업주와 앱 안에서 1:1로 대화합니다. 전화번호를 주고받지 않아도 출근 시간·준비물을 바로 확인할 수 있습니다.</p>
         </div>
         <div class="card">
-          <h3>번개등급 신뢰 시스템</h3>
-          <p>평점·완료 건수·노쇼 이력을 반영해 등급이 자동으로 매겨집니다. 성실하게 쌓을수록 더 좋은 공고로 이어집니다.</p>
+          <h3 data-i18n="c5t">번개등급 신뢰 시스템</h3>
+          <p data-i18n="c5d">평점·완료 건수·노쇼 이력을 반영해 등급이 자동으로 매겨집니다. 성실하게 쌓을수록 더 좋은 공고로 이어집니다.</p>
         </div>
         <div class="card">
-          <h3>급여 계산기 내장</h3>
-          <p>시급만 넣으면 일급·주급·월급이 계산됩니다. 주휴수당(주 15시간 이상), 3.3% 원천징수, 4대보험 옵션까지 반영합니다.</p>
+          <h3 data-i18n="c6t">급여 계산기 내장</h3>
+          <p data-i18n="c6d">시급만 넣으면 일급·주급·월급이 계산됩니다. 주휴수당(주 15시간 이상), 3.3% 원천징수, 4대보험 옵션까지 반영합니다.</p>
         </div>
       </div>
     </div>
@@ -250,33 +286,33 @@
   <section class="who">
     <div class="wrap">
       <div class="shead">
-        <h2>알바생도, 업주도</h2>
-        <p>구직과 구인을 한 앱에서 처리합니다.</p>
+        <h2 data-i18n="s2_t">알바생도, 업주도</h2>
+        <p data-i18n="s2_s">구직과 구인을 한 앱에서 처리합니다.</p>
       </div>
       <div class="grid">
         <div class="panel">
-          <span class="tag tag-w">알바생</span>
-          <h3>오늘 당장 일하고 싶을 때</h3>
+          <span class="tag tag-w" data-i18n="w_tag">알바생</span>
+          <h3 data-i18n="w_t">오늘 당장 일하고 싶을 때</h3>
           <ul>
-            <li>내 위치 반경의 스팟·단기·정기 공고를 지도로 확인</li>
-            <li>스와이프로 훑고 마음에 들면 바로 지원</li>
-            <li>합격하면 업주와 앱 안에서 바로 채팅</li>
-            <li>수입 달력으로 이번 달 번 돈과 예정 수입 추적</li>
-            <li>한국어가 어려워도 8개 언어로 그대로 이용</li>
+            <li data-i18n="w1">내 위치 반경의 스팟·단기·정기 공고를 지도로 확인</li>
+            <li data-i18n="w2">스와이프로 훑고 마음에 들면 바로 지원</li>
+            <li data-i18n="w3">합격하면 업주와 앱 안에서 바로 채팅</li>
+            <li data-i18n="w4">수입 달력으로 이번 달 번 돈과 예정 수입 추적</li>
+            <li data-i18n="w5">한국어가 어려워도 8개 언어로 그대로 이용</li>
           </ul>
-          <a class="btn btn-primary" href="/바로알바.html?guest=1">알바 찾아보기</a>
+          <a class="btn btn-primary" href="/바로알바.html?guest=1" data-i18n="w_cta">알바 찾아보기</a>
         </div>
         <div class="panel">
-          <span class="tag tag-b">업주</span>
-          <h3>갑자기 사람이 필요할 때</h3>
+          <span class="tag tag-b" data-i18n="o_tag">업주</span>
+          <h3 data-i18n="o_t">갑자기 사람이 필요할 때</h3>
           <ul>
-            <li>결원이 생기면 급구 공고를 즉시 등록</li>
-            <li>팔로워 알바생에게 새 공고 알림 자동 발송</li>
-            <li>지원자 목록에서 합격·탈락·검토중 원클릭 처리</li>
-            <li>지원자가 안 모이면 시급을 자동으로 올리는 서지 기능</li>
-            <li>정기 공고는 복사해서 다시 올리기</li>
+            <li data-i18n="o1">결원이 생기면 급구 공고를 즉시 등록</li>
+            <li data-i18n="o2">팔로워 알바생에게 새 공고 알림 자동 발송</li>
+            <li data-i18n="o3">지원자 목록에서 합격·탈락·검토중 원클릭 처리</li>
+            <li data-i18n="o4">지원자가 안 모이면 시급을 자동으로 올리는 서지 기능</li>
+            <li data-i18n="o5">정기 공고는 복사해서 다시 올리기</li>
           </ul>
-          <a class="btn btn-ghost" href="/login.html">공고 등록하기</a>
+          <a class="btn btn-ghost" href="/login.html" data-i18n="o_cta">공고 등록하기</a>
         </div>
       </div>
     </div>
@@ -285,8 +321,8 @@
   <section>
     <div class="wrap">
       <div class="shead">
-        <h2>한국어가 어려워도 괜찮습니다</h2>
-        <p>화면 전체가 8개 언어로 번역됩니다. 공고 검색부터 지원, 업주와의 채팅까지 모국어로 이용하세요.</p>
+        <h2 data-i18n="s3_t">한국어가 어려워도 괜찮습니다</h2>
+        <p data-i18n="s3_s">화면 전체가 8개 언어로 번역됩니다. 공고 검색부터 지원, 업주와의 채팅까지 모국어로 이용하세요.</p>
       </div>
       <!-- 표기는 앱의 언어 선택 화면과 반드시 같게 유지할 것(shared-lang.js의 _LANGS 순서).
            랜딩에서 본 언어명이 앱에서 다르게 보이면 같은 서비스로 안 읽힌다. -->
@@ -310,36 +346,36 @@
   <section class="who">
     <div class="wrap">
       <div class="shead">
-        <h2>일하고, 모이고, 만나고</h2>
-        <p>계정 하나로 바로모임·바로만남까지 같은 지도 위에서 이어집니다.</p>
+        <h2 data-i18n="e_t">일하고, 모이고, 만나고</h2>
+        <p data-i18n="e_s">계정 하나로 바로모임·바로만남까지 같은 지도 위에서 이어집니다.</p>
       </div>
       <div class="grid">
         <div class="panel p-moim">
-          <span class="tag tag-m">바로모임</span>
-          <h3>관심사가 같은 사람들과 가볍게</h3>
-          <p>스포츠·취미·친목·챌린지 중에서 고르고 인원과 장소, 날짜를 정해 모임을 엽니다. 개설한 모임은 지도 위에 표시돼 주변 사람들이 보고 참여를 신청합니다.</p>
+          <span class="tag tag-m" data-i18n="m_tag">바로모임</span>
+          <h3 data-i18n="m_t">관심사가 같은 사람들과 가볍게</h3>
+          <p data-i18n="m_p">스포츠·취미·친목·챌린지 중에서 고르고 인원과 장소, 날짜를 정해 모임을 엽니다. 개설한 모임은 지도 위에 표시돼 주변 사람들이 보고 참여를 신청합니다.</p>
           <ul>
-            <li>내 주변 모임을 지도에서 카테고리별로 탐색</li>
-            <li>세부 종목까지 지정해 원하는 사람만 모으기</li>
-            <li>참여가 확정되면 모임 단체채팅방에서 소통</li>
-            <li>둘러보기는 가입 없이, 참여 신청은 로그인 후</li>
+            <li data-i18n="m1">내 주변 모임을 지도에서 카테고리별로 탐색</li>
+            <li data-i18n="m2">세부 종목까지 지정해 원하는 사람만 모으기</li>
+            <li data-i18n="m3">참여가 확정되면 모임 단체채팅방에서 소통</li>
+            <li data-i18n="m4">둘러보기는 가입 없이, 참여 신청은 로그인 후</li>
           </ul>
-          <a class="btn btn-ghost" href="/바로알바.html?guest=1">모임 둘러보기</a>
+          <a class="btn btn-ghost" href="/바로알바.html?guest=1" data-i18n="m_cta">모임 둘러보기</a>
         </div>
         <div class="panel p-mannam">
-          <span class="tag tag-n">바로만남</span>
-          <h3>바로스팟과 바로미팅, 두 가지 방식</h3>
-          <p>한 사람과 조용히 만나는 1:1 매칭 바로스팟, 여럿이 함께하는 그룹 미팅 바로미팅. 알바 프로필과는 분리된 별도 프로필로 참여합니다.</p>
+          <span class="tag tag-n" data-i18n="n_tag">바로만남</span>
+          <h3 data-i18n="n_t">바로스팟과 바로미팅, 두 가지 방식</h3>
+          <p data-i18n="n_p">한 사람과 조용히 만나는 1:1 매칭 바로스팟, 여럿이 함께하는 그룹 미팅 바로미팅. 알바 프로필과는 분리된 별도 프로필로 참여합니다.</p>
           <ul>
-            <li>바로스팟은 신청하면 상대가 블라인드 상태에서 직접 고르는 1:1 매칭</li>
-            <li>바로미팅은 지도에서 모집 중인 미팅을 찾아 참가 신청</li>
-            <li>평점·노쇼 이력이 기준에 못 미치면 신청이 제한됩니다</li>
-            <li>참여에는 이용권이 필요하며, 둘러보기는 무료입니다</li>
+            <li data-i18n="n1">바로스팟은 신청하면 상대가 블라인드 상태에서 직접 고르는 1:1 매칭</li>
+            <li data-i18n="n2">바로미팅은 지도에서 모집 중인 미팅을 찾아 참가 신청</li>
+            <li data-i18n="n3">평점·노쇼 이력이 기준에 못 미치면 신청이 제한됩니다</li>
+            <li data-i18n="n4">참여에는 이용권이 필요하며, 둘러보기는 무료입니다</li>
           </ul>
-          <a class="btn btn-ghost" href="/바로알바.html?guest=1">바로만남 살펴보기</a>
+          <a class="btn btn-ghost" href="/바로알바.html?guest=1" data-i18n="n_cta">바로만남 살펴보기</a>
         </div>
       </div>
-      <p style="text-align:center;font-size:14px;color:var(--muted);margin-top:22px;word-break:keep-all">
+      <p data-i18n="e_note" style="text-align:center;font-size:14px;color:var(--muted);margin-top:22px;word-break:keep-all">
         업주라면 우리 매장을 바로만남 미팅 장소로 등록할 수 있습니다. 관리자 승인 후 지도에 노출됩니다.
       </p>
     </div>
@@ -347,27 +383,30 @@
 
   <section>
     <div class="wrap">
-      <div class="shead"><h2>자주 묻는 질문</h2></div>
+      <div class="shead"><h2 data-i18n="faq_t">자주 묻는 질문</h2></div>
+      <!-- ⚠️ 화면 본문과 아래 JSON-LD FAQPage 의 답변 텍스트가 일치해야 리치결과에서
+           경고가 안 난다(Phase 60). 언어를 바꾸면 본문만 바뀌고 스키마가 한국어로
+           남으면 그 규칙이 깨지므로, applyLang()이 스키마도 같이 다시 쓴다. -->
       <div class="faq">
         <details>
-          <summary>바로알바는 무료인가요?</summary>
-          <p>알바생은 공고 검색·지원·채팅까지 모두 무료로 이용할 수 있습니다. 업주도 공고 등록은 무료이며, 프리미엄 노출 같은 선택 기능만 유료입니다.</p>
+          <summary data-i18n="q1">바로알바는 무료인가요?</summary>
+          <p data-i18n="a1">알바생은 공고 검색·지원·채팅까지 모두 무료로 이용할 수 있습니다. 업주도 공고 등록은 무료이며, 프리미엄 노출 같은 선택 기능만 유료입니다.</p>
         </details>
         <details>
-          <summary>앱을 설치해야 하나요?</summary>
-          <p>아니요. 웹브라우저에서 바로 이용할 수 있습니다. 홈 화면에 추가하면 앱처럼 쓸 수 있고, 안드로이드는 별도 앱도 제공합니다.</p>
+          <summary data-i18n="q2">앱을 설치해야 하나요?</summary>
+          <p data-i18n="a2">아니요. 웹브라우저에서 바로 이용할 수 있습니다. 홈 화면에 추가하면 앱처럼 쓸 수 있고, 안드로이드는 별도 앱도 제공합니다.</p>
         </details>
         <details>
-          <summary>당일 정산은 어떻게 이뤄지나요?</summary>
-          <p>업주가 근무 완료를 확인하면 앱 안에서 정산이 진행됩니다. 정산 방식과 시점은 공고마다 다를 수 있으니 지원 전 공고 상세를 확인해 주세요.</p>
+          <summary data-i18n="q3">당일 정산은 어떻게 이뤄지나요?</summary>
+          <p data-i18n="a3">업주가 근무 완료를 확인하면 앱 안에서 정산이 진행됩니다. 정산 방식과 시점은 공고마다 다를 수 있으니 지원 전 공고 상세를 확인해 주세요.</p>
         </details>
         <details>
-          <summary>외국인도 이용할 수 있나요?</summary>
-          <p>네. 화면이 영어·중국어·일본어·베트남어·러시아어·몽골어·네팔어로 번역되며, 외국인 지원이 가능한 공고를 따로 모아볼 수 있습니다. 실제 근무는 본인의 체류자격이 허용하는 범위에서만 가능합니다.</p>
+          <summary data-i18n="q4">외국인도 이용할 수 있나요?</summary>
+          <p data-i18n="a4">네. 화면이 영어·중국어·일본어·베트남어·러시아어·몽골어·네팔어로 번역되며, 외국인 지원이 가능한 공고를 따로 모아볼 수 있습니다. 실제 근무는 본인의 체류자격이 허용하는 범위에서만 가능합니다.</p>
         </details>
         <details>
-          <summary>업주인데 지금 당장 사람이 필요합니다.</summary>
-          <p>로그인 후 업주로 전환해 급구 공고를 등록하면, 주변 알바생과 우리 업체를 팔로우한 알바생에게 즉시 알림이 발송됩니다.</p>
+          <summary data-i18n="q5">업주인데 지금 당장 사람이 필요합니다.</summary>
+          <p data-i18n="a5">로그인 후 업주로 전환해 급구 공고를 등록하면, 주변 알바생과 우리 업체를 팔로우한 알바생에게 즉시 알림이 발송됩니다.</p>
         </details>
       </div>
     </div>
@@ -375,9 +414,9 @@
 
   <section class="final">
     <div class="wrap">
-      <h2>지금 내 주변에 어떤 알바가 있는지 확인해보세요</h2>
-      <p>가입 없이 둘러볼 수 있습니다.</p>
-      <a class="btn btn-lg" href="/바로알바.html?guest=1">지도에서 알바 보기</a>
+      <h2 data-i18n="fin_t">지금 내 주변에 어떤 알바가 있는지 확인해보세요</h2>
+      <p data-i18n="fin_p">가입 없이 둘러볼 수 있습니다.</p>
+      <a class="btn btn-lg" href="/바로알바.html?guest=1" data-i18n="fin_cta">지도에서 알바 보기</a>
     </div>
   </section>
 
@@ -386,10 +425,10 @@
 <footer>
   <div class="wrap">
     <div class="flinks">
-      <a href="/바로알바.html?guest=1">알바 찾기</a>
-      <a href="/login.html">로그인 · 회원가입</a>
-      <a href="/terms.html">이용약관</a>
-      <a href="/privacy.html">개인정보처리방침</a>
+      <a href="/바로알바.html?guest=1" data-i18n="f1">알바 찾기</a>
+      <a href="/login.html" data-i18n="f2">로그인 · 회원가입</a>
+      <a href="/terms.html" data-i18n="f3">이용약관</a>
+      <a href="/privacy.html" data-i18n="f4">개인정보처리방침</a>
     </div>
     <div class="fmeta">
       멀티무브 주식회사 · 대표이사 박근욱<br>
@@ -399,7 +438,7 @@
   </div>
 </footer>
 
-<script type="application/ld+json">
+<script type="application/ld+json" id="ld-graph">
 {
   "@context": "https://schema.org",
   "@graph": [
@@ -448,6 +487,525 @@
     }
   ]
 }
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     랜딩 다국어화 (2026-07-28)
+
+     Phase 61에서 앱은 휴대폰 언어로 뜨게 고쳤는데 그 앞의 소개 페이지가 한국어
+     전용이라, 외국인은 여전히 "읽지도 못하는 한국어 화면"을 먼저 만나야 했다.
+
+     ⚠️ 저장 키는 앱과 같은 'baroalba_lang' 을 쓴다. 여기서 고른 언어가 앱까지
+        그대로 이어지게 하기 위해서다(랜딩에서 네팔어를 골랐는데 앱이 한국어로
+        뜨면 고른 의미가 없다).
+     ⚠️ 그래서 저장할 때는 **앱 내부 키**를 써야 한다 — 네팔어는 ISO 639-1 이 'ne'
+        인데 앱 _LANGS 의 내부 키는 'np'(옛 국가코드)다. 이 불일치는 Phase 61에서
+        두 번 밟은 함정이라 아래 NE/NP 변환을 반드시 유지할 것.
+     ⚠️ 사용자가 직접 고른 값만 저장한다. 브라우저 언어 감지값은 저장하지 않는다 —
+        저장해버리면 나중에 휴대폰 언어를 바꿔도 최초 1회 값에 묶인다(앱과 동일 원칙).
+     ══════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  var T = {
+    ko: {},   // 기본값은 HTML에 그대로 있으므로 비워둔다(첫 페인트가 곧 한국어)
+    en: {
+      nav_login:"Log in", nav_find:"Find jobs",
+      hero_eyebrow:"Real-time job matching on a map",
+      hero_title:"Work now,<br><span class=\"accent\">get paid</span> today",
+      hero_lede:"Find short-term and same-day jobs near you right on the map, and apply instantly. Get notified the moment an urgent listing goes up, and get paid the same day you finish.",
+      hero_cta1:"See jobs near me", hero_cta2:"Post a job as an employer",
+      chip1:"Browse on the map", chip2:"Urgent job alerts", chip3:"Same-day pay", chip4:"8 languages", chip5:"No install needed",
+      s1_t:"What makes BaroAlba different", s1_s:"Instead of scrolling a list, you search from where you actually are.",
+      c1t:"Map-based search", c1d:"See listings within 1–30 km of you as markers on the map. Pick the jobs closest to your home or school at a glance.",
+      c2t:"Swipe through fast", c2d:"Flip through listings one card at a time and just tap interested or pass. Your choices train the feed to move better matches to the top.",
+      c3t:"Real-time urgent alerts", c3d:"Save your preferred categories and minimum hourly pay, and you'll be notified the moment a matching listing appears. Businesses you follow get priority alerts.",
+      c4t:"Chat as soon as you're hired", c4d:"Talk one-on-one with the employer inside the app. Confirm your start time and what to bring without exchanging phone numbers.",
+      c5t:"Lightning trust rating", c5d:"Your rating is set automatically from reviews, completed jobs and no-show history. The more reliably you build it, the better the listings you reach.",
+      c6t:"Built-in pay calculator", c6d:"Enter an hourly rate and get daily, weekly and monthly totals — including weekly holiday allowance (15+ hrs/week), 3.3% withholding and social insurance options.",
+      s2_t:"For job seekers and employers alike", s2_s:"Hiring and job hunting in a single app.",
+      w_tag:"Job seeker", w_t:"When you want to work today",
+      w1:"See spot, short-term and regular listings around you on the map",
+      w2:"Swipe through them and apply the moment one looks right",
+      w3:"Chat with the employer in the app once you're hired",
+      w4:"Track this month's earnings and upcoming pay in the income calendar",
+      w5:"Use everything in 8 languages, even if Korean is hard for you",
+      w_cta:"Browse jobs",
+      o_tag:"Employer", o_t:"When you suddenly need someone",
+      o1:"Post an urgent listing the moment someone drops out",
+      o2:"Followers are notified about your new listing automatically",
+      o3:"Accept, reject or mark applicants as under review in one click",
+      o4:"Surge raises the hourly rate automatically if applicants don't come",
+      o5:"Copy a recurring listing and post it again",
+      o_cta:"Post a job",
+      s3_t:"It's fine if Korean is hard", s3_s:"The entire app is translated into 8 languages — searching, applying and chatting with employers all in your own language.",
+      e_t:"Work, gather, meet", e_s:"One account carries you into BaroMoim and BaroMannam on the same map.",
+      m_tag:"BaroMoim", m_t:"Meet people who share your interests",
+      m_p:"Pick sports, hobbies, socializing or a challenge, set the headcount, place and date, and open a group. Your group appears on the map so people nearby can find it and ask to join.",
+      m1:"Browse groups near you on the map by category",
+      m2:"Narrow it down to a specific activity to gather exactly who you want",
+      m3:"Talk in the group chat once your spot is confirmed",
+      m4:"Browsing needs no account; joining requires logging in",
+      m_cta:"Browse groups",
+      n_tag:"BaroMannam", n_t:"Two ways: BaroSpot and BaroMeeting",
+      n_p:"BaroSpot is quiet one-on-one matching; BaroMeeting is a group meetup. You take part with a separate profile, kept apart from your work profile.",
+      n1:"With BaroSpot you apply, and the other person picks from blinded candidates",
+      n2:"With BaroMeeting you find an open meetup on the map and request to join",
+      n3:"Applications are restricted if your rating or no-show history falls short",
+      n4:"Taking part requires a pass; browsing is free",
+      n_cta:"Explore BaroMannam",
+      e_note:"Employers can register their venue as a BaroMannam meeting place. It appears on the map after admin approval.",
+      faq_t:"Frequently asked questions",
+      q1:"Is BaroAlba free?", a1:"Job seekers can search, apply and chat entirely for free. Posting a listing is free for employers too — only optional features such as premium placement are paid.",
+      q2:"Do I need to install an app?", a2:"No. You can use it straight from your web browser. Add it to your home screen to use it like an app, and there's a separate Android app as well.",
+      q3:"How does same-day pay work?", a3:"Payment is processed in the app once the employer confirms the work is complete. The method and timing can differ per listing, so please check the listing details before applying.",
+      q4:"Can foreign residents use it?", a4:"Yes. The screens are translated into English, Chinese, Japanese, Vietnamese, Russian, Mongolian and Nepali, and you can filter for listings open to foreign applicants. Actual work is only possible within what your visa status permits.",
+      q5:"I'm an employer and I need someone right now.", a5:"Log in, switch to employer mode and post an urgent listing — job seekers nearby and everyone following your business are notified immediately.",
+      fin_t:"See what jobs are around you right now", fin_p:"You can look around without signing up.", fin_cta:"See jobs on the map",
+      f1:"Find jobs", f2:"Log in · Sign up", f3:"Terms of Service", f4:"Privacy Policy"
+    },
+    zh: {
+      nav_login:"登录", nav_find:"找兼职",
+      hero_eyebrow:"基于地图的实时兼职匹配",
+      hero_title:"现在就上工，<br><span class=\"accent\">当天拿薪</span>的短期兼职",
+      hero_lede:"在地图上直接找到身边的短期与当日兼职并立即申请。急招职位第一时间通知，工作结束当天就能结算。",
+      hero_cta1:"查看附近兼职", hero_cta2:"以商家身份发布",
+      chip1:"地图直接查找", chip2:"急招实时通知", chip3:"当日结算", chip4:"支持8种语言", chip5:"无需安装",
+      s1_t:"BaroAlba 的不同之处", s1_s:"不必翻列表，直接以你所在的位置为中心查找。",
+      c1t:"基于地图查找", c1d:"以当前位置为中心，在地图上以标记显示 1~30 公里内的职位。离家、离学校近的工作一眼就能挑。",
+      c2t:"滑动快速浏览", c2d:"一张一张翻看职位，只需选择感兴趣或跳过。系统会学习你的选择，把更合适的职位排到前面。",
+      c3t:"急招实时通知", c3d:"保存偏好行业与最低时薪后，符合条件的新职位一上线就会通知你。已关注的商家优先推送。",
+      c4t:"录用后立即聊天", c4d:"在应用内与商家一对一沟通。无需交换电话号码，就能确认上班时间和需要准备的物品。",
+      c5t:"闪电信用等级", c5d:"根据评分、完成次数和爽约记录自动评定等级。踏实积累，就能接触到更好的职位。",
+      c6t:"内置薪资计算器", c6d:"只要输入时薪，就能算出日薪、周薪和月薪，并计入周休津贴（每周15小时以上）、3.3% 代扣税与四大保险选项。",
+      s2_t:"求职者和商家都适用", s2_s:"求职与招聘在同一个应用内完成。",
+      w_tag:"求职者", w_t:"想今天就开工时",
+      w1:"在地图上查看附近的即时、短期与长期职位",
+      w2:"滑动浏览，看中就立即申请",
+      w3:"被录用后在应用内直接与商家聊天",
+      w4:"用收入日历追踪本月收入与预计入账",
+      w5:"就算不懂韩语，也能用8种语言正常使用",
+      w_cta:"去看看职位",
+      o_tag:"商家", o_t:"临时缺人时",
+      o1:"有人缺勤就立刻发布急招",
+      o2:"自动向关注你的求职者推送新职位通知",
+      o3:"在申请人列表中一键录用、落选或标记审核中",
+      o4:"招不满时自动上调时薪的加价功能",
+      o5:"常规职位可复制后重新发布",
+      o_cta:"发布职位",
+      s3_t:"不懂韩语也没关系", s3_s:"整个界面翻译成8种语言。从搜索职位到申请、与商家聊天，都能用母语完成。",
+      e_t:"工作、聚会、相遇", e_s:"一个账号，在同一张地图上连通 BaroMoim 与 BaroMannam。",
+      m_tag:"BaroMoim 聚会", m_t:"和兴趣相同的人轻松相聚",
+      m_p:"从运动、兴趣、联谊、挑战中选择，设定人数、地点和日期即可开团。开设的聚会会显示在地图上，附近的人看到后可申请参加。",
+      m1:"在地图上按类别浏览身边的聚会",
+      m2:"细化到具体项目，只召集想要的人",
+      m3:"确认参加后在聚会群聊中交流",
+      m4:"浏览无需注册，申请参加需登录",
+      m_cta:"浏览聚会",
+      n_tag:"BaroMannam 相遇", n_t:"BaroSpot 与 BaroMeeting 两种方式",
+      n_p:"与一个人安静相处的一对一匹配 BaroSpot，多人同行的团体聚会 BaroMeeting。使用与兼职资料分开的独立资料参与。",
+      n1:"BaroSpot 由你提出申请，对方在匿名状态下直接挑选",
+      n2:"BaroMeeting 在地图上找到招募中的聚会后申请参加",
+      n3:"评分或爽约记录未达标准时将限制申请",
+      n4:"参加需要使用券，浏览免费",
+      n_cta:"了解 BaroMannam",
+      e_note:"商家可将自家门店登记为 BaroMannam 的会面场所，管理员审核通过后在地图上展示。",
+      faq_t:"常见问题",
+      q1:"BaroAlba 是免费的吗？", a1:"求职者搜索职位、申请、聊天全部免费。商家发布职位也免费，只有置顶曝光等可选功能才收费。",
+      q2:"必须安装应用吗？", a2:"不需要。用网页浏览器即可直接使用。添加到主屏幕就能像应用一样使用，安卓另有独立应用。",
+      q3:"当日结算是怎么进行的？", a3:"商家确认工作完成后，在应用内进行结算。结算方式与时间可能因职位而异，请在申请前查看职位详情。",
+      q4:"外国人也能使用吗？", a4:"可以。界面提供英语、中文、日语、越南语、俄语、蒙古语和尼泊尔语，并可单独筛选接受外国人申请的职位。实际工作仅限于本人签证资格允许的范围。",
+      q5:"我是商家，现在马上需要人。", a5:"登录后切换为商家模式发布急招职位，附近的求职者以及关注你店铺的人会立即收到通知。",
+      fin_t:"看看现在你身边有哪些兼职", fin_p:"无需注册即可浏览。", fin_cta:"在地图上查看兼职",
+      f1:"找兼职", f2:"登录 · 注册", f3:"服务条款", f4:"隐私政策"
+    },
+    ja: {
+      nav_login:"ログイン", nav_find:"バイトを探す",
+      hero_eyebrow:"地図で探すリアルタイムバイトマッチング",
+      hero_title:"今すぐ働いて、<br><span class=\"accent\">その日に受け取る</span>超短期バイト",
+      hero_lede:"近くの短期・当日バイトを地図上ですぐ見つけて、そのまま応募。急募はリアルタイム通知で先に受け取り、仕事が終われば当日精算まで。",
+      hero_cta1:"近くのバイトを見る", hero_cta2:"事業主として募集する",
+      chip1:"地図ですぐ探せる", chip2:"急募をリアルタイム通知", chip3:"当日精算", chip4:"8言語対応", chip5:"インストール不要",
+      s1_t:"バロアルバが違う理由", s1_s:"リストをめくる代わりに、今いる場所を基準に探します。",
+      c1t:"地図ベースの検索", c1d:"現在地から半径1〜30kmの募集を地図上のマーカーで確認。家や学校から近い仕事から目で見て選べます。",
+      c2t:"スワイプで手早く", c2d:"募集を1枚ずつめくって、興味あり・パスを選ぶだけ。選んだ記録を学習し、好みに合う募集を上に表示します。",
+      c3t:"急募のリアルタイム通知", c3d:"希望業種と最低時給を保存しておけば、条件に合う新しい募集が出た瞬間に通知。フォロー中の店舗は優先通知です。",
+      c4t:"採用後すぐチャット", c4d:"事業主とアプリ内で1対1でやり取り。電話番号を交換しなくても、出勤時間や持ち物をその場で確認できます。",
+      c5t:"サンダー信頼ランク", c5d:"評価・完了件数・無断欠勤履歴からランクが自動で決まります。誠実に積み上げるほど、より良い募集につながります。",
+      c6t:"給与計算機を内蔵", c6d:"時給を入れるだけで日給・週給・月給を計算。週休手当（週15時間以上）、3.3%源泉徴収、社会保険オプションまで反映します。",
+      s2_t:"働く人にも、雇う人にも", s2_s:"求職と求人を1つのアプリで。",
+      w_tag:"アルバイト", w_t:"今日すぐ働きたいとき",
+      w1:"現在地周辺のスポット・短期・定期の募集を地図で確認",
+      w2:"スワイプで見て、気に入ったらそのまま応募",
+      w3:"採用されたら事業主とアプリ内でチャット",
+      w4:"収入カレンダーで今月の収入と入金予定を管理",
+      w5:"韓国語が苦手でも8言語でそのまま利用",
+      w_cta:"バイトを見てみる",
+      o_tag:"事業主", o_t:"急に人手が要るとき",
+      o1:"欠員が出たらすぐ急募を掲載",
+      o2:"フォロワーに新着募集の通知を自動送信",
+      o3:"応募者一覧から採用・不採用・検討中をワンクリックで処理",
+      o4:"応募が集まらないと時給を自動で上げるサージ機能",
+      o5:"定期募集はコピーして再掲載",
+      o_cta:"募集を掲載する",
+      s3_t:"韓国語が苦手でも大丈夫", s3_s:"画面全体が8言語に翻訳されます。募集検索から応募、事業主とのチャットまで母語でご利用ください。",
+      e_t:"働いて、集まって、出会って", e_s:"アカウント1つで、同じ地図の上でバロモイム・バロマンナムまでつながります。",
+      m_tag:"バロモイム", m_t:"同じ関心を持つ人と気軽に",
+      m_p:"スポーツ・趣味・親睦・チャレンジから選び、人数と場所、日付を決めて集まりを開きます。開いた集まりは地図に表示され、近くの人が見て参加を申し込みます。",
+      m1:"近くの集まりを地図でカテゴリ別に探す",
+      m2:"種目まで指定して、来てほしい人だけを集める",
+      m3:"参加が確定したらグループチャットでやり取り",
+      m4:"閲覧は登録不要、参加申込はログイン後",
+      m_cta:"集まりを見る",
+      n_tag:"バロマンナム", n_t:"バロスポットとバロミーティング、2つの方法",
+      n_p:"一人と静かに会う1対1マッチングのバロスポット、複数人で楽しむグループのバロミーティング。バイト用プロフィールとは分けた専用プロフィールで参加します。",
+      n1:"バロスポットは申し込むと、相手がブラインド状態で直接選びます",
+      n2:"バロミーティングは地図で募集中の集まりを探して参加申込",
+      n3:"評価・無断欠勤履歴が基準に届かない場合は申込が制限されます",
+      n4:"参加には利用券が必要で、閲覧は無料です",
+      n_cta:"バロマンナムを見る",
+      e_note:"事業主の方は自店をバロマンナムの会場として登録できます。管理者の承認後、地図に表示されます。",
+      faq_t:"よくある質問",
+      q1:"バロアルバは無料ですか？", a1:"アルバイトの方は募集検索・応募・チャットまですべて無料でご利用いただけます。事業主も掲載は無料で、上位表示などの任意機能のみ有料です。",
+      q2:"アプリをインストールする必要はありますか？", a2:"いいえ。ウェブブラウザからそのまま使えます。ホーム画面に追加すればアプリのように使え、Android版アプリもご用意しています。",
+      q3:"当日精算はどのように行われますか？", a3:"事業主が勤務完了を確認すると、アプリ内で精算が進みます。精算方法と時期は募集ごとに異なる場合があるため、応募前に募集詳細をご確認ください。",
+      q4:"外国人でも利用できますか？", a4:"はい。画面は英語・中国語・日本語・ベトナム語・ロシア語・モンゴル語・ネパール語に翻訳され、外国人応募可の募集だけをまとめて見ることもできます。実際の就労はご本人の在留資格が認める範囲内でのみ可能です。",
+      q5:"事業主ですが、今すぐ人が必要です。", a5:"ログイン後に事業主へ切り替えて急募を掲載すると、近くのアルバイトと自店をフォロー中の方へすぐに通知が届きます。",
+      fin_t:"今あなたの近くにどんなバイトがあるか見てみましょう", fin_p:"登録なしで見て回れます。", fin_cta:"地図でバイトを見る",
+      f1:"バイトを探す", f2:"ログイン・会員登録", f3:"利用規約", f4:"プライバシーポリシー"
+    },
+    vi: {
+      nav_login:"Đăng nhập", nav_find:"Tìm việc",
+      hero_eyebrow:"Ghép việc thời gian thực trên bản đồ",
+      hero_title:"Làm ngay hôm nay,<br><span class=\"accent\">nhận tiền</span> trong ngày",
+      hero_lede:"Tìm việc ngắn hạn và việc trong ngày quanh bạn ngay trên bản đồ rồi ứng tuyển liền. Nhận thông báo ngay khi có tin tuyển gấp, và được thanh toán ngay trong ngày làm xong.",
+      hero_cta1:"Xem việc gần tôi", hero_cta2:"Đăng tin tuyển dụng",
+      chip1:"Tìm ngay trên bản đồ", chip2:"Báo tin tuyển gấp", chip3:"Thanh toán trong ngày", chip4:"Hỗ trợ 8 ngôn ngữ", chip5:"Không cần cài đặt",
+      s1_t:"Điều khác biệt của BaroAlba", s1_s:"Thay vì lướt danh sách, bạn tìm từ đúng vị trí mình đang đứng.",
+      c1t:"Tìm theo bản đồ", c1d:"Xem các tin trong bán kính 1–30 km dưới dạng điểm đánh dấu trên bản đồ. Chọn ngay những việc gần nhà hay gần trường nhất.",
+      c2t:"Lướt nhanh từng tin", c2d:"Lật từng tin một và chỉ cần chọn quan tâm hoặc bỏ qua. Hệ thống học lựa chọn của bạn để đẩy tin phù hợp lên trên.",
+      c3t:"Báo tin tuyển gấp tức thì", c3d:"Lưu ngành nghề ưa thích và mức lương giờ tối thiểu, bạn sẽ được báo ngay khi có tin phù hợp. Cơ sở bạn theo dõi được ưu tiên báo trước.",
+      c4t:"Trúng tuyển là nhắn tin ngay", c4d:"Trao đổi 1:1 với chủ cơ sở ngay trong ứng dụng. Không cần trao đổi số điện thoại vẫn xác nhận được giờ đi làm và thứ cần mang theo.",
+      c5t:"Hạng tín nhiệm Tia chớp", c5d:"Hạng được chấm tự động từ đánh giá, số việc đã hoàn thành và lịch sử không đến làm. Càng tích lũy đàng hoàng, càng tiếp cận được việc tốt hơn.",
+      c6t:"Máy tính lương tích hợp", c6d:"Chỉ cần nhập lương giờ là ra lương ngày, tuần và tháng — có tính cả phụ cấp nghỉ tuần (từ 15 giờ/tuần), khấu trừ 3,3% và tùy chọn bảo hiểm.",
+      s2_t:"Cho cả người tìm việc lẫn chủ cơ sở", s2_s:"Tìm việc và tuyển người trong cùng một ứng dụng.",
+      w_tag:"Người tìm việc", w_t:"Khi bạn muốn làm ngay hôm nay",
+      w1:"Xem tin việc thời vụ, ngắn hạn và định kỳ quanh bạn trên bản đồ",
+      w2:"Lướt xem và ứng tuyển ngay khi thấy hợp",
+      w3:"Trúng tuyển là nhắn tin với chủ cơ sở ngay trong ứng dụng",
+      w4:"Theo dõi thu nhập tháng này và khoản sắp nhận bằng lịch thu nhập",
+      w5:"Không rành tiếng Hàn vẫn dùng được với 8 ngôn ngữ",
+      w_cta:"Xem thử việc làm",
+      o_tag:"Chủ cơ sở", o_t:"Khi đột nhiên thiếu người",
+      o1:"Có người nghỉ là đăng tin tuyển gấp ngay",
+      o2:"Tự động báo tin mới tới những người đang theo dõi bạn",
+      o3:"Duyệt đậu, loại hoặc đánh dấu đang xem xét chỉ bằng một chạm",
+      o4:"Tính năng tăng lương tự động khi không đủ người ứng tuyển",
+      o5:"Tin định kỳ chỉ cần sao chép rồi đăng lại",
+      o_cta:"Đăng tin tuyển",
+      s3_t:"Không rành tiếng Hàn cũng không sao", s3_s:"Toàn bộ màn hình được dịch sang 8 ngôn ngữ. Từ tìm tin, ứng tuyển đến trò chuyện với chủ cơ sở đều bằng tiếng mẹ đẻ.",
+      e_t:"Làm việc, tụ họp, gặp gỡ", e_s:"Một tài khoản nối liền tới BaroMoim và BaroMannam trên cùng một bản đồ.",
+      m_tag:"BaroMoim", m_t:"Gặp những người cùng sở thích",
+      m_p:"Chọn thể thao, sở thích, giao lưu hay thử thách, đặt số người, địa điểm và ngày rồi mở nhóm. Nhóm bạn mở sẽ hiện trên bản đồ để người xung quanh thấy và xin tham gia.",
+      m1:"Duyệt các nhóm quanh bạn trên bản đồ theo danh mục",
+      m2:"Chỉ định tới từng bộ môn để gom đúng người mình muốn",
+      m3:"Được duyệt tham gia là trò chuyện trong nhóm chat",
+      m4:"Xem thì không cần tài khoản, xin tham gia mới cần đăng nhập",
+      m_cta:"Xem các nhóm",
+      n_tag:"BaroMannam", n_t:"Hai cách: BaroSpot và BaroMeeting",
+      n_p:"BaroSpot là ghép đôi 1:1 để gặp riêng một người; BaroMeeting là buổi gặp nhóm nhiều người. Bạn tham gia bằng hồ sơ riêng, tách biệt với hồ sơ đi làm.",
+      n1:"Với BaroSpot bạn gửi đăng ký, đối phương chọn trực tiếp trong danh sách ẩn danh",
+      n2:"Với BaroMeeting bạn tìm buổi gặp đang tuyển trên bản đồ rồi xin tham gia",
+      n3:"Đăng ký sẽ bị hạn chế nếu điểm đánh giá hoặc lịch sử không đến làm không đạt chuẩn",
+      n4:"Tham gia cần vé sử dụng, còn xem thì miễn phí",
+      n_cta:"Tìm hiểu BaroMannam",
+      e_note:"Là chủ cơ sở, bạn có thể đăng ký cửa hàng của mình làm địa điểm gặp mặt BaroMannam. Sau khi quản trị viên duyệt, nó sẽ hiện trên bản đồ.",
+      faq_t:"Câu hỏi thường gặp",
+      q1:"BaroAlba có miễn phí không?", a1:"Người tìm việc dùng miễn phí toàn bộ từ tìm tin, ứng tuyển đến trò chuyện. Chủ cơ sở cũng đăng tin miễn phí, chỉ những tính năng tùy chọn như hiển thị nổi bật mới tính phí.",
+      q2:"Tôi có phải cài ứng dụng không?", a2:"Không. Bạn dùng ngay trên trình duyệt web. Thêm vào màn hình chính là dùng được như ứng dụng, ngoài ra còn có ứng dụng Android riêng.",
+      q3:"Thanh toán trong ngày diễn ra thế nào?", a3:"Khi chủ cơ sở xác nhận đã làm xong, việc thanh toán được tiến hành trong ứng dụng. Cách thức và thời điểm thanh toán có thể khác nhau tùy tin, nên hãy xem kỹ chi tiết tin trước khi ứng tuyển.",
+      q4:"Người nước ngoài có dùng được không?", a4:"Được. Màn hình được dịch sang tiếng Anh, Trung, Nhật, Việt, Nga, Mông Cổ và Nepal, và bạn có thể lọc riêng những tin nhận người nước ngoài. Việc làm thực tế chỉ được phép trong phạm vi tư cách lưu trú của bạn cho phép.",
+      q5:"Tôi là chủ cơ sở và cần người ngay bây giờ.", a5:"Hãy đăng nhập, chuyển sang chế độ chủ cơ sở và đăng tin tuyển gấp — người tìm việc ở gần và những ai đang theo dõi cơ sở của bạn sẽ được báo ngay lập tức.",
+      fin_t:"Xem ngay quanh bạn đang có việc gì", fin_p:"Bạn có thể xem mà không cần đăng ký.", fin_cta:"Xem việc trên bản đồ",
+      f1:"Tìm việc", f2:"Đăng nhập · Đăng ký", f3:"Điều khoản sử dụng", f4:"Chính sách bảo mật"
+    },
+    ru: {
+      nav_login:"Войти", nav_find:"Найти работу",
+      hero_eyebrow:"Подбор подработки на карте в реальном времени",
+      hero_title:"Работайте сегодня —<br><span class=\"accent\">и деньги</span> в тот же день",
+      hero_lede:"Находите краткосрочную работу и подработку на день прямо на карте рядом с вами и откликайтесь сразу. Срочные вакансии приходят уведомлением первыми, а расчёт — в день окончания работы.",
+      hero_cta1:"Работа рядом со мной", hero_cta2:"Разместить вакансию",
+      chip1:"Поиск прямо на карте", chip2:"Уведомления о срочных", chip3:"Расчёт в тот же день", chip4:"8 языков", chip5:"Без установки",
+      s1_t:"Чем отличается BaroAlba", s1_s:"Вместо пролистывания списка вы ищете от своего реального местоположения.",
+      c1t:"Поиск по карте", c1d:"Вакансии в радиусе 1–30 км отмечены прямо на карте. Можно сразу выбрать те, что ближе к дому или учёбе.",
+      c2t:"Быстрый просмотр свайпом", c2d:"Листайте вакансии по одной и отмечайте «интересно» или «пропустить». Система учится на ваших выборах и поднимает подходящее выше.",
+      c3t:"Уведомления о срочных вакансиях", c3d:"Сохраните нужные сферы и минимальную ставку — и вы получите уведомление сразу, как появится подходящая вакансия. Для компаний, на которые вы подписаны, уведомления приходят первыми.",
+      c4t:"Чат сразу после найма", c4d:"Общайтесь с работодателем один на один прямо в приложении. Время выхода и что взять с собой можно уточнить, не обмениваясь телефонами.",
+      c5t:"Рейтинг доверия «Молния»", c5d:"Уровень присваивается автоматически по оценкам, числу выполненных смен и истории неявок. Чем добросовестнее вы его набираете, тем лучше вакансии открываются.",
+      c6t:"Встроенный расчёт зарплаты", c6d:"Введите ставку в час — и получите расчёт за день, неделю и месяц, включая надбавку за недельный отдых (от 15 часов в неделю), удержание 3,3% и опции страхования.",
+      s2_t:"И соискателям, и работодателям", s2_s:"Поиск работы и наём — в одном приложении.",
+      w_tag:"Соискатель", w_t:"Когда хочется выйти на работу уже сегодня",
+      w1:"Смотрите разовые, краткосрочные и постоянные вакансии рядом на карте",
+      w2:"Пролистывайте свайпом и откликайтесь, как только что-то подошло",
+      w3:"После найма — чат с работодателем прямо в приложении",
+      w4:"Следите за заработком месяца и будущими выплатами в календаре доходов",
+      w5:"Даже если корейский даётся тяжело — всё доступно на 8 языках",
+      w_cta:"Посмотреть вакансии",
+      o_tag:"Работодатель", o_t:"Когда человек нужен срочно",
+      o1:"Кто-то не вышел — сразу размещайте срочную вакансию",
+      o2:"Подписчикам автоматически уходит уведомление о новой вакансии",
+      o3:"Принять, отклонить или отметить «на рассмотрении» — в один клик",
+      o4:"Если откликов мало, функция surge сама поднимает ставку",
+      o5:"Регулярные вакансии можно скопировать и разместить снова",
+      o_cta:"Разместить вакансию",
+      s3_t:"Ничего страшного, если корейский даётся тяжело", s3_s:"Весь интерфейс переведён на 8 языков — поиск вакансий, отклик и переписка с работодателем на родном языке.",
+      e_t:"Работать, собираться, знакомиться", e_s:"Один аккаунт ведёт вас и в BaroMoim, и в BaroMannam на той же карте.",
+      m_tag:"BaroMoim", m_t:"Лёгкие встречи с теми, у кого те же увлечения",
+      m_p:"Выберите спорт, хобби, общение или челлендж, задайте число участников, место и дату — и откройте встречу. Она появится на карте, и люди рядом смогут подать заявку.",
+      m1:"Смотрите встречи рядом на карте по категориям",
+      m2:"Указывайте конкретное занятие, чтобы собрать именно тех, кого хотите",
+      m3:"После подтверждения участия — общий чат встречи",
+      m4:"Смотреть можно без регистрации, для заявки нужен вход",
+      m_cta:"Посмотреть встречи",
+      n_tag:"BaroMannam", n_t:"Два формата: BaroSpot и BaroMeeting",
+      n_p:"BaroSpot — спокойное знакомство один на один, BaroMeeting — групповая встреча. Участие идёт по отдельному профилю, не связанному с рабочим.",
+      n1:"В BaroSpot вы подаёте заявку, а собеседник выбирает из анонимных кандидатов",
+      n2:"В BaroMeeting вы находите на карте открытую встречу и подаёте заявку",
+      n3:"При низком рейтинге или неявках в прошлом заявки ограничиваются",
+      n4:"Для участия нужен абонемент, просмотр — бесплатный",
+      n_cta:"Узнать о BaroMannam",
+      e_note:"Работодатели могут зарегистрировать своё заведение как место встреч BaroMannam. После одобрения администратором оно появится на карте.",
+      faq_t:"Частые вопросы",
+      q1:"BaroAlba бесплатный?", a1:"Для соискателей поиск вакансий, отклики и переписка полностью бесплатны. Работодателям размещение тоже бесплатно — платными являются лишь дополнительные функции вроде премиального показа.",
+      q2:"Нужно ли устанавливать приложение?", a2:"Нет. Можно пользоваться прямо в браузере. Добавьте на главный экран — и будет как приложение; для Android есть и отдельное приложение.",
+      q3:"Как происходит расчёт в тот же день?", a3:"Как только работодатель подтвердит выполнение работы, расчёт проходит в приложении. Способ и сроки могут отличаться для каждой вакансии, поэтому перед откликом посмотрите её описание.",
+      q4:"Могут ли пользоваться иностранцы?", a4:"Да. Интерфейс переведён на английский, китайский, японский, вьетнамский, русский, монгольский и непальский, а вакансии, открытые для иностранцев, можно отобрать отдельно. Фактическая работа возможна только в пределах, разрешённых вашим статусом пребывания.",
+      q5:"Я работодатель, человек нужен прямо сейчас.", a5:"Войдите, переключитесь в режим работодателя и разместите срочную вакансию — соискатели поблизости и все подписчики вашей компании получат уведомление немедленно.",
+      fin_t:"Посмотрите, какая работа есть рядом прямо сейчас", fin_p:"Смотреть можно без регистрации.", fin_cta:"Открыть вакансии на карте",
+      f1:"Найти работу", f2:"Вход · Регистрация", f3:"Условия использования", f4:"Политика конфиденциальности"
+    },
+    mn: {
+      nav_login:"Нэвтрэх", nav_find:"Ажил хайх",
+      hero_eyebrow:"Газрын зураг дээрх бодит цагийн ажлын тохироо",
+      hero_title:"Өнөөдөр ажиллаад,<br><span class=\"accent\">тэр өдөртөө</span> цалингаа ав",
+      hero_lede:"Ойр орчмын богино хугацааны болон тухайн өдрийн ажлыг газрын зураг дээрээс шууд олж, шууд өргөдөл өг. Яаралтай зар гармагц мэдэгдэл ирж, ажил дуусмагц тэр өдөртөө тооцоо хийгдэнэ.",
+      hero_cta1:"Ойр орчмын ажил", hero_cta2:"Ажил олгогчоор зар нийтлэх",
+      chip1:"Газрын зургаас шууд", chip2:"Яаралтай зарын мэдэгдэл", chip3:"Тухайн өдрийн тооцоо", chip4:"8 хэл дэмждэг", chip5:"Суулгах шаардлагагүй",
+      s1_t:"BaroAlba-гийн онцлог", s1_s:"Жагсаалт гүйлгэхийн оронд өөрийн байгаа байрлалаас хайдаг.",
+      c1t:"Газрын зураг дээр хайх", c1d:"Одоогийн байрлалаас 1–30 км доторх зарыг газрын зураг дээр тэмдэглэгээгээр харна. Гэр, сургуулиасаа ойрхон ажлаа нүдээрээ шууд сонгоно.",
+      c2t:"Шудрахад л хурдан", c2d:"Зарыг нэг нэгээр нь эргүүлж, сонирхсон эсвэл алгасахаа л сонгоно. Таны сонголтыг сурч, тохирох зарыг дээшлүүлж харуулна.",
+      c3t:"Яаралтай зарын шуурхай мэдэгдэл", c3d:"Хүссэн салбар, доод цалингаа хадгалчихвал тохирох шинэ зар гармагц мэдэгдэнэ. Дагасан байгууллагын зар эхэлж ирнэ.",
+      c4t:"Тэнцсэн даруйдаа чат", c4d:"Ажил олгогчтой апп дотроо 1:1 ярина. Утасны дугаар солилцохгүйгээр ажилд ирэх цаг, авч явах зүйлээ шууд тодруулна.",
+      c5t:"Аянга итгэлцлийн зэрэг", c5d:"Үнэлгээ, дуусгасан ажлын тоо, ирээгүй түүхэнд үндэслэн зэрэг автоматаар тогтоно. Шударгаар хуримтлуулах тусам илүү сайн зар нээгдэнэ.",
+      c6t:"Цалингийн тооцоолуур суулгасан", c6d:"Цагийн хөлсөө оруулахад өдөр, долоо хоног, сарын цалин гарна. Долоо хоногийн амралтын нэмэгдэл (7 хоногт 15+ цаг), 3.3% суутгал, даатгалын сонголтыг хүртэл тооцно.",
+      s2_t:"Ажил хайгчид ч, ажил олгогчид ч", s2_s:"Ажил хайх, хүн авах хоёрыг нэг аппаас.",
+      w_tag:"Ажил хайгч", w_t:"Өнөөдөр шууд ажиллах хүсэлтэй үед",
+      w1:"Ойр орчмын түр, богино, тогтмол зарыг газрын зургаас харах",
+      w2:"Шудран үзээд таалагдвал шууд өргөдөл өгөх",
+      w3:"Тэнцсэн бол ажил олгогчтой апп дотроо чатлах",
+      w4:"Орлогын хуанлиар энэ сарын орлого, ирэх төлбөрөө хянах",
+      w5:"Солонгос хэл хэцүү байсан ч 8 хэлээр саадгүй ашиглах",
+      w_cta:"Ажлаа үзэх",
+      o_tag:"Ажил олгогч", o_t:"Гэнэт хүн дутсан үед",
+      o1:"Хүн дутмагц яаралтай зараа шууд нийтлэх",
+      o2:"Дагагчид шинэ зарын мэдэгдэл автоматаар очно",
+      o3:"Өргөдөл гаргагчдыг нэг товшилтоор авах, татгалзах, хянаж буй гэж тэмдэглэх",
+      o4:"Хүн цуглахгүй бол цагийн хөлсийг автоматаар нэмэгдүүлэх surge",
+      o5:"Тогтмол зарыг хуулж дахин нийтлэх",
+      o_cta:"Зар нийтлэх",
+      s3_t:"Солонгос хэл хэцүү байсан ч зүгээр", s3_s:"Дэлгэц бүхэлдээ 8 хэлээр орчуулагдана. Зар хайхаас эхлээд өргөдөл өгөх, ажил олгогчтой чатлах хүртэл эх хэлээрээ.",
+      e_t:"Ажилла, цуглар, уулз", e_s:"Ганц бүртгэлээр нэг газрын зураг дээр BaroMoim, BaroMannam хүртэл холбогдоно.",
+      m_tag:"BaroMoim", m_t:"Ижил сонирхолтой хүмүүстэй чөлөөтэй",
+      m_p:"Спорт, сонирхол, нөхөрлөл, сорилтоос сонгоод хүний тоо, байршил, огноогоо тогтоон цуглаан нээнэ. Нээсэн цуглаан газрын зураг дээр гарч, ойр орчмын хүмүүс харж оролцох хүсэлт өгнө.",
+      m1:"Ойр орчмын цуглааныг газрын зургаас ангиллаар нь харах",
+      m2:"Нарийн төрлөөр нь заагаад хүссэн хүмүүсээ л цуглуулах",
+      m3:"Оролцох нь батлагдвал бүлгийн чатаар харилцах",
+      m4:"Үзэхэд бүртгэл шаардлагагүй, оролцох хүсэлтэд нэвтрэх шаардлагатай",
+      m_cta:"Цуглааныг үзэх",
+      n_tag:"BaroMannam", n_t:"BaroSpot ба BaroMeeting гэсэн хоёр хэлбэр",
+      n_p:"Нэг хүнтэй тайван уулзах 1:1 тохироо BaroSpot, олуулаа цуглах бүлгийн уулзалт BaroMeeting. Ажлын профайлаас тусдаа профайлаар оролцоно.",
+      n1:"BaroSpot-д та хүсэлт өгөхөд нөгөө тал нэр нуусан жагсаалтаас шууд сонгоно",
+      n2:"BaroMeeting-д газрын зургаас элсүүлж буй уулзалтыг олж оролцох хүсэлт өгнө",
+      n3:"Үнэлгээ, ирээгүй түүх шаардлага хангахгүй бол хүсэлт өгөх боломж хязгаарлагдана",
+      n4:"Оролцоход эрх шаардлагатай бөгөөд үзэх нь үнэгүй",
+      n_cta:"BaroMannam-ыг үзэх",
+      e_note:"Ажил олгогч бол өөрийн газраа BaroMannam-ын уулзалтын байр болгон бүртгүүлж болно. Админ баталсны дараа газрын зураг дээр гарна.",
+      faq_t:"Түгээмэл асуулт",
+      q1:"BaroAlba үнэгүй юу?", a1:"Ажил хайгч зар хайх, өргөдөл өгөх, чатлах бүгдийг үнэгүй ашиглана. Ажил олгогч зар нийтлэх нь бас үнэгүй бөгөөд зөвхөн онцлон харуулах зэрэг нэмэлт үйлчилгээ төлбөртэй.",
+      q2:"Апп заавал суулгах ёстой юу?", a2:"Үгүй. Вэб хөтчөөс шууд ашиглана. Үндсэн дэлгэцэд нэмбэл апп шиг ажиллах бөгөөд Android-д тусдаа апп бас бий.",
+      q3:"Тухайн өдрийн тооцоо яаж хийгддэг вэ?", a3:"Ажил олгогч ажил дууссаныг баталгаажуулмагц апп дотор тооцоо хийгдэнэ. Тооцооны хэлбэр, хугацаа зар бүрт өөр байж болох тул өргөдөл өгөхөөсөө өмнө зарын дэлгэрэнгүйг шалгана уу.",
+      q4:"Гадаадын иргэн ашиглаж болох уу?", a4:"Болно. Дэлгэц англи, хятад, япон, вьетнам, орос, монгол, балба хэлээр орчуулагдсан бөгөөд гадаадын иргэн өргөдөл өгөх боломжтой зарыг тусад нь шүүж харна. Бодит ажлыг зөвхөн өөрийн оршин суух эрхийн зөвшөөрсөн хүрээнд хийх боломжтой.",
+      q5:"Би ажил олгогч, яг одоо хүн хэрэгтэй байна.", a5:"Нэвтрээд ажил олгогч горимд шилжиж яаралтай зар нийтлэхэд ойр орчмын ажил хайгчид болон таны газрыг дагасан хүмүүст шууд мэдэгдэл очно.",
+      fin_t:"Яг одоо ойролцоо ямар ажил байгааг хараарай", fin_p:"Бүртгүүлэхгүйгээр үзэж болно.", fin_cta:"Газрын зургаас ажил үзэх",
+      f1:"Ажил хайх", f2:"Нэвтрэх · Бүртгүүлэх", f3:"Үйлчилгээний нөхцөл", f4:"Нууцлалын бодлого"
+    },
+    ne: {
+      nav_login:"लग इन", nav_find:"काम खोज्नुहोस्",
+      hero_eyebrow:"नक्सामा आधारित रियल-टाइम काम मिलान",
+      hero_title:"आजै काम गर्नुहोस्,<br><span class=\"accent\">आजै पैसा</span> पाउनुहोस्",
+      hero_lede:"आफ्नो वरपरका छोटो अवधि र सोही दिनका कामहरू नक्सामै भेट्टाएर तुरुन्तै आवेदन दिनुहोस्। जरुरी विज्ञापन आउनासाथ सूचना पाउनुहोस्, र काम सकिएकै दिन भुक्तानी लिनुहोस्।",
+      hero_cta1:"नजिकका काम हेर्नुहोस्", hero_cta2:"रोजगारदाताको रूपमा विज्ञापन",
+      chip1:"नक्सामै खोज", chip2:"जरुरी कामको सूचना", chip3:"सोही दिन भुक्तानी", chip4:"८ भाषा", chip5:"इन्स्टल नचाहिने",
+      s1_t:"BaroAlba किन फरक छ", s1_s:"सूची पल्टाउनुको सट्टा, तपाईं आफू भएकै ठाउँबाट खोज्नुहुन्छ।",
+      c1t:"नक्सामा आधारित खोज", c1d:"हालको स्थानबाट १–३० किमि भित्रका विज्ञापन नक्सामा मार्करका रूपमा देखिन्छन्। घर वा विद्यालय नजिकका काम हेर्नासाथ छान्न सकिन्छ।",
+      c2t:"स्वाइपले छिटो", c2d:"विज्ञापनहरू एक-एक गरी पल्टाउँदै रुचि वा पास मात्र छान्नुहोस्। तपाईंको छनोट सिकेर मिल्दो विज्ञापन माथि ल्याइन्छ।",
+      c3t:"जरुरी विज्ञापनको तत्काल सूचना", c3d:"मनपर्ने क्षेत्र र न्यूनतम पारिश्रमिक सुरक्षित गरेपछि, मिल्ने नयाँ विज्ञापन आउनासाथ सूचना आउँछ। फलो गरेका व्यवसायको सूचना पहिले आउँछ।",
+      c4t:"छनोट भएपछि तुरुन्तै च्याट", c4d:"रोजगारदातासँग एपभित्रै एक-एक गरी कुरा गर्नुहोस्। फोन नम्बर साटासाट नगरी पनि काममा जाने समय र लैजानुपर्ने सामान पक्का गर्न सकिन्छ।",
+      c5t:"बिजुली विश्वास स्तर", c5d:"मूल्याङ्कन, सकिएका कामको सङ्ख्या र नआएको इतिहासका आधारमा स्तर स्वतः तय हुन्छ। इमान्दारीपूर्वक जोड्दै जाँदा राम्रा कामसम्म पुगिन्छ।",
+      c6t:"तलब क्याल्कुलेटर भित्रै", c6d:"घण्टाको दर हाल्नासाथ दैनिक, साप्ताहिक र मासिक रकम निस्कन्छ — साप्ताहिक बिदा भत्ता (हप्तामा १५+ घण्टा), ३.३% कर कट्टी र बिमा विकल्पसहित।",
+      s2_t:"काम खोज्नेलाई पनि, रोजगारदातालाई पनि", s2_s:"काम खोज्ने र कर्मचारी खोज्ने दुवै एउटै एपमा।",
+      w_tag:"काम खोज्ने", w_t:"आजै काम गर्न मन लागेको बेला",
+      w1:"वरपरका तत्काल, छोटो र नियमित विज्ञापन नक्सामा हेर्नुहोस्",
+      w2:"स्वाइप गर्दै हेर्नुहोस्, मन परे तुरुन्तै आवेदन दिनुहोस्",
+      w3:"छनोट भएपछि रोजगारदातासँग एपभित्रै च्याट",
+      w4:"आम्दानी क्यालेन्डरबाट यो महिनाको कमाइ र आउने भुक्तानी हेर्नुहोस्",
+      w5:"कोरियन भाषा गाह्रो भए पनि ८ भाषामा सजिलै प्रयोग",
+      w_cta:"काम हेर्नुहोस्",
+      o_tag:"रोजगारदाता", o_t:"अचानक मान्छे चाहिएको बेला",
+      o1:"कोही नआए तुरुन्तै जरुरी विज्ञापन राख्नुहोस्",
+      o2:"फलो गर्नेहरूलाई नयाँ विज्ञापनको सूचना स्वतः जान्छ",
+      o3:"आवेदकलाई एकै क्लिकमा छनोट, अस्वीकृत वा विचाराधीन गर्नुहोस्",
+      o4:"आवेदक नआए पारिश्रमिक स्वतः बढाउने सर्ज सुविधा",
+      o5:"नियमित विज्ञापन प्रतिलिपि गरेर फेरि राख्नुहोस्",
+      o_cta:"विज्ञापन राख्नुहोस्",
+      s3_t:"कोरियन गाह्रो भए पनि ठीकै छ", s3_s:"सम्पूर्ण स्क्रिन ८ भाषामा अनुवाद हुन्छ। विज्ञापन खोज्नेदेखि आवेदन र रोजगारदातासँगको च्याटसम्म आफ्नै भाषामा।",
+      e_t:"काम, भेला र भेट", e_s:"एउटै खाताले उही नक्सामा BaroMoim र BaroMannam सम्म जोड्छ।",
+      m_tag:"BaroMoim", m_t:"उही रुचि भएकाहरूसँग सहजै",
+      m_p:"खेलकुद, रुचि, मेलमिलाप वा च्यालेन्जमध्ये छानेर सङ्ख्या, स्थान र मिति तोकी समूह खोल्नुहोस्। खोलेको समूह नक्सामा देखिन्छ र वरपरकाले हेरेर सहभागी हुन अनुरोध गर्छन्।",
+      m1:"वरपरका समूह नक्सामा वर्गअनुसार हेर्नुहोस्",
+      m2:"विस्तृत विधासम्म तोकेर चाहेकै मान्छे मात्र जम्मा गर्नुहोस्",
+      m3:"सहभागिता पक्का भएपछि समूह च्याटमा कुराकानी",
+      m4:"हेर्न खाता चाहिँदैन, सहभागी हुन लग इन चाहिन्छ",
+      m_cta:"समूह हेर्नुहोस्",
+      n_tag:"BaroMannam", n_t:"BaroSpot र BaroMeeting — दुई तरिका",
+      n_p:"एक जनासँग शान्त रूपमा भेट्ने १:१ मिलान BaroSpot, धेरै जना मिलेर गर्ने समूह भेट BaroMeeting। कामको प्रोफाइलभन्दा छुट्टै प्रोफाइलबाट सहभागी हुनुहुन्छ।",
+      n1:"BaroSpot मा तपाईंले अनुरोध गरेपछि अर्को पक्षले गोप्य सूचीबाट सीधै छान्छ",
+      n2:"BaroMeeting मा नक्सामा खुला भेट खोजेर सहभागी हुन अनुरोध गर्नुहोस्",
+      n3:"मूल्याङ्कन वा नआएको इतिहास मापदण्ड नपुगे अनुरोध सीमित हुन्छ",
+      n4:"सहभागी हुन पास चाहिन्छ, हेर्न भने निःशुल्क छ",
+      n_cta:"BaroMannam हेर्नुहोस्",
+      e_note:"रोजगारदाता हुनुहुन्छ भने आफ्नो पसललाई BaroMannam को भेट स्थलका रूपमा दर्ता गर्न सकिन्छ। प्रशासकको स्वीकृतिपछि नक्सामा देखिन्छ।",
+      faq_t:"बारम्बार सोधिने प्रश्न",
+      q1:"BaroAlba निःशुल्क हो?", a1:"काम खोज्नेहरूले विज्ञापन खोज्न, आवेदन दिन र च्याट गर्न सबै निःशुल्क प्रयोग गर्न सक्नुहुन्छ। रोजगारदाताले विज्ञापन राख्न पनि निःशुल्क छ; प्रिमियम देखाउने जस्ता वैकल्पिक सुविधा मात्र शुल्क लाग्ने हो।",
+      q2:"एप इन्स्टल गर्नैपर्छ?", a2:"पर्दैन। वेब ब्राउजरबाटै प्रयोग गर्न सकिन्छ। होम स्क्रिनमा थपे एपजस्तै चल्छ, र एन्ड्रोइडका लागि छुट्टै एप पनि छ।",
+      q3:"सोही दिनको भुक्तानी कसरी हुन्छ?", a3:"रोजगारदाताले काम सकिएको पुष्टि गरेपछि एपभित्रै भुक्तानी प्रक्रिया अघि बढ्छ। भुक्तानीको तरिका र समय विज्ञापनअनुसार फरक हुन सक्ने भएकाले आवेदन दिनुअघि विज्ञापनको विवरण हेर्नुहोस्।",
+      q4:"विदेशीले पनि प्रयोग गर्न सक्छन्?", a4:"सक्नुहुन्छ। स्क्रिन अङ्ग्रेजी, चिनियाँ, जापानी, भियतनामी, रुसी, मङ्गोलियन र नेपाली भाषामा अनुवाद हुन्छ, र विदेशीले आवेदन दिन मिल्ने विज्ञापन छुट्टै हेर्न सकिन्छ। वास्तविक काम भने आफ्नो बसोबास अनुमतिले दिने सीमाभित्र मात्र सम्भव हुन्छ।",
+      q5:"म रोजगारदाता हुँ, अहिले नै मान्छे चाहियो।", a5:"लग इन गरी रोजगारदातामा बदलेर जरुरी विज्ञापन राख्नुभयो भने वरपरका काम खोज्नेहरू र तपाईंको व्यवसाय फलो गरेकाहरूलाई तुरुन्तै सूचना जान्छ।",
+      fin_t:"अहिले तपाईंको वरपर कस्ता काम छन् हेर्नुहोस्", fin_p:"दर्ता नगरी पनि हेर्न सकिन्छ।", fin_cta:"नक्सामा काम हेर्नुहोस्",
+      f1:"काम खोज्नुहोस्", f2:"लग इन · दर्ता", f3:"सेवा सर्त", f4:"गोपनीयता नीति"
+    }
+  };
+
+  // 앱 _LANGS 는 네팔어를 'np' 로 쓰고 ISO/브라우저는 'ne' 를 쓴다. 랜딩 사전 키는
+  // ISO('ne')로 두고, 앱과 주고받을 때만 변환한다. (Phase 61에서 두 번 밟은 함정)
+  var toApp  = function (c) { return c === 'ne' ? 'np' : c; };
+  var toPage = function (c) { return c === 'np' ? 'ne' : c; };
+
+  var SUPPORTED = ['ko','en','zh','ja','vi','ru','mn','ne'];
+  var OG_LOCALE = { ko:'ko_KR', en:'en_US', zh:'zh_CN', ja:'ja_JP', vi:'vi_VN', ru:'ru_RU', mn:'mn_MN', ne:'ne_NP' };
+
+  // 앱 shared-lang.js 의 _detectLang() 과 같은 방식 (복붙 후 키만 페이지 기준으로 변환)
+  function detectLang() {
+    try {
+      var prefs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
+      for (var i = 0; i < prefs.length; i++) {
+        if (!prefs[i]) continue;
+        var code = String(prefs[i]).toLowerCase().split('-')[0];  // 'zh-CN' → 'zh'
+        if (SUPPORTED.indexOf(code) > -1) return code;
+      }
+    } catch (e) { /* navigator 없는 환경 */ }
+    return 'ko';
+  }
+
+  // 화면 본문이 바뀌면 FAQ 스키마도 같이 바꿔야 리치결과 경고가 안 난다(Phase 60)
+  function syncFaqSchema(dict) {
+    var el = document.getElementById('ld-graph');
+    if (!el) return;
+    try {
+      var g = JSON.parse(el.textContent);
+      (g['@graph'] || []).forEach(function (node) {
+        if (node['@type'] === 'WebSite') node.inLanguage = document.documentElement.lang;
+        if (node['@type'] !== 'FAQPage') return;
+        node.mainEntity.forEach(function (qa, i) {
+          var q = dict['q' + (i + 1)], a = dict['a' + (i + 1)];
+          if (q) qa.name = q;
+          if (a) qa.acceptedAnswer.text = a;
+        });
+      });
+      el.textContent = JSON.stringify(g);
+    } catch (e) { /* 스키마 갱신 실패해도 본문은 정상 표시 */ }
+  }
+
+  var KO_SNAPSHOT = null;   // 첫 로드 시의 한국어 원문 (되돌릴 때 쓴다)
+
+  function applyLang(code, opts) {
+    code = SUPPORTED.indexOf(code) > -1 ? code : 'ko';
+    var dict = T[code] || {};
+
+    // 한국어 원문은 HTML 자체이므로 최초 1회 스냅샷을 떠 둔다
+    if (!KO_SNAPSHOT) {
+      KO_SNAPSHOT = {};
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        KO_SNAPSHOT[el.getAttribute('data-i18n')] = el.textContent.trim();
+      });
+      document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+        KO_SNAPSHOT[el.getAttribute('data-i18n-html')] = el.innerHTML;
+      });
+    }
+    var src = (code === 'ko') ? KO_SNAPSHOT : dict;
+
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var v = src[el.getAttribute('data-i18n')];
+      if (v) el.textContent = v;
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      var v = src[el.getAttribute('data-i18n-html')];
+      if (v) el.innerHTML = v;
+    });
+
+    document.documentElement.lang = code;
+    var og = document.querySelector('meta[property="og:locale"]');
+    if (og) og.setAttribute('content', OG_LOCALE[code] || 'ko_KR');
+
+    var sel = document.getElementById('lang-select');
+    if (sel) sel.value = code;
+
+    syncFaqSchema(code === 'ko' ? KO_SNAPSHOT : dict);
+
+    // 사용자가 직접 고른 것만 저장한다. 감지값은 저장하지 않는다 —
+    // 저장하면 나중에 휴대폰 언어를 바꿔도 최초 1회 값에 묶인다(앱과 동일 원칙).
+    if (opts && opts.persist) {
+      try { localStorage.setItem('baroalba_lang', toApp(code)); } catch (e) {}
+    }
+  }
+
+  // ── 초기 언어 결정: ?lang= > 저장된 선택 > 브라우저 언어 ──
+  var initial = null;
+  try {
+    var q = new URLSearchParams(location.search).get('lang');
+    if (q && SUPPORTED.indexOf(toPage(q.toLowerCase())) > -1) initial = toPage(q.toLowerCase());
+  } catch (e) {}
+  if (!initial) {
+    try {
+      var saved = localStorage.getItem('baroalba_lang');
+      if (saved && SUPPORTED.indexOf(toPage(saved)) > -1) initial = toPage(saved);
+    } catch (e) {}
+  }
+  if (!initial) initial = detectLang();
+
+  // 한국어면 HTML 그대로가 정답이라 건드리지 않는다(첫 페인트 깜빡임 방지).
+  // 단 select 값은 맞춰야 하므로 applyLang 은 호출한다.
+  applyLang(initial, { persist: false });
+
+  var sel = document.getElementById('lang-select');
+  if (sel) {
+    sel.addEventListener('change', function () {
+      applyLang(this.value, { persist: true });
+      // 앱으로 넘어가는 링크에도 선택 언어를 실어 보낸다 — 앱은 baroalba_lang 를
+      // 먼저 보므로 필수는 아니지만, 링크만 공유해도 언어가 유지되게 한다.
+      if (typeof gtag === 'function') gtag('event', 'landing_lang_change', { lang: this.value });
+    });
+  }
+})();
 </script>
 
 </body>
