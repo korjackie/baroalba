@@ -97,23 +97,31 @@
 
   /* ── 헤더 ── */
   header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-  .hbar{display:flex;align-items:center;justify-content:space-between;height:60px}
-  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;color:var(--ink);text-decoration:none;letter-spacing:-.02em}
-  .brand img{width:28px;height:28px;border-radius:7px}
-  .hnav{display:flex;align-items:center;gap:8px}
-  /* 언어 선택 — 한국어를 못 읽는 사람이 찾아야 하는 컨트롤이라 지구본 아이콘을 같이 둔다.
-     (앱에서 "읽지도 못하는 한국어 화면에서 언어 버튼을 먼저 찾아야 했던" 문제가 Phase 61의
-     최대 발견이었다. 랜딩에서도 같은 실수를 하지 않기 위해 헤더 최상단에 노출한다) */
-  .langsel{position:relative;display:flex;align-items:center}
-  .langsel svg{position:absolute;left:9px;pointer-events:none;color:var(--muted)}
+  .hbar{display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px}
+  /* 브랜드명은 어떤 언어에서도 절대 줄바꿈되면 안 된다. 영어 화면에서 "로/알/바" 세 글자가
+     각각 한 줄씩 세 줄로 쪼개지던 문제(2026-07-28 제보)의 원인은 폰트가 아니라 헤더 폭
+     부족이었다 — 폭을 가장 많이 먹던 언어 선택(최대 132px)을 히어로로 내리고, 여기는
+     nowrap + 축소금지로 고정한다. */
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--ink);text-decoration:none;letter-spacing:-.03em;white-space:nowrap;flex-shrink:0}
+  .brand .blogo{width:30px;height:30px;flex-shrink:0;display:block}
+  .brand em{font-style:normal;color:var(--red)}
+  .hnav{display:flex;align-items:center;gap:8px;min-width:0}
+  /* 언어 선택 — 한국어를 못 읽는 사람이 가장 먼저 찾아야 하는 컨트롤이다. (앱에서 "읽지도
+     못하는 한국어 화면에서 언어 버튼부터 찾아야 했던" 문제가 Phase 61의 최대 발견이었다.)
+     헤더에 두면 위처럼 브랜드명을 밀어내므로 히어로 우측 상단 — 스크롤 없이 첫 화면에
+     그대로 보이는 자리 — 로 옮겼다. 글자를 못 읽어도 알아보도록 지구본 아이콘은 유지한다. */
+  .hero-top{display:flex;justify-content:flex-end;margin-bottom:26px}
+  .langsel{position:relative;display:inline-flex;align-items:center}
+  .langsel svg{position:absolute;left:12px;pointer-events:none;color:var(--muted)}
   .langsel select{
     appearance:none;-webkit-appearance:none;
-    padding:9px 26px 9px 30px;border:1px solid var(--line);border-radius:9px;background:#fff;
+    padding:9px 32px 9px 34px;border:1px solid var(--line);border-radius:999px;background:#fff;
     font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;
-    max-width:132px;text-overflow:ellipsis;
+    box-shadow:0 1px 2px rgba(16,24,40,.05);
   }
-  .langsel::after{content:"";position:absolute;right:11px;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
+  .langsel::after{content:"";position:absolute;right:14px;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
   .langsel select:hover{border-color:#c9ccd3}
+  .langsel select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
   .btn-primary{background:var(--red);color:#fff}
   .btn-primary:hover{background:var(--red-dark)}
@@ -122,7 +130,7 @@
   .btn-lg{padding:15px 30px;font-size:16px;border-radius:11px}
 
   /* ── 히어로 ── */
-  .hero{padding:74px 0 62px;text-align:center;background:linear-gradient(180deg,#fff6f7 0%,#fff 100%)}
+  .hero{padding:22px 0 62px;text-align:center;background:linear-gradient(180deg,#fff6f7 0%,#fff 100%)}
   .eyebrow{display:inline-block;font-size:13px;font-weight:700;color:var(--red);background:#fdeaed;padding:6px 14px;border-radius:999px;margin-bottom:20px;letter-spacing:-.01em}
   h1{font-size:clamp(30px,5.6vw,50px);line-height:1.24;font-weight:800;color:var(--ink);letter-spacing:-.035em;margin-bottom:18px;word-break:keep-all}
   h1 .accent{color:var(--red)}
@@ -162,9 +170,24 @@
   .panel li::before{content:"";position:absolute;left:3px;top:9px;width:7px;height:7px;border-radius:50%;background:var(--red)}
   .panel .btn{margin-top:20px}
 
-  /* ── 언어 ── */
-  .langs{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:8px}
-  .lang{font-size:15px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px 21px}
+  /* ── 언어 ──
+     8개를 flex-wrap 으로 흘리면 폭에 따라 4/3/1 처럼 마지막 줄에 하나만 남아 깨져 보인다.
+     4열 고정 그리드라 언어가 8개인 한 항상 정확히 2줄로 떨어진다. (언어를 늘리면 4의 배수로
+     맞추거나 이 열 수를 다시 볼 것) */
+  .langs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:720px;margin:0 auto}
+  .lang{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    min-height:66px;padding:12px 6px;font-family:inherit;font-size:15px;font-weight:700;
+    color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;
+    text-align:center;cursor:pointer;
+    transition:border-color .15s,box-shadow .15s,background .15s,color .15s;
+  }
+  .lang .code{font-size:11px;font-weight:700;letter-spacing:.09em;color:var(--muted)}
+  .lang:hover{border-color:var(--red);box-shadow:0 2px 9px rgba(200,16,46,.10)}
+  .lang:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  /* 현재 언어 표시 — 카드를 눌러 바꿀 수 있다는 걸 알려주는 유일한 단서라 반드시 유지 */
+  .lang[aria-current="true"]{border-color:var(--red);background:#fdeaed;color:var(--red)}
+  .lang[aria-current="true"] .code{color:var(--red)}
 
   /* ── FAQ ── */
   .faq{max-width:760px;margin:0 auto}
@@ -190,9 +213,31 @@
   .fmeta{line-height:1.9}
 
   @media (max-width:560px){
-    .hero{padding:52px 0 46px}
+    .hero{padding:16px 0 46px}
+    .hero-top{margin-bottom:20px}
     section{padding:50px 0}
     .card,.panel{padding:24px 20px}
+    .brand{font-size:17.5px;gap:8px}
+    .brand .blogo{width:27px;height:27px}
+    .btn{padding:9px 14px;font-size:14px}
+    /* 히어로 CTA는 모바일에서 두 줄로 쌓이는데, 폭이 제각각이면 지저분해 보인다.
+       같은 폭으로 맞춰 세로로 정렬한다. */
+    .cta{flex-direction:column;align-items:stretch;max-width:330px;margin:0 auto}
+    .btn-lg{padding:14px 20px;font-size:15.5px}
+    /* 4열은 유지(2줄 고정)하되 긴 언어명(Tiếng Việt)이 들어가도록 글자만 줄인다 */
+    .langs{gap:8px}
+    .lang{min-height:60px;padding:10px 3px;font-size:13px;border-radius:10px;letter-spacing:-.02em}
+    .lang .code{font-size:9.5px}
+  }
+  /* 아주 좁은 화면(SE 등) 안전장치. 헤더 버튼 문구가 언어마다 달라서(러시아어 "Найти работу",
+     네팔어 "काम खोज्नुहोस्" 는 한국어보다 훨씬 길다) 여유를 더 준다. 여기서 밀리면 브랜드명이
+     또 줄바꿈되는 게 아니라 가로 스크롤이 생긴다 — .brand 가 flex-shrink:0 이기 때문. */
+  @media (max-width:390px){
+    .hbar{gap:8px}
+    .btn{padding:8px 11px;font-size:13.5px}
+    .brand{font-size:16.5px;gap:7px}
+    .brand .blogo{width:25px;height:25px}
+    .lang{font-size:12px;padding:10px 2px}
   }
 </style>
 </head>
@@ -201,23 +246,21 @@
 <header>
   <div class="wrap hbar">
     <a class="brand" href="/">
-      <img src="/icons/icon-192.png" alt="" width="28" height="28">
-      바로알바
+      <!-- 로고마크: 지도 핀 + 번개 = "지도에서 찾아 즉시 일한다". 인라인 SVG라 요청이 없고
+           어느 배율에서도 안 뭉갠다(기존 icon-192.png 는 28px 로 줄면 흐려졌음). -->
+      <svg class="blogo" viewBox="0 0 32 32" role="img" aria-label="바로알바">
+        <defs>
+          <linearGradient id="blg" x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#E8213F"/><stop offset="1" stop-color="#A50B22"/>
+          </linearGradient>
+        </defs>
+        <rect width="32" height="32" rx="9" fill="url(#blg)"/>
+        <path d="M16 5.6c-3.8 0-6.9 3.05-6.9 6.82 0 4.9 6.02 11.2 6.28 11.47a.86.86 0 0 0 1.24 0c.26-.27 6.28-6.57 6.28-11.47C22.9 8.65 19.8 5.6 16 5.6z" fill="#fff"/>
+        <path d="M17.35 8.6l-4.5 5.42h2.62l-.92 3.98 4.6-5.62h-2.68z" fill="#C8102E"/>
+      </svg>
+      바로<em>알바</em>
     </a>
     <nav class="hnav">
-      <div class="langsel">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <select id="lang-select" aria-label="Language">
-          <option value="ko" lang="ko">한국어</option>
-          <option value="en" lang="en">English</option>
-          <option value="zh" lang="zh">中文</option>
-          <option value="ja" lang="ja">日本語</option>
-          <option value="vi" lang="vi">Tiếng Việt</option>
-          <option value="ru" lang="ru">Русский</option>
-          <option value="mn" lang="mn">Монгол</option>
-          <option value="ne" lang="ne">नेपाली</option>
-        </select>
-      </div>
       <a class="btn btn-ghost" href="/login.html" data-i18n="nav_login">로그인</a>
       <a class="btn btn-primary" href="/바로알바.html?guest=1" data-i18n="nav_find">알바 찾기</a>
     </nav>
@@ -228,6 +271,21 @@
 
   <div class="hero">
     <div class="wrap">
+      <div class="hero-top">
+        <div class="langsel">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <select id="lang-select" aria-label="Language">
+            <option value="ko" lang="ko">한국어</option>
+            <option value="en" lang="en">English</option>
+            <option value="zh" lang="zh">中文</option>
+            <option value="ja" lang="ja">日本語</option>
+            <option value="vi" lang="vi">Tiếng Việt</option>
+            <option value="ru" lang="ru">Русский</option>
+            <option value="mn" lang="mn">Монгол</option>
+            <option value="ne" lang="ne">नेपाली</option>
+          </select>
+        </div>
+      </div>
       <span class="eyebrow" data-i18n="hero_eyebrow">지도 기반 실시간 알바 매칭</span>
       <h1 data-i18n-html="hero_title">지금 일하고,<br><span class="accent">오늘 받는</span> 초단기 알바</h1>
       <p class="lede" data-i18n="hero_lede">
@@ -326,15 +384,17 @@
       </div>
       <!-- 표기는 앱의 언어 선택 화면과 반드시 같게 유지할 것(shared-lang.js의 _LANGS 순서).
            랜딩에서 본 언어명이 앱에서 다르게 보이면 같은 서비스로 안 읽힌다. -->
+      <!-- 장식이 아니라 실제 언어 전환 버튼이다. 여기까지 스크롤한 사람은 대부분
+           "내 언어가 되나?"를 확인하러 온 것이므로, 그 자리에서 바로 바꿔줄 수 있어야 한다. -->
       <div class="langs">
-        <span class="lang" lang="ko">한국어</span>
-        <span class="lang" lang="en">English</span>
-        <span class="lang" lang="zh">中文</span>
-        <span class="lang" lang="ja">日本語</span>
-        <span class="lang" lang="vi">Tiếng Việt</span>
-        <span class="lang" lang="ru">Русский</span>
-        <span class="lang" lang="mn">Монгол</span>
-        <span class="lang" lang="ne">नेपाली</span>
+        <button type="button" class="lang" data-lang="ko" lang="ko">한국어<span class="code">KO</span></button>
+        <button type="button" class="lang" data-lang="en" lang="en">English<span class="code">EN</span></button>
+        <button type="button" class="lang" data-lang="zh" lang="zh">中文<span class="code">ZH</span></button>
+        <button type="button" class="lang" data-lang="ja" lang="ja">日本語<span class="code">JA</span></button>
+        <button type="button" class="lang" data-lang="vi" lang="vi">Tiếng Việt<span class="code">VI</span></button>
+        <button type="button" class="lang" data-lang="ru" lang="ru">Русский<span class="code">RU</span></button>
+        <button type="button" class="lang" data-lang="mn" lang="mn">Монгол<span class="code">MN</span></button>
+        <button type="button" class="lang" data-lang="ne" lang="ne">नेपाली<span class="code">NE</span></button>
       </div>
     </div>
   </section>
@@ -969,6 +1029,11 @@
     var sel = document.getElementById('lang-select');
     if (sel) sel.value = code;
 
+    // 언어 섹션 카드에도 현재 언어를 표시한다(셀렉트와 항상 같은 값이어야 함)
+    document.querySelectorAll('.lang[data-lang]').forEach(function (b) {
+      b.setAttribute('aria-current', b.getAttribute('data-lang') === code ? 'true' : 'false');
+    });
+
     syncFaqSchema(code === 'ko' ? KO_SNAPSHOT : dict);
 
     // 사용자가 직접 고른 것만 저장한다. 감지값은 저장하지 않는다 —
@@ -996,15 +1061,23 @@
   // 단 select 값은 맞춰야 하므로 applyLang 은 호출한다.
   applyLang(initial, { persist: false });
 
+  // 셀렉트(히어로 우측 상단)와 언어 카드가 같은 경로를 타게 한다 — 한쪽만 고치면
+  // 두 컨트롤이 서로 다른 언어를 가리키는 상태가 생긴다.
+  function chooseLang(code, from) {
+    applyLang(code, { persist: true });
+    // 앱으로 넘어가는 링크에도 선택 언어를 실어 보낸다 — 앱은 baroalba_lang 를
+    // 먼저 보므로 필수는 아니지만, 링크만 공유해도 언어가 유지되게 한다.
+    if (typeof gtag === 'function') gtag('event', 'landing_lang_change', { lang: code, from: from });
+  }
+
   var sel = document.getElementById('lang-select');
   if (sel) {
-    sel.addEventListener('change', function () {
-      applyLang(this.value, { persist: true });
-      // 앱으로 넘어가는 링크에도 선택 언어를 실어 보낸다 — 앱은 baroalba_lang 를
-      // 먼저 보므로 필수는 아니지만, 링크만 공유해도 언어가 유지되게 한다.
-      if (typeof gtag === 'function') gtag('event', 'landing_lang_change', { lang: this.value });
-    });
+    sel.addEventListener('change', function () { chooseLang(this.value, 'select'); });
   }
+
+  document.querySelectorAll('.lang[data-lang]').forEach(function (b) {
+    b.addEventListener('click', function () { chooseLang(this.getAttribute('data-lang'), 'card'); });
+  });
 })();
 </script>
 
