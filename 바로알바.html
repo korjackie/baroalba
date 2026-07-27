@@ -11,6 +11,11 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <title>바로알바</title>
+  <!-- 이 파일은 앱 셸이라 크롤러가 보는 건 빈 껍데기다. 색인되면 검색결과에서
+       내용 있는 랜딩(/)과 경쟁하며 빈 페이지를 노출시키므로 noindex.
+       follow는 남겨 여기서 나가는 링크는 그대로 평가되게 한다.
+       ※ robots.txt로 막지 않는 이유 - 막으면 이 태그 자체를 못 읽는다. -->
+  <meta name="robots" content="noindex, follow">
   <meta property="og:title" content="바로알바 — 실시간 알바 매칭">
   <meta property="og:description" content="지도에서 바로 찾고, 바로 지원하는 초단기 알바 매칭">
   <meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share.png">
