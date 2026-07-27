@@ -14137,7 +14137,31 @@ const TRANSLATIONS = {
 };
 
 // ── 현재 언어 상태 ────────────────────────────────────────────
-let currentLang = localStorage.getItem('baroalba_lang') || 'ko';
+// 2026-07-28: 저장된 선택이 없을 때 브라우저/휴대폰 언어를 따르게 함.
+// 그전까지는 첫 진입이 무조건 'ko'라, 8개 언어를 1922키씩 전부 번역해두고도
+// 베트남·몽골·네팔 노동자는 "읽지도 못하는 한국어 화면에서 언어 버튼을 먼저
+// 찾아내야" 자기 언어를 볼 수 있었다. 번역이 사실상 도달 불가능했던 상태.
+// 사용자가 직접 고른 값(baroalba_lang)은 언제나 이 감지보다 우선한다.
+// 감지 결과는 일부러 저장하지 않는다 - 저장하면 나중에 휴대폰 언어를 바꿔도
+// 최초 1회 감지값에 영구히 묶인다.
+function _detectLang() {
+  try {
+    const supported = Object.keys(TRANSLATIONS);
+    const prefs = (navigator.languages && navigator.languages.length)
+      ? navigator.languages : [navigator.language];
+    for (const raw of prefs) {
+      if (!raw) continue;
+      // 'zh-CN' / 'ko-KR' 처럼 지역이 붙어 오므로 앞 부분만 본다
+      let code = String(raw).toLowerCase().split('-')[0];
+      // 브라우저는 네팔어를 ISO 639-1인 'ne'로 보내는데 이 앱의 내부 키는 'np'다.
+      // (np는 원래 '네팔 국가코드'라 언어코드 표준과 어긋나 있음 - 여기서 흡수)
+      if (code === 'ne') code = 'np';
+      if (supported.includes(code)) return code;
+    }
+  } catch (e) { /* navigator 없는 환경 - 한국어로 */ }
+  return 'ko';
+}
+let currentLang = localStorage.getItem('baroalba_lang') || _detectLang();
 let _pendingLang = currentLang;
 
 // ── 번역 헬퍼 ─────────────────────────────────────────────────
