@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '578';
+  const _APP_V = '579';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -961,10 +961,10 @@ async function openReferralInvite() {
     <div style="text-align:center;padding:4px 20px 8px">
       <div style="font-size:36px;margin-bottom:10px">🎁</div>
       <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:6px">친구 초대하고 포인트 받기</div>
-      <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">내 링크로 친구가 가입하면<br>둘 다 <b style="color:#C8102E">${REFERRAL_REWARD_POINTS.toLocaleString()}P</b>를 받아요!</div>
+      <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">내 링크로 친구가 가입하면<br>둘 다 <b style="color:var(--red)">${REFERRAL_REWARD_POINTS.toLocaleString()}P</b>를 받아요!</div>
       <div style="background:#f8f8f8;border-radius:14px;padding:16px;margin-bottom:16px">
         <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px">내 추천코드</div>
-        <div style="font-size:22px;font-weight:900;color:#C8102E;letter-spacing:2px;margin-bottom:10px">${code}</div>
+        <div style="font-size:22px;font-weight:900;color:var(--red);letter-spacing:2px;margin-bottom:10px">${code}</div>
         <div style="font-size:11px;color:#bbb">지금까지 <b style="color:#666">${count || 0}명</b> 초대함</div>
       </div>
       <button onclick="shareReferralLink('${code}')" style="width:100%;padding:14px;background:#FEE500;color:#3C1E1E;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px">
@@ -1414,7 +1414,7 @@ function renderMarkers() {
     const mkTypeChr = _mtc[job.work_type] || _mtc.spot;
     const catShort  = catName.length > 5 ? catName.slice(0,5) : catName;
 
-    const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:#7C3AED;color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:8px;white-space:nowrap">👥${_r}자리</div>` : ''; })();
+    const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:var(--purple);color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:8px;white-space:nowrap">👥${_r}자리</div>` : ''; })();
     const content = `
       <div class="marker-wrap" onclick="openDetail('${job.id}')" style="position:relative">
         ${surgeHtml}
@@ -1449,7 +1449,7 @@ function renderDateSlider() {
   const dayNamesKo = ['일','월','화','수','목','금','토'];
   const _dl = DAY_LABELS[currentLang] || DAY_LABELS.ko;
   const dayNames = dayNamesKo.map(d => _dl[d] || d);
-  let html = `<button onclick="selectDate(null)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:${selectedDate===null?'#C8102E':'#f0f0f0'};color:${selectedDate===null?'#fff':'#777'}">${t('cat_all')}</button>`;
+  let html = `<button onclick="selectDate(null)" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:${selectedDate===null?'var(--red)':'#f0f0f0'};color:${selectedDate===null?'#fff':'#777'}">${t('cat_all')}</button>`;
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
@@ -1458,7 +1458,7 @@ function renderDateSlider() {
     const isSun = d.getDay() === 0, isSat = d.getDay() === 6;
     const labelColor = isSel ? 'rgba(255,255,255,0.75)' : (isSun ? '#E53935' : isSat ? '#1976D2' : '#999');
     const numColor   = isSel ? '#fff'                    : (isSun ? '#E53935' : isSat ? '#1976D2' : '#111');
-    html += `<button onclick="selectDate('${dateStr}')" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:5px 11px;border-radius:14px;border:${isSel?'none':'1.5px solid #eee'};cursor:pointer;min-width:40px;background:${isSel?'#C8102E':'#fff'}">
+    html += `<button onclick="selectDate('${dateStr}')" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:5px 11px;border-radius:14px;border:${isSel?'none':'1.5px solid #eee'};cursor:pointer;min-width:40px;background:${isSel?'var(--red)':'#fff'}">
       <span style="font-size:10px;font-weight:700;color:${labelColor}">${i===0?t('today_label'):dayNames[d.getDay()]}</span>
       <span style="font-size:16px;font-weight:900;color:${numColor}">${d.getDate()}</span>
     </button>`;
@@ -1587,7 +1587,7 @@ function renderList() {
 
   if (displayJobs.length === 0) {
     const nextRadius = currentRadius < 3000 ? 3 : currentRadius < 5000 ? 5 : currentRadius < 10000 ? 10 : null;
-    const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('expand_radius').replace('{n}', nextRadius)}</button>` : '';
+    const expandBtn = nextRadius ? `<button onclick="setRadius(${nextRadius * 1000})" style="margin-top:16px;padding:12px 24px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('expand_radius').replace('{n}', nextRadius)}</button>` : '';
     const guestBtn = isGuest ? `<button onclick="_guestPostJobPrompt()" style="margin-top:8px;padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:block;width:100%">${t('guest_post_job_btn')}</button>` : '';
     list.innerHTML = `<div class="empty-state">
       <div class="empty-icon">📭</div>
@@ -1722,14 +1722,14 @@ function renderUrgentFeed() {
     const emoji = getCatEmoji(job.category);
     const bg = CAT_BG[job.category] || '#f5f5f5';
     return `
-    <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:150px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid #C8102E">
+    <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:150px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid var(--red)">
       <div style="background:${bg};padding:10px 12px 8px;position:relative">
         <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
         <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title || job.biz_name}</div>
-        <span style="position:absolute;top:8px;right:8px;background:#C8102E;color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥${t('urgent_label')}</span>
+        <span style="position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥${t('urgent_label')}</span>
       </div>
       <div style="padding:8px 10px">
-        <div style="font-size:14px;font-weight:900;color:#C8102E">${_shortWage(job.current_wage)}${currentLang==='ko' ? '원' : ''}</div>
+        <div style="font-size:14px;font-weight:900;color:var(--red)">${_shortWage(job.current_wage)}${currentLang==='ko' ? '원' : ''}</div>
         <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">📍 ${dist}</div>
       </div>
     </div>`;
@@ -1853,7 +1853,7 @@ async function loadMoimList(cat = '') {
 
   if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">' + t('loading_generic') + '</div></div>';
 
-  const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><span style="font-size:22px">🤝</span><span style="font-size:11px;font-weight:800;color:#7C3AED" data-i18n="create_first_moim">첫 모임 만들기</span></div>';
+  const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><span style="font-size:22px">🤝</span><span style="font-size:11px;font-weight:800;color:var(--purple)" data-i18n="create_first_moim">첫 모임 만들기</span></div>';
 
   try {
     const _moimNow = new Date().toISOString();
@@ -1915,9 +1915,9 @@ async function loadMoimList(cat = '') {
 }
 
 function _moimHomeCard(m) {
-  const catColor = { 스포츠:'#2563eb',취미:'#7c3aed',친목:'#0891b2',기타:'#6b7280' };
+  const catColor = { 스포츠:'#2563eb',취미:'var(--purple)',친목:'#0891b2',기타:'#6b7280' };
   const cat = m.category || '기타';
-  const color = catColor[cat] || '#7c3aed';
+  const color = catColor[cat] || 'var(--purple)';
   const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
   const rem = (m.max_count||10) - (m.current_count||0);
 
@@ -1956,12 +1956,12 @@ function _renderMoimCards(container, list) {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
             <div style="font-size:15px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}${_isAdmin ? _adminBtn('gatherings',m.id,'title',m.title,'모임 제목') : ''}</div>
-            ${m.entry_fee < 0 ? `<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">${t('fee_split')}</div>` : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}${t('won_suffix')}</div>` : `<div style="font-size:12px;font-weight:700;color:#16a34a;flex-shrink:0">${t('fee_free')}</div>`}
+            ${m.entry_fee < 0 ? `<div style="font-size:12px;font-weight:700;color:#D97706;flex-shrink:0">${t('fee_split')}</div>` : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:800;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}${t('won_suffix')}</div>` : `<div style="font-size:12px;font-weight:700;color:var(--green);flex-shrink:0">${t('fee_free')}</div>`}
           </div>
           <div style="font-size:12px;color:#888;margin-top:3px">📅 ${dateStr}</div>
           ${m.location_name ? `<div style="font-size:12px;color:#888;margin-top:1px">📍 ${m.location_name}</div>` : ''}
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:#7C3AED;padding:2px 8px;border-radius:8px">${tMoimCat(m.category) || t('cat_etc')}</span>
+            <span style="font-size:10px;font-weight:800;background:#EDE9FE;color:var(--purple);padding:2px 8px;border-radius:8px">${tMoimCat(m.category) || t('cat_etc')}</span>
             ${m.sub_category ? `<span style="font-size:10px;font-weight:700;background:#f5f5f5;color:#555;padding:2px 8px;border-radius:8px">${tMoimSubcat(m.sub_category)}</span>` : ''}
             ${m.skill_level && m.skill_level !== '무관' ? `<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#B45309;padding:2px 8px;border-radius:8px">🏅${tSkillLevel(m.skill_level)}</span>` : ''}
             ${m.gender_req !== 'any' ? `<span style="font-size:10px;font-weight:700;background:#F0F9FF;color:#0369A1;padding:2px 8px;border-radius:8px">${m.gender_req === 'male' ? t('gender_male_only') : t('gender_female_only')}</span>` : ''}
@@ -1971,10 +1971,10 @@ function _renderMoimCards(container, list) {
       <div style="padding:0 14px 12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <span style="font-size:11px;color:#888">${t('moim_capacity_fmt').replace('{a}', m.current_count || 0).replace('{b}', m.max_count || 10)}</span>
-          <span style="font-size:11px;font-weight:800;color:${rem<=2?'#C8102E':rem<=4?'#EA580C':'#7C3AED'}">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : ('🔒 ' + t('moim_closed'))}</span>
+          <span style="font-size:11px;font-weight:800;color:${rem<=2?'var(--red)':rem<=4?'#EA580C':'var(--purple)'}">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : ('🔒 ' + t('moim_closed'))}</span>
         </div>
         <div style="height:4px;background:#EDE9FE;border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${pct>=90?'#C8102E':'#7C3AED'};border-radius:2px;transition:width 0.4s"></div>
+          <div style="height:100%;width:${pct}%;background:${pct>=90?'var(--red)':'var(--purple)'};border-radius:2px;transition:width 0.4s"></div>
         </div>
       </div>
     </div>`;
@@ -2028,7 +2028,7 @@ async function openMoimDetail(moimId) {
   document.getElementById('moim-detail-body').innerHTML = `
     <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:24px 20px 20px;text-align:center">
       <div style="font-size:56px;margin-bottom:8px">${emoji}</div>
-      <div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:6px">${tMoimCat(m.category)} ${m.sub_category ? '· '+tMoimSubcat(m.sub_category) : ''}</div>
+      <div style="font-size:11px;font-weight:800;color:var(--purple);margin-bottom:6px">${tMoimCat(m.category)} ${m.sub_category ? '· '+tMoimSubcat(m.sub_category) : ''}</div>
       <div style="font-size:20px;font-weight:900;color:#111;line-height:1.3">${m.title}</div>
     </div>
 
@@ -2036,11 +2036,11 @@ async function openMoimDetail(moimId) {
       <!-- 모집 현황 -->
       <div style="background:#F5F3FF;border-radius:14px;padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:13px;font-weight:800;color:#7C3AED">👥 ${t('moim_recruit_status')}</span>
-          <span style="font-size:13px;font-weight:900;color:${rem<=2?'#C8102E':'#7C3AED'}">${t('moim_capacity_fmt').replace('{a}', m.current_count||0).replace('{b}', m.max_count||10)} ${rem>0?('('+t('moim_slots_left').replace('{n}', rem)+')'):('('+t('moim_closed')+')')}</span>
+          <span style="font-size:13px;font-weight:800;color:var(--purple)">👥 ${t('moim_recruit_status')}</span>
+          <span style="font-size:13px;font-weight:900;color:${rem<=2?'var(--red)':'var(--purple)'}">${t('moim_capacity_fmt').replace('{a}', m.current_count||0).replace('{b}', m.max_count||10)} ${rem>0?('('+t('moim_slots_left').replace('{n}', rem)+')'):('('+t('moim_closed')+')')}</span>
         </div>
         <div style="height:8px;background:#DDD6FE;border-radius:4px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${pct>=90?'#C8102E':'#7C3AED'};border-radius:4px"></div>
+          <div style="height:100%;width:${pct}%;background:${pct>=90?'var(--red)':'var(--purple)'};border-radius:4px"></div>
         </div>
       </div>
 
@@ -2050,21 +2050,21 @@ async function openMoimDetail(moimId) {
       <div style="display:flex;align-items:flex-start;gap:12px">
         <div style="font-size:20px;flex-shrink:0">💰</div>
         <div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_fee_label')}</div>
-        <div style="font-size:14px;font-weight:800;color:${m.entry_fee<0?'#D97706':m.entry_fee>0?'#D97706':'#16a34a'}">${m.entry_fee < 0 ? t('moim_fee_split_detail') : m.entry_fee > 0 ? t('moim_fee_fixed_detail').replace('{n}', m.entry_fee.toLocaleString()) : t('fee_free')}</div></div>
+        <div style="font-size:14px;font-weight:800;color:${m.entry_fee<0?'#D97706':m.entry_fee>0?'#D97706':'var(--green)'}">${m.entry_fee < 0 ? t('moim_fee_split_detail') : m.entry_fee > 0 ? t('moim_fee_fixed_detail').replace('{n}', m.entry_fee.toLocaleString()) : t('fee_free')}</div></div>
       </div>
       ${m.skill_level && m.skill_level !== '무관' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">🏅</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_skill_section_title')}</div><div style="font-size:14px;font-weight:800;color:#B45309">${tSkillLevel(m.skill_level)}${m.skill_desc?' · '+m.skill_desc:''}</div></div></div>` : ''}
       ${m.gender_req !== 'any' ? `<div style="display:flex;align-items:flex-start;gap:12px"><div style="font-size:20px;flex-shrink:0">👤</div><div><div style="font-size:12px;font-weight:700;color:#888">${t('moim_gender_label')}</div><div style="font-size:14px;font-weight:800;color:#0369A1">${m.gender_req==='male'?t('gender_male_only'):t('gender_female_only')}</div></div></div>` : ''}
       ${m.description ? `<div style="background:#f9fafb;border-radius:14px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 ${t('moim_desc_label')}</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
 
-      ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">💬 ${t('moim_group_chat_enter')}</button>` : ''}
+      ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:var(--purple);border:1.5px solid #DDD6FE;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px">💬 ${t('moim_group_chat_enter')}</button>` : ''}
       ${!isHost ? `<button onclick="openReportModal('moim','${m.id}')" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:6px 0;font-weight:600;margin:0 auto">🚨 ${t('moim_report_btn')}</button>` : ''}
 
       ${isHost ? `
         <div style="border-top:1px solid #f0f0f0;padding-top:16px">
           <div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🛠️ ${t('moim_host_manage_title')}</div>
           <div style="display:flex;gap:8px">
-            <button onclick="_editingMoim=_moimDetailData;openMoimCreate(_moimDetailData)" style="flex:1;padding:10px;border:1.5px solid #7C3AED;color:#7C3AED;background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ ${t('edit_btn')}</button>
-            <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">👥 ${t('moim_applicants_manage_btn')}</button>
+            <button onclick="_editingMoim=_moimDetailData;openMoimCreate(_moimDetailData)" style="flex:1;padding:10px;border:1.5px solid var(--purple);color:var(--purple);background:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">✏️ ${t('edit_btn')}</button>
+            <button onclick="loadMoimApplicants('${m.id}')" style="flex:1;padding:10px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">👥 ${t('moim_applicants_manage_btn')}</button>
           </div>
         </div>
         <div id="moim-applicants-section" style="display:none"></div>
@@ -2078,12 +2078,12 @@ async function openMoimDetail(moimId) {
   } else if (myApp) {
     applyBtn.style.display = 'block';
     if (myApp.status === 'pending')  { applyBtn.textContent = '⏳ ' + t('moim_apply_pending'); applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
-    if (myApp.status === 'approved') { applyBtn.textContent = '✅ ' + t('moim_apply_confirmed'); applyBtn.style.background = '#16a34a'; applyBtn.disabled = true; }
+    if (myApp.status === 'approved') { applyBtn.textContent = '✅ ' + t('moim_apply_confirmed'); applyBtn.style.background = 'var(--green)'; applyBtn.disabled = true; }
     if (myApp.status === 'rejected') { applyBtn.textContent = '❌ ' + t('moim_apply_rejected'); applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true; }
   } else if (rem <= 0) {
     applyBtn.textContent = '🔒 ' + t('moim_apply_closed'); applyBtn.style.background = '#9CA3AF'; applyBtn.disabled = true;
   } else {
-    applyBtn.textContent = t('moim_apply_btn'); applyBtn.style.background = '#7C3AED'; applyBtn.disabled = false;
+    applyBtn.textContent = t('moim_apply_btn'); applyBtn.style.background = 'var(--purple)'; applyBtn.disabled = false;
   }
 }
 
@@ -2116,7 +2116,7 @@ async function loadMoimApplicants(gatheringId) {
   const _NAT_FLAG = { KR:'🇰🇷', MN:'🇲🇳', NP:'🇳🇵', VN:'🇻🇳', RU:'🇷🇺', CN:'🇨🇳', UZ:'🇺🇿' };
   sec.innerHTML = `<div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;padding:0 2px">${t('moim_applicant_count').replace('{n}', data.length)}</div>` + data.map(app => {
     const w = _pMap[app.applicant_id] || {};
-    const statusColor = { pending:'#D97706', approved:'#16a34a', rejected:'#9CA3AF' }[app.status] || '#888';
+    const statusColor = { pending:'#D97706', approved:'var(--green)', rejected:'#9CA3AF' }[app.status] || '#888';
     const statusLabel = { pending:t('inquiry_status_pending'), approved:t('moim_status_approved'), rejected:t('inquiry_status_rejected') }[app.status] || app.status;
     const feePaidHtml = (hasFee && app.status === 'approved') ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f5f5f5;display:flex;align-items:center;justify-content:space-between">
@@ -2136,7 +2136,7 @@ async function loadMoimApplicants(gatheringId) {
         <span style="font-size:11px;font-weight:800;color:${statusColor};background:${statusColor}22;padding:4px 10px;border-radius:10px">${statusLabel}</span>
         ${app.status === 'pending' ? `
           <div style="display:flex;gap:4px">
-            <button onclick="decideMoimApp('${app.id}','approved','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#16a34a;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">${t('approve_btn')}</button>
+            <button onclick="decideMoimApp('${app.id}','approved','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:var(--green);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">${t('approve_btn')}</button>
             <button onclick="decideMoimApp('${app.id}','rejected','${gatheringId}')" style="padding:6px 10px;border-radius:10px;background:#e5e7eb;color:#555;border:none;font-size:11px;font-weight:700;cursor:pointer">${t('reject_btn')}</button>
           </div>` : ''}
       </div>
@@ -2196,7 +2196,7 @@ async function searchMoimPlace() {
       onmousedown="this.style.background='#F5F3FF'" onmouseup="this.style.background=''" ontouchstart="this.style.background='#F5F3FF'" ontouchend="this.style.background=''">
       <div style="font-size:13px;font-weight:800;color:#111">${r.place_name}</div>
       <div style="font-size:11px;color:#888">${r.road_address_name || r.address_name}</div>
-      ${r.category_name ? `<div style="font-size:10px;color:#7C3AED;font-weight:600">${r.category_name}</div>` : ''}
+      ${r.category_name ? `<div style="font-size:10px;color:var(--purple);font-weight:600">${r.category_name}</div>` : ''}
     </div>`).join('');
 }
 
@@ -2234,7 +2234,7 @@ function _resetMoimForm() {
   document.getElementById('f-moim-public').value = 'true';
   // 버튼 상태 초기화
   document.querySelectorAll('#moim-cat-select button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
-  document.querySelectorAll('#moim-skill-btns button').forEach(b => { const isAny = b.dataset.val==='무관'; b.style.background=(isAny?'#fff':'#f9fafb'); b.style.borderColor=(isAny?'#DDD6FE':'#e5e7eb'); b.style.color=(isAny?'#7C3AED':'#555'); });
+  document.querySelectorAll('#moim-skill-btns button').forEach(b => { const isAny = b.dataset.val==='무관'; b.style.background=(isAny?'#fff':'#f9fafb'); b.style.borderColor=(isAny?'#DDD6FE':'#e5e7eb'); b.style.color=(isAny?'var(--purple)':'#555'); });
   selectMoimPublic(true);
   document.getElementById('moim-skill-section').style.display = 'none';
   document.getElementById('moim-subcat-section').style.display = 'none';
@@ -2298,7 +2298,7 @@ const _MOIM_SUBCAT_EMOJI = {
 };
 function selectMoimCat(btn, cat) {
   document.querySelectorAll('#moim-cat-select button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
-  btn.style.background='#EDE9FE'; btn.style.borderColor='#7C3AED'; btn.style.color='#7C3AED';
+  btn.style.background='#EDE9FE'; btn.style.borderColor='var(--purple)'; btn.style.color='var(--purple)';
   document.getElementById('f-moim-cat').value = cat;
   document.getElementById('moim-skill-section').style.display = cat === '스포츠' ? 'block' : 'none';
   const subs = _MOIM_SUBCATS[cat] || [];
@@ -2317,16 +2317,16 @@ function selectMoimCat(btn, cat) {
 }
 function selectMoimSubcat(btn, val) {
   document.querySelectorAll('#moim-subcat-btns button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
-  btn.style.background='#EDE9FE'; btn.style.borderColor='#7C3AED'; btn.style.color='#7C3AED';
+  btn.style.background='#EDE9FE'; btn.style.borderColor='var(--purple)'; btn.style.color='var(--purple)';
   document.getElementById('f-moim-subcat').value = val;
 }
 function selectMoimSkill(btn, val) {
   document.querySelectorAll('#moim-skill-btns button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; });
-  btn.style.background='#EDE9FE'; btn.style.borderColor='#7C3AED'; btn.style.color='#7C3AED';
+  btn.style.background='#EDE9FE'; btn.style.borderColor='var(--purple)'; btn.style.color='var(--purple)';
   document.getElementById('f-moim-skill').value = val;
 }
 function selectMoimFee(type, amount) {
-  const styles = { active: { background:'#EDE9FE', borderColor:'#7C3AED', color:'#7C3AED' }, inactive: { background:'#f9fafb', borderColor:'#e5e7eb', color:'#555' } };
+  const styles = { active: { background:'#EDE9FE', borderColor:'var(--purple)', color:'var(--purple)' }, inactive: { background:'#f9fafb', borderColor:'#e5e7eb', color:'#555' } };
   ['free','split','fixed'].forEach(t => {
     const b = document.getElementById(`fee-btn-${t}`);
     if (!b) return;
@@ -2352,17 +2352,17 @@ function selectMoimFee(type, amount) {
 }
 function selectMoimGender(btn, val) {
   btn.parentElement.querySelectorAll('button').forEach(b => { b.style.background='#f9fafb'; b.style.borderColor='#e5e7eb'; b.style.color='#555'; b.style.border='2px solid #e5e7eb'; });
-  btn.style.background='#7C3AED'; btn.style.color='#fff'; btn.style.borderColor='#7C3AED';
+  btn.style.background='var(--purple)'; btn.style.color='#fff'; btn.style.borderColor='var(--purple)';
   document.getElementById('f-moim-gender').value = val;
 }
 function selectMoimPublic(isPublic) {
   document.getElementById('f-moim-public').value = String(isPublic);
   document.getElementById('pub-btn-public').style.background  = isPublic ? '#EDE9FE' : '#f9fafb';
-  document.getElementById('pub-btn-public').style.borderColor = isPublic ? '#7C3AED' : '#e5e7eb';
-  document.getElementById('pub-btn-public').style.color       = isPublic ? '#7C3AED' : '#555';
+  document.getElementById('pub-btn-public').style.borderColor = isPublic ? 'var(--purple)' : '#e5e7eb';
+  document.getElementById('pub-btn-public').style.color       = isPublic ? 'var(--purple)' : '#555';
   document.getElementById('pub-btn-private').style.background  = !isPublic ? '#EDE9FE' : '#f9fafb';
-  document.getElementById('pub-btn-private').style.borderColor = !isPublic ? '#7C3AED' : '#e5e7eb';
-  document.getElementById('pub-btn-private').style.color       = !isPublic ? '#7C3AED' : '#555';
+  document.getElementById('pub-btn-private').style.borderColor = !isPublic ? 'var(--purple)' : '#e5e7eb';
+  document.getElementById('pub-btn-private').style.color       = !isPublic ? 'var(--purple)' : '#555';
 }
 
 function toggleQuickMoim() {
@@ -2571,13 +2571,13 @@ async function openMoimChat(gatheringId, title) {
   // 바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 안전영역 얇은 띠만으로는 눈에 잘 안 띄어서
   // 헤더 배경 전체를 옅은 색으로 tint (바로알바 1:1 채팅은 기존 화이트 그대로 유지)
   const _mcSafearea = document.getElementById('moim-chat-safearea');
-  if (_mcSafearea) _mcSafearea.style.background = '#7C3AED';
+  if (_mcSafearea) _mcSafearea.style.background = 'var(--purple)';
   const _mcHeader = document.getElementById('moim-chat-header');
   if (_mcHeader) _mcHeader.style.background = '#F5F3FF';
   const _mcEyebrow = document.getElementById('moim-chat-eyebrow');
-  if (_mcEyebrow) { _mcEyebrow.textContent = '🍻 ' + t('moim_chat_room_label'); _mcEyebrow.style.color = '#7C3AED'; }
+  if (_mcEyebrow) { _mcEyebrow.textContent = '🍻 ' + t('moim_chat_room_label'); _mcEyebrow.style.color = 'var(--purple)'; }
   const _mcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
-  if (_mcSendBtn) _mcSendBtn.style.background = '#7C3AED';
+  if (_mcSendBtn) _mcSendBtn.style.background = 'var(--purple)';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지
   const _mcFab = document.getElementById('posting-fab');
   if (_mcFab) _mcFab.style.display = 'none';
@@ -2678,11 +2678,11 @@ async function toggleMoimChatParticipants() {
     const name = w?.name || t('moim_chat_participant_default');
     const avatarHtml = w?.photo_url
       ? `<img src="${w.photo_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-      : `<div style="width:32px;height:32px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:15px;color:#7C3AED;flex-shrink:0">${name[0]||'?'}</div>`;
+      : `<div style="width:32px;height:32px;border-radius:50%;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--purple);flex-shrink:0">${name[0]||'?'}</div>`;
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px">
       ${avatarHtml}
       <span style="font-size:13px;font-weight:700;color:#333">${name}</span>
-      ${isHost ? `<span style="font-size:10px;color:#7C3AED;font-weight:700">${t('moim_chat_leader_badge')}</span>` : ''}
+      ${isHost ? `<span style="font-size:10px;color:var(--purple);font-weight:700">${t('moim_chat_leader_badge')}</span>` : ''}
     </div>`;
   }).join('');
 }
@@ -2700,7 +2700,7 @@ function _moimChatBubble(m) {
   const isImg = m.message?.startsWith('[img]');
   const bubbleContent = isImg
     ? `<img src="${m.message.slice(5)}" style="max-width:220px;border-radius:12px;display:block;cursor:pointer;border:1px solid #eee" onclick="window.open('${m.message.slice(5)}','_blank')" loading="lazy">`
-    : `<div style="max-width:72%;padding:9px 13px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'#7C3AED':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>`;
+    : `<div style="max-width:72%;padding:9px 13px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'var(--purple)':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>`;
   return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};margin-bottom:4px">
     ${!isMine ? `<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;padding-left:4px">${avatar}<span style="font-size:10px;color:#999;font-weight:600">${name}</span></div>` : ''}
     <div style="display:flex;align-items:flex-end;gap:4px;flex-direction:${isMine?'row-reverse':'row'}">
@@ -2819,7 +2819,7 @@ function setMapMode(mode) {
   if (listFloat) {
     if (mode === 'moim' || mode === 'baromeet' || mode === 'all') {
       listFloat.style.display = 'flex';
-      listFloat.style.background = mode === 'baromeet' ? '#e11d48' : mode === 'moim' ? '#7C3AED' : '#1e293b';
+      listFloat.style.background = mode === 'baromeet' ? '#e11d48' : mode === 'moim' ? 'var(--purple)' : '#1e293b';
     } else {
       listFloat.style.display = 'none';
     }
@@ -2872,11 +2872,11 @@ async function _renderMoimMarkers() {
       ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' })
       : '';
     const content = `<div onclick="openMoimPanel();setTimeout(()=>openMoimDetail('${m.id}'),300)" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:max-content">
-      <div style="background:#7C3AED;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(124,58,237,0.4);white-space:nowrap;max-width:150px">
+      <div style="background:var(--purple);color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(124,58,237,0.4);white-space:nowrap;max-width:150px">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${emoji} ${titleShort}</div>
         <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${dateStr ? dateStr + ' · ' : ''}${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('moim_closed')}</div>
       </div>
-      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #7C3AED"></div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--purple)"></div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(m.lat, m.lng), content, yAnchor: 1.1 });
     overlay.setMap(kakaoMap);
@@ -2894,7 +2894,7 @@ function _moimListRow(m) {
     <div style="width:38px;height:38px;border-radius:10px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${emoji}</div>
     <div style="min-width:0;flex:1">
       <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || t('moim_default_title')}</div>
-      <div style="font-size:12px;color:#7C3AED;font-weight:700;margin-top:2px">${dateStr} · ${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('moim_closed')}</div>
+      <div style="font-size:12px;color:var(--purple);font-weight:700;margin-top:2px">${dateStr} · ${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('moim_closed')}</div>
     </div>
   </div>`;
 }
@@ -3060,7 +3060,7 @@ function _wageStr(j, color) {
   const w = j?.current_wage || 0;
   const lbl = _wageLabel(j);
   const amt = w > 0 ? w.toLocaleString('ko-KR') + '원' : '협의';
-  const c = color || '#C8102E';
+  const c = color || 'var(--red)';
   return `<span style="font-weight:900;color:${c}">${amt}</span><span style="font-size:10px;font-weight:800;background:rgba(200,16,46,0.08);color:${c};padding:2px 6px;border-radius:5px;margin-left:5px">${lbl}</span>`;
 }
 
@@ -3127,11 +3127,11 @@ function _homeJobCard(job) {
       ${job.biz_name ? `<div style="font-size:10px;color:#c8c8c8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${job.biz_name}</div>` : ''}
     </div>
     <div style="padding:8px 13px 12px;border-top:1px solid #f5f5f5">
-      <div style="font-size:18px;font-weight:900;color:#C8102E;line-height:1.1;letter-spacing:-0.5px">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</div>
+      <div style="font-size:18px;font-weight:900;color:var(--red);line-height:1.1;letter-spacing:-0.5px">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</div>
       <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center">
-        <span style="font-size:9px;font-weight:800;background:#fff0f2;color:#C8102E;padding:3px 7px;border-radius:6px">${label}</span>
+        <span style="font-size:9px;font-weight:800;background:#fff0f2;color:var(--red);padding:3px 7px;border-radius:6px">${label}</span>
         ${job.same_day_payment ? `<span style="font-size:9px;font-weight:800;background:#f0fdf4;color:#15803d;padding:3px 7px;border-radius:6px">${t('same_day_short')}</span>` : ''}
-        ${job.status === 'urgent' ? `<span style="font-size:9px;font-weight:800;background:#fff0f2;color:#C8102E;padding:3px 7px;border-radius:6px">${t('urgent_label')}</span>` : ''}
+        ${job.status === 'urgent' ? `<span style="font-size:9px;font-weight:800;background:#fff0f2;color:var(--red);padding:3px 7px;border-radius:6px">${t('urgent_label')}</span>` : ''}
       </div>
     </div>
   </div>`;
@@ -3220,7 +3220,7 @@ function _renderHomeAI() {
     const prefs = raw ? JSON.parse(raw) : null;
     if (!prefs || (prefs.totalSignals || 0) < 3) {
       section.innerHTML = `
-        <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div>
+        <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:6px">AI PICKS</div>
         <div style="font-size:12px;color:#bbb;line-height:1.6">공고를 둘러볼수록<br>맞춤 추천이 시작돼요</div>
         <div style="margin-top:auto;padding-top:8px;font-size:10px;color:#e0e0e0;font-weight:700">🤖 AI 학습 중...</div>
       `;
@@ -3236,7 +3236,7 @@ function _renderHomeAI() {
       } else {
         section.style.display = 'flex';
         section.innerHTML = `
-          <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div>
+          <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:6px">AI PICKS</div>
           <div style="font-size:12px;color:#bbb;line-height:1.6">지금 주변에 맞춤<br>공고가 없어요</div>
           <div style="margin-top:auto;padding-top:8px;font-size:10px;color:#e0e0e0;font-weight:700">🤖 계속 학습 중...</div>
         `;
@@ -3247,14 +3247,14 @@ function _renderHomeAI() {
     if (hwSection) hwSection.style.gridColumn = '';
     const top = scored[0].job;
     section.innerHTML = `
-      <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">AI PICKS</div>
+      <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:5px">AI PICKS</div>
       <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
       <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
-      <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#C8102E">${top.current_wage>0?top.current_wage.toLocaleString('ko-KR')+'원':'협의'}</span>${top.current_wage>0?`<span style="font-size:10px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px">${_wageLabel(top)}</span>`:''}</div>
+      <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:var(--red)">${top.current_wage>0?top.current_wage.toLocaleString('ko-KR')+'원':'협의'}</span>${top.current_wage>0?`<span style="font-size:10px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:5px">${_wageLabel(top)}</span>`:''}</div>
     `;
     section.onclick = () => openDetail(top.id);
   } catch(e) {
-    section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:6px">AI PICKS</div><div style="font-size:12px;color:#ddd">준비 중</div>`;
+    section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:6px">AI PICKS</div><div style="font-size:12px;color:#ddd">준비 중</div>`;
   }
 }
 
@@ -3287,7 +3287,7 @@ function _renderHomeSameDay() {
       section.style.display = 'none'; // GPS 미확보 상태 - 카드 숨김
     } else {
       section.style.display = 'flex';
-      section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">${t('high_wage_label')}</div><div style="font-size:12px;color:#ddd;margin-top:auto">${t('no_jobs_label')}</div>`;
+      section.innerHTML = `<div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:5px">${t('high_wage_label')}</div><div style="font-size:12px;color:#ddd;margin-top:auto">${t('no_jobs_label')}</div>`;
     }
     return;
   }
@@ -3295,10 +3295,10 @@ function _renderHomeSameDay() {
   const hourly = toHourly(top);
   section.style.display = 'flex';
   section.innerHTML = `
-    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#C8102E;margin-bottom:5px">높은 시급</div>
+    <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:var(--red);margin-bottom:5px">높은 시급</div>
     <div style="font-size:13px;font-weight:800;color:#111;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
     <div style="font-size:11px;color:#bbb;margin-top:2px">${top.category||''}</div>
-    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:#C8102E">${hourly.toLocaleString('ko-KR')}${t('won_suffix')}</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:5px">시급</span></div>
+    <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:900;color:var(--red)">${hourly.toLocaleString('ko-KR')}${t('won_suffix')}</span><span style="font-size:10px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:5px">시급</span></div>
   `;
   section.onclick = () => openDetail(top.id);
 }
@@ -3424,13 +3424,13 @@ async function _renderHomeLessonHot() {
     section.style.display = 'block';
     list.innerHTML = sorted.map(p => {
       const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + t('price_per_session_unit') : t('negotiable_label');
-      const onAir = p.is_available_now ? `<span style="font-size:9px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 5px;border-radius:5px;margin-bottom:4px;display:inline-block">${t('available_now_badge')}</span>` : '';
+      const onAir = p.is_available_now ? `<span style="font-size:9px;font-weight:800;background:#dcfce7;color:var(--green);padding:2px 5px;border-radius:5px;margin-bottom:4px;display:inline-block">${t('available_now_badge')}</span>` : '';
       const locIcon = p.location_type === '비대면' ? '💻' : p.location_type === '방문레슨' ? '🚗' : '🏫';
       return `<div onclick="openLessonDetail('${p.id}')" style="flex-shrink:0;width:130px;background:#f8faff;border:1.5px solid #dbeafe;border-radius:12px;padding:10px;cursor:pointer">
         ${onAir}
         <div style="font-size:11px;font-weight:800;color:#1d4ed8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
         <div style="font-size:10px;color:#888;margin:3px 0">${locIcon} ${p.location_type||''}</div>
-        <div style="font-size:13px;font-weight:900;color:#C8102E">${price}</div>
+        <div style="font-size:13px;font-weight:900;color:var(--red)">${price}</div>
         <div style="font-size:10px;color:#aaa;margin-top:3px">⭐ ${(p.workers?.rating||0).toFixed(1)}</div>
       </div>`;
     }).join('');
@@ -3868,12 +3868,12 @@ function _renderHomeSearchList(filtered) {
         <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:2px">${job.biz_name || ''}</div>
         <div style="font-size:14px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title}</div>
         <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
-          <span style="font-size:13px;font-weight:900;color:#C8102E">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</span>
-          ${wage > 0 ? `<span style="font-size:9px;font-weight:900;background:#fff0f2;color:#C8102E;padding:2px 6px;border-radius:4px">${_wageLabel(job)}</span>` : ''}
+          <span style="font-size:13px;font-weight:900;color:var(--red)">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</span>
+          ${wage > 0 ? `<span style="font-size:9px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:4px">${_wageLabel(job)}</span>` : ''}
           ${job.same_day_payment ? `<span style="font-size:9px;font-weight:900;background:#f0fdf4;color:#15803d;padding:2px 6px;border-radius:4px">${t('same_day_short')}</span>` : ''}
         </div>
       </div>
-      ${rem > 0 && rem <= 3 ? `<div style="font-size:11px;font-weight:800;color:#C8102E;white-space:nowrap">🔥${rem}자리</div>` : ''}
+      ${rem > 0 && rem <= 3 ? `<div style="font-size:11px;font-weight:800;color:var(--red);white-space:nowrap">🔥${rem}자리</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -3931,11 +3931,11 @@ function openDetail(jobId) {
   document.getElementById('d-title').textContent = job.title;
   const typeBadgeEl = document.getElementById('d-type-badge');
   if (job.category === '심부름') {
-    typeBadgeEl.innerHTML = '<span style="background:#F3E8FF;color:#7C3AED;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">\u{1F49C} 심부름</span>';
+    typeBadgeEl.innerHTML = '<span style="background:#F3E8FF;color:var(--purple);font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">\u{1F49C} 심부름</span>';
   } else if (job.work_type === 'short') {
-    typeBadgeEl.innerHTML = '<span style="background:#EFF6FF;color:#3B82F6;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">\u{1F4C5} 단기</span>';
+    typeBadgeEl.innerHTML = '<span style="background:#EFF6FF;color:var(--blue);font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">\u{1F4C5} 단기</span>';
   } else if (job.work_type === 'regular') {
-    typeBadgeEl.innerHTML = '<span style="background:#F0FFF4;color:#16a34a;font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">\u{1F504} 정기</span>';
+    typeBadgeEl.innerHTML = '<span style="background:#F0FFF4;color:var(--green);font-size:11px;font-weight:900;padding:2px 8px;border-radius:20px;white-space:nowrap">\u{1F504} 정기</span>';
   } else {
     typeBadgeEl.innerHTML = '';
   }
@@ -4054,10 +4054,10 @@ function openDetail(jobId) {
       const _pct = Math.min(100, Math.round(_filled / _needed * 100));
       teamEl.style.display = 'block';
       document.getElementById('d-team-bar').style.width = _pct + '%';
-      document.getElementById('d-team-bar').style.background = _pct >= 80 ? '#C8102E' : '#7C3AED';
+      document.getElementById('d-team-bar').style.background = _pct >= 80 ? 'var(--red)' : 'var(--purple)';
       const remainEl = document.getElementById('d-team-remain');
       remainEl.textContent = _rem > 0 ? t('slots_left').replace('{a}', _needed).replace('{b}', _rem) : t('recruit_done');
-      remainEl.style.color = _rem <= 1 ? '#C8102E' : '#7C3AED';
+      remainEl.style.color = _rem <= 1 ? 'var(--red)' : 'var(--purple)';
       const descEl = document.getElementById('d-team-desc');
       if (job.team_desc) { descEl.textContent = job.team_desc; descEl.style.display = 'block'; }
       else { descEl.style.display = 'none'; }
@@ -4092,7 +4092,7 @@ function openDetail(jobId) {
   const beginnerBadge = document.getElementById('d-beginner-badge');
   if (job.beginner_ok === true) {
     beginnerBadge.style.display = 'inline-flex'; beginnerBadge.textContent = '🌱 ' + t('beginner_ok');
-    beginnerBadge.style.background = '#F0FFF4'; beginnerBadge.style.color = '#16a34a'; beginnerBadge.style.border = '1.5px solid #86EFAC';
+    beginnerBadge.style.background = '#F0FFF4'; beginnerBadge.style.color = 'var(--green)'; beginnerBadge.style.border = '1.5px solid #86EFAC';
   } else if (job.beginner_ok === false) {
     beginnerBadge.style.display = 'inline-flex'; beginnerBadge.textContent = '🔰 ' + t('experienced_pref');
     beginnerBadge.style.background = '#FFF1F2'; beginnerBadge.style.color = '#9f1239'; beginnerBadge.style.border = '1.5px solid #FECDD3';
@@ -4660,7 +4660,7 @@ async function submitApplyWithMsg(skipMsg) {
 
 function showAppliedState(applicationId) {
   const btn = document.getElementById('d-apply-btn');
-  btn.style.background = '#3B82F6';
+  btn.style.background = 'var(--blue)';
   btn.textContent = '\u{1F4AC} ' + t('ask_employer');
   btn.disabled = false;
   btn.onclick = () => openWChat(applicationId, jobs.find(j=>j.id===selectedJobId)?.biz_name || '업주');
@@ -4764,7 +4764,7 @@ async function submitBizRating() {
     const rateBtn = document.getElementById('d-rate-btn');
     if (rateRow && rateBtn) {
       rateBtn.textContent = '⭐ 평점 ' + rating + '점 남김';
-      rateBtn.style.background = '#f0fdf4'; rateBtn.style.color = '#16a34a';
+      rateBtn.style.background = '#f0fdf4'; rateBtn.style.color = 'var(--green)';
       rateBtn.onclick = null; rateBtn.style.cursor = 'default';
     }
   } catch(e) {
@@ -4862,11 +4862,11 @@ async function openWorkerProfileDirect(appId) {
   if (app.status === 'pending') {
     statusActions = `
       <button onclick="${close}updateApplication('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⭐ 1차합격</button>
-      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>`;
+      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>`;
   } else if (app.status === 'reviewing') {
     statusActions = `
       <button onclick="${close}confirmAccept('${app.id}')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✅ 최종합격</button>
-      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
       <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">✗ 탈락</button>`;
   } else if (app.status === 'on_hold') {
     statusActions = `
@@ -4899,7 +4899,7 @@ async function openWorkerProfileDirect(appId) {
           <span style="font-size:11px;color:#aaa">·</span>
           <span style="font-size:12px;color:#666">완료 ${reviews}건</span>
           ${noshow > 0 ? `<span style="font-size:11px;font-weight:800;color:#DC2626">⚠️ 노쇼 ${noshow}</span>` : ''}
-          ${attendRate !== null ? `<span style="font-size:11px;font-weight:700;color:${attendRate >= 80 ? '#16a34a' : '#D97706'}">출근율 ${attendRate}%</span>` : ''}
+          ${attendRate !== null ? `<span style="font-size:11px;font-weight:700;color:${attendRate >= 80 ? 'var(--green)' : '#D97706'}">출근율 ${attendRate}%</span>` : ''}
         </div>
         <div style="margin-top:4px;display:flex;gap:5px;flex-wrap:wrap">
           ${total >= 2 ? `<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;background:${trustScore>=80?'#D1FAE5':trustScore>=60?'#E2E8F0':'#F3F4F6'};color:${trustScore>=80?'#065F46':trustScore>=60?'#475569':'#6B7280'}">신뢰 ${trustScore}점</span>` : ''}
@@ -4928,7 +4928,7 @@ async function openWorkerProfileDirect(appId) {
     ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#f8fafc;border-radius:10px;border-left:3px solid #cbd5e1;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:800;color:#64748b;display:block;margin-bottom:3px">💬 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
 
     <!-- 전화 버튼 -->
-    ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone} 전화하기</a>` : ''}
+    ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:var(--green);border:1.5px solid #86efac;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">📞 ${phone} 전화하기</a>` : ''}
 
     <!-- 상태별 액션 -->
     ${statusActions ? `<div style="display:flex;gap:8px;margin-bottom:8px">${statusActions}</div>` : ''}
@@ -5444,8 +5444,8 @@ async function loadMyApplications() {
     _statsGrid.innerHTML =
       mkStat(_total + t('count_unit'), t('app_total'), '#555') +
       mkStat(_pending + '건', '검토중', '#F59E0B') +
-      mkStat(_rate + '%', t('app_rate'), '#16a34a') +
-      mkStat(_monthEarnings > 0 ? Math.round(_monthEarnings/10000) + '만' : '-', t('app_month_income'), '#3B82F6');
+      mkStat(_rate + '%', t('app_rate'), 'var(--green)') +
+      mkStat(_monthEarnings > 0 ? Math.round(_monthEarnings/10000) + '만' : '-', t('app_month_income'), 'var(--blue)');
     _statsBar.style.display = 'block';
   }
 
@@ -5457,17 +5457,17 @@ async function loadMyApplications() {
   const STATUS = {
     pending:   { label: '검토중',   color: '#888',    bg: '#f5f5f5' },
     reviewing: { label: '\u{1F50D} 검토중', color: '#F59E0B', bg: '#FFF7ED' },
-    accepted:  { label: '✅ 합격',  color: '#16a34a', bg: '#f0fdf4' },
+    accepted:  { label: '✅ 합격',  color: 'var(--green)', bg: '#f0fdf4' },
     rejected:  { label: '❌ 탈락',  color: '#dc2626', bg: '#fef2f2' },
     cancelled: { label: t('app_cancelled'), color: '#aaa', bg: '#f0f0f0' },
-    completed: { label: '\u{1F3C1} 완료',  color: '#3B82F6', bg: '#EFF6FF' },
+    completed: { label: '\u{1F3C1} 완료',  color: 'var(--blue)', bg: '#EFF6FF' },
     noshow:    { label: '⚠️ 노쇼', color: '#D97706', bg: '#FEF3C7' },
   };
   const WORK_TYPE = {
     spot:    { label: '스팟',   emoji: '⚡', bg: '#f8f8f8',  color: '#666' },
-    short:   { label: '단기',   emoji: '\u{1F4C5}', bg: '#EFF6FF',  color: '#3B82F6' },
-    regular: { label: '정기',   emoji: '\u{1F504}', bg: '#F0FDF4',  color: '#16a34a' },
-    errand:  { label: '심부름', emoji: '\u{1F3C3}', bg: '#F3E8FF',  color: '#7C3AED' },
+    short:   { label: '단기',   emoji: '\u{1F4C5}', bg: '#EFF6FF',  color: 'var(--blue)' },
+    regular: { label: '정기',   emoji: '\u{1F504}', bg: '#F0FDF4',  color: 'var(--green)' },
+    errand:  { label: '심부름', emoji: '\u{1F3C3}', bg: '#F3E8FF',  color: 'var(--purple)' },
   };
   const fmtPhone = p => p ? p.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
 
@@ -5489,7 +5489,7 @@ async function loadMyApplications() {
       const diffH = Math.floor((dl - now) / 3600000);
       if (diffH < 24) return `<span style="font-size:11px;color:#F59E0B;font-weight:700;background:#FFF7ED;padding:3px 8px;border-radius:8px">⏰ 취소가능 ${diffH}시간 남음</span>`;
       const diffD = Math.ceil(diffH / 24);
-      return `<span style="font-size:11px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:3px 8px;border-radius:8px">취소가능 D-${diffD}</span>`;
+      return `<span style="font-size:11px;color:var(--green);font-weight:700;background:#F0FDF4;padding:3px 8px;border-radius:8px">취소가능 D-${diffD}</span>`;
     })();
 
     // 2026-07-21: wage_type을 아예 조회조차 안 하고 모든 공고를 시급으로 간주해
@@ -5543,8 +5543,8 @@ async function loadMyApplications() {
       <!-- 날짜/시간 칩 -->
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
         ${startStr    ? `<span style="font-size:11px;color:#555;font-weight:700;background:#f8f8f8;padding:4px 9px;border-radius:8px">\u{1F550} ${startStr}</span>` : ''}
-        ${workEndStr  ? `<span style="font-size:11px;color:#3B82F6;font-weight:700;background:#EFF6FF;padding:4px 9px;border-radius:8px">\u{1F4C5} ${workEndStr}까지</span>` : ''}
-        ${workDaysStr ? `<span style="font-size:11px;color:#16a34a;font-weight:700;background:#F0FDF4;padding:4px 9px;border-radius:8px">\u{1F504} ${workDaysStr}</span>` : ''}
+        ${workEndStr  ? `<span style="font-size:11px;color:var(--blue);font-weight:700;background:#EFF6FF;padding:4px 9px;border-radius:8px">\u{1F4C5} ${workEndStr}까지</span>` : ''}
+        ${workDaysStr ? `<span style="font-size:11px;color:var(--green);font-weight:700;background:#F0FDF4;padding:4px 9px;border-radius:8px">\u{1F504} ${workDaysStr}</span>` : ''}
         ${appliedStr  ? `<span style="font-size:11px;color:#bbb;font-weight:600;padding:4px 0">\u{1F4CC} ${appliedStr}</span>` : ''}
         ${cancelDlChip}
       </div>
@@ -5568,9 +5568,9 @@ async function loadMyApplications() {
         return `<button onclick="event.stopPropagation();openJobReview('${a.id}','${(job.title||'').replace(/'/g,"\\'")}','${(biz.name||'').replace(/'/g,"\\'")}',0,'')" style="margin-top:10px;width:100%;padding:10px;background:linear-gradient(135deg,#FFF7ED,#FEF3C7);color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">⭐ ${t('leave_feedback')}</button>`;
       })() : ''}
       <!-- 액션 버튼 -->
-      ${canChat ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:#3B82F6;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} ${t('ask_employer')}</button>` : ''}
+      ${canChat ? `<button onclick="event.stopPropagation();openWChat('${a.id}','${biz.name||'업주'}')" style="margin-top:10px;width:100%;padding:10px;background:#f0f4ff;color:var(--blue);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">\u{1F4AC} ${t('ask_employer')}</button>` : ''}
       ${isAccepted ? `<button id="loc-btn-${a.id}" class="loc-share-btn" onclick="event.stopPropagation();toggleLocationShare('${a.id}',this)">📍 ${t('share_location')}</button>` : ''}
-      ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">${t('cancel_application')}</button>` : ''}
+      ${canCancel ? `<button onclick="event.stopPropagation();cancelApplication('${a.id}')" style="margin-top:10px;width:100%;padding:10px;background:#FFF0F0;color:var(--red);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">${t('cancel_application')}</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -5588,7 +5588,7 @@ async function loadMyAlbaPreview() {
   // 'canceled'(오타, 실제 DB값은 'cancelled')와 'noshow' 키 누락으로 상태값 원문(예: "noshow")이
   // 그대로 화면에 노출되던 문제 - 다른 상태 매핑들과 동일한 값으로 통일 (2026-07-16 피드백)
   const statusLabel = { pending:'검토중', reviewing:'검토중', accepted:'합격', rejected:'불합격', completed:'완료', cancelled:'취소', noshow:'노쇼' };
-  const statusColor = { pending:'#F59E0B', reviewing:'#F59E0B', accepted:'#16a34a', rejected:'#94a3b8', completed:'#3b82f6', cancelled:'#94a3b8', noshow:'#D97706' };
+  const statusColor = { pending:'#F59E0B', reviewing:'#F59E0B', accepted:'var(--green)', rejected:'#94a3b8', completed:'var(--blue)', cancelled:'#94a3b8', noshow:'#D97706' };
   if (badge) {
     const activeCount = (apps || []).filter(a => ['pending','reviewing','accepted'].includes(a.status)).length;
     badge.textContent = activeCount > 0 ? `진행중 ${activeCount}건` : '';
@@ -5619,7 +5619,7 @@ async function loadMyMoimPreview() {
     const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
     return `<div onclick="event.stopPropagation();openMoimDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#faf5ff;border-radius:10px;padding:10px 12px;cursor:pointer">
       <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'모임'}</div>
-      <div style="font-size:10.5px;color:#7C3AED;margin-top:3px">${dateStr}</div>
+      <div style="font-size:10.5px;color:var(--purple);margin-top:3px">${dateStr}</div>
     </div>`;
   }).join('');
 }
@@ -5713,7 +5713,7 @@ async function loadMyGatheringActivity() {
   } else {
     noticeEl.innerHTML = notices.map(n => `
       <div style="background:#F5F3FF;border-radius:12px;padding:12px 14px;margin-bottom:6px">
-        <div style="font-size:12.5px;font-weight:800;color:#7C3AED;margin-bottom:3px">${n.title || '공지'}</div>
+        <div style="font-size:12.5px;font-weight:800;color:var(--purple);margin-bottom:3px">${n.title || '공지'}</div>
         <div style="font-size:12px;color:#555;line-height:1.5">${n.body || ''}</div>
         <div style="font-size:10.5px;color:#bbb;margin-top:4px">${new Date(n.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('');
@@ -5744,11 +5744,11 @@ async function loadMyGatheringActivity() {
     return `<div onclick="${openFn}" style="background:#fff;border:1px solid #f0f0f0;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="min-width:0">
-          <div style="font-size:10.5px;font-weight:800;color:#7C3AED;margin-bottom:2px">${catLabel}</div>
+          <div style="font-size:10.5px;font-weight:800;color:var(--purple);margin-bottom:2px">${catLabel}</div>
           <div style="font-size:13px;font-weight:800;color:#111">${g.title || '제목 없음'}</div>
           <div style="font-size:11px;color:#999;margin-top:2px">${dateStr}</div>
         </div>
-        <span style="flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;background:${a.status==='approved'?'#dcfce7':a.status==='rejected'?'#fee2e2':'#f1f5f9'};color:${a.status==='approved'?'#16a34a':a.status==='rejected'?'#dc2626':'#64748b'}">${statusLabel[a.status]||a.status}</span>
+        <span style="flex-shrink:0;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;background:${a.status==='approved'?'#dcfce7':a.status==='rejected'?'#fee2e2':'#f1f5f9'};color:${a.status==='approved'?'var(--green)':a.status==='rejected'?'#dc2626':'#64748b'}">${statusLabel[a.status]||a.status}</span>
       </div>
     </div>`;
   }).join('') || '<div style="text-align:center;padding:24px;color:#bbb;font-size:12px">아직 신청한 모임/미팅이 없어요</div>';
@@ -5800,7 +5800,7 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
       </div>
       <textarea id="review-content" placeholder="근무 환경, 업주 태도, 일의 난이도 등 솔직한 후기를 남겨주세요 (선택)" maxlength="200" style="width:100%;box-sizing:border-box;height:100px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;color:#333">${existingReview||''}</textarea>
       <div style="font-size:11px;color:#bbb;text-align:right;margin-top:4px"><span id="review-char-count">${(existingReview||'').length}</span>/200자</div>
-      <button id="review-submit-btn" onclick="window._submitReview('${appId}')" style="margin-top:16px;width:100%;padding:14px;background:${existingRating?'#16a34a':'#e5e7eb'};color:${existingRating?'#fff':'#aaa'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:${existingRating?'pointer':'default'}">후기 등록하기</button>
+      <button id="review-submit-btn" onclick="window._submitReview('${appId}')" style="margin-top:16px;width:100%;padding:14px;background:${existingRating?'var(--green)':'#e5e7eb'};color:${existingRating?'#fff':'#aaa'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:${existingRating?'pointer':'default'}">후기 등록하기</button>
     </div>`;
 
   document.body.appendChild(overlay);
@@ -5826,7 +5826,7 @@ function openJobReview(appId, jobTitle, bizName, existingRating, existingReview)
     const lbl = overlay.querySelector('#review-rating-label');
     if (lbl) lbl.textContent = _LABELS[n] || '';
     const btn = overlay.querySelector('#review-submit-btn');
-    if (btn) { btn.style.background = '#16a34a'; btn.style.color = '#fff'; btn.style.cursor = 'pointer'; }
+    if (btn) { btn.style.background = 'var(--green)'; btn.style.color = '#fff'; btn.style.cursor = 'pointer'; }
     origRender();
   };
 
@@ -5874,7 +5874,7 @@ async function showMyTrustScore() {
   const ptRating = reviews > 0 ? Math.round((rating / 5) * 40) : 0;
   const ptReview = cappedR * 2;
   const ptNoshow = noshow * 8;
-  const color = score >= 80 ? '#16a34a' : score >= 60 ? '#F59E0B' : '#94a3b8';
+  const color = score >= 80 ? 'var(--green)' : score >= 60 ? '#F59E0B' : '#94a3b8';
   const row = (label, val, sub, c) =>
     `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f5f5f5">
        <div><div style="font-size:13px;font-weight:700;color:#333">${label}</div>
@@ -5902,8 +5902,8 @@ async function showMyTrustScore() {
         </div>` : ''}
       <div style="font-size:12px;font-weight:800;color:#888;margin-bottom:4px">점수 산출 내역</div>
       ${row('기본 점수', '+40', '가입 시 누구나', '#555')}
-      ${row('평점', `+${ptRating}`, reviews > 0 ? `★ ${rating.toFixed(1)} / 5.0 (최대 40점)` : '후기가 있어야 반영돼요 (최대 40점)', '#16a34a')}
-      ${row('완료 알바', `+${ptReview}`, `후기 ${reviews}건${reviews > 10 ? ' (10건까지 반영)' : ''} · 건당 2점 (최대 20점)`, '#16a34a')}
+      ${row('평점', `+${ptRating}`, reviews > 0 ? `★ ${rating.toFixed(1)} / 5.0 (최대 40점)` : '후기가 있어야 반영돼요 (최대 40점)', 'var(--green)')}
+      ${row('완료 알바', `+${ptReview}`, `후기 ${reviews}건${reviews > 10 ? ' (10건까지 반영)' : ''} · 건당 2점 (최대 20점)`, 'var(--green)')}
       ${row('노쇼', ptNoshow ? `-${ptNoshow}` : '0', `${noshow}건 · 건당 -8점`, ptNoshow ? '#ef4444' : '#ccc')}
       <div style="margin-top:16px;padding:12px 14px;background:#f8fafc;border-radius:12px;font-size:12px;color:#888;line-height:1.7">
         신뢰점수는 업주에게 <b>신뢰 ${score}점</b> 뱃지로 표시됩니다.<br>
@@ -5947,11 +5947,11 @@ async function showMyRatings() {
             ${a.worker_review ? `
               <div style="margin-top:8px;display:flex;justify-content:flex-end">
                 <button onclick="openWorkerReviewReplyModal('${a.id}','${(a.job_postings?.businesses?.name||'업체').replace(/'/g,"\\'")}','${(a.worker_review||'').replace(/'/g,"\\'").replace(/\n/g,' ')}','${(a.worker_review_reply||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"
-                  style="font-size:11px;font-weight:700;color:${a.worker_review_reply?'#3b82f6':'#aaa'};background:${a.worker_review_reply?'#eff6ff':'#f5f5f5'};border:none;border-radius:8px;padding:5px 10px;cursor:pointer">
+                  style="font-size:11px;font-weight:700;color:${a.worker_review_reply?'var(--blue)':'#aaa'};background:${a.worker_review_reply?'#eff6ff':'#f5f5f5'};border:none;border-radius:8px;padding:5px 10px;cursor:pointer">
                   ${a.worker_review_reply ? '✏️ 내 답글 수정' : '💬 답글 달기'}
                 </button>
               </div>
-              ${a.worker_review_reply ? `<div style="margin-top:6px;padding:8px 10px;background:#eff6ff;border-radius:8px;border-left:2px solid #3b82f6;font-size:12px;color:#1e3a8a;line-height:1.5"><span style="font-weight:800">내 답글:</span> ${a.worker_review_reply}</div>` : ''}
+              ${a.worker_review_reply ? `<div style="margin-top:6px;padding:8px 10px;background:#eff6ff;border-radius:8px;border-left:2px solid var(--blue);font-size:12px;color:#1e3a8a;line-height:1.5"><span style="font-weight:800">내 답글:</span> ${a.worker_review_reply}</div>` : ''}
             ` : ''}
             ${a.review_reply ? `<div style="margin-top:8px;padding:8px 10px;background:#FEF3C7;border-radius:8px;border-left:2px solid #F59E0B;font-size:12px;color:#92400E;line-height:1.5"><span style="font-weight:800">업체 답글:</span> ${a.review_reply}</div>` : ''}
           </div>`).join('')}
@@ -5991,10 +5991,10 @@ async function openApplicationJobDetail(jobPostingId) {
   const STATUS_INFO = {
     pending:   { label:'검토중',   color:'#888',    bg:'#f5f5f5' },
     reviewing: { label:'\u{1F50D} 검토중', color:'#F59E0B', bg:'#FFF7ED' },
-    accepted:  { label:'✅ 합격',  color:'#16a34a', bg:'#f0fdf4' },
+    accepted:  { label:'✅ 합격',  color:'var(--green)', bg:'#f0fdf4' },
     rejected:  { label:'❌ 탈락',  color:'#dc2626', bg:'#fef2f2' },
     cancelled: { label:t('app_cancelled'), color:'#aaa', bg:'#f0f0f0' },
-    completed: { label:'\u{1F3C1} 완료',  color:'#3B82F6', bg:'#EFF6FF' },
+    completed: { label:'\u{1F3C1} 완료',  color:'var(--blue)', bg:'#EFF6FF' },
     noshow:    { label:'⚠️ 노쇼', color:'#D97706', bg:'#FEF3C7' },
   };
   const appStatus = myApp ? (STATUS_INFO[myApp.status] || STATUS_INFO.pending) : null;
@@ -6008,7 +6008,7 @@ async function openApplicationJobDetail(jobPostingId) {
 
       <!-- 공고 상태 -->
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;padding-top:4px;flex-wrap:wrap">
-        <span style="font-size:12px;font-weight:800;color:${isUrgent?'#C8102E':'#16a34a'};background:${isUrgent?'#fff0f0':'#f0fdf4'};padding:4px 12px;border-radius:20px">${isUrgent?'\u{1F525} 급구':'모집중'}</span>
+        <span style="font-size:12px;font-weight:800;color:${isUrgent?'var(--red)':'var(--green)'};background:${isUrgent?'#fff0f0':'#f0fdf4'};padding:4px 12px;border-radius:20px">${isUrgent?'\u{1F525} 급구':'모집중'}</span>
         <span style="font-size:12px;font-weight:700;color:#666;background:#f5f5f5;padding:4px 10px;border-radius:20px">${WORK_TYPE[j.work_type]||'스팟'}</span>
         ${j.category ? `<span style="font-size:12px;color:#999;font-weight:600">${tCategory(j.category)}</span>` : ''}
         ${appStatus ? `<span style="font-size:12px;font-weight:800;color:${appStatus.color};background:${appStatus.bg};padding:4px 12px;border-radius:20px;margin-left:auto">${appStatus.label}</span>` : ''}
@@ -6025,7 +6025,7 @@ async function openApplicationJobDetail(jobPostingId) {
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span style="font-size:17px;font-weight:900;color:#222">${biz.name || '업체명 없음'}</span>
-              ${biz.is_verified ? '<span style="font-size:10px;font-weight:800;background:#DCFCE7;color:#16a34a;padding:2px 7px;border-radius:8px;white-space:nowrap">✓ 인증</span>' : ''}
+              ${biz.is_verified ? '<span style="font-size:10px;font-weight:800;background:#DCFCE7;color:var(--green);padding:2px 7px;border-radius:8px;white-space:nowrap">✓ 인증</span>' : ''}
             </div>
             ${biz.id && !bizRecord ? `<div style="margin-top:5px"><button id="detail-follow-btn" onclick="_toggleDetailFollow('${biz.id}','${(biz.name||'').replace(/'/g,'')}')" style="padding:4px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:#555;transition:all .15s">...</button></div>` : ''}
           </div>
@@ -6039,7 +6039,7 @@ async function openApplicationJobDetail(jobPostingId) {
           </div>
           ${biz.kindness_rating ? `<div style="display:flex;align-items:center;gap:4px">
             <span style="font-size:14px">\u{1F60A}</span>
-            <span style="font-size:13px;font-weight:700;color:#3B82F6">친절도 ${biz.kindness_rating.toFixed(1)}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--blue)">친절도 ${biz.kindness_rating.toFixed(1)}</span>
           </div>` : ''}
         </div>
         <!-- 업체 설명 -->
@@ -6051,7 +6051,7 @@ async function openApplicationJobDetail(jobPostingId) {
             <div style="font-size:11px;color:#aaa;font-weight:700">업체 연락처</div>
             <div style="font-size:14px;font-weight:800;color:#1D4ED8">${fmtPhone(biz.phone)}</div>
           </div>
-          <span style="margin-left:auto;font-size:12px;color:#3B82F6;font-weight:700">전화</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--blue);font-weight:700">전화</span>
         </a>` : ''}
       </div>
 
@@ -6060,7 +6060,7 @@ async function openApplicationJobDetail(jobPostingId) {
         <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">시급</div>
         <div style="font-size:28px;font-weight:900;color:var(--red)">${wage.toLocaleString()}<span style="font-size:16px">원</span></div>
         ${j.duration_hours ? `<div style="font-size:13px;color:#888;margin-top:4px">· ${j.duration_hours}시간 근무 = 총 <strong style="color:#333">${(wage * j.duration_hours).toLocaleString()}원</strong> 예상</div>` : ''}
-        ${j.same_day_payment ? '<div style="font-size:12px;color:#16a34a;font-weight:700;margin-top:6px">\u{1F4B4} 근무 당일 현금 지급</div>' : ''}
+        ${j.same_day_payment ? '<div style="font-size:12px;color:var(--green);font-weight:700;margin-top:6px">\u{1F4B4} 근무 당일 현금 지급</div>' : ''}
       </div>
 
       <!-- 근무 일정 -->
@@ -6078,11 +6078,11 @@ async function openApplicationJobDetail(jobPostingId) {
           <div style="font-size:13px;font-weight:800;color:#333">${j.needed_count ?? 1}명</div>
         </div>
         ${j.work_end_date ? `<div style="background:#EFF6FF;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#3B82F6;font-weight:700;margin-bottom:4px">모집 마감일</div>
+          <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:4px">모집 마감일</div>
           <div style="font-size:13px;font-weight:800;color:#1E3A8A">~${j.work_end_date.slice(5).replace('-','/')}</div>
         </div>` : ''}
         ${j.work_days ? `<div style="background:#F0FDF4;border-radius:12px;padding:12px;grid-column:1/-1">
-          <div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:4px">근무 요일</div>
+          <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px">근무 요일</div>
           <div style="font-size:13px;font-weight:800;color:#166534">${j.work_days}</div>
         </div>` : ''}
       </div>
@@ -6103,8 +6103,8 @@ async function openApplicationJobDetail(jobPostingId) {
       </div>` : ''}
 
       <!-- 지원 관련 버튼 -->
-      ${canChat ? `<button onclick="openWChat('${myApp.id}','${biz.name||'업주'}')" style="width:100%;padding:14px;background:${isAccepted?'#3B82F6':'#f0f4ff'};color:${isAccepted?'#fff':'#3B82F6'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4AC} 업주에게 문의하기</button>` : ''}
-      ${canCancel ? `<button onclick="cancelApplication('${myApp.id}')" style="width:100%;padding:14px;background:#FFF0F0;color:#C8102E;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">${t('cancel_application')}</button>` : ''}
+      ${canChat ? `<button onclick="openWChat('${myApp.id}','${biz.name||'업주'}')" style="width:100%;padding:14px;background:${isAccepted?'var(--blue)':'#f0f4ff'};color:${isAccepted?'#fff':'var(--blue)'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4AC} 업주에게 문의하기</button>` : ''}
+      ${canCancel ? `<button onclick="cancelApplication('${myApp.id}')" style="width:100%;padding:14px;background:#FFF0F0;color:var(--red);border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">${t('cancel_application')}</button>` : ''}
     </div>`;
 
   // 역지오코딩: 좌표형 주소 → 행정동 주소
@@ -6130,7 +6130,7 @@ function showConfirm(message, onOk) {
       <div style="font-size:15px;font-weight:700;color:#222;margin-bottom:20px;line-height:1.6">${message}</div>
       <div style="display:flex;gap:10px">
         <button onclick="this.closest('[style*=position]').remove()" style="flex:1;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">아니오</button>
-        <button id="_confirm_ok" style="flex:1;padding:12px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">예</button>
+        <button id="_confirm_ok" style="flex:1;padding:12px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer">예</button>
       </div>
     </div>`;
   overlay.querySelector('#_confirm_ok').addEventListener('click', () => { overlay.remove(); onOk(); });
@@ -6242,7 +6242,7 @@ function renderAppCalendar() {
   const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   const firstDow = firstDay.getDay();
   const totalDays = lastDay.getDate();
-  const STATUS_COLOR = { pending:'#C8102E', reviewing:'#F59E0B', accepted:'#16a34a', completed:'#3B82F6', rejected:'#d1d5db', cancelled:'#d1d5db', noshow:'#D97706' };
+  const STATUS_COLOR = { pending:'var(--red)', reviewing:'#F59E0B', accepted:'var(--green)', completed:'var(--blue)', rejected:'#d1d5db', cancelled:'#d1d5db', noshow:'#D97706' };
 
   let cells = '';
   for (let i = 0; i < firstDow; i++) cells += '<div></div>';
@@ -6253,7 +6253,7 @@ function renderAppCalendar() {
     const dow = (firstDow + d - 1) % 7;
     const dots = da.slice(0,3).map(a => `<div style="width:5px;height:5px;border-radius:50%;background:${STATUS_COLOR[a.status]||'#aaa'};flex-shrink:0"></div>`).join('');
     cells += `<div onclick="showCalendarDay('${k}')" style="cursor:${da.length?'pointer':'default'};padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:8px;${isToday?'background:#FFF1F2':''}">
-      <div style="font-size:14px;font-weight:${isToday?'900':(da.length?'700':'400')};width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;${isToday?'background:#C8102E;color:#fff':'color:'+(dow===0?'#ef4444':dow===6?'#3B82F6':'#222')}">${d}</div>
+      <div style="font-size:14px;font-weight:${isToday?'900':(da.length?'700':'400')};width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;${isToday?'background:var(--red);color:#fff':'color:'+(dow===0?'#ef4444':dow===6?'var(--blue)':'#222')}">${d}</div>
       <div style="display:flex;gap:2px;min-height:6px">${dots}</div>
     </div>`;
   }
@@ -6267,14 +6267,14 @@ function renderAppCalendar() {
       </div>
       ${monthEarnings > 0 ? `<div style="background:#EFF6FF;border-radius:12px;padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between"><div style="font-size:12px;font-weight:700;color:#1E40AF">🏁 이달 완료 수입</div><div style="font-size:15px;font-weight:900;color:#1D4ED8">${monthEarnings.toLocaleString()}원</div></div>` : ''}
       <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">
-        ${WEEKDAYS.map((w,i)=>`<div style="text-align:center;font-size:11px;font-weight:700;color:${i===0?'#ef4444':i===6?'#3B82F6':'#aaa'};padding:4px 0">${w}</div>`).join('')}
+        ${WEEKDAYS.map((w,i)=>`<div style="text-align:center;font-size:11px;font-weight:700;color:${i===0?'#ef4444':i===6?'var(--blue)':'#aaa'};padding:4px 0">${w}</div>`).join('')}
       </div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">${cells}</div>
       <div id="cal-day-detail" style="margin-top:14px"></div>
       <div style="display:flex;gap:14px;margin-top:16px;padding:12px;background:#f9f9f9;border-radius:12px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:#C8102E"></div>검토중</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:#16a34a"></div>합격</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:#3B82F6"></div>완료</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>검토중</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>합격</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>완료</div>
       </div>
     </div>
   `;
@@ -6313,7 +6313,7 @@ function showCalendarDay(dateKey) {
 
   if (!dayApps.length) { detailEl.innerHTML = ''; return; }
 
-  const STATUS = { pending:{label:'검토중',color:'#C8102E'}, reviewing:{label:'검토중',color:'#F59E0B'}, accepted:{label:'✅ 합격',color:'#16a34a'}, completed:{label:'🏁 완료',color:'#3B82F6'}, rejected:{label:'❌ 탈락',color:'#dc2626'}, cancelled:{label:'취소됨',color:'#aaa'}, noshow:{label:'⚠️ 노쇼',color:'#D97706'} };
+  const STATUS = { pending:{label:'검토중',color:'var(--red)'}, reviewing:{label:'검토중',color:'#F59E0B'}, accepted:{label:'✅ 합격',color:'var(--green)'}, completed:{label:'🏁 완료',color:'var(--blue)'}, rejected:{label:'❌ 탈락',color:'#dc2626'}, cancelled:{label:'취소됨',color:'#aaa'}, noshow:{label:'⚠️ 노쇼',color:'#D97706'} };
   detailEl.innerHTML = `
     <div style="font-size:13px;font-weight:900;color:#222;margin-bottom:8px">${m}/${d}(${DAY_NAME[dow]}) 근무 예정</div>
     ${dayApps.map(a=>{
@@ -6373,7 +6373,7 @@ async function loadBookmarks() {
     const _bn = document.createElement('div');
     _bn.id = 'bm-reopen-banner';
     _bn.style.cssText = 'background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px';
-    _bn.innerHTML = `<div style="font-size:20px;flex-shrink:0">🔔</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:#1E40AF">북마크 공고가 다시 열렸어요!</div><div style="font-size:12px;color:#3B82F6;margin-top:3px;line-height:1.5">${_reopened.slice(0,3).join(', ')}${_reopened.length > 3 ? ' 외 ' + (_reopened.length-3) + '개' : ''}</div></div><button onclick="this.closest('#bm-reopen-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1">✕</button>`;
+    _bn.innerHTML = `<div style="font-size:20px;flex-shrink:0">🔔</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:#1E40AF">북마크 공고가 다시 열렸어요!</div><div style="font-size:12px;color:var(--blue);margin-top:3px;line-height:1.5">${_reopened.slice(0,3).join(', ')}${_reopened.length > 3 ? ' 외 ' + (_reopened.length-3) + '개' : ''}</div></div><button onclick="this.closest('#bm-reopen-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1">✕</button>`;
     el.before(_bn);
   }
 
@@ -6389,9 +6389,9 @@ async function loadBookmarks() {
           <div style="font-size:13px;color:#888;margin-bottom:4px">${biz.name || ''}</div>
           <div style="font-size:14px;font-weight:700;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원' + _wageUnit(job) : ''}</div>
         </div>
-        <button onclick="toggleBookmark('${job.id}')" style="padding:6px 12px;background:#FFF0F0;color:#C8102E;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">북마크 해제</button>
+        <button onclick="toggleBookmark('${job.id}')" style="padding:6px 12px;background:#FFF0F0;color:var(--red);border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0">북마크 해제</button>
       </div>
-      <div style="margin-top:8px;font-size:11px;font-weight:700;display:inline-block;padding:3px 8px;border-radius:8px;background:${isOpen ? '#EFF6FF' : '#f0f0f0'};color:${isOpen ? '#3B82F6' : '#aaa'}">${job.status === 'urgent' ? '\u{1F525} 급구' : isOpen ? '모집중' : '마감'}</div>
+      <div style="margin-top:8px;font-size:11px;font-weight:700;display:inline-block;padding:3px 8px;border-radius:8px;background:${isOpen ? '#EFF6FF' : '#f0f0f0'};color:${isOpen ? 'var(--blue)' : '#aaa'}">${job.status === 'urgent' ? '\u{1F525} 급구' : isOpen ? '모집중' : '마감'}</div>
     </div>`;
   }).join('');
 }
@@ -6528,7 +6528,7 @@ function _updateFollowBtn(btn, businessId, bizName) {
   const isFollowing = window._myFollows?.has(businessId);
   btn.textContent = isFollowing ? '✔ 팔로잉' : '+ 팔로우';
   btn.style.background = isFollowing ? '#f0fdf4' : 'var(--red)';
-  btn.style.color = isFollowing ? '#16a34a' : '#fff';
+  btn.style.color = isFollowing ? 'var(--green)' : '#fff';
   btn.style.borderColor = isFollowing ? '#86efac' : 'var(--red)';
   btn.onclick = () => _toggleFollow(businessId, bizName);
 }
@@ -6625,8 +6625,8 @@ function _updateFavWorkerBtn(workerId) {
   const isFav = window._myFavWorkers.has(workerId);
   btn.textContent = isFav ? '★ 즐겨찾기' : '☆ 즐겨찾기';
   btn.style.background = isFav ? '#FFF0F0' : '#f5f5f5';
-  btn.style.color = isFav ? '#C8102E' : '#555';
-  btn.style.borderColor = isFav ? '#C8102E' : '#e0e0e0';
+  btn.style.color = isFav ? 'var(--red)' : '#555';
+  btn.style.borderColor = isFav ? 'var(--red)' : '#e0e0e0';
 }
 
 async function _renderFollowingSection() {
@@ -6733,7 +6733,7 @@ function _renderChatList() {
       ? (a.gatheringCategory === 'baromeeting' ? '#fff3f4' : '#e9e3ff')
       : isBarospotRow ? '#fff3f4' : '#fff';
     const rowBorder = isGathering
-      ? (a.gatheringCategory === 'baromeeting' ? '#f43f5e' : '#7C3AED')
+      ? (a.gatheringCategory === 'baromeeting' ? '#f43f5e' : 'var(--purple)')
       : isBarospotRow ? '#f43f5e' : 'transparent';
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
       <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':rowBg};border-left:3.5px solid ${unread>0?'var(--red)':rowBorder}">
@@ -6750,7 +6750,7 @@ function _renderChatList() {
             <div style="font-size:12px;color:${unread>0?'#333':'#aaa'};font-weight:${unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${preview}</div>
             ${unread>0?`<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>`:''}
           </div>
-          <div style="font-size:11px;color:#7C3AED;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
+          <div style="font-size:11px;color:var(--purple);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.title}</div>
         </div>
       </div>
       <button class="chat-fav-btn" onclick="_toggleChatFav('${a.id}',event)">${isFav?'⭐':'☆'}</button>
@@ -7144,7 +7144,7 @@ async function _showCounterpartProfile(type) {
     const completedCount = cp.reviewCount || 0;
     const noshowCount = cp.noshowCount || 0;
     const attendRate = completedCount + noshowCount > 0 ? Math.round(completedCount / (completedCount + noshowCount) * 100) : null;
-    if (ratingNum) rows.push(_row('평점', `<span style="color:#C8102E">${stars}</span> <span style="color:#888;font-size:12px">${ratingNum}</span>`));
+    if (ratingNum) rows.push(_row('평점', `<span style="color:var(--red)">${stars}</span> <span style="color:#888;font-size:12px">${ratingNum}</span>`));
     rows.push(_row('완료 건수', `${completedCount}건${attendRate !== null ? ` · 출근율 ${attendRate}%` : ''}`));
     // 기본 정보
     if (cp.age && cp.age >= 10) rows.push(_row('나이', `${cp.age}세`));
@@ -7161,7 +7161,7 @@ async function _showCounterpartProfile(type) {
     const bizRatingNum = cp.rating ? parseFloat(cp.rating).toFixed(1) : null;
     if (bizRatingNum) {
       const bizStars = '★'.repeat(Math.round(cp.rating)) + '☆'.repeat(5 - Math.round(cp.rating));
-      rows.push(_row('평점', `<span style="color:#C8102E">${bizStars}</span> <span style="color:#888;font-size:12px">${bizRatingNum}</span>`));
+      rows.push(_row('평점', `<span style="color:var(--red)">${bizStars}</span> <span style="color:#888;font-size:12px">${bizRatingNum}</span>`));
     }
     if (cp.reviewCount) rows.push(_row('리뷰', `${cp.reviewCount}건`));
     if (cp.bizType) rows.push(_row('업종', cp.bizType));
@@ -7452,7 +7452,7 @@ async function checkAlreadyApplied(jobId) {
           rateRow.style.display = 'block';
           const btn = document.getElementById('d-rate-btn');
           btn.textContent = '⭐ 평점 ' + app.biz_rating + '점 남김';
-          btn.style.background = '#f0fdf4'; btn.style.color = '#16a34a'; btn.onclick = null; btn.style.cursor = 'default';
+          btn.style.background = '#f0fdf4'; btn.style.color = 'var(--green)'; btn.onclick = null; btn.style.cursor = 'default';
         } else {
           rateRow.style.display = 'none';
         }
@@ -8218,8 +8218,8 @@ async function loadDashboard() {
 
   cards.innerHTML =
     mkCard(appCount,      '지원',    '#8B5CF6', "openDashPanel('applications')") +
-    mkCard(postingCount,  '공고',    '#C8102E', "openDashPanel('owner')")        +
-    mkCard(lessonCount,   '레슨',    '#3b82f6', "openDashPanel('lesson')");
+    mkCard(postingCount,  '공고',    'var(--red)', "openDashPanel('owner')")        +
+    mkCard(lessonCount,   '레슨',    'var(--blue)', "openDashPanel('lesson')");
 }
 
 function openDashPanel(which) {
@@ -8513,7 +8513,7 @@ function renderAiRecommendations() {
     el.innerHTML = `
       <div style="padding:12px 0 8px;display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:7px">
-          <div style="width:22px;height:22px;background:linear-gradient(135deg,#FF6B6B,#C8102E);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:900;flex-shrink:0">✦</div>
+          <div style="width:22px;height:22px;background:linear-gradient(135deg,#FF6B6B,var(--red));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:900;flex-shrink:0">✦</div>
           <span style="font-size:13px;font-weight:900;color:#222">${t('ai_rec_title')}</span>
         </div>
         <span style="font-size:11px;color:#ccc;font-weight:600">${t('ai_rec_subtitle')}</span>
@@ -8604,7 +8604,7 @@ function renderSwipeStack() {
   if (remaining === 0) {
     stack.innerHTML = `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:32px">
       <div style="width:80px;height:80px;border-radius:50%;background:#FFF0F0;display:flex;align-items:center;justify-content:center;margin-bottom:4px">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
           <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
@@ -8699,7 +8699,7 @@ function makeSwipeCard(job, isTop) {
               <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
                 <div style="font-size:15px;font-weight:900;color:#111">${job.biz_name || ''}</div>
                 ${job.biz_rating ? `<span style="background:#FEF3C7;color:#D97706;font-size:10px;font-weight:900;padding:1px 6px;border-radius:20px">★${job.biz_rating}</span>` : ''}
-                ${isUrgent ? '<span style="background:#C8102E;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">\u{1F525} 급구</span>' : ''}
+                ${isUrgent ? '<span style="background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px">\u{1F525} 급구</span>' : ''}
               </div>
             </div>
           </div>
@@ -8745,7 +8745,7 @@ function makeSwipeCard(job, isTop) {
         </div>
         <div style="background:#f8f8f8;border-radius:12px;padding:10px 12px">
           <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:3px">\u{1F465} 모집인원</div>
-          <div style="font-size:13px;font-weight:800;color:${neededLeft<=1?'#C8102E':'#222'}">${neededLeft > 0 ? neededLeft + '명 남음' : '마감임박'}</div>
+          <div style="font-size:13px;font-weight:800;color:${neededLeft<=1?'var(--red)':'#222'}">${neededLeft > 0 ? neededLeft + '명 남음' : '마감임박'}</div>
         </div>
       </div>
 
@@ -8765,7 +8765,7 @@ function makeSwipeCard(job, isTop) {
 
     <!-- 스와이프 오버레이 -->
     <div class="sw-overlay-left" style="position:absolute;inset:0;background:rgba(200,16,46,0.15);display:flex;align-items:center;justify-content:flex-end;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
-      <div style="font-size:48px;font-weight:900;color:#C8102E;border:4px solid #C8102E;border-radius:12px;padding:8px 16px;transform:rotate(15deg)">패스</div>
+      <div style="font-size:48px;font-weight:900;color:var(--red);border:4px solid var(--red);border-radius:12px;padding:8px 16px;transform:rotate(15deg)">패스</div>
     </div>
     <div class="sw-overlay-right" style="position:absolute;inset:0;background:rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:flex-start;padding:24px;opacity:0;transition:opacity 0.1s;pointer-events:none">
       <div style="font-size:48px;font-weight:900;color:#10B981;border:4px solid #10B981;border-radius:12px;padding:8px 16px;transform:rotate(-15deg)">지원!</div>
@@ -9151,7 +9151,7 @@ async function loadWorkerProfileForm() {
     certChecks.forEach(({ key, id }) => {
       if (fileNames.some(n => n.startsWith(key))) {
         const el = document.getElementById(id);
-        if (el) { el.textContent = '✅ 등록됨'; el.style.color = '#16a34a'; }
+        if (el) { el.textContent = '✅ 등록됨'; el.style.color = 'var(--green)'; }
       }
     });
   }
@@ -9334,7 +9334,7 @@ function showGradeInfoModal() {
         </div>
       </div>
       <div style="background:#FFF0F0;border-radius:14px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:900;color:#C8102E;margin-bottom:8px">${t('grade_modal_benefit_title')}</div>
+        <div style="font-size:13px;font-weight:900;color:var(--red);margin-bottom:8px">${t('grade_modal_benefit_title')}</div>
         <div style="font-size:13px;color:#555;line-height:2">
           \u{1F51D} ${t('grade_modal_benefit_1')}<br>
           ⚡ ${t('grade_modal_benefit_2')}<br>
@@ -9342,7 +9342,7 @@ function showGradeInfoModal() {
         </div>
       </div>
       <div style="background:#F0FFF4;border-radius:14px;padding:16px;margin-bottom:20px">
-        <div style="font-size:13px;font-weight:900;color:#16a34a;margin-bottom:8px">${t('grade_modal_normal_title')}</div>
+        <div style="font-size:13px;font-weight:900;color:var(--green);margin-bottom:8px">${t('grade_modal_normal_title')}</div>
         <div style="font-size:13px;color:#555;line-height:2">
           · ${t('grade_modal_normal_1')}<br>
           · ${t('grade_modal_normal_2')}
@@ -9492,14 +9492,14 @@ async function _loadIncomeChart(selY, selM) {
   chartEl.innerHTML = slots.map(sl => {
     const pct = maxAmt > 0 ? Math.max(Math.round((sl.amount / maxAmt) * 100), sl.amount > 0 ? 6 : 2) : 2;
     const isSel = sl.y === selY && sl.m === selM;
-    const color = isSel ? '#C8102E' : (sl.amount > 0 ? '#22c55e' : '#e5e7eb');
+    const color = isSel ? 'var(--red)' : (sl.amount > 0 ? '#22c55e' : '#e5e7eb');
     return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
       <div title="${sl.amount > 0 ? sl.amount.toLocaleString() + '원' : '없음'}" style="width:100%;background:${color};border-radius:4px 4px 0 0;height:${pct}%;min-height:2px;cursor:pointer" onclick="document.getElementById('income-year-sel').value=${sl.y};document.getElementById('income-month-sel').value=${sl.m};loadWorkerIncome()"></div>
     </div>`;
   }).join('');
 
   if (labelsEl) labelsEl.innerHTML = slots.map(sl =>
-    `<div style="flex:1;text-align:center;font-size:9px;color:${sl.y===selY&&sl.m===selM?'#C8102E':'#aaa'};font-weight:${sl.y===selY&&sl.m===selM?'900':'600'}">${monthNames[sl.m]}</div>`
+    `<div style="flex:1;text-align:center;font-size:9px;color:${sl.y===selY&&sl.m===selM?'var(--red)':'#aaa'};font-weight:${sl.y===selY&&sl.m===selM?'900':'600'}">${monthNames[sl.m]}</div>`
   ).join('');
 }
 
@@ -9736,7 +9736,7 @@ function _swapPhotoSlots(fromIdx, toIdx) {
 
 function wPhotoDragStart(e, idx) { _wDragSrcIdx = idx; e.dataTransfer.effectAllowed = 'move'; }
 function wPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
-function wPhotoDragEnter(e, el) { e.preventDefault(); if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #C8102E'; el.style.outlineOffset = '-3px'; } }
+function wPhotoDragEnter(e, el) { e.preventDefault(); if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid var(--red)'; el.style.outlineOffset = '-3px'; } }
 function wPhotoDragLeave(e, el) { if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; } }
 function wPhotoDrop(e, idx, el) {
   e.preventDefault();
@@ -9780,7 +9780,7 @@ function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
       ghostEl.style.visibility = '';
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
       const tgt = under?.closest(sel);
-      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
+      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid var(--red)'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
       const savedSrc = srcEl;
@@ -9912,9 +9912,9 @@ function renderOtherCertItem(filename, displayName, signedUrl) {
       <span style="font-size:15px;flex-shrink:0">📎</span>
       <a href="${signedUrl||'#'}" target="_blank" style="flex:1;font-size:13px;font-weight:600;color:#222;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${displayName}">${displayName}</a>
       <div style="display:flex;gap:5px;flex-shrink:0">
-        <button type="button" onclick="renameOtherCert('${fn}')" style="font-size:11px;color:#fff;background:#C8102E;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">수정</button>
-        <label style="font-size:11px;color:#fff;background:#C8102E;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap;display:inline-block">파일<input type="file" accept="image/*,application/pdf" style="display:none" onchange="reuploadOtherCert('${fn}',this)"></label>
-        <button type="button" onclick="deleteOtherCert('${fn}')" style="font-size:11px;color:#C8102E;background:#fee2e2;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">삭제</button>
+        <button type="button" onclick="renameOtherCert('${fn}')" style="font-size:11px;color:#fff;background:var(--red);border:none;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">수정</button>
+        <label style="font-size:11px;color:#fff;background:var(--red);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap;display:inline-block">파일<input type="file" accept="image/*,application/pdf" style="display:none" onchange="reuploadOtherCert('${fn}',this)"></label>
+        <button type="button" onclick="deleteOtherCert('${fn}')" style="font-size:11px;color:var(--red);background:#fee2e2;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">삭제</button>
       </div>
     </div>`;
   listEl.appendChild(item);
@@ -10011,7 +10011,7 @@ async function uploadDoc(certType, input) {
   const { error } = await db.storage.from('health-certs').upload(path, file, { upsert: true });
   if (error) { showToast(t('toast_upload_failed_prefix') + error.message); return; }
   const statusEl = document.getElementById(meta.statusId);
-  if (statusEl) { statusEl.textContent = '✅ 등록됨'; statusEl.style.color = '#16a34a'; }
+  if (statusEl) { statusEl.textContent = '✅ 등록됨'; statusEl.style.color = 'var(--green)'; }
   showToast(t('toast_cert_registered_fmt').replace('{name}', meta.label));
 }
 
@@ -10050,8 +10050,8 @@ const _OB_SLIDES = [
     bg: 'linear-gradient(145deg, #fff1f2, #ffe4e6)',
     illus: `<div style="position:relative;width:100%;height:100%">
       <div class="ob-anim-layer">
-        <div class="ob-shape-circle" style="width:140px;height:140px;background:#C8102E;opacity:0.08;animation-delay:0s"></div>
-        <div class="ob-shape-circle" style="width:100px;height:100px;background:#C8102E;opacity:0.1;animation-delay:0.1s"></div>
+        <div class="ob-shape-circle" style="width:140px;height:140px;background:var(--red);opacity:0.08;animation-delay:0s"></div>
+        <div class="ob-shape-circle" style="width:100px;height:100px;background:var(--red);opacity:0.1;animation-delay:0.1s"></div>
       </div>
       <div class="ob-anim-layer" style="animation: obFloat 3s ease-in-out infinite">
         <div style="font-size:46px; filter: drop-shadow(0 4px 6px rgba(200,16,46,0.3));">💼</div>
@@ -10517,7 +10517,7 @@ function updateProfileCompletion() {
   document.getElementById('completion-pct').textContent = pct + '%';
   document.getElementById('completion-bar').style.width = pct + '%';
   document.getElementById('completion-items').innerHTML = checks.map(c =>
-    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'#16a34a':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
+    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'var(--green)':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
   ).join('');
 }
 
@@ -10731,7 +10731,7 @@ function showDisclaimerSheet(onConfirm) {
         <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128683; 주류·담배·의약품 대리 구매 등 불법 매칭 시 즉시 계정 정지</div>
         <div style="background:#f8f8f8;border-radius:12px;padding:12px 14px;font-size:13px;color:#555;font-weight:400;line-height:1.6">&#128274; 타인 개인정보 유출 및 사기 행위 금지</div>
       </div>
-      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">동의하고 저장하기</button>
+      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer">동의하고 저장하기</button>
     </div>`;
   document.body.appendChild(el);
   el.querySelector('#disclaimer-ok-btn').onclick = () => { el.remove(); if (onConfirm) onConfirm(); };
@@ -10766,12 +10766,12 @@ async function changePassword() {
   const msg = document.getElementById('pw-change-msg');
   if (!msg) return;
   msg.style.display = 'none';
-  if (pw.length < 6) { msg.textContent = '비밀번호는 6자 이상이어야 합니다.'; msg.style.color = '#C8102E'; msg.style.display = 'block'; return; }
-  if (pw !== pw2)    { msg.textContent = '비밀번호가 일치하지 않습니다.'; msg.style.color = '#C8102E'; msg.style.display = 'block'; return; }
+  if (pw.length < 6) { msg.textContent = '비밀번호는 6자 이상이어야 합니다.'; msg.style.color = 'var(--red)'; msg.style.display = 'block'; return; }
+  if (pw !== pw2)    { msg.textContent = '비밀번호가 일치하지 않습니다.'; msg.style.color = 'var(--red)'; msg.style.display = 'block'; return; }
   const { error } = await db.auth.updateUser({ password: pw });
-  if (error) { msg.textContent = t('toast_change_failed_prefix') + error.message; msg.style.color = '#C8102E'; }
+  if (error) { msg.textContent = t('toast_change_failed_prefix') + error.message; msg.style.color = 'var(--red)'; }
   else {
-    msg.textContent = '✅ 비밀번호가 변경됐습니다.'; msg.style.color = '#16a34a';
+    msg.textContent = '✅ 비밀번호가 변경됐습니다.'; msg.style.color = 'var(--green)';
     document.getElementById('pw-change-new').value = '';
     document.getElementById('pw-change-confirm').value = '';
   }
@@ -10826,13 +10826,13 @@ function updateBioCounter(textarea) {
     if (hint) hint.style.display = 'none';
     textarea.style.borderColor = '#eee';
   } else if (len < 20) {
-    counter.style.color = '#C8102E';
+    counter.style.color = 'var(--red)';
     if (hint) hint.style.display = 'block';
-    textarea.style.borderColor = '#C8102E';
+    textarea.style.borderColor = 'var(--red)';
   } else {
-    counter.style.color = '#16a34a';
+    counter.style.color = 'var(--green)';
     if (hint) hint.style.display = 'none';
-    textarea.style.borderColor = '#16a34a';
+    textarea.style.borderColor = 'var(--green)';
   }
 }
 
@@ -10979,8 +10979,8 @@ function startSurgeTimers() {
       cnt.textContent = `${m}:${String(s).padStart(2,'0')}`;
       bar.style.width = pct + '%';
       if (remaining < 10000) {
-        cnt.style.color = '#C8102E';
-        bar.style.background = '#C8102E';
+        cnt.style.color = 'var(--red)';
+        bar.style.background = 'var(--red)';
       } else {
         cnt.style.color = '';
         bar.style.background = '';
@@ -11114,14 +11114,14 @@ async function _fetchWorkerNotifications() {
     const jobTitle = app.job_postings?.title || '공고';
     const t = app.applied_at;
     if (app.status === 'accepted') {
-      items.push({ id: app.id + '_acc', icon: '✅', color: '#16a34a', title: `${biz} 합격 확정!`, body: `"${jobTitle}" 공고에서 합격됐어요`, time: t });
+      items.push({ id: app.id + '_acc', icon: '✅', color: 'var(--green)', title: `${biz} 합격 확정!`, body: `"${jobTitle}" 공고에서 합격됐어요`, time: t });
     } else if (app.status === 'rejected') {
       items.push({ id: app.id + '_rej', icon: '❌', color: '#EF4444', title: `${biz} 지원 거절`, body: `"${jobTitle}"`, time: t });
     } else if (app.status === 'completed' && app.worker_rating) {
       const stars = '★'.repeat(Math.round(app.worker_rating));
       items.push({ id: app.id + '_rev', icon: '⭐', color: '#F59E0B', title: `${biz}에서 평점 ${app.worker_rating.toFixed(1)}점!`, body: app.worker_review ? `"${app.worker_review}"` : `${stars}`, time: t });
     } else if (app.status === 'completed') {
-      items.push({ id: app.id + '_done', icon: '\u{1F3C1}', color: '#3B82F6', title: `${biz} 근무 완료`, body: `"${jobTitle}"`, time: t });
+      items.push({ id: app.id + '_done', icon: '\u{1F3C1}', color: 'var(--blue)', title: `${biz} 근무 완료`, body: `"${jobTitle}"`, time: t });
     } else if (app.status === 'noshow') {
       items.push({ id: app.id + '_ns', icon: '⚠️', color: '#BE123C', title: `${biz}에서 노쇼 처리됐어요`, body: `"${jobTitle}"`, time: t });
     }
@@ -11147,7 +11147,7 @@ async function _fetchWorkerNotifications() {
           const title = postMap[c.post_id] || '게시글';
           const commenter = c.workers?.name || '누군가';
           items.push({
-            id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: '#7C3AED',
+            id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: 'var(--purple)',
             title: `"${title.slice(0,20)}"에 댓글이 달렸어요`,
             body: `${commenter}: "${c.content.slice(0,40)}"`,
             time: c.created_at
@@ -11295,7 +11295,7 @@ function renderSearchResults(list) {
   list.forEach(j => { if (!jobs.find(e => e.id === j.id)) jobs.push(j); });
 
   const TYPE_LABEL = { regular:'정기', short:'단기', errand:'심부름', spot:'스팟' };
-  const TYPE_COLOR = { regular:'#16a34a', short:'#3B82F6', errand:'#7C3AED', spot:'#C8102E' };
+  const TYPE_COLOR = { regular:'var(--green)', short:'var(--blue)', errand:'var(--purple)', spot:'var(--red)' };
 
   el.innerHTML = list.map(job => {
     const isUrgent = job.status === 'urgent';
@@ -11306,7 +11306,7 @@ function renderSearchResults(list) {
     const regionShort = addrPart.split(' ').slice(0, 3).join(' ');
     const wt = job.work_type || 'spot';
     const typeLabel = TYPE_LABEL[wt] || '스팟';
-    const typeColor = TYPE_COLOR[wt] || '#C8102E';
+    const typeColor = TYPE_COLOR[wt] || 'var(--red)';
 
     const urgentBadge = isUrgent
       ? `<span style="font-size:10px;font-weight:700;color:#DC2626;background:#FEF2F2;padding:2px 7px;border-radius:20px">⚡ ASAP</span>` : '';
@@ -11399,7 +11399,7 @@ async function openNotifications() {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
             <div style="font-size:14px;font-weight:800;color:#222;line-height:1.4">${it.title}</div>
-            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#C8102E;flex-shrink:0;display:inline-block"></span>' : ''}
+            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;display:inline-block"></span>' : ''}
           </div>
           ${it.body ? `<div style="font-size:12px;color:#888;line-height:1.5">${it.body}</div>` : ''}
           ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_timeAgo(it.time)}</div>` : ''}
@@ -11630,8 +11630,8 @@ async function loadCommunityPosts(cat) {
   const CAT_INFO = {
     review:{ bg:'#FFF7ED', color:'#EA580C', label:t('comm_cat_review') },
     meetup:{ bg:'#FFF1F2', color:'#e11d48', label:t('comm_cat_meetup') },
-    info:  { bg:'#EFF6FF', color:'#3B82F6', label:t('comm_cat_info') },
-    free:  { bg:'#F5F3FF', color:'#7C3AED', label:t('comm_cat_free') },
+    info:  { bg:'#EFF6FF', color:'var(--blue)', label:t('comm_cat_info') },
+    free:  { bg:'#F5F3FF', color:'var(--purple)', label:t('comm_cat_free') },
     owner: { bg:'#FEF3C7', color:'#D97706', label:t('comm_cat_owner') },
     worker:{ bg:'#E0F2FE', color:'#0284C7', label:t('comm_cat_worker') },
   };
@@ -11678,8 +11678,8 @@ async function openCommunityPost(postId) {
   const CAT_INFO = {
     review:{ bg:'#FFF7ED', color:'#EA580C', label:t('comm_cat_review') },
     meetup:{ bg:'#FFF1F2', color:'#e11d48', label:t('comm_cat_meetup') },
-    info:  { bg:'#EFF6FF', color:'#3B82F6', label:t('comm_cat_info') },
-    free:  { bg:'#F5F3FF', color:'#7C3AED', label:t('comm_cat_free') },
+    info:  { bg:'#EFF6FF', color:'var(--blue)', label:t('comm_cat_info') },
+    free:  { bg:'#F5F3FF', color:'var(--purple)', label:t('comm_cat_free') },
     owner: { bg:'#FEF3C7', color:'#D97706', label:t('comm_cat_owner') },
     worker:{ bg:'#E0F2FE', color:'#0284C7', label:t('comm_cat_worker') },
   };
@@ -11720,7 +11720,7 @@ async function openCommunityPost(postId) {
       <div style="font-size:13px;color:#aaa;margin-bottom:14px">${author} · ${fmtFull(post.created_at)}</div>
       <div style="font-size:14px;color:#333;line-height:1.8;white-space:pre-wrap">${post.content}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px">
-        <button id="comm-like-btn" onclick="likeCommunityPost()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'#C8102E':'#555'};cursor:pointer">
+        <button id="comm-like-btn" onclick="likeCommunityPost()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:1.5px solid #eee;border-radius:24px;background:#fff;font-size:13px;font-weight:700;color:${_getLikedPosts().has(postId)?'var(--red)':'#555'};cursor:pointer">
           ❤️ <span id="comm-like-count">${post.likes || 0}</span>
         </button>
         ${myPostBtns}
@@ -11750,7 +11750,7 @@ async function likeCommunityPost() {
   const el = document.getElementById('comm-like-count');
   if (el) el.textContent = _commCurrentPostLikes;
   const btn = document.getElementById('comm-like-btn');
-  if (btn) btn.style.color = '#C8102E';
+  if (btn) btn.style.color = 'var(--red)';
   _saveLikedPost(_commCurrentPostId);
   await db.rpc('increment_post_likes', { p_post_id: _commCurrentPostId });
   loadCommunityPosts(_commCurrentCat);
@@ -12027,13 +12027,13 @@ function renderPostings() {
     const jobTypeBadge = cat.startsWith('\u{1F527}')||cat.startsWith('⚡')||cat.startsWith('\u{1F3E0}')||cat.startsWith('\u{1F69A}')||cat.startsWith('\u{1F6CB}')||cat.startsWith('\u{1F511}')||cat.startsWith('\u{1F9FD}')||cat.startsWith('\u{1F528}')
       ? `<span style="font-size:10px;font-weight:800;background:#EEF2FF;color:#4F46E5;padding:2px 6px;border-radius:6px">${t('technical_job_badge')}</span>`
       : cat.startsWith('\u{1F436}')||cat.startsWith('\u{1F43E}')||cat.startsWith('\u{1F476}')||cat.startsWith('\u{1F474}')||cat.startsWith('\u{1F3E5}')||cat.startsWith('\u{1F3E1}')
-      ? `<span style="font-size:10px;font-weight:800;background:#F0FDF4;color:#16a34a;padding:2px 6px;border-radius:6px">${t('care_job_badge')}</span>`
+      ? `<span style="font-size:10px;font-weight:800;background:#F0FDF4;color:var(--green);padding:2px 6px;border-radius:6px">${t('care_job_badge')}</span>`
       : '';
 
-    const WT = { errand:{bg:'#F3E8FF',color:'#7C3AED',label:t('job_type_errand')}, short:{bg:'#EFF6FF',color:'#3B82F6',label:t('work_type_short')}, regular:{bg:'#F0FFF4',color:'#16a34a',label:t('work_type_regular')}, spot:{bg:'#FFF7ED',color:'#F59E0B',label:t('work_type_spot')} };
+    const WT = { errand:{bg:'#F3E8FF',color:'var(--purple)',label:t('job_type_errand')}, short:{bg:'#EFF6FF',color:'var(--blue)',label:t('work_type_short')}, regular:{bg:'#F0FFF4',color:'var(--green)',label:t('work_type_regular')}, spot:{bg:'#FFF7ED',color:'#F59E0B',label:t('work_type_spot')} };
     const wtStyle = WT[p.work_type] || null;
     const workTypeBadge = wtStyle ? `<span style="font-size:10px;font-weight:700;background:${wtStyle.bg};color:${wtStyle.color};padding:2px 7px;border-radius:6px">${wtStyle.label}</span>` : '';
-    const statusDot = p.status === 'urgent' ? `<span style="color:#C8102E;font-weight:800;font-size:12px">● ASAP</span>` : p.status === 'open' ? `<span style="color:#555;font-weight:700;font-size:12px">● ${t('stat_open')}</span>` : `<span style="color:#bbb;font-weight:600;font-size:12px">● ${t('status_closed_label')}</span>`;
+    const statusDot = p.status === 'urgent' ? `<span style="color:var(--red);font-weight:800;font-size:12px">● ASAP</span>` : p.status === 'open' ? `<span style="color:#555;font-weight:700;font-size:12px">● ${t('stat_open')}</span>` : `<span style="color:#bbb;font-weight:600;font-size:12px">● ${t('status_closed_label')}</span>`;
     const timeInfo = workTimeStr ? workTimeStr : workRangeStr ? `~${workRangeStr}` : createdStr;
     return `
     <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}" onclick="openPostingDetail('${p.id}')">
@@ -12044,7 +12044,7 @@ function renderPostings() {
           ${workTypeBadge}
           ${jobTypeBadge}
           ${p.surge_enabled ? `<span style="font-size:10px;font-weight:800;background:#FFF3E0;color:#FF9500;padding:2px 7px;border-radius:6px">${t('grade_quick_short')}</span>` : ''}
-          ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:#7C3AED;padding:2px 6px;border-radius:6px">PRO</span>' : ''}
+          ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:var(--purple);padding:2px 6px;border-radius:6px">PRO</span>' : ''}
           ${p.age_limit ? '<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:2px 6px;border-radius:6px">18+</span>' : ''}
           ${isExpired ? `<span style="font-size:10px;font-weight:700;background:#FEF2F2;color:#EF4444;padding:2px 6px;border-radius:6px">${t('status_expired_label')}</span>` : ''}
         </div>
@@ -12113,12 +12113,12 @@ function openPostingDetail(jobId) {
 
   const WORK_TYPE_LABEL = { spot: t('work_type_spot'), short: t('work_type_short'), regular: t('work_type_regular'), errand: t('job_type_errand') };
   const typeLabel = WORK_TYPE_LABEL[p.work_type] || t('work_type_spot');
-  const statusColor = p.status==='urgent' ? '#C8102E' : p.status==='open' ? '#16a34a' : '#888';
+  const statusColor = p.status==='urgent' ? 'var(--red)' : p.status==='open' ? 'var(--green)' : '#888';
   const statusLabel = p.status==='urgent' ? 'ASAP' : p.status==='open' ? t('status_open_label') : t('status_closed_label');
 
   document.getElementById('pd-body').innerHTML = `
     <div style="padding:0 20px 20px">
-      ${!isOpen ? `<button onclick="reopenWithEdit('${p.id}')" style="width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">${t('ownr_reopen_edit_btn')}</button>` : ''}
+      ${!isOpen ? `<button onclick="reopenWithEdit('${p.id}')" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:14px">${t('ownr_reopen_edit_btn')}</button>` : ''}
       <!-- 상태/유형 -->
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;padding-top:4px">
         <span style="font-size:12px;font-weight:800;color:${statusColor};background:${statusColor}18;padding:4px 12px;border-radius:20px">${statusLabel}</span>
@@ -12135,7 +12135,7 @@ function openPostingDetail(jobId) {
         <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:4px">${t('wage_label')}</div>
         <div style="font-size:28px;font-weight:900;color:var(--red)">${p.current_wage.toLocaleString()}<span style="font-size:16px">${t('won_suffix')}</span></div>
         ${surge > 0 ? `<div style="font-size:12px;color:#FF9500;font-weight:700;margin-top:4px">${t('ownr_surge_wage_detail').replace('{base}', p.base_wage.toLocaleString()).replace('{surge}', surge.toLocaleString())}</div>` : ''}
-        ${p.same_day_payment ? `<div style="font-size:12px;color:#16a34a;font-weight:700;margin-top:4px">${t('ownr_same_day_cash_notice')}</div>` : ''}
+        ${p.same_day_payment ? `<div style="font-size:12px;color:var(--green);font-weight:700;margin-top:4px">${t('ownr_same_day_cash_notice')}</div>` : ''}
       </div>
 
       <!-- 근무 정보 그리드 -->
@@ -12171,11 +12171,11 @@ function openPostingDetail(jobId) {
           <div style="font-size:13px;font-weight:800;color:#333">${t('ownr_headcount_detail').replace('{filled}', p.filled_count ?? 0).replace('{needed}', p.needed_count ?? 1).replace('{remain}', p.needed_count - p.filled_count)}</div>
         </div>
         ${p.work_end_date ? `<div style="background:#EFF6FF;border-radius:12px;padding:12px">
-          <div style="font-size:11px;color:#3B82F6;font-weight:700;margin-bottom:4px">${t('ownr_recruit_deadline_label')}</div>
+          <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:4px">${t('ownr_recruit_deadline_label')}</div>
           <div style="font-size:13px;font-weight:800;color:#1E3A8A">~${p.work_end_date.slice(5).replace('-','/')}</div>
         </div>` : ''}
         ${p.work_days ? `<div style="background:#F0FDF4;border-radius:12px;padding:12px;grid-column:1/-1">
-          <div style="font-size:11px;color:#16a34a;font-weight:700;margin-bottom:4px">${t('ownr_work_days_label')}</div>
+          <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:4px">${t('ownr_work_days_label')}</div>
           <div style="font-size:13px;font-weight:800;color:#166534">${p.work_days}</div>
         </div>` : ''}
       </div>
@@ -12211,10 +12211,10 @@ function openPostingDetail(jobId) {
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
           <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#fff;color:#333;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${t('edit_btn')}</button>
-          <button onclick="${isOpen ? `toggleStatus('${p.id}','${p.status}')` : `reopenWithEdit('${p.id}')`}" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'#C8102E'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? t('status_closed_label') : t('reopen_posting_title')}</button>
+          <button onclick="${isOpen ? `toggleStatus('${p.id}','${p.status}')` : `reopenWithEdit('${p.id}')`}" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'var(--red)'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${isOpen ? t('status_closed_label') : t('reopen_posting_title')}</button>
         </div>
         <div style="display:flex;gap:8px">
-          ${p.status === 'open' ? `<button onclick="setPostingUrgent('${p.id}',true)" style="flex:1;padding:10px;background:#FFF0F0;color:#C8102E;border:1.5px solid #FECACA;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">${t('ownr_set_urgent_btn')}</button>` : ''}
+          ${p.status === 'open' ? `<button onclick="setPostingUrgent('${p.id}',true)" style="flex:1;padding:10px;background:#FFF0F0;color:var(--red);border:1.5px solid #FECACA;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer">${t('ownr_set_urgent_btn')}</button>` : ''}
           ${p.status === 'urgent' ? `<button onclick="surgeWage('${p.id}',${p.current_wage})" style="flex:1;padding:10px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('ownr_surge_btn')}</button>` : ''}
           <button onclick="openShareModal('${p.id}')" style="flex:1;padding:10px;background:#FEE500;color:#3C1E1E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>${t('share_tooltip')}</button>
         </div>
@@ -12343,7 +12343,7 @@ function deletePosting(jobId) {
 const _STATUS_BADGE = {
   pending:   { bg:'#F3F4F6', color:'#6B7280', get label() { return t('ownr_status_pre_review'); } },
   reviewing: { bg:'#FFF7ED', color:'#D97706', get label() { return t('ownr_status_first_pass'); } },
-  on_hold:   { bg:'#EFF6FF', color:'#3B82F6', get label() { return t('ownr_status_hold'); } },
+  on_hold:   { bg:'#EFF6FF', color:'var(--blue)', get label() { return t('ownr_status_hold'); } },
   accepted:  { bg:'#D1FAE5', color:'#065F46', get label() { return t('ownr_status_final_pass'); } },
   rejected:  { bg:'#F5F5F5', color:'#888',    get label() { return t('app_rejected'); } },
   cancelled: { bg:'#F5F5F5', color:'#aaa',    get label() { return t('ownr_status_cancelled'); } },
@@ -12424,7 +12424,7 @@ function makeApplicantCardHtml(a, opts = {}) {
   const noshow = w?.noshow_count || 0;
   const total = reviews + noshow;
   const attendanceHtml = total > 0
-    ? ` · <span style="color:${noshow > 0 ? '#dc2626' : '#16a34a'};font-weight:700">${t('attendance_rate_label').replace('{n}', Math.round(reviews/total*100))}</span>${noshow > 0 ? ` <span style="color:#dc2626">${t('noshow_count_warning_short').replace('{n}', noshow)}</span>` : ''}`
+    ? ` · <span style="color:${noshow > 0 ? '#dc2626' : 'var(--green)'};font-weight:700">${t('attendance_rate_label').replace('{n}', Math.round(reviews/total*100))}</span>${noshow > 0 ? ` <span style="color:#dc2626">${t('noshow_count_warning_short').replace('{n}', noshow)}</span>` : ''}`
     : '';
   const trustBadge = total >= 2 ? trustBadgeHtml(w) : '';
   const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
@@ -12462,7 +12462,7 @@ function makeApplicantCardHtml(a, opts = {}) {
     actions += `<button onclick="${sp}toggleFavWorker('${wid}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isFav?'#FEF3C7':'#f5f5f5'};color:${isFav?'#D97706':'#aaa'}" title="${t('favorite_title')}">${isFav?'♥':'♡'}</button>`;
     actions += `<button onclick="${sp}toggleRecommendWorker('${wid}')" class="ac-btn ac-rec" style="flex:0;padding:8px 10px;background:${isRec?'#FEF3C7':'#f5f5f5'};color:${isRec?'#D97706':'#aaa'}" title="${t('recommend_label')}">${isRec?'👍':t('recommend_label')}</button>`;
     actions += `<button onclick="${sp}toggleBlockWorker('${wid}','${name.replace(/'/g,'&#39;')}')" class="ac-btn ac-blk" style="flex:0;padding:8px 10px;background:${isBlk?'#FFF1F2':'#f5f5f5'};color:${isBlk?'#BE123C':'#aaa'}" title="${t('block_label')}">${isBlk?'🚫':t('block_label')}</button>`;
-    actions += `<button onclick="${sp}toggleCompare('${a.id}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isCmp?'#EFF6FF':'#f5f5f5'};color:${isCmp?'#3B82F6':'#aaa'}">${isCmp?t('compare_selected_label'):t('compare_label')}</button>`;
+    actions += `<button onclick="${sp}toggleCompare('${a.id}')" class="ac-btn ac-sub" style="flex:0;padding:8px 10px;background:${isCmp?'#EFF6FF':'#f5f5f5'};color:${isCmp?'var(--blue)':'#aaa'}">${isCmp?t('compare_selected_label'):t('compare_label')}</button>`;
   }
 
   const quickBadge = a.is_quick ? `<span style="font-size:10px;font-weight:900;background:#FFF9E6;color:#D97706;padding:2px 6px;border-radius:6px;margin-right:4px">${t('quick_lightning_badge')}</span>` : '';
@@ -12478,7 +12478,7 @@ function makeApplicantCardHtml(a, opts = {}) {
       </div>
       ${badge}
     </div>
-    ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:10px;border-left:3px solid #C8102E;font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:10px;border-left:3px solid var(--red);font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     ${a.status === 'completed' && a.worker_review ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#FFF7ED;border-radius:10px;border-left:3px solid #F59E0B">
       <div style="font-size:10px;font-weight:700;color:#92400E;margin-bottom:3px">⭐ ${t('review_of_name_label').replace('{name}', name)}</div>
@@ -12486,7 +12486,7 @@ function makeApplicantCardHtml(a, opts = {}) {
       ${a.review_reply ? `<div style="margin-top:6px;padding:6px 8px;background:#FEF3C7;border-radius:8px;font-size:11px;color:#92400E"><span style="font-weight:800">${t('ownr_biz_reply_label')}</span> ${a.review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     </div>` : ''}
     ${a.status === 'completed' && a.worker_rating && a.worker_review_reply ? `
-    <div style="margin:0 14px 10px;padding:10px 12px;background:#EFF6FF;border-radius:10px;border-left:3px solid #3b82f6">
+    <div style="margin:0 14px 10px;padding:10px 12px;background:#EFF6FF;border-radius:10px;border-left:3px solid var(--blue)">
       <div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:3px">💬 ${t('review_reply_of_name_label').replace('{name}', name)}</div>
       <div style="font-size:12px;color:#1e3a8a;line-height:1.5">"${a.worker_review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
     </div>` : ''}
@@ -12584,7 +12584,7 @@ function filterLessonMain(el, main) {
     const t = document.getElementById(id);
     if (t) { t.style.borderBottomColor='transparent'; t.style.color='#888'; }
   });
-  el.style.borderBottomColor = '#C8102E'; el.style.color = '#C8102E';
+  el.style.borderBottomColor = 'var(--red)'; el.style.color = 'var(--red)';
   _updateLessonSubcatRow();
   loadLessons();
 }
@@ -12665,14 +12665,14 @@ function switchLessonManageTab(tab) {
   if (tab === 'profile') {
     profileList.style.display = 'block';
     inqList.style.display = 'none';
-    tabProfile.style.borderBottomColor = '#3b82f6'; tabProfile.style.color = '#3b82f6';
+    tabProfile.style.borderBottomColor = 'var(--blue)'; tabProfile.style.color = 'var(--blue)';
     tabInq.style.borderBottomColor = 'transparent'; tabInq.style.color = '#888';
     regBtn.style.display = '';
   } else {
     profileList.style.display = 'none';
     inqList.style.display = 'block';
     tabProfile.style.borderBottomColor = 'transparent'; tabProfile.style.color = '#888';
-    tabInq.style.borderBottomColor = '#3b82f6'; tabInq.style.color = '#3b82f6';
+    tabInq.style.borderBottomColor = 'var(--blue)'; tabInq.style.color = 'var(--blue)';
     regBtn.style.display = 'none';
     loadMyLessonInquiries();
   }
@@ -12706,7 +12706,7 @@ async function loadMyLessonInquiries() {
     const { data: _seekerRows } = await db.from('workers').select('kakao_uid,name,nationality').in('kakao_uid', _seekerUids);
     const _seekerMap = Object.fromEntries((_seekerRows || []).map(w => [w.kakao_uid, w]));
     const STATUS_MAP = { pending:t('inquiry_status_pending'), accepted:t('inquiry_status_accepted'), rejected:t('inquiry_status_rejected'), closed:t('inquiry_status_closed') };
-    const STATUS_COLOR = { pending:'#D97706', accepted:'#16a34a', rejected:'#9CA3AF', closed:'#9CA3AF' };
+    const STATUS_COLOR = { pending:'#D97706', accepted:'var(--green)', rejected:'#9CA3AF', closed:'#9CA3AF' };
     el.innerHTML = inquiries.map(inq => {
       const seeker = _seekerMap[inq.seeker_kakao_uid] || {};
       const prof = profileMap[inq.lesson_profile_id] || {};
@@ -12724,11 +12724,11 @@ async function loadMyLessonInquiries() {
           <span style="font-size:11px;font-weight:800;color:${stColor};background:${stColor}22;padding:3px 9px;border-radius:8px">${stLabel}</span>
         </div>
         ${inq.message ? `<div style="font-size:12px;color:#555;background:#f9fafb;border-radius:8px;padding:9px 11px;margin-bottom:8px;line-height:1.6">"${inq.message}"</div>` : ''}
-        ${inq.proposed_price ? `<div style="font-size:12px;color:#C8102E;font-weight:700;margin-bottom:8px">${t('proposed_price_prefix')}${Number(inq.proposed_price).toLocaleString()}${t('price_per_session_unit')}</div>` : ''}
+        ${inq.proposed_price ? `<div style="font-size:12px;color:var(--red);font-weight:700;margin-bottom:8px">${t('proposed_price_prefix')}${Number(inq.proposed_price).toLocaleString()}${t('price_per_session_unit')}</div>` : ''}
         <div style="display:flex;gap:6px">
           <button onclick="openLessonInquiryChat('${inq.id}')" style="flex:1;padding:8px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">💬 ${t('chat_title')}</button>
           ${isPending ? `
-          <button onclick="decideLessonInquiry('${inq.id}','accepted')" style="flex:1;padding:8px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">✅ ${t('accept_btn')}</button>
+          <button onclick="decideLessonInquiry('${inq.id}','accepted')" style="flex:1;padding:8px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">✅ ${t('accept_btn')}</button>
           <button onclick="decideLessonInquiry('${inq.id}','rejected')" style="flex:1;padding:8px;background:#f3f4f6;color:#6b7280;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('reject_btn')}</button>
           ` : ''}
         </div>
@@ -12765,7 +12765,7 @@ function _renderLessonMarkers(data) {
   data.forEach(p => {
     if (!p.lat || !p.lng) return;
     const price = p.price_per_session ? Math.round(p.price_per_session/1000)+'K' : '-';
-    const catColor = p.main_category === '과외' ? '#7c3aed' : '#0891b2';
+    const catColor = p.main_category === '과외' ? 'var(--purple)' : '#0891b2';
     const onAir = p.is_available_now;
     const glow = onAir ? 'box-shadow:0 0 0 3px #22c55e,0 2px 12px rgba(34,197,94,0.5);' : 'box-shadow:0 2px 8px rgba(0,0,0,0.18);';
     const onAirDot = onAir ? '<span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;margin-right:4px"></span>' : '';
@@ -12787,9 +12787,9 @@ function makeLessonCardHtml(p) {
   const days = p.available_days?.join(' · ') || '';
   const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit_short'), 센터방문:'🏫 '+t('lesson_type_center_short'), 비대면:'💻 '+t('lesson_type_online_short')};
   const locTypeBadge = p.location_type ? `<span style="font-size:10px;background:#f0f9ff;color:#0891b2;padding:2px 6px;border-radius:6px">${locTypeMap[p.location_type]||p.location_type}</span>` : '';
-  const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:800;background:#dcfce7;color:#16a34a;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:#16a34a;border-radius:50%;display:inline-block"></span>${t('available_now_badge')}</span>` : '';
+  const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:800;background:#dcfce7;color:var(--green);padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block"></span>${t('available_now_badge')}</span>` : '';
   const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:800;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:6px">✓ ${t('cert_badge_short')}</span>` : '';
-  const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 6px;border-radius:6px">${t('retention_badge').replace('{n}', p._retention)}</span>` : '';
+  const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:var(--green);padding:2px 6px;border-radius:6px">${t('retention_badge').replace('{n}', p._retention)}</span>` : '';
   const titleText = `${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}`;
   return `
   <div class="lesson-card" onclick="openLessonDetail('${p.id}')">
@@ -12827,7 +12827,7 @@ async function openLessonDetail(profileId) {
     const total = Object.keys(freq).length;
     if (total > 0) {
       const pct = Math.round(returning / total * 100);
-      retentionHtml = `<div style="background:#f0fdf4;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:#16a34a;font-weight:700">${t('retention_rate_detail').replace('{n}', pct).replace('{m}', bookings.length)}</div>`;
+      retentionHtml = `<div style="background:#f0fdf4;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:var(--green);font-weight:700">${t('retention_rate_detail').replace('{n}', pct).replace('{m}', bookings.length)}</div>`;
     }
   }
 
@@ -12839,13 +12839,13 @@ async function openLessonDetail(profileId) {
 
   // 온에어 배지
   const onAirHtml = p.is_available_now
-    ? `<div style="background:#dcfce7;color:#16a34a;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;margin-bottom:10px"><span style="width:7px;height:7px;background:#16a34a;border-radius:50%"></span>${t('available_now_full')}</div>` : '';
+    ? `<div style="background:#dcfce7;color:var(--green);font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;margin-bottom:10px"><span style="width:7px;height:7px;background:var(--green);border-radius:50%"></span>${t('available_now_full')}</div>` : '';
 
   document.getElementById('lesson-detail-body').innerHTML = `
     ${onAirHtml}
     <div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'#7c3aed':'#0891b2'};padding:3px 8px;border-radius:8px">${tLessonMain(p.main_category||'레슨')}</span>
+        <span style="font-size:11px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'var(--purple)':'#0891b2'};padding:3px 8px;border-radius:8px">${tLessonMain(p.main_category||'레슨')}</span>
         <span class="lesson-subject-tag">${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</span>${certHtml}
       </div>
       <div style="font-size:19px;font-weight:900;color:#222;margin-bottom:4px">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
@@ -12858,7 +12858,7 @@ async function openLessonDetail(profileId) {
     </div>
     <div style="background:#f8fafc;border-radius:14px;padding:14px;margin-bottom:16px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('price_per_session_label')}</div><div style="font-size:16px;font-weight:800;color:#C8102E;margin-top:3px">${price}원</div></div>
+        <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('price_per_session_label')}</div><div style="font-size:16px;font-weight:800;color:var(--red);margin-top:3px">${price}원</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('duration_label')}</div><div style="font-size:16px;font-weight:800;color:#222;margin-top:3px">${p.session_duration||60}분</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('lesson_days_label')}</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${days}</div></div>
         <div><div style="font-size:11px;color:#aaa;font-weight:600">${t('class_type_label_plain')}</div><div style="font-size:13px;font-weight:700;color:#222;margin-top:3px">${locTypeMap[p.location_type]||t('negotiable_label')}</div></div>
@@ -12878,7 +12878,7 @@ async function openLessonDetail(profileId) {
             <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border-radius:10px;padding:10px 14px">
               <span style="font-size:14px;font-weight:700;color:#222">${pkg.label}</span>
               <div style="text-align:right">
-                <span style="font-size:15px;font-weight:800;color:#C8102E">${Number(pkg.price).toLocaleString()}원</span>
+                <span style="font-size:15px;font-weight:800;color:var(--red)">${Number(pkg.price).toLocaleString()}원</span>
                 ${pkg.sessions?`<span style="font-size:11px;color:#aaa;margin-left:4px">(${Math.round(pkg.price/pkg.sessions).toLocaleString()}${t('price_per_session_unit')})</span>`:''}
               </div>
             </div>`).join('')}
@@ -12888,9 +12888,9 @@ async function openLessonDetail(profileId) {
     })()}
     <div style="display:flex;gap:10px;margin-bottom:12px">
       <button onclick="openLessonConsult('${p.id}','${(w?.name||'강사').replace(/'/g,"\\'")}','${w?.kakao_uid||''}')"
-        style="flex:1;padding:14px;background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 ${t('free_consult_btn')}</button>
+        style="flex:1;padding:14px;background:#f0fdf4;color:var(--green);border:1.5px solid #86efac;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 ${t('free_consult_btn')}</button>
       <button onclick="document.getElementById('lesson-booking-form').style.display='block';this.style.display='none';document.querySelector('.lesson-cta-row').style.display='none'"
-        style="flex:1;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 ${t('booking_cta_btn')}</button>
+        style="flex:1;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">📅 ${t('booking_cta_btn')}</button>
     </div>
     <div class="lesson-cta-row"></div>`;
   document.getElementById('lesson-booking-form').style.display = 'none';
@@ -12918,8 +12918,8 @@ function onCertFileSelected(input) {
   if (_certFile) {
     nameEl.textContent = '✓ ' + _certFile.name;
     nameEl.style.display = 'block';
-    btnEl.style.borderColor = '#16a34a';
-    btnEl.style.color = '#16a34a';
+    btnEl.style.borderColor = 'var(--green)';
+    btnEl.style.color = 'var(--green)';
     btnEl.textContent = '📎 ' + _certFile.name.slice(0, 20) + ((_certFile.name.length > 20) ? '…' : '');
   } else {
     nameEl.style.display = 'none';
@@ -13246,14 +13246,14 @@ async function loadMyLessons() {
   }
   const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit_short'), 센터방문:'🏫 '+t('lesson_type_center_short'), 비대면:'💻 '+t('lesson_type_online_short')};
   el.innerHTML = data.map(p => `
-    <div class="lesson-card" style="border-left:3px solid ${p.is_active ? '#3b82f6' : '#ddd'}">
+    <div class="lesson-card" style="border-left:3px solid ${p.is_active ? 'var(--blue)' : '#ddd'}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:10px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'#7c3aed':'#0891b2'};padding:2px 7px;border-radius:6px">${tLessonMain(p.main_category||'레슨')}</span>
+          <span style="font-size:10px;font-weight:800;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'var(--purple)':'#0891b2'};padding:2px 7px;border-radius:6px">${tLessonMain(p.main_category||'레슨')}</span>
           <span class="lesson-subject-tag">${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</span>
           ${p.cert_status==='verified'?`<span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:6px">✓${t('cert_badge_short')}</span>`:''}
         </div>
-        <span style="font-size:11px;font-weight:700;color:${p.is_active ? '#16a34a' : '#aaa'}">${p.is_active ? ('● ' + t('active_status')) : ('● ' + t('inactive_status'))}</span>
+        <span style="font-size:11px;font-weight:700;color:${p.is_active ? 'var(--green)' : '#aaa'}">${p.is_active ? ('● ' + t('active_status')) : ('● ' + t('inactive_status'))}</span>
       </div>
       <div class="lesson-name">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
       ${p.subject_detail ? `<div style="font-size:12px;color:#777;margin-top:2px;margin-bottom:4px">${p.subject_detail}</div>` : ''}
@@ -13262,25 +13262,25 @@ async function loadMyLessons() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
         <div style="padding:8px 10px;background:#f8fafc;border-radius:10px">
           <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">${t('map_display_label')}</div>
-          <div style="font-size:11px;font-weight:800;color:${p.is_active?'#16a34a':'#aaa'}">${p.is_active?('● ' + t('exposed_status')):('● ' + t('hidden_status'))}</div>
+          <div style="font-size:11px;font-weight:800;color:${p.is_active?'var(--green)':'#aaa'}">${p.is_active?('● ' + t('exposed_status')):('● ' + t('hidden_status'))}</div>
         </div>
         <div style="padding:8px 10px;background:${p.is_available_now?'#f0fdf4':'#f8fafc'};border-radius:10px;display:flex;align-items:center;justify-content:space-between">
           <div>
             <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px">${t('available_now_badge')}</div>
-            <div style="font-size:11px;font-weight:800;color:${p.is_available_now?'#16a34a':'#aaa'}">${p.is_available_now?('🟢 ' + t('onair_label')):('⚫ ' + t('offline_label'))}</div>
+            <div style="font-size:11px;font-weight:800;color:${p.is_available_now?'var(--green)':'#aaa'}">${p.is_available_now?('🟢 ' + t('onair_label')):('⚫ ' + t('offline_label'))}</div>
           </div>
           <label style="position:relative;display:inline-block;width:38px;height:20px;cursor:pointer;flex-shrink:0">
             <input type="checkbox" ${p.is_available_now?'checked':''} onchange="toggleLessonOnAir('${p.id}',this.checked)"
               style="opacity:0;width:0;height:0;position:absolute">
-            <span style="position:absolute;inset:0;background:${p.is_available_now?'#16a34a':'#cbd5e1'};border-radius:20px;transition:.2s">
+            <span style="position:absolute;inset:0;background:${p.is_available_now?'var(--green)':'#cbd5e1'};border-radius:20px;transition:.2s">
               <span style="position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:${p.is_available_now?'20':'2'}px;transition:.2s"></span>
             </span>
           </label>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button onclick="toggleLessonActive('${p.id}',${!p.is_active})" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid ${p.is_active?'#e2e8f0':'#3b82f6'};background:${p.is_active?'#fff':'#eff6ff'};font-size:12px;font-weight:700;color:${p.is_active?'#888':'#3b82f6'};cursor:pointer">${p.is_active ? t('hide_from_map_btn') : t('show_on_map_btn')}</button>
-        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:#C8102E;font-size:12px;font-weight:700;cursor:pointer">${t('delete')}</button>
+        <button onclick="toggleLessonActive('${p.id}',${!p.is_active})" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid ${p.is_active?'#e2e8f0':'var(--blue)'};background:${p.is_active?'#fff':'#eff6ff'};font-size:12px;font-weight:700;color:${p.is_active?'#888':'var(--blue)'};cursor:pointer">${p.is_active ? t('hide_from_map_btn') : t('show_on_map_btn')}</button>
+        <button onclick="deleteLessonProfile('${p.id}')" style="padding:8px 14px;border-radius:10px;border:none;background:#fff0f0;color:var(--red);font-size:12px;font-weight:700;cursor:pointer">${t('delete')}</button>
       </div>
     </div>`).join('');
 }
@@ -13373,9 +13373,9 @@ function setWageType(type) {
     const btn = document.getElementById('wt-' + t);
     if (!btn) return;
     const on = t === type;
-    btn.style.background = on ? '#C8102E' : '#fff';
+    btn.style.background = on ? 'var(--red)' : '#fff';
     btn.style.color = on ? '#fff' : '#888';
-    btn.style.borderColor = on ? '#C8102E' : '#eee';
+    btn.style.borderColor = on ? 'var(--red)' : '#eee';
   });
   // 라벨·입력 갱신
   const lbl = document.getElementById('f-wage-label');
@@ -13562,7 +13562,7 @@ function showRatingModal(appId, workerId) {
       <div style="display:flex;gap:8px;margin-top:16px">
         <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">${t('cancel')}</button>
         <button id="submit-rating-btn" onclick="submitRating('${appId}','${workerId}')"
-          style="flex:2;padding:14px;background:#3B82F6;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('ownr_complete_process_btn')}</button>
+          style="flex:2;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('ownr_complete_process_btn')}</button>
       </div>
     </div>`;
 
@@ -13796,11 +13796,11 @@ function openCompareModal() {
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
           <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('app_noshow')}</div>
-          <div style="font-weight:900;color:${w.noshow_count>0?'#EF4444':'#16a34a'};font-size:15px">${w.noshow_count||0}${t('ownr_times_suffix')}</div>
+          <div style="font-weight:900;color:${w.noshow_count>0?'#EF4444':'var(--green)'};font-size:15px">${w.noshow_count||0}${t('ownr_times_suffix')}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
           <div style="color:#aaa;font-weight:700;margin-bottom:4px">${t('skills_label')}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px">${(w.skills||[]).map(s=>`<span style="background:#EFF6FF;color:#3B82F6;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700">${s}</span>`).join('')||`<span style="color:#aaa">${t('no_data_label')}</span>`}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${(w.skills||[]).map(s=>`<span style="background:#EFF6FF;color:var(--blue);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700">${s}</span>`).join('')||`<span style="color:#aaa">${t('no_data_label')}</span>`}</div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:10px">
           <div style="color:#aaa;font-weight:700;margin-bottom:2px">${t('phone_label')}</div>
@@ -13808,7 +13808,7 @@ function openCompareModal() {
         </div>
       </div>
       <div style="display:flex;gap:6px;margin-top:12px">
-        <button onclick="openChat('${a.id}','${w.name||t('ownr_applicant_fallback_label')}')" style="flex:1;padding:8px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('chat_btn_emoji')}</button>
+        <button onclick="openChat('${a.id}','${w.name||t('ownr_applicant_fallback_label')}')" style="flex:1;padding:8px;background:#EFF6FF;color:var(--blue);border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">${t('chat_btn_emoji')}</button>
         <button onclick="toggleFavWorker('${w.id}')" style="padding:8px 12px;background:${isFav?'#FEF3C7':'#f0f0f0'};color:${isFav?'#D97706':'#888'};border:none;border-radius:10px;font-size:14px;cursor:pointer">${isFav?'♥':'♡'}</button>
       </div>
     </div>`;
@@ -13937,7 +13937,7 @@ function showConfirmDialog(title, msg, okLabel, cancelLabel) {
       <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:20px;white-space:pre-line">${msg}</div>
       <div style="display:flex;gap:10px">
         <button style="flex:1;padding:13px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
-        <button style="flex:1;padding:13px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
+        <button style="flex:1;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
       </div>
     </div>`;
     document.body.appendChild(el);
@@ -14079,11 +14079,7 @@ function openPostingForm() {
   setWorkType('spot');    // 근무형태 스팟으로 강제 초기화
   setWageType('hourly');  // 급여 유형 시급으로 초기화
   // 요일 버튼 전체 초기화
-  document.querySelectorAll('#f-days-wrap button').forEach(btn => {
-    btn.style.background  = '#fff';
-    btn.style.color       = btn.dataset.day === '토' ? '#3B82F6' : btn.dataset.day === '일' ? '#C8102E' : '#888';
-    btn.style.borderColor = '#eee';
-  });
+  document.querySelectorAll('#f-days-wrap button').forEach(btn => _setDayBtn(btn, false));
   document.getElementById('f-work-days').value = '';
   const _ps0 = document.getElementById('f-period-start'); if (_ps0) _ps0.value = '';
   const _pe0 = document.getElementById('f-period-end');   if (_pe0) _pe0.value = '';
@@ -14150,7 +14146,7 @@ function setWorkType(type) {
     const el = document.getElementById(btns[k]);
     if (!el) return;
     el.style.background = k === type ? '#fff' : 'transparent';
-    el.style.color = k === type ? '#C8102E' : '#888';
+    el.style.color = k === type ? 'var(--red)' : '#888';
     el.style.boxShadow = k === type ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
   });
   document.getElementById('wt-desc').textContent = descs[type] || '';
@@ -14167,13 +14163,25 @@ function setWorkType(type) {
   renderCategorySelect();
 }
 
+// 근무요일 버튼 on/off (2026-07-27)
+// 예전엔 `btn.style.background === 'rgb(200, 16, 46)'` 로 렌더된 색 문자열을 비교해
+// 선택 상태를 판단했다. 색을 토큰(var(--red))으로 바꾸면 읽을 때 'var(--red)'가 나와
+// 비교가 항상 false가 되고, 요일을 해제할 수 없는 버그가 된다.
+// 상태는 색이 아니라 data 속성으로 들고, 스타일은 이 헬퍼 한 곳에서만 만든다
+// (초기화·수정모드 복원까지 3곳에 같은 코드가 복제돼 있어 서로 어긋날 위험도 있었음).
+function _setDayBtn(btn, on) {
+  btn.dataset.on        = on ? '1' : '';
+  btn.style.background  = on ? 'var(--red)' : '#fff';
+  btn.style.color       = on ? '#fff'
+                             : (btn.dataset.day === '토' ? 'var(--blue)'
+                             :  btn.dataset.day === '일' ? 'var(--red)' : '#888');
+  btn.style.borderColor = on ? 'var(--red)' : '#eee';
+}
+
 function toggleDay(btn) {
-  const active = btn.style.background === 'rgb(200, 16, 46)';
-  btn.style.background = active ? '#fff' : '#C8102E';
-  btn.style.color = active ? '#888' : '#fff';
-  btn.style.borderColor = active ? '#eee' : '#C8102E';
+  _setDayBtn(btn, btn.dataset.on !== '1');
   const days = Array.from(document.querySelectorAll('#f-days-wrap button'))
-    .filter(b => b.style.background === 'rgb(200, 16, 46)').map(b => b.dataset.day);
+    .filter(b => b.dataset.on === '1').map(b => b.dataset.day);
   document.getElementById('f-work-days').value = days.join(',');
 }
 
@@ -14208,20 +14216,12 @@ function openEditForm(jobId) {
   // 근무 요일 버튼 복원
   if (p.work_days) {
     const _activeDays = new Set(p.work_days.split(',').map(d => d.trim()));
-    document.querySelectorAll('#f-days-wrap button').forEach(btn => {
-      const on = _activeDays.has(btn.dataset.day);
-      btn.style.background   = on ? '#C8102E' : '#fff';
-      btn.style.color        = on ? '#fff' : (btn.dataset.day === '토' ? '#3B82F6' : btn.dataset.day === '일' ? '#C8102E' : '#888');
-      btn.style.borderColor  = on ? '#C8102E' : '#eee';
-    });
+    document.querySelectorAll('#f-days-wrap button')
+      .forEach(btn => _setDayBtn(btn, _activeDays.has(btn.dataset.day)));
     document.getElementById('f-work-days').value = p.work_days;
   } else {
     // 요일 버튼 전체 초기화
-    document.querySelectorAll('#f-days-wrap button').forEach(btn => {
-      btn.style.background  = '#fff';
-      btn.style.color       = btn.dataset.day === '토' ? '#3B82F6' : btn.dataset.day === '일' ? '#C8102E' : '#888';
-      btn.style.borderColor = '#eee';
-    });
+    document.querySelectorAll('#f-days-wrap button').forEach(btn => _setDayBtn(btn, false));
     document.getElementById('f-work-days').value = '';
   }
   // 기간(시작일/종료일) 복원
@@ -14393,9 +14393,9 @@ function renderMoimImgPreview() {
   const container = document.getElementById('moim-img-preview');
   if (!container) return;
   container.innerHTML = moimImgs.map((img, i) => `
-    <div style="position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:${i===0?'3px solid #7C3AED':'2px solid #eee'}">
+    <div style="position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:${i===0?'3px solid var(--purple)':'2px solid #eee'}">
       <img src="${img.src}" onclick="openImgViewer('${img.src}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer">
-      <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i===0?'#7C3AED':'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i+1}</div>
+      <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i===0?'var(--purple)':'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;pointer-events:none">${i+1}</div>
       ${i===0?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:800;text-align:center;padding:3px;pointer-events:none">${t('ownr_main_photo_badge')}</div>`:''}
       <button onclick="event.stopPropagation();removeMoimImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
     </div>`).join('');
@@ -14486,7 +14486,7 @@ function setLocTab(n) {
     const panel = document.getElementById(`loc-panel-${i}`);
     const active = i === n;
     tab.style.background = active ? '#fff' : 'transparent';
-    tab.style.color = active ? '#C8102E' : '#888';
+    tab.style.color = active ? 'var(--red)' : '#888';
     tab.style.boxShadow = active ? '0 1px 3px rgba(0,0,0,0.1)' : 'none';
     panel.style.display = active ? 'block' : 'none';
   });
@@ -14991,7 +14991,7 @@ function toggleRemoteFilter(el) {
 // ── 당일 정산 토글 ────────────────────────────────────────
 function setSameDay(val) {
   document.getElementById('f-same-day-on').value = val ? 'true' : 'false';
-  document.getElementById('same-day-track').style.background = val ? '#16a34a' : '#ddd';
+  document.getElementById('same-day-track').style.background = val ? 'var(--green)' : '#ddd';
   document.getElementById('same-day-knob').style.left = val ? '22px' : '2px';
 }
 
@@ -15001,14 +15001,14 @@ function toggleTeamJob() {
 }
 function setTeamJob(val) {
   document.getElementById('f-team-job').value = val ? 'true' : 'false';
-  document.getElementById('team-job-track').style.background = val ? '#7C3AED' : '#e5e7eb';
+  document.getElementById('team-job-track').style.background = val ? 'var(--purple)' : '#e5e7eb';
   document.getElementById('team-job-knob').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
   document.getElementById('team-job-detail').style.display = val ? 'block' : 'none';
 }
 
 function setBeginnerOk(val) {
   document.getElementById('f-beginner-ok').value = val ? 'true' : 'false';
-  document.getElementById('beginner-ok-track').style.background = val ? '#16a34a' : '#e5e7eb';
+  document.getElementById('beginner-ok-track').style.background = val ? 'var(--green)' : '#e5e7eb';
   document.getElementById('beginner-ok-knob').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
 }
 
@@ -15041,7 +15041,7 @@ function setNatReq(val) {
 // ── 노쇼 보증금 토글 ─────────────────────────────────────
 function setDeposit(val) {
   document.getElementById('f-deposit-on').value = val ? 'true' : 'false';
-  document.getElementById('deposit-track').style.background = val ? '#C8102E' : '#ddd';
+  document.getElementById('deposit-track').style.background = val ? 'var(--red)' : '#ddd';
   document.getElementById('deposit-knob').style.left = val ? '22px' : '2px';
   document.getElementById('deposit-amount-row').style.display = val ? 'block' : 'none';
   if (val) {
@@ -15361,7 +15361,7 @@ async function loadOwnerChatList() {
           <div style="font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isMine ? '나: ' : ''}${msg.content?.startsWith('[img]') ? '\u{1F4F7} 사진' : msg.content}</div>
           ${unread > 0 ? `<div style="min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0">${unread}</div>` : ''}
         </div>
-        <div style="font-size:11px;color:#7C3AED;font-weight:600;margin-top:2px">${a.job_postings?.title || ''}</div>
+        <div style="font-size:11px;color:var(--purple);font-weight:600;margin-top:2px">${a.job_postings?.title || ''}</div>
       </div>
     </div>`;
   }).join('');
@@ -15599,7 +15599,7 @@ function setOwnerMapMode(mode) {
   const radiusBadge = document.getElementById('owner-radius-badge');
   const radiusPopup = document.getElementById('owner-radius-popup');
   if (mode === 'jobs') {
-    tabJobs.style.background    = '#C8102E'; tabJobs.style.color    = '#fff';
+    tabJobs.style.background    = 'var(--red)'; tabJobs.style.color    = '#fff';
     tabWorkers.style.background = '#fff';     tabWorkers.style.color = '#888';
     if (jobsUI)  jobsUI.style.display  = 'flex';
     if (btPanel) btPanel.style.display = 'none';
@@ -15611,7 +15611,7 @@ function setOwnerMapMode(mode) {
     loadOwnerMapJobs();
   } else {
     tabJobs.style.background    = '#fff';     tabJobs.style.color    = '#888';
-    tabWorkers.style.background = '#C8102E'; tabWorkers.style.color = '#fff';
+    tabWorkers.style.background = 'var(--red)'; tabWorkers.style.color = '#fff';
     if (jobsUI)  jobsUI.style.display  = 'none';
     if (radiusBadge) radiusBadge.style.display = 'none';
     if (radiusPopup) radiusPopup.style.display = 'none';
@@ -15674,7 +15674,7 @@ async function loadBarotouipList() {
     const nameShort = (w.name || '').substring(0, 4);
     const ratingStr = w.rating ? `★${parseFloat(w.rating).toFixed(1)}` : '';
     const content = `<div style="text-align:center;cursor:pointer" onclick="showBarotouipContact('${w.kakao_uid}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}')">
-      <div style="width:46px;height:46px;border-radius:50%;border:2.5px solid #C8102E;overflow:hidden;box-shadow:0 2px 10px rgba(200,16,46,0.4)">${avatar}</div>
+      <div style="width:46px;height:46px;border-radius:50%;border:2.5px solid var(--red);overflow:hidden;box-shadow:0 2px 10px rgba(200,16,46,0.4)">${avatar}</div>
       <div style="margin-top:3px;background:rgba(0,0,0,0.72);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nameShort}${ratingStr ? ' '+ratingStr : ''}</div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({
@@ -15698,8 +15698,8 @@ function showBarotouipContact(kakaoUid, name, phone) {
       <div style="width:36px;height:4px;background:#eee;border-radius:2px;margin:0 auto 18px"></div>
       <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">&#128100; ${name}님에게 연락</div>
       <div style="font-size:13px;color:#888;margin-bottom:18px">직접 연락하거나 스카우트 제안을 보내세요</div>
-      <button onclick="showScoutModal('${kakaoUid}','${name.replace(/'/g,"\\'")}');this.closest('div[style*=fixed]').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C8102E,#e53935);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F3AF} 스카우트 제안 보내기</button>
-      ${phone ? `<button onclick="window.location.href='tel:${phone}'" style="width:100%;padding:14px;background:#16a34a;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">&#128222; 전화하기 (${phone})</button>` : `<div style="padding:14px;background:#f8f8f8;border-radius:14px;font-size:13px;color:#aaa;text-align:center;margin-bottom:10px">연락처 미공개</div>`}
+      <button onclick="showScoutModal('${kakaoUid}','${name.replace(/'/g,"\\'")}');this.closest('div[style*=fixed]').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--red),#e53935);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F3AF} 스카우트 제안 보내기</button>
+      ${phone ? `<button onclick="window.location.href='tel:${phone}'" style="width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">&#128222; 전화하기 (${phone})</button>` : `<div style="padding:14px;background:#f8f8f8;border-radius:14px;font-size:13px;color:#aaa;text-align:center;margin-bottom:10px">연락처 미공개</div>`}
       <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:13px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
     </div>`;
   document.body.appendChild(el);
@@ -15722,9 +15722,9 @@ function showScoutModal(workerKakaoUid, workerName) {
       ${activePostings.length ? `
       <select id="scout-posting-select" style="width:100%;padding:12px;border:1.5px solid #eee;border-radius:12px;font-size:14px;font-weight:700;margin-bottom:12px;outline:none;background:#fff">
         ${postingOptions}
-      </select>` : `<div style="padding:12px;background:#fff5f5;border-radius:12px;color:#C8102E;font-size:13px;font-weight:700;margin-bottom:12px;text-align:center">먼저 공고를 등록해주세요</div>`}
+      </select>` : `<div style="padding:12px;background:#fff5f5;border-radius:12px;color:var(--red);font-size:13px;font-weight:700;margin-bottom:12px;text-align:center">먼저 공고를 등록해주세요</div>`}
       <textarea id="scout-msg-text" placeholder="추가 메시지 (선택)" style="width:100%;padding:12px;border:1.5px solid #eee;border-radius:12px;font-size:13px;resize:none;height:72px;box-sizing:border-box;margin-bottom:12px;outline:none;font-family:inherit"></textarea>
-      ${activePostings.length ? `<button onclick="sendScoutProposal('${workerKakaoUid}','${workerName.replace(/'/g,"\\'")}',this)" style="width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4E8} 제안 보내기</button>` : ''}
+      ${activePostings.length ? `<button onclick="sendScoutProposal('${workerKakaoUid}','${workerName.replace(/'/g,"\\'")}',this)" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">\u{1F4E8} 제안 보내기</button>` : ''}
       <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:13px;background:#f0f0f0;color:#555;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">취소</button>
     </div>`;
   document.body.appendChild(el);
@@ -15868,14 +15868,14 @@ function renderOwnerSheetJobs(jobs) {
     return `<div onclick="ownerMapInfo('${j.id}')" style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         <span style="font-size:10px;font-weight:700;color:#888;background:#f5f5f5;padding:2px 7px;border-radius:6px">${j.category || ''}</span>
-        ${isUrgent ? '<span style="font-size:10px;font-weight:800;color:#fff;background:#C8102E;padding:2px 6px;border-radius:6px">🔥 급구</span>' : ''}
+        ${isUrgent ? '<span style="font-size:10px;font-weight:800;color:#fff;background:var(--red);padding:2px 6px;border-radius:6px">🔥 급구</span>' : ''}
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:14px;font-weight:800;color:#111">${j.title || ''}</div>
           <div style="font-size:11px;color:#aaa;margin-top:2px">${j.biz_name || ''} &middot; 📍 ${dist}</div>
         </div>
-        <div style="font-size:15px;font-weight:900;color:#C8102E;white-space:nowrap">${wage}</div>
+        <div style="font-size:15px;font-weight:900;color:var(--red);white-space:nowrap">${wage}</div>
       </div>
     </div>`;
   }).join('');
@@ -15946,8 +15946,8 @@ async function openWorkerProfile() {
       <div style="flex:1">
         <div style="font-size:20px;font-weight:900;color:#222">${w.name || '이름없음'}</div>
         <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-          ${w.age ? `<span style="background:#FFF0F0;color:#C8102E;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">만 ${w.age}세</span>` : '<span style="background:#f5f5f5;color:#bbb;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">나이 미입력</span>'}
-          ${w.gender ? `<span style="background:#EFF6FF;color:#3B82F6;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
+          ${w.age ? `<span style="background:#FFF0F0;color:var(--red);font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">만 ${w.age}세</span>` : '<span style="background:#f5f5f5;color:#bbb;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">나이 미입력</span>'}
+          ${w.gender ? `<span style="background:#EFF6FF;color:var(--blue);font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
           <span style="background:#f5f5f5;color:#888;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px">★ ${w.rating || '-'} · ${w.review_count || 0}건</span>
         </div>
       </div>
@@ -15974,18 +15974,18 @@ async function openWorkerProfile() {
       ${infoRow('\u{1F4DD} 자기소개', w.bio)}
       ${infoRow('\u{1F4BC} 경력 / 특기', w.experience)}
       ${w.skills?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F3F7}️ 보유 스킬</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.skills.map(s=>`<span style="background:#fff;border:1.5px solid #eee;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#444">${s}</span>`).join('')}</div></div>` : ''}
-      ${w.languages?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F5E3} 구사 가능 언어</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.languages.map(l=>{const M={ko:'\u{1F1F0}\u{1F1F7} 한국어',en:'\u{1F1FA}\u{1F1F8} 영어',zh:'\u{1F1E8}\u{1F1F3} 중국어',ja:'\u{1F1EF}\u{1F1F5} 일본어',vi:'\u{1F1FB}\u{1F1F3} 베트남어',ru:'\u{1F1F7}\u{1F1FA} 러시아어',mn:'\u{1F1F2}\u{1F1F3} 몽골어'};return `<span style="background:#F0FDF4;color:#16a34a;border:1.5px solid #86EFAC;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${M[l]||l}</span>`;}).join('')}</div></div>` : ''}
-      ${w.vehicles?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F697} 보유 이동수단</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.vehicles.map(v=>{const M={bicycle:'\u{1F6B2} 자전거',kickboard:'\u{1F6F4} 킥보드',motorcycle:'\u{1F6F5} 오토바이',car_compact:'\u{1F697} 차량(소형)',car_midsize:'\u{1F699} 차량(중형)',car_suv:'\u{1F690} 차량(SUV)',car_large:'\u{1F68C} 차량(대형)',truck:'\u{1F69A} 트럭/화물'};return `<span style="background:#EFF6FF;color:#3B82F6;border:1.5px solid #BFDBFE;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${M[v]||v}</span>`;}).join('')}</div></div>` : ''}
+      ${w.languages?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F5E3} 구사 가능 언어</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.languages.map(l=>{const M={ko:'\u{1F1F0}\u{1F1F7} 한국어',en:'\u{1F1FA}\u{1F1F8} 영어',zh:'\u{1F1E8}\u{1F1F3} 중국어',ja:'\u{1F1EF}\u{1F1F5} 일본어',vi:'\u{1F1FB}\u{1F1F3} 베트남어',ru:'\u{1F1F7}\u{1F1FA} 러시아어',mn:'\u{1F1F2}\u{1F1F3} 몽골어'};return `<span style="background:#F0FDF4;color:var(--green);border:1.5px solid #86EFAC;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${M[l]||l}</span>`;}).join('')}</div></div>` : ''}
+      ${w.vehicles?.length ? `<div style="background:#f8f8f8;border-radius:12px;padding:14px"><div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">\u{1F697} 보유 이동수단</div><div style="display:flex;flex-wrap:wrap;gap:6px">${w.vehicles.map(v=>{const M={bicycle:'\u{1F6B2} 자전거',kickboard:'\u{1F6F4} 킥보드',motorcycle:'\u{1F6F5} 오토바이',car_compact:'\u{1F697} 차량(소형)',car_midsize:'\u{1F699} 차량(중형)',car_suv:'\u{1F690} 차량(SUV)',car_large:'\u{1F68C} 차량(대형)',truck:'\u{1F69A} 트럭/화물'};return `<span style="background:#EFF6FF;color:var(--blue);border:1.5px solid #BFDBFE;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${M[v]||v}</span>`;}).join('')}</div></div>` : ''}
     </div>
 
     <!-- 액션 버튼 -->
     ${app.status === 'pending' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
       <button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">⭐ 1차합격</button>
-      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
     </div>` : ''}
     ${app.status === 'reviewing' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
       <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">✅ 최종합격</button>
-      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">📌 보류</button>
       <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">❌ 탈락</button>
     </div>` : ''}
     ${app.status === 'on_hold' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
@@ -15995,7 +15995,7 @@ async function openWorkerProfile() {
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
       <button onclick="openOwnerReport('worker','${w.kakao_uid || w.id || ''}')" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
-      <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:#3B82F6;cursor:pointer;font-weight:700">📥 지원서 저장</button>
+      <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:var(--blue);cursor:pointer;font-weight:700">📥 지원서 저장</button>
     </div>
     <button onclick="document.getElementById('_wp-overlay').remove()" style="width:100%;margin-top:10px;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
   </div>`;
@@ -16096,9 +16096,9 @@ async function printWorkerProfile(appId) {
        ${row('구사 언어', langs)}
        ${row('이동수단', vehicles)}
      </table>
-     ${w.bio ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">자기소개</div><div style="font-size:13px;line-height:1.7;color:#333">${w.bio.replace(/</g,'&lt;')}</div></div>` : ''}
-     ${w.experience ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">경력 / 특기</div><div style="font-size:13px;line-height:1.7;color:#333">${w.experience.replace(/</g,'&lt;')}</div></div>` : ''}
-     ${app.apply_message ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #C8102E;padding-left:8px">지원 메시지</div><div style="font-size:13px;line-height:1.7;color:#333">${app.apply_message.replace(/</g,'&lt;')}</div></div>` : ''}`,
+     ${w.bio ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid var(--red);padding-left:8px">자기소개</div><div style="font-size:13px;line-height:1.7;color:#333">${w.bio.replace(/</g,'&lt;')}</div></div>` : ''}
+     ${w.experience ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid var(--red);padding-left:8px">경력 / 특기</div><div style="font-size:13px;line-height:1.7;color:#333">${w.experience.replace(/</g,'&lt;')}</div></div>` : ''}
+     ${app.apply_message ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid var(--red);padding-left:8px">지원 메시지</div><div style="font-size:13px;line-height:1.7;color:#333">${app.apply_message.replace(/</g,'&lt;')}</div></div>` : ''}`,
     `table{width:100%;border-collapse:collapse}`
   );
 }
@@ -16460,7 +16460,7 @@ function setJobType(type) {
   document.querySelectorAll('.job-type-tab').forEach(btn => {
     const active = btn.dataset.type === type;
     btn.style.background = active ? '#fff' : 'transparent';
-    btn.style.color = active ? '#C8102E' : '#888';
+    btn.style.color = active ? 'var(--red)' : '#888';
     btn.style.boxShadow = active ? '0 1px 4px rgba(0,0,0,0.1)' : 'none';
   });
 
@@ -16535,7 +16535,7 @@ async function renderAdminSection() {
       <span style="flex:1;font-size:13px;font-weight:700;color:#222;word-break:break-all">${a.email}</span>
       ${isSelf
         ? '<span style="font-size:11px;color:#aaa;flex-shrink:0">(본인)</span>'
-        : `<button onclick="removeAdminEmail('${a.email}')" style="padding:4px 10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>`}
+        : `<button onclick="removeAdminEmail('${a.email}')" style="padding:4px 10px;background:#FFF0F0;color:var(--red);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>`}
     </div>`;
   }).join('');
 
@@ -16543,11 +16543,11 @@ async function renderAdminSection() {
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px;margin-bottom:4px">
       <span style="font-size:18px">${c.icon || '📋'}</span>
       <span style="flex:1;font-size:14px;font-weight:700">${c.name}</span>
-      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:var(--red);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
     </div>`).join('');
 
   sec.innerHTML = `
-    <div style="font-size:12px;font-weight:800;color:#3B82F6;margin-bottom:10px;display:flex;align-items:center;gap:6px">🛡️ 어드민 계정 관리</div>
+    <div style="font-size:12px;font-weight:800;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:6px">🛡️ 어드민 계정 관리</div>
     <div id="admin-email-list">${adminRows}</div>
     <div style="display:flex;gap:6px;margin-top:8px">
       <input id="new-admin-email" type="email" placeholder="추가할 이메일" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;font-family:inherit">
@@ -16556,12 +16556,12 @@ async function renderAdminSection() {
 
     <div style="height:1px;background:#eee;margin:16px 0"></div>
 
-    <div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:10px">📂 카테고리 관리 (${categories.length}개)</div>
+    <div style="font-size:12px;font-weight:800;color:var(--purple);margin-bottom:10px">📂 카테고리 관리 (${categories.length}개)</div>
     <div id="admin-cat-list">${catRows || '<div style="font-size:13px;color:#aaa;padding:8px 0">카테고리 없음 — 아래에서 추가하세요</div>'}</div>
     <div style="display:flex;gap:6px;margin-top:8px">
       <input id="admin-cat-icon" placeholder="🍕" style="width:44px;text-align:center;padding:9px 6px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:16px;outline:none;font-family:inherit">
       <input id="admin-cat-name" placeholder="카테고리명" style="flex:1;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;font-family:inherit">
-      <button onclick="addCategory()" style="padding:9px 14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">+ 추가</button>
+      <button onclick="addCategory()" style="padding:9px 14px;background:var(--purple);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">+ 추가</button>
     </div>`;
 
   // 키보드가 올라올 때 입력창 가림 방지 — visualViewport 기반
@@ -16596,7 +16596,7 @@ function renderAdminCatList() {
     <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8f8f8;border-radius:10px;margin-bottom:4px">
       <span style="font-size:18px">${c.icon}</span>
       <span style="flex:1;font-size:14px;font-weight:700">${c.name}</span>
-      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:#C8102E;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+      <button onclick="deleteCategory('${c.name}')" style="padding:4px 10px;background:#FFF0F0;color:var(--red);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
     </div>`).join('');
 }
 
@@ -16749,7 +16749,7 @@ function _updateOwnerCompletion() {
   if (pctEl) pctEl.textContent = pct + '%';
   if (barEl) barEl.style.width = pct + '%';
   if (itemsEl) itemsEl.innerHTML = checks.map(c =>
-    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'#16a34a':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
+    `<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700;background:${c.ok?'#dcfce7':'#f3f4f6'};color:${c.ok?'var(--green)':'#aaa'}">${c.ok?'✓':'+'}${c.label}</span>`
   ).join('');
 }
 
@@ -16765,13 +16765,13 @@ function updateBizDescCounter(textarea) {
     if (hint) hint.style.display = 'none';
     textarea.style.borderColor = '#eee';
   } else if (len < 20) {
-    counter.style.color = '#C8102E';
+    counter.style.color = 'var(--red)';
     if (hint) hint.style.display = 'block';
-    textarea.style.borderColor = '#C8102E';
+    textarea.style.borderColor = 'var(--red)';
   } else {
-    counter.style.color = '#16a34a';
+    counter.style.color = 'var(--green)';
     if (hint) hint.style.display = 'none';
-    textarea.style.borderColor = '#16a34a';
+    textarea.style.borderColor = 'var(--green)';
   }
 }
 
@@ -16779,7 +16779,7 @@ function saveOwnerNotiSetting(key, val) {
   localStorage.setItem('owner_noti_' + key, val ? '1' : '0');
   const track = document.getElementById('owner-noti-track-' + key);
   const thumb = document.getElementById('owner-noti-thumb-' + key);
-  if (track) track.style.background = val ? '#C8102E' : '#ddd';
+  if (track) track.style.background = val ? 'var(--red)' : '#ddd';
   if (thumb) thumb.style.transform  = val ? 'translateX(20px)' : 'translateX(0)';
 }
 function initOwnerNotiToggles() {
@@ -16811,11 +16811,11 @@ function showOwnerAvatarTip(inputId) {
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
         <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:12px">
-          <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           <span style="font-size:14px;color:#374151;font-weight:600">업체·매장 로고 또는 외관 사진</span>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:12px">
-          <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           <span style="font-size:14px;color:#374151;font-weight:600">대표자·직원 사진 (활기찬 분위기)</span>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:12px">
@@ -16823,7 +16823,7 @@ function showOwnerAvatarTip(inputId) {
           <span style="font-size:14px;color:#6b7280;font-weight:500">저작권 위반 이미지 · 타업체 사진</span>
         </div>
       </div>
-      <label style="display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:#C8102E;color:#fff;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;box-sizing:border-box;gap:8px">
+      <label style="display:flex;align-items:center;justify-content:center;width:100%;padding:16px;background:var(--red);color:#fff;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;box-sizing:border-box;gap:8px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         사진 선택하기
         <input type="file" accept="image/*" style="display:none" onchange="document.getElementById('owner-avatar-tip-overlay').remove();uploadOwnerAvatar(this)">
@@ -16985,10 +16985,10 @@ function renderMyPlacesQuick() {
       : p.is_default;
     return `
     <button type="button" onclick="applyPlaceToForm('${p.id}')"
-      style="width:100%;text-align:left;padding:9px 12px;background:${isActive?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${isActive?'#C8102E':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
+      style="width:100%;text-align:left;padding:9px 12px;background:${isActive?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${isActive?'var(--red)':'#eee'};border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px">
       <span style="font-size:16px">\u{1F4CD}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:#C8102E">(기본)</span>':''}${isActive?' <span style="font-size:10px;color:#C8102E">✓ 선택됨</span>':''}</div>
+        <div style="font-size:13px;font-weight:800;color:#222">${p.name}${p.is_default?' <span style="font-size:10px;color:var(--red)">(기본)</span>':''}${isActive?' <span style="font-size:10px;color:var(--red)">✓ 선택됨</span>':''}</div>
         <div style="font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.address||''}</div>
       </div>
     </button>`;
@@ -17032,7 +17032,7 @@ async function loadMannamSpotStatus() {
       document.getElementById('mspot-discount').value = spot.discount_pct || '';
       if (badge) {
         badge.style.display = 'inline-block';
-        if (spot.is_active) { badge.textContent = '운영중'; badge.style.background = '#dcfce7'; badge.style.color = '#16a34a'; }
+        if (spot.is_active) { badge.textContent = '운영중'; badge.style.background = '#dcfce7'; badge.style.color = 'var(--green)'; }
         else { badge.textContent = '승인대기'; badge.style.background = '#fef3c7'; badge.style.color = '#d97706'; }
       }
     } else if (badge) {
@@ -17084,12 +17084,12 @@ function renderMyPlacesList() {
     return;
   }
   el.innerHTML = _bizPlaces.map(p => `
-    <div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:10px 12px;border:1.5px solid ${p.is_default?'#C8102E':'#f0f0f0'}">
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:10px 12px;border:1.5px solid ${p.is_default?'var(--red)':'#f0f0f0'}">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:800;color:#222">${p.name}</div>
         <div style="font-size:11px;color:#aaa;margin-top:2px">${p.address||''}</div>
       </div>
-      ${p.is_default ? '<span style="font-size:10px;font-weight:800;color:#C8102E;background:#FFF0F0;padding:2px 6px;border-radius:6px;white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:#888;background:#f5f5f5;border:none;border-radius:6px;padding:3px 7px;cursor:pointer">기본 설정</button>`}
+      ${p.is_default ? '<span style="font-size:10px;font-weight:800;color:var(--red);background:#FFF0F0;padding:2px 6px;border-radius:6px;white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:#888;background:#f5f5f5;border:none;border-radius:6px;padding:3px 7px;cursor:pointer">기본 설정</button>`}
       <button onclick="deletePlace('${p.id}')" style="font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;line-height:1;flex-shrink:0">✕</button>
     </div>`).join('');
 }
@@ -17288,13 +17288,13 @@ function selectPayMethod(el, method) {
     d.style.border = '1.5px solid #e5e7eb';
     d.style.background = '#fff';
   });
-  el.style.border = '2px solid #C8102E';
+  el.style.border = '2px solid var(--red)';
   el.style.background = '#fff9f9';
 }
 
 const PLAN_DETAILS = {
   basic: {
-    color: '#C8102E',
+    color: 'var(--red)',
     badge: '베이직',
     features: [
       '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">💼 업주 혜택</strong>',
@@ -17304,14 +17304,14 @@ const PLAN_DETAILS = {
       '📋 공고 복사 1클릭 재등록',
       '📊 공고별 조회수 트래킹',
       '⭐ 즐겨찾는 알바생 북마크',
-      '<strong style="font-size:11px;color:#7C3AED;display:block;margin-top:6px;margin-bottom:4px">🤝 바로모임 혜택</strong>',
+      '<strong style="font-size:11px;color:var(--purple);display:block;margin-top:6px;margin-bottom:4px">🤝 바로모임 혜택</strong>',
       '🎪 모임 <strong>월 10개</strong> 개설 (무료: 1개)',
       '🔗 비공개 모임 초대링크 무제한',
       '💬 단체채팅방 개설 무제한',
     ],
   },
   pro: {
-    color: '#7C3AED',
+    color: 'var(--purple)',
     badge: '프로',
     features: [
       '<strong style="font-size:11px;color:#888;display:block;margin-bottom:4px">💼 업주 혜택</strong>',
@@ -17322,7 +17322,7 @@ const PLAN_DETAILS = {
       '📋 공고 복사 1클릭 재등록',
       '📊 공고별 조회수 트래킹',
       '⭐ 즐겨찾는 알바생 북마크',
-      '<strong style="font-size:11px;color:#7C3AED;display:block;margin-top:6px;margin-bottom:4px">🤝 바로모임 혜택</strong>',
+      '<strong style="font-size:11px;color:var(--purple);display:block;margin-top:6px;margin-bottom:4px">🤝 바로모임 혜택</strong>',
       '🎪 모임 <strong>무제한</strong> 개설',
       '🔗 비공개 모임 초대링크 무제한',
       '💬 단체채팅방 개설 무제한',
@@ -17353,11 +17353,11 @@ function renderPlanUI() {
   const p = PLAN_INFO[_currentPlan];
   badge.textContent = p.name;
   badge.style.background = _currentPlan === 'pro' ? '#EDE9FE' : _currentPlan === 'basic' ? '#FFF0F0' : '#e5e7eb';
-  badge.style.color      = _currentPlan === 'pro' ? '#7C3AED' : _currentPlan === 'basic' ? '#C8102E' : '#555';
+  badge.style.color      = _currentPlan === 'pro' ? 'var(--purple)' : _currentPlan === 'basic' ? 'var(--red)' : '#555';
   ['free','basic','pro'].forEach(k => {
     const card = document.getElementById('plan-' + k);
     if (!card) return;
-    card.style.border = k === _currentPlan ? '2px solid #C8102E' : '2px solid transparent';
+    card.style.border = k === _currentPlan ? '2px solid var(--red)' : '2px solid transparent';
     card.style.background = k === _currentPlan ? '#FFF5F5' : '#fff';
   });
 }
@@ -17370,7 +17370,7 @@ function togglePremiumPosting(el) {
   }
   const next = !isOn;
   el.dataset.on = String(next);
-  el.style.background = next ? '#7C3AED' : '#e5e7eb';
+  el.style.background = next ? 'var(--purple)' : '#e5e7eb';
   el.querySelector('div').style.transform = next ? 'translateX(20px)' : 'translateX(0)';
   document.getElementById('f-is-premium').value = String(next);
 }
@@ -17666,13 +17666,13 @@ async function _fetchOwnerNotifications() {
     const name = app.workers?.name || '지원자';
     const title = app.job_postings?.title || '공고';
     if (app.status === 'pending') {
-      items.push({ icon: '\u{1F4E5}', color: '#C8102E', title: `${name}님이 지원했어요`, body: `"${title}"`, time: app.applied_at });
+      items.push({ icon: '\u{1F4E5}', color: 'var(--red)', title: `${name}님이 지원했어요`, body: `"${title}"`, time: app.applied_at });
     } else if (app.status === 'accepted') {
-      items.push({ icon: '\u{2705}', color: '#C8102E', title: `${name}님 합격 처리됨`, body: `"${title}"`, time: app.updated_at });
+      items.push({ icon: '\u{2705}', color: 'var(--red)', title: `${name}님 합격 처리됨`, body: `"${title}"`, time: app.updated_at });
     } else if (app.status === 'cancelled') {
       items.push({ icon: '\u{1F6AB}', color: '#aaa', title: `${name}님이 지원 취소했어요`, body: `"${title}"`, time: app.updated_at });
     } else if (app.status === 'completed') {
-      items.push({ icon: '\u{1F3C1}', color: '#C8102E', title: `${name}님 근무 완료`, body: `"${title}"`, time: app.updated_at });
+      items.push({ icon: '\u{1F3C1}', color: 'var(--red)', title: `${name}님 근무 완료`, body: `"${title}"`, time: app.updated_at });
     } else if (app.status === 'noshow') {
       items.push({ icon: '\u{1F613}', color: '#aaa', title: `${name}님 노쇼 처리됨`, body: `"${title}"`, time: app.updated_at });
     }
@@ -17699,7 +17699,7 @@ async function _fetchOwnerNotifications() {
             const ptitle = postMap[c.post_id] || '게시글';
             const commenter = c.workers?.name || c.businesses?.biz_name || '누군가';
             items.push({
-              id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: '#7C3AED',
+              id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: 'var(--purple)',
               title: `"${ptitle.slice(0,20)}"에 댓글이 달렸어요`,
               body: `${commenter}: "${c.content.slice(0,40)}"`,
               time: c.created_at
@@ -17774,7 +17774,7 @@ async function openOwnerNotifications() {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
             <div style="font-size:14px;font-weight:800;color:#222;line-height:1.4">${it.title}</div>
-            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:#C8102E;flex-shrink:0;display:inline-block"></span>' : ''}
+            ${isNew ? '<span style="min-width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;display:inline-block"></span>' : ''}
           </div>
           ${it.body ? `<div style="font-size:12px;color:#888">${it.body}</div>` : ''}
           ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_ownerTimeAgo(it.time)}</div>` : ''}
@@ -17912,7 +17912,7 @@ function bizPhotoDragStart(e, photoId) {
 function bizPhotoDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
 function bizPhotoDragEnter(e, el) {
   e.preventDefault();
-  if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid #C8102E'; el.style.outlineOffset = '-3px'; }
+  if (!el.contains(e.relatedTarget)) { el.style.outline = '3px solid var(--red)'; el.style.outlineOffset = '-3px'; }
 }
 function bizPhotoDragLeave(e, el) {
   if (!el.contains(e.relatedTarget)) { el.style.outline = ''; el.style.outlineOffset = ''; }
@@ -17968,7 +17968,7 @@ function _setupTouchDnd(grid, swapFn, attr = 'data-photo-id') {
       ghostEl.style.visibility = '';
       grid.querySelectorAll('[draggable]').forEach(c => { c.style.outline = ''; c.style.outlineOffset = ''; });
       const tgt = under?.closest(sel);
-      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid #C8102E'; tgt.style.outlineOffset = '-3px'; }
+      if (tgt && tgt !== srcEl) { tgt.style.outline = '3px solid var(--red)'; tgt.style.outlineOffset = '-3px'; }
     }, { passive: false });
     el.addEventListener('touchend', e => {
       const savedSrc = srcEl;
@@ -18062,7 +18062,7 @@ function switchMannnamTab(tab) {
   document.getElementById('mnm-content-spot').style.display = isMeet ? 'none' : 'block';
   const tMeet = document.getElementById('mnm-tab-meeting');
   const tSpot = document.getElementById('mnm-tab-spot');
-  if (tMeet) { tMeet.style.borderBottomColor = isMeet ? '#7C3AED' : 'transparent'; tMeet.style.color = isMeet ? '#7C3AED' : '#aaa'; tMeet.style.fontWeight = isMeet ? '800' : '700'; }
+  if (tMeet) { tMeet.style.borderBottomColor = isMeet ? 'var(--purple)' : 'transparent'; tMeet.style.color = isMeet ? 'var(--purple)' : '#aaa'; tMeet.style.fontWeight = isMeet ? '800' : '700'; }
   if (tSpot) { tSpot.style.borderBottomColor = isMeet ? 'transparent' : '#f43f5e'; tSpot.style.color = isMeet ? '#aaa' : '#f43f5e'; tSpot.style.fontWeight = isMeet ? '700' : '800'; }
   if (!isMeet) _loadBarospotList();
 }
@@ -18101,7 +18101,7 @@ function _renderLiveButton() {
   if (!btn) return;
   if (_liveShareArrived) { btn.textContent = '✅ ' + t('live_arrived_done'); btn.style.background = '#f5f5f5'; btn.style.color = '#999'; btn.disabled = true; }
   else if (_liveShareCtx) { btn.textContent = '✅ ' + t('live_arrived_btn'); btn.style.background = '#f5f5f5'; btn.style.color = '#666'; btn.disabled = false; }
-  else { btn.textContent = '🚀 ' + t('track_departed_btn'); btn.style.background = '#7C3AED'; btn.style.color = '#fff'; btn.disabled = false; }
+  else { btn.textContent = '🚀 ' + t('track_departed_btn'); btn.style.background = 'var(--purple)'; btn.style.color = '#fff'; btn.disabled = false; }
 }
 
 // 예전엔 "도착했어요"를 눌러도 그냥 공유만 멈추고(status:'stopped') 아무 확인/피드백 없이
@@ -18224,7 +18224,7 @@ function _renderLiveTravelers(travelers) {
     if (typeof t.lat !== 'number' || typeof t.lng !== 'number') return;
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(t.lat, t.lng),
-      content: `<div style="background:#7C3AED;color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.25)">🚗 ${_fmtDistanceM(t.distance_m)}</div>`,
+      content: `<div style="background:var(--purple);color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.25)">🚗 ${_fmtDistanceM(t.distance_m)}</div>`,
       yAnchor: 1,
     });
     overlay.setMap(_trackMap);
@@ -18542,7 +18542,7 @@ function _renderBaromeetCard(m, myStatus) {
     return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${d.getHours()<12?'오전':'오후'} ${((d.getHours()-1)%12)+1}:${String(d.getMinutes()).padStart(2,'0')}`;
   })() : '날짜 미정';
   const tags = Array.isArray(m.tags) ? m.tags : [];
-  const _maleSlots = Array.from({length:maleMax}).map((_,i)=>i<maleCur?'<span style="color:#3b82f6;font-size:14px">●</span>':'<span style="color:#ddd;font-size:14px">○</span>').join('');
+  const _maleSlots = Array.from({length:maleMax}).map((_,i)=>i<maleCur?'<span style="color:var(--blue);font-size:14px">●</span>':'<span style="color:#ddd;font-size:14px">○</span>').join('');
   const _femaleSlots = Array.from({length:femaleMax}).map((_,i)=>i<femaleCur?'<span style="color:#f43f5e;font-size:14px">●</span>':'<span style="color:#ddd;font-size:14px">○</span>').join('');
   return `<div onclick="openBaromeetDetail('${m.id}')" style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #f0f0f0;cursor:pointer">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
@@ -18557,7 +18557,7 @@ function _renderBaromeetCard(m, myStatus) {
         <button onclick="event.stopPropagation();shareBaromeet('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="background:#f5f5f5;border:none;border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" title="공유">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </button>
-        <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:#7C3AED'}">${isFull?'마감':'자리있음'}</span>
+        <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;${isFull?'background:#f5f5f5;color:#bbb':'background:#ede9fe;color:var(--purple)'}">${isFull?'마감':'자리있음'}</span>
       </div>
     </div>
     <!-- 모집현황 -->
@@ -18569,17 +18569,17 @@ function _renderBaromeetCard(m, myStatus) {
       </div>
       <div style="width:1px;background:#eee"></div>
       <div style="flex:1;text-align:center">
-        <div style="font-size:10px;color:#3b82f6;font-weight:800;margin-bottom:4px">남성 ${maleCur}/${maleMax}명</div>
+        <div style="font-size:10px;color:var(--blue);font-weight:800;margin-bottom:4px">남성 ${maleCur}/${maleMax}명</div>
         <div style="letter-spacing:1px">${_maleSlots}</div>
         <div style="font-size:10px;color:#bbb;margin-top:2px">${maleLeft>0?maleLeft+'자리 남음':'마감'}</div>
       </div>
     </div>
     ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:#f5f5f5;color:#666;padding:3px 8px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
     ${myStatus === 'approved'
-      ? `<button onclick="event.stopPropagation();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+      ? `<button onclick="event.stopPropagation();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
       : myStatus === 'pending'
       ? `<button disabled style="width:100%;padding:12px;background:#f5f5f5;color:#aaa;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:default">⏳ 관리자 승인 대기중</button>`
-      : `<button onclick="event.stopPropagation();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
+      : `<button onclick="event.stopPropagation();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:12px;background:${isFull?'#f5f5f5':'var(--purple)'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
   </div>`;
 }
 
@@ -18610,7 +18610,7 @@ function openBaromeetDetail(id) {
     </div>
     <button onclick="_openBaromeetTracking('${m.id}', ${myStatus === 'approved'})" style="display:flex;align-items:center;gap:10px;width:calc(100% - 40px);margin:14px 20px 0;padding:12px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:12px;cursor:pointer;text-align:left">
       <span style="font-size:18px">🗺️</span>
-      <span style="flex:1;font-size:13px;font-weight:800;color:#7C3AED">위치 · 남은 시간 실시간으로 보기</span>
+      <span style="flex:1;font-size:13px;font-weight:800;color:var(--purple)">위치 · 남은 시간 실시간으로 보기</span>
       <span style="color:#c4b5fd;font-size:16px">›</span>
     </button>
     <div style="margin:16px 20px;display:flex;gap:10px;background:#fafafa;border-radius:12px;padding:14px">
@@ -18620,28 +18620,28 @@ function openBaromeetDetail(id) {
       </div>
       <div style="width:1px;background:#eee"></div>
       <div style="flex:1;text-align:center">
-        <div style="font-size:12px;color:#3b82f6;font-weight:800;margin-bottom:4px">남성 ${maleCur}/${maleMax}명</div>
+        <div style="font-size:12px;color:var(--blue);font-weight:800;margin-bottom:4px">남성 ${maleCur}/${maleMax}명</div>
         <div style="font-size:11px;color:#bbb">${maleLeft>0?maleLeft+'자리 남음':'마감'}</div>
       </div>
     </div>
     ${tags.length ? `<div style="margin:0 20px 16px;display:flex;flex-wrap:wrap;gap:4px">${tags.map(t=>`<span style="font-size:11px;background:#f5f5f5;color:#666;padding:4px 9px;border-radius:6px">#${t}</span>`).join('')}</div>` : ''}
     ${m.description ? `<div style="margin:0 20px 16px;background:#f9fafb;border-radius:12px;padding:14px"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">📝 소개</div><div style="font-size:13px;color:#333;line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
     <div style="margin:0 20px 20px;background:#F5F3FF;border-radius:12px;padding:16px">
-      <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:10px">🤝 어떻게 진행되나요?</div>
+      <div style="font-size:13px;font-weight:900;color:var(--purple);margin-bottom:10px">🤝 어떻게 진행되나요?</div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">1</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가 신청 (이용권 또는 포인트 차감)</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">2</span><span style="font-size:12.5px;color:#555;line-height:1.6">신청과 동시에 익명 단체채팅방에 바로 입장</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">3</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅에서 다른 참가자들과 미리 인사하며 정원이 찰 때까지 대화</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">4</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅으로 시간·장소를 맞춰 만나요</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:#7C3AED;flex-shrink:0">5</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가비는 신청 시 이용권/포인트로 이미 결제 완료 — <b>현장 결제는 필요 없어요</b></span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:var(--purple);flex-shrink:0">1</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가 신청 (이용권 또는 포인트 차감)</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:var(--purple);flex-shrink:0">2</span><span style="font-size:12.5px;color:#555;line-height:1.6">신청과 동시에 익명 단체채팅방에 바로 입장</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:var(--purple);flex-shrink:0">3</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅에서 다른 참가자들과 미리 인사하며 정원이 찰 때까지 대화</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:var(--purple);flex-shrink:0">4</span><span style="font-size:12.5px;color:#555;line-height:1.6">채팅으로 시간·장소를 맞춰 만나요</span></div>
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:13px;font-weight:900;color:var(--purple);flex-shrink:0">5</span><span style="font-size:12.5px;color:#555;line-height:1.6">참가비는 신청 시 이용권/포인트로 이미 결제 완료 — <b>현장 결제는 필요 없어요</b></span></div>
       </div>
     </div>
     <div style="padding:0 20px 8px">
       ${myStatus === 'approved'
-        ? `<button onclick="closeBaromeetDetail();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
+        ? `<button onclick="closeBaromeetDetail();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:14px;background:var(--purple);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">💬 익명 단체채팅방 입장</button>`
         : myStatus === 'pending'
         ? `<button disabled style="width:100%;padding:14px;background:#f5f5f5;color:#aaa;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:default">⏳ 관리자 승인 대기중</button>`
-        : `<button onclick="closeBaromeetDetail();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:14px;background:${isFull?'#f5f5f5':'#7C3AED'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
+        : `<button onclick="closeBaromeetDetail();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:14px;background:${isFull?'#f5f5f5':'var(--purple)'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
     </div>
     <div style="padding:0 20px 24px;text-align:center">
       <button onclick="openReportModal('gathering','${m.id}')" style="display:inline-flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:#bbb;cursor:pointer;padding:6px 0;font-weight:600">🚨 이 바로미팅 신고하기</button>
@@ -18914,7 +18914,7 @@ function _resolveBaromeetAvatarUrl(baromeetAvatar, dbPhotoUrl) {
 function _renderBmAvatarEmojiGrid() {
   const grid = document.getElementById('bm-avatar-emoji-grid');
   if (!grid) return;
-  grid.innerHTML = BAROMEET_AVATAR_EMOJIS.map(e => `<button type="button" onclick="selectBaromeetAvatarEmoji('${e}')" style="width:38px;height:38px;border-radius:50%;border:2px solid ${e===_baromeetAvatarEmoji?'#7C3AED':'transparent'};background:#fff;font-size:18px;cursor:pointer;padding:0">${e}</button>`).join('');
+  grid.innerHTML = BAROMEET_AVATAR_EMOJIS.map(e => `<button type="button" onclick="selectBaromeetAvatarEmoji('${e}')" style="width:38px;height:38px;border-radius:50%;border:2px solid ${e===_baromeetAvatarEmoji?'var(--purple)':'transparent'};background:#fff;font-size:18px;cursor:pointer;padding:0">${e}</button>`).join('');
 }
 function selectBaromeetAvatarEmoji(e) {
   _baromeetAvatarEmoji = e;
@@ -18926,9 +18926,9 @@ function setBaromeetAvatarType(type) {
     const btn = document.getElementById('bm-avatar-type-' + t);
     if (!btn) return;
     const active = t === type;
-    btn.style.borderColor = active ? '#7C3AED' : '#e5e7eb';
+    btn.style.borderColor = active ? 'var(--purple)' : '#e5e7eb';
     btn.style.background  = active ? '#F5F3FF' : '#fff';
-    btn.style.color       = active ? '#7C3AED' : '#666';
+    btn.style.color       = active ? 'var(--purple)' : '#666';
   });
   const grid = document.getElementById('bm-avatar-emoji-grid');
   if (grid) grid.style.display = type === 'emoji' ? 'flex' : 'none';
@@ -19054,7 +19054,7 @@ async function openBaroPass() {
 
   openBottomSheet(`
     <div style="text-align:center;padding:4px 20px 8px">
-      <div style="font-size:13px;font-weight:900;color:#7C3AED;margin-bottom:16px">${t('baropass_brand_label')}</div>
+      <div style="font-size:13px;font-weight:900;color:var(--purple);margin-bottom:16px">${t('baropass_brand_label')}</div>
       <div style="background:linear-gradient(135deg,#F5F3FF,#FFF1F2);border:1.5px solid #ede9fe;border-radius:20px;padding:24px 20px">
         ${avatarHtml}
         <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">${nick}</div>
@@ -19070,7 +19070,7 @@ async function openBaroPass() {
         ` : `<div style="font-size:12px;color:#aaa;line-height:1.6">${t('baropass_no_schedule_line1')}<br>${t('baropass_no_schedule_line2')}</div>`}
       </div>
       <div style="font-size:11px;color:#bbb;margin:14px 0 16px;line-height:1.6">${t('baropass_show_hint_line1')}<br>${t('baropass_show_hint_line2')}</div>
-      <button onclick="closeBottomSheet();openQrScanner()" style="width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <button onclick="closeBottomSheet();openQrScanner()" style="width:100%;padding:13px;background:var(--purple);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><rect x="7" y="7" width="4" height="4"/><rect x="13" y="7" width="4" height="4"/><rect x="7" y="13" width="4" height="4"/><rect x="13" y="13" width="4" height="4"/></svg>
         ${t('baropass_scan_btn')}
       </button>
@@ -19149,11 +19149,11 @@ async function _handleBaroPassScan(payload) {
   resultBox.style.display = 'flex';
 
   if (!scannedUserId) {
-    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">⚠️</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">${t('qr_unrecognized')}</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>`;
+    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">⚠️</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">${t('qr_unrecognized')}</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>`;
     return;
   }
   if (scannedUserId === currentUser?.id) {
-    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">🙂</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">${t('qr_own_qr')}</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>`;
+    resultBody.innerHTML = `<div style="font-size:40px;margin-bottom:10px">🙂</div><div style="font-size:15px;font-weight:900;color:#111;margin-bottom:16px">${t('qr_own_qr')}</div><button onclick="_retryQrScan()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>`;
     return;
   }
 
@@ -19172,18 +19172,18 @@ async function _handleBaroPassScan(payload) {
   if (approved) {
     resultBody.innerHTML = `
       <div style="font-size:40px;margin-bottom:8px">✅</div>
-      <div style="font-size:16px;font-weight:900;color:#16a34a;margin-bottom:10px">${t('qr_verified_participant')}</div>
+      <div style="font-size:16px;font-weight:900;color:var(--green);margin-bottom:10px">${t('qr_verified_participant')}</div>
       <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:4px">${nick}${genderLabel ? ` · ${genderLabel}` : ''}${verifiedBadge}</div>
       ${gatheringTitle ? `<div style="font-size:13px;color:#888;margin-bottom:20px">${t('qr_approved_participant_of').replace('{name}', gatheringTitle)}</div>` : '<div style="font-size:13px;color:#888;margin-bottom:20px"></div>'}
       <button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#f5f5f5;color:#666;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">${t('qr_rescan_btn')}</button>
-      <button onclick="closeQrScanner()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('confirm_done_btn')}</button>
+      <button onclick="closeQrScanner()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('confirm_done_btn')}</button>
     `;
   } else {
     resultBody.innerHTML = `
       <div style="font-size:40px;margin-bottom:8px">❌</div>
       <div style="font-size:16px;font-weight:900;color:#dc2626;margin-bottom:10px">${t('qr_not_verified')}</div>
       <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">${t('qr_invalid_or_cancelled_line1')}<br>${t('qr_invalid_or_cancelled_line2')}</div>
-      <button onclick="_retryQrScan()" style="width:100%;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>
+      <button onclick="_retryQrScan()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('qr_rescan_btn')}</button>
     `;
   }
 }
@@ -19238,7 +19238,7 @@ async function openWorkplaceVerify() {
       <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">${t('workverify_doc_label')}</div>
       <input type="file" id="wv-doc-input" accept="image/*" style="display:none" onchange="_wvFilePicked(this)">
       <button type="button" onclick="document.getElementById('wv-doc-input').click()" id="wv-doc-btn" style="width:100%;padding:14px;background:#f8f8f8;border:1.5px dashed #ddd;border-radius:12px;font-size:13px;color:#888;cursor:pointer;margin-bottom:16px">${t('photo_select_btn')}</button>
-      <button onclick="submitWorkplaceVerify()" style="width:100%;padding:14px;background:#7C3AED;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">${t('workverify_send_btn')}</button>
+      <button onclick="submitWorkplaceVerify()" style="width:100%;padding:14px;background:var(--purple);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer">${t('workverify_send_btn')}</button>
     </div>
   `);
 }
@@ -19247,7 +19247,7 @@ let _wvDocFile = null;
 function _wvFilePicked(input) {
   _wvDocFile = input.files[0] || null;
   const btn = document.getElementById('wv-doc-btn');
-  if (btn && _wvDocFile) { btn.textContent = '✅ ' + _wvDocFile.name; btn.style.color = '#16a34a'; btn.style.borderColor = '#86efac'; }
+  if (btn && _wvDocFile) { btn.textContent = '✅ ' + _wvDocFile.name; btn.style.color = 'var(--green)'; btn.style.borderColor = '#86efac'; }
 }
 
 async function submitWorkplaceVerify() {
@@ -19550,13 +19550,13 @@ function switchBasicTab(tab) {
   if (accountPane) accountPane.style.display = isAccount ? 'flex' : 'none';
   if (mannamPane) mannamPane.style.display = isAccount ? 'none' : 'flex';
   if (accountBtn) { accountBtn.style.color = isAccount ? 'var(--red)' : '#aaa'; accountBtn.style.borderBottomColor = isAccount ? 'var(--red)' : 'transparent'; }
-  if (mannamBtn) { mannamBtn.style.color = isAccount ? '#aaa' : '#7C3AED'; mannamBtn.style.borderBottomColor = isAccount ? 'transparent' : '#7C3AED'; }
+  if (mannamBtn) { mannamBtn.style.color = isAccount ? '#aaa' : 'var(--purple)'; mannamBtn.style.borderBottomColor = isAccount ? 'transparent' : 'var(--purple)'; }
 }
 
 function _renderMannamProfilePanel() {
   const sel = _mpDatingProfile;
   const bodyTypes = sel.gender === 'male' ? DATING_BODY_TYPES_MALE : DATING_BODY_TYPES_FEMALE;
-  const chip = (label, active, onclick) => `<button type="button" onclick="${onclick}" style="padding:7px 13px;border-radius:20px;border:1.5px solid ${active?'#7C3AED':'#eee'};font-size:12.5px;font-weight:700;background:${active?'#F5F3FF':'#fff'};color:${active?'#7C3AED':'#888'};cursor:pointer">${label}</button>`;
+  const chip = (label, active, onclick) => `<button type="button" onclick="${onclick}" style="padding:7px 13px;border-radius:20px;border:1.5px solid ${active?'var(--purple)':'#eee'};font-size:12.5px;font-weight:700;background:${active?'#F5F3FF':'#fff'};color:${active?'var(--purple)':'#888'};cursor:pointer">${label}</button>`;
   document.getElementById('mp-dating-job-chips').innerHTML = DATING_JOB_CATEGORIES.map(v => chip(tDatingJob(v), sel.job_category===v, `_mpSelectDatingJob('${v.replace(/'/g,"\\'")}')`)).join('');
   document.getElementById('mp-dating-body-chips').innerHTML = bodyTypes.map(v => chip(tDatingBody(v), sel.body_type===v, `_mpSelectDatingBody('${v}')`)).join('');
   document.getElementById('mp-dating-interest-chips').innerHTML = DATING_INTERESTS.map(v => chip(tDatingInterest(v), sel.interests.includes(v), `_mpToggleDatingInterest('${v}')`)).join('');
@@ -19565,8 +19565,8 @@ function _renderMannamProfilePanel() {
   const pairs = [['E','I'],['S','N'],['T','F'],['J','P']];
   document.getElementById('mp-dating-mbti').innerHTML = pairs.map(([a,b], i) => `
     <div style="flex:1;display:flex;border-radius:10px;overflow:hidden;border:1.5px solid #eee">
-      <button type="button" onclick="_mpSetMbtiPart(${i},'${a}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===a?'#7C3AED':'#fff'};color:${_mpMbtiParts[i]===a?'#fff':'#888'};font-size:13px;font-weight:800;cursor:pointer">${a}</button>
-      <button type="button" onclick="_mpSetMbtiPart(${i},'${b}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===b?'#7C3AED':'#fff'};color:${_mpMbtiParts[i]===b?'#fff':'#888'};font-size:13px;font-weight:800;cursor:pointer">${b}</button>
+      <button type="button" onclick="_mpSetMbtiPart(${i},'${a}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===a?'var(--purple)':'#fff'};color:${_mpMbtiParts[i]===a?'#fff':'#888'};font-size:13px;font-weight:800;cursor:pointer">${a}</button>
+      <button type="button" onclick="_mpSetMbtiPart(${i},'${b}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===b?'var(--purple)':'#fff'};color:${_mpMbtiParts[i]===b?'#fff':'#888'};font-size:13px;font-weight:800;cursor:pointer">${b}</button>
     </div>`).join('');
 
   const preview = document.getElementById('mp-photo-preview');
@@ -19577,11 +19577,11 @@ function _renderMannamProfilePanel() {
   const avatarBtn = document.getElementById('mp-photo-mode-avatar');
   const customBtn = document.getElementById('mp-photo-mode-custom');
   const isAvatar = _mpDatingPhotoMode === 'avatar';
-  avatarBtn.style.borderColor = isAvatar ? '#7C3AED' : '#eee';
-  avatarBtn.style.color = isAvatar ? '#7C3AED' : '#666';
+  avatarBtn.style.borderColor = isAvatar ? 'var(--purple)' : '#eee';
+  avatarBtn.style.color = isAvatar ? 'var(--purple)' : '#666';
   avatarBtn.style.background = isAvatar ? '#F5F3FF' : '#fff';
-  customBtn.style.borderColor = !isAvatar ? '#7C3AED' : '#eee';
-  customBtn.style.color = !isAvatar ? '#7C3AED' : '#666';
+  customBtn.style.borderColor = !isAvatar ? 'var(--purple)' : '#eee';
+  customBtn.style.color = !isAvatar ? 'var(--purple)' : '#666';
   customBtn.style.background = !isAvatar ? '#F5F3FF' : '#fff';
 }
 function _mpSelectDatingJob(v) { _mpDatingProfile.job_category = _mpDatingProfile.job_category===v ? null : v; _renderMannamProfilePanel(); }
@@ -19647,7 +19647,7 @@ async function saveCombinedProfile() {
 async function openSpotPassSheet(gender) {
   const all = await loadBarospotPassProducts();
   const products = all[gender] || [];
-  const color = gender === 'female' ? '#f43f5e' : '#3b82f6';
+  const color = gender === 'female' ? '#f43f5e' : 'var(--blue)';
   const bgColor = gender === 'female' ? '#fff0f4' : '#eff6ff';
   let html = `<div style="padding:20px 16px 0">
     <div style="font-size:16px;font-weight:900;color:#111;margin-bottom:16px">${t('pass_purchase_title')}</div>
@@ -19675,7 +19675,7 @@ function selectSpotPass(id) {
     el.style.border = '2px solid #e5e7eb';
   });
   const el = document.getElementById('ssp-' + id);
-  const color = _spotGender === 'female' ? '#f43f5e' : '#3b82f6';
+  const color = _spotGender === 'female' ? '#f43f5e' : 'var(--blue)';
   if (el) el.style.border = `2px solid ${color}`;
   _selectedSpotPass = id;
   const btn = document.getElementById('ssp-buy-btn');
@@ -19856,11 +19856,11 @@ async function _loadFemaleApplications() {
       </div>
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')} · ${whenText}</div>` : ''}
       ${canPick ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <div style="font-size:11px;color:#7C3AED;font-weight:700">${t('tap_to_pick_candidate_hint')}${maleAppCount[a.event_id] ? t('male_applicants_count_suffix').replace('{n}', maleAppCount[a.event_id]) : ''}</div>
-        <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:700;color:#3b82f6;background:#eff6ff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">${t('share_short_btn')}</button>
+        <div style="font-size:11px;color:var(--purple);font-weight:700">${t('tap_to_pick_candidate_hint')}${maleAppCount[a.event_id] ? t('male_applicants_count_suffix').replace('{n}', maleAppCount[a.event_id]) : ''}</div>
+        <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:700;color:var(--blue);background:#eff6ff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">${t('share_short_btn')}</button>
       </div>` : ''}
       ${canTrack ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <div style="font-size:11px;color:#7C3AED;font-weight:700">${t('location_distance_hint')}</div>
+        <div style="font-size:11px;color:var(--purple);font-weight:700">${t('location_distance_hint')}</div>
         ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
           ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
           : `<span style="font-size:10.5px;color:#bbb">${t('cancel_deadline_passed_notice')}</span>`}
@@ -19966,10 +19966,10 @@ async function openBarospotCandidates(applicationId) {
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:800;color:#222">${[c.age ? t('age_full_years').replace('{n}', c.age) : null, c.height_cm?c.height_cm+'cm':null, tDatingJob(c.job_category), tDatingBody(c.body_type), c.mbti].filter(Boolean).join(' · ') || t('age_unknown_label')}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">${t('noshow_count_suffix').replace('{n}', c.noshow_count)}</span>` : ''}</div>
-              ${c.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${c.interests.slice(0,5).map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
+              ${c.interests?.length ? `<div style="font-size:11px;color:var(--blue);margin-top:2px">${c.interests.slice(0,5).map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
               <div style="font-size:12px;color:#666;margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.bio ? c.bio.replace(/</g,'&lt;') : t('bio_empty_notice')}</div>
             </div>
-            <button onclick="selectBarospotCandidate('${applicationId}','${c.application_id}')" style="flex-shrink:0;padding:9px 14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${t('select_btn')}</button>
+            <button onclick="selectBarospotCandidate('${applicationId}','${c.application_id}')" style="flex-shrink:0;padding:9px 14px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${t('select_btn')}</button>
           </div>
         `).join('')}
       </div>
@@ -20158,11 +20158,11 @@ async function loadUpcomingBarospotOffers() {
     const booked = bookedIds.has(ev.id);
     return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;gap:10px">
       <div style="min-width:0">
-        <span style="font-size:9.5px;font-weight:800;color:#3b82f6;background:#eff6ff;padding:2px 7px;border-radius:6px;margin-bottom:4px;display:inline-block">${t('upcoming_badge')}</span>
+        <span style="font-size:9.5px;font-weight:800;color:var(--blue);background:#eff6ff;padding:2px 7px;border-radius:6px;margin-bottom:4px;display:inline-block">${t('upcoming_badge')}</span>
         <div style="font-size:13px;font-weight:800;color:#222">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')}</div>
         <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · ${t('female_assign_waiting_short')}</div>
       </div>
-      <button onclick="toggleBarospotPrebook('${ev.id}', this)" data-booked="${booked}" style="flex-shrink:0;padding:9px 14px;background:${booked ? '#eef2ff' : '#3b82f6'};color:${booked ? '#6366f1' : '#fff'};border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${booked ? t('prebooked_btn_label') : t('prebook_btn_label')}</button>
+      <button onclick="toggleBarospotPrebook('${ev.id}', this)" data-booked="${booked}" style="flex-shrink:0;padding:9px 14px;background:${booked ? '#eef2ff' : 'var(--blue)'};color:${booked ? '#6366f1' : '#fff'};border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">${booked ? t('prebooked_btn_label') : t('prebook_btn_label')}</button>
     </div>`;
   }).join('');
 }
@@ -20175,7 +20175,7 @@ async function toggleBarospotPrebook(eventId, btnEl) {
     if (error) { showToast(t('error_prefix_short') + error.message); return; }
     btnEl.dataset.booked = 'false';
     btnEl.textContent = t('prebook_btn_label');
-    btnEl.style.background = '#3b82f6';
+    btnEl.style.background = 'var(--blue)';
     btnEl.style.color = '#fff';
     showToast(t('prebook_cancelled_toast'));
   } else {
@@ -20243,7 +20243,7 @@ async function _loadMaleApplications() {
       ${ev ? `<div style="font-size:12px;color:#666">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')} · ${whenText}</div>` : ''}
       ${previewHtml}
       ${canTrack ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <div style="font-size:11px;color:#3b82f6;font-weight:700">${t('location_distance_hint')}</div>
+        <div style="font-size:11px;color:var(--blue);font-weight:700">${t('location_distance_hint')}</div>
         ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
           ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:700;color:#ef4444;background:#fef2f2;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
           : `<span style="font-size:10.5px;color:#bbb">${t('cancel_deadline_passed_notice')}</span>`}
@@ -20347,7 +20347,7 @@ function _renderSpotEventCard(ev, preview) {
         </div>
         <div style="min-width:0;flex:1">
           <div style="font-size:12.5px;font-weight:800;color:#333">${[preview.age ? preview.age+t('years_old_suffix') : null, tDatingJob(preview.job_category), tDatingBody(preview.body_type)].filter(Boolean).join(' · ') || t('profile_preparing_notice')}</div>
-          ${preview.interests?.length ? `<div style="font-size:11px;color:#3b82f6;margin-top:2px">${preview.interests.slice(0,4).map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
+          ${preview.interests?.length ? `<div style="font-size:11px;color:var(--blue);margin-top:2px">${preview.interests.slice(0,4).map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
           ${preview.bio ? `<div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${preview.bio.replace(/</g,'&lt;')}</div>` : ''}
         </div>
       </div>
@@ -20367,7 +20367,7 @@ function _renderSpotEventCard(ev, preview) {
     : '';
   return `<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1.5px solid #bfdbfe;overflow:hidden">
     <div style="margin-bottom:10px">
-      <span style="font-size:9.5px;font-weight:800;color:#fff;background:#3b82f6;padding:2px 7px;border-radius:6px;margin-bottom:5px;display:inline-block">${t('recruiting_apply_available_badge')}</span>
+      <span style="font-size:9.5px;font-weight:800;color:#fff;background:var(--blue);padding:2px 7px;border-radius:6px;margin-bottom:5px;display:inline-block">${t('recruiting_apply_available_badge')}</span>
       <div style="font-size:15px;font-weight:900;color:#111;margin-bottom:3px">${r.name || t('restaurant_info_confirming')}</div>
       <div style="font-size:12px;color:#888">${whenText}</div>
       ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">📍 ${ev.address}</div>` : ''}
@@ -20377,8 +20377,8 @@ function _renderSpotEventCard(ev, preview) {
     ${profileHtml}
     ${r.menu_description ? `<div style="font-size:12px;color:#666;background:#f8f9fa;border-radius:8px;padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:13px;font-weight:800;color:#3b82f6">${(r.base_price||0).toLocaleString()}${t('won_suffix')} <span style="font-size:11px;color:#aaa;font-weight:400">${t('meal_included_suffix')}</span></div>
-      <button onclick="applySpotEvent('${ev.id}', this)" style="padding:9px 18px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">${t('barospot_apply_btn')}</button>
+      <div style="font-size:13px;font-weight:800;color:var(--blue)">${(r.base_price||0).toLocaleString()}${t('won_suffix')} <span style="font-size:11px;color:#aaa;font-weight:400">${t('meal_included_suffix')}</span></div>
+      <button onclick="applySpotEvent('${ev.id}', this)" style="padding:9px 18px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">${t('barospot_apply_btn')}</button>
     </div>
   </div>`;
 }
@@ -20580,7 +20580,7 @@ async function _renderBarospotInterestSection(eventId) {
   } else if (interest.status === 'accepted') {
     textEl.textContent = t('mutual_interest_desc');
     btn.textContent = t('barospot_chat_btn_label');
-    btn.style.background = '#7C3AED'; btn.style.color = '#fff';
+    btn.style.background = 'var(--purple)'; btn.style.color = '#fff';
     btn.onclick = () => openBarospotChatRoom(eventId);
   } else {
     textEl.textContent = t('barospot_ended_desc');
@@ -20649,7 +20649,7 @@ function _toggleBarospotReviewTag(btn, tag) {
     btn.style.background = '#fff'; btn.style.color = '#666'; btn.style.borderColor = '#eee';
   } else {
     _bspReviewTags.add(tag);
-    btn.style.background = '#7C3AED'; btn.style.color = '#fff'; btn.style.borderColor = '#7C3AED';
+    btn.style.background = 'var(--purple)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--purple)';
   }
 }
 async function submitBarospotReview() {
@@ -20807,7 +20807,7 @@ function _barospotChatBubbleHtml(m) {
   const isImg = typeof m.content === 'string' && m.content.startsWith('[img]');
   const bubbleContent = isImg
     ? `<img src="${m.content.slice(5)}" style="max-width:200px;border-radius:12px;display:block">`
-    : `<div style="max-width:240px;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;word-break:break-word;background:${isMine?'#7C3AED':'#fff'};color:${isMine?'#fff':'#222'};border:${isMine?'none':'1px solid #eee'}">${(m.content||'').replace(/</g,'&lt;')}</div>`;
+    : `<div style="max-width:240px;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;word-break:break-word;background:${isMine?'var(--purple)':'#fff'};color:${isMine?'#fff':'#222'};border:${isMine?'none':'1px solid #eee'}">${(m.content||'').replace(/</g,'&lt;')}</div>`;
   const avatar = !isMine ? `<div style="width:26px;height:26px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:13px">${m.sender_photo_url ? `<img src="${m.sender_photo_url}" style="width:100%;height:100%;object-fit:cover">` : '👤'}</div>` : '';
   return `<div style="display:flex;flex-direction:column;${isMine?'align-items:flex-end':'align-items:flex-start'};margin-bottom:10px">
     <div style="display:flex;align-items:flex-end;gap:6px;flex-direction:${isMine?'row-reverse':'row'}">
@@ -20904,7 +20904,7 @@ function openBarospotProfileReveal() {
       </div>
       <div style="font-size:18px;font-weight:900;color:#111;margin-bottom:4px">${p.name || t('name_unknown_label')}</div>
       <div style="font-size:13px;color:#888;margin-bottom:14px">${[p.age?p.age+t('years_old_suffix'):null, p.height_cm?p.height_cm+'cm':null, tDatingJob(p.job_category), tDatingBody(p.body_type), p.mbti].filter(Boolean).join(' · ')}</div>
-      ${p.interests?.length ? `<div style="font-size:12.5px;color:#7C3AED;margin-bottom:14px">${p.interests.map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
+      ${p.interests?.length ? `<div style="font-size:12.5px;color:var(--purple);margin-bottom:14px">${p.interests.map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
       ${p.bio ? `<div style="text-align:left;background:#f8f9fa;border-radius:12px;padding:14px;font-size:13px;color:#444;line-height:1.6">${p.bio.replace(/</g,'&lt;')}</div>` : ''}
     </div>`;
   openBottomSheet(html);
@@ -20990,15 +20990,15 @@ function selectChargeMethod(method) {
   _selectedChargeMethod = method;
   document.querySelectorAll('.pc-method-btn').forEach(b => {
     const isSelected = b.dataset.method === method;
-    b.style.borderColor  = isSelected ? '#7C3AED' : '#e0e0e0';
+    b.style.borderColor  = isSelected ? 'var(--purple)' : '#e0e0e0';
     b.style.background   = isSelected ? '#f3e8ff' : '#fff';
-    b.style.color        = isSelected ? '#7C3AED' : '#555';
+    b.style.color        = isSelected ? 'var(--purple)' : '#555';
     b.style.fontWeight   = isSelected ? '900' : '600';
   });
   const nextBtn = document.getElementById('pc-method-next');
   if (nextBtn) {
     nextBtn.disabled = false;
-    nextBtn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px';
+    nextBtn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px';
     nextBtn.textContent = method === 'cash' ? '계좌이체로 충전 ›' : '토스로 결제 ›';
   }
 }
@@ -21018,7 +21018,7 @@ function _buildChargeAmtGrid() {
     return `<button class="pc-amt-btn" data-tier="${i}" onclick="selectChargeTier(this,${i})"
       style="border:1.5px solid ${border};border-radius:12px;padding:10px 6px;background:${bg};cursor:pointer;text-align:center;line-height:1.3;transition:all .15s;position:relative">
       <div style="font-size:13px;font-weight:900;color:#333">₩${t.amount.toLocaleString()}</div>
-      <div style="font-size:12px;font-weight:900;color:#7C3AED;margin-top:2px">${t.total.toLocaleString()}P</div>
+      <div style="font-size:12px;font-weight:900;color:var(--purple);margin-top:2px">${t.total.toLocaleString()}P</div>
       ${bonusLabel}
     </button>`;
   }).join('');
@@ -21031,7 +21031,7 @@ function _buildChargeAmtGrid() {
         style="flex:1;border:1.5px solid #e0e0e0;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;outline:none">
       <span style="font-size:12px;color:#888;flex-shrink:0">원</span>
     </div>
-    <div id="pc-custom-preview" style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:5px;min-height:16px"></div>
+    <div id="pc-custom-preview" style="font-size:11px;color:var(--purple);font-weight:700;margin-top:5px;min-height:16px"></div>
   </div>`;
   grid.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">${tierHtml}</div>${customHtml}`;
 
@@ -21049,7 +21049,7 @@ function selectChargeTier(btn, tierIdx) {
   document.querySelectorAll('.pc-amt-btn').forEach(b => {
     b.style.borderColor = '#e0e0e0'; b.style.background = '#fff';
   });
-  btn.style.borderColor = '#7C3AED'; btn.style.background = '#f3e8ff';
+  btn.style.borderColor = 'var(--purple)'; btn.style.background = '#f3e8ff';
   _updateAmtProceedBtn();
 }
 
@@ -21096,7 +21096,7 @@ function _updateAmtProceedBtn() {
   }
   const totalPts = _currentChargeTotalPts();
   btn.disabled = false;
-  btn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer';
+  btn.style.cssText = 'width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--purple),#a855f7);color:#fff;font-size:15px;font-weight:900;cursor:pointer';
   btn.textContent = `💎 ${totalPts.toLocaleString()}P 충전 (₩${_selectedChargeAmt.toLocaleString()})`;
 }
 
@@ -21170,7 +21170,7 @@ function _updateCashBtn() {
   if (!btn) return;
   const hasName = ni?.value.trim().length > 0;
   btn.disabled = !hasName;
-  btn.style.background = hasName ? 'linear-gradient(135deg,#16a34a,#22c55e)' : '#e0e0e0';
+  btn.style.background = hasName ? 'linear-gradient(135deg,var(--green),#22c55e)' : '#e0e0e0';
   btn.style.color = hasName ? '#fff' : '#aaa';
   btn.style.cursor = hasName ? 'pointer' : 'not-allowed';
 }
@@ -21233,7 +21233,7 @@ async function openPointHistory() {
           <div style="font-size:13px;font-weight:700;color:#222">${(t.description || (isPlus ? '포인트 충전' : '포인트 사용')).replace(/</g,'&lt;')}</div>
           <div style="font-size:11px;color:#aaa;margin-top:2px">${dtStr} · 잔액 ${(t.balance_after||0).toLocaleString()}P</div>
         </div>
-        <div style="font-size:15px;font-weight:900;color:${isPlus ? '#7C3AED' : '#C8102E'}">${isPlus ? '+' : ''}${t.amount.toLocaleString()}P</div>
+        <div style="font-size:15px;font-weight:900;color:${isPlus ? 'var(--purple)' : 'var(--red)'}">${isPlus ? '+' : ''}${t.amount.toLocaleString()}P</div>
       </div>`;
     }).join('');
   } catch(_) {
