@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '584';
+  const _APP_V = '585';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -14731,6 +14731,10 @@ function searchKakaoFallback(query) {
       const r = result[0];
       document.getElementById('f-lat').value = r.y;
       document.getElementById('f-lng').value = r.x;
+      // 🔴 찾은 주소를 화면(location-result)에만 보여주고 f-address 에는 안 넣고 있었다
+      // (2026-07-28 수정). 그래서 이 폴백 경로로 위치를 잡으면 좌표만 저장되고
+      // address 는 null 로 들어갔다. 다른 위치선택 경로들은 전부 f-address 를 채운다.
+      document.getElementById('f-address').value = r.address_name;
       document.getElementById('location-result').textContent = '\u{1F4CD} ' + r.address_name;
       document.getElementById('location-result').style.display = 'block';
       document.getElementById('place-results').style.display = 'none';
@@ -14783,6 +14787,10 @@ async function submitPosting() {
   const duration = isErrand ? errandDuration : (startTime && endTime ? Math.round((endTime - startTime) / 360000) / 10 : null);
 
   if (!title) { showToast(t('ownr_enter_job_title_notice')); return; }
+  // 상세 설명 필수 (2026-07-28). 검색 색인용 JobPosting 스키마는 description 이 필수라
+  // 비어 있으면 그 공고는 검색결과에 아예 못 뜬다. DB 실측상 10/25 만 채워져 있었다.
+  // 지원자 입장에서도 업무 내용 없는 공고는 판단이 안 된다. 15자는 한 문장 분량.
+  if (!desc || desc.length < 15) { showToast(t('ownr_enter_job_desc_notice')); return; }
   if (_hasBadWord(title) || (desc && _hasBadWord(desc))) { showToast(t('ownr_forbidden_expression_notice')); return; }
   if (_hasBadWord(title) || _hasBadWord(desc)) { showToast(t('ownr_forbidden_word_notice')); return; }
   if (wageType === 'other') {
@@ -14836,6 +14844,18 @@ async function submitPosting() {
 
   const addrText = document.getElementById('f-address')?.value.trim()
     || document.getElementById('f-direct-addr')?.value.trim() || null;
+
+  // 근무지 주소 필수 (비대면 제외, 2026-07-28). 좌표만 있으면 지도엔 찍히지만
+  // 검색엔진에 내보내는 JobPosting 의 jobLocation 을 만들 수 없어 색인에서 빠진다.
+  // 위쪽에서 이미 좌표를 요구하고 있으므로, 위치를 제대로 고른 경우엔 위치선택
+  // 경로들이 f-address 를 채워줘서 이 검증에 걸리지 않는다.
+  // ⚠️ ownr_enter_address_notice(주소 "검색창"이 비었을 때 쓰는 기존 키)와 헷갈리지 말 것.
+  //    여기는 공고 저장 시점의 근무지 주소 검증이라 별도 키를 쓴다.
+  if (!_isRemote && !addrText) {
+    showToast(t('ownr_enter_job_address_notice'));
+    document.getElementById('f-address')?.focus();
+    return;
+  }
 
   const payload = {
     business_id: bizRecord.id,
@@ -15163,7 +15183,11 @@ function copyPosting(jobId) {
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat;
   document.getElementById('f-lng').value = p.lng;
-  document.getElementById('f-address').value = '';
+  // 🔴 여긴 원래 ''로 비웠다(2026-07-28 수정). 좌표(lat/lng)는 복사해오면서 주소 텍스트만
+  // 지우니까, 복사로 올린 공고는 전부 address=null 로 저장됐다. 아래 showMiniMap 이
+  // 이미 p.address 를 쓰고 있는 걸 보면 원래 의도도 주소를 들고 오는 쪽이었다.
+  // (DB 실측에서 address 가 14/25 밖에 안 차 있던 주된 경로 중 하나)
+  document.getElementById('f-address').value = p.address || '';
   if (p.start_time) {
     const s = new Date(p.start_time);
     setTimeSelects('start', s);

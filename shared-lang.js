@@ -130,6 +130,8 @@ const STRENGTH_LABELS = {
 
 const TRANSLATIONS = {
   ko: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'상세 설명을 15자 이상 입력해주세요', ownr_enter_job_address_notice:'근무지 주소를 입력해주세요',
     // 내비게이션 (알바생 앱)
     nav_home:'홈', nav_map:'지도', nav_swipe:'스와이프', nav_applications:'바로', nav_chats:'채팅', nav_profile:'마이페이지',
     // 서브탭
@@ -1899,6 +1901,8 @@ const TRANSLATIONS = {
     chat_with_name:'{name}님과 채팅', chat_with_tutor:'{name} 강사님과 상담', no_data_label:'없음', grade_quick_short:'⚡ 번개',
   },
   en: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'Please enter a job description (at least 15 characters)', ownr_enter_job_address_notice:'Please enter the work location address',
     nav_home:'Home', nav_map:'Map', nav_swipe:'Swipe', nav_applications:'Applied', nav_chats:'Chat', nav_profile:'My Page',
     tab_status:'Applications', tab_bookmarks:'🔖 Bookmarks',
     status_pending:'Pending', status_accepted:'✅ Accepted', status_rejected:'❌ Rejected', status_cancelled:'Cancelled',
@@ -3647,6 +3651,8 @@ const TRANSLATIONS = {
     chat_with_name:'Chat with {name}', chat_with_tutor:'Consult with Tutor {name}', no_data_label:'None', grade_quick_short:'⚡ Flash',
   },
   zh: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'请输入至少15个字的详细说明', ownr_enter_job_address_notice:'请输入工作地点地址',
     nav_home:'首页', nav_map:'地图', nav_swipe:'滑动', nav_applications:'我的申请', nav_chats:'聊天', nav_profile:'我的',
     tab_status:'申请状态', tab_bookmarks:'🔖 收藏',
     status_pending:'审核中', status_accepted:'✅ 录用', status_rejected:'❌ 拒绝', status_cancelled:'已取消',
@@ -5395,6 +5401,8 @@ const TRANSLATIONS = {
     chat_with_name:'与{name}聊天', chat_with_tutor:'与{name}老师咨询', no_data_label:'无', grade_quick_short:'⚡ 闪电',
   },
   ja: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'詳細説明を15文字以上入力してください', ownr_enter_job_address_notice:'勤務地の住所を入力してください',
     nav_home:'ホーム', nav_map:'地図', nav_swipe:'スワイプ', nav_applications:'応募履歴', nav_chats:'チャット', nav_profile:'マイページ',
     tab_status:'応募状況', tab_bookmarks:'🔖 ブックマーク',
     status_pending:'審査中', status_accepted:'✅ 合格', status_rejected:'❌ 不合格', status_cancelled:'キャンセル',
@@ -7143,6 +7151,8 @@ const TRANSLATIONS = {
     chat_with_name:'{name}さんとのチャット', chat_with_tutor:'{name}講師との相談', no_data_label:'なし', grade_quick_short:'⚡ 稲妻',
   },
   vi: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'Vui lòng nhập mô tả chi tiết từ 15 ký tự trở lên', ownr_enter_job_address_notice:'Vui lòng nhập địa chỉ nơi làm việc',
     nav_home:'Trang chủ', nav_map:'Bản đồ', nav_swipe:'Vuốt', nav_applications:'Đã ứng tuyển', nav_chats:'Chat', nav_profile:'Trang của tôi',
     tab_status:'Trạng thái', tab_bookmarks:'🔖 Đã lưu',
     status_pending:'Đang xét', status_accepted:'✅ Đã nhận', status_rejected:'❌ Từ chối', status_cancelled:'Đã hủy',
@@ -8891,6 +8901,8 @@ const TRANSLATIONS = {
     chat_with_name:'Trò chuyện với {name}', chat_with_tutor:'Tư vấn với gia sư {name}', no_data_label:'Chưa có', grade_quick_short:'⚡ Flash',
   },
   mn: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'Дэлгэрэнгүй тайлбарыг 15-аас дээш тэмдэгтээр бичнэ үү', ownr_enter_job_address_notice:'Ажлын байрны хаягийг оруулна уу',
     nav_home:'Нүүр', nav_map:'Газрын зураг', nav_swipe:'Свайп', nav_applications:'Өргөдлүүд', nav_chats:'Чат', nav_profile:'Миний хуудас',
     tab_status:'Өргөдлийн байдал', tab_bookmarks:'🔖 Хадгалсан',
     status_pending:'Хянаж байна', status_accepted:'✅ Авсан', status_rejected:'❌ Татгалзсан', status_cancelled:'Цуцлагдсан',
@@ -10639,6 +10651,8 @@ const TRANSLATIONS = {
     chat_with_name:'{name}-тай чат', chat_with_tutor:'Багш {name}-тай зөвлөгөө', no_data_label:'Байхгүй', grade_quick_short:'⚡ Аянга',
   },
   ru: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'Введите описание не короче 15 символов', ownr_enter_job_address_notice:'Укажите адрес места работы',
     nav_home:'Главная', nav_map:'Карта', nav_swipe:'Свайп', nav_applications:'Заявки', nav_chats:'Чат', nav_profile:'Профиль',
     tab_status:'Мои заявки', tab_bookmarks:'🔖 Закладки',
     status_pending:'На рассмотрении', status_accepted:'✅ Принят', status_rejected:'❌ Отказ', status_cancelled:'Отменено',
@@ -12387,6 +12401,8 @@ const TRANSLATIONS = {
     chat_with_name:'Чат с {name}', chat_with_tutor:'Консультация с репетитором {name}', no_data_label:'Нет', grade_quick_short:'⚡ Молния',
   },
   np: {
+    // 공고 등록 필수 검증 (2026-07-28) - JobPosting 스키마 필수값 확보용
+    ownr_enter_job_desc_notice:'कृपया कम्तीमा १५ अक्षरको विस्तृत विवरण लेख्नुहोस्', ownr_enter_job_address_notice:'कृपया कामको ठाउँको ठेगाना लेख्नुहोस्',
     nav_home:'घर', nav_map:'नक्सा', nav_swipe:'स्वाइप', nav_applications:'आवेदन', nav_chats:'कुराकानी', nav_profile:'मेरो पेज',
     tab_status:'आवेदनको स्थिति', tab_bookmarks:'🔖 बुकमार्क',
     status_pending:'समीक्षाधीन', status_accepted:'✅ स्वीकृत', status_rejected:'❌ अस्वीकृत', status_cancelled:'रद्द',
