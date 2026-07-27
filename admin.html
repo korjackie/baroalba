@@ -1027,8 +1027,21 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
   const authEmail = (session.user.email || session.user.user_metadata?.email || '').toLowerCase().trim();
-  const { data: adminRow } = await db.from('app_admins').select('email').ilike('email', authEmail).maybeSingle();
-  if (!adminRow) {
+  // 2026-07-28: 예전엔 여기서 app_admins 테이블을 직접 읽어 관리자 여부를 판정했다.
+  // 그런데 그 테이블에만 RLS가 없어서 공개 anon 키로 SELECT/INSERT/DELETE가 전부
+  // 뚫려 있었다 - 아무나 자기 이메일을 관리자로 INSERT하면 이 관문을 통과했다.
+  // (docs/260728_fix_app_admins_rls.sql 로 테이블을 잠그고 함수만 노출한다)
+  // 이제 "내가 관리자인가" boolean만 받아오고, 명단 자체는 클라이언트에 주지 않는다.
+  // 함수가 아직 없는 환경(SQL 적용 전)에서는 예전 방식으로 폴백해 관리자가 잠기지 않게 한다.
+  let isAdmin = false;
+  const { data: rpcAdmin, error: rpcErr } = await db.rpc('is_app_admin');
+  if (!rpcErr) {
+    isAdmin = rpcAdmin === true;
+  } else {
+    const { data: adminRow } = await db.from('app_admins').select('email').ilike('email', authEmail).maybeSingle();
+    isAdmin = !!adminRow;
+  }
+  if (!isAdmin) {
     alert('관리자 권한이 없습니다. (' + authEmail + ')');
     location.href = '/login.html';
     return;
