@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '581';
+  const _APP_V = '582';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -688,8 +688,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (isCommunityMode) {
       setTimeout(() => openCommunityPanel(), 800);
     }
-  } else if (localStorage.getItem('baroalba_guest') || new URLSearchParams(location.search).get('job')) {
+  } else if (localStorage.getItem('baroalba_guest') || new URLSearchParams(location.search).get('job') || new URLSearchParams(location.search).get('guest')) {
     isGuest = true;
+    // 랜딩(index.html)의 "가입 없이 둘러보기" CTA가 ?guest=1로 들어온다. 이게 없으면
+    // 랜딩에서 넘어온 신규 방문자는 세션도 플래그도 없어 아래 goToLogin()으로 튕겼고,
+    // 랜딩이 내건 "가입 없이 둘러볼 수 있습니다"가 그대로 거짓말이 됐음.
+    // 로그인 화면 enterAsGuest()와 똑같이 플래그를 남겨 새로고침·앱 내 재진입에도 유지.
+    // (?job= 딥링크는 종전대로 일회성이므로 플래그를 남기지 않는다)
+    if (new URLSearchParams(location.search).get('guest')) localStorage.setItem('baroalba_guest', '1');
     document.getElementById('guest-banner').classList.add('show');
     // 프로필 탭을 "로그인"으로 강조
     const profileNav = document.querySelector('.nav-item:last-child');

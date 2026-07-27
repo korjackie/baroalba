@@ -1,13 +1,380 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>바로알바</title>
-  <!-- index.html은 실제 앱 진입점(/바로알바.html)로 보내는 용도만 함 - 조건부/버전비교 없이 항상 즉시 리다이렉트.
-       예전엔 여기에도 앱 전체 사본이 들어있고 localStorage 버전 비교로 조건부 리다이렉트를 했었는데,
-       그 비교값이 한번 저장되면 다신 리다이렉트가 안 일어나 오래된 화면이 영구적으로 보이는 버그가 있었음. -->
-  <script>location.replace('/바로알바.html' + location.search);</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>바로알바 — 지금 일하고 오늘 받는 초단기 알바 | 지도로 찾는 당일 알바</title>
+<meta name="description" content="지도 위에서 내 주변 단기·당일 알바를 바로 찾고 바로 지원하세요. 급구 공고 실시간 알림, 당일 정산, 한국어·영어·중국어·일본어·베트남어·러시아어 6개 언어 지원. 업주는 결원 발생 즉시 급구 공고를 등록할 수 있습니다.">
+<link rel="canonical" href="https://baroalba.multimove.co.kr/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#C8102E">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://baroalba.multimove.co.kr/">
+<meta property="og:site_name" content="바로알바">
+<meta property="og:title" content="바로알바 — 지금 일하고 오늘 받는 초단기 알바">
+<meta property="og:description" content="지도 위에서 내 주변 단기·당일 알바를 바로 찾고 바로 지원. 급구 알림 · 당일 정산 · 6개 언어 지원.">
+<meta property="og:image" content="https://baroalba.multimove.co.kr/icons/og-share.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+
+<script>
+  /* 이 페이지는 원래 앱으로 튕겨보내는 빈 리다이렉트였다. 지금은 공개 랜딩이지만
+     기존 진입 경로를 깨뜨리지 않도록 두 경우만 예전처럼 앱으로 통과시킨다.
+       1) 쿼리스트링이 있는 경우 — ?job= / ?tab= / ?community= / OAuth 파라미터.
+          인쇄된 QR과 과거 공유링크가 여기로 들어온다.
+       2) 이미 로그인한 사용자 — '/'를 북마크해둔 기존 이용자가 랜딩을 거치지 않게.
+     검색엔진 크롤러와 신규 방문자는 둘 다 해당 없어 랜딩을 그대로 본다.
+     판정에 실패하면 그냥 랜딩이 보일 뿐이라 실패해도 안전하다. */
+  (function () {
+    if (location.search) {
+      location.replace('/바로알바.html' + location.search + location.hash);
+      return;
+    }
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('-auth-token') > -1 && localStorage.getItem(k)) {
+          location.replace('/바로알바.html');
+          return;
+        }
+      }
+    } catch (e) { /* 프라이빗 모드 등 localStorage 차단 — 랜딩 노출 */ }
+  })();
+</script>
+
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --red:#C8102E; --red-dark:#A00D25;
+    --ink:#16181d; --body:#454b57; --muted:#6b7280;
+    --line:#e6e8ec; --soft:#f7f8fa; --bg:#fff;
+  }
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+    color:var(--body); background:var(--bg); line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  /* ── 헤더 ── */
+  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .hbar{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;color:var(--ink);text-decoration:none;letter-spacing:-.02em}
+  .brand img{width:28px;height:28px;border-radius:7px}
+  .hnav{display:flex;align-items:center;gap:8px}
+  .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:hover{background:var(--red-dark)}
+  .btn-ghost{border-color:var(--line);color:var(--ink);background:#fff}
+  .btn-ghost:hover{border-color:#c9ccd3}
+  .btn-lg{padding:15px 30px;font-size:16px;border-radius:11px}
+
+  /* ── 히어로 ── */
+  .hero{padding:74px 0 62px;text-align:center;background:linear-gradient(180deg,#fff6f7 0%,#fff 100%)}
+  .eyebrow{display:inline-block;font-size:13px;font-weight:700;color:var(--red);background:#fdeaed;padding:6px 14px;border-radius:999px;margin-bottom:20px;letter-spacing:-.01em}
+  h1{font-size:clamp(30px,5.6vw,50px);line-height:1.24;font-weight:800;color:var(--ink);letter-spacing:-.035em;margin-bottom:18px;word-break:keep-all}
+  h1 .accent{color:var(--red)}
+  .lede{font-size:clamp(16px,2.2vw,18.5px);color:var(--body);max-width:640px;margin:0 auto 32px;word-break:keep-all}
+  .cta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+  .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+  .chip{font-size:13.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);padding:7px 14px;border-radius:999px}
+
+  /* ── 섹션 ── */
+  section{padding:64px 0;border-top:1px solid var(--line)}
+  .shead{text-align:center;margin-bottom:42px}
+  h2{font-size:clamp(23px,3.4vw,31px);font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:11px;word-break:keep-all}
+  .shead p{color:var(--muted);font-size:16px;word-break:keep-all}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:18px}
+  .card{border:1px solid var(--line);border-radius:14px;padding:26px 24px;background:#fff}
+  .card h3{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:9px;letter-spacing:-.02em}
+  .card p{font-size:15px;color:var(--body);word-break:keep-all}
+
+  /* ── 대상별 ── */
+  .who{background:var(--soft)}
+  .who .grid{grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 28px}
+  .panel .tag{display:inline-block;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;margin-bottom:15px}
+  .tag-w{background:#fdeaed;color:var(--red)}
+  .tag-b{background:#e8f0fe;color:#1a56c4}
+  .panel h3{font-size:21px;font-weight:800;color:var(--ink);margin-bottom:16px;letter-spacing:-.025em}
+  .panel ul{list-style:none}
+  .panel li{position:relative;padding-left:23px;margin-bottom:11px;font-size:15.5px;word-break:keep-all}
+  .panel li::before{content:"";position:absolute;left:3px;top:9px;width:7px;height:7px;border-radius:50%;background:var(--red)}
+  .panel .btn{margin-top:20px}
+
+  /* ── 언어 ── */
+  .langs{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .lang{font-size:15px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px 21px}
+
+  /* ── FAQ ── */
+  .faq{max-width:760px;margin:0 auto}
+  .faq details{border:1px solid var(--line);border-radius:12px;padding:19px 22px;margin-bottom:11px;background:#fff}
+  .faq summary{font-weight:700;color:var(--ink);cursor:pointer;font-size:16px;list-style:none;word-break:keep-all}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";float:right;color:var(--red);font-weight:800;margin-left:12px}
+  .faq details[open] summary::after{content:"−"}
+  .faq p{margin-top:13px;font-size:15.5px;word-break:keep-all}
+
+  /* ── 마무리 CTA ── */
+  .final{background:var(--red);color:#fff;text-align:center;border:0}
+  .final h2{color:#fff}
+  .final p{color:#ffd9de;font-size:16.5px;margin-bottom:28px;word-break:keep-all}
+  .final .btn{background:#fff;color:var(--red)}
+  .final .btn:hover{background:#ffeef0}
+
+  /* ── 푸터 ── */
+  footer{padding:42px 0;font-size:13.5px;color:var(--muted);border-top:1px solid var(--line)}
+  .flinks{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px}
+  .flinks a{font-weight:600;color:var(--body);text-decoration:none}
+  .flinks a:hover{color:var(--red)}
+  .fmeta{line-height:1.9}
+
+  @media (max-width:560px){
+    .hero{padding:52px 0 46px}
+    section{padding:50px 0}
+    .card,.panel{padding:24px 20px}
+  }
+</style>
 </head>
-<body></body>
+<body>
+
+<header>
+  <div class="wrap hbar">
+    <a class="brand" href="/">
+      <img src="/icons/icon-192.png" alt="" width="28" height="28">
+      바로알바
+    </a>
+    <nav class="hnav">
+      <a class="btn btn-ghost" href="/login.html">로그인</a>
+      <a class="btn btn-primary" href="/바로알바.html?guest=1">알바 찾기</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <div class="hero">
+    <div class="wrap">
+      <span class="eyebrow">지도 기반 실시간 알바 매칭</span>
+      <h1>지금 일하고,<br><span class="accent">오늘 받는</span> 초단기 알바</h1>
+      <p class="lede">
+        내 주변 단기·당일 알바를 지도 위에서 바로 찾고, 바로 지원하세요.
+        급구 공고는 실시간 알림으로 먼저 받아보고, 일이 끝나면 당일 정산까지.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary btn-lg" href="/바로알바.html?guest=1">내 주변 알바 보기</a>
+        <a class="btn btn-ghost btn-lg" href="/login.html">업주로 공고 등록</a>
+      </div>
+      <div class="chips">
+        <span class="chip">지도에서 바로 탐색</span>
+        <span class="chip">급구 실시간 알림</span>
+        <span class="chip">당일 정산</span>
+        <span class="chip">6개 언어 지원</span>
+        <span class="chip">설치 없이 웹에서</span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="shead">
+        <h2>바로알바가 다른 이유</h2>
+        <p>목록을 넘기는 대신, 지도에서 내 위치 기준으로 찾습니다.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>지도 기반 탐색</h3>
+          <p>현재 위치 반경 1~30km 안의 공고를 지도 위 마커로 확인합니다. 집·학교에서 가까운 일자리부터 눈으로 바로 고를 수 있습니다.</p>
+        </div>
+        <div class="card">
+          <h3>스와이프로 빠르게</h3>
+          <p>공고를 한 장씩 넘기며 관심·패스만 고르면 됩니다. 고른 기록을 학습해 취향에 맞는 공고를 위로 올려줍니다.</p>
+        </div>
+        <div class="card">
+          <h3>급구 공고 실시간 알림</h3>
+          <p>선호 업종과 최저 시급 조건을 저장해두면 조건에 맞는 새 공고가 올라오는 즉시 알림이 갑니다. 팔로우한 업체는 우선 알림.</p>
+        </div>
+        <div class="card">
+          <h3>합격 후 바로 채팅</h3>
+          <p>업주와 앱 안에서 1:1로 대화합니다. 전화번호를 주고받지 않아도 출근 시간·준비물을 바로 확인할 수 있습니다.</p>
+        </div>
+        <div class="card">
+          <h3>번개등급 신뢰 시스템</h3>
+          <p>평점·완료 건수·노쇼 이력을 반영해 등급이 자동으로 매겨집니다. 성실하게 쌓을수록 더 좋은 공고로 이어집니다.</p>
+        </div>
+        <div class="card">
+          <h3>급여 계산기 내장</h3>
+          <p>시급만 넣으면 일급·주급·월급이 계산됩니다. 주휴수당(주 15시간 이상), 3.3% 원천징수, 4대보험 옵션까지 반영합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="who">
+    <div class="wrap">
+      <div class="shead">
+        <h2>알바생도, 업주도</h2>
+        <p>구직과 구인을 한 앱에서 처리합니다.</p>
+      </div>
+      <div class="grid">
+        <div class="panel">
+          <span class="tag tag-w">알바생</span>
+          <h3>오늘 당장 일하고 싶을 때</h3>
+          <ul>
+            <li>내 위치 반경의 스팟·단기·정기 공고를 지도로 확인</li>
+            <li>스와이프로 훑고 마음에 들면 바로 지원</li>
+            <li>합격하면 업주와 앱 안에서 바로 채팅</li>
+            <li>수입 달력으로 이번 달 번 돈과 예정 수입 추적</li>
+            <li>한국어가 어려워도 6개 언어로 그대로 이용</li>
+          </ul>
+          <a class="btn btn-primary" href="/바로알바.html?guest=1">알바 찾아보기</a>
+        </div>
+        <div class="panel">
+          <span class="tag tag-b">업주</span>
+          <h3>갑자기 사람이 필요할 때</h3>
+          <ul>
+            <li>결원이 생기면 급구 공고를 즉시 등록</li>
+            <li>팔로워 알바생에게 새 공고 알림 자동 발송</li>
+            <li>지원자 목록에서 합격·탈락·검토중 원클릭 처리</li>
+            <li>지원자가 안 모이면 시급을 자동으로 올리는 서지 기능</li>
+            <li>정기 공고는 복사해서 다시 올리기</li>
+          </ul>
+          <a class="btn btn-ghost" href="/login.html">공고 등록하기</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="shead">
+        <h2>한국어가 어려워도 괜찮습니다</h2>
+        <p>화면 전체가 6개 언어로 번역됩니다. 공고 검색부터 지원, 업주와의 채팅까지 모국어로 이용하세요.</p>
+      </div>
+      <div class="langs">
+        <span class="lang" lang="ko">한국어</span>
+        <span class="lang" lang="en">English</span>
+        <span class="lang" lang="zh">中文</span>
+        <span class="lang" lang="ja">日本語</span>
+        <span class="lang" lang="vi">Tiếng Việt</span>
+        <span class="lang" lang="ru">Русский</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="shead"><h2>자주 묻는 질문</h2></div>
+      <div class="faq">
+        <details>
+          <summary>바로알바는 무료인가요?</summary>
+          <p>알바생은 공고 검색·지원·채팅까지 모두 무료로 이용할 수 있습니다. 업주도 공고 등록은 무료이며, 프리미엄 노출 같은 선택 기능만 유료입니다.</p>
+        </details>
+        <details>
+          <summary>앱을 설치해야 하나요?</summary>
+          <p>아니요. 웹브라우저에서 바로 이용할 수 있습니다. 홈 화면에 추가하면 앱처럼 쓸 수 있고, 안드로이드는 별도 앱도 제공합니다.</p>
+        </details>
+        <details>
+          <summary>당일 정산은 어떻게 이뤄지나요?</summary>
+          <p>업주가 근무 완료를 확인하면 앱 안에서 정산이 진행됩니다. 정산 방식과 시점은 공고마다 다를 수 있으니 지원 전 공고 상세를 확인해 주세요.</p>
+        </details>
+        <details>
+          <summary>외국인도 이용할 수 있나요?</summary>
+          <p>네. 화면이 영어·중국어·일본어·베트남어·러시아어로 번역되며, 외국인 지원이 가능한 공고를 따로 모아볼 수 있습니다. 실제 근무는 본인의 체류자격이 허용하는 범위에서만 가능합니다.</p>
+        </details>
+        <details>
+          <summary>업주인데 지금 당장 사람이 필요합니다.</summary>
+          <p>로그인 후 업주로 전환해 급구 공고를 등록하면, 주변 알바생과 우리 업체를 팔로우한 알바생에게 즉시 알림이 발송됩니다.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap">
+      <h2>지금 내 주변에 어떤 알바가 있는지 확인해보세요</h2>
+      <p>가입 없이 둘러볼 수 있습니다.</p>
+      <a class="btn btn-lg" href="/바로알바.html?guest=1">지도에서 알바 보기</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="flinks">
+      <a href="/바로알바.html?guest=1">알바 찾기</a>
+      <a href="/login.html">로그인 · 회원가입</a>
+      <a href="/terms.html">이용약관</a>
+      <a href="/privacy.html">개인정보처리방침</a>
+    </div>
+    <div class="fmeta">
+      멀티무브 주식회사 · 대표이사 박근욱<br>
+      사업자등록번호 265-87-03885 · contact@multimove.co.kr<br>
+      © 2026 MultiMOVE Inc. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://baroalba.multimove.co.kr/#org",
+      "name": "멀티무브 주식회사",
+      "alternateName": "MultiMOVE Inc.",
+      "url": "https://baroalba.multimove.co.kr/",
+      "logo": "https://baroalba.multimove.co.kr/icons/icon-512.png",
+      "email": "contact@multimove.co.kr"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://baroalba.multimove.co.kr/#website",
+      "name": "바로알바",
+      "url": "https://baroalba.multimove.co.kr/",
+      "inLanguage": "ko",
+      "publisher": { "@id": "https://baroalba.multimove.co.kr/#org" }
+    },
+    {
+      "@type": "WebApplication",
+      "name": "바로알바",
+      "url": "https://baroalba.multimove.co.kr/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web, Android",
+      "inLanguage": ["ko","en","zh","ja","vi","ru"],
+      "description": "지도 기반으로 내 주변 단기·당일 알바를 찾고 바로 지원하는 실시간 알바 매칭 서비스.",
+      "publisher": { "@id": "https://baroalba.multimove.co.kr/#org" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "바로알바는 무료인가요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "알바생은 공고 검색·지원·채팅까지 모두 무료로 이용할 수 있습니다. 업주도 공고 등록은 무료이며, 프리미엄 노출 같은 선택 기능만 유료입니다." } },
+        { "@type": "Question", "name": "앱을 설치해야 하나요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "아니요. 웹브라우저에서 바로 이용할 수 있습니다. 홈 화면에 추가하면 앱처럼 쓸 수 있고, 안드로이드는 별도 앱도 제공합니다." } },
+        { "@type": "Question", "name": "당일 정산은 어떻게 이뤄지나요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "업주가 근무 완료를 확인하면 앱 안에서 정산이 진행됩니다. 정산 방식과 시점은 공고마다 다를 수 있으니 지원 전 공고 상세를 확인해 주세요." } },
+        { "@type": "Question", "name": "외국인도 이용할 수 있나요?",
+          "acceptedAnswer": { "@type": "Answer", "text": "네. 화면이 영어·중국어·일본어·베트남어·러시아어로 번역되며, 외국인 지원이 가능한 공고를 따로 모아볼 수 있습니다. 실제 근무는 본인의 체류자격이 허용하는 범위에서만 가능합니다." } },
+        { "@type": "Question", "name": "업주인데 지금 당장 사람이 필요합니다.",
+          "acceptedAnswer": { "@type": "Answer", "text": "로그인 후 업주로 전환해 급구 공고를 등록하면, 주변 알바생과 우리 업체를 팔로우한 알바생에게 즉시 알림이 발송됩니다." } }
+      ]
+    }
+  ]
+}
+</script>
+
+</body>
 </html>
