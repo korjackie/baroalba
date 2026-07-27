@@ -634,6 +634,35 @@ ALTER TABLE workers ADD COLUMN IF NOT EXISTS workplace_verify_token TEXT;
 
 ---
 
+### Phase 60 ✅ 공개 랜딩페이지 + SEO 기본기 (2026-07-27, v582)
+
+**`/`가 로그인 폼이었다** — vercel.json이 `/` → `login.html`로 리라이트하고 있어, 검색엔진이
+보는 첫 화면에 서비스 설명이 한 글자도 없었다. index.html을 실제 랜딩으로 채우고 그 리라이트를 제거.
+
+- **기존 진입 경로 보존**(index.html 상단 스크립트): ①쿼리스트링 있으면 앱으로(인쇄된 QR·과거
+  공유링크의 `?job=`/OAuth) ②localStorage에 supabase 세션 있으면 앱으로(`/`를 북마크한 기존 이용자).
+  판정 실패 시 그냥 랜딩이 보일 뿐이라 안전. OAuth 콜백은 `/app.html`로 돌아오므로 이 변경과 무관.
+  앱 내부 이동은 전부 `/login.html` 명시라 `/`에 의존하는 코드가 없음을 grep으로 확인 후 제거.
+- **🔴 랜딩이 내건 약속이 실제로는 막혀 있던 문제**: CTA가 전부 `/바로알바.html`로 가는데,
+  부팅 분기(app.js ~691)는 **세션 / `baroalba_guest` 플래그 / `?job=` 셋 다 없으면 `goToLogin()`으로
+  튕긴다.** 랜딩에서 온 신규 방문자가 정확히 그 조건이라 "가입 없이 둘러볼 수 있습니다"가
+  거짓이 되고 전환 경로가 통째로 로그인 벽에 막힌 상태였음. 게스트 분기에 `?guest=1`을 추가하고
+  로그인화면 `enterAsGuest()`와 **동일하게** 플래그를 남겨 새로고침에도 유지되게 함.
+  `?job=` 딥링크는 종전대로 일회성(플래그 미저장) 유지 — 기존 동작을 바꾸지 않기 위해 분리.
+- **SEO**: title/description/canonical/OG/twitter + JSON-LD 4종(Organization·WebSite·
+  WebApplication·FAQPage). FAQ는 **화면 본문과 스키마 답변 텍스트가 일치해야** 리치결과에서
+  경고가 안 나므로 스크립트로 5문항 대조. robots.txt(admin·api·docs·backup·시안 차단) + sitemap.xml.
+- **캐시 헤더**: HTML은 no-store 유지(락스텝 버전 갱신 즉시 반영이 이 앱의 전제),
+  `/assets` 1일 · `/icons` 1년 immutable · `/` CDN 10분.
+- **교훈**: 랜딩·마케팅 페이지를 붙일 때는 **CTA가 실제로 열리는지**를 앱 부팅 분기까지 따라가
+  확인할 것. 링크가 200을 주는 것과 사용자가 그 화면을 볼 수 있는 것은 다르다.
+
+**남은 작업**: 공고별 URL(`/job/:id`)이 생기면 sitemap.xml을 서버리스 자동생성으로 교체하고
+JobPosting 스키마를 붙일 것. 현재 sitemap은 정적 3개(`/`, terms, privacy)뿐이라
+색인될 실질 콘텐츠가 랜딩 한 장이다. `manifest.json`에 UTF-8 BOM이 있음(기존 상태, 동작엔 문제없음).
+
+---
+
 ## 8. 현재 버그 / 미완료
 
 | 항목 | 상태 | 처리 방법 |
