@@ -126,7 +126,14 @@
   .panel .tag{display:inline-block;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;margin-bottom:15px}
   .tag-w{background:#fdeaed;color:var(--red)}
   .tag-b{background:#e8f0fe;color:#1a56c4}
+  /* 바로모임 보라 / 바로만남 로즈 — 앱 홈 화면의 두 섹션 헤더와 같은 색을 쓴다.
+     랜딩에서 본 색과 앱에서 만나는 색이 다르면 같은 기능으로 안 읽힌다. */
+  .tag-m{background:#f5f3ff;color:#5B21B6}
+  .tag-n{background:#fff1f2;color:#be123c}
+  .p-moim li::before{background:#7C3AED}
+  .p-mannam li::before{background:#e11d48}
   .panel h3{font-size:21px;font-weight:800;color:var(--ink);margin-bottom:16px;letter-spacing:-.025em}
+  .panel p{font-size:15px;margin:-6px 0 15px;word-break:keep-all}
   .panel ul{list-style:none}
   .panel li{position:relative;padding-left:23px;margin-bottom:11px;font-size:15.5px;word-break:keep-all}
   .panel li::before{content:"";position:absolute;left:3px;top:9px;width:7px;height:7px;border-radius:50%;background:var(--red)}
@@ -293,6 +300,48 @@
         <span class="lang" lang="mn">Монгол</span>
         <span class="lang" lang="ne">नेपाली</span>
       </div>
+    </div>
+  </section>
+
+  <!-- 바로모임·바로만남 — 앱 홈 화면(panel-home ④⑤)에 실제로 있는 두 섹션을 소개한다.
+       문구는 앱의 실제 구현 기준으로만 쓸 것: 모임 카테고리는 개설폼의 스포츠·취미·친목·
+       챌린지(+기타)가 전부이고, 사내 소개문서에 남아 있는 "8개 카테고리"는 낡은 값이다.
+       바로만남은 이용권 기반(유료)이라 위 FAQ의 "무료" 답변과 충돌하지 않도록 명시한다. -->
+  <section class="who">
+    <div class="wrap">
+      <div class="shead">
+        <h2>일하고, 모이고, 만나고</h2>
+        <p>계정 하나로 바로모임·바로만남까지 같은 지도 위에서 이어집니다.</p>
+      </div>
+      <div class="grid">
+        <div class="panel p-moim">
+          <span class="tag tag-m">바로모임</span>
+          <h3>관심사가 같은 사람들과 가볍게</h3>
+          <p>스포츠·취미·친목·챌린지 중에서 고르고 인원과 장소, 날짜를 정해 모임을 엽니다. 개설한 모임은 지도 위에 표시돼 주변 사람들이 보고 참여를 신청합니다.</p>
+          <ul>
+            <li>내 주변 모임을 지도에서 카테고리별로 탐색</li>
+            <li>세부 종목까지 지정해 원하는 사람만 모으기</li>
+            <li>참여가 확정되면 모임 단체채팅방에서 소통</li>
+            <li>둘러보기는 가입 없이, 참여 신청은 로그인 후</li>
+          </ul>
+          <a class="btn btn-ghost" href="/바로알바.html?guest=1">모임 둘러보기</a>
+        </div>
+        <div class="panel p-mannam">
+          <span class="tag tag-n">바로만남</span>
+          <h3>바로스팟과 바로미팅, 두 가지 방식</h3>
+          <p>한 사람과 조용히 만나는 1:1 매칭 바로스팟, 여럿이 함께하는 그룹 미팅 바로미팅. 알바 프로필과는 분리된 별도 프로필로 참여합니다.</p>
+          <ul>
+            <li>바로스팟은 신청하면 상대가 블라인드 상태에서 직접 고르는 1:1 매칭</li>
+            <li>바로미팅은 지도에서 모집 중인 미팅을 찾아 참가 신청</li>
+            <li>평점·노쇼 이력이 기준에 못 미치면 신청이 제한됩니다</li>
+            <li>참여에는 이용권이 필요하며, 둘러보기는 무료입니다</li>
+          </ul>
+          <a class="btn btn-ghost" href="/바로알바.html?guest=1">바로만남 살펴보기</a>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:14px;color:var(--muted);margin-top:22px;word-break:keep-all">
+        업주라면 우리 매장을 바로만남 미팅 장소로 등록할 수 있습니다. 관리자 승인 후 지도에 노출됩니다.
+      </p>
     </div>
   </section>
 
