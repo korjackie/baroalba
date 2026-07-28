@@ -3,7 +3,7 @@
 > **새 세션은 이 문서를 먼저 끝까지 읽으세요.** 맥락을 이어가기 위한 살아있는 작업 로그입니다.
 > 의미 있는 작업을 끝낼 때마다 **요청 없이도** 이 문서를 갱신할 것.
 > 개발 규칙·시스템 구조는 [`../CLAUDE.md`](../CLAUDE.md), 옛 이력은 [`WORK_LOG.md`](WORK_LOG.md)
-> 최종 갱신: **2026-07-28** (sw.js v585 / Phase 65 — 랜딩 헤더·언어 UI, 버전 락스텝 불필요)
+> 최종 갱신: **2026-07-28** (sw.js v585 / Phase 66 — 공고 자동마감 서버크론화, 강제다크 수정, 버전 락스텝 불필요)
 
 ---
 
@@ -79,8 +79,9 @@ v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었�
 | 항목 | 근거 | 해야 할 일 |
 |------|------|-----------|
 | **🔴 토스 결제가 아직 테스트 키 = 실매출 0원** | `assets/js/app.js:17379` 이 `TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW'`. **구독 결제와 포인트 충전 UI는 이미 라이브인데 결제창이 테스트 결제창이라 실제로 돈이 안 들어옴.** 2026-06-20 마일스톤 잔여과제에 적힌 뒤 5주 넘게 그대로 | 선행조건이 개발이 아니라 **행정**임: 인감증명서 준비 → 토스페이먼츠 전자결제 신청 → 심사 → 라이브 키 발급. 키 받으면 `app.js` 상수 1줄 + Vercel 환경변수 `TOSS_SECRET_KEY` 교체(`api/toss-confirm.js`·`api/toss-points.js` 가 읽음). **신청부터 넣어야 대기시간이 줄어듦** |
-| **공고 자동 마감** | Phase 62에서 실측: `expires_at` 이 **0/25**. 만료 시각이 아예 없어서 **근무일이 5일 지난 공고가 아직 `urgent` 로 살아있음.** 구글 채용공고 정책도 만료 공고 제거를 요구 | `work_end_date` 경과 시 `is_active=false`. 기존 `api/surge-check.js` 가 이미 cron-job.org 로 도는 크론이므로 **거기 붙이면 서버리스 함수를 안 늘려도 됨** (Hobby 12개 상한이 꽉 참) |
+| ~~공고 자동 마감~~ | ✅ Phase 66 (2026-07-28) 완료 |
 | 공고 저장 오류 | 재현 시 `showAlert` 의 실제 에러 메시지 확보부터 | validation / DB constraint 원인 추적 |
+| **🔴 `/api/surge-check` 가 사실상 인증이 없다** | Phase 66에서 발견: `vercel env ls production` 에 `CRON_SECRET` 자체가 없음. 코드는 `secret !== process.env.CRON_SECRET` 인데 둘 다 `undefined` 면 통과되므로, **시크릿 헤더 없이 아무나 호출해도 200이 뜨고 실제로 DB를 쓴다**(임금 서지 적용 + 이번에 추가된 공고 자동마감). curl로 직접 확인함(`x-cron-secret` 없이 200) | 값 생성 → `vercel env add CRON_SECRET production` → **cron-job.org 쪽 요청 헤더에도 동일 값을 넣어야** 함(외부 서비스 설정이라 대표님 계정 작업 필요, 순서를 잘못하면 진짜 크론이 401로 끊김) |
 | 공고 채움률 | `description` 10/25, `address` 14/25, `biz_name` 4/25 | Phase 63에서 입력 검증을 넣었으므로 **신규 공고부터 개선되는지 재측정**. 기존 25건은 그대로임 |
 
 ### 중기 (1~2주)
@@ -513,6 +514,51 @@ Phase 62에서 "`address` 14/25, `description` 10/25 라 채움률이 낮다 →
 바로브랜딩(`C:/dev/barobranding-saas`)도 같은 3개 구조로 맞췄다.
 
 커밋: `ad492d5` `2fffd1d` `a9459b0` `1f1c3d9`
+
+### Phase 66 ✅ 공고 자동마감 서버 크론화 + Android 강제다크 색상왜곡 수정 (2026-07-28, 커밋 `9ab9bea`)
+
+**공고 자동 마감을 서버로 이식.** `autoCloseExpiredPostings()`(work_end_date 지난 공고 /
+start_time+duration_hours 지난 단건공고를 `status:'closed'`로) 는 원래 업주가 로그인해서
+`initOwnerFeatures()` 를 탈 때만, **그 업주 소유 공고에 한해서만** 돌고 있었다 — 전체 공고
+기준으로는 아무도 안 봐줄 수 있는 구조. 같은 로직을 그대로 복붙(규칙 7)해 REST fetch 판으로
+바꾸고 이미 cron-job.org 가 주기 호출하는 `api/surge-check.js` 핸들러 안에 편입시켰다(Hobby
+12개 함수 상한 그대로 유지, 새 파일 없음). 클라이언트판은 손대지 않고 그대로 둠(중복 실행돼도
+멱등이라 무해).
+- 배포 후 라이브 curl 검증: `job_postings` 전체 25건이 이미 전부 `closed` 상태였음(대조 결과
+  `updated_at` 이 갱신 안 되는 걸 보아 이번 서버판이 아니라 그 전에 클라이언트판이 이미 정리한
+  것으로 보임 — `status` 만 바꾸는 UPDATE라 `updated_at` 컬럼 자체가 안 움직여서 어느 경로가
+  닫았는지 사후 구분은 불가능). 지금 라이브에 열린 공고가 0건이라는 뜻이라, 신규 공고가 안
+  올라오면 홈 화면이 계속 빈 상태로 보일 수 있음 — 영업 재개 시 확인할 것.
+
+**🔴 이번에 발견: `/api/surge-check` 에 사실상 인증이 없다.** 검증 삼아 시크릿 없이
+`curl https://baroalba.multimove.co.kr/api/surge-check` 를 날렸더니 200 + 정상 JSON이
+돌아옴. `vercel env ls production` 으로 확인하니 `CRON_SECRET` 환경변수 자체가 없어서,
+코드의 `secret !== process.env.CRON_SECRET` 비교가 `undefined !== undefined` → `false` 로
+항상 통과되고 있었다. 즉 이 엔드포인트는 누구나 호출해서 임금 서지를 강제로 트리거하거나
+(이번 추가분) 공고를 일괄 마감시킬 수 있는 상태. **고치지 않고 남겨둠** — Vercel에 값만
+넣으면 cron-job.org 가 보내는 요청은 시크릿이 없어 즉시 401로 끊기므로, cron-job.org 쪽
+헤더 설정을 같은 세션에서 같이 바꿔야 한다(외부 서비스 계정 작업, 대표님 확인 필요). 1장
+표에 등록해둠.
+
+**Android 강제 다크 테마가 브랜드 색을 왜곡하고 있었다** (실기기 제보: 헤더 "바로"는
+흰색, "알바"는 분홍, `한국어` 언어 select 는 빨간 테두리의 커다란 알약 모양으로 나옴).
+원인은 `index.html`/`바로알바.html`/`login.html` 어디에도 `color-scheme` 메타가 없어서 —
+Android Chrome/WebView가 이 페이지들을 "다크모드 미지원 페이지"로 보고 색을 알고리즘으로
+반전시킨다(밝은 배경은 어둡게, 채도 있는 텍스트는 색상까지 틀어짐). `appearance:none` 으로
+커스텀 스타일한 `<select>` 도 이 강제 다크 아래에서는 네이티브 렌더링으로 되돌아가 커스텀
+padding/border-radius가 무시된다. `<meta name="color-scheme" content="light">` 한 줄을
+세 파일에 추가해 Android가 알고리즘 반전을 아예 안 하도록 함(이 프로젝트는 다크 테마를
+디자인한 적이 없으므로 `light` 단독 선언이 맞음). **HTML만 고치는 변경이라 sw.js가
+문서를 항상 network-first(no-store)로 서빙하는 구조상 버전 락스텝 불필요**(Phase 65와
+동일 근거, `sw.js:72`).
+
+**"바로알바가 다른 이유" 카드가 텍스트만 있다는 피드백** (전에도 요청했었는데 반영이
+안 됐던 것) — 카드 6개 전부 아이콘이 아예 없이 h3+p만 있던 상태였다. 로고마크와 같은
+인라인 SVG 방식(Phase 65 규칙 유지, 외부 아이콘 라이브러리 요청 없음)으로 카드마다
+44px 원형 배지 + 22px 라인아이콘 추가(지도핀/스와이프카드/알림종/채팅/방패번개/계산기).
+배지 배경은 기존 `.eyebrow`/`.tag-w` 와 같은 `#fdeaed` 톤으로 통일.
+
+---
 
 ### Phase 65 ✅ 랜딩 헤더 줄바꿈 수정 + 로고마크 + 언어 카드 2줄 정렬 (2026-07-28)
 
