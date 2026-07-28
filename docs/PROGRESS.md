@@ -79,9 +79,10 @@ v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었�
 | 항목 | 근거 | 해야 할 일 |
 |------|------|-----------|
 | **🔴 토스 결제가 아직 테스트 키 = 실매출 0원** | `assets/js/app.js:17379` 이 `TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW'`. **구독 결제와 포인트 충전 UI는 이미 라이브인데 결제창이 테스트 결제창이라 실제로 돈이 안 들어옴.** 2026-06-20 마일스톤 잔여과제에 적힌 뒤 5주 넘게 그대로 | 선행조건이 개발이 아니라 **행정**임: 인감증명서 준비 → 토스페이먼츠 전자결제 신청 → 심사 → 라이브 키 발급. 키 받으면 `app.js` 상수 1줄 + Vercel 환경변수 `TOSS_SECRET_KEY` 교체(`api/toss-confirm.js`·`api/toss-points.js` 가 읽음). **신청부터 넣어야 대기시간이 줄어듦** |
-| ~~공고 자동 마감~~ | ✅ Phase 66 (2026-07-28) 완료 |
+| ~~공고 자동 마감~~ | Phase 66 (2026-07-28) | ✅ 완료 |
 | 공고 저장 오류 | 재현 시 `showAlert` 의 실제 에러 메시지 확보부터 | validation / DB constraint 원인 추적 |
-| **🔴 `/api/surge-check` 가 사실상 인증이 없다** | Phase 66에서 발견: `vercel env ls production` 에 `CRON_SECRET` 자체가 없음. 코드는 `secret !== process.env.CRON_SECRET` 인데 둘 다 `undefined` 면 통과되므로, **시크릿 헤더 없이 아무나 호출해도 200이 뜨고 실제로 DB를 쓴다**(임금 서지 적용 + 이번에 추가된 공고 자동마감). curl로 직접 확인함(`x-cron-secret` 없이 200) | 값 생성 → `vercel env add CRON_SECRET production` → **cron-job.org 쪽 요청 헤더에도 동일 값을 넣어야** 함(외부 서비스 설정이라 대표님 계정 작업 필요, 순서를 잘못하면 진짜 크론이 401로 끊김) |
+| **🔴 `/api/surge-check` 가 사실상 인증이 없다** | Phase 66에서 발견: `vercel env ls production` 에 `CRON_SECRET` 자체가 없음. 코드는 `secret !== process.env.CRON_SECRET` 인데 둘 다 `undefined` 면 통과되므로, **시크릿 헤더 없이 아무나 호출해도 200이 뜨고 실제로 DB를 쓴다**(임금 서지 적용 + 이번에 추가된 공고 자동마감) | 값 생성 → `vercel env add CRON_SECRET production` → **cron-job.org 쪽 요청 헤더에도 동일 값을 넣어야** 함(외부 서비스 설정이라 대표님 계정 작업 필요, 순서를 잘못하면 진짜 크론이 401로 끊김) |
+| **🟡 라이브에 열린 공고가 0건** | Phase 66에서 발견: `job_postings` 25건 전부 `status='closed'`. Phase 62~63 이 "1건 살아있음"이라 적은 뒤 어느 시점(정확한 시점은 `updated_at` 이 status 변경 시 안 갱신돼 특정 불가)에 그 1건도 닫힘 | 지금 홈 화면에 표시할 실제 공고가 없다는 뜻. 테스트 공고라도 몇 개 다시 열거나, 영업 재개 시점에 함께 확인 |
 | 공고 채움률 | `description` 10/25, `address` 14/25, `biz_name` 4/25 | Phase 63에서 입력 검증을 넣었으므로 **신규 공고부터 개선되는지 재측정**. 기존 25건은 그대로임 |
 
 ### 중기 (1~2주)
@@ -119,6 +120,7 @@ v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었�
 | 앱이 715KB 로고를 26~28px 로 씀 | `바로알바.html` 4곳(85·1105·1400·3414줄)이 `icons/바로알바 최종로고.png`(1005px/**715KB**)를 직접 참조. 랜딩은 Phase 67에서 96px/13KB 판으로 교체했으나 앱은 그대로 | `icons/logo-mark-96.png` 로 4곳 교체하면 됨(이미 생성돼 있음, `tools/make-logo.py`). 앱은 SW 캐시라 체감은 첫 로드뿐이지만 설치 트래픽이 그만큼 준다 |
 | 테스트 없음 | 수동 검수 의존 | 핵심 함수 단위 테스트 |
 | owner.html redirect | 잠정 구조 | 장기적으로 역할 완전 통합 |
+| `color-scheme` 메타 미적용 파일 남음 | Phase 66에서 `index.html`/`바로알바.html`/`login.html` 3개만 추가함. `admin.html`/`worker.html`/`reset.html`/`terms.html`/`privacy.html`은 아직 없어 Android 강제다크 색왜곡에 그대로 노출 | 한 줄(`<meta name="color-scheme" content="light">`) 추가만 하면 됨. admin은 내부용(화이트리스트)이라 우선순위 낮음 |
 
 ---
 
