@@ -3,7 +3,7 @@
 > **새 세션은 이 문서를 먼저 끝까지 읽으세요.** 맥락을 이어가기 위한 살아있는 작업 로그입니다.
 > 의미 있는 작업을 끝낼 때마다 **요청 없이도** 이 문서를 갱신할 것.
 > 개발 규칙·시스템 구조는 [`../CLAUDE.md`](../CLAUDE.md), 옛 이력은 [`WORK_LOG.md`](WORK_LOG.md)
-> 최종 갱신: **2026-07-28** (sw.js **v586** / Phase 67 — 랜딩 실기기 피드백 반영, 모임·만남 딥링크)
+> 최종 갱신: **2026-07-28** (sw.js **v588** / Phase 69 — 만료 바로스팟 홈 노출 + 공고 주소 개행 유실 + 아이콘·색 정리)
 
 ---
 
@@ -86,6 +86,8 @@ v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었�
 | 항목 | 근거 | 해야 할 일 |
 |------|------|-----------|
 | **🔴 토스 결제가 아직 테스트 키 = 실매출 0원** | `assets/js/app.js:17379` 이 `TOSS_CLIENT_KEY = 'test_ck_24xLea5zVA660wge91nyrQAMYNwW'`. **구독 결제와 포인트 충전 UI는 이미 라이브인데 결제창이 테스트 결제창이라 실제로 돈이 안 들어옴.** 2026-06-20 마일스톤 잔여과제에 적힌 뒤 5주 넘게 그대로 | 선행조건이 개발이 아니라 **행정**임: 인감증명서 준비 → 토스페이먼츠 전자결제 신청 → 심사 → 라이브 키 발급. 키 받으면 `app.js` 상수 1줄 + Vercel 환경변수 `TOSS_SECRET_KEY` 교체(`api/toss-confirm.js`·`api/toss-points.js` 가 읽음). **신청부터 넣어야 대기시간이 줄어듦** |
+| **홈 배너 색 5종을 몇 종으로 줄일지 — 대표님 답 대기** | Phase 69: 보라(바로모임)/핑크(바로만남)/앰버(커뮤니티)/주황(RANK)/파랑(바로브랜딩), 위계 없이 무작위로 읽힘. 긴급 빨강과 충돌하던 바로만남 색만 이번에 뺌 | 제안해둔 안: **기능 진입(바로모임·바로만남)은 고유색 유지, 정보 진입(커뮤니티·RANK·바로브랜딩) 3개는 중립 톤으로 통일.** 홈 첫인상이 바뀌는 변경이라 대표님 확인 먼저 — 답 오면 A/B 시안으로 보여드리고 진행 |
+| `worker.html`에 `color-scheme` 메타 확인 안 됨 | Phase 69에서 독립 HTML 6개(`mannnam`/`reset`/`privacy`/`terms`/`admin`/`index`)는 처리했는데 `worker.html`은 점검 목록에서 빠졌음 | 같은 패턴으로 `color-scheme`/`viewport-fit`/안전영역 3종 확인 후 필요하면 추가 |
 | ~~공고 자동 마감~~ | Phase 66 (2026-07-28) | ✅ 완료 |
 | 공고 저장 오류 | 재현 시 `showAlert` 의 실제 에러 메시지 확보부터 | validation / DB constraint 원인 추적 |
 | **🔴 `/api/surge-check` 가 사실상 인증이 없다** | Phase 66에서 발견: `vercel env ls production` 에 `CRON_SECRET` 자체가 없음. 코드는 `secret !== process.env.CRON_SECRET` 인데 둘 다 `undefined` 면 통과되므로, **시크릿 헤더 없이 아무나 호출해도 200이 뜨고 실제로 DB를 쓴다**(임금 서지 적용 + 이번에 추가된 공고 자동마감) | 값 생성 → `vercel env add CRON_SECRET production` → **cron-job.org 쪽 요청 헤더에도 동일 값을 넣어야** 함(외부 서비스 설정이라 대표님 계정 작업 필요, 순서를 잘못하면 진짜 크론이 401로 끊김) |
@@ -127,7 +129,8 @@ v571~573(업주 화면·공고등록 폼)까지 끝난 뒤 다음 타겟이었�
 | 앱이 715KB 로고를 26~28px 로 씀 | `바로알바.html` 4곳(85·1105·1400·3414줄)이 `icons/바로알바 최종로고.png`(1005px/**715KB**)를 직접 참조. 랜딩은 Phase 67에서 96px/13KB 판으로 교체했으나 앱은 그대로 | `icons/logo-mark-96.png` 로 4곳 교체하면 됨(이미 생성돼 있음, `tools/make-logo.py`). 앱은 SW 캐시라 체감은 첫 로드뿐이지만 설치 트래픽이 그만큼 준다 |
 | 테스트 없음 | 수동 검수 의존 | 핵심 함수 단위 테스트 |
 | owner.html redirect | 잠정 구조 | 장기적으로 역할 완전 통합 |
-| `color-scheme` 메타 미적용 파일 남음 | Phase 66에서 `index.html`/`바로알바.html`/`login.html` 3개만 추가함. `admin.html`/`worker.html`/`reset.html`/`terms.html`/`privacy.html`은 아직 없어 Android 강제다크 색왜곡에 그대로 노출 | 한 줄(`<meta name="color-scheme" content="light">`) 추가만 하면 됨. admin은 내부용(화이트리스트)이라 우선순위 낮음 |
+| ~~`color-scheme` 메타 미적용 파일 남음~~ | Phase 69 (2026-07-28)에 `mannnam`/`reset`/`privacy`/`terms`/`admin` 5개 추가로 완료 | ✅ 완료. `worker.html`만 미확인 상태로 남음 — 다음에 볼 때 같이 체크 |
+| **Vercel 자동 배포가 안 걸릴 때가 있다** | Phase 69 배포 중 발견: `git push origin main` 후 5분 넘게 라이브가 이전 버전(`v587`)에 머물렀음. GitHub→Vercel 웹훅이 그때 안 걸린 것으로 추정(재현조건 미상, 대시보드에 새 배포 자체가 안 잡혔음) | `vercel --prod --yes` 로 직접 배포해 해결. **이 문서 "배포 파이프라인"이 "자동 빌드 + 배포"라고 적어놨지만 항상 그런 건 아니다 — push 후 라이브 버전을 실제로 확인하고, 5분 넘게 안 바뀌면 수동 배포할 것** |
 
 ---
 

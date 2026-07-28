@@ -435,11 +435,14 @@ print('중복 ID:', dups)
       1. sw.js         const CACHE  = 'baroalba-vNNN'
       2. assets/js/app.js  const _APP_V = 'NNN'
       3. 바로알바.html   app.js?v=NNN / app_ui.js?v=NNN / shared-lang.js?v=NNN
-      (현재 585 — 정확한 값은 위 파일들을 직접 볼 것)
+      (현재 588 — 정확한 값은 위 파일들을 직접 볼 것)
   → git push origin main
-  → Vercel 자동 빌드 + 배포 (약 30초)
+  → Vercel 자동 빌드 + 배포 (보통 약 30초)
   → baroalba.multimove.co.kr 즉시 반영
   → 라이브에서 실제로 NNN이 나오는지 확인하고 나서 완료 보고
+  ⚠️ 자동 배포가 안 걸릴 때가 있다(Phase 69, 2026-07-28 - push 후 5분 넘게 라이브가
+     이전 버전에 머묾, GitHub→Vercel 웹훅 미발동 추정). push만 믿지 말고 라이브 버전을
+     실제로 확인할 것 - 안 바뀌면 `vercel --prod --yes` 로 직접 배포
 
 Android 빌드
   → build.gradle 버전 업
