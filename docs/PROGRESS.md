@@ -25,6 +25,7 @@
 | **업주 지원자 알림이 항상 0건** — 같은 `applications.updated_at` 버그가 업주 쪽 사본에 남아있었음 | ✅ 해결 (v587, 2026-07-28) | Phase 68. v541에서 알바생 쪽만 고치고 업주 쪽 사본은 놓쳤다. 라이브 실측 `42703` → 쿼리 전체 400 → `(data\|\|[])`가 조용히 빈 배열. **⚠️ `schema.sql:81`에는 `updated_at`이 있다 — 컬럼 존재는 문서가 아니라 라이브 REST로 확인할 것** |
 | 홈 헤더 종이 알바생 전용 + 홈 종에 뱃지 요소 자체가 없었음 | ✅ 해결 (v587, 2026-07-28) | Phase 68. 업주 알림은 공고관리 패널 안 별도 종에만 존재했고, `#noti-badge`는 지도 상단바에만 있었다. 홈 종에 업주 알림 병합 + `#home-noti-badge` 신설 |
 | 공고 카드 C안이 6곳 중 2곳만 적용 (검색 결과 카드가 진입 경로에 따라 두 종류) | ✅ 해결 (v587, 2026-07-28) | Phase 68. `f284163`(v581)이 `renderList`/`renderSearchResults`만 했음. `_jcardH()` 신설해 가로 카드 3곳 통일 + `_renderHomeSearchList`를 C안 마크업으로 |
+| **`login.html` 에 안전영역 처리가 통째로 없음** — 스크롤 시 로그인/회원가입 탭이 상태표시줄 침범 | ✅ 해결 (2026-07-28, 커밋 `edd566c`) | Phase 68-B. 독립 파일이라 `--sat` 체계도 `viewport-fit=cover` 도 없었다. **⚠️ 앱 CSS/JS를 안 쓰는 독립 HTML(`login.html`·`index.html`·`mannnam.html` 등)은 안전영역·다크모드 같은 전역 처리가 자동으로 안 따라온다 — 앱에서 고친 것을 여기도 고쳤는지 매번 따로 확인할 것** |
 | businesses.plan 컬럼 부재로 모임(바로모임) 목록 전체가 안 뜨는 문제 | ✅ 해결 (v542, 2026-07-19) | PRO/BASIC 뱃지 조회가 바깥 try와 묶여있어 실패시 이미 성공한 목록까지 비워지던 것 - 별도 try로 격리 |
 | 지원자 프로필(`_wp-overlay`)/전자계약서(`contract-modal`) 뒤로가기 안 됨 | ✅ 해결 (v544, 2026-07-19) | Phase 58 전수감사(WATCH_IDS/popstate 캐스케이드)에서 누락됐던 동일 버그 클래스. `_wp-overlay`는 동적 생성/제거 방식이라 WATCH_IDS로 못 잡아 popstate 캐스케이드에 직접 등록 |
 | 전자계약서/지원서 PDF 다운로드 안 됨(인쇄→다운로드 전환 직후) | ✅ 해결 (v545 + Android versionCode 31, 2026-07-19) | 브라우저는 인쇄 대신 파일 다운로드로 전환(html2pdf.js)하면 되지만, 안드로이드 WebView는 JS의 blob 다운로드를 받아줄 장치가 원래 없음(`MainActivity.java`에 다운로드 핸들러 자체가 없었음) - `AndroidBridge.saveBase64File()` 신설해 PDF를 base64로 네이티브에 직접 전달, MediaStore(API29+)/앱 전용 폴더(API<29)에 저장. Android 리빌드+Play Console 업로드까지 완료 |
@@ -581,6 +582,35 @@ Phase 62에서 "`address` 14/25, `description` 10/25 라 채움률이 낮다 →
 `v=587`·`_APP_V='587'`·`baroalba-v587` 확인.
 
 락스텝 v586→v587(app.js·CSS·HTML 전부 고쳤으므로 4곳 전부).
+
+#### Phase 68-B — 로그인 화면 상태표시줄 침범 (커밋 `edd566c`)
+
+같은 세션 후속 제보. 스크롤하면 로그인/회원가입 탭이 상태표시줄 밑으로 파고들어 시간·배터리
+글자와 겹치고, 상태표시줄 아이콘도 흰색→검은색으로 변했다.
+
+**원인은 `login.html` 이 독립 파일이라는 것.** `app.js`/`style.css` 를 안 쓰므로 앱이 갖춘
+안전영역 체계(`--sat`/`--sab`/`--sat-safe`, `style.css:22~25`)가 **아예 없었다.** 게다가
+`viewport-fit=cover` 도 빠져 있어(`바로알바.html:5` 에는 있다) `env(safe-area-inset-*)` 이
+전부 `0px` 로 계산됐다.
+
+⚠️ **`viewport-fit=cover` 만 넣어도 부족하다.** 네이티브 Android 앱은 TWA 가 아니라
+`MainActivity.java` 가 감싼 raw WebView 라 `display-mode:standalone` 도 아니고 `env()` 도
+0 이다. `app.js:505~529` 가 이미 이 문제를 풀어놨으므로(`window.AndroidBridge` 존재로
+네이티브 판별 → 28px 폴백) 같은 로직을 그대로 가져왔다(규칙 7).
+
+고친 것: `viewport-fit=cover` + `--sat` 4종 정의 + head 인라인 실측 스크립트 +
+`body::before` 로 상태표시줄 자리를 브랜드 빨강으로 덮는 고정 띠(계속 빨강이라 상태표시줄
+아이콘도 흰색으로 고정된다) + `.screen` `padding-top` 과 `.hero` `48→36` 으로 총여백 유지
+(첫 화면은 변화 없음) + `.card` 하단 `--sab-safe`(제스처바가 이메일 입력창을 덮던 것) +
+`inset:0` 고정 오버레이 3개·업데이트 배너 보정.
+
+**🔴 여기서 얻을 교훈**: 앱 CSS/JS를 안 쓰는 독립 HTML(`login.html`·`index.html`·
+`mannnam.html` 등)은 안전영역·다크모드 같은 전역 처리가 자동으로 안 따라온다.
+Phase 66의 `color-scheme` 도 세 파일에 따로 넣어야 했던 것과 같은 유형이다.
+**앱에서 전역 처리를 고치면 독립 HTML도 같이 봤는지 확인할 것.**
+
+락스텝 불필요 — `login.html` 단독 변경이고 `sw.js:72` 가 document 를 항상
+network-first(`no-store`)로 서빙한다(Phase 65·66 과 같은 근거).
 
 ---
 
