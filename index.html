@@ -107,7 +107,13 @@
      부족이었다 — 폭을 가장 많이 먹던 언어 선택(최대 132px)을 히어로로 내리고, 여기는
      nowrap + 축소금지로 고정한다. */
   .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--ink);text-decoration:none;letter-spacing:-.03em;white-space:nowrap;flex-shrink:0}
-  .brand .blogo{width:30px;height:30px;flex-shrink:0;display:block}
+  .brand .blogo{width:30px;height:30px;border-radius:8px;overflow:hidden;flex-shrink:0;display:block}
+  .brand .blogo img{width:100%;height:100%;object-fit:cover;display:block}
+  /* 워드마크는 반드시 한 덩어리(하나의 flex item)여야 한다. 예전엔 `바로<em>알바</em>` 를
+     .brand 바로 밑에 뒀는데, flex 컨테이너는 벌거벗은 텍스트("바로")를 익명 flex item 으로
+     만들기 때문에 로고↔글자 간격용 gap:9px 가 "바로"와 "알바" 사이에도 그대로 들어가
+     "바로 알바" 로 벌어져 보였다(2026-07-28 실기기 제보). span 으로 감싸 한 item 으로 만든다. */
+  .brand .bword{display:block}
   .brand em{font-style:normal;color:var(--red)}
   .hnav{display:flex;align-items:center;gap:8px;min-width:0}
   /* 언어 선택 — 한국어를 못 읽는 사람이 가장 먼저 찾아야 하는 컨트롤이다. (앱에서 "읽지도
@@ -116,14 +122,17 @@
      그대로 보이는 자리 — 로 옮겼다. 글자를 못 읽어도 알아보도록 지구본 아이콘은 유지한다. */
   .hero-top{display:flex;justify-content:flex-end;margin-bottom:26px}
   .langsel{position:relative;display:inline-flex;align-items:center}
-  .langsel svg{position:absolute;left:12px;pointer-events:none;color:var(--muted)}
+  .langsel svg{position:absolute;left:10px;pointer-events:none;color:var(--muted)}
+  /* 좌우 여백은 아이콘·화살표가 실제로 차지하는 만큼만 준다. 예전 값(좌34/우32)은
+     글자 폭과 무관하게 남는 여백이 생겨 "한국어" 오른쪽이 휑하게 비어 보였다. */
   .langsel select{
     appearance:none;-webkit-appearance:none;
-    padding:9px 32px 9px 34px;border:1px solid var(--line);border-radius:999px;background:#fff;
+    padding:8px 25px 8px 31px;border:1px solid var(--line);border-radius:999px;background:#fff;
     font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;
     box-shadow:0 1px 2px rgba(16,24,40,.05);
   }
-  .langsel::after{content:"";position:absolute;right:14px;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
+  .langsel svg{left:10px}
+  .langsel::after{content:"";position:absolute;right:11px;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
   .langsel select:hover{border-color:#c9ccd3}
   .langsel select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
@@ -150,17 +159,24 @@
   .shead p{color:var(--muted);font-size:16px;word-break:keep-all}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:18px}
-  .card{border:1px solid var(--line);border-radius:14px;padding:26px 24px;background:#fff}
-  .cico{width:44px;height:44px;border-radius:12px;background:#fdeaed;color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-  .cico svg{width:22px;height:22px}
-  .card h3{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:9px;letter-spacing:-.02em}
+  .card{border:1px solid var(--line);border-radius:14px;padding:22px 20px;background:#fff}
+  /* 아이콘은 제목과 같은 줄에 둔다. 아이콘이 자기 줄을 통째로 차지하면 카드 6장 × 60px 만큼
+     페이지가 길어지고, 그만큼 스크롤해야 다음 섹션이 나온다. */
+  .chead{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+  .cico{width:36px;height:36px;border-radius:10px;background:#fdeaed;color:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .cico svg{width:19px;height:19px}
+  .card h3{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em;word-break:keep-all}
   .card p{font-size:15px;color:var(--body);word-break:keep-all}
 
   /* ── 대상별 ── */
   .who{background:var(--soft)}
   .who .grid{grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px}
   .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 28px}
-  .panel .tag{display:inline-block;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;margin-bottom:15px}
+  /* 태그(알바생/업주·바로모임/바로만남)는 제목 위 자기 줄이 아니라 제목 오른쪽 끝에 둔다.
+     제목과 태그가 같은 줄을 나눠 쓰면 한 줄이 절약되고, 태그가 어느 제목의 것인지도 더 붙어 보인다. */
+  .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .phead h3{margin-bottom:0}
+  .panel .tag{display:inline-block;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;flex-shrink:0;white-space:nowrap}
   .tag-w{background:#fdeaed;color:var(--red)}
   .tag-b{background:#e8f0fe;color:#1a56c4}
   /* 바로모임 보라 / 바로만남 로즈 — 앱 홈 화면의 두 섹션 헤더와 같은 색을 쓴다.
@@ -252,19 +268,11 @@
 <header>
   <div class="wrap hbar">
     <a class="brand" href="/">
-      <!-- 로고마크: 지도 핀 + 번개 = "지도에서 찾아 즉시 일한다". 인라인 SVG라 요청이 없고
-           어느 배율에서도 안 뭉갠다(기존 icon-192.png 는 28px 로 줄면 흐려졌음). -->
-      <svg class="blogo" viewBox="0 0 32 32" role="img" aria-label="바로알바">
-        <defs>
-          <linearGradient id="blg" x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#E8213F"/><stop offset="1" stop-color="#A50B22"/>
-          </linearGradient>
-        </defs>
-        <rect width="32" height="32" rx="9" fill="url(#blg)"/>
-        <path d="M16 5.6c-3.8 0-6.9 3.05-6.9 6.82 0 4.9 6.02 11.2 6.28 11.47a.86.86 0 0 0 1.24 0c.26-.27 6.28-6.57 6.28-11.47C22.9 8.65 19.8 5.6 16 5.6z" fill="#fff"/>
-        <path d="M17.35 8.6l-4.5 5.42h2.62l-.92 3.98 4.6-5.62h-2.68z" fill="#C8102E"/>
-      </svg>
-      바로<em>알바</em>
+      <!-- 실제 서비스 로고를 쓴다. 앱(바로알바.html:87 app-header-logo)이 이미 이 파일을
+           28px 로 쓰고 있으므로 같은 방식을 그대로 따른다(규칙 7). 한때 여기만 자체 제작
+           SVG(지도핀+번개)를 쓴 적이 있는데, 앱과 로고가 달라 같은 서비스로 안 읽혔다. -->
+      <span class="blogo"><img src="./icons/바로알바 최종로고.png" alt="바로알바"></span>
+      <span class="bword">바로<em>알바</em></span>
     </a>
     <nav class="hnav">
       <a class="btn btn-ghost" href="/login.html" data-i18n="nav_login">로그인</a>
@@ -320,33 +328,45 @@
       </div>
       <div class="grid">
         <div class="card">
-          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.7-7-11.5A7 7 0 0 1 19 9.5C19 14.3 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
-          <h3 data-i18n="c1t">지도 기반 탐색</h3>
+          <div class="chead">
+            <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.7-7-11.5A7 7 0 0 1 19 9.5C19 14.3 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
+            <h3 data-i18n="c1t">지도 기반 탐색</h3>
+          </div>
           <p data-i18n="c1d">현재 위치 반경 1~30km 안의 공고를 지도 위 마커로 확인합니다. 집·학교에서 가까운 일자리부터 눈으로 바로 고를 수 있습니다.</p>
         </div>
         <div class="card">
-          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7.3" y="3.3" width="12" height="15.5" rx="2.2" opacity=".4"/><rect x="4" y="6.3" width="12" height="15.5" rx="2.2" fill="#fff"/></svg></div>
-          <h3 data-i18n="c2t">스와이프로 빠르게</h3>
+          <div class="chead">
+            <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7.3" y="3.3" width="12" height="15.5" rx="2.2" opacity=".4"/><rect x="4" y="6.3" width="12" height="15.5" rx="2.2" fill="#fff"/></svg></div>
+            <h3 data-i18n="c2t">스와이프로 빠르게</h3>
+          </div>
           <p data-i18n="c2d">공고를 한 장씩 넘기며 관심·패스만 고르면 됩니다. 고른 기록을 학습해 취향에 맞는 공고를 위로 올려줍니다.</p>
         </div>
         <div class="card">
-          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a5 5 0 0 0-5 5V12c0 .6-.2 1.1-.6 1.6L5 15.5h14l-1.4-1.9a2.6 2.6 0 0 1-.6-1.6V8.2a5 5 0 0 0-5-5z"/><path d="M9.6 18.3a2.4 2.4 0 0 0 4.8 0"/></svg></div>
-          <h3 data-i18n="c3t">급구 공고 실시간 알림</h3>
+          <div class="chead">
+            <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a5 5 0 0 0-5 5V12c0 .6-.2 1.1-.6 1.6L5 15.5h14l-1.4-1.9a2.6 2.6 0 0 1-.6-1.6V8.2a5 5 0 0 0-5-5z"/><path d="M9.6 18.3a2.4 2.4 0 0 0 4.8 0"/></svg></div>
+            <h3 data-i18n="c3t">급구 공고 실시간 알림</h3>
+          </div>
           <p data-i18n="c3d">선호 업종과 최저 시급 조건을 저장해두면 조건에 맞는 새 공고가 올라오는 즉시 알림이 갑니다. 팔로우한 업체는 우선 알림.</p>
         </div>
         <div class="card">
-          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1h-9.5L6 19.8V16H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1z"/></svg></div>
-          <h3 data-i18n="c4t">합격 후 바로 채팅</h3>
+          <div class="chead">
+            <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1h-9.5L6 19.8V16H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1z"/></svg></div>
+            <h3 data-i18n="c4t">합격 후 바로 채팅</h3>
+          </div>
           <p data-i18n="c4d">업주와 앱 안에서 1:1로 대화합니다. 전화번호를 주고받지 않아도 출근 시간·준비물을 바로 확인할 수 있습니다.</p>
         </div>
         <div class="card">
-          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3l6.5 2.6v5.4c0 4.6-2.9 7.3-6.5 8.6-3.6-1.3-6.5-4-6.5-8.6V5.9L12 3.3z"/><path d="M13 8.2l-3.3 4.4h2.5l-1.1 3.6 3.9-4.8h-2.5z" fill="currentColor" stroke="none"/></svg></div>
-          <h3 data-i18n="c5t">번개등급 신뢰 시스템</h3>
+          <div class="chead">
+            <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3l6.5 2.6v5.4c0 4.6-2.9 7.3-6.5 8.6-3.6-1.3-6.5-4-6.5-8.6V5.9L12 3.3z"/><path d="M13 8.2l-3.3 4.4h2.5l-1.1 3.6 3.9-4.8h-2.5z" fill="currentColor" stroke="none"/></svg></div>
+            <h3 data-i18n="c5t">번개등급 신뢰 시스템</h3>
+          </div>
           <p data-i18n="c5d">평점·완료 건수·노쇼 이력을 반영해 등급이 자동으로 매겨집니다. 성실하게 쌓을수록 더 좋은 공고로 이어집니다.</p>
         </div>
         <div class="card">
-          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.3" y="3.2" width="13.4" height="17.6" rx="2"/><line x1="8" y1="6.8" x2="16" y2="6.8"/><circle cx="8.6" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="15.4" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="8.6" cy="16.1" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="16.1" r=".9" fill="currentColor" stroke="none"/><circle cx="15.4" cy="16.1" r=".9" fill="currentColor" stroke="none"/></svg></div>
-          <h3 data-i18n="c6t">급여 계산기 내장</h3>
+          <div class="chead">
+            <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.3" y="3.2" width="13.4" height="17.6" rx="2"/><line x1="8" y1="6.8" x2="16" y2="6.8"/><circle cx="8.6" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="15.4" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="8.6" cy="16.1" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="16.1" r=".9" fill="currentColor" stroke="none"/><circle cx="15.4" cy="16.1" r=".9" fill="currentColor" stroke="none"/></svg></div>
+            <h3 data-i18n="c6t">급여 계산기 내장</h3>
+          </div>
           <p data-i18n="c6d">시급만 넣으면 일급·주급·월급이 계산됩니다. 주휴수당(주 15시간 이상), 3.3% 원천징수, 4대보험 옵션까지 반영합니다.</p>
         </div>
       </div>
@@ -361,8 +381,10 @@
       </div>
       <div class="grid">
         <div class="panel">
-          <span class="tag tag-w" data-i18n="w_tag">알바생</span>
-          <h3 data-i18n="w_t">오늘 당장 일하고 싶을 때</h3>
+          <div class="phead">
+            <h3 data-i18n="w_t">오늘 당장 일하고 싶을 때</h3>
+            <span class="tag tag-w" data-i18n="w_tag">알바생</span>
+          </div>
           <ul>
             <li data-i18n="w1">내 위치 반경의 스팟·단기·정기 공고를 지도로 확인</li>
             <li data-i18n="w2">스와이프로 훑고 마음에 들면 바로 지원</li>
@@ -373,8 +395,10 @@
           <a class="btn btn-primary" href="/바로알바.html?guest=1" data-i18n="w_cta">알바 찾아보기</a>
         </div>
         <div class="panel">
-          <span class="tag tag-b" data-i18n="o_tag">업주</span>
-          <h3 data-i18n="o_t">갑자기 사람이 필요할 때</h3>
+          <div class="phead">
+            <h3 data-i18n="o_t">갑자기 사람이 필요할 때</h3>
+            <span class="tag tag-b" data-i18n="o_tag">업주</span>
+          </div>
           <ul>
             <li data-i18n="o1">결원이 생기면 급구 공고를 즉시 등록</li>
             <li data-i18n="o2">팔로워 알바생에게 새 공고 알림 자동 발송</li>
@@ -423,8 +447,10 @@
       </div>
       <div class="grid">
         <div class="panel p-moim">
-          <span class="tag tag-m" data-i18n="m_tag">바로모임</span>
-          <h3 data-i18n="m_t">관심사가 같은 사람들과 가볍게</h3>
+          <div class="phead">
+            <h3 data-i18n="m_t">관심사가 같은 사람들과 가볍게</h3>
+            <span class="tag tag-m" data-i18n="m_tag">바로모임</span>
+          </div>
           <p data-i18n="m_p">스포츠·취미·친목·챌린지 중에서 고르고 인원과 장소, 날짜를 정해 모임을 엽니다. 개설한 모임은 지도 위에 표시돼 주변 사람들이 보고 참여를 신청합니다.</p>
           <ul>
             <li data-i18n="m1">내 주변 모임을 지도에서 카테고리별로 탐색</li>
@@ -432,11 +458,13 @@
             <li data-i18n="m3">참여가 확정되면 모임 단체채팅방에서 소통</li>
             <li data-i18n="m4">둘러보기는 가입 없이, 참여 신청은 로그인 후</li>
           </ul>
-          <a class="btn btn-ghost" href="/바로알바.html?guest=1" data-i18n="m_cta">모임 둘러보기</a>
+          <a class="btn btn-ghost" href="/바로알바.html?guest=1&amp;panel=moim" data-i18n="m_cta">바로모임 둘러보기</a>
         </div>
         <div class="panel p-mannam">
-          <span class="tag tag-n" data-i18n="n_tag">바로만남</span>
-          <h3 data-i18n="n_t">바로스팟과 바로미팅, 두 가지 방식</h3>
+          <div class="phead">
+            <h3 data-i18n="n_t">바로스팟과 바로미팅, 두 가지 방식</h3>
+            <span class="tag tag-n" data-i18n="n_tag">바로만남</span>
+          </div>
           <p data-i18n="n_p">한 사람과 조용히 만나는 1:1 매칭 바로스팟, 여럿이 함께하는 그룹 미팅 바로미팅. 알바 프로필과는 분리된 별도 프로필로 참여합니다.</p>
           <ul>
             <li data-i18n="n1">바로스팟은 신청하면 상대가 블라인드 상태에서 직접 고르는 1:1 매칭</li>
@@ -444,7 +472,7 @@
             <li data-i18n="n3">평점·노쇼 이력이 기준에 못 미치면 신청이 제한됩니다</li>
             <li data-i18n="n4">참여에는 이용권이 필요하며, 둘러보기는 무료입니다</li>
           </ul>
-          <a class="btn btn-ghost" href="/바로알바.html?guest=1" data-i18n="n_cta">바로만남 살펴보기</a>
+          <a class="btn btn-ghost" href="/바로알바.html?guest=1&amp;panel=mannam" data-i18n="n_cta">바로만남 둘러보기</a>
         </div>
       </div>
       <p data-i18n="e_note" style="text-align:center;font-size:14px;color:var(--muted);margin-top:22px;word-break:keep-all">
@@ -617,14 +645,14 @@
       m2:"Narrow it down to a specific activity to gather exactly who you want",
       m3:"Talk in the group chat once your spot is confirmed",
       m4:"Browsing needs no account; joining requires logging in",
-      m_cta:"Browse groups",
+      m_cta:"Browse BaroMoim",
       n_tag:"BaroMannam", n_t:"Two ways: BaroSpot and BaroMeeting",
       n_p:"BaroSpot is quiet one-on-one matching; BaroMeeting is a group meetup. You take part with a separate profile, kept apart from your work profile.",
       n1:"With BaroSpot you apply, and the other person picks from blinded candidates",
       n2:"With BaroMeeting you find an open meetup on the map and request to join",
       n3:"Applications are restricted if your rating or no-show history falls short",
       n4:"Taking part requires a pass; browsing is free",
-      n_cta:"Explore BaroMannam",
+      n_cta:"Browse BaroMannam",
       e_note:"Employers can register their venue as a BaroMannam meeting place. It appears on the map after admin approval.",
       faq_t:"Frequently asked questions",
       q1:"Is BaroAlba free?", a1:"Job seekers can search, apply and chat entirely for free. Posting a listing is free for employers too — only optional features such as premium placement are paid.",
@@ -672,14 +700,14 @@
       m2:"细化到具体项目，只召集想要的人",
       m3:"确认参加后在聚会群聊中交流",
       m4:"浏览无需注册，申请参加需登录",
-      m_cta:"浏览聚会",
+      m_cta:"浏览 BaroMoim",
       n_tag:"BaroMannam 相遇", n_t:"BaroSpot 与 BaroMeeting 两种方式",
       n_p:"与一个人安静相处的一对一匹配 BaroSpot，多人同行的团体聚会 BaroMeeting。使用与兼职资料分开的独立资料参与。",
       n1:"BaroSpot 由你提出申请，对方在匿名状态下直接挑选",
       n2:"BaroMeeting 在地图上找到招募中的聚会后申请参加",
       n3:"评分或爽约记录未达标准时将限制申请",
       n4:"参加需要使用券，浏览免费",
-      n_cta:"了解 BaroMannam",
+      n_cta:"浏览 BaroMannam",
       e_note:"商家可将自家门店登记为 BaroMannam 的会面场所，管理员审核通过后在地图上展示。",
       faq_t:"常见问题",
       q1:"BaroAlba 是免费的吗？", a1:"求职者搜索职位、申请、聊天全部免费。商家发布职位也免费，只有置顶曝光等可选功能才收费。",
@@ -727,7 +755,7 @@
       m2:"種目まで指定して、来てほしい人だけを集める",
       m3:"参加が確定したらグループチャットでやり取り",
       m4:"閲覧は登録不要、参加申込はログイン後",
-      m_cta:"集まりを見る",
+      m_cta:"バロモイムを見る",
       n_tag:"バロマンナム", n_t:"バロスポットとバロミーティング、2つの方法",
       n_p:"一人と静かに会う1対1マッチングのバロスポット、複数人で楽しむグループのバロミーティング。バイト用プロフィールとは分けた専用プロフィールで参加します。",
       n1:"バロスポットは申し込むと、相手がブラインド状態で直接選びます",
@@ -782,14 +810,14 @@
       m2:"Chỉ định tới từng bộ môn để gom đúng người mình muốn",
       m3:"Được duyệt tham gia là trò chuyện trong nhóm chat",
       m4:"Xem thì không cần tài khoản, xin tham gia mới cần đăng nhập",
-      m_cta:"Xem các nhóm",
+      m_cta:"Xem BaroMoim",
       n_tag:"BaroMannam", n_t:"Hai cách: BaroSpot và BaroMeeting",
       n_p:"BaroSpot là ghép đôi 1:1 để gặp riêng một người; BaroMeeting là buổi gặp nhóm nhiều người. Bạn tham gia bằng hồ sơ riêng, tách biệt với hồ sơ đi làm.",
       n1:"Với BaroSpot bạn gửi đăng ký, đối phương chọn trực tiếp trong danh sách ẩn danh",
       n2:"Với BaroMeeting bạn tìm buổi gặp đang tuyển trên bản đồ rồi xin tham gia",
       n3:"Đăng ký sẽ bị hạn chế nếu điểm đánh giá hoặc lịch sử không đến làm không đạt chuẩn",
       n4:"Tham gia cần vé sử dụng, còn xem thì miễn phí",
-      n_cta:"Tìm hiểu BaroMannam",
+      n_cta:"Xem BaroMannam",
       e_note:"Là chủ cơ sở, bạn có thể đăng ký cửa hàng của mình làm địa điểm gặp mặt BaroMannam. Sau khi quản trị viên duyệt, nó sẽ hiện trên bản đồ.",
       faq_t:"Câu hỏi thường gặp",
       q1:"BaroAlba có miễn phí không?", a1:"Người tìm việc dùng miễn phí toàn bộ từ tìm tin, ứng tuyển đến trò chuyện. Chủ cơ sở cũng đăng tin miễn phí, chỉ những tính năng tùy chọn như hiển thị nổi bật mới tính phí.",
@@ -837,14 +865,14 @@
       m2:"Указывайте конкретное занятие, чтобы собрать именно тех, кого хотите",
       m3:"После подтверждения участия — общий чат встречи",
       m4:"Смотреть можно без регистрации, для заявки нужен вход",
-      m_cta:"Посмотреть встречи",
+      m_cta:"Посмотреть BaroMoim",
       n_tag:"BaroMannam", n_t:"Два формата: BaroSpot и BaroMeeting",
       n_p:"BaroSpot — спокойное знакомство один на один, BaroMeeting — групповая встреча. Участие идёт по отдельному профилю, не связанному с рабочим.",
       n1:"В BaroSpot вы подаёте заявку, а собеседник выбирает из анонимных кандидатов",
       n2:"В BaroMeeting вы находите на карте открытую встречу и подаёте заявку",
       n3:"При низком рейтинге или неявках в прошлом заявки ограничиваются",
       n4:"Для участия нужен абонемент, просмотр — бесплатный",
-      n_cta:"Узнать о BaroMannam",
+      n_cta:"Посмотреть BaroMannam",
       e_note:"Работодатели могут зарегистрировать своё заведение как место встреч BaroMannam. После одобрения администратором оно появится на карте.",
       faq_t:"Частые вопросы",
       q1:"BaroAlba бесплатный?", a1:"Для соискателей поиск вакансий, отклики и переписка полностью бесплатны. Работодателям размещение тоже бесплатно — платными являются лишь дополнительные функции вроде премиального показа.",
@@ -892,7 +920,7 @@
       m2:"Нарийн төрлөөр нь заагаад хүссэн хүмүүсээ л цуглуулах",
       m3:"Оролцох нь батлагдвал бүлгийн чатаар харилцах",
       m4:"Үзэхэд бүртгэл шаардлагагүй, оролцох хүсэлтэд нэвтрэх шаардлагатай",
-      m_cta:"Цуглааныг үзэх",
+      m_cta:"BaroMoim-ыг үзэх",
       n_tag:"BaroMannam", n_t:"BaroSpot ба BaroMeeting гэсэн хоёр хэлбэр",
       n_p:"Нэг хүнтэй тайван уулзах 1:1 тохироо BaroSpot, олуулаа цуглах бүлгийн уулзалт BaroMeeting. Ажлын профайлаас тусдаа профайлаар оролцоно.",
       n1:"BaroSpot-д та хүсэлт өгөхөд нөгөө тал нэр нуусан жагсаалтаас шууд сонгоно",
@@ -947,7 +975,7 @@
       m2:"विस्तृत विधासम्म तोकेर चाहेकै मान्छे मात्र जम्मा गर्नुहोस्",
       m3:"सहभागिता पक्का भएपछि समूह च्याटमा कुराकानी",
       m4:"हेर्न खाता चाहिँदैन, सहभागी हुन लग इन चाहिन्छ",
-      m_cta:"समूह हेर्नुहोस्",
+      m_cta:"BaroMoim हेर्नुहोस्",
       n_tag:"BaroMannam", n_t:"BaroSpot र BaroMeeting — दुई तरिका",
       n_p:"एक जनासँग शान्त रूपमा भेट्ने १:१ मिलान BaroSpot, धेरै जना मिलेर गर्ने समूह भेट BaroMeeting। कामको प्रोफाइलभन्दा छुट्टै प्रोफाइलबाट सहभागी हुनुहुन्छ।",
       n1:"BaroSpot मा तपाईंले अनुरोध गरेपछि अर्को पक्षले गोप्य सूचीबाट सीधै छान्छ",

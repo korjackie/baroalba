@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '585';
+  const _APP_V = '586';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -781,6 +781,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 바로스팟 호감표시 알림/수락알림 딥링크 - 트래킹 시트를 열어 호감표시 섹션이 보이게 함
   const deepBarospotInterestId = _dParams.get('barospot_interest') || _dParams.get('barospot_chat');
   if (deepBarospotInterestId) setTimeout(() => _openSpotEventTracking(deepBarospotInterestId, true), 800);
+  // 랜딩(/)의 "바로모임 둘러보기"·"바로만남 둘러보기" CTA 처리.
+  // 이 파라미터가 없던 동안 두 CTA 는 ?guest=1 만 달고 있어서 앱 홈으로만 떨어졌고,
+  // 버튼 문구가 약속한 화면(모임 목록/만남 목록)은 열리지 않았다 — Phase 60 교훈
+  // ("링크가 200을 주는 것과 사용자가 그 화면을 볼 수 있는 것은 다르다")의 재발이다.
+  // 두 함수 모두 게스트 차단이 없어 로그인 없이도 목록까지 보인다(확인 완료).
+  const deepPanel = _dParams.get('panel');
+  if (deepPanel === 'moim')   setTimeout(() => openMoimPanel(), 800);
+  if (deepPanel === 'mannam') setTimeout(() => openMannnamPanel(), 800);
   // 커뮤니티 게시글 딥링크 처리 (공유하기로 받은 링크)
   const deepPostId = _dParams.get('post');
   if (deepPostId) setTimeout(() => { openCommunityPanel(); openCommunityPost(deepPostId); }, 800);
