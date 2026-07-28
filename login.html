@@ -2,7 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- viewport-fit=cover 가 없으면 env(safe-area-inset-*) 이 전부 0px 로 계산된다.
+       바로알바.html 에는 있었는데 이 파일에만 빠져 있어서, 안드로이드 앱(edge-to-edge
+       WebView)에서 스크롤하면 로그인/회원가입 탭이 상태표시줄 밑으로 파고들었다. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#C8102E">
   <meta name="color-scheme" content="light">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -41,6 +44,13 @@
       --kakao: #FEE500;
       --naver: #03C75A;
       --google-border: #dadce0;
+      /* 이 페이지는 app.js/style.css 를 안 쓰는 독립 파일이라 안전영역 처리가 통째로
+         없었다. 앱과 같은 이름/같은 계산식으로 맞춘다(style.css:22~25). --sat 은 아래
+         head 스크립트가 실측값으로 덮어쓴다. */
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sat-safe: max(var(--sat), env(safe-area-inset-top, 0px));
+      --sab-safe: max(var(--sab), env(safe-area-inset-bottom, 0px));
     }
     body {
       font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
@@ -49,6 +59,19 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+    }
+    /* 상태표시줄 자리를 브랜드 빨강으로 덮는 고정 띠.
+       edge-to-edge WebView 에서는 페이지가 상태표시줄 밑까지 그려지므로, 스크롤하면
+       흰 카드가 그 아래로 올라와 시간·배터리 글자와 겹친다(실기기 제보 2026-07-28).
+       theme-color 가 이미 #C8102E 라 첫 화면과 같은 색이고, 계속 빨강이라 상태표시줄
+       아이콘도 흰색으로 고정된다(스크롤하다 검게 변하던 것도 같이 해결). */
+    body::before {
+      content: '';
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--sat-safe);
+      background: var(--red);
+      z-index: 9998;
+      pointer-events: none;
     }
 
     /* ── 스플래시 ── */
@@ -78,13 +101,26 @@
     @keyframes splash-slide { 0%{transform:translateX(-150%)} 100%{transform:translateX(350%)} }
 
     /* ── 메인 레이아웃 ── */
-    .screen { display: none; flex-direction: column; min-height: 100dvh; overflow-y: auto; }
+    /* padding-top 으로 콘텐츠 시작점을 상태표시줄 아래로 내린다. 위 고정 띠와 같은
+       빨강 위에 얹히므로 시각적 이음매는 없다. 하단은 제스처 바 자리 확보. */
+    .screen {
+      display: none; flex-direction: column; min-height: 100dvh; overflow-y: auto;
+      padding-top: var(--sat-safe);
+    }
     .screen.active { display: flex; }
+
+    /* 화면 전체를 덮는 고정 오버레이들도 같은 보정이 필요하다(inset:0 이라 상태표시줄
+       밑에서 시작한다) */
+    #screen-pw-reset, #screen-inline-reset, #screen-naver-magic {
+      padding-top: calc(40px + var(--sat-safe)) !important;
+      padding-bottom: calc(40px + var(--sab-safe)) !important;
+    }
 
     /* ── 로그인 화면 ── */
     .hero {
       background: #C8102E;
-      padding: 48px 24px 36px;
+      /* 상태표시줄 높이만큼 위에서 이미 밀렸으므로 48 → 36 으로 줄여 총여백을 맞춘다 */
+      padding: 36px 24px 36px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -104,7 +140,8 @@
     .card {
       background: #fff;
       border-radius: 28px 28px 0 0;
-      padding: 28px 24px 32px;
+      /* 하단 제스처 바(--sab-safe)가 이메일 입력창·푸터를 덮던 것 보정 */
+      padding: 28px 24px calc(32px + var(--sab-safe));
       flex: 1;
       overflow-y: auto;
       box-shadow: 0 -4px 24px rgba(0,0,0,0.08);
@@ -351,6 +388,37 @@
     /* 네이버 버튼 내부 div 숨기기 (SDK 자체 버튼 대신 커스텀 사용) */
     #naverIdLogin { display: none !important; }
   </style>
+
+  <!-- ── 상태표시줄 높이 실측 ─────────────────────────────────────
+       app.js:505~529 와 같은 로직을 이 독립 파일에도 넣는다(규칙 7 — 이미 푼 문제를
+       다시 설계하지 않는다). CSS의 env(safe-area-inset-top) 만 믿으면 안 되는 이유:
+       네이티브 Android 앱은 TWA가 아니라 MainActivity.java가 감싼 raw WebView라
+       display-mode:standalone 도 아니고 env() 도 0px 로 나온다. 그래서 노치 없는
+       안드로이드 기기에서는 안전영역이 통째로 0이 되어 위 CSS가 아무 일도 안 한다.
+       window.AndroidBridge 존재로 네이티브 앱을 판별해 28px 폴백을 넣는다. -->
+  <script>
+  (function () {
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;height:env(safe-area-inset-top,0px);width:0';
+    document.documentElement.appendChild(probe);
+    var sat = probe.offsetHeight;
+    probe.remove();
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+    var isNativeApp = !!window.AndroidBridge;
+    if ((isStandalone || isNativeApp) && sat === 0) sat = 28; // 비노치 안드로이드 기본 상태표시줄
+    if (sat > 0) document.documentElement.style.setProperty('--sat', sat + 'px');
+
+    // 하단 제스처 바도 같은 이유로 0 이 나온다
+    var pb = document.createElement('div');
+    pb.style.cssText = 'position:fixed;bottom:0;left:0;height:env(safe-area-inset-bottom,0px);width:0';
+    document.documentElement.appendChild(pb);
+    var sab = pb.offsetHeight;
+    pb.remove();
+    if ((isStandalone || isNativeApp) && sab === 0) sab = 16;
+    if (sab > 0) document.documentElement.style.setProperty('--sab', sab + 'px');
+  })();
+  </script>
 </head>
 <body>
 
@@ -891,7 +959,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 인앱 브라우저 감지 시 상단 배너 표시
   if (isInAppBrowser()) {
     const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;font-size:12px;font-weight:700;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
+    // top:0 고정이라 상태표시줄과 겹친다 - padding-top 에 안전영역을 더해 내린다
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:calc(10px + var(--sat-safe)) 16px 10px;font-size:12px;font-weight:700;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     banner.innerHTML = `<span>더 나은 경험을 위해 ${isIOS ? 'Safari' : 'Chrome'}에서 열어주세요</span>
       <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:800">${isIOS ? 'Safari' : 'Chrome'}으로 열기</button>`;
