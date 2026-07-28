@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '587';
+  const _APP_V = '588';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1671,9 +1671,7 @@ function renderList() {
     const isUrgent = job.status === 'urgent';
     const hasSurge = job.wage_delta > 0;
     const isErrand = job.work_type === 'errand';
-    const _ap0 = (job.address||'').split('\n');
-    const _da0 = _ap0[0] ? (_ap0[1] ? _ap0[0] + ' · ' + _ap0[1].split(' ').slice(0,3).join(' ') : _ap0[0]) : null;
-    const dist = job.is_remote ? t('remote_work_label') : _distStr(job.distance_m, job.lat, job.lng, _da0);
+    const dist = job.is_remote ? t('remote_work_label') : _distStr(job.distance_m, job.lat, job.lng, _addrLabel(job.address));
     const startStr = job.start_time ? formatTime(job.start_time) : t('undecided');
     const surgeTimer = job.surge_enabled ? buildSurgeTimer(job) : '';
     const appSt = job.applied_status;
@@ -1898,9 +1896,9 @@ async function loadMoimList(cat = '') {
   const homeList  = document.getElementById('home-moim-list');
   if (!container && !homeList) return; // 둘 다 없으면 패스
 
-  if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px">' + t('loading_generic') + '</div></div>';
+  if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="display:flex;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 14h1a4 4 0 0 1 4 4v2"/></svg></div><div style="font-size:13px;margin-top:8px">' + t('loading_generic') + '</div></div>';
 
-  const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><span style="font-size:22px">🤝</span><span style="font-size:11px;font-weight:800;color:var(--purple)" data-i18n="create_first_moim">첫 모임 만들기</span></div>';
+  const MOIM_PLACEHOLDER = '<div onclick="openMoimPanel(true)" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:140px;height:80px;border-radius:13px;border:1.5px dashed #c4b5fd;background:#faf5ff;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 14h1a4 4 0 0 1 4 4v2"/></svg><span style="font-size:11px;font-weight:800;color:var(--purple)" data-i18n="create_first_moim">첫 모임 만들기</span></div>';
 
   try {
     const _moimNow = new Date().toISOString();
@@ -1934,7 +1932,7 @@ async function loadMoimList(cat = '') {
   } catch(e) {
     if (myVer !== _moimLoadVer) return;
     _moimList = [];
-    if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="font-size:28px">🤝</div><div style="font-size:13px;margin-top:8px;line-height:1.6">' + t('chat_load_failed').replace('\n', '<br>') + '</div></div>';
+    if (container) container.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb"><div style="display:flex;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 14h1a4 4 0 0 1 4 4v2"/></svg></div><div style="font-size:13px;margin-top:8px;line-height:1.6">' + t('chat_load_failed').replace('\n', '<br>') + '</div></div>';
     if (homeList) { homeList.innerHTML = MOIM_PLACEHOLDER; if (typeof applyLang === 'function') applyLang(); }
     return;
   }
@@ -2719,7 +2717,7 @@ async function toggleMoimChatParticipants() {
       return `<div style="display:flex;align-items:center;gap:8px;padding:6px 4px">
         ${avatarHtml}
         <span style="font-size:13px;font-weight:700;color:#333">${nick}</span>
-        ${isHost ? `<span style="font-size:10px;color:#e11d48;font-weight:700">${t('moim_chat_host_badge')}</span>` : ''}
+        ${isHost ? `<span style="font-size:10px;color:#DB2777;font-weight:700">${t('moim_chat_host_badge')}</span>` : ''}
       </div>`;
     }
     const name = w?.name || t('moim_chat_participant_default');
@@ -2866,7 +2864,7 @@ function setMapMode(mode) {
   if (listFloat) {
     if (mode === 'moim' || mode === 'baromeet' || mode === 'all') {
       listFloat.style.display = 'flex';
-      listFloat.style.background = mode === 'baromeet' ? '#e11d48' : mode === 'moim' ? 'var(--purple)' : '#1e293b';
+      listFloat.style.background = mode === 'baromeet' ? '#DB2777' : mode === 'moim' ? 'var(--purple)' : '#1e293b';
     } else {
       listFloat.style.display = 'none';
     }
@@ -2954,7 +2952,7 @@ function _baromeetListRow(m) {
     <div style="width:38px;height:38px;border-radius:10px;background:#FFF1F2;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💕</div>
     <div style="min-width:0;flex:1">
       <div style="font-size:14px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title || '바로미팅'}</div>
-      <div style="font-size:12px;color:#e11d48;font-weight:700;margin-top:2px">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr} · ${isFull ? t('closed_label') : t('recruiting_label')}</div>
+      <div style="font-size:12px;color:#DB2777;font-weight:700;margin-top:2px">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr} · ${isFull ? t('closed_label') : t('recruiting_label')}</div>
       <div style="font-size:11px;color:#999;margin-top:1px">${m.location_name || t('place_undecided_label')}</div>
     </div>
   </div>`;
@@ -3044,11 +3042,11 @@ async function _renderBaromeetMarkers() {
       ? new Date(m.gathering_date).toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' })
       : '';
     const content = `<div onclick="openBaromeetDetail('${m.id}')" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:max-content">
-      <div style="background:#e11d48;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(225,29,72,0.4);white-space:nowrap;max-width:150px">
+      <div style="background:#DB2777;color:#fff;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.4;box-shadow:0 2px 8px rgba(225,29,72,0.4);white-space:nowrap;max-width:150px">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">💕 ${titleShort}</div>
         <div style="font-size:10px;font-weight:700;opacity:0.85;margin-top:2px;white-space:nowrap">${m.target_age_range ? m.target_age_range + ' · ' : ''}${dateStr ? dateStr + ' · ' : ''}${isFull ? t('closed_label') : t('recruiting_label')}</div>
       </div>
-      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #e11d48"></div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #DB2777"></div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(m.lat, m.lng), content, yAnchor: 1.1 });
     overlay.setMap(kakaoMap);
@@ -3177,9 +3175,9 @@ function _jcardH(job) {
   const isUrgent = job.status === 'urgent';
   const isErrand = job.work_type === 'errand';
   const wage = job.current_wage || 0;
-  const _ap = (job.address || '').split('\n');
-  const _da = _ap[0] ? (_ap[1] ? _ap[0] + ' · ' + _ap[1].split(' ').slice(0, 3).join(' ') : _ap[0]) : null;
-  const dist = job.is_remote ? t('remote_work_label') : _distStr(job.distance_m, job.lat, job.lng, _da);
+  // 152px 카드에 주소 전체를 넣으면 잘려서 아무 정보도 안 된다 — 시/구/동 3토막까지만
+  const dist = job.is_remote ? t('remote_work_label')
+    : _distStr(job.distance_m, job.lat, job.lng, _addrShort(job.address, 2));
 
   const _rem = (job.needed_count ?? 0) - (job.filled_count ?? 0);
   const chips = [];
@@ -3946,8 +3944,7 @@ function _renderHomeSearchList(filtered) {
     const isUrgent = job.status === 'urgent';
     const isErrand = job.work_type === 'errand';
     const wage = job.current_wage || 0;
-    const _ap = (job.address || '').split('\n');
-    const regionShort = ((_ap[1] || _ap[0] || '').split(' ').slice(0, 3).join(' ')) || '';
+    const regionShort = _addrShort(job.address, 3);
     const typeLabel = TYPE_LABEL[job.work_type || 'spot'] || '스팟';
     const _rem = (job.needed_count ?? 0) - (job.filled_count ?? 0);
 
@@ -5766,9 +5763,9 @@ async function loadMyBaromeetPreview() {
     items.push({
       sortDate: g.gathering_date ? new Date(g.gathering_date).getTime() : 0,
       html: `<div onclick="event.stopPropagation();openBaromeetDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#fff1f2;border-radius:10px;padding:10px 12px;cursor:pointer">
-        <div style="font-size:10px;font-weight:800;color:#e11d48;margin-bottom:2px">🤝 바로미팅</div>
+        <div style="font-size:10px;font-weight:800;color:#DB2777;margin-bottom:2px">🤝 바로미팅</div>
         <div style="font-size:12px;font-weight:800;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'바로미팅'}</div>
-        <div style="font-size:10.5px;color:#e11d48;margin-top:3px">${dateStr}${statusTag}</div>
+        <div style="font-size:10.5px;color:#DB2777;margin-top:3px">${dateStr}${statusTag}</div>
       </div>`,
     });
   });
@@ -11107,6 +11104,58 @@ function getCatClass(cat) {
   return map[cat] || '';
 }
 
+// ── 공고 주소 파서 ────────────────────────────────────────────
+// 공고 주소는 "업체명\n도로명주소" 포맷을 전제로 화면 곳곳에서 split('\n')[1] 로
+// 지역을 뽑아 왔는데, 실제 DB에는 개행이 없는 데이터가 들어와 있다.
+// 원인: f-address 가 <input> 이라 값에 개행을 넣어도 브라우저가 조용히 지운다
+// (HTML 명세의 value sanitization — textarea 는 유지, input 은 삭제. 실측 확인).
+// 그래서 "올리브스테이\n서울특별시 중구…" 로 넣은 것이 "올리브스테이서울특별시 중구…"
+// 로 저장됐고, 지역 추출이 전 화면에서 깨져 있었다. (2026-07-28)
+// 입력 쪽은 _setJobAddress/_getJobAddress 로 고쳤지만, 이미 붙어서 저장된 과거
+// 데이터는 되돌릴 수 없으므로 표시 시점에 시/도 이름을 경계로 잘라 복구한다.
+const _SIDO_RE = /(서울특별시|부산광역시|대구광역시|인천광역시|광주광역시|대전광역시|울산광역시|세종특별자치시|경기도|강원특별자치도|강원도|충청북도|충청남도|전북특별자치도|전라북도|전라남도|경상북도|경상남도|제주특별자치도)/;
+
+// 공고 등록 폼의 주소 쓰기/읽기 — 개행은 절대 <input> 을 통과시키지 않는다.
+// placeName 만 보이는 칸에 넣고, 도로명주소는 hidden(f-address-road)에 따로 둔다.
+function _setJobAddress(placeName, roadAddr) {
+  const el = document.getElementById('f-address');
+  const road = document.getElementById('f-address-road');
+  if (el) el.value = placeName || roadAddr || '';
+  if (road) road.value = (placeName && roadAddr && placeName !== roadAddr) ? roadAddr : '';
+}
+// 저장 직전에만 "업체명\n도로명주소" 로 합친다(DB/렌더러가 기대하는 포맷).
+function _getJobAddress() {
+  const a = (document.getElementById('f-address')?.value || '').trim();
+  const b = (document.getElementById('f-address-road')?.value || '').trim();
+  if (!a) return null;
+  return (b && b !== a) ? a + '\n' + b : a;
+}
+
+function _splitAddr(address) {
+  const raw = (address || '').trim();
+  if (!raw) return { place: '', road: '' };
+  const nl = raw.split('\n');
+  if (nl.length > 1) return { place: nl[0].trim(), road: nl.slice(1).join(' ').trim() };
+  const m = raw.match(_SIDO_RE);
+  if (m && m.index > 0) return { place: raw.slice(0, m.index).trim(), road: raw.slice(m.index).trim() };
+  return { place: '', road: raw };
+}
+
+// 카드에 쓸 짧은 지역 문자열 ("서울특별시 중구 을지로32길 33 3층" → "서울특별시 중구 을지로32길")
+function _addrShort(address, maxWords) {
+  const { road, place } = _splitAddr(address);
+  const src = road || place;
+  if (!src) return '';
+  return src.split(' ').slice(0, maxWords || 3).join(' ');
+}
+
+// 카드 메타줄용 — 업체명과 지역을 가운뎃점으로 잇는다(둘 다 있을 때만)
+function _addrLabel(address) {
+  const { place, road } = _splitAddr(address);
+  const short = road ? road.split(' ').slice(0, 3).join(' ') : '';
+  return [place, short].filter(Boolean).join(' · ') || null;
+}
+
 function _distStr(distM, lat, lng, addrFallback) {
   if (distM != null && !isNaN(distM)) {
     return distM < 1000 ? Math.round(distM)+'m' : (distM/1000).toFixed(1)+'km';
@@ -11402,8 +11451,7 @@ function renderSearchResults(list) {
     const isUrgent = job.status === 'urgent';
     const isErrand = job.work_type === 'errand';
     const bizName  = job.businesses?.name || '';
-    const addrPart = (job.address || '').split('\n')[1] || (job.address || '');
-    const regionShort = addrPart.split(' ').slice(0, 3).join(' ');
+    const regionShort = _addrShort(job.address, 3);
     const wt = job.work_type || 'spot';
     const typeLabel = TYPE_LABEL[wt] || '스팟';
 
@@ -11748,7 +11796,7 @@ async function loadCommunityPosts(cat) {
 
   const CAT_INFO = {
     review:{ bg:'#FFF7ED', color:'#EA580C', label:t('comm_cat_review') },
-    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:t('comm_cat_meetup') },
+    meetup:{ bg:'#FFF1F2', color:'#DB2777', label:t('comm_cat_meetup') },
     info:  { bg:'#EFF6FF', color:'var(--blue)', label:t('comm_cat_info') },
     free:  { bg:'#F5F3FF', color:'var(--purple)', label:t('comm_cat_free') },
     owner: { bg:'#FEF3C7', color:'#D97706', label:t('comm_cat_owner') },
@@ -11796,7 +11844,7 @@ async function openCommunityPost(postId) {
 
   const CAT_INFO = {
     review:{ bg:'#FFF7ED', color:'#EA580C', label:t('comm_cat_review') },
-    meetup:{ bg:'#FFF1F2', color:'#e11d48', label:t('comm_cat_meetup') },
+    meetup:{ bg:'#FFF1F2', color:'#DB2777', label:t('comm_cat_meetup') },
     info:  { bg:'#EFF6FF', color:'var(--blue)', label:t('comm_cat_info') },
     free:  { bg:'#F5F3FF', color:'var(--purple)', label:t('comm_cat_free') },
     owner: { bg:'#FEF3C7', color:'#D97706', label:t('comm_cat_owner') },
@@ -14205,7 +14253,7 @@ function openPostingForm() {
   document.getElementById('f-wage').value = '';
   document.getElementById('f-needed').value = 1;
   document.getElementById('f-desc').value = '';
-  document.getElementById('f-address').value = '';
+  _setJobAddress('', '');
   document.getElementById('f-lat').value = '';
   document.getElementById('f-lng').value = '';
   document.getElementById('location-result').style.display = 'none';
@@ -14375,7 +14423,7 @@ function openEditForm(jobId) {
   if (p.lat && p.lng) {
     showMiniMap(p.lat, p.lng, p.address || '');
     if (p.address) {
-      document.getElementById('f-address').value = p.address;
+      _setJobAddress('', p.address);
       const _eParts = p.address.split('\n');
       const _eLabel = _eParts.length > 1
         ? _eParts[0] + ' · ' + _eParts[1].split(' ').slice(0,3).join(' ')
@@ -14614,7 +14662,7 @@ function setLocTab(n) {
 function setLocationResult(lat, lng, label) {
   document.getElementById('f-lat').value = lat;
   document.getElementById('f-lng').value = lng;
-  document.getElementById('f-address').value = label;
+  _setJobAddress('', label);
   document.getElementById('location-result').textContent = '\u{1F4CD} ' + label;
   document.getElementById('location-result').style.display = 'block';
   document.getElementById('addr-results').style.display = 'none';
@@ -14668,7 +14716,7 @@ async function applyDirectAddr() {
   } else if (bizRecord?.lat && bizRecord?.lng) {
     document.getElementById('f-lat').value = bizRecord.lat;
     document.getElementById('f-lng').value = bizRecord.lng;
-    document.getElementById('f-address').value = text;
+    _setJobAddress('', text);
     document.getElementById('location-result').textContent = '\u{1F4CD} ' + text + t('ownr_biz_location_based_suffix');
     document.getElementById('location-result').style.display = 'block';
     showMiniMap(bizRecord.lat, bizRecord.lng);
@@ -14763,7 +14811,7 @@ function selectPlace(idx) {
   document.getElementById('f-naver-link').value = item.link || '';
   const roadAddr = item.roadAddress || item.address || '';
   // DB에 장소명 + 도로명 주소 모두 저장
-  document.getElementById('f-address').value = item.title + (roadAddr ? '\n' + roadAddr : '');
+  _setJobAddress(item.title, roadAddr);
   const locLabel = `\u{1F4CD} ${item.title}${roadAddr ? ' · ' + roadAddr : ''}${item.link ? '  ✅' : ''}`;
   document.getElementById('location-result').textContent = locLabel;
   document.getElementById('location-result').style.display = 'block';
@@ -14781,7 +14829,7 @@ function searchKakaoFallback(query) {
       // 🔴 찾은 주소를 화면(location-result)에만 보여주고 f-address 에는 안 넣고 있었다
       // (2026-07-28 수정). 그래서 이 폴백 경로로 위치를 잡으면 좌표만 저장되고
       // address 는 null 로 들어갔다. 다른 위치선택 경로들은 전부 f-address 를 채운다.
-      document.getElementById('f-address').value = r.address_name;
+      _setJobAddress('', r.address_name);
       document.getElementById('location-result').textContent = '\u{1F4CD} ' + r.address_name;
       document.getElementById('location-result').style.display = 'block';
       document.getElementById('place-results').style.display = 'none';
@@ -14889,7 +14937,7 @@ async function submitPosting() {
     showToast(t('ownr_end_date_future_notice')); return;
   }
 
-  const addrText = document.getElementById('f-address')?.value.trim()
+  const addrText = _getJobAddress()
     || document.getElementById('f-direct-addr')?.value.trim() || null;
 
   // 근무지 주소 필수 (비대면 제외, 2026-07-28). 좌표만 있으면 지도엔 찍히지만
@@ -15234,7 +15282,7 @@ function copyPosting(jobId) {
   // 지우니까, 복사로 올린 공고는 전부 address=null 로 저장됐다. 아래 showMiniMap 이
   // 이미 p.address 를 쓰고 있는 걸 보면 원래 의도도 주소를 들고 오는 쪽이었다.
   // (DB 실측에서 address 가 14/25 밖에 안 차 있던 주된 경로 중 하나)
-  document.getElementById('f-address').value = p.address || '';
+  _setJobAddress('', p.address || '');
   if (p.start_time) {
     const s = new Date(p.start_time);
     setTimeSelects('start', s);
@@ -15287,7 +15335,7 @@ function reopenWithEdit(jobId) {
   document.getElementById('f-desc').value = p.description || '';
   document.getElementById('f-lat').value = p.lat;
   document.getElementById('f-lng').value = p.lng;
-  document.getElementById('f-address').value = p.address || '';
+  _setJobAddress('', p.address || '');
   if (p.start_time) {
     const s = new Date(p.start_time);
     setTimeSelects('start', s);
@@ -17146,9 +17194,10 @@ function applyPlaceToForm(placeId) {
   document.getElementById('f-lng').value = p.lng;
   if (p.naver_url) document.getElementById('f-naver-link').value = p.naver_url;
   showMiniMap(p.lat, p.lng, p.address || p.name);
-  // "업체명\n도로명주소" 포맷으로 저장 — 위치 미설정 방지 + 상세 표기
-  const addrSave = p.name + (p.address ? '\n' + p.address : '');
-  document.getElementById('f-address').value = addrSave;
+  // "업체명\n도로명주소" 포맷으로 저장 — 위치 미설정 방지 + 상세 표기.
+  // ⚠️ 개행을 f-address(<input>)에 직접 넣으면 브라우저가 지운다. _setJobAddress 가
+  //    도로명주소를 hidden 에 따로 담고, 저장 시점에 _getJobAddress 가 합친다.
+  _setJobAddress(p.name, p.address);
   const shortAddr = p.address ? p.address.split(' ').slice(0,3).join(' ') : '';
   document.getElementById('location-result').textContent = '\u{1F4CD} ' + p.name + (shortAddr ? ' · ' + shortAddr : '');
   document.getElementById('location-result').style.display = 'block';
@@ -18584,9 +18633,16 @@ async function _loadHomeBaromeetTeaser() {
   const section = document.getElementById('home-baromeet-section');
   const list = document.getElementById('home-baromeet-list');
   if (!section || !list) return;
+  // 🔴 날짜 필터가 없어서 이미 지난 바로미팅이 "모집 중"으로 계속 떠 있었다.
+  // 형제 기능인 바로모임(loadMoimList)에는 같은 필터가 이미 있었는데 여기만 빠져서,
+  // 같은 홈 화면의 두 배너가 서로 다른 규칙으로 동작하고 있었다. (2026-07-28)
+  // status 만 믿으면 안 된다 — autoCloseExpiredGatherings() 는 host_id 가 나인 것만
+  // 닫으므로 남이 만든 모임은 지나도 영원히 'open' 이다.
+  const _now = new Date().toISOString();
   const { data } = await db.from('gatherings')
     .select('id,title,gathering_date,baromeeting_male_max,baromeeting_female_max,baromeeting_male_cur,baromeeting_female_cur')
     .eq('status', 'open').eq('category', 'baromeeting')
+    .or(`gathering_date.is.null,gathering_date.gte.${_now}`)
     .order('created_at', { ascending: false }).limit(6);
   if (!data?.length) { section.style.display = 'none'; }
   else { section.style.display = 'block'; list.innerHTML = data.map(m => _baromeetHomeCard(m)).join(''); }
@@ -18600,9 +18656,15 @@ async function _loadHomeBarospotTeaser() {
   const section = document.getElementById('home-barospot-section');
   const list = document.getElementById('home-barospot-list');
   if (!section || !list) return;
+  // _loadHomeBaromeetTeaser 와 같은 이유로 날짜 필터 추가 (2026-07-28).
+  // 실기기 제보: 7/16 스팟이 7/28 까지 "모집 중 · 자리있음" 으로 홈에 떠 있었다.
+  // barospot_events 는 자동 마감 로직 자체가 없어서 status 는 영원히 recruiting_male 이다.
+  const _now = new Date().toISOString();
   const { data } = await db.from('barospot_events')
     .select('id, event_date, barospot_restaurants(name)')
-    .eq('status', 'recruiting_male').order('event_date', { ascending: true }).limit(6);
+    .eq('status', 'recruiting_male')
+    .or(`event_date.is.null,event_date.gte.${_now}`)
+    .order('event_date', { ascending: true }).limit(6);
   if (!data?.length) { section.style.display = 'none'; }
   else { section.style.display = 'block'; list.innerHTML = data.map(ev => _barospotHomeCard(ev)).join(''); }
   _updateHomeMannamEmptyState();
@@ -18615,11 +18677,11 @@ function _barospotHomeCard(ev) {
   const dateStr = ev.event_date ? new Date(ev.event_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
   // 바로모임 홈카드(_moimHomeCard)와 동일한 구성/아이콘(.mc-cat/.mc-title/.mc-date/.mc-slots/.mc-fee) 재사용
   return `<div onclick="openMannnamPanel()" class="moim-card" style="flex-shrink:0;width:160px;padding:16px">
-    <div class="mc-cat" style="color:#e11d48">바로스팟</div>
+    <div class="mc-cat" style="color:#DB2777">바로스팟</div>
     <div class="mc-title">${r.name || '바로스팟'}</div>
     <div class="mc-date">${dateStr}</div>
     <div class="mc-slots">${t('baromeet_home_recruit_male')}</div>
-    <div class="mc-fee" style="color:#e11d48">${t('spot_available')}</div>
+    <div class="mc-fee" style="color:#DB2777">${t('spot_available')}</div>
   </div>`;
 }
 // 바로미팅/바로스팟 둘 다 없을 때도 바로모임 카드와 높이가 맞도록 빈 상태 문구를 채워둠
@@ -18641,11 +18703,11 @@ function _baromeetHomeCard(m) {
   const dateStr = m.gathering_date ? new Date(m.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
   // 바로모임 홈카드(_moimHomeCard)와 동일한 구성/아이콘(.mc-cat/.mc-title/.mc-date/.mc-slots/.mc-fee)을 재사용
   return `<div onclick="openMannnamPanel()" class="moim-card" style="flex-shrink:0;width:160px;padding:16px">
-    <div class="mc-cat" style="color:#e11d48">바로미팅</div>
+    <div class="mc-cat" style="color:#DB2777">바로미팅</div>
     <div class="mc-title">${m.title||'바로미팅'}</div>
     <div class="mc-date">${dateStr}</div>
     <div class="mc-slots">${isFull ? t('moim_closed') : t('moim_slots_left').replace('{n}', remTotal)}</div>
-    <div class="mc-fee" style="color:${isFull?'#94a3b8':'#e11d48'}">${isFull?t('moim_closed'):t('spot_available')}</div>
+    <div class="mc-fee" style="color:${isFull?'#94a3b8':'#DB2777'}">${isFull?t('moim_closed'):t('spot_available')}</div>
   </div>`;
 }
 
@@ -19495,13 +19557,13 @@ async function _enterBaromeetChat(gatheringId, title, nick, showPhoto, photoUrl)
   // 바로모임(보라)/바로미팅(로즈)을 색으로 구분 - 헤더 배경 전체를 옅게 tint
   // (바로알바 1:1 채팅은 기존 화이트 그대로 유지)
   const _bcSafearea = document.getElementById('moim-chat-safearea');
-  if (_bcSafearea) _bcSafearea.style.background = '#e11d48';
+  if (_bcSafearea) _bcSafearea.style.background = '#DB2777';
   const _bcHeader = document.getElementById('moim-chat-header');
   if (_bcHeader) _bcHeader.style.background = '#FFF1F2';
   const _bcEyebrow = document.getElementById('moim-chat-eyebrow');
-  if (_bcEyebrow) { _bcEyebrow.textContent = '💕 ' + t('mannam_chat_room_label'); _bcEyebrow.style.color = '#e11d48'; }
+  if (_bcEyebrow) { _bcEyebrow.textContent = '💕 ' + t('mannam_chat_room_label'); _bcEyebrow.style.color = '#DB2777'; }
   const _bcSendBtn = document.querySelector('#moim-chat-input-bar button[onclick="sendMoimChat()"]');
-  if (_bcSendBtn) _bcSendBtn.style.background = '#e11d48';
+  if (_bcSendBtn) _bcSendBtn.style.background = '#DB2777';
   // FAB(z-index:520)이 panel-moim-chat(z-index:400) 위로 뚫고 나오는 현상 방지 + 키보드 가림 방지
   // (openMoimChat과 동일한 panel-moim-chat DOM을 공유하면서도 이 등록이 빠져있던 게 원인)
   const _bcFab = document.getElementById('posting-fab');
@@ -20501,7 +20563,7 @@ function _renderSpotEventCard(ev, preview) {
   // 피드백이 있었음 - 분홍색 배경+라벨로 식당 정보와 시각적으로 분리하고 의미를 명시
   const profileHtml = preview ? `
     <div style="background:#fff5f7;border:1px solid #fecdd3;border-radius:10px;padding:10px;margin-bottom:10px">
-      <div style="font-size:10.5px;font-weight:800;color:#e11d48;margin-bottom:8px">${t('blind_preview_partner_label')}</div>
+      <div style="font-size:10.5px;font-weight:800;color:#DB2777;margin-bottom:8px">${t('blind_preview_partner_label')}</div>
       <div style="display:flex;gap:10px;align-items:flex-start">
         <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#e5e7eb;display:flex;align-items:center;justify-content:center">
           ${preview.photo_url ? `<img src="${preview.photo_url}" style="width:100%;height:100%;object-fit:cover;filter:blur(3px);transform:scale(1.15)">` : `<span style="font-size:18px">${icon('user',16)}</span>`}

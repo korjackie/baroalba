@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=587"></script>
+  <script src="./shared-lang.js?v=588"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=587">
+  <link rel="stylesheet" href="./assets/css/style.css?v=588">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1204,7 +1204,7 @@
       <div id="home-recent-section" style="padding:7px 12px 0">
         <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:15px;overflow:hidden">
           <div style="padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:13px;font-weight:900;color:#111">📋 <span data-i18n="nearby_jobs_title">주변 알바 공고</span></div>
+            <div style="font-size:13px;font-weight:900;color:#111;display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M9 2h6a1 1 0 0 1 1 1v2H8V3a1 1 0 0 1 1-1z"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg><span data-i18n="nearby_jobs_title">주변 알바 공고</span></div>
             <button onclick="showAllJobs()" style="font-size:11px;color:#C8102E;font-weight:700;background:none;border:none;cursor:pointer"><span data-i18n="view_all">전체보기</span> ›</button>
           </div>
           <div id="home-recent-list" style="display:flex;gap:8px;overflow-x:auto;padding:0 14px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
@@ -1239,21 +1239,21 @@
       <div style="padding:7px 12px 0">
         <div style="background:#fff;border:1.5px solid #fecdd3;border-radius:15px;overflow:hidden">
           <div onclick="openMannnamPanel()" style="background:#FFF1F2;padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #fecdd3;cursor:pointer">
-            <div style="width:30px;height:30px;background:#e11d48;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">💫</div>
+            <div style="width:30px;height:30px;background:#DB2777;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
             <div style="flex:1">
               <div style="font-size:14px;font-weight:900;color:#be123c">바로만남</div>
               <div style="font-size:10px;color:#fda4af;margin-top:1px" data-i18n="mannam_desc">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
             </div>
-            <span style="font-size:9px;font-weight:900;background:#e11d48;color:#fff;padding:2px 8px;border-radius:10px">NEW</span>
-            <button onclick="event.stopPropagation();openMannnamPanel()" style="font-size:12px;color:#e11d48;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0"><span data-i18n="see_all">전체</span> ›</button>
+            <span style="font-size:9px;font-weight:900;background:#DB2777;color:#fff;padding:2px 8px;border-radius:10px">NEW</span>
+            <button onclick="event.stopPropagation();openMannnamPanel()" style="font-size:12px;color:#DB2777;font-weight:700;background:none;border:none;cursor:pointer;flex-shrink:0"><span data-i18n="see_all">전체</span> ›</button>
           </div>
           <div id="home-mannam-preview" style="padding:9px 14px;min-height:44px">
             <div id="home-baromeet-section" style="display:none;margin-bottom:8px">
-              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px">🤝 <span data-i18n="baromeeting_recruit">바로미팅 모집 중</span></div>
+              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#be123c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><path d="M16 14h1a4 4 0 0 1 4 4v2"/></svg><span data-i18n="baromeeting_recruit">바로미팅 모집 중</span></div>
               <div id="home-baromeet-list" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
             </div>
             <div id="home-barospot-section" style="display:none">
-              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px">📍 <span data-i18n="barospot_recruit">바로스팟 참가자 모집 중</span></div>
+              <div style="font-size:11px;font-weight:800;color:#be123c;margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#be123c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg><span data-i18n="barospot_recruit">바로스팟 참가자 모집 중</span></div>
               <div id="home-barospot-list" style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
             </div>
             <div id="home-mannam-empty" style="display:none;color:#bbb;font-size:12px;padding:10px 0" data-i18n="no_open_moim">아직 열린 모임이 없어요</div>
@@ -1265,7 +1265,11 @@
            그 화면 자체가 진입 경로를 잃어서 홈 화면에 그대로 옮겨옴 -->
       <div onclick="openCommunityPanel()" style="margin:8px 12px 0;background:#fffbf0;border:1.5px solid #FDE68A;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;cursor:pointer;-webkit-tap-highlight-color:rgba(245,158,11,0.05)">
         <div style="width:30px;height:30px;border-radius:9px;background:#F59E0B;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <!-- 말풍선 → 게시판(줄글) 아이콘으로 교체 (2026-07-28).
+               2026-07-22에 헤더 버튼을 말풍선에서 바꾼 이유가 "하단탭 채팅과 같은 기호"
+               였는데, 정작 이 카드가 계속 말풍선을 쓰고 있어서 충돌이 옮겨갔을 뿐이었다.
+               하단탭 채팅(말풍선)과 겹치지 않는 기호로 바꾼다. -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10"/><path d="M7 13h10"/><path d="M7 17h6"/></svg>
         </div>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:900;color:#222" data-i18n="community_title">커뮤니티 게시판</div>
@@ -1278,7 +1282,7 @@
            톤)와 색감이 튀어 "뒤죽박죽"으로 보인다는 피드백 - 다른 카드들과 동일하게 연한
            배경+테두리+색상 아이콘박스 톤으로 통일, 간격도 상하 카드와 동일하게(8px) 맞춤 -->
       <div onclick="showRankPanel('employer')" style="margin:8px 12px 0;background:#FFF7ED;border:1.5px solid #FDBA74;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;cursor:pointer;-webkit-tap-highlight-color:rgba(194,65,12,0.05)">
-        <div style="width:30px;height:30px;background:#C2410C;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🏆</div>
+        <div style="width:30px;height:30px;background:#C2410C;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.1 1.1-.6 1.4L8 19.5c-.5.3-.5 1 0 1h8c.5 0 .5-.7 0-1l-1.4-1.1c-.5-.3-.6-.8-.6-1.4v-2.3"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg></div>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:900;color:#222;line-height:1.25" data-i18n="rank_title">업체 · 알바생 신뢰도 순위</div>
           <div style="font-size:10px;color:#c2793d;margin-top:1px" data-i18n="rank_desc">업종별 1위가 누구인지 확인하세요</div>
@@ -1292,7 +1296,7 @@
            테두리+아이콘박스 톤·간격(8px)으로 통일. 서비스명(바로브랜딩)을 부제가 아니라
            본문 급으로 키우고, "MultiMOVE 계열 서비스" 문구는 불필요하다는 피드백으로 제거 -->
       <a href="https://barobranding.vercel.app/" target="_blank" rel="noopener" style="margin:8px 12px 16px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:15px;padding:11px 14px;display:flex;align-items:center;gap:9px;text-decoration:none;-webkit-tap-highlight-color:rgba(37,99,235,0.05)">
-        <div style="width:30px;height:30px;border-radius:9px;background:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px">📈</div>
+        <div style="width:30px;height:30px;background:#2563EB;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/><path d="M19 8h-3.5"/><path d="M19 8v3.5"/></svg></div>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:900;color:#1e3a8a">바로브랜딩</div>
           <div style="font-size:10px;color:#60a5fa;margin-top:1px" data-i18n="brand_subtitle">우리 매장 온라인 순위, 무료로 확인하기</div>
@@ -4152,6 +4156,12 @@
         <div id="loc-panel-1">
           <div class="location-search">
             <input class="form-input" id="f-address" placeholder="업체명 입력 (예: 부산 사하구 스타벅스)" data-i18n-ph="ownr_ph_biz_name_input_example">
+            <!-- 도로명주소 별도 보관 (2026-07-28).
+                 예전엔 f-address 한 칸에 "업체명\n도로명주소" 를 넣었는데, <input> 은
+                 대입 시 개행을 조용히 지우므로(HTML value sanitization) 실제로는
+                 "업체명도로명주소" 로 붙어 저장됐다. 저장 시점에 _getJobAddress() 가
+                 이 둘을 '\n' 으로 합친다. -->
+            <input type="hidden" id="f-address-road">
             <button class="search-addr-btn" onclick="searchNaverPlace()">&#128269; <span data-i18n="search">검색</span></button>
           </div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
@@ -4369,7 +4379,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=587"></script>
+<script src="./assets/js/app.js?v=588"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4527,7 +4537,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=587"></script>
+<script src="./assets/js/app_ui.js?v=588"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
@@ -4695,7 +4705,7 @@
 <div id="mannnam-panel" style="display:none;position:fixed;inset:0;z-index:510;background:#f8f8f8;flex-direction:column;overflow:hidden">
   <!-- 상태표시줄 영역 전용 색상 띠 - 흰 배경 위에서는 상태표시줄 아이콘(밝은색)이 안 보이는 문제가 있어
        채팅 안전영역과 동일하게 브랜드색 띠를 따로 둠 -->
-  <div style="height:var(--sat-safe,0px);background:#e11d48;flex-shrink:0"></div>
+  <div style="height:var(--sat-safe,0px);background:#DB2777;flex-shrink:0"></div>
   <div style="background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0">
     <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
       <button onclick="closeMannnamPanel()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">
