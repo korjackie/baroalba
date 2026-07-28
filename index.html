@@ -122,17 +122,31 @@
      그대로 보이는 자리 — 로 옮겼다. 글자를 못 읽어도 알아보도록 지구본 아이콘은 유지한다. */
   .hero-top{display:flex;justify-content:flex-end;margin-bottom:26px}
   .langsel{position:relative;display:inline-flex;align-items:center}
-  .langsel svg{position:absolute;left:10px;pointer-events:none;color:var(--muted)}
-  /* 좌우 여백은 아이콘·화살표가 실제로 차지하는 만큼만 준다. 예전 값(좌34/우32)은
-     글자 폭과 무관하게 남는 여백이 생겨 "한국어" 오른쪽이 휑하게 비어 보였다. */
-  .langsel select{
-    appearance:none;-webkit-appearance:none;
-    padding:8px 25px 8px 31px;border:1px solid var(--line);border-radius:999px;background:#fff;
-    font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;
-    box-shadow:0 1px 2px rgba(16,24,40,.05);
+  /* select 가 absolute 라 DOM 순서상 아이콘/화살표보다 위에 깔린다 — 둘을 z-index 로
+     다시 올려주지 않으면 지구본이 select 밑에 가려 안 보인다. */
+  .langsel svg{position:absolute;left:10px;z-index:2;pointer-events:none;color:var(--muted)}
+  /* 알약의 폭은 sizer(.lsz)가 정하고, select 는 그 위에 겹쳐 깐다. 좌우 여백은
+     지구본 아이콘·화살표가 실제로 차지하는 만큼만. 둘의 font/padding 은 반드시
+     같아야 폭이 어긋나지 않는다 — 한쪽만 고치지 말 것.
+     언어마다 이름 길이가 크게 달라서(한국어 3자 ↔ Tiếng Việt 10자) 폭을 완전히 같게는
+     못 맞춘다. 대신 ①글자는 가운데 정렬 ②min-width 로 짧은 언어가 쪼그라들지 않게
+     ③긴 언어(.long)만 폰트를 한 단계 줄여 폭 차이를 좁힌다. */
+  .langsel{min-width:104px}
+  .lsz,.langsel select{
+    font-family:inherit;font-size:14px;font-weight:600;letter-spacing:inherit;
+    padding:8px 29px 8px 31px;white-space:nowrap;text-align:center;
   }
-  .langsel svg{left:10px}
-  .langsel::after{content:"";position:absolute;right:11px;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
+  .langsel.long .lsz,.langsel.long select{font-size:12.5px}
+  .lsz{visibility:hidden;display:block}
+  .langsel select{
+    position:absolute;inset:0;width:100%;
+    appearance:none;-webkit-appearance:none;
+    border:1px solid var(--line);border-radius:999px;background:#fff;
+    color:var(--ink);cursor:pointer;
+    box-shadow:0 1px 2px rgba(16,24,40,.05);
+    text-align-last:center; /* Chrome 계열은 select 가운데 정렬에 이 속성이 필요 */
+  }
+  .langsel::after{content:"";position:absolute;right:11px;z-index:2;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
   .langsel select:hover{border-color:#c9ccd3}
   .langsel select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
@@ -290,6 +304,12 @@
       <div class="hero-top">
         <div class="langsel">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <!-- 폭 측정용 유령 글자. <select> 는 폭이 "가장 긴 option"("Tiếng Việt" 등)으로
+               잡히기 때문에, 짧은 "한국어" 를 골라도 오른쪽에 빈 공간이 남는다 — padding 을
+               줄여도 절대 안 없어진다(2026-07-28 두 번째 제보). 알약의 실제 폭은 이 span 이
+               정하고 select 는 그 위에 겹쳐 깔아, 항상 선택된 글자에 딱 맞게 만든다.
+               텍스트는 applyLang() 이 언어를 바꿀 때마다 같이 갱신한다. -->
+          <span class="lsz" id="lang-sizer" aria-hidden="true">한국어</span>
           <select id="lang-select" aria-label="Language">
             <option value="ko" lang="ko">한국어</option>
             <option value="en" lang="en">English</option>
@@ -1070,6 +1090,17 @@
 
     var sel = document.getElementById('lang-select');
     if (sel) sel.value = code;
+    // 알약 폭을 선택된 언어명에 맞춘다. 이걸 빼먹으면 언어를 바꿔도 폭이 그대로라
+    // 짧은 언어명에서 오른쪽이 비고 긴 언어명("Tiếng Việt")은 잘린다.
+    var szr = document.getElementById('lang-sizer');
+    if (szr && sel && sel.selectedOptions[0]) {
+      szr.textContent = sel.selectedOptions[0].textContent;
+      // 기본 크기로 재보고 너무 길 때만 .long(작은 폰트)으로 내린다. 먼저 클래스를
+      // 떼고 측정해야 이전 언어의 축소 상태가 다음 측정에 섞이지 않는다.
+      var box = szr.parentNode;
+      box.classList.remove('long');
+      if (szr.getBoundingClientRect().width > 118) box.classList.add('long');
+    }
 
     // 언어 섹션 카드에도 현재 언어를 표시한다(셀렉트와 항상 같은 값이어야 함)
     document.querySelectorAll('.lang[data-lang]').forEach(function (b) {
