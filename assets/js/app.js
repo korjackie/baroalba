@@ -589,7 +589,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '590';
+  const _APP_V = '591';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1298,7 +1298,7 @@ async function loadJobs() {
     else if (sortByWage) result.sort((a,b) => b.current_wage - a.current_wage);
 
     // 고급 필터
-    if (minWageFilter > 10000) result = result.filter(j => (j.current_wage || 0) >= minWageFilter);
+    if (minWageFilter > 10030) result = result.filter(j => (j.current_wage || 0) >= minWageFilter);
     if (dateFilter) {
       const now = new Date();
       const todayD = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1306,7 +1306,21 @@ async function loadJobs() {
       const day    = now.getDay();
       const sat    = new Date(todayD.getTime() + ((6 - day + 7) % 7) * 86400000);
       const sun    = new Date(sat.getTime() + 86400000);
+      const _dfDayIdx = { '일':0, '월':1, '화':2, '수':3, '목':4, '금':5, '토':6 };
+      const _matchesWeekday = (idx) => {
+        if (dateFilter === 'today') return idx === todayD.getDay();
+        if (dateFilter === 'tmr')   return idx === tmrD.getDay();
+        if (dateFilter === 'wknd')  return idx === 0 || idx === 6;
+        return false;
+      };
       result = result.filter(j => {
+        // 정기(반복) 근무는 등록일 기준 start_time만 보면 안 됨 - work_days 요일이
+        // 조건과 겹치면 "그날도 근무 있음"으로 인정 (2026-07-29 발견: 안 그러면 몇 주 전에
+        // 등록된 정기공고가 오늘/내일/주말 필터에서 전부 부당하게 빠짐)
+        if (j.work_type === 'regular' && j.work_days) {
+          const idxs = j.work_days.split(',').map(d => _dfDayIdx[d.trim()]).filter(x => x !== undefined);
+          if (idxs.some(_matchesWeekday)) return true;
+        }
         if (!j.start_time) return false;
         const d = new Date(j.start_time);
         const jd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -7967,16 +7981,16 @@ function openAdvFilter() {
 function closeAdvFilter() {
   document.getElementById('adv-filter-overlay').style.display = 'none';
   const wage = parseInt(document.getElementById('wage-slider')?.value || 0);
-  minWageFilter = wage > 10000 ? wage : 0;
+  minWageFilter = wage > 10030 ? wage : 0;
   const chip = document.getElementById('chip-adv-filter');
-  const active = minWageFilter > 10000 || dateFilter || timeFilter;
-  if (chip) { chip.classList.toggle('active', active); chip.textContent = active ? '필터●' : '필터'; }
+  const active = minWageFilter > 10030 || dateFilter || timeFilter;
+  if (chip) { chip.classList.toggle('active', active); chip.innerHTML = `🎚️ <span data-i18n="filter_more">${t('filter_more')}</span>${active ? '●' : ''}`; }
   loadJobs();
 }
 function resetAdvFilter() {
   minWageFilter = 0; dateFilter = ''; timeFilter = '';
   const sl = document.getElementById('wage-slider');
-  if (sl) { sl.value = 10000; document.getElementById('wage-val').textContent = '10,000원'; }
+  if (sl) { sl.value = 10030; document.getElementById('wage-val').textContent = '10,030원'; }
   ['flt-date-any','flt-date-today','flt-date-tmr','flt-date-wknd'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.cssText = el.style.cssText.replace(/background:[^;]+/, `background:${id==='flt-date-any'?'var(--red)':'#f0f0f0'}`).replace(/color:[^;]+/, `color:${id==='flt-date-any'?'#fff':'#555'}`);
