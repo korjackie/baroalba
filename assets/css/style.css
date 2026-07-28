@@ -555,6 +555,48 @@
 
     .card-star { color: var(--ink-600); font-size: 11.5px; font-weight: 600; }
 
+    /* ── 가로 스크롤 카드 — C안 축약판 (2026-07-28) ──────────────────────
+       급구 피드 · 주변 알바 공고 · AI 추천 세 곳이 각자 다른 인라인 스타일로
+       그리고 있어서, 같은 공고가 화면마다 다른 앱처럼 보였다(이모지 썸네일,
+       weight 900, "1.2만원" 축약, AI 추천만 주황 ASAP 등).
+       152px 폭에는 [제목 + 시급]을 한 줄에 못 넣으므로 세로로 쌓되, 위계 규칙은
+       .job-card 와 완전히 동일하게 간다:
+         제목 700 / 시급 700 빨강 / 나머지 400·600 회색
+         빨강은 카드당 하나(is-alert)만, 이모지 없음, 칩은 상위 2개 + "+N" */
+    .jcard-h {
+      flex-shrink: 0; width: 152px; background: #fff;
+      border: 1px solid var(--line); border-radius: var(--r);
+      padding: 13px; cursor: pointer;
+      display: flex; flex-direction: column;
+      transition: border-color .15s, box-shadow .15s, transform .12s;
+    }
+    .jcard-h:active { transform: scale(0.99); background: #FAFBFC; }
+    .jcard-h.urgent-card { border-color: #F6CBD2; }
+    .jch-title {
+      font-size: 13.5px; font-weight: 700; color: var(--ink-900);
+      line-height: 1.35; letter-spacing: -0.01em;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+      /* 2줄 고정 — 제목 길이가 제각각이어도 시급 줄이 카드마다 같은 높이에 온다 */
+      min-height: 2.7em;
+    }
+    .jch-biz {
+      font-size: 11px; color: var(--ink-400); font-weight: 400; margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .jch-wage {
+      font-size: 17px; font-weight: 700; color: var(--red);
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+      line-height: 1.3; margin-top: 8px;
+    }
+    .jch-wage .cw-unit { font-size: 10.5px; font-weight: 600; color: var(--ink-400); }
+    .jch-sub {
+      font-size: 11px; color: var(--ink-400); font-variant-numeric: tabular-nums;
+      margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .jcard-h .jc-chips { margin-top: 9px; gap: 4px; }
+    .jcard-h .jc-chip  { font-size: 10.5px; padding: 2px 7px; }
+
     /* ── 공통 모달 오버레이 ── */
     .modal-overlay {
       display: none;

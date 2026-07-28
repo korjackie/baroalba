@@ -587,7 +587,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '586';
+  const _APP_V = '587';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1778,26 +1778,10 @@ function renderUrgentFeed() {
   if (!section || !feedList) return;
   if (!urgentJobs.length) { section.style.display = 'none'; return; }
   section.style.display = 'block';
-  feedList.innerHTML = urgentJobs.map(job => {
-    const _ap1 = (job.address||'').split('\n');
-    const _da1 = _ap1[0] ? (_ap1[1] ? _ap1[0] + ' · ' + _ap1[1].split(' ').slice(0,3).join(' ') : _ap1[0]) : null;
-    const dist = _distStr(job.distance_m, job.lat, job.lng, _da1);
-    const emoji = getCatEmoji(job.category);
-    const bg = CAT_BG[job.category] || '#f5f5f5';
-    return `
-    <div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:150px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.10);cursor:pointer;border:2px solid var(--red)">
-      <div style="background:${bg};padding:10px 12px 8px;position:relative">
-        <div style="font-size:28px;line-height:1;margin-bottom:4px">${emoji}</div>
-        <div style="font-size:11px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title || job.biz_name}</div>
-        <span style="position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:6px">🔥${t('urgent_label')}</span>
-      </div>
-      <div style="padding:8px 10px">
-        <div style="font-size:14px;font-weight:900;color:var(--red)">${_shortWage(job.current_wage)}${currentLang==='ko' ? '원' : ''}</div>
-        <div style="font-size:10px;color:#888;font-weight:700;margin-top:2px">${icon('pin')} ${dist}</div>
-      </div>
-    </div>`;
-  }).join('');
-
+  // 급구 카드도 공통 가로 카드로 통일 (2026-07-28). 예전엔 이모지 썸네일 + 🔥급구 뱃지 +
+  // weight 900 + "1.2만원" 축약이라 같은 공고가 지도 목록과 완전히 달라 보였다.
+  // 급구 표시는 .urgent-card 테두리 + ASAP 빨강 칩이 대신한다(_jcardH가 처리).
+  feedList.innerHTML = urgentJobs.map(job => _jcardH(job)).join('');
 }
 
 function renderTodayPick() {}
@@ -3185,25 +3169,52 @@ function loadHomePanel() {
   if (floatBtn) floatBtn.style.display = 'none';
 }
 
-function _homeJobCard(job) {
+// ── 가로 스크롤 카드 공통 (급구 피드 · 주변 알바 공고 · AI 추천) ────────────
+// 세 곳이 각자 인라인 스타일로 그리고 있어서 같은 공고가 화면마다 다르게 보였다.
+// renderList()의 C안과 같은 위계 규칙을 쓰는 한 함수로 통일한다. (2026-07-28)
+// 칩 우선순위도 renderList와 같은 순서를 쓰되, 폭이 좁으므로 2개까지만 노출한다.
+function _jcardH(job) {
+  const isUrgent = job.status === 'urgent';
+  const isErrand = job.work_type === 'errand';
   const wage = job.current_wage || 0;
-  const label = _wageLabel(job);
-  return `<div onclick="openDetail('${job.id}')" style="flex-shrink:0;width:152px;background:#fff;border-radius:15px;overflow:hidden;cursor:pointer;border:1.5px solid #f0f0f0;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
-    <div style="padding:13px 13px 8px">
-      <div style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#d0d0d0;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tCategory(job.category)}</div>
-      <div style="font-size:13px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${job.title || job.biz_name}</div>
-      ${job.biz_name ? `<div style="font-size:10px;color:#c8c8c8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${job.biz_name}</div>` : ''}
-    </div>
-    <div style="padding:8px 13px 12px;border-top:1px solid #f5f5f5">
-      <div style="font-size:18px;font-weight:900;color:var(--red);line-height:1.1;letter-spacing:-0.5px">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</div>
-      <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center">
-        <span style="font-size:9px;font-weight:800;background:#fff0f2;color:var(--red);padding:3px 7px;border-radius:6px">${label}</span>
-        ${job.same_day_payment ? `<span style="font-size:9px;font-weight:800;background:#f0fdf4;color:#15803d;padding:3px 7px;border-radius:6px">${t('same_day_short')}</span>` : ''}
-        ${job.status === 'urgent' ? `<span style="font-size:9px;font-weight:800;background:#fff0f2;color:var(--red);padding:3px 7px;border-radius:6px">${t('urgent_label')}</span>` : ''}
-      </div>
-    </div>
+  const _ap = (job.address || '').split('\n');
+  const _da = _ap[0] ? (_ap[1] ? _ap[0] + ' · ' + _ap[1].split(' ').slice(0, 3).join(' ') : _ap[0]) : null;
+  const dist = job.is_remote ? t('remote_work_label') : _distStr(job.distance_m, job.lat, job.lng, _da);
+
+  const _rem = (job.needed_count ?? 0) - (job.filled_count ?? 0);
+  const chips = [];
+  const _c = (label, alert) => { if (label) chips.push({ label, alert: !!alert }); };
+  if (_rem === 1)               _c(t('almost_full_badge'), true);
+  if (isUrgent)                 _c('ASAP', true);
+  if (job.same_day_payment)     _c(t('same_day_short'));
+  if (job.beginner_ok === true) _c(t('beginner_ok_badge'));
+  if (job.category)             _c(tCategory(job.category));
+  const _shown = chips.slice(0, 2);
+  const _hidden = chips.length - _shown.length;
+  // 빨강은 카드당 하나만 — 둘 이상이면 신호가 죽는다(.job-card와 같은 규칙)
+  let _used = false;
+  const chipHtml = _shown.map(c => {
+    const on = c.alert && !_used;
+    if (on) _used = true;
+    return `<span class="jc-chip${on ? ' is-alert' : ''}">${c.label}</span>`;
+  }).join('') + (_hidden > 0 ? `<span class="jc-chip is-more">+${_hidden}</span>` : '');
+
+  const durTxt = job.duration_hours > 0 ? job.duration_hours + t('hours_unit') : '';
+  const subLine = [dist, durTxt].filter(Boolean).join(' · ');
+  const wageHtml = wage > 0
+    ? `${wage.toLocaleString('ko-KR')}${t('won_suffix')}<span class="cw-unit">${isErrand ? t('per_job_suffix') : t('per_hour_suffix')}</span>`
+    : t('negotiable_label');
+
+  return `<div class="jcard-h ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')">
+    <div class="jch-title">${job.title || job.biz_name || ''}</div>
+    <div class="jch-biz">${job.biz_name || ''}</div>
+    <div class="jch-wage">${wageHtml}</div>
+    ${subLine ? `<div class="jch-sub">${subLine}</div>` : ''}
+    <div class="jc-chips">${chipHtml}</div>
   </div>`;
 }
+
+function _homeJobCard(job) { return _jcardH(job); }
 
 // 급구 공고가 실제로 있으면 벤토 배너 내용을 진짜 공고로 교체, 없으면 기본 마케팅 카피 유지
 // (전엔 별도 home-urgent-section이 이 배너와 분리돼 있어서 이 배너 자체는 항상 정적 카피만 보여주고 있었음)
@@ -3926,22 +3937,53 @@ function _renderHomeSearchList(filtered) {
     list.innerHTML = '<div style="text-align:center;padding:32px 0;color:#bbb"><div style="font-size:28px;margin-bottom:8px">' + icon('search',24) + '</div><div style="font-size:13px;font-weight:600">검색 결과가 없어요</div></div>';
     return;
   }
+  // 검색 결과가 두 종류였다 — 홈 검색바로 찾으면 이모지 썸네일 카드, 검색 오버레이로
+  // 찾으면 C안 카드. 같은 검색인데 다른 앱처럼 보였고, C안을 만든 목적("공고 카드와
+  // 검색 카드를 같게")이 반만 달성돼 있었다. renderSearchResults와 같은 마크업으로
+  // 통일한다. (2026-07-28)
+  const TYPE_LABEL = { regular:'정기', short:'단기', errand:'심부름', spot:'스팟' };
   list.innerHTML = filtered.slice(0, 20).map(job => {
-    const emoji = getCatEmoji ? getCatEmoji(job.category) : '💼';
+    const isUrgent = job.status === 'urgent';
+    const isErrand = job.work_type === 'errand';
     const wage = job.current_wage || 0;
-    const rem = (job.needed_count||1) - (job.filled_count||0);
-    return `<div onclick="openDetail('${job.id}')" style="display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border-radius:14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.07);cursor:pointer;border:1px solid #f0f0f0">
-      <div style="width:44px;height:44px;border-radius:12px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${emoji}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:2px">${job.biz_name || ''}</div>
-        <div style="font-size:14px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${job.title}</div>
-        <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
-          <span style="font-size:13px;font-weight:900;color:var(--red)">${wage > 0 ? wage.toLocaleString('ko-KR')+t('won_suffix') : t('negotiable_label')}</span>
-          ${wage > 0 ? `<span style="font-size:9px;font-weight:900;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:4px">${_wageLabel(job)}</span>` : ''}
-          ${job.same_day_payment ? `<span style="font-size:9px;font-weight:900;background:#f0fdf4;color:#15803d;padding:2px 6px;border-radius:4px">${t('same_day_short')}</span>` : ''}
-        </div>
+    const _ap = (job.address || '').split('\n');
+    const regionShort = ((_ap[1] || _ap[0] || '').split(' ').slice(0, 3).join(' ')) || '';
+    const typeLabel = TYPE_LABEL[job.work_type || 'spot'] || '스팟';
+    const _rem = (job.needed_count ?? 0) - (job.filled_count ?? 0);
+
+    const chips = [];
+    const _c = (label, alert) => { if (label) chips.push({ label, alert: !!alert }); };
+    if (_rem === 1)           _c(t('almost_full_badge'), true);
+    if (isUrgent)             _c('ASAP', true);
+    if (job.same_day_payment) _c(t('same_day_short'));
+    _c(typeLabel);
+    if (regionShort)          _c(regionShort);
+    if (job.category)         _c(tCategory(job.category));
+    const _shown = chips.slice(0, 3);
+    const _hidden = chips.length - _shown.length;
+    let _used = false;
+    const chipHtml = _shown.map(c => {
+      const on = c.alert && !_used;
+      if (on) _used = true;
+      return `<span class="jc-chip${on ? ' is-alert' : ''}">${c.label}</span>`;
+    }).join('') + (_hidden > 0 ? `<span class="jc-chip is-more">+${_hidden}</span>` : '');
+
+    const sub = [
+      job.duration_hours > 0 ? job.duration_hours + t('hours_unit') : '',
+      (!isErrand && job.duration_hours > 0 && wage > 0)
+        ? t('job_total_wage_fmt').replace('{n}', (wage * job.duration_hours).toLocaleString()) : '',
+    ].filter(Boolean).join(' · ');
+
+    return `<div class="job-card ${isUrgent ? 'urgent-card' : ''}" onclick="openDetail('${job.id}')">
+      <div class="card-r1">
+        <div class="card-title">${job.title || t('job_unit')}</div>
+        <div class="card-wage">${wage > 0 ? wage.toLocaleString('ko-KR') + t('won_suffix') + `<span class="cw-unit">${isErrand ? t('per_job_suffix') : t('per_hour_suffix')}</span>` : t('negotiable_label')}</div>
       </div>
-      ${rem > 0 && rem <= 3 ? `<div style="font-size:11px;font-weight:800;color:var(--red);white-space:nowrap">🔥${rem}자리</div>` : ''}
+      <div class="card-r2">
+        <div class="card-biz">${job.biz_name || ''}</div>
+        <div class="card-sub">${sub}</div>
+      </div>
+      <div class="jc-chips">${chipHtml}</div>
     </div>`;
   }).join('');
 }
@@ -8566,17 +8608,6 @@ function renderAiRecommendations() {
 
     if (!scored.length) { el.style.display = 'none'; return; }
 
-    // 카테고리별 그라디언트 배경
-    const _CAT_BG = {
-      'F&B':'linear-gradient(135deg,#FFF7ED,#FEE2E2)',
-      '물류':'linear-gradient(135deg,#F5F3FF,#EDE9FE)',
-      '판매':'linear-gradient(135deg,#F0FDF4,#DCFCE7)',
-      '청소':'linear-gradient(135deg,#F0F9FF,#DBEAFE)',
-      '이벤트':'linear-gradient(135deg,#FDF4FF,#FAE8FF)',
-      '심부름':'linear-gradient(135deg,#F5F3FF,#EDE9FE)',
-    };
-    const _getBg = cat => _CAT_BG[cat] || 'linear-gradient(135deg,#F8FAFC,#F1F5F9)';
-
     el.style.display = 'block';
     el.innerHTML = `
       <div style="padding:12px 0 8px;display:flex;align-items:center;justify-content:space-between">
@@ -8587,25 +8618,7 @@ function renderAiRecommendations() {
         <span style="font-size:11px;color:#ccc;font-weight:600">${t('ai_rec_subtitle')}</span>
       </div>
       <div style="display:flex;gap:10px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
-        ${scored.map(({ job: j }) => {
-          const wage = (j.current_wage || 0).toLocaleString();
-          const cat = j.category || '';
-          const emoji = CAT_EMOJI[cat] || '💼';
-          const urgent = j.status === 'urgent';
-          const startStr = j.start_time ? formatTime(j.start_time) : '';
-          return `
-          <div onclick="openDetail('${j.id}')" style="flex-shrink:0;width:140px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);cursor:pointer;border:${urgent ? '2px solid #FF9500' : '1px solid #f0f0f0'}">
-            <div style="height:70px;background:${_getBg(cat)};display:flex;align-items:center;justify-content:center;position:relative">
-              <span style="font-size:30px;line-height:1">${emoji}</span>
-              ${urgent ? '<span style="position:absolute;top:6px;right:6px;font-size:9px;font-weight:900;background:#FF9500;color:#fff;padding:2px 6px;border-radius:8px">ASAP</span>' : ''}
-            </div>
-            <div style="padding:9px 11px 11px">
-              <div style="font-size:11px;font-weight:800;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${j.biz_name || j.title}</div>
-              <div style="font-size:15px;font-weight:900;color:var(--red)">${wage}원</div>
-              <div style="font-size:10px;color:#aaa;font-weight:700;margin-top:2px">${cat}${startStr ? ' · ' + startStr : ''}</div>
-            </div>
-          </div>`;
-        }).join('')}
+        ${scored.map(({ job: j }) => _jcardH(j)).join('')}
       </div>`;
   } catch(e) {}
 }
@@ -11157,9 +11170,13 @@ function _notiKey() { return 'noti_last_seen_' + (currentUser?.id || 'guest'); }
 
 async function _fetchWorkerNotifications() {
   if (!currentUser) return [];
-  const { data: w } = await db.from('workers').select('id, rating, review_count, noshow_count').eq('kakao_uid', currentUser.id).single();
-  if (!w) return [];
+  const items = [];
 
+  // ⚠️ 여기서 workers 행이 없다고 return 하면 안 된다. 업주 전용 계정은 workers 행이
+  //    없어서, 아래 업주 알림 합치기까지 도달하지도 못하고 빈 목록이 됐다. (2026-07-28)
+  const { data: w } = await db.from('workers').select('id, rating, review_count, noshow_count').eq('kakao_uid', currentUser.id).single();
+
+  if (w) {
   // applications 테이블엔 updated_at(상태 변경 시각) 컬럼이 없어(2026-07-19 확인,
   // 400 에러로 늘 실패하고 있었음) applied_at(지원 시각)으로 대체 - 상태변경 시각까진
   // 아니지만 최소한 조회는 되게 함
@@ -11169,8 +11186,6 @@ async function _fetchWorkerNotifications() {
     .not('status', 'in', '(pending,reviewing)')
     .order('applied_at', { ascending: false })
     .limit(40);
-
-  const items = [];
 
   // 등급 업 조건 달성 알림 (번개등급)
   const QUICK = { minRating: 4.3, minReviews: 3 };
@@ -11225,6 +11240,24 @@ async function _fetchWorkerNotifications() {
       }
     } catch(e) {}
   }
+  } // ← if (w)
+
+  // 업주 알림 합치기 — 홈 헤더의 종은 지금까지 '알바생 전용'이라, 내가 올린 공고에
+  // 지원자가 들어와도 여기엔 아무것도 안 떴다. 업주 알림은 공고관리 패널 안의 별도
+  // 종에만 있었고 거기까지 들어가야만 보였다. 업주도 앱을 열면 홈부터 보므로,
+  // 홈 종이 두 종류를 다 보여주는 게 맞다. (2026-07-28)
+  // _fetchOwnerNotifications() 는 bizRecord 가 없으면 스스로 [] 를 주므로 그냥 부른다.
+  try {
+    const ownerItems = await _fetchOwnerNotifications();
+    if (ownerItems.length) items.push(...ownerItems);
+  } catch(e) { console.error('[noti] owner merge:', e); }
+
+  // 두 출처가 섞였으므로 최신순으로 다시 정렬한다(시각 없는 등급 알림은 맨 위 고정).
+  items.sort((a, b) => {
+    if (!a.time) return -1;
+    if (!b.time) return 1;
+    return new Date(b.time) - new Date(a.time);
+  });
 
   return items;
 }
@@ -11416,19 +11449,20 @@ async function updateNotiBadge() {
   const items = await _fetchWorkerNotifications();
   const lastSeen = parseInt(localStorage.getItem(_notiKey()) || '0');
   const unread = items.filter(it => it.isGrade ? !localStorage.getItem('noti_grade_seen_' + (currentUser?.id || '')) : (it.time && new Date(it.time).getTime() > lastSeen)).length;
-  const badge = document.getElementById('noti-badge');
   const bell = document.getElementById('noti-bell-btn');
   if (bell) bell.style.display = 'block';
-  if (!badge) return;
-  if (unread > 0) {
-    badge.textContent = unread > 9 ? '9+' : unread;
-    badge.style.display = 'flex';
-    // 업주 모드(bizRecord 있음)에서는 앱 배지를 건드리지 않음 — 업주 알림이 기준이어야 함
-    if (!bizRecord && 'setAppBadge' in navigator) navigator.setAppBadge(unread).catch(() => {});
-  } else {
-    badge.style.display = 'none';
-    if (!bizRecord && 'clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
-  }
+  // 지도 상단바 종(#noti-badge)과 홈 패널 종(#home-noti-badge) 두 곳을 같이 갱신한다.
+  const badges = ['noti-badge', 'home-noti-badge']
+    .map(id => document.getElementById(id)).filter(Boolean);
+  if (!badges.length) return;
+  badges.forEach(b => {
+    if (unread > 0) { b.textContent = unread > 9 ? '9+' : unread; b.style.display = 'flex'; }
+    else b.style.display = 'none';
+  });
+  // 홈 종이 업주 알림까지 포함하게 됐으므로 앱 배지도 여기서 정상적으로 세운다.
+  // (예전엔 업주 알림이 홈에 안 들어와서 업주 모드에선 일부러 건드리지 않았다)
+  if (unread > 0) { if ('setAppBadge' in navigator) navigator.setAppBadge(unread).catch(() => {}); }
+  else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
 }
 
 async function openNotifications() {
@@ -11437,7 +11471,12 @@ async function openNotifications() {
   if (currentUser) localStorage.setItem('noti_grade_seen_' + currentUser.id, '1');
   // 읽음 시각 업데이트
   localStorage.setItem(_notiKey(), Date.now().toString());
-  document.getElementById('noti-badge').style.display = 'none';
+  // 홈 종이 업주 알림도 같이 보여주므로 읽음 시각도 같이 밀어준다. 안 그러면 홈에서
+  // 이미 본 지원자 알림이 공고관리 패널 종에서 다시 새 알림으로 뜬다.
+  if (bizRecord) localStorage.setItem(_ownerNotiKey(), Date.now().toString());
+  ['noti-badge', 'home-noti-badge', 'owner-noti-badge'].forEach(id => {
+    const b = document.getElementById(id); if (b) b.style.display = 'none';
+  });
   // 앱 아이콘 배지도 즉시 0으로
   if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(() => {});
 
@@ -11465,7 +11504,7 @@ async function openNotifications() {
   if (!listEl) return;
 
   if (!items.length) {
-    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#aaa"><div style="font-size:36px;margin-bottom:10px">\u{1F515}</div><div style="font-size:14px;font-weight:700">아직 알림이 없어요</div><div style="font-size:12px;margin-top:4px">공고에 지원하면 합격/거절 소식을 받아요</div></div>';
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#aaa"><div style="font-size:36px;margin-bottom:10px">\u{1F515}</div><div style="font-size:14px;font-weight:700">아직 알림이 없어요</div><div style="font-size:12px;margin-top:4px">' + (bizRecord ? '공고에 지원자가 들어오면 여기로 알려드려요' : '공고에 지원하면 합격/거절 소식을 받아요') + '</div></div>';
     return;
   }
 
@@ -17760,26 +17799,38 @@ async function _fetchOwnerNotifications() {
   const postingIds = (myPostings || []).map(p => p.id);
   if (!postingIds.length) return [];
 
-  const { data: recentApps } = await db.from('applications')
-    .select('id, status, applied_at, updated_at, workers(name), job_postings(title)')
+  // 🔴 applications 에는 updated_at 컬럼이 없다(라이브 실측: 42703 column does not
+  // exist). 여기서 select 에 넣고 있어서 PostgREST가 쿼리 전체를 400으로 거부했고,
+  // supabase-js 는 error 만 채우고 data 를 null 로 주므로 (recentApps || []) 가 조용히
+  // 빈 배열이 되어 **업주 알림이 항상 0건**이었다 — "지원자가 왔는데 알림이 안 뜬다"의
+  // 원인. 알바생 쪽 _fetchWorkerNotifications 는 2026-07-19에 같은 이유로 이미
+  // applied_at 으로 바꿨는데 업주 쪽 사본은 그대로 남아 있었다. (2026-07-28)
+  // ⚠️ supabase/schema.sql:81 에는 updated_at 이 있다 — 스키마 파일과 실 DB가 다르므로
+  //    컬럼 존재 여부는 문서가 아니라 라이브 REST로 확인할 것.
+  const { data: recentApps, error: _appErr } = await db.from('applications')
+    .select('id, status, applied_at, workers(name), job_postings(title)')
     .in('job_posting_id', postingIds)
     .order('applied_at', { ascending: false })
     .limit(40);
+  if (_appErr) console.error('[ownerNoti] applications:', _appErr);
 
   const items = [];
   (recentApps || []).forEach(app => {
     const name = app.workers?.name || '지원자';
     const title = app.job_postings?.title || '공고';
+    // 상태 변경 시각 컬럼이 없어 전부 applied_at(지원 시각) 기준이다. 정확한 시각은
+    // 아니지만, 안 뜨는 것보다는 낫다.
+    const at = app.applied_at;
     if (app.status === 'pending') {
-      items.push({ icon: '\u{1F4E5}', color: 'var(--red)', title: `${name}님이 지원했어요`, body: `"${title}"`, time: app.applied_at });
+      items.push({ icon: '\u{1F4E5}', color: 'var(--red)', title: `${name}님이 지원했어요`, body: `"${title}"`, time: at });
     } else if (app.status === 'accepted') {
-      items.push({ icon: '\u{2705}', color: 'var(--red)', title: `${name}님 합격 처리됨`, body: `"${title}"`, time: app.updated_at });
+      items.push({ icon: '\u{2705}', color: 'var(--red)', title: `${name}님 합격 처리됨`, body: `"${title}"`, time: at });
     } else if (app.status === 'cancelled') {
-      items.push({ icon: '\u{1F6AB}', color: '#aaa', title: `${name}님이 지원 취소했어요`, body: `"${title}"`, time: app.updated_at });
+      items.push({ icon: '\u{1F6AB}', color: '#aaa', title: `${name}님이 지원 취소했어요`, body: `"${title}"`, time: at });
     } else if (app.status === 'completed') {
-      items.push({ icon: '\u{1F3C1}', color: 'var(--red)', title: `${name}님 근무 완료`, body: `"${title}"`, time: app.updated_at });
+      items.push({ icon: '\u{1F3C1}', color: 'var(--red)', title: `${name}님 근무 완료`, body: `"${title}"`, time: at });
     } else if (app.status === 'noshow') {
-      items.push({ icon: '\u{1F613}', color: '#aaa', title: `${name}님 노쇼 처리됨`, body: `"${title}"`, time: app.updated_at });
+      items.push({ icon: '\u{1F613}', color: '#aaa', title: `${name}님 노쇼 처리됨`, body: `"${title}"`, time: at });
     }
   });
 
