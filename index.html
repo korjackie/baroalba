@@ -9,6 +9,10 @@
 <link rel="canonical" href="https://baroalba.multimove.co.kr/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#C8102E">
+<!-- 이 페이지는 라이트 테마로만 디자인됐다. 선언이 없으면 Android Chrome/WebView가
+     "웹 콘텐츠 강제 다크 테마"로 색을 임의로 반전시켜 브랜드 레드가 분홍으로 뒤틀리고
+     appearance:none select도 네이티브 다크 알약 모양으로 덮어써버린다(2026-07-28 실기기 제보). -->
+<meta name="color-scheme" content="light">
 
 <!-- 네이버 서치어드바이저 소유확인(2026-07-28). 네이버는 구글의 도메인 속성과 달리
      사이트마다 따로 등록해야 해서 바로브랜딩 등록이 여기 적용되지 않는다.
@@ -147,6 +151,8 @@
 
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:18px}
   .card{border:1px solid var(--line);border-radius:14px;padding:26px 24px;background:#fff}
+  .cico{width:44px;height:44px;border-radius:12px;background:#fdeaed;color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .cico svg{width:22px;height:22px}
   .card h3{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:9px;letter-spacing:-.02em}
   .card p{font-size:15px;color:var(--body);word-break:keep-all}
 
@@ -314,26 +320,32 @@
       </div>
       <div class="grid">
         <div class="card">
+          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.7-7-11.5A7 7 0 0 1 19 9.5C19 14.3 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
           <h3 data-i18n="c1t">지도 기반 탐색</h3>
           <p data-i18n="c1d">현재 위치 반경 1~30km 안의 공고를 지도 위 마커로 확인합니다. 집·학교에서 가까운 일자리부터 눈으로 바로 고를 수 있습니다.</p>
         </div>
         <div class="card">
+          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7.3" y="3.3" width="12" height="15.5" rx="2.2" opacity=".4"/><rect x="4" y="6.3" width="12" height="15.5" rx="2.2" fill="#fff"/></svg></div>
           <h3 data-i18n="c2t">스와이프로 빠르게</h3>
           <p data-i18n="c2d">공고를 한 장씩 넘기며 관심·패스만 고르면 됩니다. 고른 기록을 학습해 취향에 맞는 공고를 위로 올려줍니다.</p>
         </div>
         <div class="card">
+          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a5 5 0 0 0-5 5V12c0 .6-.2 1.1-.6 1.6L5 15.5h14l-1.4-1.9a2.6 2.6 0 0 1-.6-1.6V8.2a5 5 0 0 0-5-5z"/><path d="M9.6 18.3a2.4 2.4 0 0 0 4.8 0"/></svg></div>
           <h3 data-i18n="c3t">급구 공고 실시간 알림</h3>
           <p data-i18n="c3d">선호 업종과 최저 시급 조건을 저장해두면 조건에 맞는 새 공고가 올라오는 즉시 알림이 갑니다. 팔로우한 업체는 우선 알림.</p>
         </div>
         <div class="card">
+          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1h-9.5L6 19.8V16H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1z"/></svg></div>
           <h3 data-i18n="c4t">합격 후 바로 채팅</h3>
           <p data-i18n="c4d">업주와 앱 안에서 1:1로 대화합니다. 전화번호를 주고받지 않아도 출근 시간·준비물을 바로 확인할 수 있습니다.</p>
         </div>
         <div class="card">
+          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3l6.5 2.6v5.4c0 4.6-2.9 7.3-6.5 8.6-3.6-1.3-6.5-4-6.5-8.6V5.9L12 3.3z"/><path d="M13 8.2l-3.3 4.4h2.5l-1.1 3.6 3.9-4.8h-2.5z" fill="currentColor" stroke="none"/></svg></div>
           <h3 data-i18n="c5t">번개등급 신뢰 시스템</h3>
           <p data-i18n="c5d">평점·완료 건수·노쇼 이력을 반영해 등급이 자동으로 매겨집니다. 성실하게 쌓을수록 더 좋은 공고로 이어집니다.</p>
         </div>
         <div class="card">
+          <div class="cico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.3" y="3.2" width="13.4" height="17.6" rx="2"/><line x1="8" y1="6.8" x2="16" y2="6.8"/><circle cx="8.6" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="15.4" cy="12.4" r=".9" fill="currentColor" stroke="none"/><circle cx="8.6" cy="16.1" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="16.1" r=".9" fill="currentColor" stroke="none"/><circle cx="15.4" cy="16.1" r=".9" fill="currentColor" stroke="none"/></svg></div>
           <h3 data-i18n="c6t">급여 계산기 내장</h3>
           <p data-i18n="c6d">시급만 넣으면 일급·주급·월급이 계산됩니다. 주휴수당(주 15시간 이상), 3.3% 원천징수, 4대보험 옵션까지 반영합니다.</p>
         </div>

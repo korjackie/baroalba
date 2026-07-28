@@ -14,6 +14,8 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
   };
 
+  const closed = await autoCloseExpiredPostings(headers);
+
   // surge_enabled인 공고 전체 조회
   const fetchRes = await fetch(
     SUPABASE_URL + '/rest/v1/job_postings?surge_enabled=eq.true&status=in.(open,urgent)&select=id,current_wage,base_wage,surge_max_wage,surge_amount,surge_interval_min,updated_at',
@@ -24,7 +26,7 @@ export default async function handler(req, res) {
   }
   const surgePostings = await fetchRes.json();
   if (!surgePostings?.length) {
-    return res.json({ updated: 0, checked: 0 });
+    return res.json({ updated: 0, checked: 0, closed });
   }
 
   const now = Date.now();
@@ -62,5 +64,51 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.json({ updated, checked: surgePostings.length, results });
+  return res.json({ updated, checked: surgePostings.length, results, closed });
+}
+
+// app.js의 autoCloseExpiredPostings() 와 동일 로직(규칙 7) - 업주가 로그인해야만
+// 돌던 걸 전체 공고 대상으로 여기서도 돌린다 (docs/PROGRESS.md "공고 자동 마감" 참고)
+async function autoCloseExpiredPostings(headers) {
+  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  let closed = 0;
+
+  // 1) work_end_date 기준: 종료일 지난 공고
+  const endedRes = await fetch(
+    SUPABASE_URL + '/rest/v1/job_postings?status=in.(open,urgent)&work_end_date=not.is.null&work_end_date=lt.' + today,
+    {
+      method: 'PATCH',
+      headers: { ...headers, 'Prefer': 'return=representation' },
+      body: JSON.stringify({ status: 'closed' }),
+    }
+  );
+  if (endedRes.ok) closed += (await endedRes.json()).length;
+
+  // 2) start_time + duration_hours 기준: 단건 공고(work_end_date 없음)가 끝난 경우
+  const oneshotRes = await fetch(
+    SUPABASE_URL + '/rest/v1/job_postings?status=in.(open,urgent)&work_end_date=is.null&start_time=not.is.null&select=id,start_time,duration_hours',
+    { headers }
+  );
+  if (oneshotRes.ok) {
+    const oneshots = await oneshotRes.json();
+    const expiredIds = oneshots.filter(p => {
+      const end = new Date(p.start_time);
+      end.setHours(end.getHours() + (p.duration_hours || 0));
+      return end < now;
+    }).map(p => p.id);
+    if (expiredIds.length) {
+      const patchRes = await fetch(
+        SUPABASE_URL + '/rest/v1/job_postings?id=in.(' + expiredIds.join(',') + ')',
+        {
+          method: 'PATCH',
+          headers: { ...headers, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ status: 'closed' }),
+        }
+      );
+      if (patchRes.ok) closed += expiredIds.length;
+    }
+  }
+
+  return closed;
 }
