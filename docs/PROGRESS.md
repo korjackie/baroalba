@@ -3,7 +3,7 @@
 > **새 세션은 이 문서를 먼저 끝까지 읽으세요.** 맥락을 이어가기 위한 살아있는 작업 로그입니다.
 > 의미 있는 작업을 끝낼 때마다 **요청 없이도** 이 문서를 갱신할 것.
 > 개발 규칙·시스템 구조는 [`../CLAUDE.md`](../CLAUDE.md), 옛 이력은 [`WORK_LOG.md`](WORK_LOG.md)
-> 최종 갱신: **2026-07-28** (sw.js **v588** / Phase 69 — 만료 바로스팟 홈 노출 + 공고 주소 개행 유실 + 아이콘·색 정리)
+> 최종 갱신: **2026-07-29** (sw.js **v590** / Phase 70-B — 지도 화면에 외국인·시니어 환영 퀵칩 노출 + RPC 누락컬럼 대비)
 
 ---
 
@@ -527,6 +527,73 @@ Phase 62에서 "`address` 14/25, `description` 10/25 라 채움률이 낮다 →
 바로브랜딩(`C:/dev/barobranding-saas`)도 같은 3개 구조로 맞췄다.
 
 커밋: `ad492d5` `2fffd1d` `a9459b0` `1f1c3d9`
+
+---
+
+### Phase 70 ✅ 나이 무관(시니어 환영) 필터 신설 (2026-07-29, v589)
+
+대표님 제안 — "외국인 환영 필터가 있듯이 나이 무관(시니어 환영)도 별도 필터로 관리하자."
+기관용 매칭 도구(B2B) 아이디어도 같은 대화에서 나왔으나 **보류 아이템으로만 기록**하고
+(→ 메모리 `project_revenue_plan_2026h2` 갱신 예정, 이번 분기 "바로알바=연결만" 원칙 유지),
+이번엔 이 필터 하나만 구현했다.
+
+**기존 `nationality_requirement`(외국인 환영) 패턴을 그대로 복붙**(house rule 7) —
+DB 컬럼 → 업주 폼 토글 → 저장 → 카드/상세 배지 → 홈 필터 조건까지 동일 구조로:
+
+- **DB**: `job_postings.senior_welcome BOOLEAN DEFAULT false` 신규 컬럼.
+  `age_limit`(만 18세 이상만 지원 가능, 미성년자 보호용)과는 **반대 방향 조건**이라
+  별도 컬럼으로 분리 — 하나의 boolean을 반전해서 재사용하지 않음(의미가 다름).
+  DDL은 `docs/260729_add_senior_welcome.sql`, **대표님 Supabase 실행 필요**.
+  ⚠️ `nearby_jobs()` RPC가 `SELECT *` 기반이 아니라면 반환 컬럼 목록에도
+  `senior_welcome`을 추가해야 홈 지도 피드에 값이 실린다 — 실행 후 확인 필요.
+- **업주 폼**: 미성년자 보호 토글 바로 아래에 "🧓 나이 무관 (시니어 환영)" 토글 신설
+  (`senior-welcome-toggle` / `f-senior-welcome`, `toggleSeniorWelcome()`/`setSeniorWelcome()`
+  — `toggleAgeLimit`/`setAgeLimit`와 동일 구조). 새 공고 작성 시작(`openPostingForm`)·수정·복사·
+  재오픈 4개 진입점 전부에서 초기화/복원되도록 연결(기존 `age_limit`은 신규작성 시 초기화가
+  안 되고 있던 것을 이번에 발견했으나, 범위 밖이라 손대지 않고 새 토글만 제대로 초기화).
+- **뱃지**: 공고 카드 칩(`foreigner_welcome_badge`와 같은 목록), 상세 페이지 배지 행
+  (`#d-senior-badge`, 초보/식사 배지와 같은 줄), 업주 공고 리스트의 18+ 뱃지 옆.
+- **홈 필터**: 고급필터 패널에 "외국인 환영" 바로 아래 "시니어 환영" 토글 추가.
+  `_hfPendingNat`(단일값, 외국인 전용)에 얹지 않고 `_hfPendingSkillMatch`와 같은
+  **독립 boolean**(`_hfPendingSenior`/`_homeFilterSenior`)으로 분리 — 시니어 환영과
+  외국인 환영은 동시에 켤 수 있는 조건이라 단일-선택 필드에 넣으면 안 됐다.
+- **i18n**: `senior_welcome_label`/`ownr_senior_welcome_desc`/`filter_senior`/
+  `filter_senior_desc`/`senior_welcome_badge` 5키 × 8개국어(총 40개) 전수 추가.
+
+검증: `node --check`로 `app.js`/`sw.js`/`shared-lang.js` 3개 파일 문법 통과.
+락스텝 v588→v589(`_APP_V`/`sw.js` CACHE/`바로알바.html` 4개 `?v=`).
+
+**나이 기준**: 별도 숫자 나이 체크는 안 둠 — `senior_welcome`은 `foreigner_welcome`과 동일하게
+업주가 "나이 무관"이라고 표시만 하는 라벨이고 워커의 실제 나이(`birth_date`)는 조회하지 않는다.
+대표님 확인 완료(2026-07-29) — 라벨 기준(50세 이상을 "시니어"로 보는 통념)만 참고하고
+코드에는 반영하지 않음. 워커 나이 연동(자동 추천·매칭 우선순위 등)은 별도 요청 시 재검토.
+
+**DDL 실행 완료**(2026-07-29, 대표님 Supabase SQL Editor 실행, "Success. No rows returned" 확인).
+
+#### Phase 70-B — 지도 화면 노출 보강 + RPC 누락 컬럼 대비 (2026-07-29, v590)
+
+대표님 실사용 테스트: 지도 화면 "필터"(고급 필터 시트, 최소시급/날짜/시간대 전용)에서 시니어
+환영을 못 찾음 — **찾으신 게 맞았다.** 국적·나이 조건은 처음부터 홈 탭 전용 필터에만 있었고
+지도 화면엔 아예 없었음(외국인 환영도 마찬가지, 기존부터 없던 상태). "외국인·시니어에 특화된
+서비스"가 지향점이라, 두 조건을 지도 화면에서도 원탭으로 켤 수 있게 보강:
+
+- **지도 상단 필터바에 퀵칩 신설**: 카테고리▾ 근무타입▾ 급구 · · · 비대면 · 필터 열에
+  🌏외국인 환영 / 🧓시니어 환영 칩을 급구/비대면과 동일한 자리·스타일로 추가(서브패널 진입 없이
+  1탭). `filterForeignerWelcome`/`filterSeniorWelcome` 전역 boolean + `toggleForeignerWelcomeFilter()`
+  /`toggleSeniorWelcomeFilter()`(`toggleRemoteFilter()`와 동일 구조) → `loadJobs()` 필터링에 반영.
+- **🔴 `nearby_jobs()` RPC 신규 컬럼 미반영 위험을 실제로 대비**: `loadJobs()`가 `is_remote`/
+  `preferred_languages`처럼 **RPC 도입 이후에 추가된 컬럼은 결과에 `undefined`로 오면 별도
+  배치 조회로 보정**하는 기존 패턴이 있었음 — `senior_welcome`도 어제 막 추가한 신규 컬럼이라
+  같은 위험이 있어 동일 패턴으로 fallback 패치 추가(`result[0].senior_welcome === undefined`
+  판정 시 `job_postings`에서 배치 재조회). `nationality_requirement`는 기존 컬럼이라 이미
+  RPC 반환에 포함돼 있어 손대지 않음.
+
+락스텝 v589→v590. `node --check` 통과.
+
+**남은 작업**: 실기기에서 지도 화면 새 칩 2개 on/off → 마커·리스트 실제로 걸러지는지 확인.
+기관용 매칭 도구는 보류 — 구체적 접촉 기관이 생기면 스코프다운 파일럿으로 재검토.
+
+---
 
 ### Phase 69 ✅ 만료 바로스팟 홈 노출 + 공고 주소가 붙어서 저장되던 버그 (2026-07-28, v588, 커밋 `fa762f3`)
 

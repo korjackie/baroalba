@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 신규 기능 & 버그수정 (2026.07.28)</title>
+<style>
+  :root{--red:#C8102E;--green:#16a34a;--blue:#3b82f6;--orange:#f59e0b;--purple:#7c3aed;--pink:#f43f5e;--radius:16px;--shadow:0 4px 20px rgba(0,0,0,0.10)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#f8f9fa;color:#111;line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:56px}
+  .nav-logo{font-size:16px;font-weight:900;color:var(--red)}
+  .nav-tag{font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);padding:3px 10px;border-radius:100px}
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);padding:88px 5% 52px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(200,16,46,0.25),transparent 65%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#ff6b7a;font-size:11px;font-weight:800;padding:4px 14px;border-radius:100px;letter-spacing:1px;margin-bottom:16px}
+  .hero h1{font-size:clamp(22px,4vw,36px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
+  .hero h1 span{color:var(--red)}
+  .hero-sub{font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:32px}
+  .hero-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .hero-chip{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px}
+  .hero-chip.new{background:rgba(244,63,94,0.2);border-color:rgba(244,63,94,0.4);color:#fb7185}
+  .container{max-width:860px;margin:0 auto;padding:52px 5%}
+  .section{margin-bottom:52px}
+  .section-label{font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .section-title{font-size:clamp(18px,2.5vw,24px);font-weight:900;letter-spacing:-0.5px;margin-bottom:6px}
+  .section-desc{font-size:13px;color:#888;margin-bottom:24px}
+  .cards{display:flex;flex-direction:column;gap:16px}
+  .card{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);border:1px solid #ebebeb}
+  .card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .badge{font-size:10px;font-weight:900;padding:3px 10px;border-radius:100px}
+  .badge-feat{background:#dcfce7;color:#14532d}
+  .badge-fix{background:#fee2e2;color:#991b1b}
+  .badge-ux{background:#dbeafe;color:#1e3a8a}
+  .badge-api{background:#fef9c3;color:#713f12}
+  .badge-infra{background:#ede9fe;color:#4c1d95}
+  .badge-new{background:linear-gradient(90deg,#f43f5e,#a855f7);color:#fff}
+  .badge-warn{background:#ffedd5;color:#9a3412}
+  .badge-crit{background:linear-gradient(90deg,#ef4444,#f97316);color:#fff}
+  .card-title{font-size:16px;font-weight:900;color:#111;margin-bottom:6px}
+  .card-desc{font-size:13px;color:#666;line-height:1.7}
+  .card-desc code{font-family:'SF Mono',monospace;background:#f1f5f9;padding:1px 6px;border-radius:4px;font-size:12px;color:var(--red)}
+  .card.highlight{background:linear-gradient(135deg,#fff0f5,#fdf4ff);border:1.5px solid rgba(244,63,94,0.25)}
+  .card.highlight .card-title{color:var(--pink)}
+  .card.crit{background:linear-gradient(135deg,#fef2f2,#fff7ed);border:1.5px solid rgba(239,68,68,0.3)}
+  .card.crit .card-title{color:#dc2626}
+  footer{text-align:center;padding:32px 5% 20px;font-size:12px;color:#aaa;border-top:1px solid #eee}
+  @media(max-width:600px){.container{padding:40px 4%}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-tag">릴리즈 노트 · 2026.07.28</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">RELEASE NOTES · v549~v588 · Phase 60~69</div>
+  <h1>2026년 <span>7월 27일~28일</span> 업데이트</h1>
+  <p class="hero-sub">로그인 화면이던 첫 페이지를 진짜 서비스 소개 랜딩으로 전환 · 8개 언어 자동감지 복구 · 토스트 158개 전수번역 · 업주 알림 0건 버그 3중 원인 근본수정 · 문서 3개로 통합</p>
+  <div class="hero-chips">
+    <span class="hero-chip new">🌐 공개 랜딩페이지 + SEO 신설</span>
+    <span class="hero-chip new">🗣️ 8개 언어 자동감지 복구</span>
+    <span class="hero-chip new">🔔 업주 알림 3겹 원인 근본수정</span>
+    <span class="hero-chip">🧾 i18n 158키 전수번역</span>
+    <span class="hero-chip">📄 문서 3개로 통합</span>
+    <span class="hero-chip">⚠️ CRON_SECRET 미설정 발견</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ① 공개 랜딩 + SEO -->
+  <div class="section">
+    <div class="section-label">Critical · New Surface</div>
+    <div class="section-title">🌐 &ldquo;/&rdquo;가 로그인 화면이었다 — 진짜 서비스 소개 랜딩으로 전환</div>
+    <div class="section-desc">검색엔진이 보는 첫 화면에 서비스 설명이 한 글자도 없던 상태를 발견하고, 랜딩 신설부터 8개 언어·공고별 URL까지 SEO 기반을 한 구간에 완성.</div>
+    <div class="cards">
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">ROOT CAUSE</span></div>
+        <div class="card-title">공개 랜딩페이지 신설 + JSON-LD 4종 + robots.txt/sitemap.xml</div>
+        <div class="card-desc"><code>vercel.json</code>이 <code>/</code>를 <code>login.html</code>로 리라이트하고 있었음. <code>index.html</code>을 실제 랜딩으로 채우고 그 리라이트를 제거. 기존 진입 경로(쿼리스트링·저장된 세션)는 그대로 앱으로 보존해 기존 이용자에게 영향 없음.</div>
+      </div>
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">CTA 막힘</span></div>
+        <div class="card-title">랜딩이 내건 약속이 실제로는 로그인 벽에 막혀 있었음</div>
+        <div class="card-desc">CTA가 전부 앱으로 가는데, 부팅 분기가 세션/게스트 플래그/딥링크 셋 다 없으면 로그인 화면으로 튕겼음. "가입 없이 둘러볼 수 있습니다"가 거짓이 되고 있던 것을 게스트 플래그로 수정.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-new">NEW</span></div>
+        <div class="card-title">공고별 URL(<code>/job/:id</code>) 서버렌더링 + 사이트맵 자동생성</div>
+        <div class="card-desc">크롤러가 실행 못 하는 클라이언트 앱 대신 서버가 완성된 HTML을 내려줌. JobPosting 스키마는 필수값이 갖춰진 공고만 출력, 마감 공고는 <code>noindex</code>. Vercel Hobby 12개 함수 상한을 두 번째로 만나 이메일 API 2개를 <code>api/email.js</code> 하나로 합쳐 슬롯을 확보.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">공고 등록 화면 두 경로가 주소를 지우거나 안 채우고 있었음</div>
+        <div class="card-desc">공고 채움률이 낮은 원인을 "입력을 강제하자"로 바로 갈 뻔했으나, 저장 경로를 따라가 보니 <strong>공고 복사</strong>가 주소를 빈 문자열로 덮어쓰고 있었고 <strong>지도 검색 폴백</strong>은 화면 표시만 하고 실제 저장 필드엔 안 넣고 있었음. 두 경로 수정 + 설명 15자·주소 필수 검증 추가.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 8개 언어 -->
+  <div class="section">
+    <div class="section-label">i18n Complete</div>
+    <div class="section-title">🗣️ 8개 언어가 사실상 도달 불가능했다 — 자동감지 복구 + 토스트 158개 전수번역</div>
+    <div class="section-desc">여러 세션에 걸쳐 8개 언어로 번역해뒀지만, 정작 그 언어 사용자에게 자동으로는 닿지 않고 있던 구조적 공백을 발견.</div>
+    <div class="cards">
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">ROOT CAUSE</span></div>
+        <div class="card-title">저장된 언어 선택이 없으면 무조건 한국어 — 브라우저 언어 감지 코드 자체가 없었음</div>
+        <div class="card-desc">네팔 노동자가 앱을 처음 열면 한국어가 뜨고, 자기 언어를 보려면 읽지도 못하는 화면에서 언어 버튼을 먼저 찾아야 했음. 저장값이 없을 때만 <code>navigator.language</code>를 따르도록 수정(사용자 선택은 항상 우선, 감지값 자체는 저장 안 함).</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">TRAP</span></div>
+        <div class="card-title">네팔어 코드 불일치(ISO <code>ne</code> ↔ 앱 내부 <code>np</code>) — 두 번 밟은 함정</div>
+        <div class="card-desc">브라우저는 표준코드 <code>ne</code>로 보내는데 앱 내부 키는 국가코드 <code>np</code>. 매핑 없으면 네팔 휴대폰이 조용히 한국어로 떨어짐. 랜딩 JSON-LD <code>inLanguage</code>에도 동일 적용.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-feat">FEAT</span></div>
+        <div class="card-title">랜딩 페이지 8개 언어 지원 + 페이지 내 언어 선택기</div>
+        <div class="card-desc">본문 83개 키 번역. 초기 언어는 <code>?lang=</code> &gt; 저장된 선택 &gt; 브라우저 언어 순. 저장 키를 앱과 동일한 <code>baroalba_lang</code>으로 통일해 랜딩에서 고른 언어가 앱까지 이어짐. 언어 전환 시 FAQ 구조화 데이터도 함께 재작성.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">홈 화면 공고 카드 렌더링 + 토스트 알림 전수 번역</div>
+        <div class="card-desc">날짜슬라이더·지역필터·마커 카테고리 23종·만원 축약 표기(한국어 "1.2만원" 유지, 나머지 7개 언어 "12k" 통일) 등 신규 키 약 45개 적용(i18n 4차). 이어서 하드코딩된 <code>showToast('한국어')</code> 155건(고유 127개) + 문자열 연결·템플릿 리터럴 형태로 숨어있던 것까지 4개 배치로 전수 번역, <strong>총 158개 신규 키 × 8개국어</strong>(i18n 5차).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 실사용 버그 근본수정 -->
+  <div class="section">
+    <div class="section-label">Root-Cause Fixes</div>
+    <div class="section-title">🔔 업주 지원자 알림이 항상 0건이던 버그 — 원인이 3겹이었다</div>
+    <div class="section-desc">대표님 실기기 제보 3건에서 시작해 "전에 얘기했는데 절반만 반영된" 유형의 버그들을 연속으로 근본 수정.</div>
+    <div class="cards">
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">3겹 원인</span></div>
+        <div class="card-title">업주 지원자 알림 0건 — 스키마 드리프트 사본 누락 + 알바생 전용 종 + 뱃지 부재</div>
+        <div class="card-desc">① <code>applications.updated_at</code>(라이브 DB에 없는 컬럼)을 조회해 쿼리 전체가 400 → 조용히 빈 배열. <strong>이미 2026-07-19에 알바생 쪽은 고쳤던 버그의 업주 쪽 사본을 놓쳤던 것</strong> — 같은 로직이 파일 안에 두 벌 존재한다는 전제 없이 한 벌만 고쳤기 때문. ② 홈 화면 종은 알바생이 지원한 건만 보고 업주 알림은 별도 종에만 있었음. ③ 그 홈 종엔 뱃지 요소 자체가 없었음. 셋을 함께 수정 + <code>#home-noti-badge</code> 신설.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">교훈</span></div>
+        <div class="card-title"><code>schema.sql</code>엔 있지만 실제 DB엔 없었다 — 문서가 아니라 라이브 REST로 확인할 것</div>
+        <div class="card-desc">스키마 문서 파일과 실제 운영 DB가 어긋나 있던 사례. 컬럼 존재 여부 판단은 항상 살아있는 DB 쿼리 기준으로.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">공고 카드 UI가 6곳 중 2곳만 통일 적용돼 있었음</div>
+        <div class="card-desc">이전 통일 작업이 검색결과 렌더러 2곳만 처리하고 급구피드·홈공고카드·AI추천·홈검색결과 4곳은 그대로였음 — 같은 검색인데 결과 카드가 진입 경로에 따라 다른 앱처럼 보이던 상태. 나머지 4곳도 동일 위계로 통일.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">로그인 화면이 상태표시줄을 침범 — 독립 HTML은 전역 안전영역 처리가 자동으로 안 따라온다</div>
+        <div class="card-desc"><code>login.html</code>은 앱 CSS/JS를 안 써서 안전영역 체계(<code>--sat</code>/<code>--sab</code>)와 <code>viewport-fit=cover</code>가 아예 없었음. 앱에서 이미 풀어놓은 로직을 그대로 이식.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">12일 지난 바로스팟이 &ldquo;모집 중&rdquo;으로 홈에 계속 노출</div>
+        <div class="card-desc">형제 기능인 바로모임엔 날짜 필터가 있는데 바로만남 쪽 두 화면에만 없었음. <code>status</code>만 믿으면 안 됨 — 자동마감 함수는 본인이 만든 것만 닫고, 바로스팟은 자동마감 로직 자체가 없었음.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">공고 주소가 &ldquo;업체명+도로명주소&rdquo;로 붙어서 저장 — 지역 표시가 전 화면에서 깨짐</div>
+        <div class="card-desc"><code>&lt;input&gt;</code>은 대입값의 개행을 조용히 지운다(<code>&lt;textarea&gt;</code>는 유지). 렌더러가 개행 기준으로 지역을 뽑고 있어 전 화면에서 깨져 있었음. hidden 필드 분리 + 기존 데이터 복구 함수로 해결.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 랜딩 실기기 피드백 + 인프라 -->
+  <div class="section">
+    <div class="section-label">Field Feedback & Infra</div>
+    <div class="section-title">🛠️ 랜딩 실기기 피드백 6건 · 공고 자동마감 서버화 · Android 색상왜곡</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">&ldquo;모임 둘러보기&rdquo;·&ldquo;바로만남 살펴보기&rdquo; CTA가 실제로는 그 화면을 안 열고 있었음</div>
+        <div class="card-desc">앱 홈(게스트)으로만 떨어지고 패널 자체를 여는 딥링크 값이 없었음. <code>?panel=moim|mannam</code> 신설. 링크가 200을 주는 것과 사용자가 실제 그 화면을 볼 수 있는 것은 다르다는 교훈의 재확인.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-ux">UX</span></div>
+        <div class="card-title">랜딩 로고·브랜드 표기·언어 선택 UI 정리</div>
+        <div class="card-desc">랜딩만 자체 제작 SVG 로고를 쓰던 것을 앱과 동일 마크로 통일, "바로알바"가 flex 컨테이너 익명 아이템 규칙 때문에 "바로 알바"로 벌어지던 것 수정, 언어 셀렉트가 가장 긴 옵션 기준으로 폭이 잡히던 문제를 유령 span sizer로 해결.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-infra">INFRA</span></div>
+        <div class="card-title">공고 자동마감을 서버 크론으로 이식</div>
+        <div class="card-desc">기존엔 업주가 로그인해야만, 그 업주 소유 공고에 한해서만 자동마감이 돌고 있었음. 기존 <code>api/surge-check.js</code> 크론 핸들러 안에 편입(함수 상한 유지, 새 파일 없음).</div>
+      </div>
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">SECURITY</span></div>
+        <div class="card-title">⚠️ <code>/api/surge-check</code>에 사실상 인증이 없다</div>
+        <div class="card-desc"><code>CRON_SECRET</code> 환경변수 자체가 없어 시크릿 비교가 <code>undefined !== undefined</code>로 항상 통과됨. 시크릿 헤더 없이 아무나 호출해도 200이 뜨고 실제로 임금 서지·공고 마감을 트리거함. 값 설정 + cron-job.org 헤더 동기화가 필요(외부 서비스 계정 작업).</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-fix">BUG</span></div>
+        <div class="card-title">Android 강제 다크 테마가 브랜드 색을 왜곡</div>
+        <div class="card-desc"><code>color-scheme</code> 메타가 없어 Android WebView가 페이지를 다크모드 미지원으로 보고 색을 알고리즘으로 반전시키고 있었음. 3개 파일에 <code>light</code> 단독 선언 추가.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ 문서 재편 -->
+  <div class="section">
+    <div class="section-label">Docs</div>
+    <div class="section-title">📄 이력 문서 5곳 분산 → 3개로 통합</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><span class="badge badge-infra">DOCS</span></div>
+        <div class="card-title">CLAUDE.md(규칙) · docs/PROGRESS.md(현재상태) · docs/WORK_LOG.md(과거경위)</div>
+        <div class="card-desc">서로 다른 시점에서 멈춰 이미 고친 버그를 미결로 보여주는 등 실제 피해가 있었음. 매 세션 자동 로드되는 CLAUDE.md 용량을 55,684자 → 25,233자(약 55% 감소)로 축소.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ 잔존 이슈 -->
+  <div class="section">
+    <div class="section-label">Known Issues</div>
+    <div class="section-title">⚠️ 잔존 이슈</div>
+    <div class="cards">
+      <div class="card crit">
+        <div class="card-header"><span class="badge badge-crit">🔴 P0</span></div>
+        <div class="card-title">토스 결제가 아직 테스트 키 — 실매출 0원</div>
+        <div class="card-desc">구독 결제·포인트 충전 UI는 이미 라이브인데 결제창이 테스트 결제창. 5주 넘게 그대로 방치. 선행조건은 개발이 아니라 행정(인감증명서 → 토스페이먼츠 전자결제 신청 → 심사 → 라이브 키 발급) — 신청부터 넣어야 대기시간이 줄어듦.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">SECURITY</span></div>
+        <div class="card-title"><code>CRON_SECRET</code> 값 설정 대기</div>
+        <div class="card-desc">값을 넣으면 cron-job.org 요청도 같이 401로 끊기므로, 외부 서비스 헤더 설정을 같은 타이밍에 맞춰야 함(대표님 계정 작업 필요).</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">DATA</span></div>
+        <div class="card-title">라이브에 열린 공고가 0건</div>
+        <div class="card-desc"><code>job_postings</code> 25건 전부 <code>status='closed'</code>. 지금 홈 화면에 표시할 실제 공고가 없다는 뜻 — 영업 재개 시점에 확인 필요.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">LEGAL</span></div>
+        <div class="card-title">유료직업소개사업 등록 여부 재확인 필요</div>
+        <div class="card-desc">초기 기획 당시엔 무료 매칭이라 등록 불필요로 판단했으나, 지금은 업주 구독료·포인트를 과금 중이라 전제가 달라짐. 라이브 결제 전 고용노동부 확인이 안전.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="badge badge-warn">DECISION NEEDED</span></div>
+        <div class="card-title">홈 배너 색 5종 — 몇 종으로 줄일지 대표님 확인 대기</div>
+        <div class="card-desc">긴급 빨강과 충돌하던 바로만남 색만 이번에 처리. 기능 진입 2개는 고유색 유지, 정보 진입 3개는 중립 톤 통일안이 제안돼 있음.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>바로알바 by MultiMOVE · 릴리즈 노트 · 2026.07.28</footer>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바로알바 — 개발 타임라인 (2026.07.28)</title>
+<style>
+  :root{--red:#C8102E;--green:#16a34a;--blue:#3b82f6;--orange:#f59e0b;--purple:#7c3aed;--pink:#f43f5e;--gray-100:#f8f9fa;--gray-200:#eee;--gray-500:#888;--gray-900:#111;--white:#fff;--radius:16px;--shadow:0 2px 12px rgba(0,0,0,0.06)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px}
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);padding:100px 5% 60px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(200,16,46,0.25),transparent 70%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(200,16,46,0.2);border:1px solid rgba(200,16,46,0.4);color:#ff6b7a;font-size:12px;font-weight:800;padding:5px 16px;border-radius:100px;letter-spacing:1px;margin-bottom:20px}
+  .hero h1{font-size:clamp(26px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.2;margin-bottom:12px}
+  .hero h1 span{color:var(--red)}
+  .hero-desc{font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:36px}
+  .hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+  .stat-item{text-align:center}
+  .stat-num{font-size:28px;font-weight:900;color:var(--red);line-height:1}
+  .stat-label{font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;font-weight:700}
+  .container{max-width:860px;margin:0 auto;padding:60px 5%}
+  .section-label{font-size:12px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .section-title{font-size:clamp(20px,3vw,28px);font-weight:900;letter-spacing:-0.5px;margin-bottom:8px}
+  .section-desc{font-size:14px;color:var(--gray-500);margin-bottom:36px}
+  .timeline-wrapper{position:relative}
+  .timeline-wrapper::before{content:'';position:absolute;left:130px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red),rgba(200,16,46,0.1))}
+  .tl-group{margin-bottom:44px}
+  .tl-date-header{display:flex;align-items:center;margin-bottom:18px}
+  .tl-date-label{width:120px;font-size:11px;font-weight:800;color:var(--gray-500);text-align:right;padding-right:18px;flex-shrink:0;letter-spacing:0.5px}
+  .tl-date-dot{width:14px;height:14px;border-radius:50%;background:var(--red);border:3px solid var(--gray-100);flex-shrink:0;margin-left:-8px;position:relative;z-index:1}
+  .tl-date-dot.today{background:var(--green);box-shadow:0 0 0 5px rgba(22,163,74,0.2)}
+  .tl-date-text{font-size:14px;font-weight:800;color:var(--gray-900);margin-left:14px}
+  .tl-items{padding-left:148px;display:flex;flex-direction:column;gap:10px}
+  .tl-item{background:var(--white);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);border:1px solid var(--gray-200);border-left:4px solid var(--gray-200)}
+  .tl-item.bug{border-left-color:#ef4444}
+  .tl-item.feat{border-left-color:var(--green)}
+  .tl-item.ux{border-left-color:var(--blue)}
+  .tl-item.fix{border-left-color:var(--orange)}
+  .tl-item.infra{border-left-color:var(--purple)}
+  .tl-item.today-item{background:linear-gradient(135deg,#0a2a0a,#1a3a0a);border:1.5px solid rgba(22,163,74,0.4);border-left:4px solid var(--green)}
+  .tl-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .v-chip{font-size:11px;font-weight:900;background:var(--gray-100);color:#666;padding:2px 10px;border-radius:100px;font-family:'SF Mono',monospace}
+  .tl-item.today-item .v-chip{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8)}
+  .type-chip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:100px}
+  .type-chip.bug{background:#fee2e2;color:#991b1b}
+  .type-chip.feat{background:#dcfce7;color:#14532d}
+  .type-chip.ux{background:#dbeafe;color:#1e3a8a}
+  .type-chip.fix{background:#fef9c3;color:#713f12}
+  .type-chip.infra{background:#ede9fe;color:#4c1d95}
+  .type-chip.new{background:linear-gradient(90deg,#f43f5e,#a855f7);color:#fff}
+  .type-chip.api{background:#fffbeb;color:#92400e}
+  .type-chip.crit{background:linear-gradient(90deg,#ef4444,#f97316);color:#fff}
+  .tl-title{font-size:15px;font-weight:900;margin-bottom:4px;color:var(--gray-900)}
+  .tl-item.today-item .tl-title{color:#fff}
+  .tl-desc{font-size:12px;color:var(--gray-500);line-height:1.6}
+  .tl-item.today-item .tl-desc{color:rgba(255,255,255,0.6)}
+  .today-badge{display:inline-block;background:var(--green);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:100px;letter-spacing:1px}
+  .pending-section{margin-top:56px}
+  .pending-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:20px}
+  .pending-card{background:var(--white);border-radius:var(--radius);padding:20px;border:1px solid var(--gray-200);box-shadow:var(--shadow)}
+  .pending-prio{display:inline-block;font-size:11px;font-weight:900;padding:3px 10px;border-radius:100px;margin-bottom:12px}
+  .prio-high{background:#fee2e2;color:#991b1b}
+  .prio-mid{background:#ffedd5;color:#9a3412}
+  .prio-low{background:#dbeafe;color:#1e3a8a}
+  .prio-ddl{background:#fffbeb;color:#92400e}
+  .prio-plan{background:#ede9fe;color:#4c1d95}
+  .pending-title{font-size:14px;font-weight:900;margin-bottom:4px}
+  .pending-desc{font-size:12px;color:var(--gray-500);line-height:1.6}
+  footer{text-align:center;padding:40px 5% 20px;font-size:13px;color:var(--gray-500);border-top:1px solid var(--gray-200)}
+  @media(max-width:768px){.timeline-wrapper::before{left:16px}.tl-date-label{display:none}.tl-date-dot{margin-left:10px}.tl-items{padding-left:44px}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">타임라인 · 2026.07.28</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">DEV TIMELINE</div>
+  <h1>바로알바 <span>개발 타임라인</span></h1>
+  <p class="hero-desc">2026년 상반기 ~ 7월 28일 개발 이력 통합본</p>
+  <div class="hero-stats">
+    <div class="stat-item"><div class="stat-num">588</div><div class="stat-label">SW 최신 버전</div></div>
+    <div class="stat-item"><div class="stat-num">10</div><div class="stat-label">7/21~28 Phase 수 (60~69)</div></div>
+    <div class="stat-item"><div class="stat-num">158</div><div class="stat-label">i18n 신규 키 × 8개국어</div></div>
+    <div class="stat-item"><div class="stat-num">3겹</div><div class="stat-label">업주 알림 0건 원인</div></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="section-label">Timeline</div>
+  <div class="section-title">개발 이력</div>
+  <div class="section-desc">최신 순. 7/21(직전 문서) 이후 7/27~28은 초록색 — 로그인 화면이던 첫 페이지를 공개 랜딩으로 전환하고 8개 언어·SEO 기반을 완성한 뒤, 실기기 제보를 따라 업주 알림·만료 노출·주소 저장 버그를 연속 근본수정한 구간.</div>
+
+  <div class="timeline-wrapper">
+
+    <!-- 7/28 최신 (Phase 69 + 68) -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.28</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">만료노출 · 공고주소 버그 + 업주알림 3겹원인 <span class="today-badge">TODAY</span></div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item bug"><div class="tl-header"><span class="v-chip">v588</span><span class="type-chip crit">P0</span></div><div class="tl-title">12일 지난 바로스팟이 &ldquo;모집 중&rdquo;으로 홈 노출</div><div class="tl-desc">형제 기능 바로모임엔 날짜 필터가 있었는데 바로만남 쪽 두 화면에만 없었음. status만 믿으면 자동마감 로직 자체가 없는 화면을 놓친다.</div></div>
+        <div class="tl-item today-item bug"><div class="tl-header"><span class="v-chip">v588</span><span class="type-chip crit">P0</span></div><div class="tl-title">공고 주소가 &ldquo;업체명+도로명주소&rdquo;로 붙어 저장</div><div class="tl-desc">&lt;input&gt;은 대입값의 개행을 조용히 지운다(textarea는 유지). hidden 필드 분리 + 기존 데이터 복구 함수로 해결.</div></div>
+        <div class="tl-item today-item crit"><div class="tl-header"><span class="v-chip">v587</span><span class="type-chip crit">ROOT CAUSE</span></div><div class="tl-title">업주 지원자 알림 0건 — 원인 3겹(스키마 사본누락+전용종+뱃지부재)</div><div class="tl-desc">applications.updated_at 없는 컬럼 400 → 07.19에 알바생 쪽만 고쳤던 버그의 업주 사본. 같은 로직이 파일에 두 벌 있다는 전제 없이 한 벌만 고쳤던 게 원인.</div></div>
+        <div class="tl-item today-item fix"><div class="tl-header"><span class="v-chip">v587</span><span class="type-chip fix">FIX</span></div><div class="tl-title">공고 카드 UI 6곳 중 4곳이 통일 미적용 상태로 남아있었음</div><div class="tl-desc">급구피드·홈공고카드·AI추천·홈검색결과 4곳을 _jcardH()로 통일. 같은 검색인데 진입경로별로 다른 카드가 보이던 문제 해결.</div></div>
+        <div class="tl-item today-item bug"><div class="tl-header"><span class="v-chip">login.html</span><span class="type-chip bug">BUG</span></div><div class="tl-title">로그인 화면이 상태표시줄을 침범</div><div class="tl-desc">독립 HTML이라 앱의 --sat 안전영역 체계가 아예 없었음. 앱 로직 그대로 이식.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/28 (Phase 67·66·65) -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.28</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">랜딩 실기기 피드백 · 자동마감 크론화 · 다크모드 왜곡</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item bug"><div class="tl-header"><span class="v-chip">v586</span><span class="type-chip crit">CRITICAL</span></div><div class="tl-title">&ldquo;모임 둘러보기&rdquo;·&ldquo;바로만남 살펴보기&rdquo;가 실제로 그 화면을 안 열고 있었음</div><div class="tl-desc">앱 홈(게스트)으로만 떨어지고 패널을 여는 딥링크 값 자체가 없었음. ?panel=moim|mannam 신설.</div></div>
+        <div class="tl-item today-item ux"><div class="tl-header"><span class="v-chip">v586</span><span class="type-chip ux">UX</span></div><div class="tl-title">랜딩 로고 통일 · 브랜드 줄바꿈 버그 · 언어버튼 여백</div><div class="tl-desc">flex 컨테이너의 익명 텍스트 아이템 규칙 때문에 "바로알바"가 "바로 알바"로 벌어지던 것, select 폭이 가장 긴 옵션 기준으로 잡히던 것 등 실기기 제보 6건.</div></div>
+        <div class="tl-item today-item infra"><div class="tl-header"><span class="v-chip">cron</span><span class="type-chip infra">INFRA</span></div><div class="tl-title">공고 자동마감을 서버 크론(api/surge-check)으로 이식</div><div class="tl-desc">기존엔 업주 로그인 시, 그 업주 소유 공고에 한해서만 자동마감이 돌고 있었음.</div></div>
+        <div class="tl-item today-item bug"><div class="tl-header"><span class="v-chip">🔴</span><span class="type-chip crit">SECURITY</span></div><div class="tl-title">/api/surge-check에 사실상 인증이 없다</div><div class="tl-desc">CRON_SECRET 환경변수 자체가 없어 시크릿 비교가 항상 통과됨. 값 설정 전까지 위험 상태로 남겨둠.</div></div>
+        <div class="tl-item today-item fix"><div class="tl-header"><span class="v-chip">v?</span><span class="type-chip fix">FIX</span></div><div class="tl-title">Android 강제 다크 테마가 브랜드 색을 왜곡</div><div class="tl-desc">color-scheme 메타 부재로 WebView가 색을 알고리즘 반전시키고 있었음. 3개 파일에 light 단독 선언.</div></div>
+        <div class="tl-item today-item ux"><div class="tl-header"><span class="v-chip">v?</span><span class="type-chip ux">UX</span></div><div class="tl-title">랜딩 헤더 줄바꿈 + 로고마크 SVG화 + 언어카드 2줄 정렬</div><div class="tl-desc">브랜드 텍스트가 세 줄로 쪼개지던 것, PNG 로고가 28px에서 흐려지던 것 등 모바일 실기기 제보 대응.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/28 (Phase 64·63·62) -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.28</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">문서 3개 통합 · 랜딩 8개언어 · 공고 URL SSR</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item infra"><div class="tl-header"><span class="v-chip">docs</span><span class="type-chip infra">DOCS</span></div><div class="tl-title">이력 문서 5곳 분산 → CLAUDE.md/PROGRESS.md/WORK_LOG.md 3개로 통합</div><div class="tl-desc">이미 고친 버그를 미결로 보여주는 등 실제 피해 확인. 자동로드 문서 용량 55,684자 → 25,233자(55% 감소).</div></div>
+        <div class="tl-item today-item feat"><div class="tl-header"><span class="v-chip">v585</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">랜딩 페이지 8개 언어 지원 + 공고주소 비던 경로 2곳 수정</div><div class="tl-desc">공고 복사·지도검색 폴백 두 경로가 주소를 지우거나 안 채우고 있었음 — "안 채운다"가 아니라 코드가 지우고 있었던 것.</div></div>
+        <div class="tl-item today-item feat"><div class="tl-header"><span class="v-chip">api/seo</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">공고별 URL(/job/:id) 서버렌더링 + 사이트맵 자동생성</div><div class="tl-desc">살아있는 공고가 25건 중 1건뿐임을 먼저 확인 — 당장 효과는 작지만 공고량이 붙는 순간 자동 작동.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/27~28 (Phase 60·61 + i18n) -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.27~28</div>
+        <div class="tl-date-dot today"></div>
+        <div class="tl-date-text">💫 공개 랜딩페이지 최초 신설 + i18n 완결 <span class="today-badge">MILESTONE</span></div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item today-item crit"><div class="tl-header"><span class="v-chip">v582</span><span class="type-chip crit">ROOT CAUSE</span></div><div class="tl-title">&ldquo;/&rdquo;가 로그인 화면이었다 — 실제 서비스 소개 랜딩 신설</div><div class="tl-desc">검색엔진이 보는 첫 화면에 서비스 설명이 없었음. JSON-LD 4종 + robots.txt/sitemap.xml.</div></div>
+        <div class="tl-item today-item feat"><div class="tl-header"><span class="v-chip">v583~584</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">랜딩 GA4 연결 · OG이미지 재제작 · 언어 자동감지 복구</div><div class="tl-desc">navigator.language 감지 코드 자체가 없어 8개 언어가 사실상 도달 불가능했던 것을 발견·수정. 바로모임·바로만남 랜딩 소개 섹션도 추가.</div></div>
+        <div class="tl-item today-item feat"><div class="tl-header"><span class="v-chip">v574~576</span><span class="type-chip feat">i18n</span></div><div class="tl-title">홈화면 렌더링 완역 + 토스트 158개 신규키 전수번역</div><div class="tl-desc">하드코딩 showToast 155건(고유127) 등을 4배치로 전수 치환, 8개국어 적용.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/16~21 (직전 문서 요약) -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.16~21</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">스키마 드리프트 전수대조 16건 + P0 근본종결 (260721 문서)</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v531~548</span><span class="type-chip new">32 commits</span></div><div class="tl-title">코드↔실제DB 전수대조로 조용히 죽어있던 기능 16건 색출 + 결제 플랜 리셋(P0) 근본종결</div><div class="tl-desc">원칙 13-9 "검수는 코드가 아니라 살아있는 DB에 대고 하라" 확립. 상세는 260721_* 문서 참고.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/13~16 (더 이전 요약) -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.13~16</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">바로스팟 1:1 재설계 · 마이페이지 대개편 (260716 문서)</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">118 commits</span><span class="type-chip new">RESTRUCTURE</span></div><div class="tl-title">바로스팟 정원제→1:1 매칭 전면 재설계 + 마이페이지 통합 + 상태표시줄 근본해결</div><div class="tl-desc">상세는 260716_* 문서 참고.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/6 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.06</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">💫 바로만남 서비스 최초 론칭</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v360~362</span><span class="type-chip new">NEW SERVICE</span></div><div class="tl-title">바로만남 풀스크린 패널 최초 구현</div><div class="tl-desc">이후 07.09~16에 초기 구현의 미완성 부분들을 대거 재설계.</div></div>
+      </div>
+    </div>
+
+    <!-- 7/2 -->
+    <div class="tl-group">
+      <div class="tl-date-header">
+        <div class="tl-date-label">07.02</div>
+        <div class="tl-date-dot"></div>
+        <div class="tl-date-text">Google Play 정식 출시 (Android v1.5.0)</div>
+      </div>
+      <div class="tl-items">
+        <div class="tl-item feat"><div class="tl-header"><span class="v-chip">v328~332</span><span class="type-chip feat">FEAT</span></div><div class="tl-title">Google Play Store 정식 출시</div><div class="tl-desc">모임채팅 FAB · 레슨채팅 DDL · 뒤로가기 버그 · 숏컷 필터 통일.</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 미결 작업 -->
+  <div class="pending-section">
+    <div class="section-label">Pending</div>
+    <div class="section-title">잔여 검수 · 예정 작업</div>
+    <div class="pending-grid">
+      <div class="pending-card">
+        <div class="pending-prio prio-high">HIGH</div>
+        <div class="pending-title">토스 라이브 결제 키 발급 — 실매출 0원 5주째</div>
+        <div class="pending-desc">선행조건이 개발이 아니라 행정(인감증명서 → 토스페이먼츠 전자결제 신청 → 심사). 신청부터 넣어야 대기시간이 줄어듦.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-high">HIGH</div>
+        <div class="pending-title">CRON_SECRET 값 설정 + cron-job.org 헤더 동기화</div>
+        <div class="pending-desc">지금은 /api/surge-check가 시크릿 헤더 없이도 호출 가능한 상태. 값 설정과 외부 헤더 변경을 같은 타이밍에 해야 진짜 크론이 끊기지 않음.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-mid">MEDIUM</div>
+        <div class="pending-title">라이브에 열린 공고가 0건</div>
+        <div class="pending-desc">job_postings 25건 전부 status=closed. 신규 공고가 안 올라오면 홈 화면이 계속 빈 상태로 보일 수 있음.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-mid">MEDIUM</div>
+        <div class="pending-title">worker.html color-scheme 메타 미확인</div>
+        <div class="pending-desc">독립 HTML 6개 중 이 파일만 점검 목록에서 빠짐. 같은 패턴(color-scheme/viewport-fit/안전영역) 확인 필요.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-ddl">법률 확인</div>
+        <div class="pending-title">유료직업소개사업 등록 여부 재확인</div>
+        <div class="pending-desc">무료 매칭 전제로 초기 판단했으나 지금은 구독료·포인트를 과금 중이라 전제가 바뀜. 라이브 결제 전 고용노동부 확인 권장.</div>
+      </div>
+      <div class="pending-card">
+        <div class="pending-prio prio-plan">대표님 확인 대기</div>
+        <div class="pending-title">홈 배너 색 5종 정리안</div>
+        <div class="pending-desc">긴급 빨강과 충돌하던 바로만남 색만 처리 완료. 기능진입 2개 고유색 유지 + 정보진입 3개 중립톤 통일안 제안돼 있음.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>바로알바 by MultiMOVE · 타임라인 최종 업데이트: 2026.07.28</footer>
+</body>
+</html>

@@ -29,6 +29,8 @@ const _subwayCache = {};        // 지하철역 검색 캐시
 let selectedCategories = new Set();  // 업종 복수 선택
 let selectedWorkTypes  = new Set();  // 형태 복수 선택 (regular/short/spot/errand)
 let filterRemote = false;
+let filterForeignerWelcome = false; // 지도 화면 "외국인 환영" 퀵칩
+let filterSeniorWelcome = false;    // 지도 화면 "시니어 환영" 퀵칩
 let includeLesson = false;           // 레슨/과외 마커 포함
 let urgentOnly = false;
 let sortByWage = false;
@@ -587,7 +589,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '588';
+  const _APP_V = '590';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1204,7 +1206,7 @@ async function loadJobs() {
       .select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
                start_time, duration_hours, needed_count, filled_count, description,
                surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
-               work_type, same_day_payment, noshow_deposit, age_limit, return_bonus,
+               work_type, same_day_payment, noshow_deposit, age_limit, return_bonus, senior_welcome,
                preferred_languages, is_remote, work_end_date, work_days,
                businesses(name, rating, kindness_rating, review_count)`)
       .eq('is_remote', true)
@@ -1256,6 +1258,16 @@ async function loadJobs() {
       }
     }
 
+    // senior_welcome 배치 fetch (nearby_jobs RPC가 신규 컬럼이라 미반영일 수 있음, 2026-07-29 추가)
+    if (result.length && result[0].senior_welcome === undefined) {
+      const ids = result.map(j => j.id);
+      const { data: seniorData } = await db.from('job_postings').select('id, senior_welcome').in('id', ids);
+      if (seniorData) {
+        const seniorMap = new Map(seniorData.map(d => [d.id, d.senior_welcome === true]));
+        result = result.map(j => ({ ...j, senior_welcome: seniorMap.get(j.id) || false }));
+      }
+    }
+
     // 복수 카테고리 클라이언트 필터 (2개 이상 선택 시)
     if (selectedCategories.size > 1) result = result.filter(j => selectedCategories.has(j.category));
     // 전문기술 mid 필터
@@ -1276,6 +1288,8 @@ async function loadJobs() {
     }
     if (urgentOnly) result = result.filter(j => j.status === 'urgent');
     if (filterRemote) result = result.filter(j => j.is_remote);
+    if (filterForeignerWelcome) result = result.filter(j => j.nationality_requirement === 'foreigner_welcome');
+    if (filterSeniorWelcome) result = result.filter(j => j.senior_welcome === true);
     if (_langFilterActive && _myLangs.length) result = result.filter(j => (j.preferred_languages || []).some(l => _myLangs.includes(l)));
     if      (sortMode === 'wage_desc') result.sort((a,b) => b.current_wage - a.current_wage);
     else if (sortMode === 'wage_asc')  result.sort((a,b) => a.current_wage - b.current_wage);
@@ -1320,7 +1334,7 @@ async function loadJobs() {
         .select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
                  start_time, duration_hours, needed_count, filled_count, description,
                  surge_enabled, surge_amount, surge_interval_min, surge_max_wage,
-                 work_type, same_day_payment, noshow_deposit, age_limit, return_bonus,
+                 work_type, same_day_payment, noshow_deposit, age_limit, return_bonus, senior_welcome,
                  preferred_languages, is_remote, work_end_date, work_days,
                  biz_name, businesses(name, rating, kindness_rating, review_count)`)
         .in('status', ['open', 'urgent'])
@@ -1702,6 +1716,7 @@ function renderList() {
     if (job.beginner_ok === true) _chip(t('beginner_ok_badge'));
     if (job.meal_included)        _chip(t('meal_included_badge'));
     if (job.nationality_requirement === 'foreigner_welcome') _chip(t('foreigner_welcome_badge'));
+    if (job.senior_welcome === true)  _chip(t('senior_welcome_badge'));
     if (job.is_remote)            _chip(t('remote_work_label'));
     if (job.surge_enabled)        _chip(t('surge_badge_label'));
     if (job.is_team_job)          _chip(t('team_recruit_badge'));
@@ -3064,6 +3079,7 @@ let _homeFilterJobType = '';
 let _homeFilterWorkType = '';
 let _homeFilterSearch = '';
 let _homeFilterSkillMatch = false; // 2026-07-16 추가 - 내 보유 스킬(workers.skills)과 카테고리가 겹치는 공고만
+let _homeFilterSenior = false; // 나이 무관(시니어 환영) 필터
 let _homeSort = 'latest';
 let _hfPendingCat = '';
 let _hfPendingWage = '';
@@ -3072,6 +3088,7 @@ let _hfPendingJobType = '';
 let _hfPendingWorkType = '';
 let _hfPendingSearch = '';
 let _hfPendingSkillMatch = false;
+let _hfPendingSenior = false;
 let _myWorkerSkills = null; // 최초 토글 시 1회 조회 후 캐시
 
 function _wageUnit(j) {
@@ -3719,12 +3736,14 @@ function openHomeFilter() {
   _hfPendingCat = _homeFilterCat; _hfPendingWage = _homeFilterWage; _hfPendingNat = _homeFilterNat;
   _hfPendingJobType = _homeFilterJobType; _hfPendingWorkType = _homeFilterWorkType;
   _hfPendingSearch = _homeFilterSearch; _hfPendingSkillMatch = _homeFilterSkillMatch;
+  _hfPendingSenior = _homeFilterSenior;
   document.querySelectorAll('.hfc-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === _hfPendingCat));
   document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.toggle('active', b.dataset.jtype === _hfPendingJobType));
   document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.toggle('active', b.dataset.wtype === _hfPendingWorkType));
   const si = document.getElementById('hfc-search-input'); if (si) { si.value = _hfPendingSearch; }
   const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.toggle('on', _hfPendingWage==='same_day');
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.toggle('on', _hfPendingNat==='foreigner');
+  const sen = document.getElementById('hfc-toggle-senior'); if (sen) sen.classList.toggle('on', _hfPendingSenior);
   const skl = document.getElementById('hfc-toggle-skill'); if (skl) skl.classList.toggle('on', _hfPendingSkillMatch);
   // 스킬 맞춤 필터는 알바생 전용 - 업주 계정은 그 항목 자체를 숨김
   const sklRow = document.getElementById('hfc-skill-row');
@@ -3737,12 +3756,14 @@ function closeHomeFilter() { document.getElementById('home-filter-overlay').styl
 function resetHomeFilter() {
   _hfPendingCat = ''; _hfPendingWage = ''; _hfPendingNat = '';
   _hfPendingJobType = ''; _hfPendingWorkType = ''; _hfPendingSearch = ''; _hfPendingSkillMatch = false;
+  _hfPendingSenior = false;
   document.querySelectorAll('.hfc-cat').forEach(b => b.classList.toggle('active', b.dataset.cat === ''));
   document.querySelectorAll('.hfc-jtype').forEach(b => b.classList.toggle('active', b.dataset.jtype === ''));
   document.querySelectorAll('.hfc-wtype').forEach(b => b.classList.toggle('active', b.dataset.wtype === ''));
   const si = document.getElementById('hfc-search-input'); if (si) si.value = '';
   const sd = document.getElementById('hfc-toggle-sd'); if (sd) sd.classList.remove('on');
   const nat = document.getElementById('hfc-toggle-nat'); if (nat) nat.classList.remove('on');
+  const sen = document.getElementById('hfc-toggle-senior'); if (sen) sen.classList.remove('on');
   const skl = document.getElementById('hfc-toggle-skill'); if (skl) skl.classList.remove('on');
   _updateHomeFilterCount();
 }
@@ -3793,6 +3814,9 @@ function toggleHFCond(cond) {
   } else if (cond === 'foreigner') {
     _hfPendingNat = _hfPendingNat === 'foreigner' ? '' : 'foreigner';
     const el = document.getElementById('hfc-toggle-nat'); if (el) el.classList.toggle('on', _hfPendingNat==='foreigner');
+  } else if (cond === 'senior') {
+    _hfPendingSenior = !_hfPendingSenior;
+    const el = document.getElementById('hfc-toggle-senior'); if (el) el.classList.toggle('on', _hfPendingSenior);
   }
   _updateHomeFilterCount();
 }
@@ -3807,6 +3831,7 @@ function _updateHomeFilterCount() {
   if (_hfPendingWorkType) f = f.filter(j => _hfPendingWorkType==='lesson'?(j.work_type==='lesson'||j.job_type==='technical'):(j.work_type||'spot')===_hfPendingWorkType);
   if (_hfPendingWage==='same_day') f = f.filter(j => j.same_day_payment);
   if (_hfPendingNat==='foreigner') f = f.filter(j => j.nationality_requirement==='foreigner_welcome');
+  if (_hfPendingSenior) f = f.filter(j => j.senior_welcome === true);
   if (_hfPendingSkillMatch && _myWorkerSkills?.length) f = f.filter(j => _myWorkerSkills.includes(j.category));
   const btn = document.getElementById('home-filter-apply-btn');
   if (btn) btn.textContent = t('view_jobs_count_fmt').replace('{n}', f.length);
@@ -3816,6 +3841,7 @@ function applyHomeFilter() {
   _homeFilterCat = _hfPendingCat; _homeFilterWage = _hfPendingWage; _homeFilterNat = _hfPendingNat;
   _homeFilterJobType = _hfPendingJobType; _homeFilterWorkType = _hfPendingWorkType;
   _homeFilterSkillMatch = _hfPendingSkillMatch;
+  _homeFilterSenior = _hfPendingSenior;
   const si = document.getElementById('home-search-input');
   if (si) si.value = _homeFilterSearch;
   window._homeFilterApplied = true; // 필터 명시 적용 — 전체여도 결과창 유지
@@ -3839,6 +3865,7 @@ function setHomeFilter(btn, cat, wage, nat) {
 function clearHomeFilter() {
   _homeFilterSearch = ''; _homeFilterCat = ''; _homeFilterWage = '';
   _homeFilterNat = ''; _homeFilterJobType = ''; _homeFilterWorkType = ''; _homeFilterSkillMatch = false;
+  _homeFilterSenior = false;
   _homeSort = 'latest';
   window._homeFilterApplied = false;
   const si = document.getElementById('home-search-input'); if (si) si.value = '';
@@ -3854,9 +3881,10 @@ function _doHomeFilterRender() {
   if (_homeFilterWorkType) filtered = filtered.filter(j => _homeFilterWorkType==='lesson'?(j.work_type==='lesson'||j.job_type==='technical'):(j.work_type||'spot')===_homeFilterWorkType);
   if (_homeFilterWage === 'same_day') filtered = filtered.filter(j => j.same_day_payment);
   if (_homeFilterNat === 'foreigner') filtered = filtered.filter(j => j.nationality_requirement === 'foreigner_welcome');
+  if (_homeFilterSenior) filtered = filtered.filter(j => j.senior_welcome === true);
   if (_homeFilterSkillMatch && _myWorkerSkills?.length) filtered = filtered.filter(j => _myWorkerSkills.includes(j.category));
 
-  const hasFilter = window._homeFilterApplied || _homeFilterSearch || _homeFilterCat || _homeFilterWage || _homeFilterNat || _homeFilterJobType || _homeFilterWorkType || _homeFilterSkillMatch;
+  const hasFilter = window._homeFilterApplied || _homeFilterSearch || _homeFilterCat || _homeFilterWage || _homeFilterNat || _homeFilterJobType || _homeFilterWorkType || _homeFilterSkillMatch || _homeFilterSenior;
   const srEl = document.getElementById('home-search-results');
   const defaultEl = document.getElementById('home-default-content');
   if (!hasFilter) {
@@ -3874,6 +3902,7 @@ function _doHomeFilterRender() {
   if (_homeFilterWorkType) parts.push({spot:'스팟',short:'단기',regular:'정기',lesson:'레슨/과외'}[_homeFilterWorkType]||_homeFilterWorkType);
   if (_homeFilterWage === 'same_day') parts.push('당일정산');
   if (_homeFilterNat === 'foreigner') parts.push('외국인환영');
+  if (_homeFilterSenior) parts.push('시니어환영');
   if (_homeFilterSkillMatch) parts.push('내 스킬 맞춤');
   if (label) label.textContent = t('filtered_jobs_count_fmt').replace('{parts}', parts.join(' · ')).replace('{n}', filtered.length);
   _renderHomeSearchList(filtered);
@@ -4017,7 +4046,7 @@ function openDetail(jobId) {
     db.from('job_postings').select(`id, title, category, base_wage, current_wage, status, lat, lng, address,
       start_time, duration_hours, needed_count, filled_count, description, biz_name,
       surge_enabled, surge_amount, surge_interval_min, surge_max_wage, wage_delta,
-      work_type, same_day_payment, noshow_deposit, age_limit, return_bonus, is_remote,
+      work_type, same_day_payment, noshow_deposit, age_limit, return_bonus, senior_welcome, is_remote,
       businesses(name, rating, kindness_rating, review_count)`)
       .eq('id', jobId).maybeSingle()
       .then(({ data }) => { if (data) { jobs.push(data); openDetail(jobId); } });
@@ -4208,8 +4237,10 @@ function openDetail(jobId) {
   }
   const mealBadge = document.getElementById('d-meal-badge');
   if (mealBadge) mealBadge.style.display = job.meal_included ? 'inline-flex' : 'none';
+  const seniorBadge = document.getElementById('d-senior-badge');
+  if (seniorBadge) seniorBadge.style.display = job.senior_welcome === true ? 'inline-flex' : 'none';
   const badgesRow = document.getElementById('d-badges-row');
-  if (badgesRow) badgesRow.style.display = (job.beginner_ok !== undefined || job.meal_included) ? 'flex' : 'none';
+  if (badgesRow) badgesRow.style.display = (job.beginner_ok !== undefined || job.meal_included || job.senior_welcome === true) ? 'flex' : 'none';
 
   // 당일정산 배지
   document.getElementById('d-same-day').style.display = job.same_day_payment ? 'block' : 'none';
@@ -12213,6 +12244,7 @@ function renderPostings() {
           ${p.surge_enabled ? `<span style="font-size:10px;font-weight:800;background:#FFF3E0;color:#FF9500;padding:2px 7px;border-radius:6px">${t('grade_quick_short')}</span>` : ''}
           ${p.is_premium ? '<span style="font-size:10px;font-weight:700;background:#EDE9FE;color:var(--purple);padding:2px 6px;border-radius:6px">PRO</span>' : ''}
           ${p.age_limit ? '<span style="font-size:10px;font-weight:700;background:#FFF7ED;color:#EA580C;padding:2px 6px;border-radius:6px">18+</span>' : ''}
+          ${p.senior_welcome === true ? `<span style="font-size:10px;font-weight:700;background:#FFFBEB;color:#92400E;padding:2px 6px;border-radius:6px">${t('senior_welcome_badge')}</span>` : ''}
           ${isExpired ? `<span style="font-size:10px;font-weight:700;background:#FEF2F2;color:#EF4444;padding:2px 6px;border-radius:6px">${t('status_expired_label')}</span>` : ''}
         </div>
         <!-- 토글 스위치 -->
@@ -14285,7 +14317,7 @@ function openPostingForm() {
   document.getElementById('surge-preview').textContent = '';
   // 당일정산 + 노쇼보증금 + 재방문인센티브 + 비대면 + 초보/식사 초기화
   setSameDay(false); setDeposit(false); setReturnBonusOn(false); toggleRemoteMode(false);
-  setBeginnerOk(false); setMealIncluded(false); setNatReq('any'); setTeamJob(false);
+  setBeginnerOk(false); setMealIncluded(false); setNatReq('any'); setTeamJob(false); setSeniorWelcome(false);
   const _pu0 = document.getElementById('f-pickup-location'); if (_pu0) _pu0.value = '';
   const _td0 = document.getElementById('f-team-desc'); if (_td0) _td0.value = '';
   renderMyPlacesQuick();
@@ -14455,6 +14487,7 @@ function openEditForm(jobId) {
   setTeamJob(p.is_team_job || false);
   const _td = document.getElementById('f-team-desc'); if (_td) _td.value = p.team_desc || '';
   setAgeLimit(p.age_limit || false);
+  setSeniorWelcome(p.senior_welcome || false);
   setJobLangs(p.preferred_languages || []);
   const dep = p.noshow_deposit || 0;
   setDeposit(dep > 0);
@@ -14977,6 +15010,7 @@ async function submitPosting() {
     work_end_date:      workType === 'short' ? periodEnd : null,
     holiday_pay:        workType === 'regular' ? holidayPay : false,
     age_limit:          document.getElementById('f-age-limit').value === 'true',
+    senior_welcome:     document.getElementById('f-senior-welcome').value === 'true',
     preferred_languages: JSON.parse(document.getElementById('f-pref-langs')?.value || '[]'),
     is_remote:          document.getElementById('f-is-remote').value === 'true',
     beginner_ok:             document.getElementById('f-beginner-ok').value === 'true',
@@ -15175,6 +15209,20 @@ function toggleRemoteFilter(el) {
   if (typeof renderMarkers === 'function') renderMarkers();
 }
 
+function toggleForeignerWelcomeFilter(el) {
+  filterForeignerWelcome = !filterForeignerWelcome;
+  el.classList.toggle('active', filterForeignerWelcome);
+  loadJobs();
+  if (typeof renderMarkers === 'function') renderMarkers();
+}
+
+function toggleSeniorWelcomeFilter(el) {
+  filterSeniorWelcome = !filterSeniorWelcome;
+  el.classList.toggle('active', filterSeniorWelcome);
+  loadJobs();
+  if (typeof renderMarkers === 'function') renderMarkers();
+}
+
 // ── 당일 정산 토글 ────────────────────────────────────────
 function setSameDay(val) {
   document.getElementById('f-same-day-on').value = val ? 'true' : 'false';
@@ -15299,6 +15347,7 @@ function copyPosting(jobId) {
   document.getElementById('surge-preview').textContent = '';
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
+  setSeniorWelcome(p.senior_welcome || false);
   setJobLangs(p.preferred_languages || []);
   const _rb2 = p.return_bonus || 0;
   setReturnBonusOn(_rb2 > 0);
@@ -15351,6 +15400,7 @@ function reopenWithEdit(jobId) {
   document.getElementById('surge-preview').textContent = '';
   setSameDay(p.same_day_payment || false);
   setAgeLimit(p.age_limit || false);
+  setSeniorWelcome(p.senior_welcome || false);
   setJobLangs(p.preferred_languages || []);
   const _rb3 = p.return_bonus || 0;
   setReturnBonusOn(_rb3 > 0);
@@ -17582,6 +17632,23 @@ function setAgeLimit(val) {
   if (!el) return;
   el.dataset.on = String(val);
   el.style.background = val ? '#EA580C' : '#e5e7eb';
+  el.querySelector('div').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
+}
+
+function toggleSeniorWelcome(el) {
+  const next = el.dataset.on !== 'true';
+  el.dataset.on = String(next);
+  el.style.background = next ? '#92400E' : '#e5e7eb';
+  el.querySelector('div').style.transform = next ? 'translateX(20px)' : 'translateX(0)';
+  document.getElementById('f-senior-welcome').value = String(next);
+}
+
+function setSeniorWelcome(val) {
+  document.getElementById('f-senior-welcome').value = val ? 'true' : 'false';
+  const el = document.getElementById('senior-welcome-toggle');
+  if (!el) return;
+  el.dataset.on = String(val);
+  el.style.background = val ? '#92400E' : '#e5e7eb';
   el.querySelector('div').style.transform = val ? 'translateX(20px)' : 'translateX(0)';
 }
 
