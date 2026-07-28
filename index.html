@@ -268,10 +268,12 @@
 <header>
   <div class="wrap hbar">
     <a class="brand" href="/">
-      <!-- 실제 서비스 로고를 쓴다. 앱(바로알바.html:87 app-header-logo)이 이미 이 파일을
-           28px 로 쓰고 있으므로 같은 방식을 그대로 따른다(규칙 7). 한때 여기만 자체 제작
-           SVG(지도핀+번개)를 쓴 적이 있는데, 앱과 로고가 달라 같은 서비스로 안 읽혔다. -->
-      <span class="blogo"><img src="./icons/바로알바 최종로고.png" alt="바로알바"></span>
+      <!-- 실제 서비스 로고를 쓴다(앱 바로알바.html:87 app-header-logo 와 같은 마크).
+           한때 여기만 자체 제작 SVG(지도핀+번개)를 써서 앱과 로고가 달랐다.
+           ⚠️ 원본 `바로알바 최종로고.png` 를 직접 걸지 말 것 — 1005px/715KB 라 30px 로
+           쓰자고 랜딩 첫 화면에서 715KB 를 받게 된다(Phase 61 의 OG 715KB 와 같은 실수).
+           tools/make-logo.py 로 뽑은 96px/13KB 판을 쓴다. -->
+      <span class="blogo"><img src="./icons/logo-mark-96.png" alt="바로알바" width="30" height="30"></span>
       <span class="bword">바로<em>알바</em></span>
     </a>
     <nav class="hnav">
