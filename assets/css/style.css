@@ -1211,19 +1211,23 @@
     .submit-btn:disabled { background:#ddd; cursor:default; animation:none; }
 
     /* ── 지원자 카드 ── */
+    /* 상태는 우측 배지가 이미 색으로 구분한다. 예전엔 왼쪽 4px 띠도 함께 썼는데
+       pending/reviewing/accepted가 전부 같은 빨강이라 정보는 안 주고 무게만 차지했고,
+       공고 카드(posting-card)의 띠와 두 겹으로 겹쳐 계층이 안 읽혔다. 띠는 걷어냈다. */
     .applicant-card {
       background:#fff; border-radius:14px; margin-bottom:10px;
-      box-shadow:0 1px 8px rgba(0,0,0,0.07); border-left:4px solid #e5e7eb; overflow:hidden;
+      box-shadow:0 1px 5px rgba(0,0,0,0.05); border:1px solid #f0f0f0; overflow:hidden;
     }
-    .applicant-card.s-pending   { border-left-color:var(--red); }
-    .applicant-card.s-reviewing { border-left-color:var(--red); }
-    .applicant-card.s-accepted  { border-left-color:var(--red); }
-    .applicant-card.s-rejected  { border-left-color:#e0e0e0; }
-    .applicant-card.s-cancelled { border-left-color:#e0e0e0; }
-    .applicant-card.s-completed { border-left-color:#bbb; }
-    .applicant-card.s-noshow    { border-left-color:#e0e0e0; }
+    .applicant-card.s-rejected,
+    .applicant-card.s-cancelled,
+    .applicant-card.s-noshow    { opacity:0.62; }
     .applicant-card.cmp-selected { box-shadow:0 0 0 2px var(--blue); }
     .ac-top { display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer; }
+    .ac-star {
+      background:none; border:none; padding:0 2px; cursor:pointer; flex-shrink:0;
+      font-size:19px; line-height:1; color:#d4d4d8;
+    }
+    .ac-star.on { color:#F59E0B; }
     .applicant-avatar {
       width:44px; height:44px; border-radius:50%;
       background:linear-gradient(135deg,#FFE4E4,#FFCACA);
@@ -1231,13 +1235,17 @@
     }
     .ac-info { flex:1; min-width:0; }
     .ac-name { font-size:14px; font-weight:800; color:#111; }
-    .ac-meta { font-size:11px; color:#aaa; font-weight:600; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* 평점·완료건수·출근율·전화번호가 한 줄에 다 들어가 nowrap+ellipsis로 전화번호가
+       늘 잘렸다(넣어놓고 안 보이는 상태). 두 줄까지 흐르도록 풀었다. */
+    .ac-meta { font-size:11px; color:#aaa; font-weight:600; margin-top:3px; line-height:1.5; }
     .ac-actions { display:flex; align-items:center; gap:6px; padding:0 14px 12px; }
-    .ac-btn { flex:1; padding:8px 4px; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center; white-space:nowrap; transition:opacity 0.1s; }
+    .ac-btn { flex:1; padding:9px 4px; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center; white-space:nowrap; transition:opacity 0.1s; }
     .ac-btn:active { opacity:0.75; }
     .ac-chat  { background:#f5f5f5; color:#555; }
     .ac-pass  { background:#FFF0F0; color:var(--red); font-weight:800; }
-    .ac-fail  { background:#f5f5f5; color:#888; }
+    /* 주 행동. 나머지 버튼과 같은 크기·같은 채도로 두면 무엇을 눌러야 하는지가 안 읽힌다 */
+    .ac-hire  { flex:1.5; background:#22c55e; color:#fff; font-weight:800; }
+    .ac-fail  { background:#fafafa; color:#9ca3af; font-weight:600; }
     .ac-done  { background:var(--red); color:#fff; font-weight:800; }
     .ac-sub   { background:#f5f5f5; color:#888; font-size:11px; }
     .ac-rec   { background:#f5f5f5; color:#555; }
