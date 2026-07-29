@@ -589,7 +589,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '593';
+  const _APP_V = '594';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -5013,18 +5013,18 @@ async function openWorkerProfileDirect(appId) {
   let statusActions = '';
   if (app.status === 'pending' || app.status === 'reviewing') {
     statusActions = `
-      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_status_final_pass')}</button>
+      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_status_final_pass')}</button>
       <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_hold_action_btn')}</button>
       <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">${t('ownr_reject_btn')}</button>`;
   } else if (app.status === 'on_hold') {
     statusActions = `
-      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_status_final_pass')}</button>
+      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_status_final_pass')}</button>
       <button onclick="${close}toggleInterest('${app.id}','${app.status}')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_pass_first_round_btn')}</button>
       <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:#f5f5f5;color:#888;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">${t('ownr_reject_btn')}</button>`;
   } else if (app.status === 'accepted') {
     statusActions = `
-      <button onclick="${close}showRatingModal('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">🏁 근무완료</button>
-      <button onclick="${close}markNoshow('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#FEE2E2;color:#DC2626;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">😶 노쇼</button>`;
+      <button onclick="${close}showRatingModal('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('check',14)} ${t('ownr_complete_action_btn')}</button>
+      <button onclick="${close}markNoshow('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#fafafa;color:#9ca3af;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">${t('app_noshow')}</button>`;
   }
 
   // photo_url이 있으면 실제 사진을, 로드 실패/없으면 기본 아이콘을 보여줌(형제 fallback div
@@ -12650,20 +12650,23 @@ function makeApplicantCardHtml(a, opts = {}) {
   const canInterest = ['pending','reviewing','on_hold'].includes(a.status);
   const starOn = a.status === 'reviewing';
   const starBtn = canInterest
-    ? `<button onclick="${sp}toggleInterest('${a.id}','${a.status}')" class="ac-star${starOn ? ' on' : ''}" title="${t('ownr_pass_first_round_btn')}">${starOn ? '★' : '☆'}</button>`
+    ? `<button onclick="${sp}toggleInterest('${a.id}','${a.status}')" class="ac-star${starOn ? ' on' : ''}" title="${t('ownr_pass_first_round_btn')}">${icon(starOn ? 'star' : 'starO', 18)}</button>`
     : '';
 
+  // 라벨의 이모지(💬📌✗⭐🏁)는 걷어내고 앱이 이미 쓰는 SVG 아이콘 세트로 통일한다.
+  // 이모지는 기기·OS마다 모양과 크기가 달라 버튼 높이가 들쭉날쭉해지고 색도 제각각이었다.
+  const ic = n => icon(n, 13);
   // 액션 버튼 (상태별로 필요한 것만)
-  let actions = `<button onclick="${sp}openChat('${a.id}','${name}')" class="ac-btn ac-chat">${t('chat_btn_emoji')}</button>`;
+  let actions = `<button onclick="${sp}openChat('${a.id}','${name}')" class="ac-btn ac-chat">${ic('chat')} ${t('chat_btn_emoji')}</button>`;
   if (a.status === 'pending' || a.status === 'reviewing') {
-    actions += `<button onclick="${sp}confirmAccept('${a.id}')" class="ac-btn ac-hire">${t('ownr_status_final_pass')}</button>`;
+    actions += `<button onclick="${sp}confirmAccept('${a.id}')" class="ac-btn ac-hire">${ic('check')} ${t('ownr_status_final_pass')}</button>`;
     actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">${t('ownr_hold_action_btn')}</button>`;
     actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">${t('ownr_reject_btn')}</button>`;
   } else if (a.status === 'on_hold') {
-    actions += `<button onclick="${sp}confirmAccept('${a.id}')" class="ac-btn ac-hire">${t('ownr_status_final_pass')}</button>`;
+    actions += `<button onclick="${sp}confirmAccept('${a.id}')" class="ac-btn ac-hire">${ic('check')} ${t('ownr_status_final_pass')}</button>`;
     actions += `<button onclick="${sp}updateApplication('${a.id}','rejected')" class="ac-btn ac-fail">${t('ownr_reject_btn')}</button>`;
   } else if (a.status === 'accepted') {
-    actions += `<button onclick="${sp}showRatingModal('${a.id}','${wid}')" class="ac-btn ac-done">${t('ownr_complete_action_btn')}</button>`;
+    actions += `<button onclick="${sp}showRatingModal('${a.id}','${wid}')" class="ac-btn ac-done">${ic('check')} ${t('ownr_complete_action_btn')}</button>`;
     actions += `<button onclick="${sp}markNoshow('${a.id}','${wid}')" class="ac-btn ac-fail">${t('app_noshow')}</button>`;
   } else if (a.status === 'rejected') {
     actions += `<button onclick="${sp}updateApplication('${a.id}','on_hold')" class="ac-btn ac-sub">${t('ownr_back_to_hold_btn')}</button>`;
@@ -12696,7 +12699,7 @@ function makeApplicantCardHtml(a, opts = {}) {
       </div>
       ${starBtn}${badge}
     </div>
-    ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:10px;border-left:3px solid var(--red);font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:10px;border-left:3px solid #d4d4d8;font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     ${a.status === 'completed' && a.worker_review ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#FFF7ED;border-radius:10px;border-left:3px solid #F59E0B">
       <div style="font-size:10px;font-weight:700;color:#92400E;margin-bottom:3px">${icon('star')} ${t('review_of_name_label').replace('{name}', name)}</div>
@@ -16168,7 +16171,11 @@ async function openWorkerProfile() {
     .eq('id', _chatAppId).single();
   if (!app) return;
   const w = app.workers || {};
-  const STATUS = { pending:'⏳ 접수중', reviewing:'\u{1F50D} 검토중', accepted:'✅ 합격', rejected:'❌ 탈락', completed:'\u{1F3C1} 완료', cancelled:'취소' };
+  // 상태 라벨은 _STATUS_BADGE 하나만 쓴다. 예전엔 여기에 이모지 섞인 한국어 사본이
+  // 따로 있어서 "1차합격→관심" 같은 변경이 이 화면에만 반영이 안 됐다.
+  const STATUS = Object.fromEntries(
+    Object.entries(_STATUS_BADGE).map(([k, v]) => [k, v.label])
+  );
 
   const infoRow = (label, value) => `
     <div style="background:#f8f8f8;border-radius:12px;padding:14px">
@@ -16246,7 +16253,7 @@ async function openWorkerProfile() {
 
     <!-- 액션 버튼 -->
     ${['pending','reviewing','on_hold'].includes(app.status) ? `<div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1.5;padding:13px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('ownr_status_final_pass')}</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1.5;padding:13px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">${t('ownr_status_final_pass')}</button>
       ${app.status === 'on_hold'
         ? `<button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_pass_first_round_btn')}</button>`
         : `<button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${t('ownr_hold_action_btn')}</button>`}
@@ -16356,9 +16363,9 @@ async function printWorkerProfile(appId) {
        ${row('구사 언어', langs)}
        ${row('이동수단', vehicles)}
      </table>
-     ${w.bio ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid var(--red);padding-left:8px">자기소개</div><div style="font-size:13px;line-height:1.7;color:#333">${w.bio.replace(/</g,'&lt;')}</div></div>` : ''}
-     ${w.experience ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid var(--red);padding-left:8px">경력 / 특기</div><div style="font-size:13px;line-height:1.7;color:#333">${w.experience.replace(/</g,'&lt;')}</div></div>` : ''}
-     ${app.apply_message ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid var(--red);padding-left:8px">지원 메시지</div><div style="font-size:13px;line-height:1.7;color:#333">${app.apply_message.replace(/</g,'&lt;')}</div></div>` : ''}`,
+     ${w.bio ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #d4d4d8;padding-left:8px">자기소개</div><div style="font-size:13px;line-height:1.7;color:#333">${w.bio.replace(/</g,'&lt;')}</div></div>` : ''}
+     ${w.experience ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #d4d4d8;padding-left:8px">경력 / 특기</div><div style="font-size:13px;line-height:1.7;color:#333">${w.experience.replace(/</g,'&lt;')}</div></div>` : ''}
+     ${app.apply_message ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #d4d4d8;padding-left:8px">지원 메시지</div><div style="font-size:13px;line-height:1.7;color:#333">${app.apply_message.replace(/</g,'&lt;')}</div></div>` : ''}`,
     `table{width:100%;border-collapse:collapse}`
   );
 }
