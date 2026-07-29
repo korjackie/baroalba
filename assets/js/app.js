@@ -136,21 +136,23 @@ function closeBottomSheet() {
 // 바로알바/바로모임/바로만남을 아우르는 통합 서비스가 되면서 이 버튼을
 // 조회용 대시보드가 아니라 "등록/개설" 전용 액션으로 재정의함
 function openCreateActionSheet() {
-  const row = (icon, title, desc, onclick) => `
+  // 아이콘은 이모지 대신 앱 SVG 세트를 쓴다(기기·OS마다 모양이 달라지지 않게).
+  const row = (iconName, title, desc, onclick) => `
     <div onclick="${onclick}" style="display:flex;align-items:center;gap:14px;padding:14px 20px;cursor:pointer">
-      <div style="width:44px;height:44px;border-radius:12px;background:#f8f8f8;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${icon}</div>
+      <div style="width:44px;height:44px;border-radius:12px;background:#f6f6f7;color:#52525b;display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon(iconName, 20)}</div>
       <div style="min-width:0">
         <div style="font-size:15px;font-weight:800;color:#222">${title}</div>
         <div style="font-size:12px;color:#999;margin-top:2px">${desc}</div>
       </div>
     </div>`;
+  // 순서는 서비스 비중대로 — 공고(본업) → 레슨/과외 → 모임 → 만남(요청)
   openBottomSheet(`
     <div style="padding:4px 20px 12px;font-size:17px;font-weight:900;color:#111">무엇을 등록하시겠어요?</div>
     <div style="display:flex;flex-direction:column;padding-bottom:8px">
-      ${row('🍻', '바로모임 개설', '취미·운동·스터디 등 모임을 열어보세요', "closeBottomSheet();openMoimPanel(true)")}
-      ${row('💼', '공고 등록·관리', '알바 공고를 올리고 지원자를 받아보세요', "closeBottomSheet();openOwnerPanel('postings')")}
-      ${row('📚', '레슨/과외 등록', '레슨·과외 공고를 등록·관리해보세요', "closeBottomSheet();openLessonManagePanel()")}
-      ${row('📢', '모임/만남 개설 요청하기', '"이런 모임 만들어주세요" 요청을 남겨보세요', "closeBottomSheet();openGatheringRequestSheet()")}
+      ${row('brief', '공고 등록·관리', '알바 공고를 올리고 지원자를 받아보세요', "closeBottomSheet();openOwnerPanel('postings')")}
+      ${row('school', '레슨/과외 등록', '레슨·과외 공고를 등록·관리해보세요', "closeBottomSheet();openLessonManagePanel()")}
+      ${row('users', '바로모임 개설', '취미·운동·스터디 등 모임을 열어보세요', "closeBottomSheet();openMoimPanel(true)")}
+      ${row('megaph', '모임/만남 개설 요청하기', '"이런 모임 만들어주세요" 요청을 남겨보세요', "closeBottomSheet();openGatheringRequestSheet()")}
     </div>
   `);
 }
@@ -164,8 +166,8 @@ function openGatheringRequestSheet() {
     <div style="padding:0 20px 4px;font-size:12.5px;color:#999;line-height:1.5">원하는 지역과 종류를 남겨주시면 검토 후 개설해드려요.</div>
     <div style="display:flex;flex-direction:column;gap:8px;padding:12px 20px 20px">
       <select id="greq-type" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;background:#fff">
-        <option value="moim">🍻 바로모임</option>
-        <option value="baromeeting">💕 바로만남 (바로미팅·바로스팟)</option>
+        <option value="moim">바로모임</option>
+        <option value="baromeeting">바로만남 (바로미팅·바로스팟)</option>
       </select>
       <input id="greq-region" type="text" placeholder="희망 지역 (예: 판교, 강남역)" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none">
       <textarea id="greq-desc" placeholder="어떤 모임/미팅을 원하시는지 자유롭게 적어주세요" rows="3" style="padding:11px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:none;font-family:inherit"></textarea>
@@ -589,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '594';
+  const _APP_V = '595';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
