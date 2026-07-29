@@ -589,7 +589,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '591';
+  const _APP_V = '592';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -11292,16 +11292,16 @@ async function _fetchWorkerNotifications() {
     const jobTitle = app.job_postings?.title || '공고';
     const t = app.applied_at;
     if (app.status === 'accepted') {
-      items.push({ id: app.id + '_acc', icon: '✅', color: 'var(--green)', title: `${biz} 합격 확정!`, body: `"${jobTitle}" 공고에서 합격됐어요`, time: t });
+      items.push({ id: app.id + '_acc', icon: '✅', color: 'var(--green)', title: `${biz} 합격 확정!`, body: `"${jobTitle}" 공고에서 합격됐어요`, time: t, goApplications: true });
     } else if (app.status === 'rejected') {
-      items.push({ id: app.id + '_rej', icon: '❌', color: '#EF4444', title: `${biz} 지원 거절`, body: `"${jobTitle}"`, time: t });
+      items.push({ id: app.id + '_rej', icon: '❌', color: '#EF4444', title: `${biz} 지원 거절`, body: `"${jobTitle}"`, time: t, goApplications: true });
     } else if (app.status === 'completed' && app.worker_rating) {
       const stars = '★'.repeat(Math.round(app.worker_rating));
-      items.push({ id: app.id + '_rev', icon: '⭐', color: '#F59E0B', title: `${biz}에서 평점 ${app.worker_rating.toFixed(1)}점!`, body: app.worker_review ? `"${app.worker_review}"` : `${stars}`, time: t });
+      items.push({ id: app.id + '_rev', icon: '⭐', color: '#F59E0B', title: `${biz}에서 평점 ${app.worker_rating.toFixed(1)}점!`, body: app.worker_review ? `"${app.worker_review}"` : `${stars}`, time: t, goApplications: true });
     } else if (app.status === 'completed') {
-      items.push({ id: app.id + '_done', icon: '\u{1F3C1}', color: 'var(--blue)', title: `${biz} 근무 완료`, body: `"${jobTitle}"`, time: t });
+      items.push({ id: app.id + '_done', icon: '\u{1F3C1}', color: 'var(--blue)', title: `${biz} 근무 완료`, body: `"${jobTitle}"`, time: t, goApplications: true });
     } else if (app.status === 'noshow') {
-      items.push({ id: app.id + '_ns', icon: '⚠️', color: '#BE123C', title: `${biz}에서 노쇼 처리됐어요`, body: `"${jobTitle}"`, time: t });
+      items.push({ id: app.id + '_ns', icon: '⚠️', color: '#BE123C', title: `${biz}에서 노쇼 처리됐어요`, body: `"${jobTitle}"`, time: t, goApplications: true });
     }
   });
 
@@ -11328,7 +11328,7 @@ async function _fetchWorkerNotifications() {
             id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: 'var(--purple)',
             title: `"${title.slice(0,20)}"에 댓글이 달렸어요`,
             body: `${commenter}: "${c.content.slice(0,40)}"`,
-            time: c.created_at
+            time: c.created_at, postId: c.post_id
           });
         });
       }
@@ -11605,8 +11605,12 @@ async function openNotifications() {
     const isNew = it.isGrade
       ? !localStorage.getItem('noti_grade_seen_' + (currentUser?.id || ''))
       : (it.time && new Date(it.time).getTime() > lastSeen);
+    const nav = it.goApplications ? `document.getElementById('noti-overlay')?.remove();goToMyApplications();`
+      : it.appId ? `document.getElementById('noti-overlay')?.remove();openWorkerProfileDirect('${it.appId}');`
+      : it.postId ? `document.getElementById('noti-overlay')?.remove();openCommunityPost('${it.postId}');`
+      : '';
     return `
-      <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f8f8f8;align-items:flex-start">
+      <div onclick="${nav}" style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f8f8f8;align-items:flex-start${nav ? ';cursor:pointer' : ''}">
         <div style="width:40px;height:40px;border-radius:50%;background:${it.color}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${it.icon}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
@@ -11616,6 +11620,7 @@ async function openNotifications() {
           ${it.body ? `<div style="font-size:12px;color:#888;line-height:1.5">${it.body}</div>` : ''}
           ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_timeAgo(it.time)}</div>` : ''}
         </div>
+        ${nav ? `<div style="color:#ccc;font-size:16px;flex-shrink:0;padding-top:10px">›</div>` : ''}
       </div>`;
   }).join('');
 }
@@ -17952,15 +17957,15 @@ async function _fetchOwnerNotifications() {
     // 아니지만, 안 뜨는 것보다는 낫다.
     const at = app.applied_at;
     if (app.status === 'pending') {
-      items.push({ icon: '\u{1F4E5}', color: 'var(--red)', title: `${name}님이 지원했어요`, body: `"${title}"`, time: at });
+      items.push({ icon: '\u{1F4E5}', color: 'var(--red)', title: `${name}님이 지원했어요`, body: `"${title}"`, time: at, appId: app.id });
     } else if (app.status === 'accepted') {
-      items.push({ icon: '\u{2705}', color: 'var(--red)', title: `${name}님 합격 처리됨`, body: `"${title}"`, time: at });
+      items.push({ icon: '\u{2705}', color: 'var(--red)', title: `${name}님 합격 처리됨`, body: `"${title}"`, time: at, appId: app.id });
     } else if (app.status === 'cancelled') {
-      items.push({ icon: '\u{1F6AB}', color: '#aaa', title: `${name}님이 지원 취소했어요`, body: `"${title}"`, time: at });
+      items.push({ icon: '\u{1F6AB}', color: '#aaa', title: `${name}님이 지원 취소했어요`, body: `"${title}"`, time: at, appId: app.id });
     } else if (app.status === 'completed') {
-      items.push({ icon: '\u{1F3C1}', color: 'var(--red)', title: `${name}님 근무 완료`, body: `"${title}"`, time: at });
+      items.push({ icon: '\u{1F3C1}', color: 'var(--red)', title: `${name}님 근무 완료`, body: `"${title}"`, time: at, appId: app.id });
     } else if (app.status === 'noshow') {
-      items.push({ icon: '\u{1F613}', color: '#aaa', title: `${name}님 노쇼 처리됨`, body: `"${title}"`, time: at });
+      items.push({ icon: '\u{1F613}', color: '#aaa', title: `${name}님 노쇼 처리됨`, body: `"${title}"`, time: at, appId: app.id });
     }
   });
 
@@ -17988,7 +17993,7 @@ async function _fetchOwnerNotifications() {
               id: 'comm_cmt_' + c.id, icon: '&#x1F4AC;', color: 'var(--purple)',
               title: `"${ptitle.slice(0,20)}"에 댓글이 달렸어요`,
               body: `${commenter}: "${c.content.slice(0,40)}"`,
-              time: c.created_at
+              time: c.created_at, postId: c.post_id
             });
           });
         }
@@ -18054,8 +18059,11 @@ async function openOwnerNotifications() {
 
   listEl.innerHTML = items.map(it => {
     const isNew = it.time && new Date(it.time).getTime() > lastSeen;
+    const nav = it.appId ? `document.getElementById('owner-noti-overlay')?.remove();openWorkerProfileDirect('${it.appId}');`
+      : it.postId ? `document.getElementById('owner-noti-overlay')?.remove();openCommunityPost('${it.postId}');`
+      : '';
     return `
-      <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f8f8f8;align-items:flex-start">
+      <div onclick="${nav}" style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f8f8f8;align-items:flex-start${nav ? ';cursor:pointer' : ''}">
         <div style="width:40px;height:40px;border-radius:50%;background:${it.color}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${it.icon}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
@@ -18065,6 +18073,7 @@ async function openOwnerNotifications() {
           ${it.body ? `<div style="font-size:12px;color:#888">${it.body}</div>` : ''}
           ${it.time ? `<div style="font-size:11px;color:#bbb;margin-top:4px">${_ownerTimeAgo(it.time)}</div>` : ''}
         </div>
+        ${nav ? `<div style="color:#ccc;font-size:16px;flex-shrink:0;padding-top:10px">›</div>` : ''}
       </div>`;
   }).join('');
 }
