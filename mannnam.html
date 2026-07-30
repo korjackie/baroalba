@@ -8,25 +8,30 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#111;min-height:100dvh}
-:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
-.hdr{background:#fff;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:100}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:var(--ink-900);min-height:100dvh}
+:root{
+      /* 2026-07-31 프리미엄 2차 — 이 파일은 assets/css/style.css 를 로드하지 않는다.
+         토큰이 없으면 var() 선언이 통째로 무효가 되어 색이 깨지므로 여기에 사본을 둔다.
+         ⚠️ style.css 의 :root 값이 바뀌면 여기도 같이 고칠 것 (Phase 68-B 유형) */
+      --ink-900:#15181E; --ink-600:#4E5661; --ink-400:#838C98;
+      --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+.hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100}
 .hdr-inner{padding:calc(var(--sat) + 14px) 16px 14px;display:flex;align-items:center;gap:12px}
-.tab-bar{display:flex;border-bottom:1px solid #f0f0f0;background:#fff}
-.tab-btn{flex:1;padding:13px 4px;font-size:13px;font-weight:500;color:#aaa;border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s}
+.tab-bar{display:flex;border-bottom:1px solid var(--line);background:#fff}
+.tab-btn{flex:1;padding:13px 4px;font-size:13px;font-weight:500;color:var(--ink-400);border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s}
 .tab-btn.active{color:#7C3AED;border-bottom-color:#7C3AED}
 .content{padding:14px;padding-bottom:calc(14px + var(--sab))}
-.card{background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:16px;margin-bottom:12px}
+.card{background:#fff;border-radius:16px;border:1px solid var(--line);padding:16px;margin-bottom:12px}
 .btn-primary{width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
-.btn-secondary{padding:8px 16px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-secondary{padding:8px 16px;background:#f3f4f6;color:var(--ink-600);border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
 .btn-danger{padding:8px 16px;background:#fee2e2;color:#ef4444;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
 .btn-success{padding:8px 16px;background:#d1fae5;color:#059669;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
 .status-badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:500}
-input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:11px;font-size:14px;outline:none;font-family:inherit}
+input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:14px;outline:none;font-family:inherit}
 input:focus,select:focus,textarea:focus{border-color:#7C3AED}
-label{font-size:12px;font-weight:500;color:#555;display:block;margin-bottom:5px;margin-top:12px}
+label{font-size:12px;font-weight:500;color:var(--ink-600);display:block;margin-bottom:5px;margin-top:12px}
 label:first-child{margin-top:0}
-.spinner{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite}
+.spinner{width:24px;height:24px;border:3px solid var(--line);border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -37,7 +42,7 @@ label:first-child{margin-top:0}
 <!-- 로그인 화면 -->
 <div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px">
   <div style="font-size:28px;font-weight:700;color:#7C3AED;margin-bottom:8px">바로만남</div>
-  <div style="font-size:14px;color:#888;margin-bottom:40px">매니저 관리 시스템</div>
+  <div style="font-size:14px;color:var(--ink-400);margin-bottom:40px">매니저 관리 시스템</div>
   <div style="width:100%;max-width:360px">
     <label>이메일</label>
     <input type="email" id="login-email" placeholder="매니저 이메일" autocomplete="email">
@@ -53,10 +58,10 @@ label:first-child{margin-top:0}
   <div class="hdr">
     <div class="hdr-inner">
       <div style="flex:1">
-        <div style="font-size:16px;font-weight:700;color:#111">바로만남 매니저</div>
-        <div id="mgr-name" style="font-size:11px;color:#aaa;margin-top:1px"></div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink-900)">바로만남 매니저</div>
+        <div id="mgr-name" style="font-size:11px;color:var(--ink-400);margin-top:1px"></div>
       </div>
-      <button onclick="doLogout()" style="padding:7px 14px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer">로그아웃</button>
+      <button onclick="doLogout()" style="padding:7px 14px;background:#f3f4f6;color:var(--ink-600);border:none;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer">로그아웃</button>
     </div>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('restaurants')" id="tab-restaurants">🏪 식당</button>
@@ -213,18 +218,18 @@ async function loadRestaurants() {
   const { data, error } = await db.from('barospot_restaurants')
     .select('*').order('created_at', { ascending: false });
   if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
-  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">등록된 식당이 없어요</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:14px">등록된 식당이 없어요</div>'; return; }
   el.innerHTML = data.map(r => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
-          <div style="font-size:15px;font-weight:700;color:#111">${r.name}</div>
-          <div style="font-size:12px;color:#888;margin-top:2px">${r.address||''}</div>
+          <div style="font-size:15px;font-weight:700;color:var(--ink-900)">${r.name}</div>
+          <div style="font-size:12px;color:var(--ink-400);margin-top:2px">${r.address||''}</div>
         </div>
         <span class="status-badge" style="background:${r.is_active?'#d1fae5':'#f3f4f6'};color:${r.is_active?'#059669':'#9ca3af'}">${r.is_active?'운영중':'비활성'}</span>
       </div>
-      <div style="font-size:12px;color:#666;margin-bottom:10px">${r.menu_description||''}</div>
-      <div style="display:flex;gap:6px;font-size:12px;color:#888;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">${r.menu_description||''}</div>
+      <div style="display:flex;gap:6px;font-size:12px;color:var(--ink-400);margin-bottom:12px">
         <span>여성 ${r.female_price?.toLocaleString()}원</span>
         <span>·</span>
         <span>남성 ${r.male_price?.toLocaleString()}원</span>
@@ -296,7 +301,7 @@ async function loadEvents() {
   const { data, error } = await db.from('barospot_events')
     .select('*, barospot_restaurants(name)').order('event_date', { ascending: false }).limit(50);
   if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
-  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">이벤트가 없어요</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:14px">이벤트가 없어요</div>'; return; }
   const statusLabel = { open:'모집중', full:'마감', confirmed:'확정', cancelled:'취소' };
   const statusColor = { open:'#10b981', full:'#f59e0b', confirmed:'#7C3AED', cancelled:'#9ca3af' };
   el.innerHTML = data.map(ev => `
@@ -304,11 +309,11 @@ async function loadEvents() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
           <div style="font-size:15px;font-weight:700">${ev.barospot_restaurants?.name||'식당 미지정'}</div>
-          <div style="font-size:12px;color:#888;margin-top:2px">${ev.event_date} ${ev.event_time}</div>
+          <div style="font-size:12px;color:var(--ink-400);margin-top:2px">${ev.event_date} ${ev.event_time}</div>
         </div>
         <span class="status-badge" style="background:${statusColor[ev.status]||'#ccc'}22;color:${statusColor[ev.status]||'#ccc'}">${statusLabel[ev.status]||ev.status}</span>
       </div>
-      <div style="display:flex;gap:12px;font-size:12px;color:#666;margin-bottom:12px">
+      <div style="display:flex;gap:12px;font-size:12px;color:var(--ink-400);margin-bottom:12px">
         <span>여성 ${ev.female_remaining}/${ev.female_slots}</span>
         <span>남성 ${ev.male_remaining}/${ev.male_slots}</span>
         <span>남성결제 ${ev.male_price?.toLocaleString()}원</span>
@@ -388,7 +393,7 @@ async function loadFemaleApps() {
     .eq('gender', 'female')
     .order('created_at', { ascending: false }).limit(50);
   if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
-  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">여성 신청자가 없어요</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:14px">여성 신청자가 없어요</div>'; return; }
   const statusLabel = { pending:'검토중', matched:'배정완료', confirmed:'확정', cancelled:'취소', rejected:'거절' };
   const statusColor = { pending:'#f59e0b', matched:'#8b5cf6', confirmed:'#10b981', cancelled:'#9ca3af', rejected:'#ef4444' };
   el.innerHTML = data.map(a => {
@@ -399,11 +404,11 @@ async function loadFemaleApps() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
           <div style="font-size:15px;font-weight:700">${w?.name||'이름없음'}</div>
-          <div style="font-size:12px;color:#888">${w?.phone||''}</div>
+          <div style="font-size:12px;color:var(--ink-400)">${w?.phone||''}</div>
         </div>
         <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>
       </div>
-      ${ev ? `<div style="font-size:12px;color:#666;margin-bottom:10px">배정: ${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
+      ${ev ? `<div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">배정: ${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${a.status === 'pending' ? `<button onclick="openAssignModal('${a.id}')" class="btn-success">식당 배정</button><button onclick="updateAppStatus('${a.id}','rejected','female')" class="btn-danger">거절</button>` : ''}
         ${a.status === 'matched' ? `<button onclick="updateAppStatus('${a.id}','confirmed','female')" class="btn-success">확정</button><button onclick="updateAppStatus('${a.id}','cancelled','female')" class="btn-danger">취소</button>` : ''}
@@ -444,7 +449,7 @@ async function loadMaleApps() {
     .eq('gender', 'male')
     .order('created_at', { ascending: false }).limit(50);
   if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
-  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px">남성 신청자가 없어요</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:14px">남성 신청자가 없어요</div>'; return; }
   const statusLabel = { pending:'검토중', confirmed:'확정', cancelled:'취소', rejected:'거절' };
   const statusColor = { pending:'#f59e0b', confirmed:'#10b981', cancelled:'#9ca3af', rejected:'#ef4444' };
   el.innerHTML = data.map(a => {
@@ -455,11 +460,11 @@ async function loadMaleApps() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
           <div style="font-size:15px;font-weight:700">${w?.name||'이름없음'}</div>
-          <div style="font-size:12px;color:#888">${w?.phone||''}</div>
+          <div style="font-size:12px;color:var(--ink-400)">${w?.phone||''}</div>
         </div>
         <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>
       </div>
-      ${ev ? `<div style="font-size:12px;color:#666;margin-bottom:10px">${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
+      ${ev ? `<div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${a.status === 'pending' ? `<button onclick="updateAppStatus('${a.id}','confirmed','male')" class="btn-success">확정</button><button onclick="updateAppStatus('${a.id}','rejected','male')" class="btn-danger">거절</button>` : ''}
         ${a.status === 'confirmed' ? `<button onclick="updateAppStatus('${a.id}','cancelled','male')" class="btn-danger">취소</button>` : ''}

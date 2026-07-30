@@ -17,7 +17,12 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,'Apple SD Gothic Neo',sans-serif; background:#f1f5f9; min-height:100vh; }
 
-    :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
+    :root {
+      /* 2026-07-31 프리미엄 2차 — 이 파일은 assets/css/style.css 를 로드하지 않는다.
+         토큰이 없으면 var() 선언이 통째로 무효가 되어 색이 깨지므로 여기에 사본을 둔다.
+         ⚠️ style.css 의 :root 값이 바뀌면 여기도 같이 고칠 것 (Phase 68-B 유형) */
+      --ink-900:#15181E; --ink-600:#4E5661; --ink-400:#838C98;
+      --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8; --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
     .header {
       background:#1e293b; color:#fff;
       padding:14px 16px;
@@ -2851,7 +2856,7 @@ async function openBarospotEventDetail(eventId) {
   const r = ev.barospot_restaurants || {};
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
   document.getElementById('bed-body').innerHTML = `
-    <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:2px">${r.name || '식당 미배정'}</div>
+    <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:2px">${r.name || '식당 미배정'}</div>
     <div style="font-size:12.5px;color:#94a3b8;margin-bottom:14px">${whenText}${ev.address ? ' · ' + ev.address : ''}</div>
     <div id="bed-participants"><div class="loading">로딩 중...</div></div>
   `;
@@ -3078,7 +3083,7 @@ function openBarospotAppDetail(applicationId) {
   const canConfirm = a.gender === 'male' && a.event_id && a.status === 'pending';
   const openEvents = _barospotEvents.filter(e => e.status === 'recruiting_male');
   document.getElementById('bad-body').innerHTML = `
-    <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:2px">${w.name || '이름없음'}</div>
+    <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:2px">${w.name || '이름없음'}</div>
     <div style="font-size:12.5px;color:#94a3b8;margin-bottom:14px">${genderLabel} · ${w.phone || '연락처 미등록'}</div>
     <div style="background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#334155;display:flex;flex-direction:column;gap:6px">
       <div><b>📍 배정 바로스팟</b> · ${eventInfo}</div>

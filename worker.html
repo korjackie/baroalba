@@ -10,19 +10,24 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    :root { --red:#FF4B4B; --nav-h:64px; }
-    body { font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:#f5f5f5; min-height:100vh; }
+    :root {
+      /* 2026-07-31 프리미엄 2차 — 이 파일은 assets/css/style.css 를 로드하지 않는다.
+         토큰이 없으면 var() 선언이 통째로 무효가 되어 색이 깨지므로 여기에 사본을 둔다.
+         ⚠️ style.css 의 :root 값이 바뀌면 여기도 같이 고칠 것 (Phase 68-B 유형) */
+      --ink-900:#15181E; --ink-600:#4E5661; --ink-400:#838C98;
+      --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8; --red:#FF4B4B; --nav-h:64px; }
+    body { font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:var(--surface-1); min-height:100vh; }
 
     /* ── 헤더 ── */
     .header {
       position:sticky; top:0; z-index:100;
       background:#fff; padding:14px 16px 12px;
-      border-bottom:1px solid #f0f0f0;
+      border-bottom:1px solid var(--line);
       box-shadow:0 1px 8px rgba(0,0,0,0.06);
       display:flex; align-items:center; justify-content:space-between;
     }
     .header-logo { font-size:20px; font-weight:700; color:var(--red); }
-    .header-name { font-size:13px; color:#555; font-weight:500; }
+    .header-name { font-size:13px; color:var(--ink-600); font-weight:500; }
     .back-btn { font-size:13px; color:var(--red); font-weight:500; background:none; border:none; cursor:pointer; }
 
     /* ── 프로필 카드 ── */
@@ -32,20 +37,20 @@
       display:flex; align-items:center; gap:16px;
     }
     .avatar { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#FF4B4B,#ff7b7b); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
-    .profile-info .name { font-size:18px; font-weight:700; color:#222; }
-    .profile-info .sub { font-size:12px; color:#aaa; margin-top:3px; }
+    .profile-info .name { font-size:18px; font-weight:700; color:var(--ink-900); }
+    .profile-info .sub { font-size:12px; color:var(--ink-400); margin-top:3px; }
     .rating-badge { display:flex; align-items:center; gap:4px; background:#FFF8E1; color:#F59E0B; font-size:13px; font-weight:600; padding:4px 10px; border-radius:10px; margin-top:6px; width:fit-content; }
 
     /* ── 통계 ── */
     .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:0 16px 16px; }
     .stat-card { background:#fff; border-radius:14px; padding:12px 8px; text-align:center; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
     .stat-val { font-size:20px; font-weight:700; color:var(--red); }
-    .stat-label { font-size:10px; color:#aaa; font-weight:500; margin-top:2px; }
+    .stat-label { font-size:10px; color:var(--ink-400); font-weight:500; margin-top:2px; }
 
     /* ── 필터 탭 ── */
     .filter-tabs { display:flex; gap:6px; padding:0 16px 12px; overflow-x:auto; scrollbar-width:none; }
     .filter-tabs::-webkit-scrollbar { display:none; }
-    .ftab { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid #e0e0e0; background:#fff; font-size:12px; font-weight:500; color:#888; cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+    .ftab { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid #e0e0e0; background:#fff; font-size:12px; font-weight:500; color:var(--ink-400); cursor:pointer; white-space:nowrap; transition:all 0.15s; }
     .ftab.active { background:var(--red); border-color:var(--red); color:#fff; }
 
     /* ── 지원 카드 ── */
@@ -53,7 +58,7 @@
     .app-card {
       background:#fff; border-radius:16px; padding:16px;
       margin-bottom:12px; box-shadow:0 1px 6px rgba(0,0,0,0.06);
-      border-left:4px solid #eee;
+      border-left:4px solid var(--line);
     }
     .app-card.pending  { border-left-color:#F59E0B; }
     .app-card.accepted { border-left-color:#10B981; }
@@ -61,40 +66,40 @@
     .app-card.completed { border-left-color:#3B82F6; }
 
     .card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
-    .card-biz { font-size:11px; color:#aaa; font-weight:500; margin-bottom:3px; }
-    .card-title { font-size:15px; font-weight:600; color:#222; }
+    .card-biz { font-size:11px; color:var(--ink-400); font-weight:500; margin-bottom:3px; }
+    .card-title { font-size:15px; font-weight:600; color:var(--ink-900); }
     .status-chip { font-size:11px; font-weight:600; padding:3px 10px; border-radius:10px; flex-shrink:0; }
     .chip-pending  { background:#FFF8E1; color:#F59E0B; }
     .chip-accepted { background:#E6FBF4; color:#10B981; }
-    .chip-rejected { background:#f0f0f0; color:#aaa; }
+    .chip-rejected { background:var(--surface-1); color:var(--ink-400); }
     .chip-completed{ background:#EFF6FF; color:#3B82F6; }
 
-    .card-meta { display:flex; gap:10px; font-size:11px; color:#aaa; font-weight:500; margin-bottom:12px; }
+    .card-meta { display:flex; gap:10px; font-size:11px; color:var(--ink-400); font-weight:500; margin-bottom:12px; }
     .card-wage { font-size:16px; font-weight:700; color:var(--red); margin-bottom:8px; }
 
     .card-actions { display:flex; gap:8px; }
-    .cancel-btn { padding:9px 14px; background:#f5f5f5; color:#888; border:none; border-radius:10px; font-size:12px; font-weight:500; cursor:pointer; }
+    .cancel-btn { padding:9px 14px; background:var(--surface-1); color:var(--ink-400); border:none; border-radius:10px; font-size:12px; font-weight:500; cursor:pointer; }
     .review-btn { flex:1; padding:9px; background:linear-gradient(135deg,#F59E0B,#FFD60A); color:#fff; border:none; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer; }
-    .reviewed-badge { font-size:11px; font-weight:500; color:#aaa; padding:6px 0; }
+    .reviewed-badge { font-size:11px; font-weight:500; color:var(--ink-400); padding:6px 0; }
 
     /* ── 평점 모달 ── */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end; }
     .modal-overlay.open { display:flex; }
     .review-sheet { background:#fff; border-radius:24px 24px 0 0; width:100%; padding:0 0 40px; animation:slideUp 0.3s ease; }
     @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-    .review-head { padding:14px 20px 12px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; }
-    .review-title { font-size:17px; font-weight:600; color:#222; }
-    .review-close { font-size:22px; color:#aaa; background:none; border:none; cursor:pointer; }
+    .review-head { padding:14px 20px 12px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+    .review-title { font-size:17px; font-weight:600; color:var(--ink-900); }
+    .review-close { font-size:22px; color:var(--ink-400); background:none; border:none; cursor:pointer; }
     .review-body { padding:20px; }
-    .review-biz { font-size:14px; font-weight:500; color:#555; margin-bottom:20px; text-align:center; }
+    .review-biz { font-size:14px; font-weight:500; color:var(--ink-600); margin-bottom:20px; text-align:center; }
 
     .stars-section { margin-bottom:20px; }
-    .stars-label { font-size:12px; font-weight:500; color:#888; margin-bottom:10px; }
+    .stars-label { font-size:12px; font-weight:500; color:var(--ink-400); margin-bottom:10px; }
     .stars-row { display:flex; gap:8px; justify-content:center; }
     .star-btn { font-size:32px; cursor:pointer; transition:transform 0.1s; }
     .star-btn:active { transform:scale(0.9); }
 
-    .review-textarea { width:100%; padding:12px 14px; border:1.5px solid #eee; border-radius:12px; font-size:14px; color:#222; outline:none; resize:none; height:90px; font-family:inherit; margin-bottom:16px; }
+    .review-textarea { width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; font-size:14px; color:var(--ink-900); outline:none; resize:none; height:90px; font-family:inherit; margin-bottom:16px; }
     .review-textarea:focus { border-color:var(--red); }
     .submit-review-btn { width:100%; padding:15px; background:var(--red); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; }
 
@@ -104,7 +109,7 @@
     .empty-txt { font-size:14px; font-weight:500; line-height:1.6; }
 
     /* ── 로딩 ── */
-    .spinner { width:36px; height:36px; border:3px solid #eee; border-top-color:var(--red); border-radius:50%; animation:spin 0.7s linear infinite; margin:32px auto; }
+    .spinner { width:36px; height:36px; border:3px solid var(--line); border-top-color:var(--red); border-radius:50%; animation:spin 0.7s linear infinite; margin:32px auto; }
     @keyframes spin { to{transform:rotate(360deg)} }
 
     /* ── 토스트 ── */
@@ -112,10 +117,10 @@
     .toast.hidden { opacity:0; }
 
     /* ── 하단 내비 ── */
-    .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:#fff; border-top:1px solid #f0f0f0; display:flex; z-index:400; box-shadow:0 -2px 12px rgba(0,0,0,0.06); }
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:#fff; border-top:1px solid var(--line); display:flex; z-index:400; box-shadow:0 -2px 12px rgba(0,0,0,0.06); }
     .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border:none; background:none; }
     .nav-icon { font-size:22px; }
-    .nav-label { font-size:10px; font-weight:500; color:#bbb; }
+    .nav-label { font-size:10px; font-weight:500; color:var(--ink-400); }
     .nav-item.active .nav-label { color:var(--red); }
   </style>
 </head>
@@ -226,15 +231,15 @@
       <button class="review-close" onclick="document.getElementById('account-overlay').classList.remove('open')">✕</button>
     </div>
     <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
-      <button onclick="showChangePw()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;text-align:left">🔑 비밀번호 변경</button>
-      <button onclick="doLogout()" style="width:100%;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;text-align:left">🚪 로그아웃</button>
-      <div style="height:1px;background:#f0f0f0;margin:4px 0"></div>
+      <button onclick="showChangePw()" style="width:100%;padding:14px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;text-align:left">🔑 비밀번호 변경</button>
+      <button onclick="doLogout()" style="width:100%;padding:14px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;text-align:left">🚪 로그아웃</button>
+      <div style="height:1px;background:var(--surface-1);margin:4px 0"></div>
       <button onclick="deleteAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
       <!-- 비밀번호 변경 폼 (이메일 로그인만) -->
-      <div id="change-pw-form" style="display:none;margin-top:4px;padding:14px;background:#f8f8f8;border-radius:14px;">
-        <div style="font-size:12px;font-weight:500;color:#888;margin-bottom:8px">새 비밀번호</div>
-        <input id="new-pw" type="password" placeholder="6자 이상" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none">
-        <input id="new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:10px;outline:none">
+      <div id="change-pw-form" style="display:none;margin-top:4px;padding:14px;background:var(--surface-1);border-radius:14px;">
+        <div style="font-size:12px;font-weight:500;color:var(--ink-400);margin-bottom:8px">새 비밀번호</div>
+        <input id="new-pw" type="password" placeholder="6자 이상" style="width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;margin-bottom:8px;outline:none">
+        <input id="new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;margin-bottom:10px;outline:none">
         <button onclick="submitChangePw()" style="width:100%;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">변경하기</button>
       </div>
     </div>

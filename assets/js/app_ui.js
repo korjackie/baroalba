@@ -128,7 +128,7 @@ async function loadStaffPanel() {
       const { data: jobs } = await db.from('job_postings').select('id').eq('business_id', bizRecord?.id);
       jobIds = (jobs || []).map(j => j.id);
     }
-    if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">' + t('ownr_no_postings_registered') + '</div>'; return; }
+    if (!jobIds.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400)">' + t('ownr_no_postings_registered') + '</div>'; return; }
 
     const { data, error } = await db.from('applications')
       .select('id,status,applied_at,worker_rating,wage_paid,job_posting_id,workers(id,name,rating,review_count,nationality,kakao_uid), job_postings(id,title,current_wage,duration_hours,work_type)')
@@ -137,14 +137,14 @@ async function loadStaffPanel() {
 
     if (error) {
       console.error('[Staff] 조회 실패:', error);
-      el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">${t('load_failed')}<br><span style="font-size:11px;color:#ccc">${error.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:500;cursor:pointer;font-size:13px">${t('retry_short_btn')}</button></div>`;
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--ink-400)">${t('load_failed')}<br><span style="font-size:11px;color:#ccc">${error.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:500;cursor:pointer;font-size:13px">${t('retry_short_btn')}</button></div>`;
       return;
     }
     _staffData = data || [];
     renderStaffPanel();
   } catch(e) {
     console.error('[Staff] 예외:', e);
-    el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa">${t('error_occurred_short')}<br><span style="font-size:11px;color:#ccc">${e.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:500;cursor:pointer;font-size:13px">${t('retry_short_btn')}</button></div>`;
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--ink-400)">${t('error_occurred_short')}<br><span style="font-size:11px;color:#ccc">${e.message}</span><br><button onclick="loadStaffPanel()" style="margin-top:10px;background:none;border:none;color:var(--red);font-weight:500;cursor:pointer;font-size:13px">${t('retry_short_btn')}</button></div>`;
   }
 }
 
@@ -182,7 +182,7 @@ function renderStaffPanel() {
   document.getElementById('st-total-wage').textContent = monthlyWage ? monthlyWage.toLocaleString() + t('won_suffix') : '—';
 
   if (!filtered.length) {
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">' + t('ownr_no_matching_data') + '</div>';
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:13px">' + t('ownr_no_matching_data') + '</div>';
     return;
   }
 
@@ -397,7 +397,7 @@ function onVisaDocSelect(event) {
   _visaDocFile = file;
   const preview = document.getElementById('visa-doc-preview');
   preview.innerHTML = `<div style="font-size:13px;font-weight:500;color:#16a34a">✅ ${file.name}</div>
-    <button onclick="document.getElementById('visa-doc-file').click()" style="margin-top:6px;padding:6px 14px;background:#f5f5f5;border:none;border-radius:8px;font-size:12px;font-weight:500;color:#555;cursor:pointer">변경</button>`;
+    <button onclick="document.getElementById('visa-doc-file').click()" style="margin-top:6px;padding:6px 14px;background:var(--surface-1);border:none;border-radius:8px;font-size:12px;font-weight:500;color:var(--ink-600);cursor:pointer">변경</button>`;
 }
 
 async function loadVisaProfile() {
@@ -468,17 +468,17 @@ async function loadWageHistory() {
       _getWorkerId(),
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
     ]);
-    if (!wid) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
+    if (!wid) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:13px">완료된 근무가 없어요</div>'; return; }
 
     const { data: apps, error: appErr } = await db.from('applications')
       .select('id, wage_paid, wage_paid_at, job_posting_id')
       .eq('worker_id', wid)
       .in('status', ['done', 'completed']);
     if (appErr) {
-      el.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">불러오기 실패<br><span style="font-size:10px;color:#f87171">${appErr.code || ''}: ${appErr.message || ''}</span></div>`;
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:13px">불러오기 실패<br><span style="font-size:10px;color:#f87171">${appErr.code || ''}: ${appErr.message || ''}</span></div>`;
       return;
     }
-    if (!apps?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">완료된 근무가 없어요</div>'; return; }
+    if (!apps?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:13px">완료된 근무가 없어요</div>'; return; }
 
     // job 상세 별도 조회 (nested join 대신)
     const jobIds = [...new Set(apps.map(a => a.job_posting_id).filter(Boolean))];
@@ -495,19 +495,19 @@ async function loadWageHistory() {
       const wage = (job.current_wage||0) * (job.duration_hours||0);
       const isPaid = a.wage_paid;
       const date = job.start_time ? new Date(job.start_time).toLocaleDateString('ko-KR') : '-';
-      return `<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #f0f0f0">
+      return `<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--line)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="font-size:13px;font-weight:600;color:#111">${job.biz_name||'업체'}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${job.biz_name||'업체'}</div>
           <span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:8px;${isPaid?'background:#D1FAE5;color:#065F46':'background:#FEE2E2;color:#991B1B'}">${isPaid?'✅ 수령확인':'❌ 미수령'}</span>
         </div>
-        <div style="font-size:12px;color:#555">${job.title||''} · ${date}</div>
+        <div style="font-size:12px;color:var(--ink-600)">${job.title||''} · ${date}</div>
         <div style="font-size:18px;font-weight:700;color:#C8102E;margin-top:6px">${wage?wage.toLocaleString()+'원':'시급 미기재'}</div>
         ${!isPaid ? `<button onclick="workerConfirmWageReceived('${a.id}',this)" style="margin-top:8px;width:100%;padding:10px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">💴 급여 수령 확인</button>
-        <button onclick="reportWageIssue('${a.id}')" style="margin-top:4px;width:100%;padding:8px;background:#f5f5f5;color:#888;border:none;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer">⚠️ 임금체불 신고</button>` : `<div style="font-size:11px;color:#aaa;margin-top:6px">${a.wage_paid_at ? '수령일: ' + new Date(a.wage_paid_at).toLocaleDateString('ko-KR') : ''}</div>`}
+        <button onclick="reportWageIssue('${a.id}')" style="margin-top:4px;width:100%;padding:8px;background:var(--surface-1);color:var(--ink-400);border:none;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer">⚠️ 임금체불 신고</button>` : `<div style="font-size:11px;color:var(--ink-400);margin-top:6px">${a.wage_paid_at ? '수령일: ' + new Date(a.wage_paid_at).toLocaleDateString('ko-KR') : ''}</div>`}
       </div>`;
     }).join('');
   } catch(e) {
-    if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">불러오기 실패<br><span style="font-size:11px">잠시 후 다시 시도해주세요</span></div>';
+    if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:13px">불러오기 실패<br><span style="font-size:11px">잠시 후 다시 시도해주세요</span></div>';
   }
 }
 
@@ -540,7 +540,7 @@ function openWorkerRightsGuide() {
   overlay.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 48px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
       <div style="font-size:17px;font-weight:700">📋 ${g.title}</div>
-      <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:var(--ink-400);background:none;border:none;cursor:pointer">✕</button>
     </div>
     <div class="rights-card">
       <div style="font-size:12px;font-weight:600;opacity:0.7;margin-bottom:10px;letter-spacing:0.5px">WORKER RIGHTS</div>
@@ -566,17 +566,17 @@ function openWorkerReviewReplyModal(appId, bizName, review, existingReply) {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div>
-          <div style="font-size:17px;font-weight:700;color:#222">💬 업체 평가에 답글 달기</div>
-          <div style="font-size:12px;color:#aaa;margin-top:2px">${bizName}의 나에 대한 평가</div>
+          <div style="font-size:17px;font-weight:700;color:var(--ink-900)">💬 업체 평가에 답글 달기</div>
+          <div style="font-size:12px;color:var(--ink-400);margin-top:2px">${bizName}의 나에 대한 평가</div>
         </div>
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:var(--ink-400);background:none;border:none;cursor:pointer">✕</button>
       </div>
-      <div style="background:#f8f8f8;border-radius:12px;padding:12px;margin-bottom:16px;font-size:13px;color:#555;line-height:1.5;border-left:3px solid #F59E0B">
+      <div style="background:var(--surface-1);border-radius:12px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--ink-600);line-height:1.5;border-left:3px solid #F59E0B">
         ⭐ "${review}"
       </div>
       <textarea id="wreply-content" placeholder="이 평가에 대한 답글을 남겨주세요 (최대 200자)" maxlength="200"
-        style="width:100%;box-sizing:border-box;height:90px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;outline:none">${existingReply||''}</textarea>
-      <div style="font-size:11px;color:#bbb;text-align:right;margin-top:4px" id="wreply-char-count">${(existingReply||'').length}/200자</div>
+        style="width:100%;box-sizing:border-box;height:90px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;outline:none">${existingReply||''}</textarea>
+      <div style="font-size:11px;color:var(--ink-400);text-align:right;margin-top:4px" id="wreply-char-count">${(existingReply||'').length}/200자</div>
       <button id="wreply-submit-btn" onclick="window._submitWorkerReviewReply('${appId}')"
         style="margin-top:16px;width:100%;padding:14px;background:#3b82f6;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer">
         ${existingReply ? '수정하기' : '답글 등록하기'}
@@ -617,17 +617,17 @@ function openReviewReplyModal(appId, workerName, review, existingReply) {
     <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div>
-          <div style="font-size:17px;font-weight:700;color:#222">💬 후기 답글 달기</div>
-          <div style="font-size:12px;color:#aaa;margin-top:2px">${workerName}님의 후기</div>
+          <div style="font-size:17px;font-weight:700;color:var(--ink-900)">💬 후기 답글 달기</div>
+          <div style="font-size:12px;color:var(--ink-400);margin-top:2px">${workerName}님의 후기</div>
         </div>
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:#aaa;background:none;border:none;cursor:pointer">✕</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="font-size:22px;color:var(--ink-400);background:none;border:none;cursor:pointer">✕</button>
       </div>
       <div style="background:#FFF7ED;border-radius:12px;padding:12px;margin-bottom:16px;font-size:13px;color:#78350F;line-height:1.5;border-left:3px solid #F59E0B">
         ⭐ "${review}"
       </div>
       <textarea id="reply-content" placeholder="후기에 대한 답글을 남겨주세요 (최대 200자)" maxlength="200"
-        style="width:100%;box-sizing:border-box;height:90px;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;outline:none">${existingReply||''}</textarea>
-      <div style="font-size:11px;color:#bbb;text-align:right;margin-top:4px" id="reply-char-count">${(existingReply||'').length}/200자</div>
+        style="width:100%;box-sizing:border-box;height:90px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:14px;resize:none;font-family:inherit;line-height:1.6;outline:none">${existingReply||''}</textarea>
+      <div style="font-size:11px;color:var(--ink-400);text-align:right;margin-top:4px" id="reply-char-count">${(existingReply||'').length}/200자</div>
       <button id="reply-submit-btn" onclick="window._submitReviewReply('${appId}')"
         style="margin-top:16px;width:100%;padding:14px;background:#C8102E;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer">
         ${existingReply ? '수정하기' : '답글 등록하기'}
@@ -680,15 +680,15 @@ async function showContractModal(appId) {
   document.getElementById('contract-content').innerHTML = `
     <p style="margin-bottom:14px"><strong>${b?.biz_name || b?.name || '업체명'}</strong>(이하 "사용자")와 <strong>${w?.name || '근로자'}</strong>(이하 "근로자")는 다음과 같이 근로계약을 체결합니다.</p>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
-      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:500;width:32%">직무</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${j?.title || '-'}</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:500">근무일시</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${workDate}</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:500">근무지</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${j?.address || '별도 안내'}</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:500">임금</td><td style="padding:9px 10px;border:1px solid #e5e7eb"><strong style="color:#C8102E">${wage}</strong></td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:500">사용자</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${b?.biz_name || '-'} (${b?.phone || '-'})</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:500">근로자</td><td style="padding:9px 10px;border:1px solid #e5e7eb">${w?.name || '-'} (${w?.phone || '-'})</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500;width:32%">직무</td><td style="padding:9px 10px;border:1px solid var(--line)">${j?.title || '-'}</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근무일시</td><td style="padding:9px 10px;border:1px solid var(--line)">${workDate}</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근무지</td><td style="padding:9px 10px;border:1px solid var(--line)">${j?.address || '별도 안내'}</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">임금</td><td style="padding:9px 10px;border:1px solid var(--line)"><strong style="color:#C8102E">${wage}</strong></td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">사용자</td><td style="padding:9px 10px;border:1px solid var(--line)">${b?.biz_name || '-'} (${b?.phone || '-'})</td></tr>
+      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근로자</td><td style="padding:9px 10px;border:1px solid var(--line)">${w?.name || '-'} (${w?.phone || '-'})</td></tr>
     </table>
-    <p style="font-size:12px;color:#666;line-height:1.75">① 임금은 근무 종료 후 당일 또는 익일 지급을 원칙으로 한다.<br>② 근로자는 부득이한 사유 없이 계약된 근무를 이행하지 않을 경우 신뢰점수가 차감될 수 있다.<br>③ 사용자는 최저임금법 및 근로기준법을 준수한다.</p>
-    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:12px;color:#aaa">
+    <p style="font-size:12px;color:var(--ink-400);line-height:1.75">① 임금은 근무 종료 후 당일 또는 익일 지급을 원칙으로 한다.<br>② 근로자는 부득이한 사유 없이 계약된 근무를 이행하지 않을 경우 신뢰점수가 차감될 수 있다.<br>③ 사용자는 최저임금법 및 근로기준법을 준수한다.</p>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--ink-400)">
       <span>계약일: ${dateStr}</span>
       <span>바로알바 플랫폼 자동 생성</span>
     </div>`;
@@ -788,7 +788,7 @@ function openNotiHistory() {
 async function loadNotiHistory() {
   const el = document.getElementById('noti-history-list');
   if (!el) return;
-  el.innerHTML = '<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">로딩 중...</div>';
+  el.innerHTML = '<div style="text-align:center;color:var(--ink-400);padding:40px 20px;font-size:14px">로딩 중...</div>';
   const items = [];
   try {
     // 0. 시스템 알림 (notifications 테이블) — 전체 사용자 공통
@@ -866,21 +866,21 @@ async function loadNotiHistory() {
     }
     items.sort((a, b) => new Date(b.ts) - new Date(a.ts));
     if (!items.length) {
-      el.innerHTML = '<div style="text-align:center;color:#bbb;padding:60px 20px;font-size:14px">최근 7일간 알림이 없어요</div>';
+      el.innerHTML = '<div style="text-align:center;color:var(--ink-400);padding:60px 20px;font-size:14px">최근 7일간 알림이 없어요</div>';
       return;
     }
     el.innerHTML = items.map(item => `
       <div style="background:#fff;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;${item.unread ? 'border-left:3px solid #7C3AED;' : ''}">
         <span style="font-size:20px;margin-top:2px;flex-shrink:0">${item.icon}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:${item.unread ? '800' : '700'};color:#111;margin-bottom:2px">${item.title}</div>
-          <div style="font-size:12px;color:#888;margin-bottom:4px">${item.sub}</div>
-          <div style="font-size:11px;color:#bbb">${formatRelativeDate(item.ts)}</div>
+          <div style="font-size:13px;font-weight:${item.unread ? '800' : '700'};color:var(--ink-900);margin-bottom:2px">${item.title}</div>
+          <div style="font-size:12px;color:var(--ink-400);margin-bottom:4px">${item.sub}</div>
+          <div style="font-size:11px;color:var(--ink-400)">${formatRelativeDate(item.ts)}</div>
         </div>
         <span style="font-size:11px;font-weight:600;color:${item.badgeColor};background:${item.badgeBg};padding:3px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0">${item.badge}${item.unread ? ' 🆕' : ''}</span>
       </div>`).join('');
   } catch (e) {
-    el.innerHTML = '<div style="text-align:center;color:#bbb;padding:40px 20px;font-size:14px">불러오기 실패</div>';
+    el.innerHTML = '<div style="text-align:center;color:var(--ink-400);padding:40px 20px;font-size:14px">불러오기 실패</div>';
   }
 }
 
@@ -891,6 +891,6 @@ function renderWorkerLocMap(containerId, lat, lng) {
     📍 근로자 현재 위치<br>
     <a href="https://map.kakao.com/link/map/위치,${lat},${lng}" target="_blank"
        style="color:#C8102E;text-decoration:underline;font-size:12px">지도에서 보기 →</a>
-    <br><span style="font-size:11px;color:#888;font-weight:400">위도 ${lat.toFixed(4)} / 경도 ${lng.toFixed(4)}</span>
+    <br><span style="font-size:11px;color:var(--ink-400);font-weight:400">위도 ${lat.toFixed(4)} / 경도 ${lng.toFixed(4)}</span>
   </div>`;
 }
