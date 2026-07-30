@@ -26,8 +26,8 @@
       position:sticky; top:0; z-index:100;
     }
     .header-left { display:flex; align-items:center; gap:8px; }
-    .header-logo { font-size:16px; font-weight:900; color:#C8102E; }
-    .header-badge { font-size:10px; font-weight:800; background:#C8102E; color:#fff; padding:2px 6px; border-radius:5px; letter-spacing:0.5px; }
+    .header-logo { font-size:16px; font-weight:700; color:#C8102E; }
+    .header-badge { font-size:10px; font-weight:600; background:#C8102E; color:#fff; padding:2px 6px; border-radius:5px; letter-spacing:0.5px; }
     .header-user { font-size:11px; color:#94a3b8; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .logout-btn { font-size:11px; color:#94a3b8; background:none; border:none; cursor:pointer; padding:6px 8px; white-space:nowrap; }
     .logout-btn:hover { color:#fff; }
@@ -43,7 +43,7 @@
       background:none; border:none; cursor:pointer; color:#94a3b8; padding:4px 0;
     }
     .nav-icon { font-size:19px; filter:grayscale(100%) opacity(0.55); transition:0.15s; }
-    .nav-label { font-size:10px; font-weight:800; }
+    .nav-label { font-size:10px; font-weight:600; }
     .nav-btn.active { color:#C8102E; }
     .nav-btn.active .nav-icon { filter:grayscale(0%) opacity(1); }
 
@@ -54,14 +54,14 @@
 
     /* 대시보드 - 제목(좌) + 현황(우) 한 줄 카드 */
     .dash-row { display:flex; align-items:center; gap:14px; background:#fff; border-radius:14px; padding:12px 16px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.06); max-width:520px; margin-left:auto; margin-right:auto; }
-    .dash-row-label { font-size:12.5px; font-weight:800; color:#475569; width:82px; flex-shrink:0; line-height:1.3; white-space:nowrap; }
+    .dash-row-label { font-size:12.5px; font-weight:600; color:#475569; width:82px; flex-shrink:0; line-height:1.3; white-space:nowrap; }
     .dash-row-stats { flex:1; min-width:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
     .dash-row-stats::-webkit-scrollbar { display:none; }
     .dash-stat { flex:0 0 92px; text-align:center; cursor:pointer; user-select:none; padding:2px 4px; }
     .dash-stat.no-click { cursor:default; }
-    .dash-stat-val { font-size:17px; font-weight:900; color:#1e293b; }
+    .dash-stat-val { font-size:17px; font-weight:700; color:#1e293b; }
     .dash-stat-val.alert { color:#EF4444; }
-    .dash-stat-label { font-size:9.5px; color:#94a3b8; font-weight:600; margin-top:1px; }
+    .dash-stat-label { font-size:9.5px; color:#94a3b8; font-weight:500; margin-top:1px; }
 
     /* 메뉴 리스트 (그룹 탭 안의 하위 메뉴) */
     .list-group { background:#fff; border-radius:14px; box-shadow:0 1px 4px rgba(0,0,0,0.06); overflow:hidden; margin-bottom:16px; }
@@ -70,9 +70,9 @@
     .list-item:active { background:#f8fafc; }
     .list-icon { width:34px; height:34px; border-radius:9px; background:#f8fafc; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
     .list-text { flex:1; min-width:0; }
-    .list-title { font-size:14px; font-weight:800; color:#1e293b; margin-bottom:2px; }
+    .list-title { font-size:14px; font-weight:600; color:#1e293b; margin-bottom:2px; }
     .list-desc { font-size:11px; color:#94a3b8; }
-    .list-arrow { color:#cbd5e1; font-weight:700; font-size:14px; flex-shrink:0; }
+    .list-arrow { color:#cbd5e1; font-weight:500; font-size:14px; flex-shrink:0; }
 
     /* 통계 카드 */
     .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px; }
@@ -88,19 +88,19 @@
     .stat-card.no-click:active { transform:none; }
     .stat-left { flex:1; min-width:0; }
     .stat-icon { font-size:22px; line-height:1; }
-    .stat-val { font-size:26px; font-weight:900; color:#1e293b; flex-shrink:0; }
-    .stat-label { font-size:11px; color:#94a3b8; font-weight:600; margin-top:3px; }
+    .stat-val { font-size:26px; font-weight:700; color:#1e293b; flex-shrink:0; }
+    .stat-label { font-size:11px; color:#94a3b8; font-weight:500; margin-top:3px; }
     .stat-card.alert .stat-val { color:#EF4444; }
 
     /* 섹션 헤더 */
     .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .section-title { font-size:16px; font-weight:800; color:#1e293b; }
+    .section-title { font-size:16px; font-weight:600; color:#1e293b; }
 
     /* 필터 바 */
     .filter-bar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
     .filter-btn {
       padding:6px 14px; border-radius:20px; border:1.5px solid #e2e8f0;
-      font-size:12px; font-weight:700; cursor:pointer; background:#fff; color:#64748b;
+      font-size:12px; font-weight:500; cursor:pointer; background:#fff; color:#64748b;
     }
     .filter-btn.active { background:#1e293b; color:#fff; border-color:#1e293b; }
 
@@ -117,20 +117,20 @@
 
     .report-body { padding:14px 16px; }
     .report-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
-    .report-type { font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; background:#FFF7ED; color:#F59E0B; }
+    .report-type { font-size:10px; font-weight:600; padding:2px 8px; border-radius:5px; background:#FFF7ED; color:#F59E0B; }
     .report-type.job  { background:#EFF6FF; color:#3B82F6; }
     .report-type.user { background:#FEF3C7; color:#D97706; }
     .report-type.moim { background:#F5F3FF; color:#7C3AED; }
     .report-type.gathering { background:#FFF1F2; color:#e11d48; }
     .report-date { font-size:11px; color:#94a3b8; }
-    .report-target { font-size:15px; font-weight:800; color:#1e293b; margin-bottom:3px; }
+    .report-target { font-size:15px; font-weight:600; color:#1e293b; margin-bottom:3px; }
     .report-biz { font-size:12px; color:#94a3b8; margin-bottom:6px; }
-    .report-reason { display:inline-block; font-size:12px; font-weight:700; background:#FEE2E2; color:#EF4444; padding:3px 10px; border-radius:20px; margin-bottom:6px; }
+    .report-reason { display:inline-block; font-size:12px; font-weight:500; background:#FEE2E2; color:#EF4444; padding:3px 10px; border-radius:20px; margin-bottom:6px; }
     .report-detail { font-size:13px; color:#475569; background:#f8fafc; padding:8px 12px; border-radius:8px; margin-bottom:10px; }
     .report-reporter { font-size:11px; color:#94a3b8; margin-bottom:10px; }
     .report-actions { display:flex; gap:6px; flex-wrap:wrap; }
     .r-btn {
-      padding:6px 14px; border-radius:8px; border:none; font-size:12px; font-weight:700; cursor:pointer;
+      padding:6px 14px; border-radius:8px; border:none; font-size:12px; font-weight:500; cursor:pointer;
     }
     .r-btn-reviewing { background:#EFF6FF; color:#3B82F6; }
     .r-btn-done      { background:#DCFCE7; color:#16a34a; }
@@ -140,7 +140,7 @@
 
     /* 상태 배지 */
     .status-badge {
-      font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px;
+      font-size:10px; font-weight:600; padding:2px 8px; border-radius:5px;
       white-space:nowrap;
     }
     .sb-pending   { background:#FFF7ED; color:#F59E0B; }
@@ -156,12 +156,12 @@
     }
     .posting-row.closed { opacity:0.5; }
     .posting-info { flex:1; min-width:0; }
-    .posting-title { font-size:14px; font-weight:800; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .posting-title { font-size:14px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .posting-meta  { font-size:11px; color:#94a3b8; margin-top:2px; }
-    .posting-wage  { font-size:14px; font-weight:900; color:#C8102E; white-space:nowrap; }
+    .posting-wage  { font-size:14px; font-weight:700; color:#C8102E; white-space:nowrap; }
     .close-btn {
       padding:7px 14px; background:#FEE2E2; color:#EF4444; border:none;
-      border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+      border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap;
     }
     .close-btn:disabled { background:#f1f5f9; color:#cbd5e1; cursor:default; }
 
@@ -176,11 +176,11 @@
     .user-avatar {
       width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#EDE9FE,#DDD6FE);
       display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
-      font-weight:800; color:#7C3AED;
+      font-weight:600; color:#7C3AED;
     }
-    .user-name  { font-size:14px; font-weight:800; color:#1e293b; }
+    .user-name  { font-size:14px; font-weight:600; color:#1e293b; }
     .user-meta  { font-size:11px; color:#94a3b8; margin-top:2px; }
-    .user-stats { font-size:12px; color:#64748b; font-weight:600; margin-top:3px; }
+    .user-stats { font-size:12px; color:#64748b; font-weight:500; margin-top:3px; }
     .user-row.banned { border-left:3px solid #EF4444; }
     .user-row.banned .user-avatar { background:linear-gradient(135deg,#FEE2E2,#FECACA); color:#EF4444; }
 
@@ -206,24 +206,24 @@
       width:72px; height:72px; border-radius:50%;
       background:linear-gradient(135deg,#EDE9FE,#DDD6FE);
       display:flex; align-items:center; justify-content:center;
-      font-size:28px; font-weight:900; color:#7C3AED; margin:0 auto 12px;
+      font-size:28px; font-weight:700; color:#7C3AED; margin:0 auto 12px;
     }
     .dp-avatar.banned { background:linear-gradient(135deg,#FEE2E2,#FECACA); color:#EF4444; }
-    .dp-name { font-size:22px; font-weight:900; color:#1e293b; text-align:center; }
+    .dp-name { font-size:22px; font-weight:700; color:#1e293b; text-align:center; }
     .dp-phone { font-size:13px; color:#94a3b8; text-align:center; margin-top:4px; }
     .dp-stats { display:flex; gap:0; margin:16px 0; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; }
     .dp-stat { flex:1; padding:14px 8px; text-align:center; border-right:1px solid #e2e8f0; }
     .dp-stat:last-child { border-right:none; }
-    .dp-stat-val { font-size:20px; font-weight:900; color:#1e293b; }
-    .dp-stat-label { font-size:10px; color:#94a3b8; font-weight:600; margin-top:2px; }
+    .dp-stat-val { font-size:20px; font-weight:700; color:#1e293b; }
+    .dp-stat-label { font-size:10px; color:#94a3b8; font-weight:500; margin-top:2px; }
     .dp-tabs { display:flex; border-bottom:1px solid #e2e8f0; margin-bottom:16px; }
-    .dp-tab { flex:1; padding:11px; font-size:13px; font-weight:700; color:#94a3b8; background:none; border:none; cursor:pointer; border-bottom:2.5px solid transparent; }
+    .dp-tab { flex:1; padding:11px; font-size:13px; font-weight:500; color:#94a3b8; background:none; border:none; cursor:pointer; border-bottom:2.5px solid transparent; }
     .dp-tab.active { color:#C8102E; border-bottom-color:#C8102E; }
     .dp-actions {
       position:sticky; bottom:0; background:#fff; padding:12px 16px;
       border-top:1px solid #e2e8f0; display:flex; gap:8px; flex-shrink:0;
     }
-    .dp-action-btn { flex:1; padding:13px; border-radius:12px; border:none; font-size:13px; font-weight:800; cursor:pointer; }
+    .dp-action-btn { flex:1; padding:13px; border-radius:12px; border:none; font-size:13px; font-weight:600; cursor:pointer; }
     .da-noshow { background:#EFF6FF; color:#3B82F6; }
     .da-ban    { background:#FEE2E2; color:#EF4444; }
     .da-unban  { background:#DCFCE7; color:#16a34a; }
@@ -231,10 +231,10 @@
     /* 활동 아이템 */
     .app-item { padding:12px 0; border-bottom:1px solid #f1f5f9; }
     .app-item:last-child { border-bottom:none; }
-    .app-item-title { font-size:13px; font-weight:700; color:#1e293b; }
+    .app-item-title { font-size:13px; font-weight:500; color:#1e293b; }
     .app-item-meta { font-size:11px; color:#94a3b8; margin-top:3px; }
     .app-item-review { font-size:12px; color:#64748b; margin-top:4px; font-style:italic; }
-    .as-badge { font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; white-space:nowrap; }
+    .as-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:5px; white-space:nowrap; }
     .as-hired    { background:#DCFCE7; color:#16a34a; }
     .as-done     { background:#EFF6FF; color:#3B82F6; }
     .as-pending  { background:#FFF7ED; color:#F59E0B; }
@@ -249,14 +249,14 @@
     }
     .moim-row.closed { opacity:0.5; }
     .moim-title-wrap { display:flex; align-items:center; gap:8px; margin-bottom:3px; }
-    .moim-title { font-size:14px; font-weight:800; color:#1e293b; }
+    .moim-title { font-size:14px; font-weight:600; color:#1e293b; }
     .moim-meta { font-size:11px; color:#94a3b8; margin-top:2px; }
     .moim-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-    .m-btn { padding:6px 12px; border-radius:8px; border:none; font-size:11px; font-weight:700; cursor:pointer; }
+    .m-btn { padding:6px 12px; border-radius:8px; border:none; font-size:11px; font-weight:500; cursor:pointer; }
     .m-btn-close  { background:#FEE2E2; color:#EF4444; }
     .m-btn-open   { background:#DCFCE7; color:#16a34a; }
     .m-btn-delete { background:#f1f5f9; color:#94a3b8; }
-    .moim-status-badge { font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; }
+    .moim-status-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:5px; }
     .ms-open   { background:#DCFCE7; color:#16a34a; }
     .ms-closed { background:#f1f5f9; color:#94a3b8; }
 
@@ -274,14 +274,14 @@
     #toast {
       position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
       background:#1e293b; color:#fff; padding:12px 20px; border-radius:12px;
-      font-size:13px; font-weight:700; display:none; z-index:9999;
+      font-size:13px; font-weight:500; display:none; z-index:9999;
       box-shadow:0 4px 20px rgba(0,0,0,0.2);
     }
 
     /* 설정 전체화면 패널 탭 */
     .settings-ftab {
       flex:1; min-width:max-content; padding:12px 16px;
-      font-size:12px; font-weight:800; color:#94a3b8;
+      font-size:12px; font-weight:600; color:#94a3b8;
       border:none; background:none; cursor:pointer;
       border-bottom:2.5px solid transparent; white-space:nowrap;
     }
@@ -312,7 +312,7 @@
   </button>
   <button class="nav-btn" id="tbtn-alba" onclick="switchTab('alba')">
     <span class="nav-icon">⚡</span><span class="nav-label">바로알바</span>
-    <span id="report-badge" style="display:none;position:absolute;top:2px;right:22%;background:#EF4444;color:#fff;font-size:9px;font-weight:900;min-width:15px;height:15px;line-height:15px;padding:0 3px;border-radius:8px;text-align:center">0</span>
+    <span id="report-badge" style="display:none;position:absolute;top:2px;right:22%;background:#EF4444;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;line-height:15px;padding:0 3px;border-radius:8px;text-align:center">0</span>
   </button>
   <button class="nav-btn" id="tbtn-moim" onclick="switchTab('moim')">
     <span class="nav-icon">🤝</span><span class="nav-label">바로모임</span>
@@ -422,17 +422,17 @@
   <!-- 설정 그룹 메뉴 -->
   <div class="tab-content" id="tab-settings">
     <div class="section-title" style="margin-bottom:14px">⚙️ 시스템 설정</div>
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;margin-bottom:10px">카테고리 마스터 데이터</div>
+    <div style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:10px">카테고리 마스터 데이터</div>
     <div class="list-group">
       <div class="list-item" onclick="navTo('settings','baroalba')"><div class="list-icon">⚡</div><div class="list-text"><div class="list-title">바로알바 업종 설정</div><div class="list-desc">카페, 식당 등 추가/수정</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('settings','baromoim')"><div class="list-icon">🤝</div><div class="list-text"><div class="list-title">바로모임 분야 설정</div><div class="list-desc">스포츠, 취미 등 추가/수정</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="navTo('settings','lesson')"><div class="list-icon">📚</div><div class="list-text"><div class="list-title">레슨/과외 과목 설정</div><div class="list-desc">수학, 영어 등 추가/수정</div></div><div class="list-arrow">›</div></div>
     </div>
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">가격 설정</div>
+    <div style="font-size:12px;font-weight:600;color:#94a3b8;margin:18px 0 10px">가격 설정</div>
     <div class="list-group">
       <div class="list-item" onclick="navTo('settings','pass-pricing')"><div class="list-icon">🎟️</div><div class="list-text"><div class="list-title">이용권 가격 (바로스팟·바로미팅 공용)</div><div class="list-desc">성별·횟수별 이용권 가격 추가/수정</div></div><div class="list-arrow">›</div></div>
     </div>
-    <div style="font-size:12px;font-weight:800;color:#94a3b8;margin:18px 0 10px">보안 및 권한</div>
+    <div style="font-size:12px;font-weight:600;color:#94a3b8;margin:18px 0 10px">보안 및 권한</div>
     <div class="list-group">
       <div class="list-item" onclick="navTo('settings','admins')"><div class="list-icon">🛡️</div><div class="list-text"><div class="list-title">최고 관리자 계정 관리</div><div class="list-desc">admin 접근 권한 제어</div></div><div class="list-arrow">›</div></div>
       <div class="list-item" onclick="cleanupWithdrawnWorkers()"><div class="list-icon">🧹</div><div class="list-text"><div class="list-title">탈퇴자 개인정보 일괄 정리</div><div class="list-desc">인증 계정이 삭제된 탈퇴자의 이름·전화번호·사진을 익명화</div></div><div class="list-arrow">›</div></div>
@@ -444,7 +444,7 @@
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로스팟·바로미팅이 함께 쓰는 이용권 가격입니다(성별·횟수별 이용권 하나로 두 서비스 모두 이용). 여기서 수정하면 이용권 구매 화면에 바로 반영됩니다.</div>
     <div id="pass-pricing-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div id="pass-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">이용권 등록</div>
+      <div id="pass-form-title" style="font-size:13px;font-weight:600;color:#7C3AED;margin-bottom:10px">이용권 등록</div>
       <input type="hidden" id="pp-id">
       <div style="display:flex;flex-direction:column;gap:8px">
         <select id="pp-gender" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
@@ -461,8 +461,8 @@
           <input id="pp-order" type="number" min="0" value="0" placeholder="정렬순서" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
         </div>
         <div style="display:flex;gap:8px">
-          <button onclick="savePassProduct()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">저장</button>
-          <button onclick="resetPassProductForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+          <button onclick="savePassProduct()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">저장</button>
+          <button onclick="resetPassProductForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">초기화</button>
         </div>
       </div>
     </div>
@@ -512,9 +512,9 @@
   <div class="tab-content" id="tab-users">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <input id="users-search" type="text" placeholder="이름 · 전화번호로 검색" oninput="renderUsers()" style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
-      <span id="users-count" style="font-size:12px;color:#94a3b8;font-weight:700;white-space:nowrap"></span>
+      <span id="users-count" style="font-size:12px;color:#94a3b8;font-weight:500;white-space:nowrap"></span>
     </div>
-    <button onclick="openBackfillReferral()" style="width:100%;padding:10px;margin-bottom:10px;background:#EDE9FE;color:#7C3AED;border:none;border-radius:10px;font-size:12.5px;font-weight:800;cursor:pointer">🎁 과거 추천인 가입 보정</button>
+    <button onclick="openBackfillReferral()" style="width:100%;padding:10px;margin-bottom:10px;background:#EDE9FE;color:#7C3AED;border:none;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer">🎁 과거 추천인 가입 보정</button>
     <div id="users-list"><div class="loading">로딩 중...</div></div>
   </div>
 
@@ -531,7 +531,7 @@
   <!-- 바로미팅 개설·관리 -->
   <div class="tab-content" id="tab-baromeetings">
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">현재 모집중/마감된 바로미팅 목록입니다. 새로 개설하려면 아래 버튼을 눌러주세요.</div>
-    <button type="button" onclick="resetBaromeetingForm();openBmForm()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer">+ 새로 개설</button>
+    <button type="button" onclick="resetBaromeetingForm();openBmForm()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer">+ 새로 개설</button>
     <div id="baromeetings-list"><div class="loading">로딩 중...</div></div>
   </div>
 
@@ -540,11 +540,11 @@
     <div class="detail-panel" onclick="event.stopPropagation()" style="max-height:93vh">
       <div class="dp-header">
         <button onclick="closeBmForm()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
-        <span id="baromeeting-form-title" style="font-size:16px;font-weight:800;color:#1e293b">바로미팅 개설</span>
+        <span id="baromeeting-form-title" style="font-size:16px;font-weight:600;color:#1e293b">바로미팅 개설</span>
       </div>
       <div class="dp-body" style="overflow-y:auto">
         <div id="bm-applicants-section" style="display:none;margin-bottom:14px">
-          <button type="button" onclick="toggleBmApplicants()" style="width:100%;text-align:left;padding:10px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:10px;font-size:12.5px;font-weight:800;color:#7C3AED;cursor:pointer">👥 신청자 현황 보기 <span id="bm-applicants-toggle-arrow">▾</span></button>
+          <button type="button" onclick="toggleBmApplicants()" style="width:100%;text-align:left;padding:10px 14px;background:#F5F3FF;border:1px solid #ede9fe;border-radius:10px;font-size:12.5px;font-weight:600;color:#7C3AED;cursor:pointer">👥 신청자 현황 보기 <span id="bm-applicants-toggle-arrow">▾</span></button>
           <div id="bm-applicants-list" style="display:none;margin-top:8px"></div>
         </div>
         <input type="hidden" id="bm-id">
@@ -552,8 +552,8 @@
           <input id="bm-title" type="text" placeholder="미팅 제목 (예: 강남역 저녁 소셜 미팅)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
           <textarea id="bm-desc" placeholder="소개/안내 문구" rows="2" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;resize:none;font-family:inherit"></textarea>
           <div style="display:flex;gap:8px">
-            <button type="button" id="bm-loc-tab-partner" onclick="setBmLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:700;cursor:pointer">제휴매장에서 선택</button>
-            <button type="button" id="bm-loc-tab-search" onclick="setBmLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">새 장소 검색</button>
+            <button type="button" id="bm-loc-tab-partner" onclick="setBmLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:500;cursor:pointer">제휴매장에서 선택</button>
+            <button type="button" id="bm-loc-tab-search" onclick="setBmLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:500;cursor:pointer">새 장소 검색</button>
           </div>
           <select id="bm-partner-select" onchange="selectBmPartnerRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
             <option value="">제휴매장을 선택하세요</option>
@@ -561,7 +561,7 @@
           <div id="bm-search-block" style="display:none">
             <div style="display:flex;gap:8px">
               <input id="bm-place-query" type="text" placeholder="장소명 검색 (예: 강남 OO카페)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBmPlace();}">
-              <button onclick="searchBmPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+              <button onclick="searchBmPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">🔍 검색</button>
             </div>
             <div id="bm-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-top:8px"></div>
           </div>
@@ -569,7 +569,7 @@
           <input id="bm-location-name" type="text" placeholder="장소명 (예: 강남역 OO카페)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
           <input id="bm-location-address" type="text" placeholder="주소" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
           <div>
-            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">모임 일시</div>
+            <div style="font-size:11px;font-weight:500;color:#64748b;margin-bottom:4px">모임 일시</div>
             <div style="display:flex;gap:8px">
               <div style="position:relative;flex:1.3;min-width:0">
                 <input id="bm-date" type="date" oninput="updateBmDateDisplay()" onchange="updateBmDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
@@ -580,9 +580,9 @@
           </div>
           <div>
             <div style="display:flex;gap:8px;margin-bottom:4px">
-              <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">남성 정원</div>
-              <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">여성 정원</div>
-              <div style="flex:1;font-size:11px;font-weight:700;color:#64748b">참가비(1인, 원)</div>
+              <div style="flex:1;font-size:11px;font-weight:500;color:#64748b">남성 정원</div>
+              <div style="flex:1;font-size:11px;font-weight:500;color:#64748b">여성 정원</div>
+              <div style="flex:1;font-size:11px;font-weight:500;color:#64748b">참가비(1인, 원)</div>
             </div>
             <div style="display:flex;gap:8px">
               <input id="bm-male-max" type="number" min="1" value="4" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
@@ -592,7 +592,7 @@
             <div style="font-size:11px;color:#94a3b8;margin-top:4px">정원이 다 차면(남성+여성) 참가자 전원에게 익명 단체채팅방이 자동으로 열립니다. 참가비는 1인당 결제 금액입니다.</div>
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">타겟 연령대 (지도 만남 필터에 사용돼요)</div>
+            <div style="font-size:11px;font-weight:500;color:#64748b;margin-bottom:4px">타겟 연령대 (지도 만남 필터에 사용돼요)</div>
             <select id="bm-age-range" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
               <option value="">전연령</option>
               <option value="20대">20대</option>
@@ -603,8 +603,8 @@
         </div>
       </div>
       <div style="padding:16px;flex-shrink:0;border-top:1px solid #e2e8f0;display:flex;gap:8px">
-        <button onclick="saveBaromeeting()" style="flex:2;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
-        <button onclick="resetBaromeetingForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">초기화</button>
+        <button onclick="saveBaromeeting()" style="flex:2;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
+        <button onclick="resetBaromeetingForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">초기화</button>
       </div>
     </div>
   </div>
@@ -614,12 +614,12 @@
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로스팟(제휴매장) 데이터입니다 - 바로만남 매니저 페이지와 동일하며, 여기서 등록·수정하면 바로 반영됩니다.</div>
     <div id="restaurants-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div id="restaurant-form-title" style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">제휴 매장 등록</div>
+      <div id="restaurant-form-title" style="font-size:13px;font-weight:600;color:#7C3AED;margin-bottom:10px">제휴 매장 등록</div>
       <input type="hidden" id="r-id">
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
           <input id="r-place-query" type="text" placeholder="네이버 플레이스 검색 (예: 강남 스타벅스)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchRestaurantPlace();}">
-          <button onclick="searchRestaurantPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+          <button onclick="searchRestaurantPlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">🔍 검색</button>
         </div>
         <div id="r-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden"></div>
         <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">검색 결과를 선택하면 아래 식당명·주소·연락처가 자동으로 채워집니다. 필요하면 직접 수정할 수도 있어요.</div>
@@ -631,8 +631,8 @@
         <div style="font-size:11px;color:#94a3b8;margin:-2px 0 2px">아래 식사비는 선택 입력입니다. 비워두면 0원으로 저장되며, 매장 상세 화면에 참고용으로만 표시됩니다.</div>
         <input id="r-base-price" type="number" min="0" placeholder="기본 식사비(선택, 1인 원)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box">
         <div style="display:flex;gap:8px;position:sticky;bottom:calc(76px + var(--sab));background:#fff;padding:10px 0 2px;margin-top:4px;box-shadow:0 -8px 12px -4px rgba(255,255,255,0.9);z-index:5">
-          <button onclick="saveRestaurant()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
-          <button onclick="resetRestaurantForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+          <button onclick="saveRestaurant()" style="flex:2;padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
+          <button onclick="resetRestaurantForm()" style="flex:1;padding:12px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">초기화</button>
         </div>
       </div>
     </div>
@@ -648,7 +648,7 @@
        동시에 해결됨(시트 안 입력창은 이미 있는 _adjustPanels가 키보드를 정상 처리해줌) -->
   <div class="tab-content" id="tab-barospot">
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">현재 개설된 바로스팟 목록입니다. 새로 개설하려면 아래 버튼을 눌러주세요.</div>
-    <button type="button" onclick="resetBarospotEventForm();openBseForm()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:800;cursor:pointer">+ 새로 개설</button>
+    <button type="button" onclick="resetBarospotEventForm();openBseForm()" style="width:100%;padding:12px;margin-bottom:14px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer">+ 새로 개설</button>
     <div id="barospot-events-list"><div class="loading">로딩 중...</div></div>
     <!-- 신청자 상세조회(openBarospotAppDetail)에 필요한 데이터만 백그라운드로 채워두는
          용도 - 화면에는 안 보이고, 신청자 관리는 각 바로스팟 카드 클릭 → 상세에서 함 -->
@@ -660,14 +660,14 @@
     <div class="detail-panel" onclick="event.stopPropagation()" style="max-height:93vh">
       <div class="dp-header">
         <button onclick="closeBseForm()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
-        <span id="bse-form-title" style="font-size:16px;font-weight:800;color:#1e293b">바로스팟 개설</span>
+        <span id="bse-form-title" style="font-size:16px;font-weight:600;color:#1e293b">바로스팟 개설</span>
       </div>
       <div class="dp-body" style="overflow-y:auto">
         <input type="hidden" id="bse-id">
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;gap:8px">
-            <button type="button" id="bse-loc-tab-partner" onclick="setBseLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:700;cursor:pointer">제휴매장에서 선택</button>
-            <button type="button" id="bse-loc-tab-search" onclick="setBseLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer">새 장소 검색</button>
+            <button type="button" id="bse-loc-tab-partner" onclick="setBseLocationMode('partner')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #7C3AED;background:#7C3AED;color:#fff;font-size:12px;font-weight:500;cursor:pointer">제휴매장에서 선택</button>
+            <button type="button" id="bse-loc-tab-search" onclick="setBseLocationMode('search')" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:500;cursor:pointer">새 장소 검색</button>
           </div>
           <select id="bse-restaurant" onchange="selectBseRestaurant()" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff">
             <option value="">제휴매장을 선택하세요</option>
@@ -675,7 +675,7 @@
           <div id="bse-search-block" style="display:none">
             <div style="display:flex;gap:8px">
               <input id="bse-place-query" type="text" placeholder="장소명 검색 (예: 강남 OO식당)" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBsePlace();}">
-              <button onclick="searchBsePlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 검색</button>
+              <button onclick="searchBsePlace()" style="padding:11px 16px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">🔍 검색</button>
             </div>
             <div id="bse-place-results" style="display:none;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;margin-top:8px"></div>
           </div>
@@ -683,7 +683,7 @@
           <input id="bse-location-name" type="text" placeholder="매장명 (예: 강남역 OO식당)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
           <input id="bse-address" type="text" placeholder="주소 (실시간 위치추적을 쓰려면 꼭 입력)" style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none">
           <div>
-            <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">진행 일시</div>
+            <div style="font-size:11px;font-weight:500;color:#64748b;margin-bottom:4px">진행 일시</div>
             <div style="display:flex;gap:8px">
               <div style="position:relative;flex:1.3;min-width:0">
                 <input id="bse-date" type="date" oninput="updateBseDateDisplay()" onchange="updateBseDateDisplay()" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
@@ -697,8 +697,8 @@
         </div>
       </div>
       <div style="padding:16px;flex-shrink:0;border-top:1px solid #e2e8f0;display:flex;gap:8px">
-        <button onclick="saveBarospotEvent()" style="flex:2;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
-        <button onclick="resetBarospotEventForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">초기화</button>
+        <button onclick="saveBarospotEvent()" style="flex:2;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(124,58,237,0.35)">저장</button>
+        <button onclick="resetBarospotEventForm()" style="flex:1;padding:13px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">초기화</button>
       </div>
     </div>
   </div>
@@ -707,7 +707,7 @@
   <div class="tab-content" id="tab-coupons">
     <div id="coupons-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">쿠폰 생성</div>
+      <div style="font-size:13px;font-weight:600;color:#7C3AED;margin-bottom:10px">쿠폰 생성</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input id="new-coupon-code" type="text" placeholder="쿠폰 코드 (예: BARO2026)"
           style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;text-transform:uppercase">
@@ -720,7 +720,7 @@
         <input id="new-coupon-expires" type="date"
           style="padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;color:#475569">
         <button onclick="createCoupon()"
-          style="padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">쿠폰 생성</button>
+          style="padding:12px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">쿠폰 생성</button>
       </div>
     </div>
   </div>
@@ -736,13 +736,13 @@
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">admin.html 접근이 허용된 관리자 이메일 목록입니다.</div>
     <div id="settings-admin-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:10px">관리자 추가</div>
+      <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px">관리자 추가</div>
       <div style="display:flex;gap:8px">
         <input id="new-admin-email" type="email" placeholder="이메일 주소 입력"
           style="flex:1;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none"
           onkeydown="if(event.key==='Enter')addAdmin()">
         <button onclick="addAdmin()"
-          style="padding:12px 18px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+          style="padding:12px 18px;background:#1e293b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
   </div>
@@ -752,11 +752,11 @@
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">알바 공고 등록 시 선택하는 업종 카테고리입니다. (앱 공고 작성 화면에 반영)</div>
     <div id="cat-list-baroalba"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="font-size:13px;font-weight:800;color:#C8102E;margin-bottom:10px">카테고리 추가</div>
+      <div style="font-size:13px;font-weight:600;color:#C8102E;margin-bottom:10px">카테고리 추가</div>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="new-cat-icon-baroalba" placeholder="🍕" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
         <input id="new-cat-name-baroalba" placeholder="예: 카페, 편의점, 물류" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baroalba')">
-        <button onclick="addCategory('baroalba')" style="padding:11px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+        <button onclick="addCategory('baroalba')" style="padding:11px 16px;background:#C8102E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
   </div>
@@ -766,11 +766,11 @@
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">모임 개설 시 선택하는 메인 카테고리입니다.</div>
     <div id="cat-list-baromoim"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">모임 카테고리 추가</div>
+      <div style="font-size:13px;font-weight:600;color:#7C3AED;margin-bottom:10px">모임 카테고리 추가</div>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="new-cat-icon-baromoim" placeholder="🤝" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
         <input id="new-cat-name-baromoim" placeholder="예: 스포츠, 취미, 친목" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('baromoim')">
-        <button onclick="addCategory('baromoim')" style="padding:11px 16px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+        <button onclick="addCategory('baromoim')" style="padding:11px 16px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
   </div>
@@ -780,11 +780,11 @@
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">레슨·과외 프로필 등록 시 선택하는 과목 카테고리입니다.</div>
     <div id="cat-list-lesson"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="font-size:13px;font-weight:800;color:#0EA5E9;margin-bottom:10px">레슨 카테고리 추가</div>
+      <div style="font-size:13px;font-weight:600;color:#0EA5E9;margin-bottom:10px">레슨 카테고리 추가</div>
       <div style="display:flex;gap:8px;align-items:center">
         <input id="new-cat-icon-lesson" placeholder="📚" maxlength="4" style="width:52px;text-align:center;padding:11px 4px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:18px;outline:none">
         <input id="new-cat-name-lesson" placeholder="예: 수학, 영어, 코딩" style="flex:1;min-width:0;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addCategory('lesson')">
-        <button onclick="addCategory('lesson')" style="padding:11px 16px;background:#0EA5E9;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap">추가</button>
+        <button onclick="addCategory('lesson')" style="padding:11px 16px;background:#0EA5E9;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">추가</button>
       </div>
     </div>
   </div>
@@ -794,7 +794,7 @@
     <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">바로만남 매니저로 지정된 업주는 식당·이벤트·신청자를 관리할 수 있습니다.</div>
     <div id="mannnam-mgr-list"><div class="loading">로딩 중...</div></div>
     <div style="margin-top:20px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="font-size:13px;font-weight:800;color:#7C3AED;margin-bottom:10px">매니저 지정</div>
+      <div style="font-size:13px;font-weight:600;color:#7C3AED;margin-bottom:10px">매니저 지정</div>
       <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">등록된 업주 목록에서 바로 선택하거나, 사업자명으로 검색하세요</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <input id="mannnam-mgr-search" type="text" placeholder="사업자명으로 검색 (비워두면 전체 목록)"
@@ -812,7 +812,7 @@
   <div class="detail-panel" onclick="event.stopPropagation()">
     <div class="dp-header">
       <button onclick="closePostingDetail()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
-      <span style="font-size:16px;font-weight:800;color:#1e293b">공고 상세</span>
+      <span style="font-size:16px;font-weight:600;color:#1e293b">공고 상세</span>
     </div>
     <div class="dp-body" id="posting-dp-body"><div class="loading">로딩 중...</div></div>
   </div>
@@ -822,7 +822,7 @@
   <div class="detail-panel" onclick="event.stopPropagation()">
     <div class="dp-header">
       <button onclick="closeUserDetail()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
-      <span style="font-size:16px;font-weight:800;color:#1e293b" id="dp-title">회원 상세</span>
+      <span style="font-size:16px;font-weight:600;color:#1e293b" id="dp-title">회원 상세</span>
     </div>
     <div class="dp-body" id="dp-body"><div class="loading">로딩 중...</div></div>
     <div class="dp-actions" id="dp-actions" style="display:none"></div>
@@ -834,16 +834,16 @@
   <div class="detail-panel" onclick="event.stopPropagation()" style="max-height:92vh">
     <div class="dp-header">
       <button onclick="closeMoimEdit()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
-      <span style="font-size:16px;font-weight:800;color:#1e293b">모임 수정</span>
+      <span style="font-size:16px;font-weight:600;color:#1e293b">모임 수정</span>
     </div>
     <div class="dp-body" style="overflow-y:auto">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 제목</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">모임 제목</label>
           <input id="me-title" type="text" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">카테고리</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">카테고리</label>
           <select id="me-category" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;background:#fff">
             <option value="exercise">🏋️ 운동</option>
             <option value="hobby">🎨 취미</option>
@@ -855,27 +855,27 @@
           </select>
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 날짜</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">모임 날짜</label>
           <input id="me-date" type="date" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 시간</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">모임 시간</label>
           <input id="me-time" type="time" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">장소명</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">장소명</label>
           <input id="me-location" type="text" placeholder="예: 강남역 스타벅스" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">모임 내용</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">모임 내용</label>
           <textarea id="me-description" rows="4" placeholder="모임 목적, 분위기, 주의사항 등" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;resize:none;font-family:inherit;line-height:1.5"></textarea>
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">최대 인원</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">최대 인원</label>
           <input id="me-maxcount" type="number" min="2" max="100" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">참가비</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">참가비</label>
           <select id="me-entryfee-type" onchange="_meFeeToggle()" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;background:#fff;margin-bottom:8px">
             <option value="0">무료</option>
             <option value="-1">각자 분담 (N분의1)</option>
@@ -884,7 +884,7 @@
           <input id="me-entryfee-amount" type="number" min="0" placeholder="참가비 금액 (원)" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;display:none">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">성별 조건</label>
+          <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">성별 조건</label>
           <select id="me-gender" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;background:#fff">
             <option value="any">성별 무관</option>
             <option value="male_only">남성만</option>
@@ -893,12 +893,12 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
           <input id="me-public" type="checkbox" style="width:18px;height:18px;cursor:pointer">
-          <label for="me-public" style="font-size:14px;font-weight:700;color:#1e293b;cursor:pointer">공개 모임</label>
+          <label for="me-public" style="font-size:14px;font-weight:500;color:#1e293b;cursor:pointer">공개 모임</label>
         </div>
       </div>
     </div>
     <div style="padding:16px;flex-shrink:0;border-top:1px solid #e2e8f0">
-      <button onclick="saveMoimEdit()" style="width:100%;padding:14px;background:#1e293b;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer">저장</button>
+      <button onclick="saveMoimEdit()" style="width:100%;padding:14px;background:#1e293b;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">저장</button>
     </div>
   </div>
 </div>
@@ -908,11 +908,11 @@
   <div class="detail-panel" onclick="event.stopPropagation()">
     <div class="dp-header">
       <button onclick="closeBmDetail()" style="background:none;border:none;font-size:24px;color:#64748b;cursor:pointer;line-height:1;flex-shrink:0">‹</button>
-      <span style="font-size:16px;font-weight:800;color:#1e293b">바로미팅 상세</span>
+      <span style="font-size:16px;font-weight:600;color:#1e293b">바로미팅 상세</span>
     </div>
     <div class="dp-body" id="bm-detail-body"><div class="loading">로딩 중...</div></div>
     <div class="dp-actions" style="padding:14px 16px;border-top:1px solid #e2e8f0;flex-shrink:0">
-      <button id="bm-detail-edit-btn" style="width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer">수정하기</button>
+      <button id="bm-detail-edit-btn" style="width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">수정하기</button>
     </div>
   </div>
 </div>
@@ -924,8 +924,8 @@
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
     <div id="admin-confirm-msg" style="font-size:14px;color:#1e293b;line-height:1.6;white-space:pre-line;margin-bottom:20px"></div>
     <div style="display:flex;gap:8px">
-      <button id="admin-confirm-cancel" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
-      <button id="admin-confirm-ok" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">확인</button>
+      <button id="admin-confirm-cancel" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">취소</button>
+      <button id="admin-confirm-ok" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">확인</button>
     </div>
   </div>
 </div>
@@ -933,15 +933,15 @@
 <!-- 회원 포인트 수동 지급/차감 -->
 <div id="grant-points-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
-    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">💎 포인트 지급 / 차감</div>
+    <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">💎 포인트 지급 / 차감</div>
     <div id="gp-target-name" style="font-size:13px;color:#64748b;margin-bottom:16px"></div>
-    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">금액 (차감은 마이너스로 입력)</label>
+    <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">금액 (차감은 마이너스로 입력)</label>
     <input id="gp-amount" type="number" placeholder="예: 3000 또는 -3000" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px">
-    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">사유</label>
+    <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">사유</label>
     <input id="gp-reason" type="text" placeholder="예: 추천인 포인트 보정" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:18px">
     <div style="display:flex;gap:8px">
-      <button onclick="closeGrantPoints()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
-      <button onclick="submitGrantPoints()" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">지급하기</button>
+      <button onclick="closeGrantPoints()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">취소</button>
+      <button onclick="submitGrantPoints()" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">지급하기</button>
     </div>
   </div>
 </div>
@@ -949,17 +949,17 @@
 <!-- 과거 추천인 가입 보정 (workers 행 자동생성 로직 배포 이전 가입자용) -->
 <div id="backfill-referral-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
-    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">🎁 과거 추천인 가입 보정</div>
+    <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">🎁 과거 추천인 가입 보정</div>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">회원목록에 안 잡히는 예전 추천가입 건을 찾아 회원 행을 만들고 추천인 포인트를 지급합니다. 회원 목록/Table Editor에서 kakao_uid를 이미 확인했다면 이메일 대신 uid를 입력하는 게 더 정확합니다.</div>
-    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">가입한 친구의 이메일 (또는 아래 uid)</label>
+    <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">가입한 친구의 이메일 (또는 아래 uid)</label>
     <input id="bf-email" type="email" placeholder="예: friend@gmail.com" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px">
-    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">또는 kakao_uid (Table Editor에서 확인한 값)</label>
+    <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">또는 kakao_uid (Table Editor에서 확인한 값)</label>
     <input id="bf-uid" type="text" placeholder="예: c7f83921-f4a2-4553-9b6e-d090ca626f6c" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:12px">
-    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">추천코드</label>
+    <label style="font-size:12px;font-weight:500;color:#64748b;display:block;margin-bottom:6px">추천코드</label>
     <input id="bf-code" type="text" placeholder="예: S4TJZH" style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:18px">
     <div style="display:flex;gap:8px">
-      <button onclick="closeBackfillReferral()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
-      <button onclick="submitBackfillReferral()" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">보정하기</button>
+      <button onclick="closeBackfillReferral()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">취소</button>
+      <button onclick="submitBackfillReferral()" style="flex:1;padding:11px;background:#7C3AED;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">보정하기</button>
     </div>
   </div>
 </div>
@@ -967,12 +967,12 @@
 <!-- 바로스팟 완료 처리 (노쇼 표시) -->
 <div id="barospot-complete-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
-    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">✅ 바로스팟 완료 처리</div>
+    <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">✅ 바로스팟 완료 처리</div>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">실제로 노쇼가 있었다면 체크해주세요. 노쇼 처리되면 해당 회원의 노쇼 횟수가 올라가고, 반복되면 다음 바로스팟 신청이 제한돼요.</div>
     <div id="bce-participants" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px"></div>
     <div style="display:flex;gap:8px">
-      <button onclick="closeBarospotComplete()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
-      <button onclick="submitBarospotComplete()" style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">완료 처리</button>
+      <button onclick="closeBarospotComplete()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">취소</button>
+      <button onclick="submitBarospotComplete()" style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">완료 처리</button>
     </div>
   </div>
 </div>
@@ -980,12 +980,12 @@
 <!-- 바로미팅 완료 처리 (노쇼 표시) - 바로스팟과 동일한 패턴 -->
 <div id="baromeet-complete-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:320px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28)">
-    <div style="font-size:15px;font-weight:800;color:#1e293b;margin-bottom:4px">✅ 바로미팅 완료 처리</div>
+    <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">✅ 바로미팅 완료 처리</div>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.5">실제로 노쇼가 있었다면 체크해주세요. 노쇼 처리되면 해당 회원의 노쇼 횟수가 올라가고, 반복되면 바로스팟 등 다른 이용도 제한돼요.</div>
     <div id="bmce-participants" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px"></div>
     <div style="display:flex;gap:8px">
-      <button onclick="closeBaromeetComplete()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">취소</button>
-      <button onclick="submitBaromeetComplete()" style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer">완료 처리</button>
+      <button onclick="closeBaromeetComplete()" style="flex:1;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">취소</button>
+      <button onclick="submitBaromeetComplete()" style="flex:1;padding:11px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">완료 처리</button>
     </div>
   </div>
 </div>
@@ -994,7 +994,7 @@
 <div id="barospot-app-detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28);max-height:80vh;overflow-y:auto">
     <div id="bad-body"></div>
-    <button onclick="closeBarospotAppDetail()" style="width:100%;margin-top:14px;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+    <button onclick="closeBarospotAppDetail()" style="width:100%;margin-top:14px;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">닫기</button>
   </div>
 </div>
 
@@ -1002,7 +1002,7 @@
 <div id="barospot-event-detail-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:700;align-items:center;justify-content:center;padding:24px">
   <div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28);max-height:80vh;overflow-y:auto">
     <div id="bed-body"></div>
-    <button onclick="closeBarospotEventDetail()" style="width:100%;margin-top:14px;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">닫기</button>
+    <button onclick="closeBarospotEventDetail()" style="width:100%;margin-top:14px;padding:11px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">닫기</button>
   </div>
 </div>
 
@@ -1528,7 +1528,7 @@ async function openPostingDetail(id) {
   const endDate = p.work_end_date ? new Date(p.work_end_date).toLocaleDateString('ko-KR') : '-';
   body.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <span style="font-size:18px;font-weight:900;color:#1e293b">${p.title || '(제목없음)'}</span>
+      <span style="font-size:18px;font-weight:700;color:#1e293b">${p.title || '(제목없음)'}</span>
       <span class="status-badge ${p.status === 'closed' ? 'sb-dismissed' : 'sb-done'}">${statusLabel}</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#334155">
@@ -1543,7 +1543,7 @@ async function openPostingDetail(id) {
       ${p.description ? `<div style="background:#f8fafc;border-radius:10px;padding:10px 12px;white-space:pre-wrap">${p.description}</div>` : ''}
       <div style="font-size:11px;color:#94a3b8">등록일 ${p.created_at ? new Date(p.created_at).toLocaleString('ko-KR') : '-'}</div>
     </div>
-    ${p.status !== 'closed' ? `<button onclick="closePostingById('${p.id}');closePostingDetail()" style="width:100%;margin-top:16px;padding:12px;background:#fee2e2;color:#991b1b;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">강제 마감</button>` : ''}
+    ${p.status !== 'closed' ? `<button onclick="closePostingById('${p.id}');closePostingDetail()" style="width:100%;margin-top:16px;padding:12px;background:#fee2e2;color:#991b1b;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">강제 마감</button>` : ''}
   `;
 }
 function closePostingDetail() {
@@ -1583,8 +1583,8 @@ function renderUsers() {
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 <span class="user-name">${u.name || '(이름없음)'}</span>
-                ${banned ? '<span style="font-size:10px;background:#FEE2E2;color:#EF4444;padding:1px 6px;border-radius:5px;font-weight:800">정지</span>' : ''}
-                ${noshow >= 3 ? '<span style="font-size:10px;background:#FFF7ED;color:#F59E0B;padding:1px 6px;border-radius:5px;font-weight:800">노쇼주의</span>' : ''}
+                ${banned ? '<span style="font-size:10px;background:#FEE2E2;color:#EF4444;padding:1px 6px;border-radius:5px;font-weight:600">정지</span>' : ''}
+                ${noshow >= 3 ? '<span style="font-size:10px;background:#FFF7ED;color:#F59E0B;padding:1px 6px;border-radius:5px;font-weight:600">노쇼주의</span>' : ''}
               </div>
               <div class="user-meta">${u.phone || '-'}</div>
               <div class="user-stats">⭐ ${u.rating ? u.rating.toFixed(1) : '-'} &nbsp;·&nbsp; 완료 ${u.review_count || 0}회 &nbsp;·&nbsp; 노쇼 ${noshow}회 &nbsp;·&nbsp; ${joinDate} 가입</div>
@@ -1639,9 +1639,9 @@ function renderUserDetail() {
           const pc = { kakao:'#FEE500;color:#3C1E1E', naver:'#03C75A;color:#fff', google:'#fff;color:#444;border:1.5px solid #e0e0e0', email:'#EFF6FF;color:#3B82F6' };
           const key = u.auth_provider === 'email' ? 'email' : (u.auth_provider || 'email');
           const style = pc[key] || pc.email;
-          return `<span style="font-size:11px;font-weight:800;background:${style};padding:3px 10px;border-radius:20px">${pm[key] || u.auth_provider}</span>`;
+          return `<span style="font-size:11px;font-weight:600;background:${style};padding:3px 10px;border-radius:20px">${pm[key] || u.auth_provider}</span>`;
         })() : ''}
-        ${u.is_banned ? '<span style="background:#FEE2E2;color:#EF4444;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:800">계정 정지 중</span>' : ''}
+        ${u.is_banned ? '<span style="background:#FEE2E2;color:#EF4444;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:600">계정 정지 중</span>' : ''}
       </div>
       ${(() => {
         let ageStr = '';
@@ -1707,7 +1707,7 @@ function renderUserDetail() {
         const date = a.reviewed_at ? new Date(a.reviewed_at).toLocaleDateString('ko-KR') : '';
         return `<div class="app-item">
           <div style="display:flex;align-items:center;gap:6px">
-            <span>${stars}</span><span style="font-size:14px;font-weight:900">${a.employer_rating}</span>
+            <span>${stars}</span><span style="font-size:14px;font-weight:700">${a.employer_rating}</span>
           </div>
           ${a.review ? `<div class="app-item-review">"${a.review}"</div>` : ''}
           <div class="app-item-meta">${a.biz_name}${date ? ' · ' + date : ''}</div>
@@ -1851,7 +1851,7 @@ function renderMoims() {
           <span>${icon}</span>
           <span class="moim-title">${m.title || '(제목없음)'}</span>
           <span class="moim-status-badge ${isClosed ? 'ms-closed' : 'ms-open'}">${isClosed ? '마감' : '진행중'}</span>
-          ${!m.is_public ? '<span style="font-size:10px;background:#FEF3C7;color:#D97706;padding:2px 7px;border-radius:5px;font-weight:800">비공개</span>' : ''}
+          ${!m.is_public ? '<span style="font-size:10px;background:#FEF3C7;color:#D97706;padding:2px 7px;border-radius:5px;font-weight:600">비공개</span>' : ''}
         </div>
         <div class="moim-meta">${dateStr} · ${spots} · 주최 ${m.host_name || '-'}${m.host_phone ? ' (' + m.host_phone + ')' : ''}</div>
         ${m.location_name ? `<div class="moim-meta" style="margin-top:2px">📍 ${m.location_name}</div>` : ''}
@@ -2004,10 +2004,10 @@ async function loadMannnamManagers() {
   el.innerHTML = data.map(b => `
     <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div style="font-size:14px;font-weight:800;color:#1e293b">${b.name||'이름없음'}</div>
+        <div style="font-size:14px;font-weight:600;color:#1e293b">${b.name||'이름없음'}</div>
       </div>
       <button onclick="removeMannnamManager('${b.id}')"
-        style="padding:7px 14px;background:#fee2e2;color:#ef4444;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">해제</button>
+        style="padding:7px 14px;background:#fee2e2;color:#ef4444;border:none;border-radius:9px;font-size:12px;font-weight:500;cursor:pointer">해제</button>
     </div>`).join('');
 }
 
@@ -2017,10 +2017,10 @@ function _renderMannnamBizList(data) {
   if (!data?.length) { resEl.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:#94a3b8">검색 결과 없음</div>'; return; }
   resEl.innerHTML = data.map(b => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #f1f5f9">
-      <div style="font-size:13px;font-weight:700;color:#1e293b">${b.name||'이름없음'}</div>
+      <div style="font-size:13px;font-weight:500;color:#1e293b">${b.name||'이름없음'}</div>
       ${b.mannnam_role === 'manager'
-        ? '<span style="font-size:11px;background:#ede9fe;color:#7C3AED;padding:3px 9px;border-radius:8px;font-weight:700">매니저</span>'
-        : `<button onclick="assignMannnamManager('${b.id}')" style="padding:6px 13px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">지정</button>`}
+        ? '<span style="font-size:11px;background:#ede9fe;color:#7C3AED;padding:3px 9px;border-radius:8px;font-weight:500">매니저</span>'
+        : `<button onclick="assignMannnamManager('${b.id}')" style="padding:6px 13px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:500;cursor:pointer">지정</button>`}
     </div>`).join('');
 }
 async function searchBizForMannnam(query) {
@@ -2090,12 +2090,12 @@ async function loadGatheringRequests() {
   el.innerHTML = rows.map(r => `
     <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);opacity:${r.status === 'done' ? 0.55 : 1}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-        <div style="font-size:13px;font-weight:800;color:#1e293b">${typeLabel[r.request_type] || r.request_type} · ${r.region}</div>
+        <div style="font-size:13px;font-weight:600;color:#1e293b">${typeLabel[r.request_type] || r.request_type} · ${r.region}</div>
         <span class="status-badge ${r.status === 'done' ? 'sb-done' : 'sb-reviewing'}">${r.status === 'done' ? '처리완료' : '대기중'}</span>
       </div>
       ${r.description ? `<div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:8px">${r.description}</div>` : ''}
       <div style="font-size:11px;color:#94a3b8;margin-bottom:${r.status === 'done' ? '0' : '10px'}">${r.requester_name || '이름없음'} · ${new Date(r.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-      ${r.status !== 'done' ? `<button onclick="markGatheringRequestDone('${r.id}')" style="width:100%;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">처리완료로 표시</button>` : ''}
+      ${r.status !== 'done' ? `<button onclick="markGatheringRequestDone('${r.id}')" style="width:100%;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">처리완료로 표시</button>` : ''}
     </div>
   `).join('');
 }
@@ -2117,13 +2117,13 @@ async function loadWorkplaceVerifyRequests() {
   el.innerHTML = rows.map(w => `
     <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-        <div style="font-size:13px;font-weight:800;color:#1e293b">${w.name || '이름없음'} · ${w.workplace_name || '-'}</div>
+        <div style="font-size:13px;font-weight:600;color:#1e293b">${w.name || '이름없음'} · ${w.workplace_name || '-'}</div>
         <span class="status-badge sb-reviewing">${w.workplace_verify_method || '-'}</span>
       </div>
       ${w.workplace_verify_doc_url ? `<a href="${w.workplace_verify_doc_url}" target="_blank" style="display:inline-block;font-size:12px;color:#7C3AED;margin-bottom:8px">📎 제출 서류 보기</a>` : '<div style="font-size:12px;color:#94a3b8;margin-bottom:8px">서류 없음 (직장이메일 인증)</div>'}
       <div style="display:flex;gap:8px">
-        <button onclick="reviewWorkplaceVerify('${w.id}','verified')" style="flex:1;padding:9px;background:#dcfce7;color:#14532d;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✅ 인증 승인</button>
-        <button onclick="reviewWorkplaceVerify('${w.id}','rejected')" style="flex:1;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">반려</button>
+        <button onclick="reviewWorkplaceVerify('${w.id}','verified')" style="flex:1;padding:9px;background:#dcfce7;color:#14532d;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">✅ 인증 승인</button>
+        <button onclick="reviewWorkplaceVerify('${w.id}','rejected')" style="flex:1;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">반려</button>
       </div>
     </div>
   `).join('');
@@ -2168,13 +2168,13 @@ function _renderCommunityMgmtList() {
         <span style="font-size:11px;color:#94a3b8">${new Date(p.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
       </div>
       <div id="cp-view-${p.id}">
-        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px">${(p.title || '(제목없음)').replace(/</g,'&lt;')}</div>
+        <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:4px">${(p.title || '(제목없음)').replace(/</g,'&lt;')}</div>
         <div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:8px;white-space:pre-wrap">${(p.content || '').slice(0,200).replace(/</g,'&lt;')}</div>
         <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">${author} · 댓글 ${p.comments_count || 0}개</div>
         <div style="display:flex;gap:8px">
-          <button id="cp-toggle-${p.id}" onclick="toggleCommunityMgmtComments('${p.id}', this)" style="flex:1;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">댓글 보기</button>
-          <button onclick="editCommunityMgmtPost('${p.id}')" style="flex:1;padding:9px;background:#eff6ff;color:#1e3a8a;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">수정</button>
-          <button onclick="deleteCommunityMgmtPost('${p.id}')" style="flex:1;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>
+          <button id="cp-toggle-${p.id}" onclick="toggleCommunityMgmtComments('${p.id}', this)" style="flex:1;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">댓글 보기</button>
+          <button onclick="editCommunityMgmtPost('${p.id}')" style="flex:1;padding:9px;background:#eff6ff;color:#1e3a8a;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">수정</button>
+          <button onclick="deleteCommunityMgmtPost('${p.id}')" style="flex:1;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">삭제</button>
         </div>
       </div>
       <div id="cp-comments-${p.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9"></div>
@@ -2209,8 +2209,8 @@ async function _renderCommunityMgmtComments(postId) {
           <div style="font-size:10.5px;color:#94a3b8;margin-top:3px">${c.is_anonymous ? '익명' : (c.workers?.name || c.businesses?.biz_name || '알 수 없음')} · ${new Date(c.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
-          <button onclick="editCommunityMgmtComment('${c.id}','${postId}')" style="padding:5px 10px;background:#eff6ff;color:#1e3a8a;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">수정</button>
-          <button onclick="deleteCommunityMgmtComment('${c.id}','${postId}')" style="padding:5px 10px;background:#fee2e2;color:#991b1b;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button>
+          <button onclick="editCommunityMgmtComment('${c.id}','${postId}')" style="padding:5px 10px;background:#eff6ff;color:#1e3a8a;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer">수정</button>
+          <button onclick="deleteCommunityMgmtComment('${c.id}','${postId}')" style="padding:5px 10px;background:#fee2e2;color:#991b1b;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer">삭제</button>
         </div>
       </div>
     </div>`).join('');
@@ -2239,11 +2239,11 @@ function editCommunityMgmtPost(id) {
   const view = document.getElementById('cp-view-' + id);
   if (!p || !view) return;
   view.innerHTML = `
-    <input id="cp-edit-title-${id}" value="${(p.title || '').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:6px;box-sizing:border-box">
+    <input id="cp-edit-title-${id}" value="${(p.title || '').replace(/"/g,'&quot;')}" style="width:100%;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:6px;box-sizing:border-box">
     <textarea id="cp-edit-content-${id}" rows="4" style="width:100%;padding:9px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:8px;box-sizing:border-box;resize:vertical">${(p.content || '')}</textarea>
     <div style="display:flex;gap:8px">
-      <button onclick="saveCommunityMgmtPost('${id}')" style="flex:1;padding:9px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">저장</button>
-      <button onclick="_renderCommunityMgmtList()" style="flex:1;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="saveCommunityMgmtPost('${id}')" style="flex:1;padding:9px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">저장</button>
+      <button onclick="_renderCommunityMgmtList()" style="flex:1;padding:9px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">취소</button>
     </div>`;
 }
 async function saveCommunityMgmtPost(id) {
@@ -2266,8 +2266,8 @@ function editCommunityMgmtComment(id, postId) {
     <div style="flex:1">
       <textarea id="cc-edit-${id}" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;margin-bottom:6px;box-sizing:border-box;resize:vertical">${curText}</textarea>
       <div style="display:flex;gap:6px">
-        <button onclick="saveCommunityMgmtComment('${id}','${postId}')" style="flex:1;padding:7px;background:#7C3AED;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">저장</button>
-        <button onclick="_renderCommunityMgmtComments('${postId}')" style="flex:1;padding:7px;background:#f1f5f9;color:#475569;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">취소</button>
+        <button onclick="saveCommunityMgmtComment('${id}','${postId}')" style="flex:1;padding:7px;background:#7C3AED;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer">저장</button>
+        <button onclick="_renderCommunityMgmtComments('${postId}')" style="flex:1;padding:7px;background:#f1f5f9;color:#475569;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer">취소</button>
       </div>
     </div>`;
 }
@@ -2295,7 +2295,7 @@ async function loadBaromeetings() {
           <div onclick="openBmDetail('${m.id}')" style="cursor:pointer">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
               <div style="min-width:0">
-                <div style="font-size:14px;font-weight:800;color:#1e293b">${m.title || '(제목없음)'}</div>
+                <div style="font-size:14px;font-weight:600;color:#1e293b">${m.title || '(제목없음)'}</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px">${_fmtBmDate(m.gathering_date)} · ${m.location_name || '장소 미정'}</div>
               </div>
               <span class="status-badge ${isClosed ? 'sb-dismissed' : 'sb-done'}">${isClosed ? '마감' : '모집중'}</span>
@@ -2364,7 +2364,7 @@ async function searchBmPlace() {
     _bmPlaceItems = data.items;
     box.innerHTML = data.items.map((item, i) => `
       <div onclick="selectBmPlace(${i})" style="padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer">
-        <div style="font-size:13px;font-weight:800;color:#1e293b">${item.title}</div>
+        <div style="font-size:13px;font-weight:600;color:#1e293b">${item.title}</div>
         <div style="font-size:11px;color:#94a3b8;margin-top:2px">${item.roadAddress || item.address || ''}${item.telephone ? ' · ' + item.telephone : ''}</div>
       </div>`).join('');
   } catch (e) {
@@ -2428,18 +2428,18 @@ async function renderBmApplicantsList() {
     const genderLabel = w?.gender === 'female' ? '여성' : w?.gender === 'male' ? '남성' : '-';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid #f1f5f9">
       <div style="min-width:0">
-        <div style="font-size:13px;font-weight:800;color:#1e293b">${w?.name || '이름없음'} <span style="font-size:11px;font-weight:700;color:#94a3b8">${genderLabel}</span></div>
+        <div style="font-size:13px;font-weight:600;color:#1e293b">${w?.name || '이름없음'} <span style="font-size:11px;font-weight:500;color:#94a3b8">${genderLabel}</span></div>
         <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w?.phone || '연락처 미등록'} · ${new Date(a.applied_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         ${a.status === 'pending' ? `
-        <button onclick="approveBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">승인</button>
-        <button onclick="rejectBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">거절</button>
+        <button onclick="approveBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:500;cursor:pointer">승인</button>
+        <button onclick="rejectBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:500;cursor:pointer">거절</button>
         ` : ''}
         ${a.status === 'approved' ? `
-        <button onclick="rejectBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">참가취소</button>
+        <button onclick="rejectBmApplicant('${a.id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:500;cursor:pointer">참가취소</button>
         ` : ''}
-        <button onclick="sendApplicantNotice('${a.applicant_id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#F5F3FF;color:#7C3AED;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">공지</button>
+        <button onclick="sendApplicantNotice('${a.applicant_id}','${(w?.name||'신청자').replace(/'/g,"\\'")}')" style="background:#F5F3FF;color:#7C3AED;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:500;cursor:pointer">공지</button>
         <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
       </div>
     </div>`;
@@ -2469,7 +2469,7 @@ async function openBmDetail(id) {
 
   body.innerHTML = `
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
-      <div style="font-size:17px;font-weight:900;color:#1e293b">${m.title || '(제목없음)'}</div>
+      <div style="font-size:17px;font-weight:700;color:#1e293b">${m.title || '(제목없음)'}</div>
       <span class="status-badge ${isClosed ? 'sb-dismissed' : 'sb-done'}">${isClosed ? '마감' : '모집중'}</span>
     </div>
     ${m.description ? `<div style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:14px">${m.description}</div>` : ''}
@@ -2479,23 +2479,23 @@ async function openBmDetail(id) {
       <div style="font-size:13px;color:#334155"><b>👥 정원</b> · 여성 ${femaleCur}/${femaleMax}명 · 남성 ${maleCur}/${maleMax}명</div>
       <div style="font-size:13px;color:#334155"><b>💰 참가비</b> · ${m.entry_fee ? m.entry_fee.toLocaleString() + '원' : '무료'}</div>
     </div>
-    <div style="font-size:13px;font-weight:800;color:#1e293b;margin-bottom:8px">신청자 (${apps.length}명)</div>
+    <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px">신청자 (${apps.length}명)</div>
     ${apps.length ? apps.map(a => {
       const w = a.worker;
       const genderLabel = w?.gender === 'female' ? '여성' : w?.gender === 'male' ? '남성' : '-';
       const nameEsc = (w?.name||'신청자').replace(/'/g,"\\'");
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9">
         <div style="min-width:0">
-          <div style="font-size:13px;font-weight:800;color:#1e293b">${w?.name || '이름없음'} <span style="font-size:11px;font-weight:700;color:#94a3b8">${genderLabel}</span></div>
+          <div style="font-size:13px;font-weight:600;color:#1e293b">${w?.name || '이름없음'} <span style="font-size:11px;font-weight:500;color:#94a3b8">${genderLabel}</span></div>
           <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w?.phone || '연락처 미등록'} · ${new Date(a.applied_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${a.status === 'pending' ? `
-          <button onclick="approveBmApplicant('${a.id}','${nameEsc}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">승인</button>
-          <button onclick="rejectBmApplicant('${a.id}','${nameEsc}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">거절</button>
+          <button onclick="approveBmApplicant('${a.id}','${nameEsc}')" style="background:#dcfce7;color:#16a34a;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:500;cursor:pointer">승인</button>
+          <button onclick="rejectBmApplicant('${a.id}','${nameEsc}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:500;cursor:pointer">거절</button>
           ` : ''}
           ${a.status === 'approved' ? `
-          <button onclick="rejectBmApplicant('${a.id}','${nameEsc}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">참가취소</button>
+          <button onclick="rejectBmApplicant('${a.id}','${nameEsc}')" style="background:#fee2e2;color:#ef4444;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:500;cursor:pointer">참가취소</button>
           ` : ''}
           <span class="status-badge ${a.status==='approved'?'sb-done':a.status==='rejected'?'sb-dismissed':'sb-reviewing'}">${statusLabel[a.status]||a.status}</span>
         </div>
@@ -2698,7 +2698,7 @@ async function loadRestaurants() {
         <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
             <div style="min-width:0">
-              <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '이름없음'}</div>
+              <div style="font-size:14px;font-weight:600;color:#1e293b">${r.name || '이름없음'}</div>
               <div style="font-size:11px;color:#94a3b8;margin-top:2px">${r.address || ''}</div>
             </div>
             <span class="status-badge ${r.is_active ? 'sb-done' : 'sb-dismissed'}" style="flex-shrink:0">${r.is_active ? '운영중' : '비활성'}</span>
@@ -2774,7 +2774,7 @@ async function searchBsePlace() {
     _bsePlaceItems = data.items;
     box.innerHTML = data.items.map((item, i) => `
       <div onclick="selectBsePlace(${i})" style="padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer">
-        <div style="font-size:13px;font-weight:800;color:#1e293b">${item.title}</div>
+        <div style="font-size:13px;font-weight:600;color:#1e293b">${item.title}</div>
         <div style="font-size:11px;color:#94a3b8;margin-top:2px">${item.roadAddress || item.address || ''}${item.telephone ? ' · ' + item.telephone : ''}</div>
       </div>`).join('');
   } catch (e) {
@@ -2825,7 +2825,7 @@ async function loadBarospotEvents() {
         return `<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div onclick="openBarospotEventDetail('${ev.id}')" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;cursor:pointer">
             <div style="min-width:0">
-              <div style="font-size:14px;font-weight:800;color:#1e293b">${r.name || '식당 미배정'}</div>
+              <div style="font-size:14px;font-weight:600;color:#1e293b">${r.name || '식당 미배정'}</div>
               <div style="font-size:11px;color:#94a3b8;margin-top:2px">${whenText}</div>
               ${ev.address ? `<div style="font-size:11px;color:#94a3b8">${ev.address}${(ev.lat==null)?' (좌표 확보 실패 - 주소 확인 필요)':''}</div>` : ''}
               <div style="font-size:11px;color:#64748b;margin-top:4px">신청 현황 · 여성 ${cnt.female} · 남성 ${cnt.male}</div>
@@ -2851,7 +2851,7 @@ async function openBarospotEventDetail(eventId) {
   const r = ev.barospot_restaurants || {};
   const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '일정 미정';
   document.getElementById('bed-body').innerHTML = `
-    <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:2px">${r.name || '식당 미배정'}</div>
+    <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:2px">${r.name || '식당 미배정'}</div>
     <div style="font-size:12.5px;color:#94a3b8;margin-bottom:14px">${whenText}${ev.address ? ' · ' + ev.address : ''}</div>
     <div id="bed-participants"><div class="loading">로딩 중...</div></div>
   `;
@@ -2865,7 +2865,7 @@ async function openBarospotEventDetail(eventId) {
         const genderLabel = a.gender === 'male' ? '남성' : '여성';
         const color = BAROSPOT_APP_STATUS_COLOR[a.status] || '#94a3b8';
         return `<div onclick="closeBarospotEventDetail();openBarospotAppDetail('${a.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f8fafc;border-radius:10px;padding:11px 14px;margin-bottom:8px;cursor:pointer">
-          <div style="font-size:13px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel}</span></div>
+          <div style="font-size:13px;font-weight:600;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:500">${genderLabel}</span></div>
           <span class="status-badge" style="background:${color}18;color:${color};flex-shrink:0">${BAROSPOT_APP_STATUS_LABEL[a.status] || a.status}</span>
         </div>`;
       }).join('')
@@ -3050,7 +3050,7 @@ async function loadBarospotApplications() {
         const color = BAROSPOT_APP_STATUS_COLOR[a.status] || '#94a3b8';
         return `<div onclick="openBarospotAppDetail('${a.id}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border-radius:12px;padding:13px 16px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer">
           <div style="min-width:0">
-            <div style="font-size:14px;font-weight:800;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:600">${genderLabel}</span></div>
+            <div style="font-size:14px;font-weight:600;color:#1e293b">${w.name || '이름없음'} <span style="font-size:11px;color:#94a3b8;font-weight:500">${genderLabel}</span></div>
           </div>
           <span class="status-badge" style="background:${color}18;color:${color};flex-shrink:0">${BAROSPOT_APP_STATUS_LABEL[a.status] || a.status}</span>
         </div>`;
@@ -3078,7 +3078,7 @@ function openBarospotAppDetail(applicationId) {
   const canConfirm = a.gender === 'male' && a.event_id && a.status === 'pending';
   const openEvents = _barospotEvents.filter(e => e.status === 'recruiting_male');
   document.getElementById('bad-body').innerHTML = `
-    <div style="font-size:17px;font-weight:900;color:#111;margin-bottom:2px">${w.name || '이름없음'}</div>
+    <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:2px">${w.name || '이름없음'}</div>
     <div style="font-size:12.5px;color:#94a3b8;margin-bottom:14px">${genderLabel} · ${w.phone || '연락처 미등록'}</div>
     <div style="background:#f8fafc;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#334155;display:flex;flex-direction:column;gap:6px">
       <div><b>📍 배정 바로스팟</b> · ${eventInfo}</div>
@@ -3155,7 +3155,7 @@ async function searchRestaurantPlace() {
     _restaurantPlaceItems = data.items;
     box.innerHTML = data.items.map((item, i) => `
       <div onclick="selectRestaurantPlace(${i})" style="padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer">
-        <div style="font-size:13px;font-weight:800;color:#1e293b">${item.title}</div>
+        <div style="font-size:13px;font-weight:600;color:#1e293b">${item.title}</div>
         <div style="font-size:11px;color:#94a3b8;margin-top:2px">${item.roadAddress || item.address || ''}${item.telephone ? ' · ' + item.telephone : ''}</div>
       </div>`).join('');
   } catch (e) {
@@ -3179,7 +3179,7 @@ function selectRestaurantPlace(idx) {
   const phoneHint = document.getElementById('r-phone-hint');
   if (!item.telephone) {
     const q = encodeURIComponent(item.title + ' ' + (item.roadAddress || item.address || ''));
-    phoneHint.innerHTML = `전화번호를 못 가져왔어요 - <a href="https://map.naver.com/v5/search/${q}" target="_blank" rel="noopener" style="color:#7C3AED;font-weight:700">네이버지도에서 찾기 ↗</a>`;
+    phoneHint.innerHTML = `전화번호를 못 가져왔어요 - <a href="https://map.naver.com/v5/search/${q}" target="_blank" rel="noopener" style="color:#7C3AED;font-weight:500">네이버지도에서 찾기 ↗</a>`;
     phoneHint.style.display = 'block';
   } else {
     phoneHint.style.display = 'none';
@@ -3241,7 +3241,7 @@ async function loadCoupons() {
     ? list.map(c => `
         <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-            <span style="font-size:15px;font-weight:900;color:#1e293b;letter-spacing:0.5px">${c.code}</span>
+            <span style="font-size:15px;font-weight:700;color:#1e293b;letter-spacing:0.5px">${c.code}</span>
             <span class="status-badge ${c.is_active ? 'sb-done' : 'sb-dismissed'}">${c.is_active ? '활성' : '비활성'}</span>
           </div>
           <div style="font-size:12px;color:#64748b;margin-bottom:10px">
@@ -3301,7 +3301,7 @@ async function loadPassPricing() {
     ? _passProducts.map(p => `
         <div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-            <span style="font-size:14px;font-weight:900;color:#1e293b">${genderLabel[p.gender] || p.gender} · ${p.label}</span>
+            <span style="font-size:14px;font-weight:700;color:#1e293b">${genderLabel[p.gender] || p.gender} · ${p.label}</span>
             <span class="status-badge ${p.is_active ? 'sb-done' : 'sb-dismissed'}">${p.is_active ? '판매중' : '비활성'}</span>
           </div>
           <div style="font-size:12px;color:#64748b;margin-bottom:10px">
@@ -3396,12 +3396,12 @@ async function loadAdminList() {
     ? list.map(a => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f5f9">
           <div>
-            <span style="font-size:14px;color:#1e293b;font-weight:600">${a.email}</span>
-            ${a.email === myEmail ? '<span style="font-size:10px;background:#EFF6FF;color:#3B82F6;padding:1px 7px;border-radius:5px;font-weight:800;margin-left:6px">나</span>' : ''}
+            <span style="font-size:14px;color:#1e293b;font-weight:500">${a.email}</span>
+            ${a.email === myEmail ? '<span style="font-size:10px;background:#EFF6FF;color:#3B82F6;padding:1px 7px;border-radius:5px;font-weight:600;margin-left:6px">나</span>' : ''}
           </div>
           ${a.email !== myEmail
             ? `<button onclick="removeAdmin('${a.email}')"
-                style="padding:5px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">
+                style="padding:5px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer">
                 삭제
               </button>`
             : '<span style="font-size:11px;color:#cbd5e1">삭제 불가</span>'}
@@ -3463,11 +3463,11 @@ function renderCategoryList(svc) {
   el.innerHTML = cats.map((c, i) => `
     <div id="cat-row-${svc}-${i}" style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:11px 14px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
       <span style="font-size:20px;width:28px;text-align:center;flex-shrink:0">${c.icon || '📋'}</span>
-      <span style="flex:1;font-size:14px;font-weight:700;color:#1e293b">${c.name}</span>
+      <span style="flex:1;font-size:14px;font-weight:500;color:#1e293b">${c.name}</span>
       <button onclick="editCategoryRow('${svc}',${i})"
-        style="padding:5px 11px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">수정</button>
+        style="padding:5px 11px;background:#EFF6FF;color:#3B82F6;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">수정</button>
       <button onclick="deleteCategoryByName('${svc}','${c.name}')"
-        style="padding:5px 11px;background:#FEE2E2;color:#EF4444;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">삭제</button>
+        style="padding:5px 11px;background:#FEE2E2;color:#EF4444;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">삭제</button>
     </div>`).join('');
 }
 
@@ -3482,9 +3482,9 @@ function editCategoryRow(svc, i) {
       style="flex:1;padding:8px 10px;border:1.5px solid #7C3AED;border-radius:8px;font-size:13px;outline:none"
       onkeydown="if(event.key==='Enter')saveCategoryEdit('${svc}','${c.name}',${i})">
     <button onclick="saveCategoryEdit('${svc}','${c.name}',${i})"
-      style="padding:6px 11px;background:#7C3AED;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">저장</button>
+      style="padding:6px 11px;background:#7C3AED;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">저장</button>
     <button onclick="renderCategoryList('${svc}')"
-      style="padding:6px 11px;background:#f1f5f9;color:#64748b;border:none;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer">취소</button>
+      style="padding:6px 11px;background:#f1f5f9;color:#64748b;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">취소</button>
   `;
   document.getElementById(`edit-cat-name-${svc}-${i}`).focus();
 }

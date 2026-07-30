@@ -106,7 +106,7 @@
      각각 한 줄씩 세 줄로 쪼개지던 문제(2026-07-28 제보)의 원인은 폰트가 아니라 헤더 폭
      부족이었다 — 폭을 가장 많이 먹던 언어 선택(최대 132px)을 히어로로 내리고, 여기는
      nowrap + 축소금지로 고정한다. */
-  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--ink);text-decoration:none;letter-spacing:-.03em;white-space:nowrap;flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:19px;color:var(--ink);text-decoration:none;letter-spacing:-.03em;white-space:nowrap;flex-shrink:0}
   .brand .blogo{width:30px;height:30px;border-radius:8px;overflow:hidden;flex-shrink:0;display:block}
   .brand .blogo img{width:100%;height:100%;object-fit:cover;display:block}
   /* 워드마크는 반드시 한 덩어리(하나의 flex item)여야 한다. 예전엔 `바로<em>알바</em>` 를
@@ -133,7 +133,7 @@
      ③긴 언어(.long)만 폰트를 한 단계 줄여 폭 차이를 좁힌다. */
   .langsel{min-width:104px}
   .lsz,.langsel select{
-    font-family:inherit;font-size:14px;font-weight:600;letter-spacing:inherit;
+    font-family:inherit;font-size:14px;font-weight:500;letter-spacing:inherit;
     padding:8px 29px 8px 31px;white-space:nowrap;text-align:center;
   }
   .langsel.long .lsz,.langsel.long select{font-size:12.5px}
@@ -149,7 +149,7 @@
   .langsel::after{content:"";position:absolute;right:11px;z-index:2;pointer-events:none;border:4px solid transparent;border-top-color:var(--muted);margin-top:4px}
   .langsel select:hover{border-color:#c9ccd3}
   .langsel select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
-  .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:700;font-size:14.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
+  .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:500;font-size:14.5px;text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
   .btn-primary{background:var(--red);color:#fff}
   .btn-primary:hover{background:var(--red-dark)}
   .btn-ghost{border-color:var(--line);color:var(--ink);background:#fff}
@@ -158,18 +158,18 @@
 
   /* ── 히어로 ── */
   .hero{padding:22px 0 62px;text-align:center;background:linear-gradient(180deg,#fff6f7 0%,#fff 100%)}
-  .eyebrow{display:inline-block;font-size:13px;font-weight:700;color:var(--red);background:#fdeaed;padding:6px 14px;border-radius:999px;margin-bottom:20px;letter-spacing:-.01em}
-  h1{font-size:clamp(30px,5.6vw,50px);line-height:1.24;font-weight:800;color:var(--ink);letter-spacing:-.035em;margin-bottom:18px;word-break:keep-all}
+  .eyebrow{display:inline-block;font-size:13px;font-weight:500;color:var(--red);background:#fdeaed;padding:6px 14px;border-radius:999px;margin-bottom:20px;letter-spacing:-.01em}
+  h1{font-size:clamp(30px,5.6vw,50px);line-height:1.24;font-weight:600;color:var(--ink);letter-spacing:-.035em;margin-bottom:18px;word-break:keep-all}
   h1 .accent{color:var(--red)}
   .lede{font-size:clamp(16px,2.2vw,18.5px);color:var(--body);max-width:640px;margin:0 auto 32px;word-break:keep-all}
   .cta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
   .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:34px}
-  .chip{font-size:13.5px;font-weight:600;color:var(--body);background:#fff;border:1px solid var(--line);padding:7px 14px;border-radius:999px}
+  .chip{font-size:13.5px;font-weight:500;color:var(--body);background:#fff;border:1px solid var(--line);padding:7px 14px;border-radius:999px}
 
   /* ── 섹션 ── */
   section{padding:64px 0;border-top:1px solid var(--line)}
   .shead{text-align:center;margin-bottom:42px}
-  h2{font-size:clamp(23px,3.4vw,31px);font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:11px;word-break:keep-all}
+  h2{font-size:clamp(23px,3.4vw,31px);font-weight:600;color:var(--ink);letter-spacing:-.03em;margin-bottom:11px;word-break:keep-all}
   .shead p{color:var(--muted);font-size:16px;word-break:keep-all}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:18px}
@@ -179,7 +179,7 @@
   .chead{display:flex;align-items:center;gap:11px;margin-bottom:9px}
   .cico{width:36px;height:36px;border-radius:10px;background:#fdeaed;color:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .cico svg{width:19px;height:19px}
-  .card h3{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em;word-break:keep-all}
+  .card h3{font-size:17px;font-weight:600;color:var(--ink);letter-spacing:-.02em;word-break:keep-all}
   .card p{font-size:15px;color:var(--body);word-break:keep-all}
 
   /* ── 대상별 ── */
@@ -190,7 +190,7 @@
      제목과 태그가 같은 줄을 나눠 쓰면 한 줄이 절약되고, 태그가 어느 제목의 것인지도 더 붙어 보인다. */
   .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
   .phead h3{margin-bottom:0}
-  .panel .tag{display:inline-block;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;flex-shrink:0;white-space:nowrap}
+  .panel .tag{display:inline-block;font-size:12.5px;font-weight:500;padding:5px 12px;border-radius:999px;flex-shrink:0;white-space:nowrap}
   .tag-w{background:#fdeaed;color:var(--red)}
   .tag-b{background:#e8f0fe;color:#1a56c4}
   /* 바로모임 보라 / 바로만남 로즈 — 앱 홈 화면의 두 섹션 헤더와 같은 색을 쓴다.
@@ -199,7 +199,7 @@
   .tag-n{background:#fff1f2;color:#be123c}
   .p-moim li::before{background:#7C3AED}
   .p-mannam li::before{background:#e11d48}
-  .panel h3{font-size:21px;font-weight:800;color:var(--ink);margin-bottom:16px;letter-spacing:-.025em}
+  .panel h3{font-size:21px;font-weight:600;color:var(--ink);margin-bottom:16px;letter-spacing:-.025em}
   .panel p{font-size:15px;margin:-6px 0 15px;word-break:keep-all}
   .panel ul{list-style:none}
   .panel li{position:relative;padding-left:23px;margin-bottom:11px;font-size:15.5px;word-break:keep-all}
@@ -213,12 +213,12 @@
   .langs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:720px;margin:0 auto}
   .lang{
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-    min-height:66px;padding:12px 6px;font-family:inherit;font-size:15px;font-weight:700;
+    min-height:66px;padding:12px 6px;font-family:inherit;font-size:15px;font-weight:500;
     color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;
     text-align:center;cursor:pointer;
     transition:border-color .15s,box-shadow .15s,background .15s,color .15s;
   }
-  .lang .code{font-size:11px;font-weight:700;letter-spacing:.09em;color:var(--muted)}
+  .lang .code{font-size:11px;font-weight:500;letter-spacing:.09em;color:var(--muted)}
   .lang:hover{border-color:var(--red);box-shadow:0 2px 9px rgba(200,16,46,.10)}
   .lang:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   /* 현재 언어 표시 — 카드를 눌러 바꿀 수 있다는 걸 알려주는 유일한 단서라 반드시 유지 */
@@ -228,9 +228,9 @@
   /* ── FAQ ── */
   .faq{max-width:760px;margin:0 auto}
   .faq details{border:1px solid var(--line);border-radius:12px;padding:19px 22px;margin-bottom:11px;background:#fff}
-  .faq summary{font-weight:700;color:var(--ink);cursor:pointer;font-size:16px;list-style:none;word-break:keep-all}
+  .faq summary{font-weight:500;color:var(--ink);cursor:pointer;font-size:16px;list-style:none;word-break:keep-all}
   .faq summary::-webkit-details-marker{display:none}
-  .faq summary::after{content:"+";float:right;color:var(--red);font-weight:800;margin-left:12px}
+  .faq summary::after{content:"+";float:right;color:var(--red);font-weight:600;margin-left:12px}
   .faq details[open] summary::after{content:"−"}
   .faq p{margin-top:13px;font-size:15.5px;word-break:keep-all}
 
@@ -244,7 +244,7 @@
   /* ── 푸터 ── */
   footer{padding:42px 0;font-size:13.5px;color:var(--muted);border-top:1px solid var(--line)}
   .flinks{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px}
-  .flinks a{font-weight:600;color:var(--body);text-decoration:none}
+  .flinks a{font-weight:500;color:var(--body);text-decoration:none}
   .flinks a:hover{color:var(--red)}
   .fmeta{line-height:1.9}
 

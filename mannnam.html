@@ -13,22 +13,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hdr{background:#fff;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:100}
 .hdr-inner{padding:calc(var(--sat) + 14px) 16px 14px;display:flex;align-items:center;gap:12px}
 .tab-bar{display:flex;border-bottom:1px solid #f0f0f0;background:#fff}
-.tab-btn{flex:1;padding:13px 4px;font-size:13px;font-weight:700;color:#aaa;border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s}
+.tab-btn{flex:1;padding:13px 4px;font-size:13px;font-weight:500;color:#aaa;border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s}
 .tab-btn.active{color:#7C3AED;border-bottom-color:#7C3AED}
 .content{padding:14px;padding-bottom:calc(14px + var(--sab))}
 .card{background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:16px;margin-bottom:12px}
-.btn-primary{width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer}
-.btn-secondary{padding:8px 16px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
-.btn-danger{padding:8px 16px;background:#fee2e2;color:#ef4444;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
-.btn-success{padding:8px 16px;background:#d1fae5;color:#059669;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
-.status-badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:700}
+.btn-primary{width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-secondary{padding:8px 16px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-danger{padding:8px 16px;background:#fee2e2;color:#ef4444;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-success{padding:8px 16px;background:#d1fae5;color:#059669;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
+.status-badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:500}
 input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:11px;font-size:14px;outline:none;font-family:inherit}
 input:focus,select:focus,textarea:focus{border-color:#7C3AED}
-label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px;margin-top:12px}
+label{font-size:12px;font-weight:500;color:#555;display:block;margin-bottom:5px;margin-top:12px}
 label:first-child{margin-top:0}
 .spinner{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
+#toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -36,7 +36,7 @@ label:first-child{margin-top:0}
 
 <!-- 로그인 화면 -->
 <div id="login-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px">
-  <div style="font-size:28px;font-weight:900;color:#7C3AED;margin-bottom:8px">바로만남</div>
+  <div style="font-size:28px;font-weight:700;color:#7C3AED;margin-bottom:8px">바로만남</div>
   <div style="font-size:14px;color:#888;margin-bottom:40px">매니저 관리 시스템</div>
   <div style="width:100%;max-width:360px">
     <label>이메일</label>
@@ -53,10 +53,10 @@ label:first-child{margin-top:0}
   <div class="hdr">
     <div class="hdr-inner">
       <div style="flex:1">
-        <div style="font-size:16px;font-weight:900;color:#111">바로만남 매니저</div>
+        <div style="font-size:16px;font-weight:700;color:#111">바로만남 매니저</div>
         <div id="mgr-name" style="font-size:11px;color:#aaa;margin-top:1px"></div>
       </div>
-      <button onclick="doLogout()" style="padding:7px 14px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer">로그아웃</button>
+      <button onclick="doLogout()" style="padding:7px 14px;background:#f3f4f6;color:#555;border:none;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer">로그아웃</button>
     </div>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('restaurants')" id="tab-restaurants">🏪 식당</button>
@@ -92,7 +92,7 @@ label:first-child{margin-top:0}
 <!-- 식당 등록/수정 모달 -->
 <div id="restaurant-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);overflow-y:auto">
   <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:60px;padding:20px 16px 24px;position:relative;max-width:600px;margin-left:auto;margin-right:auto">
-    <div style="font-size:16px;font-weight:900;margin-bottom:16px" id="restaurant-modal-title">식당 등록</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px" id="restaurant-modal-title">식당 등록</div>
     <label>식당명</label><input type="text" id="r-name" placeholder="예) 스시진">
     <label>주소</label><input type="text" id="r-address" placeholder="예) 서울시 강남구 ...">
     <label>전화번호</label><input type="tel" id="r-phone" placeholder="예) 02-1234-5678">
@@ -111,7 +111,7 @@ label:first-child{margin-top:0}
 <!-- 이벤트 등록/수정 모달 -->
 <div id="event-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);overflow-y:auto">
   <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:60px;padding:20px 16px 24px;max-width:600px;margin-left:auto;margin-right:auto">
-    <div style="font-size:16px;font-weight:900;margin-bottom:16px" id="event-modal-title">이벤트 개설</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px" id="event-modal-title">이벤트 개설</div>
     <label>제휴 식당</label>
     <select id="e-restaurant"><option value="">선택하세요</option></select>
     <label>이벤트 날짜</label><input type="date" id="e-date">
@@ -131,7 +131,7 @@ label:first-child{margin-top:0}
 <!-- 여성 배정 모달 -->
 <div id="assign-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5)">
   <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:auto;padding:20px 16px 24px;position:absolute;bottom:0;left:0;right:0;max-width:600px;margin-left:auto;margin-right:auto">
-    <div style="font-size:15px;font-weight:900;margin-bottom:14px">식당·이벤트 배정</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px">식당·이벤트 배정</div>
     <label>배정할 이벤트</label>
     <select id="assign-event-id"><option value="">선택하세요</option></select>
     <input type="hidden" id="assign-app-id">
@@ -218,7 +218,7 @@ async function loadRestaurants() {
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
-          <div style="font-size:15px;font-weight:900;color:#111">${r.name}</div>
+          <div style="font-size:15px;font-weight:700;color:#111">${r.name}</div>
           <div style="font-size:12px;color:#888;margin-top:2px">${r.address||''}</div>
         </div>
         <span class="status-badge" style="background:${r.is_active?'#d1fae5':'#f3f4f6'};color:${r.is_active?'#059669':'#9ca3af'}">${r.is_active?'운영중':'비활성'}</span>
@@ -303,7 +303,7 @@ async function loadEvents() {
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
-          <div style="font-size:15px;font-weight:900">${ev.barospot_restaurants?.name||'식당 미지정'}</div>
+          <div style="font-size:15px;font-weight:700">${ev.barospot_restaurants?.name||'식당 미지정'}</div>
           <div style="font-size:12px;color:#888;margin-top:2px">${ev.event_date} ${ev.event_time}</div>
         </div>
         <span class="status-badge" style="background:${statusColor[ev.status]||'#ccc'}22;color:${statusColor[ev.status]||'#ccc'}">${statusLabel[ev.status]||ev.status}</span>
@@ -398,7 +398,7 @@ async function loadFemaleApps() {
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
-          <div style="font-size:15px;font-weight:900">${w?.name||'이름없음'}</div>
+          <div style="font-size:15px;font-weight:700">${w?.name||'이름없음'}</div>
           <div style="font-size:12px;color:#888">${w?.phone||''}</div>
         </div>
         <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>
@@ -454,7 +454,7 @@ async function loadMaleApps() {
     return `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
-          <div style="font-size:15px;font-weight:900">${w?.name||'이름없음'}</div>
+          <div style="font-size:15px;font-weight:700">${w?.name||'이름없음'}</div>
           <div style="font-size:12px;color:#888">${w?.phone||''}</div>
         </div>
         <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>

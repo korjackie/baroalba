@@ -89,11 +89,11 @@
     #splash.hidden { opacity: 0; visibility: hidden; }
     .splash-logo { width:88px; height:88px; border-radius:24px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.25); }
     .splash-logo img { width:100%; height:100%; object-fit:cover; display:block; }
-    .splash-name { font-size:34px; font-weight:900; color:#fff; letter-spacing:-1.5px; margin-top:18px; }
+    .splash-name { font-size:34px; font-weight:700; color:#fff; letter-spacing:-1.5px; margin-top:18px; }
     .splash-sub { font-size:14px; color:rgba(255,255,255,0.85); margin-top:8px; }
-    .splash-tagline { font-size:12px; color:rgba(255,255,255,0.8); font-weight:700; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:28px; }
+    .splash-tagline { font-size:12px; color:rgba(255,255,255,0.8); font-weight:500; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:28px; }
     .splash-slogan { text-align:center; margin-top:24px; min-height:66px; }
-    .splash-slogan-line { font-size:22px; font-weight:500; color:#fff; line-height:1.6; letter-spacing:-0.3px; }
+    .splash-slogan-line { font-size:22px; font-weight:400; color:#fff; line-height:1.6; letter-spacing:-0.3px; }
     .type-cursor { display:inline-block; color:rgba(255,255,255,0.7); animation:blink 0.7s step-end infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
     .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:32px; overflow:hidden; }
@@ -129,12 +129,12 @@
     .hero-icon { font-size: 56px; }
     .hero-name {
       font-size: 28px;
-      font-weight: 900;
+      font-weight: 700;
       color: #fff;
       letter-spacing: -0.5px;
       margin-top: 8px;
     }
-    .hero-sub { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.95); margin-top: 8px; text-align: center; line-height: 1.8; letter-spacing: -0.3px; }
+    .hero-sub { font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.95); margin-top: 8px; text-align: center; line-height: 1.8; letter-spacing: -0.3px; }
 
     /* ── 카드 ── */
     .card {
@@ -160,7 +160,7 @@
       padding: 9px;
       text-align: center;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 500;
       color: #999;
       border-radius: 10px;
       cursor: pointer;
@@ -180,7 +180,7 @@
       border-radius: 14px;
       border: none;
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 500;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
       position: relative;
@@ -218,7 +218,7 @@
 
     /* ── 이메일 폼 ── */
     .form-group { margin-bottom: 14px; }
-    .form-label { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 6px; display: block; }
+    .form-label { font-size: 12px; font-weight: 500; color: #888; margin-bottom: 6px; display: block; }
     .form-input {
       width: 100%;
       padding: 13px 14px;
@@ -249,7 +249,7 @@
     }
     .signup-role-card.selected { border-color: var(--red); background: #FFF5F5; }
     .signup-role-card .role-icon { font-size: 28px; margin-bottom: 4px; }
-    .signup-role-card .role-name { font-size: 14px; font-weight: 800; color: #222; }
+    .signup-role-card .role-name { font-size: 14px; font-weight: 600; color: #222; }
     .signup-role-card .role-desc { font-size: 11px; color: #888; margin-top: 2px; }
 
     /* ── 제출 버튼 ── */
@@ -261,7 +261,7 @@
       border: none;
       border-radius: 14px;
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 600;
       cursor: pointer;
       margin-top: 4px;
       transition: background 0.15s, transform 0.1s;
@@ -278,7 +278,7 @@
       margin-top: 20px;
     }
     .link-text { font-size: 13px; color: #888; }
-    .link-btn { color: var(--red); font-weight: 700; cursor: pointer; text-decoration: underline; }
+    .link-btn { color: var(--red); font-weight: 500; cursor: pointer; text-decoration: underline; }
     .guest-btn {
       background: none;
       border: none;
@@ -295,8 +295,8 @@
       margin-top:12px; border:1px solid #e2e8f0;
     }
     .find-panel.open { display:block; }
-    .find-panel-title { font-size:14px; font-weight:800; color:#1e293b; margin-bottom:12px; }
-    .find-result { font-size:14px; color:#1e293b; background:#fff; border-radius:10px; padding:12px; text-align:center; font-weight:700; margin-top:10px; display:none; }
+    .find-panel-title { font-size:14px; font-weight:600; color:#1e293b; margin-bottom:12px; }
+    .find-result { font-size:14px; color:#1e293b; background:#fff; border-radius:10px; padding:12px; text-align:center; font-weight:500; margin-top:10px; display:none; }
 
     /* ── 에러 메시지 ── */
     .error-msg {
@@ -305,7 +305,7 @@
       border-radius: 10px;
       padding: 10px 14px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       margin-bottom: 14px;
       display: none;
     }
@@ -330,7 +330,7 @@
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .modal-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 20px; }
-    .modal-title { font-size: 20px; font-weight: 800; color: #222; text-align: center; margin-bottom: 6px; }
+    .modal-title { font-size: 20px; font-weight: 600; color: #222; text-align: center; margin-bottom: 6px; }
     .modal-sub   { font-size: 14px; color: #888; text-align: center; margin-bottom: 28px; }
 
     .role-cards { display: flex; gap: 14px; margin-bottom: 24px; }
@@ -345,7 +345,7 @@
     }
     .role-card.selected { border-color: var(--red); background: #FFF5F5; }
     .role-card .role-icon { font-size: 40px; margin-bottom: 10px; }
-    .role-card .role-name { font-size: 16px; font-weight: 800; color: #222; margin-bottom: 4px; }
+    .role-card .role-name { font-size: 16px; font-weight: 600; color: #222; margin-bottom: 4px; }
     .role-card .role-desc { font-size: 12px; color: #888; line-height: 1.4; }
 
     .role-confirm-btn {
@@ -356,7 +356,7 @@
       border: none;
       border-radius: 14px;
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 600;
       cursor: pointer;
     }
     .role-confirm-btn:disabled { background: #ddd; cursor: default; }
@@ -383,7 +383,7 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-size: 14px; color: #666; font-weight: 600; }
+    .loading-text { font-size: 14px; color: #666; font-weight: 500; }
 
     /* 네이버 버튼 내부 div 숨기기 (SDK 자체 버튼 대신 커스텀 사용) */
     #naverIdLogin { display: none !important; }
@@ -441,30 +441,30 @@
 
     <!-- 서비스 카테고리 뱃지 -->
     <div style="display:flex;gap:7px;margin-top:14px;width:100%;justify-content:center;flex-wrap:wrap;">
-      <span style="background:rgba(255,255,255,0.93);color:#C8102E;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">⚡ 번개알바</span>
-      <span style="background:rgba(255,255,255,0.93);color:#d97706;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">📅 단기/장기알바</span>
-      <span style="background:rgba(255,255,255,0.93);color:#2563eb;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">📦 운반</span>
-      <span style="background:rgba(255,255,255,0.93);color:#16a34a;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🛵 퀵배달</span>
-      <span style="background:rgba(255,255,255,0.93);color:#0891b2;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🏃 심부름</span>
-      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🎾 레슨/과외</span>
-      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">🤝 바로모임</span>
-      <span style="background:rgba(255,255,255,0.93);color:#e11d48;font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;white-space:nowrap;">💕 바로만남</span>
+      <span style="background:rgba(255,255,255,0.93);color:#C8102E;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">⚡ 번개알바</span>
+      <span style="background:rgba(255,255,255,0.93);color:#d97706;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">📅 단기/장기알바</span>
+      <span style="background:rgba(255,255,255,0.93);color:#2563eb;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">📦 운반</span>
+      <span style="background:rgba(255,255,255,0.93);color:#16a34a;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🛵 퀵배달</span>
+      <span style="background:rgba(255,255,255,0.93);color:#0891b2;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🏃 심부름</span>
+      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🎾 레슨/과외</span>
+      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🤝 바로모임</span>
+      <span style="background:rgba(255,255,255,0.93);color:#e11d48;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">💕 바로만남</span>
     </div>
 
     <!-- 신뢰 숫자 마케팅 -->
     <div id="trust-stats" style="display:flex;gap:20px;margin-top:18px;opacity:0;transition:opacity 0.6s">
       <div style="text-align:center">
-        <div id="stat-workers" style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px">—</div>
+        <div id="stat-workers" style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.5px">—</div>
         <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px">등록 알바생</div>
       </div>
       <div style="width:1px;background:rgba(255,255,255,0.25);align-self:stretch"></div>
       <div style="text-align:center">
-        <div id="stat-jobs" style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px">—</div>
+        <div id="stat-jobs" style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.5px">—</div>
         <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px">누적 공고</div>
       </div>
       <div style="width:1px;background:rgba(255,255,255,0.25);align-self:stretch"></div>
       <div style="text-align:center">
-        <div id="stat-available" style="font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px">—</div>
+        <div id="stat-available" style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.5px">—</div>
         <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px">지금 바로출근</div>
       </div>
     </div>
@@ -473,12 +473,12 @@
     <div id="install-area" style="margin-top:16px;display:none;flex-direction:column;align-items:center;gap:8px">
       <!-- Android: beforeinstallprompt 버튼 -->
       <button id="install-btn" onclick="triggerInstall()"
-        style="padding:10px 28px;background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.6);border-radius:24px;font-size:13px;font-weight:800;cursor:pointer;backdrop-filter:blur(8px)">
+        style="padding:10px 28px;background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.6);border-radius:24px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)">
         📲 앱으로 설치하기
       </button>
       <!-- iOS: 수동 안내 -->
       <div id="ios-install-guide" style="display:none;background:rgba(255,255,255,0.18);border-radius:16px;padding:12px 16px;text-align:center;backdrop-filter:blur(8px)">
-        <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:6px">📲 홈 화면에 추가하기</div>
+        <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:6px">📲 홈 화면에 추가하기</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.6">
           Safari 하단 <strong>공유 버튼(⎙)</strong> 탭 →<br>
           <strong>"홈 화면에 추가"</strong> 선택
@@ -602,16 +602,16 @@
            받음(2026-07-16). SNS 가입은 이 폼을 안 거치므로 app.js의 로그인 시점
            성별 필수 게이트(showMandatoryGenderGate)가 대신 처리 -->
       <div class="form-group">
-        <label class="form-label">성별 <span style="color:#C8102E;font-weight:700">*</span></label>
+        <label class="form-label">성별 <span style="color:#C8102E;font-weight:500">*</span></label>
         <div style="display:flex;gap:8px">
-          <button type="button" id="signup-gender-male-btn" onclick="setSignupGender('male')" style="flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">남성</button>
-          <button type="button" id="signup-gender-female-btn" onclick="setSignupGender('female')" style="flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555">여성</button>
+          <button type="button" id="signup-gender-male-btn" onclick="setSignupGender('male')" style="flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:#f8f8f8;color:#555">남성</button>
+          <button type="button" id="signup-gender-female-btn" onclick="setSignupGender('female')" style="flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:#f8f8f8;color:#555">여성</button>
         </div>
       </div>
 
       <!-- 국적 선택 -->
       <div class="form-group">
-        <label class="form-label">국적 <span style="color:#C8102E;font-weight:700">*</span></label>
+        <label class="form-label">국적 <span style="color:#C8102E;font-weight:500">*</span></label>
         <select class="form-input" id="signup-nationality" onchange="onSignupNationalityChange()" style="appearance:none;-webkit-appearance:none">
           <option value="">국적을 선택해주세요</option>
           <option value="KR">🇰🇷 대한민국 (Korean)</option>
@@ -633,7 +633,7 @@
 
       <!-- 비자 종류 (외국인만) -->
       <div class="form-group" id="signup-visa-section" style="display:none">
-        <label class="form-label">체류 비자 종류 <span style="color:#C8102E;font-weight:700">*</span></label>
+        <label class="form-label">체류 비자 종류 <span style="color:#C8102E;font-weight:500">*</span></label>
         <select class="form-input" id="signup-visa-type" onchange="onSignupVisaChange()" style="appearance:none;-webkit-appearance:none">
           <option value="">비자 종류를 선택해주세요</option>
           <option value="H-2">H-2 방문취업 (동포)</option>
@@ -656,11 +656,11 @@
       <div style="background:#f8fafc;border-radius:12px;padding:14px 16px;margin-bottom:14px">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:10px">
           <input type="checkbox" id="agree-age" style="width:18px;height:18px;flex-shrink:0;margin-top:1px;accent-color:#C8102E">
-          <span style="font-size:13px;color:#444;line-height:1.5">만 19세 이상임을 확인합니다 <span style="color:#C8102E;font-weight:700">*</span></span>
+          <span style="font-size:13px;color:#444;line-height:1.5">만 19세 이상임을 확인합니다 <span style="color:#C8102E;font-weight:500">*</span></span>
         </label>
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
           <input type="checkbox" id="agree-banned" style="width:18px;height:18px;flex-shrink:0;margin-top:1px;accent-color:#C8102E">
-          <span style="font-size:13px;color:#444;line-height:1.5">주류·담배·의약품 등 <strong>금지 심부름</strong>을 하지 않겠습니다 <span style="color:#C8102E;font-weight:700">*</span></span>
+          <span style="font-size:13px;color:#444;line-height:1.5">주류·담배·의약품 등 <strong>금지 심부름</strong>을 하지 않겠습니다 <span style="color:#C8102E;font-weight:500">*</span></span>
         </label>
       </div>
       <button class="submit-btn" onclick="signupEmail()">회원가입</button>
@@ -684,7 +684,7 @@
 
     <!-- ── 회사 정보 푸터 ── -->
     <footer style="padding:16px 20px 20px;text-align:center;font-size:10.5px;line-height:1.7;background:#111;">
-      <div style="font-weight:700;color:rgba(255,255,255,0.85);margin-bottom:5px;font-size:12px;letter-spacing:0.2px">멀티무브 주식회사</div>
+      <div style="font-weight:500;color:rgba(255,255,255,0.85);margin-bottom:5px;font-size:12px;letter-spacing:0.2px">멀티무브 주식회사</div>
       <div style="color:rgba(255,255,255,0.4)">대표자 박근욱 · 사업자등록번호 265-87-03885</div>
       <div style="color:rgba(255,255,255,0.4)">서울 강남구 논현로75길 15, 501호</div>
       <div style="color:rgba(255,255,255,0.4)">contact@multimove.co.kr · 010-8972-3035</div>
@@ -695,7 +695,7 @@
 <!-- ── 비밀번호 재설정 화면 ── -->
 <div id="screen-pw-reset" style="display:none;position:fixed;inset:0;z-index:3000;background:#fff;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px">
   <div style="font-size:48px;margin-bottom:20px">🔑</div>
-  <div style="font-size:22px;font-weight:900;color:#222;margin-bottom:8px">새 비밀번호 설정</div>
+  <div style="font-size:22px;font-weight:700;color:#222;margin-bottom:8px">새 비밀번호 설정</div>
   <div style="font-size:14px;color:#888;margin-bottom:28px">6자 이상 새 비밀번호를 입력하세요</div>
   <div style="width:100%;max-width:360px">
     <input id="new-pw-input" type="password" placeholder="새 비밀번호 (6자 이상)"
@@ -703,7 +703,7 @@
     <input id="new-pw-confirm" type="password" placeholder="비밀번호 확인"
       style="width:100%;padding:14px 16px;border:1.5px solid #eee;border-radius:12px;font-size:15px;margin-bottom:16px;outline:none;box-sizing:border-box">
     <button onclick="submitNewPassword()"
-      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer">
+      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">
       비밀번호 변경
     </button>
     <div id="pw-reset-error" style="color:#EF4444;font-size:13px;text-align:center;margin-top:10px;display:none"></div>
@@ -723,14 +723,14 @@
 <div id="screen-inline-reset" style="display:none;position:fixed;inset:0;z-index:3000;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:#C8102E;">
   <div style="background:#fff;border-radius:24px;padding:36px 24px 40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
     <div style="font-size:48px;text-align:center;margin-bottom:16px">🔑</div>
-    <div style="font-size:22px;font-weight:900;color:#222;text-align:center;margin-bottom:6px">새 비밀번호 설정</div>
+    <div style="font-size:22px;font-weight:700;color:#222;text-align:center;margin-bottom:6px">새 비밀번호 설정</div>
     <div style="font-size:14px;color:#888;text-align:center;margin-bottom:28px">6자 이상 새 비밀번호를 입력해주세요</div>
     <input id="inline-pw1" type="password" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password"
       style="width:100%;padding:14px 16px;border:1.5px solid #eee;border-radius:12px;font-size:15px;color:#222;outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
     <input id="inline-pw2" type="password" placeholder="비밀번호 확인" autocomplete="new-password"
       style="width:100%;padding:14px 16px;border:1.5px solid #eee;border-radius:12px;font-size:15px;color:#222;outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
     <button id="inline-btn" onclick="doInlineReset()"
-      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px;">비밀번호 변경</button>
+      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:4px;">비밀번호 변경</button>
     <div id="inline-msg" style="font-size:13px;text-align:center;margin-top:14px;display:none;"></div>
   </div>
 </div>
@@ -738,15 +738,15 @@
 <!-- 네이버 이메일 확인 안내 오버레이 -->
 <div id="screen-naver-magic" style="display:none;position:fixed;inset:0;z-index:2000;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;background:#fff;text-align:center;overflow-y:auto">
   <div style="font-size:56px;margin-bottom:20px">📧</div>
-  <div style="font-size:22px;font-weight:900;color:#222;margin-bottom:10px">이메일을 확인해주세요</div>
+  <div style="font-size:22px;font-weight:700;color:#222;margin-bottom:10px">이메일을 확인해주세요</div>
   <div style="font-size:14px;color:#666;line-height:1.7;margin-bottom:12px">아래 이메일로 가입 확인 메일을 보냈습니다</div>
-  <div id="naver-magic-email" style="font-size:15px;font-weight:800;color:#C8102E;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:20px;word-break:break-all;max-width:320px"></div>
+  <div id="naver-magic-email" style="font-size:15px;font-weight:600;color:#C8102E;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:20px;word-break:break-all;max-width:320px"></div>
   <div style="font-size:13px;color:#888;line-height:1.9;margin-bottom:32px;max-width:300px">
     📌 이메일에서 <b>"Confirm your email"</b><br>버튼을 클릭하면 가입 완료됩니다<br>
     이후 네이버 로그인이 정상 작동합니다<br>
     <span style="font-size:12px;color:#bbb">(스팸함도 확인 · 최초 1회만 필요)</span>
   </div>
-  <button onclick="document.getElementById('screen-naver-magic').style.display='none'" style="width:100%;max-width:320px;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer">← 로그인 화면으로 돌아가기</button>
+  <button onclick="document.getElementById('screen-naver-magic').style.display='none'" style="width:100%;max-width:320px;padding:14px;background:#f5f5f5;color:#555;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer">← 로그인 화면으로 돌아가기</button>
 </div>
 
 <script>
@@ -960,10 +960,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (isInAppBrowser()) {
     const banner = document.createElement('div');
     // top:0 고정이라 상태표시줄과 겹친다 - padding-top 에 안전영역을 더해 내린다
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:calc(10px + var(--sat-safe)) 16px 10px;font-size:12px;font-weight:700;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:calc(10px + var(--sat-safe)) 16px 10px;font-size:12px;font-weight:500;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     banner.innerHTML = `<span>더 나은 경험을 위해 ${isIOS ? 'Safari' : 'Chrome'}에서 열어주세요</span>
-      <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:800">${isIOS ? 'Safari' : 'Chrome'}으로 열기</button>`;
+      <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:600">${isIOS ? 'Safari' : 'Chrome'}으로 열기</button>`;
     document.body.prepend(banner);
   }
 
@@ -1219,8 +1219,8 @@ function setSignupGender(val) {
   _signupGender = val;
   const mBtn = document.getElementById('signup-gender-male-btn');
   const fBtn = document.getElementById('signup-gender-female-btn');
-  const activeStyle = 'flex:1;padding:11px;border:1.5px solid #C8102E;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#C8102E;color:#fff';
-  const idleStyle   = 'flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#f8f8f8;color:#555';
+  const activeStyle = 'flex:1;padding:11px;border:1.5px solid #C8102E;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:#C8102E;color:#fff';
+  const idleStyle   = 'flex:1;padding:11px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:#f8f8f8;color:#555';
   mBtn.style.cssText = val === 'male'   ? activeStyle : idleStyle;
   fBtn.style.cssText = val === 'female' ? activeStyle : idleStyle;
 }
@@ -1451,7 +1451,7 @@ function hideLoading()   { document.getElementById('loading').classList.remove('
 
 function showToastMsg(msg) {
   const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;white-space:nowrap;text-align:center;';
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;white-space:nowrap;text-align:center;';
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 2500);
