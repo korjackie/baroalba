@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '596';
+  const _APP_V = '597';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -5012,6 +5012,10 @@ async function openWorkerProfileDirect(appId) {
   const attendRate = total > 0 ? Math.round(reviews / total * 100) : null;
   const trustScore = calcBakalbaScore(w);
 
+  // 아래 버튼 줄은 상태에 따라 2개 또는 3개가 된다 - 좁은 화면에서 3개일 때 라벨이 밀리지
+  // 않도록 좌우 패딩을 줄이고 nowrap을 건다
+  const _wdBtn = 'padding:13px 6px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap';
+
   let statusActions = '';
   if (app.status === 'pending' || app.status === 'reviewing') {
     statusActions = `
@@ -5084,10 +5088,16 @@ async function openWorkerProfileDirect(appId) {
     <!-- 상태별 액션 -->
     ${statusActions ? `<div style="display:flex;gap:8px;margin-bottom:8px">${statusActions}</div>` : ''}
 
-    <!-- 채팅 + 지원서 보기 -->
+    <!-- 채팅 + 지원서 보기 + 계약서 -->
+    <!-- 계약서는 합격 처리 직후 자동으로 뜨는 게 유일한 경로였다. 한 번 닫으면 다시 볼
+         방법이 없어서 "계약서 어디 갔냐"는 얘기가 나왔다(2026-07-30). 합격/완료 상태의
+         지원자 시트에 상설 버튼을 둔다. -->
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('chat')} 채팅</button>
-      <button onclick="${close}_chatAppId='${app.id}';openWorkerProfile()" style="flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer">${icon('clip')} 지원서 보기</button>
+      <button onclick="${close}openChat('${app.id}','${wname}')" style="flex:1;${_wdBtn}">${icon('chat')} 채팅</button>
+      <button onclick="${close}_chatAppId='${app.id}';openWorkerProfile()" style="flex:1;${_wdBtn}">${icon('clip')} 지원서</button>
+      ${['accepted','completed'].includes(app.status)
+        ? `<button onclick="${close}showContractModal('${app.id}')" style="flex:1;${_wdBtn}">${icon('brief')} 계약서</button>`
+        : ''}
     </div>
 
     <!-- 닫기 -->
@@ -12697,7 +12707,8 @@ function makeApplicantCardHtml(a, opts = {}) {
       <div class="applicant-avatar">${avatarSvg}</div>
       <div class="ac-info">
         <div class="ac-name">${quickBadge}${name}${trustBadge}${jobTitle}</div>
-        <div class="ac-meta">${icon('star')} ${rating} · ${t('completed_count_label').replace('{n}', reviews)}${attendanceHtml}${phone ? ' · '+phone : ''}${showExtras && lastWorked ? ` · <span style="color:#94a3b8">${t('work_relative_label').replace('{date}', formatRelativeDate(lastWorked))}</span>` : ''}</div>
+        <div class="ac-meta">${icon('star')} ${rating} · ${t('completed_count_label').replace('{n}', reviews)}${attendanceHtml}${showExtras && lastWorked ? ` · <span style="color:#94a3b8">${t('work_relative_label').replace('{date}', formatRelativeDate(lastWorked))}</span>` : ''}</div>
+        ${phone ? `<div class="ac-phone">${icon('phone', 11)} ${phone}</div>` : ''}
       </div>
       ${starBtn}${badge}
     </div>
@@ -16264,7 +16275,12 @@ async function openWorkerProfile() {
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
       <button onclick="openOwnerReport('worker','${w.kakao_uid || w.id || ''}')" style="background:none;border:none;font-size:12px;color:#ccc;cursor:pointer;font-weight:600">신고하기</button>
-      <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:var(--blue);cursor:pointer;font-weight:700">📥 지원서 저장</button>
+      <div style="display:flex;gap:14px">
+        ${['accepted','completed'].includes(app.status)
+          ? `<button onclick="document.getElementById('_wp-overlay')?.remove();showContractModal('${app.id}')" style="background:none;border:none;font-size:12px;color:var(--blue);cursor:pointer;font-weight:700">📄 근로계약서</button>`
+          : ''}
+        <button onclick="printWorkerProfile('${app.id}')" style="background:none;border:none;font-size:12px;color:var(--blue);cursor:pointer;font-weight:700">📥 지원서 저장</button>
+      </div>
     </div>
     <button onclick="document.getElementById('_wp-overlay').remove()" style="width:100%;margin-top:10px;padding:12px;background:#f0f0f0;color:#555;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">닫기</button>
   </div>`;
@@ -16338,6 +16354,33 @@ async function _downloadPdf(filename, bodyHtml, extraCss) {
   }
 }
 
+// 원격 이미지를 data URI로 바꿔 넘긴다. html2canvas의 useCORS는 서버가 CORS 헤더를 안 주면
+// 그 이미지만 조용히 빠지고, 캡처 시점에 아직 안 받아졌어도 마찬가지로 빠진다. 미리 받아두면
+// 둘 다 사라진다. 실패하면 null을 주고 호출부가 기본 실루엣으로 대체한다.
+async function _imgToDataUri(url) {
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+// 사진 미등록이면 기본 실루엣. SVG 대신 div 두 개로 그린다 - html2canvas의 SVG 처리는
+// 환경을 타서, 어차피 단순한 도형이면 div가 확실하다.
+const _PDF_SILHOUETTE = `
+  <div style="position:relative;width:56px;height:62px">
+    <div style="position:absolute;left:16px;top:2px;width:24px;height:24px;border-radius:50%;background:#d4d4d8"></div>
+    <div style="position:absolute;left:4px;top:32px;width:48px;height:30px;border-radius:24px 24px 0 0;background:#d4d4d8"></div>
+  </div>`;
+
 async function printWorkerProfile(appId) {
   const { data: app } = await db.from('applications')
     .select('*, workers(*), job_postings(title)')
@@ -16357,11 +16400,26 @@ async function printWorkerProfile(appId) {
   const langs = (w.languages || []).map(l => ({'ko':'한국어','en':'영어','zh':'중국어','ja':'일본어','vi':'베트남어','ru':'러시아어','mn':'몽골어'}[l]||l)).join(', ') || null;
   const phone = w.phone ? w.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') : null;
 
+  // 이력서 형식대로 사진 칸을 둔다. photo_url은 실제 업로드 사진 외에 'emoji:😀' 형태도
+  // 올 수 있어(바로만남 아바타와 같은 컬럼) 세 갈래로 나눠 처리한다.
+  const rawPhoto = w.photo_url || '';
+  let photoInner = _PDF_SILHOUETTE;
+  if (rawPhoto.startsWith('emoji:')) {
+    photoInner = `<div style="font-size:46px;line-height:1">${rawPhoto.slice(6)}</div>`;
+  } else if (rawPhoto) {
+    const dataUri = await _imgToDataUri(rawPhoto);
+    if (dataUri) photoInner = `<img src="${dataUri}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+  }
+  const photoBox = `<div style="width:96px;height:120px;border:1px solid #ddd;background:#fafafa;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center">${photoInner}</div>`;
+
   await _downloadPdf(
     `지원서_${(w.name || '지원자').replace(/[^\w가-힣]/g, '')}_${today.replace(/\./g, '')}.pdf`,
     `<h2 style="text-align:center;letter-spacing:3px;margin-bottom:6px;font-size:20px">지 원 서</h2>
      <p style="text-align:center;font-size:12px;color:#888;margin-bottom:24px">바로알바 플랫폼 자동 생성 · ${today}</p>
-     <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px">
+     <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:20px">
+     ${photoBox}
+     <div style="flex:1;min-width:0">
+     <table style="width:100%;border-collapse:collapse;font-size:13px">
        ${row('지원 공고', app.job_postings?.title)}
        ${row('지원 상태', STATUS[app.status] || app.status)}
        ${row('이름', w.name)}
@@ -16374,6 +16432,8 @@ async function printWorkerProfile(appId) {
        ${row('구사 언어', langs)}
        ${row('이동수단', vehicles)}
      </table>
+     </div>
+     </div>
      ${w.bio ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #d4d4d8;padding-left:8px">자기소개</div><div style="font-size:13px;line-height:1.7;color:#333">${w.bio.replace(/</g,'&lt;')}</div></div>` : ''}
      ${w.experience ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #d4d4d8;padding-left:8px">경력 / 특기</div><div style="font-size:13px;line-height:1.7;color:#333">${w.experience.replace(/</g,'&lt;')}</div></div>` : ''}
      ${app.apply_message ? `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:13px;margin-bottom:6px;border-left:3px solid #d4d4d8;padding-left:8px">지원 메시지</div><div style="font-size:13px;line-height:1.7;color:#333">${app.apply_message.replace(/</g,'&lt;')}</div></div>` : ''}`,

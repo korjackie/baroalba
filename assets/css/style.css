@@ -1240,6 +1240,10 @@
     /* 평점·완료건수·출근율·전화번호가 한 줄에 다 들어가 nowrap+ellipsis로 전화번호가
        늘 잘렸다(넣어놓고 안 보이는 상태). 두 줄까지 흐르도록 풀었다. */
     .ac-meta { font-size:11px; color:#aaa; font-weight:600; margin-top:3px; line-height:1.5; }
+    /* 전화번호는 줄바꿈 대상이 아니다. 통계 뒤에 " · "로 붙여놨더니 출근율 다음에서 줄이
+       갈려 번호가 두 동강 났다(2026-07-30 제보). 아예 자기 줄을 준다. */
+    .ac-phone { font-size:11px; color:#8b8b93; font-weight:700; margin-top:2px; white-space:nowrap;
+                display:inline-flex; align-items:center; gap:3px; }
     .ac-actions { display:flex; align-items:center; gap:6px; padding:0 14px 12px; }
     .ac-btn { flex:1; padding:9px 4px; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center; white-space:nowrap; transition:opacity 0.1s;
               display:inline-flex; align-items:center; justify-content:center; gap:4px; }
@@ -1249,9 +1253,10 @@
        색은 브랜드 레드(--red)로 통일한다 — 예전엔 #22c55e 라 앱의 --green(#16a34a)도 아닌
        제3의 초록이 크림슨 헤더·시급·FAB 사이에서 혼자 튀었다. 카드당 강조색은 하나만 쓴다. */
     .ac-hire  { flex:1.5; background:var(--red); color:#fff; font-weight:800; }
-    .ac-done  { background:var(--red); color:#fff; font-weight:800; }
+    /* 라벨이 "완료"에서 "완료 및 평가"로 길어져 nowrap이면 밀린다. ac-hire와 같은 주 행동이라
+       폭도 같은 급으로 준다. (선언이 두 번 중복돼 있던 것도 여기서 하나로 정리) */
+    .ac-done  { flex:1.8; background:var(--red); color:#fff; font-weight:800; }
     .ac-fail  { background:#fafafa; color:#9ca3af; font-weight:600; }
-    .ac-done  { background:var(--red); color:#fff; font-weight:800; }
     .ac-sub   { background:#f5f5f5; color:#888; font-size:11px; }
     .ac-rec   { background:#f5f5f5; color:#555; }
     .ac-blk   { background:#f5f5f5; color:#888; }
