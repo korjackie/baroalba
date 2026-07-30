@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>바로알바 — 프리미엄 디자인 시스템 설계 (2026.07.31)</title>
+<style>
+  :root{--red:#C8102E;--red-light:#fff0f2;--green:#16a34a;--green-light:#f0fdf4;--blue:#3b82f6;--blue-light:#eff6ff;--orange:#f59e0b;--orange-light:#fffbeb;--purple:#7c3aed;--gray-900:#111;--gray-700:#444;--gray-500:#888;--gray-200:#eee;--gray-100:#f8f9fa;--white:#fff;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--gray-900);background:var(--gray-100);line-height:1.6}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px}
+  .nav-logo{font-size:18px;font-weight:900;color:var(--red)}
+  .nav-badge{background:var(--blue-light);color:var(--blue);font-size:12px;font-weight:800;padding:4px 12px;border-radius:100px}
+  main{max-width:900px;margin:0 auto;padding:80px 5% 60px}
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);border-radius:24px;padding:44px 40px;margin-bottom:36px;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(200,16,46,0.28),transparent 62%);pointer-events:none}
+  .hero-tag{display:inline-block;background:rgba(200,16,46,0.25);border:1px solid rgba(200,16,46,0.5);color:#ff6b7a;font-size:11px;font-weight:800;padding:4px 14px;border-radius:100px;letter-spacing:1px;margin-bottom:16px}
+  .hero h1{font-size:clamp(22px,3.4vw,32px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.25;margin-bottom:10px}
+  .hero p{font-size:14px;color:rgba(255,255,255,0.55);line-height:1.8}
+  .section{margin-bottom:34px}
+  .section-label{font-size:11px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .section-title{font-size:clamp(17px,2.4vw,22px);font-weight:900;letter-spacing:-0.5px;margin-bottom:14px}
+  .card{background:#fff;border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--gray-200)}
+  .card-title{font-size:15px;font-weight:900;color:var(--gray-900);margin-bottom:10px}
+  .card p{font-size:13.5px;color:var(--gray-700);line-height:1.85;margin-bottom:10px}
+  .card p:last-child{margin-bottom:0}
+  .card strong{color:var(--gray-900);font-weight:800}
+  code{font-family:'SF Mono','Fira Code',monospace;background:#f1f5f9;padding:1px 6px;border-radius:4px;font-size:12px;color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+  th{background:var(--gray-100);padding:9px 12px;text-align:left;font-size:11px;font-weight:800;color:var(--gray-500);letter-spacing:0.5px}
+  td{padding:9px 12px;border-top:1px solid var(--gray-200);color:var(--gray-700);vertical-align:top}
+  tr.hi td{background:var(--red-light)}
+  tr.ok td{background:var(--green-light)}
+  .tbl-wrap{overflow-x:auto}
+  .callout{border-radius:14px;padding:16px 18px;margin:12px 0;font-size:13px;line-height:1.8}
+  .callout.warn{background:var(--orange-light);border:1.5px solid #fde68a;color:#92400e}
+  .callout.crit{background:var(--red-light);border:1.5px solid #fecdd3;color:#9f1239}
+  .callout.info{background:var(--blue-light);border:1.5px solid #bfdbfe;color:#1e40af}
+  .callout strong{font-weight:900}
+  .code-block{background:#0f172a;border-radius:12px;padding:16px 18px;margin:12px 0;overflow-x:auto}
+  .code-block pre{font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:#e2e8f0;line-height:1.75;white-space:pre}
+  .code-block .cmt{color:#64748b}
+  .code-block .grn{color:#4ade80}
+  .code-block .red{color:#fb7185}
+  ol,ul{margin:8px 0 8px 20px;font-size:13.5px;color:var(--gray-700);line-height:1.9}
+  li{margin-bottom:4px}
+  .path{background:#0f172a;color:#e2e8f0;font-family:'SF Mono',monospace;font-size:11.5px;padding:12px 14px;border-radius:10px;word-break:break-all;line-height:1.7}
+  footer{text-align:center;padding:36px 0 20px;font-size:12.5px;color:var(--gray-500);border-top:1px solid var(--gray-200)}
+  @media(max-width:600px){main{padding:76px 4% 40px}.hero{padding:32px 22px}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">디자인 시스템 설계 · 2026.07.31</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-tag">DESIGN SYSTEM · 착수 전 설계</div>
+    <h1>프리미엄 디자인 시스템 전환</h1>
+    <p>화면마다 제각각인 시각 규칙을 하나의 시스템으로 좁혀,<br>앱 전체가 한 사람이 만든 것처럼 보이게 한다. <strong style="color:rgba(255,255,255,0.8)">기능 변경 없음 — 순수 시각 작업.</strong></p>
+  </div>
+
+  <!-- 1. 배경 -->
+  <div class="section">
+    <div class="section-label">Background</div>
+    <div class="section-title">1. 왜 지금 "저렴해 보이는가"</div>
+    <div class="card">
+      <p><code>style.css</code> + <code>바로알바.html</code> + <code>app.js</code> 3파일 실측 (2026-07-31):</p>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>축</th><th>현재</th><th>프리미엄 앱 기준</th></tr></thead>
+        <tbody>
+          <tr class="hi"><td>색</td><td><strong>고유 362종</strong> · 리터럴 4,548회 vs 토큰 741회 (채택률 14%)</td><td>회색 4~5 + 강조 1 + 상태 2~3</td></tr>
+          <tr class="hi"><td>글자 굵기</td><td><strong>7종</strong> (300~900). 800이 564회, 900이 284회</td><td>3~4종</td></tr>
+          <tr><td>글자 크기</td><td>27종</td><td>6~7종</td></tr>
+          <tr><td>모서리</td><td>23종</td><td>3~4종</td></tr>
+          <tr class="hi"><td>그림자</td><td><strong>82종</strong></td><td>2~3종</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="callout crit">
+        <strong>1순위 원인은 굵기다.</strong> 800·900이 848회로 전체의 절반 가까이 — 거의 모든 글자가 굵다.
+        전부 강조하면 강조가 사라지고, 위계 없이 시끄러운 화면이 된다.
+      </div>
+      <p><strong>2순위는 회색 8단계</strong>(<code>#111 #222 #333 #555 #666 #888 #aaa #bbb</code>, 약 1,350회)와
+      밝은 회색 5종(약 700회). 같은 역할에 매번 다른 값을 써서 화면 간 규칙이 안 맞는다.</p>
+      <div class="callout info">
+        디자인 토큰(<code>--ink-900/600/400/200</code>, <code>--line</code>, <code>--r</code>)은 2026-07-27에 이미 정의됐으나 절반만 적용된 상태다.
+        <strong>이 작업은 새 시스템을 만드는 게 아니라, 이미 정의된 시스템을 앱 전체에 관철시키는 것이다.</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 방향 -->
+  <div class="section">
+    <div class="section-label">Direction</div>
+    <div class="section-title">2. 방향 — "절충안" (대표님 확정)</div>
+    <div class="card">
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>방향</th><th>내용</th><th>판정</th></tr></thead>
+        <tbody>
+          <tr><td>미니멀</td><td>여백 크게, 정보량 축소</td><td>❌ 한 화면 공고 수가 줄고 시니어에게 작게 느껴짐</td></tr>
+          <tr class="ok"><td><strong>절충</strong></td><td><strong>굵기만 정리, 글자크기·정보량 유지</strong></td><td>✅ <strong>채택</strong></td></tr>
+          <tr><td>가독성 우선</td><td>글자를 더 키우고 대비 강화</td><td>❌ 프리미엄과 반대 방향</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p><strong>이 앱은 외국인·시니어 특화를 지향</strong>하므로(2026-07-29 확정), 전형적인 프리미엄
+      미니멀(얇은 글씨·넓은 여백)은 타겟 사용자의 가독성과 충돌한다. 굵기의 <strong>상대 위계</strong>만
+      정리하고 글자 크기와 정보 밀도는 건드리지 않는다.</p>
+    </div>
+  </div>
+
+  <!-- 3. 적용 방식 -->
+  <div class="section">
+    <div class="section-label">Rollout</div>
+    <div class="section-title">3. 적용 방식 — 축 단위 순차</div>
+    <div class="card">
+      <p>화면 단위(홈→지도→상세…)가 아니라 <strong>축 단위</strong>로 앱 전체에 일괄 적용한다.</p>
+      <ul>
+        <li><strong>화면 단위의 문제</strong>: 작업 중 "새 화면 반 / 옛 화면 반"이 되는데, 이 앱은 홈↔지도↔상세 전환이 잦아 그 불일치가 즉시 드러난다.</li>
+        <li><strong>축 단위의 이점</strong>: 매 단계가 전역이라 앱은 항상 일관된 상태를 유지한다. 각 축이 독립 커밋이라 롤백 단위가 명확하다.</li>
+      </ul>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>차수</th><th>축</th><th>근거</th></tr></thead>
+        <tbody>
+          <tr class="ok"><td>1차</td><td>글자 굵기</td><td>체감 변화가 가장 크고, 색을 안 건드려 위험이 낮다</td></tr>
+          <tr class="ok"><td>2차</td><td>색 (회색·면·선)</td><td>건수가 가장 많고 문맥 분기가 필요해 단독 배포</td></tr>
+          <tr class="ok"><td>3차</td><td>모서리 · 그림자</td><td>시각적 마감. 1·2차가 안정된 뒤</td></tr>
+          <tr><td>4차</td><td>간격 (4/8 그리드)</td><td>레이아웃이 움직이므로 마지막. <strong>별도 계획으로 분리</strong></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="callout info"><strong>이번 구현 범위는 1~3차다.</strong></div>
+    </div>
+  </div>
+
+  <!-- 4-1 굵기 -->
+  <div class="section">
+    <div class="section-label">Axis 1</div>
+    <div class="section-title">4-1. 1차 — 글자 굵기 (7종 → 4종)</div>
+    <div class="card">
+      <p>상대 순서를 보존한 채 전체를 한 단계씩 내린다. <strong>위계는 유지되고 화면만 조용해진다.</strong></p>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>현재</th><th>사용횟수</th><th>→ 신규</th><th>역할</th></tr></thead>
+        <tbody>
+          <tr class="hi"><td>900</td><td>284</td><td><strong>700</strong></td><td>제목 · 시급 · 로고</td></tr>
+          <tr class="hi"><td>800</td><td>564</td><td><strong>600</strong></td><td>부제 · 버튼 · 배지</td></tr>
+          <tr class="hi"><td>700</td><td>552</td><td><strong>500</strong></td><td>메타 · 본문강조</td></tr>
+          <tr><td>600</td><td>108</td><td><strong>500</strong></td><td>〃</td></tr>
+          <tr><td>500 · 400 · 300</td><td>45</td><td><strong>400</strong></td><td>본문 (300은 한글에서 너무 얇다)</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>최종 스케일: <strong>400 본문 / 500 보조강조 / 600 강조 / 700 제목</strong><br>
+      600과 700이 500으로 합쳐지는 것이 유일한 정보 손실이나, 600은 108회뿐이라 영향이 작다.</p>
+      <div class="callout warn">
+        <strong>주의</strong>: <code>font-weight: bold</code>(=700) · <code>bolder</code> 등 숫자 아닌 표기가 있는지 먼저 확인하고 있으면 함께 매핑한다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4-2 색 -->
+  <div class="section">
+    <div class="section-label">Axis 2</div>
+    <div class="section-title">4-2. 2차 — 색</div>
+
+    <div class="card">
+      <div class="card-title">텍스트 (회색 8단계 → 4단계)</div>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>현재 리터럴</th><th>횟수</th><th>→ 토큰</th><th>값</th></tr></thead>
+        <tbody>
+          <tr><td><code>#111</code> <code>#222</code> <code>#15181E</code></td><td>~280</td><td><code>--ink-900</code></td><td>#15181E 제목</td></tr>
+          <tr><td><code>#333</code> <code>#555</code> <code>#4E5661</code></td><td>~288</td><td><code>--ink-600</code></td><td>#4E5661 본문</td></tr>
+          <tr><td><code>#666</code> <code>#888</code> <code>#838C98</code></td><td>~308</td><td><code>--ink-400</code></td><td>#838C98 보조</td></tr>
+          <tr class="hi"><td><code>#aaa</code> <code>#bbb</code></td><td><strong>474</strong></td><td><code>--ink-400</code></td><td><strong>#838C98 — 대비 상승</strong></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="callout crit">
+        <strong>#aaa·#bbb(474회)를 한 단계 진하게 올리는 것이 이번 안의 핵심 판단이다.</strong>
+        대비가 올라가 <strong>시니어·외국인 가독성이 함께 개선</strong>된다.
+        실측 결과 <code>#bbb</code> 154회가 <strong>전부 <code>color:</code> 용도이고 <code>border:</code> 사용은 0건</strong>이라,
+        통합해도 선이 두꺼워 보이는 부작용이 없다.
+      </div>
+      <p><code>--ink-200</code>(<code>#C3CAD3</code>)은 비활성·플레이스홀더 전용으로 남긴다.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">면 · 선 (밝은 회색 5종 → 3종)</div>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>현재</th><th>횟수</th><th>→ 토큰</th><th>값 · 용도</th></tr></thead>
+        <tbody>
+          <tr><td><code>#fff</code></td><td>659</td><td><code>--surface-0</code></td><td>#FFFFFF · 카드 · 시트</td></tr>
+          <tr class="ok"><td><code>#f5f5f5</code> <code>#f8f8f8</code></td><td>233</td><td><code>--surface-1</code> <strong>(신설)</strong></td><td>#F4F6F8 · 페이지 배경</td></tr>
+          <tr><td>—</td><td>—</td><td><code>--surface-2</code> (기존)</td><td>#FBFCFD · 중립 칩</td></tr>
+          <tr><td><code>#eee</code> <code>#f0f0f0</code> <code>#e5e7eb</code></td><td>457</td><td><code>--line</code></td><td>#E3E7EC · 테두리 · 구분선</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p><strong><code>--surface-1</code> 신설 이유</strong>: 기존 <code>--surface-2</code>(<code>#FBFCFD</code>)는 거의 흰색이라
+      페이지 배경으로 쓰면 흰 카드가 배경과 분리되지 않는다. 페이지 배경용 단계가 별도로 필요하다.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔴 문맥 분기 필수</div>
+      <div class="callout crit">
+        실측: <strong><code>#f0f0f0</code>은 <code>border</code>로 106회, <code>background</code>로 49회 사용된다.</strong>
+        같은 리터럴이 두 역할을 겸하므로 <strong>단순 문자열 치환은 금지</strong>한다.
+        치환 스크립트는 속성명을 함께 읽어 분기해야 한다.
+      </div>
+      <div class="code-block"><pre><span class="cmt"># 속성명으로 분기</span>
+border-color / border / border-*  : #f0f0f0 #eee #e5e7eb  →  <span class="grn">--line</span>
+background / background-color     : #f0f0f0 #eee #e5e7eb  →  <span class="grn">--surface-1</span></pre></div>
+      <p><code>#eee</code>·<code>#e5e7eb</code>도 같은 방식으로 문맥을 확인한 뒤 분기한다.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">예외 — 절대 건드리지 않는 색</div>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>색</th><th>횟수</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr><td><code>#C8102E</code> (<code>--red</code>)</td><td>92+</td><td>브랜드 아이덴티티</td></tr>
+          <tr><td><code>#FEE500</code></td><td>9</td><td>카카오 브랜드 규정</td></tr>
+          <tr><td><code>#03C75A</code></td><td>4</td><td>네이버 브랜드 규정</td></tr>
+          <tr><td><code>#4285F4</code></td><td>3</td><td>구글 브랜드 규정</td></tr>
+          <tr class="hi"><td><code>#22c55e</code> <code>#16a34a</code> <code>#10B981</code></td><td>45</td><td><strong>on/off 토글 · 상태점.</strong> Phase 74에 "on/off 관례라 그대로 둔다"고 이미 판단한 사항</td></tr>
+          <tr><td><code>--fnb</code> <code>--logistics</code> <code>--sales</code> <code>--cleaning</code> <code>--event</code></td><td>—</td><td>지도 마커 카테고리 구분용. 정보를 나르는 색이라 범위 밖</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4-3 모서리/그림자 -->
+  <div class="section">
+    <div class="section-label">Axis 3</div>
+    <div class="section-title">4-3. 3차 — 모서리 · 그림자</div>
+    <div class="card">
+      <div class="card-title">모서리 (23종 → 4종 + pill)</div>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>토큰</th><th>값</th><th>용도</th><th>흡수하는 기존 값</th></tr></thead>
+        <tbody>
+          <tr><td><code>--r-sm</code> (기존)</td><td>8px</td><td>칩 · 작은 버튼</td><td>2, 4, 6, 8, 9</td></tr>
+          <tr><td><code>--r</code> (기존)</td><td>12px</td><td>카드 · 입력</td><td>10, 12</td></tr>
+          <tr class="ok"><td><code>--r-lg</code> <strong>(신설)</strong></td><td>16px</td><td>큰 카드 · 패널</td><td>14, 15, 16</td></tr>
+          <tr class="ok"><td><code>--r-xl</code> <strong>(신설)</strong></td><td>20px</td><td>시트 · 모달</td><td>20, 24</td></tr>
+          <tr><td>—</td><td>999px</td><td>pill</td><td>유지</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">그림자 (82종 → 3종)</div>
+      <div class="code-block"><pre><span class="grn">--shadow-sm</span>: 0 1px 3px  rgba(21,24,30,.06);  <span class="cmt">/* 카드 */</span>
+<span class="grn">--shadow-md</span>: 0 2px 8px  rgba(21,24,30,.08);  <span class="cmt">/* 검색바 · 떠있는 요소 */</span>
+<span class="grn">--shadow-lg</span>: 0 8px 24px rgba(21,24,30,.12);  <span class="cmt">/* 모달 · 시트 · FAB */</span></pre></div>
+      <div class="callout warn">
+        <strong>순검정 <code>rgba(0,0,0,…)</code> → 잉크색 기반 <code>rgba(21,24,30,…)</code>으로 바꾸는 것이 핵심이다.</strong>
+        순검정 그림자는 화면을 탁해 보이게 한다. 또한 현재 82종이 제각각이라 요소마다 떠 있는 높이가
+        안 맞는데, 3단계로 좁히면 계층이 일관되게 읽힌다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 절차 -->
+  <div class="section">
+    <div class="section-label">Process</div>
+    <div class="section-title">5. 작업 절차 (매 차수 공통)</div>
+    <div class="card">
+      <ol>
+        <li><strong>치환 스크립트 작성</strong> — Node 스크립트, 문맥(속성명) 인식, 예외 목록 반영</li>
+        <li><strong>드라이런</strong> — 치환 건수와 예외 적중 건수를 먼저 출력. <strong>판정 기준은 매핑표 실측 건수</strong>(예: 1차 <code>900→700</code> 284건). 10% 이상 어긋나면 중단하고 원인부터 찾는다</li>
+        <li><strong>적용</strong> → <code>node --check</code> 3파일(<code>app.js</code> <code>sw.js</code> <code>shared-lang.js</code>)</li>
+        <li><strong>락스텝 5곳 동기화</strong> — <code>_APP_V</code> / <code>sw.js</code>의 <code>CACHE</code> / <code>바로알바.html</code>의 <code>?v=</code> 4개</li>
+        <li><strong>단독 커밋</strong> — 축 1개 = 커밋 1개 (롤백 단위)</li>
+        <li><strong>푸시 → 라이브 <code>sw.js</code> 버전 확인.</strong> 5분 넘게 안 바뀌면 <code>vercel --prod --yes</code> 수동 배포</li>
+        <li><strong>실기기 확인</strong> — 홈 / 지도 / 공고상세 / 마이페이지 / 업주 공고관리 5화면</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 6~8 -->
+  <div class="section">
+    <div class="section-label">Verify · Rollback · Scope</div>
+    <div class="section-title">6~8. 검증 · 롤백 · 범위 밖</div>
+    <div class="card">
+      <div class="card-title">검증</div>
+      <ul>
+        <li><strong>문법</strong>: <code>node --check</code> 3파일</li>
+        <li><strong>치환 정확도</strong>: 드라이런의 예외 적중 건수가 예외표와 일치하는지 대조</li>
+        <li><strong>잔여 리터럴</strong>: 각 차수 후 해당 축 리터럴이 예외 목록만 남았는지 재실측 (예: 1차 후 <code>font-weight:800</code> 잔여 = 0)</li>
+        <li><strong>시각</strong>: 실기기 5화면 스크린샷. 필요 시 Playwright 390px 실측</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">롤백</div>
+      <p>축 = 커밋이므로 <code>git revert &lt;sha&gt;</code> 한 번으로 해당 축만 되돌린다. 다른 축은 영향받지 않는다.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">범위 밖 (YAGNI)</div>
+      <ul>
+        <li><strong>기능 · 문구 · 레이아웃 변경</strong> — 이번은 순수 시각 작업</li>
+        <li><strong>인라인 스타일의 CSS 클래스 이전</strong> — <code>app.js</code> 전면 수술이라 위험 대비 실익이 낮다. 토큰 참조로 바꾸는 것만으로 목표(일관성)는 달성된다</li>
+        <li><strong>다크 모드</strong> — 이 앱은 다크 테마를 설계한 적이 없고 <code>color-scheme:light</code>로 고정했다(Phase 66)</li>
+        <li><strong>브랜드 레드 · 로고 변경</strong> — "브랜드 전체 재정의"는 선택하지 않았다</li>
+        <li><strong>모션 · 트랜지션</strong> — 별도 축. 1~4차 완료 후 재평가</li>
+        <li><strong>글자 크기 27종 정리</strong> — 절충안 선택에 따라 크기는 유지</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 9. 미결 -->
+  <div class="section">
+    <div class="section-label">Open Questions</div>
+    <div class="section-title">9. 착수 전 확인할 것</div>
+    <div class="card">
+      <ul>
+        <li><code>font-weight: bold</code> / <code>bolder</code> 등 숫자 아닌 표기의 존재 여부와 건수</li>
+        <li><code>#eee</code> · <code>#e5e7eb</code>의 border/background 문맥 분포 (<code>#f0f0f0</code>은 106/49로 측정 완료)</li>
+        <li><strong>독립 HTML 포함 여부</strong> — <code>index.html</code> · <code>login.html</code> · <code>admin.html</code>은 앱 CSS를 안 쓰므로 전역 처리가 자동으로 따라오지 않는다(Phase 68-B 교훈). 1차 착수 시 포함할지 결정 필요</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Source</div>
+    <div class="section-title">원본 마크다운 경로</div>
+    <div class="card">
+      <div class="path">prototype\docs\superpowers\specs\<br>2026-07-31-premium-design-system-design.md</div>
+      <p style="margin-top:10px">이 HTML은 읽기용 사본이다. 내용이 갈리면 <strong>마크다운이 정본</strong>이며, 진행 상태는 <code>docs/PROGRESS.md</code>에 Phase로 기록한다.</p>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 by MultiMOVE · 프리미엄 디자인 시스템 설계 · 2026.07.31</footer>
+</body>
+</html>
