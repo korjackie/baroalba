@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '595';
+  const _APP_V = '596';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -16299,10 +16299,19 @@ async function _downloadPdf(filename, bodyHtml, extraCss) {
     showToast('PDF 생성 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인해주세요');
     return;
   }
+  // 소스 div에 직접 left:-9999px를 주면 안 된다(2026-07-30 "계약서 PDF가 백지" 제보).
+  // html2pdf는 소스를 복제해 자기 오버레이에 넣으면서 position만 relative로 덮어쓰는데
+  // (bundle의 container.firstChild.style.position="relative"), 그러면 복제본이
+  // position:relative + left:-9999px가 되어 캔버스 밖으로 밀려난다. 종이 크기는 맞고
+  // 내용만 없는 PDF가 나오던 이유. 화면에서 숨기는 건 바깥 래퍼가 맡고, html2pdf에
+  // 넘기는 div 자체에는 위치 오프셋을 남기지 않는다.
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;overflow:hidden';
   const div = document.createElement('div');
-  div.style.cssText = "position:fixed;left:-9999px;top:0;background:#fff;width:210mm;box-sizing:border-box;padding:14mm 16mm;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#222;line-height:1.7";
+  div.style.cssText = "background:#fff;width:210mm;box-sizing:border-box;padding:14mm 16mm;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#222;line-height:1.7";
   div.innerHTML = `<style>${extraCss || ''}</style>${bodyHtml}`;
-  document.body.appendChild(div);
+  holder.appendChild(div);
+  document.body.appendChild(holder);
   try {
     const opt = {
       margin: 10,
@@ -16325,7 +16334,7 @@ async function _downloadPdf(filename, bodyHtml, extraCss) {
     console.error('[pdf] 생성 실패:', e);
     showToast('PDF 저장에 실패했어요. 다시 시도해주세요');
   } finally {
-    div.remove();
+    holder.remove();
   }
 }
 
