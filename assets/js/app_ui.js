@@ -233,7 +233,7 @@ function renderStaffPanel() {
           </button>
         </div>` : ''}
       </div>
-      ${a.status === 'completed' && !isPaid && wage ? `<div style="margin:4px 0 8px"><button onclick="openWageTransferModal('${a.id}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}',${wage})" style="width:100%;padding:11px;background:linear-gradient(135deg,#0064FF,#0051CC);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_toss_kakaopay_transfer_btn')}</button></div>` : ''}
+      ${a.status === 'completed' && !isPaid && wage ? `<div style="margin:4px 0 8px"><button onclick="openWageTransferModal('${a.id}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}',${wage})" style="width:100%;padding:10px;background:linear-gradient(135deg,#0064FF,#0051CC);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_toss_kakaopay_transfer_btn')}</button></div>` : ''}
       <div class="staff-actions">
         <button class="staff-act-btn" onclick="openChat('${a.id}','${(w.name||'').replace(/'/g,"\\'")}')">${t('chat_btn_emoji')}</button>
         ${w.phone ? `<button class="staff-act-btn" onclick="window.location.href='tel:${w.phone}'">${t('call_btn_emoji')}</button>` : ''}
@@ -498,7 +498,7 @@ async function loadWageHistory() {
       return `<div style="background:#fff;border-radius:var(--r-lg);padding:14px;margin-bottom:10px;border:1px solid var(--line)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${job.biz_name||'업체'}</div>
-          <span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:var(--r-sm);${isPaid?'background:#D1FAE5;color:#065F46':'background:#FEE2E2;color:#991B1B'}">${isPaid?'✅ 수령확인':'❌ 미수령'}</span>
+          <span style="font-size:10px;font-weight:600;padding:2px 10px;border-radius:var(--r-sm);${isPaid?'background:#D1FAE5;color:#065F46':'background:#FEE2E2;color:#991B1B'}">${isPaid?'✅ 수령확인':'❌ 미수령'}</span>
         </div>
         <div style="font-size:12px;color:var(--ink-600)">${job.title||''} · ${date}</div>
         <div style="font-size:18px;font-weight:700;color:#C8102E;margin-top:6px">${wage?wage.toLocaleString()+'원':'시급 미기재'}</div>
@@ -680,12 +680,12 @@ async function showContractModal(appId) {
   document.getElementById('contract-content').innerHTML = `
     <p style="margin-bottom:14px"><strong>${b?.biz_name || b?.name || '업체명'}</strong>(이하 "사용자")와 <strong>${w?.name || '근로자'}</strong>(이하 "근로자")는 다음과 같이 근로계약을 체결합니다.</p>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">
-      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500;width:32%">직무</td><td style="padding:9px 10px;border:1px solid var(--line)">${j?.title || '-'}</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근무일시</td><td style="padding:9px 10px;border:1px solid var(--line)">${workDate}</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근무지</td><td style="padding:9px 10px;border:1px solid var(--line)">${j?.address || '별도 안내'}</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">임금</td><td style="padding:9px 10px;border:1px solid var(--line)"><strong style="color:#C8102E">${wage}</strong></td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">사용자</td><td style="padding:9px 10px;border:1px solid var(--line)">${b?.biz_name || '-'} (${b?.phone || '-'})</td></tr>
-      <tr><td style="padding:9px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근로자</td><td style="padding:9px 10px;border:1px solid var(--line)">${w?.name || '-'} (${w?.phone || '-'})</td></tr>
+      <tr><td style="padding:8px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500;width:32%">직무</td><td style="padding:8px 10px;border:1px solid var(--line)">${j?.title || '-'}</td></tr>
+      <tr><td style="padding:8px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근무일시</td><td style="padding:8px 10px;border:1px solid var(--line)">${workDate}</td></tr>
+      <tr><td style="padding:8px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근무지</td><td style="padding:8px 10px;border:1px solid var(--line)">${j?.address || '별도 안내'}</td></tr>
+      <tr><td style="padding:8px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">임금</td><td style="padding:8px 10px;border:1px solid var(--line)"><strong style="color:#C8102E">${wage}</strong></td></tr>
+      <tr><td style="padding:8px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">사용자</td><td style="padding:8px 10px;border:1px solid var(--line)">${b?.biz_name || '-'} (${b?.phone || '-'})</td></tr>
+      <tr><td style="padding:8px 10px;border:1px solid var(--line);background:#f9fafb;font-weight:500">근로자</td><td style="padding:8px 10px;border:1px solid var(--line)">${w?.name || '-'} (${w?.phone || '-'})</td></tr>
     </table>
     <p style="font-size:12px;color:var(--ink-400);line-height:1.75">① 임금은 근무 종료 후 당일 또는 익일 지급을 원칙으로 한다.<br>② 근로자는 부득이한 사유 없이 계약된 근무를 이행하지 않을 경우 신뢰점수가 차감될 수 있다.<br>③ 사용자는 최저임금법 및 근로기준법을 준수한다.</p>
     <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--ink-400)">
@@ -716,7 +716,7 @@ async function printContract() {
   await _downloadPdf(
     `근로계약서_${today}.pdf`,
     `<h2 style="text-align:center;letter-spacing:4px;margin-bottom:28px;font-size:20px">근 로 계 약 서</h2>${content}`,
-    `table{width:100%;border-collapse:collapse;margin:12px 0}td{padding:9px 10px;border:1px solid #ddd;font-size:13px}`
+    `table{width:100%;border-collapse:collapse;margin:12px 0}td{padding:8px 10px;border:1px solid #ddd;font-size:13px}`
   );
 }
 
@@ -877,7 +877,7 @@ async function loadNotiHistory() {
           <div style="font-size:12px;color:var(--ink-400);margin-bottom:4px">${item.sub}</div>
           <div style="font-size:11px;color:var(--ink-400)">${formatRelativeDate(item.ts)}</div>
         </div>
-        <span style="font-size:11px;font-weight:600;color:${item.badgeColor};background:${item.badgeBg};padding:3px 8px;border-radius:var(--r-sm);white-space:nowrap;flex-shrink:0">${item.badge}${item.unread ? ' 🆕' : ''}</span>
+        <span style="font-size:11px;font-weight:600;color:${item.badgeColor};background:${item.badgeBg};padding:2px 8px;border-radius:var(--r-sm);white-space:nowrap;flex-shrink:0">${item.badge}${item.unread ? ' 🆕' : ''}</span>
       </div>`).join('');
   } catch (e) {
     el.innerHTML = '<div style="text-align:center;color:var(--ink-400);padding:40px 20px;font-size:14px">불러오기 실패</div>';

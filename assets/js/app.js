@@ -165,13 +165,13 @@ function openGatheringRequestSheet() {
     <div style="padding:4px 20px 4px;font-size:17px;font-weight:700;color:var(--ink-900)">모임/만남 개설 요청하기</div>
     <div style="padding:0 20px 4px;font-size:12.5px;color:#999;line-height:1.5">원하는 지역과 종류를 남겨주시면 검토 후 개설해드려요.</div>
     <div style="display:flex;flex-direction:column;gap:8px;padding:12px 20px 20px">
-      <select id="greq-type" style="padding:11px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;outline:none;background:#fff">
+      <select id="greq-type" style="padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;outline:none;background:#fff">
         <option value="moim">바로모임</option>
         <option value="baromeeting">바로만남 (바로미팅·바로스팟)</option>
       </select>
-      <input id="greq-region" type="text" placeholder="희망 지역 (예: 판교, 강남역)" style="padding:11px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;outline:none">
-      <textarea id="greq-desc" placeholder="어떤 모임/미팅을 원하시는지 자유롭게 적어주세요" rows="3" style="padding:11px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;outline:none;resize:none;font-family:inherit"></textarea>
-      <button onclick="submitGatheringRequest()" style="padding:13px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">요청 보내기</button>
+      <input id="greq-region" type="text" placeholder="희망 지역 (예: 판교, 강남역)" style="padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;outline:none">
+      <textarea id="greq-desc" placeholder="어떤 모임/미팅을 원하시는지 자유롭게 적어주세요" rows="3" style="padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;outline:none;resize:none;font-family:inherit"></textarea>
+      <button onclick="submitGatheringRequest()" style="padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">요청 보내기</button>
     </div>
   `);
 }
@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '603';
+  const _APP_V = '604';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1518,7 +1518,7 @@ function renderMarkers() {
     const mkTypeChr = _mtc[job.work_type] || _mtc.spot;
     const catShort  = catName.length > 5 ? catName.slice(0,5) : catName;
 
-    const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:var(--purple);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:var(--r-sm);white-space:nowrap">${icon('users')}${_r}자리</div>` : ''; })();
+    const _teamBadge = (() => { if (!job.is_team_job) return ''; const _r = job.needed_count - (job.filled_count||0); return _r > 0 ? `<div style="position:absolute;top:-8px;right:-8px;background:var(--purple);color:#fff;font-size:9px;font-weight:700;padding:2px 4px;border-radius:var(--r-sm);white-space:nowrap">${icon('users')}${_r}자리</div>` : ''; })();
     const content = `
       <div class="marker-wrap" onclick="openDetail('${job.id}')" style="position:relative">
         ${surgeHtml}
@@ -1562,7 +1562,7 @@ function renderDateSlider() {
     const isSun = d.getDay() === 0, isSat = d.getDay() === 6;
     const labelColor = isSel ? 'rgba(255,255,255,0.75)' : (isSun ? '#E53935' : isSat ? '#1976D2' : '#999');
     const numColor   = isSel ? '#fff'                    : (isSun ? '#E53935' : isSat ? '#1976D2' : '#111');
-    html += `<button onclick="selectDate('${dateStr}')" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:5px 11px;border-radius:var(--r-lg);border:${isSel?'none':'1.5px solid #eee'};cursor:pointer;min-width:40px;background:${isSel?'var(--red)':'#fff'}">
+    html += `<button onclick="selectDate('${dateStr}')" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:4px 10px;border-radius:var(--r-lg);border:${isSel?'none':'1.5px solid #eee'};cursor:pointer;min-width:40px;background:${isSel?'var(--red)':'#fff'}">
       <span style="font-size:10px;font-weight:500;color:${labelColor}">${i===0?t('today_label'):dayNames[d.getDay()]}</span>
       <span style="font-size:16px;font-weight:700;color:${numColor}">${d.getDate()}</span>
     </button>`;
@@ -1587,10 +1587,10 @@ function renderDistrictFilter() {
   const districts = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   if (!districts.length) { wrap.style.display='none'; return; }
   wrap.style.display = 'flex';
-  let html = `<button onclick="selectDistrict(null)" style="flex-shrink:0;padding:5px 12px;border-radius:var(--r-xl);border:none;font-size:11px;font-weight:500;cursor:pointer;background:${selectedDistrict===null?'#222':'#f0f0f0'};color:${selectedDistrict===null?'#fff':'#666'}">${t('cat_all')}</button>`;
+  let html = `<button onclick="selectDistrict(null)" style="flex-shrink:0;padding:4px 12px;border-radius:var(--r-xl);border:none;font-size:11px;font-weight:500;cursor:pointer;background:${selectedDistrict===null?'#222':'#f0f0f0'};color:${selectedDistrict===null?'#fff':'#666'}">${t('cat_all')}</button>`;
   districts.forEach(([d,cnt]) => {
     const isA = selectedDistrict === d;
-    html += `<button onclick="selectDistrict('${d}')" style="flex-shrink:0;padding:5px 12px;border-radius:var(--r-xl);border:none;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;background:${isA?'#222':'#f0f0f0'};color:${isA?'#fff':'#555'}">${d} <span style="font-size:10px;opacity:0.65">${cnt}</span></button>`;
+    html += `<button onclick="selectDistrict('${d}')" style="flex-shrink:0;padding:4px 12px;border-radius:var(--r-xl);border:none;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;background:${isA?'#222':'#f0f0f0'};color:${isA?'#fff':'#555'}">${d} <span style="font-size:10px;opacity:0.65">${cnt}</span></button>`;
   });
   wrap.innerHTML = html;
 }
@@ -1784,8 +1784,8 @@ function renderList() {
         const needed = job.needed_count || 1;
         const pct = Math.min(100, Math.round(filled / needed * 100));
         const rem = needed - filled;
-        return `<div style="margin-top:11px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;font-size:11.5px;color:var(--ink-400)">
+        return `<div style="margin-top:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;font-size:11.5px;color:var(--ink-400)">
             <span>${t('team_recruit_count_fmt').replace('{n}', needed)}</span>
             <span style="font-weight:500;color:${rem<=1?'var(--red)':'var(--ink-600)'}">${rem > 0 ? t('moim_slots_left').replace('{n}', rem) : t('recruit_complete_label')}</span>
           </div>
@@ -2042,7 +2042,7 @@ function _renderMoimCards(container, list) {
             <div style="font-size:15px;font-weight:700;color:var(--ink-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}${_isAdmin ? _adminBtn('gatherings',m.id,'title',m.title,'모임 제목') : ''}</div>
             ${m.entry_fee < 0 ? `<div style="font-size:12px;font-weight:500;color:#D97706;flex-shrink:0">${t('fee_split')}</div>` : m.entry_fee > 0 ? `<div style="font-size:13px;font-weight:600;color:#D97706;flex-shrink:0">${m.entry_fee.toLocaleString()}${t('won_suffix')}</div>` : `<div style="font-size:12px;font-weight:500;color:var(--green);flex-shrink:0">${t('fee_free')}</div>`}
           </div>
-          <div style="font-size:12px;color:var(--ink-400);margin-top:3px">${icon('cal')} ${dateStr}</div>
+          <div style="font-size:12px;color:var(--ink-400);margin-top:2px">${icon('cal')} ${dateStr}</div>
           ${m.location_name ? `<div style="font-size:12px;color:var(--ink-400);margin-top:1px">${icon('pin')} ${m.location_name}</div>` : ''}
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
             <span style="font-size:10px;font-weight:600;background:#EDE9FE;color:var(--purple);padding:2px 8px;border-radius:var(--r-sm)">${tMoimCat(m.category) || t('cat_etc')}</span>
@@ -2141,7 +2141,7 @@ async function openMoimDetail(moimId) {
       ${m.description ? `<div style="background:#f9fafb;border-radius:var(--r-lg);padding:14px"><div style="font-size:12px;font-weight:500;color:var(--ink-400);margin-bottom:6px">📝 ${t('moim_desc_label')}</div><div style="font-size:13px;color:var(--ink-600);line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
 
       ${canChat ? `<button onclick="openMoimChat('${m.id}','${m.title}')" style="width:100%;padding:12px;background:#EDE9FE;color:var(--purple);border:1.5px solid #DDD6FE;border-radius:var(--r-lg);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px">${icon('chat')} ${t('moim_group_chat_enter')}</button>` : ''}
-      ${!isHost ? `<button onclick="openReportModal('moim','${m.id}')" style="display:flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:var(--ink-400);cursor:pointer;padding:6px 0;font-weight:500;margin:0 auto">🚨 ${t('moim_report_btn')}</button>` : ''}
+      ${!isHost ? `<button onclick="openReportModal('moim','${m.id}')" style="display:flex;align-items:center;gap:2px;background:none;border:none;font-size:11px;color:var(--ink-400);cursor:pointer;padding:6px 0;font-weight:500;margin:0 auto">🚨 ${t('moim_report_btn')}</button>` : ''}
 
       ${isHost ? `
         <div style="border-top:1px solid var(--line);padding-top:16px">
@@ -2206,7 +2206,7 @@ async function loadMoimApplicants(gatheringId) {
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
         <span style="font-size:11px;color:var(--ink-400)">${(m.entry_fee > 0 ? t('moim_fee_amount_label').replace('{n}', m.entry_fee.toLocaleString()) : t('fee_split')) + t('onsite_payment_suffix')}</span>
         <button id="fee-btn-${app.id}" onclick="toggleMoimFeePaid('${app.id}','${gatheringId}',${!!app.fee_paid},this)"
-          style="padding:5px 12px;border-radius:var(--r-sm);border:none;font-size:11px;font-weight:600;cursor:pointer;${app.fee_paid ? 'background:#dcfce7;color:#15803d' : 'background:#f3f4f6;color:#6b7280'}">
+          style="padding:4px 12px;border-radius:var(--r-sm);border:none;font-size:11px;font-weight:600;cursor:pointer;${app.fee_paid ? 'background:#dcfce7;color:#15803d' : 'background:#f3f4f6;color:#6b7280'}">
           ${app.fee_paid ? ('✅ ' + t('fee_paid_label')) : ('□ ' + t('fee_unpaid_label'))}
         </button>
       </div>` : '';
@@ -2276,7 +2276,7 @@ async function searchMoimPlace() {
   box.style.display = 'block';
   box.innerHTML = results.slice(0, 5).map(r => `
     <div onclick="selectMoimPlace('${r.place_name.replace(/'/g,"\\'")}','${(r.road_address_name||r.address_name).replace(/'/g,"\\'")}',${r.y},${r.x})"
-      style="padding:11px 14px;border-bottom:1px solid #EDE9FE;cursor:pointer;display:flex;flex-direction:column;gap:2px;-webkit-tap-highlight-color:transparent"
+      style="padding:10px 14px;border-bottom:1px solid #EDE9FE;cursor:pointer;display:flex;flex-direction:column;gap:2px;-webkit-tap-highlight-color:transparent"
       onmousedown="this.style.background='#F5F3FF'" onmouseup="this.style.background=''" ontouchstart="this.style.background='#F5F3FF'" ontouchend="this.style.background=''">
       <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${r.place_name}</div>
       <div style="font-size:11px;color:var(--ink-400)">${r.road_address_name || r.address_name}</div>
@@ -2392,7 +2392,7 @@ function selectMoimCat(btn, cat) {
   if (subs.length) {
     btnsEl.innerHTML = subs.map(s => {
       const em = _MOIM_SUBCAT_EMOJI[s] || '';
-      return `<button type="button" data-val="${s}" onclick="selectMoimSubcat(this,'${s}')" style="padding:7px 12px;border-radius:var(--r-xl);border:1.5px solid var(--line);background:#f9fafb;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink-600)">${em} ${tMoimSubcat(s)}</button>`;
+      return `<button type="button" data-val="${s}" onclick="selectMoimSubcat(this,'${s}')" style="padding:6px 12px;border-radius:var(--r-xl);border:1.5px solid var(--line);background:#f9fafb;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink-600)">${em} ${tMoimSubcat(s)}</button>`;
     }).join('');
     sec.style.display = 'block';
   } else {
@@ -2784,9 +2784,9 @@ function _moimChatBubble(m) {
   const isImg = m.message?.startsWith('[img]');
   const bubbleContent = isImg
     ? `<img src="${m.message.slice(5)}" style="max-width:220px;border-radius:var(--r);display:block;cursor:pointer;border:1px solid var(--line)" onclick="window.open('${m.message.slice(5)}','_blank')" loading="lazy">`
-    : `<div style="max-width:72%;padding:9px 13px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'var(--purple)':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>`;
+    : `<div style="max-width:72%;padding:8px 12px;border-radius:${isMine?'16px 4px 16px 16px':'4px 16px 16px 16px'};background:${isMine?'var(--purple)':'#f0f0f0'};color:${isMine?'#fff':'#111'};font-size:14px;word-break:break-word;line-height:1.5">${m.message}</div>`;
   return `<div style="display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};margin-bottom:4px">
-    ${!isMine ? `<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;padding-left:4px">${avatar}<span style="font-size:10px;color:#999;font-weight:500">${name}</span></div>` : ''}
+    ${!isMine ? `<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;padding-left:4px">${avatar}<span style="font-size:10px;color:#999;font-weight:500">${name}</span></div>` : ''}
     <div style="display:flex;align-items:flex-end;gap:4px;flex-direction:${isMine?'row-reverse':'row'}">
       ${bubbleContent}
       <div style="font-size:10px;color:var(--ink-400);white-space:nowrap">${time}</div>
@@ -3152,7 +3152,7 @@ function _wageStr(j, color) {
   const lbl = _wageLabel(j);
   const amt = w > 0 ? w.toLocaleString('ko-KR') + t('won_suffix') : t('negotiable_label');
   const c = color || 'var(--red)';
-  return `<span style="font-weight:700;color:${c}">${amt}</span><span style="font-size:10px;font-weight:600;background:rgba(200,16,46,0.08);color:${c};padding:2px 6px;border-radius:var(--r-sm);margin-left:5px">${lbl}</span>`;
+  return `<span style="font-weight:700;color:${c}">${amt}</span><span style="font-size:10px;font-weight:600;background:rgba(200,16,46,0.08);color:${c};padding:2px 6px;border-radius:var(--r-sm);margin-left:4px">${lbl}</span>`;
 }
 
 let _homeJobRetryTimer = null;
@@ -3365,7 +3365,7 @@ function _renderHomeAI() {
     if (hwSection) hwSection.style.gridColumn = '';
     const top = scored[0].job;
     section.innerHTML = `
-      <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:5px">AI PICKS</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:4px">AI PICKS</div>
       <div style="font-size:13px;font-weight:600;color:var(--ink-900);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
       <div style="font-size:11px;color:var(--ink-400);margin-top:2px">${tCategory(top.category)}</div>
       <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:700;color:var(--red)">${top.current_wage>0?top.current_wage.toLocaleString('ko-KR')+t('won_suffix'):t('negotiable_label')}</span>${top.current_wage>0?`<span style="font-size:10px;font-weight:700;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:var(--r-sm)">${_wageLabel(top)}</span>`:''}</div>
@@ -3405,7 +3405,7 @@ function _renderHomeSameDay() {
       section.style.display = 'none'; // GPS 미확보 상태 - 카드 숨김
     } else {
       section.style.display = 'flex';
-      section.innerHTML = `<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:5px">${t('high_wage_label')}</div><div style="font-size:12px;color:#ddd;margin-top:auto">${t('no_jobs_label')}</div>`;
+      section.innerHTML = `<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:4px">${t('high_wage_label')}</div><div style="font-size:12px;color:#ddd;margin-top:auto">${t('no_jobs_label')}</div>`;
     }
     return;
   }
@@ -3413,7 +3413,7 @@ function _renderHomeSameDay() {
   const hourly = toHourly(top);
   section.style.display = 'flex';
   section.innerHTML = `
-    <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:5px">${t('high_wage_label')}</div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:4px">${t('high_wage_label')}</div>
     <div style="font-size:13px;font-weight:600;color:var(--ink-900);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${top.title||top.biz_name}</div>
     <div style="font-size:11px;color:var(--ink-400);margin-top:2px">${tCategory(top.category)}</div>
     <div style="margin-top:auto;padding-top:6px;display:flex;align-items:baseline;gap:4px"><span style="font-size:15px;font-weight:700;color:var(--red)">${hourly.toLocaleString('ko-KR')}${t('won_suffix')}</span><span style="font-size:10px;font-weight:700;background:#fff0f2;color:var(--red);padding:2px 6px;border-radius:var(--r-sm)">${t('wage_hourly_label')}</span></div>
@@ -3542,14 +3542,14 @@ async function _renderHomeLessonHot() {
     section.style.display = 'block';
     list.innerHTML = sorted.map(p => {
       const price = p.price_per_session ? Number(p.price_per_session).toLocaleString() + t('price_per_session_unit') : t('negotiable_label');
-      const onAir = p.is_available_now ? `<span style="font-size:9px;font-weight:600;background:#dcfce7;color:var(--green);padding:2px 5px;border-radius:var(--r-sm);margin-bottom:4px;display:inline-block">${t('available_now_badge')}</span>` : '';
+      const onAir = p.is_available_now ? `<span style="font-size:9px;font-weight:600;background:#dcfce7;color:var(--green);padding:2px 4px;border-radius:var(--r-sm);margin-bottom:4px;display:inline-block">${t('available_now_badge')}</span>` : '';
       const locIcon = p.location_type === '비대면' ? '💻' : p.location_type === '방문레슨' ? '🚗' : '🏫';
       return `<div onclick="openLessonDetail('${p.id}')" style="flex-shrink:0;width:130px;background:#f8faff;border:1.5px solid #dbeafe;border-radius:var(--r);padding:10px;cursor:pointer">
         ${onAir}
         <div style="font-size:11px;font-weight:600;color:#1d4ed8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
-        <div style="font-size:10px;color:var(--ink-400);margin:3px 0">${locIcon} ${p.location_type||''}</div>
+        <div style="font-size:10px;color:var(--ink-400);margin:2px 0">${locIcon} ${p.location_type||''}</div>
         <div style="font-size:13px;font-weight:700;color:var(--red)">${price}</div>
-        <div style="font-size:10px;color:var(--ink-400);margin-top:3px">${icon('star')} ${(p.workers?.rating||0).toFixed(1)}</div>
+        <div style="font-size:10px;color:var(--ink-400);margin-top:2px">${icon('star')} ${(p.workers?.rating||0).toFixed(1)}</div>
       </div>`;
     }).join('');
   } catch(e) { section.style.display = 'none'; }
@@ -3587,7 +3587,7 @@ async function _renderRankPanel() {
     ? ['전체','F&B','물류','판매','청소','이벤트','제조','IT','기타']
     : ['전체','F&B','물류','판매','청소','이벤트','챌린지','컨텐츠','기타'];
   const catEl = document.getElementById('rank-cat-filter');
-  if (catEl) catEl.innerHTML = cats.map(c => `<button onclick="_setRankCat('${c}')" style="flex-shrink:0;padding:5px 12px;border-radius:var(--r-xl);border:1.5px solid ${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#b45309':'#e5e7eb'};background:${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#b45309':'#fff'};color:${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#fff':'#888'};font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap">${c}</button>`).join('');
+  if (catEl) catEl.innerHTML = cats.map(c => `<button onclick="_setRankCat('${c}')" style="flex-shrink:0;padding:4px 12px;border-radius:var(--r-xl);border:1.5px solid ${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#b45309':'#e5e7eb'};background:${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#b45309':'#fff'};color:${_rankCurrentCat===c||(!_rankCurrentCat&&c==='전체')?'#fff':'#888'};font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap">${c}</button>`).join('');
 
   const listEl = document.getElementById('rank-list');
   listEl.innerHTML = `<div style="text-align:center;padding:32px;color:#ddd">${t('loading_generic')}</div>`;
@@ -3691,7 +3691,7 @@ async function _loadHomeTopPartners() {
           : '';
         const fallback = `<div style="width:32px;height:32px;border-radius:var(--r-sm);background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${ac.text};flex-shrink:0${e.photo_url?';display:none':''}">${(e.name||'?')[0]}</div>`;
         const typeTag = e.biz_type ? `<span style="font-size:10px;background:#fff7ed;color:#b45309;border-radius:var(--r-sm);padding:2px 6px;font-weight:600">${e.biz_type}</span>` : '';
-        return `<div onclick="_showDetailBizProfile('${e.id}')" style="display:flex;align-items:center;gap:9px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent" title="${e.name} 프로필 보기">
+        return `<div onclick="_showDetailBizProfile('${e.id}')" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent" title="${e.name} 프로필 보기">
           ${avatarHtml}${fallback}
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
@@ -3729,7 +3729,7 @@ async function _loadHomeTopPartners() {
         const specialty = cats[0] || skls[0] || '';
         const specIcon = _CAT_ICON[specialty] || '';
         const specTag = specialty ? `<span style="font-size:10px;background:#f0fdf4;color:#15803d;border-radius:var(--r-sm);padding:2px 6px;font-weight:600">${specIcon} ${specialty}</span>` : '';
-        return `<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           ${avatarHtml}${flagFallback}
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
@@ -4502,7 +4502,7 @@ function _renderDetailSubway(el, infoStr) {
   let badges = '';
   for (const [line, color] of Object.entries(LC)) {
     if (infoStr.includes(line)) {
-      badges += `<span style="display:inline-flex;align-items:center;background:${color};color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--r-xl);margin-right:4px;white-space:nowrap">${line}</span>`;
+      badges += `<span style="display:inline-flex;align-items:center;background:${color};color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:var(--r-xl);margin-right:4px;white-space:nowrap">${line}</span>`;
     }
   }
   const cleanText = infoStr.replace(/\s+(?:\d+호선|GTX-[A-Z]|경의중앙선|분당선|신분당선|공항철도|경춘선|인천\d+호선)/g,'').replace(/\s+/g,' ').trim();
@@ -4870,7 +4870,7 @@ async function _promptFillProfileAfterApply() {
         <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:6px">${t('nudge_title')}</div>
         <div style="font-size:13px;color:var(--ink-600);line-height:1.7;margin-bottom:16px">${t('nudge_desc').replace('{n}', missing.length)}</div>
         <div style="background:var(--surface-1);border-radius:var(--r);padding:14px;margin-bottom:18px">
-          <div style="font-size:11px;font-weight:600;color:var(--ink-400);margin-bottom:9px">${t('nudge_missing_label')}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink-400);margin-bottom:8px">${t('nudge_missing_label')}</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${missing.map(m => `<span style="font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink-600)">+ ${m.label}</span>`).join('')}
           </div>
@@ -5087,23 +5087,23 @@ async function openWorkerProfileDirect(appId) {
 
   // 아래 버튼 줄은 상태에 따라 2개 또는 3개가 된다 - 좁은 화면에서 3개일 때 라벨이 밀리지
   // 않도록 좌우 패딩을 줄이고 nowrap을 건다
-  const _wdBtn = 'padding:13px 6px;background:#f1f5f9;color:#475569;border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap';
+  const _wdBtn = 'padding:12px 6px;background:#f1f5f9;color:#475569;border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap';
 
   let statusActions = '';
   if (app.status === 'pending' || app.status === 'reviewing') {
     statusActions = `
-      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:13px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_status_final_pass')}</button>
-      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_hold_action_btn')}</button>
-      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:var(--surface-1);color:var(--ink-400);border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('ownr_reject_btn')}</button>`;
+      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_status_final_pass')}</button>
+      <button onclick="${close}updateApplication('${app.id}','on_hold')" style="flex:1;padding:12px;background:#EFF6FF;color:var(--blue);border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_hold_action_btn')}</button>
+      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:12px;background:var(--surface-1);color:var(--ink-400);border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('ownr_reject_btn')}</button>`;
   } else if (app.status === 'on_hold') {
     statusActions = `
-      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:13px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_status_final_pass')}</button>
-      <button onclick="${close}toggleInterest('${app.id}','${app.status}')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_pass_first_round_btn')}</button>
-      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:13px;background:var(--surface-1);color:var(--ink-400);border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('ownr_reject_btn')}</button>`;
+      <button onclick="${close}confirmAccept('${app.id}')" style="flex:1.5;padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_status_final_pass')}</button>
+      <button onclick="${close}toggleInterest('${app.id}','${app.status}')" style="flex:1;padding:12px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_pass_first_round_btn')}</button>
+      <button onclick="${close}updateApplication('${app.id}','rejected')" style="flex:1;padding:12px;background:var(--surface-1);color:var(--ink-400);border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('ownr_reject_btn')}</button>`;
   } else if (app.status === 'accepted') {
     statusActions = `
-      <button onclick="${close}showRatingModal('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${icon('check',14)} ${t('ownr_complete_action_btn')}</button>
-      <button onclick="${close}markNoshow('${app.id}','${w.id||''}')" style="flex:1;padding:13px;background:#fafafa;color:#9ca3af;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('app_noshow')}</button>`;
+      <button onclick="${close}showRatingModal('${app.id}','${w.id||''}')" style="flex:1;padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${icon('check',14)} ${t('ownr_complete_action_btn')}</button>
+      <button onclick="${close}markNoshow('${app.id}','${w.id||''}')" style="flex:1;padding:12px;background:#fafafa;color:#9ca3af;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('app_noshow')}</button>`;
   }
 
   // photo_url이 있으면 실제 사진을, 로드 실패/없으면 기본 아이콘을 보여줌(형제 fallback div
@@ -5122,14 +5122,14 @@ async function openWorkerProfileDirect(appId) {
       ${avatarHtml}
       <div style="flex:1;min-width:0">
         <div style="font-size:18px;font-weight:700;color:var(--ink-900)">${w.name || '이름없음'}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap">
           <span style="font-size:12px;color:var(--ink-400)">${icon('star')} ${rating}</span>
           <span style="font-size:11px;color:var(--ink-400)">·</span>
           <span style="font-size:12px;color:var(--ink-400)">완료 ${reviews}건</span>
           ${noshow > 0 ? `<span style="font-size:11px;font-weight:600;color:#DC2626">${icon('warn')} 노쇼 ${noshow}</span>` : ''}
           ${attendRate !== null ? `<span style="font-size:11px;font-weight:500;color:${attendRate >= 80 ? 'var(--green)' : '#D97706'}">출근율 ${attendRate}%</span>` : ''}
         </div>
-        <div style="margin-top:4px;display:flex;gap:5px;flex-wrap:wrap">
+        <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
           ${total >= 2 ? `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-sm);background:${trustScore>=80?'#D1FAE5':trustScore>=60?'#E2E8F0':'#F3F4F6'};color:${trustScore>=80?'#065F46':trustScore>=60?'#475569':'#6B7280'}">신뢰 ${trustScore}점</span>` : ''}
           ${w.age ? `<span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:var(--r-sm);background:#f1f5f9;color:#475569">만 ${w.age}세</span>` : ''}
           ${w.gender ? `<span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:var(--r-sm);background:#f1f5f9;color:#475569">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
@@ -5153,7 +5153,7 @@ async function openWorkerProfileDirect(appId) {
     </div>` : ''}
 
     <!-- 지원 메시지 -->
-    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#f8fafc;border-radius:var(--r);border-left:3px solid #cbd5e1;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">${icon('chat')} 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${app.apply_message ? `<div style="margin-bottom:10px;padding:10px 12px;background:#f8fafc;border-radius:var(--r);border-left:3px solid #cbd5e1;font-size:12px;color:#444;line-height:1.5"><span style="font-size:10px;font-weight:600;color:#64748b;display:block;margin-bottom:2px">${icon('chat')} 지원 메시지</span>${app.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
 
     <!-- 전화 버튼 -->
     ${phone ? `<a href="tel:${w.phone}" style="display:block;width:100%;padding:12px;background:#f0fdf4;color:var(--green);border:1.5px solid #86efac;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:10px;box-sizing:border-box">${icon('phone')} ${phone} 전화하기</a>` : ''}
@@ -5259,8 +5259,8 @@ function confirmLeaveChat(appId, name) {
       <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:8px">채팅방 나가기</div>
       <div style="font-size:14px;color:var(--ink-400);line-height:1.6;margin-bottom:24px"><b>${name}</b>님과의 채팅방을<br>나가시겠어요?<br><span style="font-size:12px;color:var(--ink-400)">새 메시지가 오면 자동으로 다시 표시됩니다.</span></div>
       <div style="display:flex;gap:10px">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer">취소</button>
-        <button onclick="leaveChatItem('${appId}');this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#ef4444;color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">나가기</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer">취소</button>
+        <button onclick="leaveChatItem('${appId}');this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:#ef4444;color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">나가기</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -5290,8 +5290,8 @@ function confirmLeaveGatheringChat(rowId, gatheringId, category, name) {
       <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:8px">${t('gchat_leave_title')}</div>
       <div style="font-size:14px;color:var(--ink-400);line-height:1.6;margin-bottom:24px"><b>${name}</b><br>${isBaromeet ? t('gchat_leave_baromeet_desc') : `${t('gchat_leave_moim_desc')}<br><span style="font-size:12px;color:var(--ink-400)">${t('gchat_leave_moim_subdesc')}</span>`}</div>
       <div style="display:flex;gap:10px">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer">${t('cancel')}</button>
-        <button onclick="_leaveGatheringChatConfirmed('${rowId}','${gatheringId}',${isBaromeet});this.closest('div[style*=fixed]').remove()" style="flex:1;padding:13px;background:#ef4444;color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">${t('mp_exit')}</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer">${t('cancel')}</button>
+        <button onclick="_leaveGatheringChatConfirmed('${rowId}','${gatheringId}',${isBaromeet});this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;background:#ef4444;color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">${t('mp_exit')}</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -5719,11 +5719,11 @@ async function loadMyApplications() {
       if (a.status !== 'accepted' || !a.cancel_deadline) return '';
       const dl = new Date(a.cancel_deadline);
       const now = new Date();
-      if (dl <= now) return '<span style="font-size:11px;color:#EF4444;font-weight:500;background:#FFF0F0;padding:3px 8px;border-radius:var(--r-sm)">' + t('cancel_deadline_passed') + '</span>';
+      if (dl <= now) return '<span style="font-size:11px;color:#EF4444;font-weight:500;background:#FFF0F0;padding:2px 8px;border-radius:var(--r-sm)">' + t('cancel_deadline_passed') + '</span>';
       const diffH = Math.floor((dl - now) / 3600000);
-      if (diffH < 24) return `<span style="font-size:11px;color:#F59E0B;font-weight:500;background:#FFF7ED;padding:3px 8px;border-radius:var(--r-sm)">⏰ 취소가능 ${diffH}시간 남음</span>`;
+      if (diffH < 24) return `<span style="font-size:11px;color:#F59E0B;font-weight:500;background:#FFF7ED;padding:2px 8px;border-radius:var(--r-sm)">⏰ 취소가능 ${diffH}시간 남음</span>`;
       const diffD = Math.ceil(diffH / 24);
-      return `<span style="font-size:11px;color:var(--green);font-weight:500;background:#F0FDF4;padding:3px 8px;border-radius:var(--r-sm)">취소가능 D-${diffD}</span>`;
+      return `<span style="font-size:11px;color:var(--green);font-weight:500;background:#F0FDF4;padding:2px 8px;border-radius:var(--r-sm)">취소가능 D-${diffD}</span>`;
     })();
 
     // 2026-07-21: wage_type을 아예 조회조차 안 하고 모든 공고를 시급으로 간주해
@@ -5758,10 +5758,10 @@ async function loadMyApplications() {
       <!-- 헤더: 공고 유형 + 상태 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:var(--r-sm);background:${wt.bg};color:${wt.color}">${wt.emoji} ${wt.label}</span>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-sm);background:${wt.bg};color:${wt.color}">${wt.emoji} ${wt.label}</span>
           ${job.category ? `<span style="font-size:11px;color:var(--ink-400);font-weight:500">${tCategory(job.category)}</span>` : ''}
         </div>
-        <div style="font-size:12px;font-weight:600;color:${s.color};background:${s.bg};padding:3px 10px;border-radius:var(--r-xl);white-space:nowrap">${s.label}</div>
+        <div style="font-size:12px;font-weight:600;color:${s.color};background:${s.bg};padding:2px 10px;border-radius:var(--r-xl);white-space:nowrap">${s.label}</div>
       </div>
 
       <!-- 공고명 + 업체명 -->
@@ -5775,10 +5775,10 @@ async function loadMyApplications() {
       <div style="font-size:14px;font-weight:500;color:var(--red);margin-bottom:8px">${wageStr}</div>
 
       <!-- 날짜/시간 칩 -->
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
-        ${startStr    ? `<span style="font-size:11px;color:var(--ink-600);font-weight:500;background:var(--surface-1);padding:4px 9px;border-radius:var(--r-sm)">\u{1F550} ${startStr}</span>` : ''}
-        ${workEndStr  ? `<span style="font-size:11px;color:var(--blue);font-weight:500;background:#EFF6FF;padding:4px 9px;border-radius:var(--r-sm)">\u{1F4C5} ${workEndStr}까지</span>` : ''}
-        ${workDaysStr ? `<span style="font-size:11px;color:var(--green);font-weight:500;background:#F0FDF4;padding:4px 9px;border-radius:var(--r-sm)">\u{1F504} ${workDaysStr}</span>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+        ${startStr    ? `<span style="font-size:11px;color:var(--ink-600);font-weight:500;background:var(--surface-1);padding:4px 8px;border-radius:var(--r-sm)">\u{1F550} ${startStr}</span>` : ''}
+        ${workEndStr  ? `<span style="font-size:11px;color:var(--blue);font-weight:500;background:#EFF6FF;padding:4px 8px;border-radius:var(--r-sm)">\u{1F4C5} ${workEndStr}까지</span>` : ''}
+        ${workDaysStr ? `<span style="font-size:11px;color:var(--green);font-weight:500;background:#F0FDF4;padding:4px 8px;border-radius:var(--r-sm)">\u{1F504} ${workDaysStr}</span>` : ''}
         ${appliedStr  ? `<span style="font-size:11px;color:var(--ink-400);font-weight:500;padding:4px 0">\u{1F4CC} ${appliedStr}</span>` : ''}
         ${cancelDlChip}
       </div>
@@ -5829,7 +5829,7 @@ async function loadMyAlbaPreview() {
   }
   if (!apps?.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink-400);padding:6px 0">' + t('app_empty') + '</div>'; return; }
   el.innerHTML = apps.slice(0, 2).map(a => `
-    <div onclick="event.stopPropagation();goToMyApplications()" style="display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-radius:var(--r);padding:9px 12px;cursor:pointer">
+    <div onclick="event.stopPropagation();goToMyApplications()" style="display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-radius:var(--r);padding:8px 12px;cursor:pointer">
       <div style="min-width:0">
         <div style="font-size:12.5px;font-weight:600;color:var(--ink-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.job_postings?.title || '공고'}</div>
         <div style="font-size:11px;color:#999;margin-top:1px">${a.job_postings?.current_wage ? a.job_postings.current_wage.toLocaleString()+'원' : ''}</div>
@@ -5853,7 +5853,7 @@ async function loadMyMoimPreview() {
     const dateStr = g.gathering_date ? new Date(g.gathering_date).toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}) : t('moim_date_tbd');
     return `<div onclick="event.stopPropagation();openMoimDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#faf5ff;border-radius:var(--r);padding:10px 12px;cursor:pointer">
       <div style="font-size:12px;font-weight:600;color:var(--ink-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'모임'}</div>
-      <div style="font-size:10.5px;color:var(--purple);margin-top:3px">${dateStr}</div>
+      <div style="font-size:10.5px;color:var(--purple);margin-top:2px">${dateStr}</div>
     </div>`;
   }).join('');
 }
@@ -5892,7 +5892,7 @@ async function loadMyBaromeetPreview() {
       html: `<div onclick="event.stopPropagation();openBaromeetDetail('${g.id}')" style="flex-shrink:0;width:140px;background:#fff1f2;border-radius:var(--r);padding:10px 12px;cursor:pointer">
         <div style="font-size:10px;font-weight:600;color:#DB2777;margin-bottom:2px">🤝 바로미팅</div>
         <div style="font-size:12px;font-weight:600;color:var(--ink-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${g.title||'바로미팅'}</div>
-        <div style="font-size:10.5px;color:#DB2777;margin-top:3px">${dateStr}${statusTag}</div>
+        <div style="font-size:10.5px;color:#DB2777;margin-top:2px">${dateStr}${statusTag}</div>
       </div>`,
     });
   });
@@ -5906,7 +5906,7 @@ async function loadMyBaromeetPreview() {
       html: `<div onclick="event.stopPropagation();_openSpotEventTracking('${a.event_id}', ${iAmApproved})" style="flex-shrink:0;width:140px;background:#fff0f4;border-radius:var(--r);padding:10px 12px;cursor:pointer">
         <div style="font-size:10px;font-weight:600;color:#be123c;margin-bottom:2px">${icon('pin')} 바로스팟</div>
         <div style="font-size:12px;font-weight:600;color:var(--ink-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev?.barospot_restaurants?.name||'바로스팟'}</div>
-        <div style="font-size:10.5px;color:#be123c;margin-top:3px">${dateStr}${statusTag}</div>
+        <div style="font-size:10.5px;color:#be123c;margin-top:2px">${dateStr}${statusTag}</div>
       </div>`,
     });
   });
@@ -5947,7 +5947,7 @@ async function loadMyGatheringActivity() {
   } else {
     noticeEl.innerHTML = notices.map(n => `
       <div style="background:#F5F3FF;border-radius:var(--r);padding:12px 14px;margin-bottom:6px">
-        <div style="font-size:12.5px;font-weight:600;color:var(--purple);margin-bottom:3px">${n.title || '공지'}</div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--purple);margin-bottom:2px">${n.title || '공지'}</div>
         <div style="font-size:12px;color:var(--ink-600);line-height:1.5">${n.body || ''}</div>
         <div style="font-size:10.5px;color:var(--ink-400);margin-top:4px">${new Date(n.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
       </div>`).join('');
@@ -5982,7 +5982,7 @@ async function loadMyGatheringActivity() {
           <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${g.title || '제목 없음'}</div>
           <div style="font-size:11px;color:#999;margin-top:2px">${dateStr}</div>
         </div>
-        <span style="flex-shrink:0;font-size:10px;font-weight:600;padding:3px 8px;border-radius:var(--r-sm);background:${a.status==='approved'?'#dcfce7':a.status==='rejected'?'#fee2e2':'#f1f5f9'};color:${a.status==='approved'?'var(--green)':a.status==='rejected'?'#dc2626':'#64748b'}">${statusLabel[a.status]||a.status}</span>
+        <span style="flex-shrink:0;font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r-sm);background:${a.status==='approved'?'#dcfce7':a.status==='rejected'?'#fee2e2':'#f1f5f9'};color:${a.status==='approved'?'var(--green)':a.status==='rejected'?'#dc2626':'#64748b'}">${statusLabel[a.status]||a.status}</span>
       </div>
     </div>`;
   }).join('') || '<div style="text-align:center;padding:24px;color:var(--ink-400);font-size:12px">아직 신청한 모임/미팅이 없어요</div>';
@@ -6110,7 +6110,7 @@ async function showMyTrustScore() {
   const ptNoshow = noshow * 8;
   const color = score >= 80 ? 'var(--green)' : score >= 60 ? '#F59E0B' : '#94a3b8';
   const row = (label, val, sub, c) =>
-    `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)">
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)">
        <div><div style="font-size:13px;font-weight:500;color:var(--ink-600)">${label}</div>
        <div style="font-size:11px;color:var(--ink-400);margin-top:2px">${sub}</div></div>
        <div style="font-size:14px;font-weight:700;color:${c}">${val}</div>
@@ -6144,7 +6144,7 @@ async function showMyTrustScore() {
         80점 이상이면 초록 뱃지로 강조돼요.
       </div>
       <button onclick="this.closest('div[style*=fixed]').remove();showRankPanel('worker')"
-        style="width:100%;margin-top:14px;padding:13px;border:none;border-radius:var(--r);background:var(--surface-1);color:var(--ink-600);font-size:13px;font-weight:600;cursor:pointer">
+        style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:var(--r);background:var(--surface-1);color:var(--ink-600);font-size:13px;font-weight:600;cursor:pointer">
         전체 알바생 순위 보기
       </button>
     </div>`;
@@ -6181,7 +6181,7 @@ async function showMyRatings() {
             ${a.worker_review ? `
               <div style="margin-top:8px;display:flex;justify-content:flex-end">
                 <button onclick="openWorkerReviewReplyModal('${a.id}','${(a.job_postings?.businesses?.name||'업체').replace(/'/g,"\\'")}','${(a.worker_review||'').replace(/'/g,"\\'").replace(/\n/g,' ')}','${(a.worker_review_reply||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')"
-                  style="font-size:11px;font-weight:500;color:${a.worker_review_reply?'var(--blue)':'#aaa'};background:${a.worker_review_reply?'#eff6ff':'#f5f5f5'};border:none;border-radius:var(--r-sm);padding:5px 10px;cursor:pointer">
+                  style="font-size:11px;font-weight:500;color:${a.worker_review_reply?'var(--blue)':'#aaa'};background:${a.worker_review_reply?'#eff6ff':'#f5f5f5'};border:none;border-radius:var(--r-sm);padding:4px 10px;cursor:pointer">
                   ${a.worker_review_reply ? '✏️ 내 답글 수정' : '💬 답글 달기'}
                 </button>
               </div>
@@ -6259,9 +6259,9 @@ async function openApplicationJobDetail(jobPostingId) {
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span style="font-size:17px;font-weight:700;color:var(--ink-900)">${biz.name || '업체명 없음'}</span>
-              ${biz.is_verified ? '<span style="font-size:10px;font-weight:600;background:#DCFCE7;color:var(--green);padding:2px 7px;border-radius:var(--r-sm);white-space:nowrap">' + icon('check') + ' 인증</span>' : ''}
+              ${biz.is_verified ? '<span style="font-size:10px;font-weight:600;background:#DCFCE7;color:var(--green);padding:2px 6px;border-radius:var(--r-sm);white-space:nowrap">' + icon('check') + ' 인증</span>' : ''}
             </div>
-            ${biz.id && !bizRecord ? `<div style="margin-top:5px"><button id="detail-follow-btn" onclick="_toggleDetailFollow('${biz.id}','${(biz.name||'').replace(/'/g,'')}')" style="padding:4px 14px;border-radius:var(--r-xl);font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:var(--ink-600);transition:all .15s">...</button></div>` : ''}
+            ${biz.id && !bizRecord ? `<div style="margin-top:4px"><button id="detail-follow-btn" onclick="_toggleDetailFollow('${biz.id}','${(biz.name||'').replace(/'/g,'')}')" style="padding:4px 14px;border-radius:var(--r-xl);font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:var(--ink-600);transition:all .15s">...</button></div>` : ''}
           </div>
         </div>
         <!-- 평점 -->
@@ -6486,7 +6486,7 @@ function renderAppCalendar() {
     const isToday = now.getFullYear() === _calYear && now.getMonth() === _calMonth && now.getDate() === d;
     const dow = (firstDow + d - 1) % 7;
     const dots = da.slice(0,3).map(a => `<div style="width:5px;height:5px;border-radius:50%;background:${STATUS_COLOR[a.status]||'#aaa'};flex-shrink:0"></div>`).join('');
-    cells += `<div onclick="showCalendarDay('${k}')" style="cursor:${da.length?'pointer':'default'};padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:var(--r-sm);${isToday?'background:#FFF1F2':''}">
+    cells += `<div onclick="showCalendarDay('${k}')" style="cursor:${da.length?'pointer':'default'};padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:var(--r-sm);${isToday?'background:#FFF1F2':''}">
       <div style="font-size:14px;font-weight:${isToday?'900':(da.length?'700':'400')};width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;${isToday?'background:var(--red);color:#fff':'color:'+(dow===0?'#ef4444':dow===6?'var(--blue)':'#222')}">${d}</div>
       <div style="display:flex;gap:2px;min-height:6px">${dots}</div>
     </div>`;
@@ -6499,16 +6499,16 @@ function renderAppCalendar() {
         <div style="font-size:17px;font-weight:700;color:var(--ink-900)">${_calYear}년 ${MONTH_NAMES[_calMonth]}</div>
         <button onclick="calNavMonth(1)" style="background:none;border:none;font-size:22px;color:var(--ink-400);cursor:pointer;padding:4px 10px;line-height:1">›</button>
       </div>
-      ${monthEarnings > 0 ? `<div style="background:#EFF6FF;border-radius:var(--r);padding:11px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between"><div style="font-size:12px;font-weight:500;color:#1E40AF">🏁 이달 완료 수입</div><div style="font-size:15px;font-weight:700;color:#1D4ED8">${monthEarnings.toLocaleString()}원</div></div>` : ''}
+      ${monthEarnings > 0 ? `<div style="background:#EFF6FF;border-radius:var(--r);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between"><div style="font-size:12px;font-weight:500;color:#1E40AF">🏁 이달 완료 수입</div><div style="font-size:15px;font-weight:700;color:#1D4ED8">${monthEarnings.toLocaleString()}원</div></div>` : ''}
       <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">
         ${WEEKDAYS.map((w,i)=>`<div style="text-align:center;font-size:11px;font-weight:500;color:${i===0?'#ef4444':i===6?'var(--blue)':'#aaa'};padding:4px 0">${w}</div>`).join('')}
       </div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">${cells}</div>
       <div id="cal-day-detail" style="margin-top:14px"></div>
       <div style="display:flex;gap:14px;margin-top:16px;padding:12px;background:#f9f9f9;border-radius:var(--r);flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-400)"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>검토중</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-400)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>합격</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-400)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>완료</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-400)"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>검토중</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-400)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>합격</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-400)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>완료</div>
       </div>
     </div>
   `;
@@ -6607,7 +6607,7 @@ async function loadBookmarks() {
     const _bn = document.createElement('div');
     _bn.id = 'bm-reopen-banner';
     _bn.style.cssText = 'background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:var(--r);padding:12px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px';
-    _bn.innerHTML = `<div style="font-size:20px;flex-shrink:0">${icon('bell',16)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1E40AF">북마크 공고가 다시 열렸어요!</div><div style="font-size:12px;color:var(--blue);margin-top:3px;line-height:1.5">${_reopened.slice(0,3).join(', ')}${_reopened.length > 3 ? ' 외 ' + (_reopened.length-3) + '개' : ''}</div></div><button onclick="this.closest('#bm-reopen-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1">${icon('close',16)}</button>`;
+    _bn.innerHTML = `<div style="font-size:20px;flex-shrink:0">${icon('bell',16)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1E40AF">북마크 공고가 다시 열렸어요!</div><div style="font-size:12px;color:var(--blue);margin-top:2px;line-height:1.5">${_reopened.slice(0,3).join(', ')}${_reopened.length > 3 ? ' 외 ' + (_reopened.length-3) + '개' : ''}</div></div><button onclick="this.closest('#bm-reopen-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;flex-shrink:0;padding:0;line-height:1">${icon('close',16)}</button>`;
     el.before(_bn);
   }
 
@@ -6619,13 +6619,13 @@ async function loadBookmarks() {
     <div style="background:#fff;border-radius:var(--r-lg);padding:16px;margin-bottom:10px;box-shadow:var(--shadow-md)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
         <div style="flex:1;min-width:0;cursor:pointer" onclick="openDetail('${job.id}')">
-          <div style="font-size:15px;font-weight:600;color:var(--ink-900);margin-bottom:3px">${job.title || '공고'}</div>
+          <div style="font-size:15px;font-weight:600;color:var(--ink-900);margin-bottom:2px">${job.title || '공고'}</div>
           <div style="font-size:13px;color:var(--ink-400);margin-bottom:4px">${biz.name || ''}</div>
           <div style="font-size:14px;font-weight:500;color:var(--red)">${job.current_wage ? job.current_wage.toLocaleString() + '원' + _wageUnit(job) : ''}</div>
         </div>
         <button onclick="toggleBookmark('${job.id}')" style="padding:6px 12px;background:#FFF0F0;color:var(--red);border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">북마크 해제</button>
       </div>
-      <div style="margin-top:8px;font-size:11px;font-weight:500;display:inline-block;padding:3px 8px;border-radius:var(--r-sm);background:${isOpen ? '#EFF6FF' : '#f0f0f0'};color:${isOpen ? 'var(--blue)' : '#aaa'}">${job.status === 'urgent' ? '\u{1F525} 급구' : isOpen ? '모집중' : '마감'}</div>
+      <div style="margin-top:8px;font-size:11px;font-weight:500;display:inline-block;padding:2px 8px;border-radius:var(--r-sm);background:${isOpen ? '#EFF6FF' : '#f0f0f0'};color:${isOpen ? 'var(--blue)' : '#aaa'}">${job.status === 'urgent' ? '\u{1F525} 급구' : isOpen ? '모집중' : '마감'}</div>
     </div>`;
   }).join('');
 }
@@ -6970,7 +6970,7 @@ function _renderChatList() {
       ? (a.gatheringCategory === 'baromeeting' ? '#f43f5e' : 'var(--purple)')
       : isBarospotRow ? '#f43f5e' : 'transparent';
     return `<div class="chat-swipe-wrap" id="csw-${a.id}">
-      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:11px 16px;background:${unread>0?'#FFFAFA':rowBg};border-left:3.5px solid ${unread>0?'var(--red)':rowBorder}">
+      <div class="chat-swipe-inner" data-app-id="${a.id}" data-name="${a.counterpartName}" data-side="${a.side}" onclick="_chatItemClick(event,'${a.id}','${a.counterpartName}','${a.side}')" style="gap:12px;padding:10px 16px;background:${unread>0?'#FFFAFA':rowBg};border-left:3.5px solid ${unread>0?'var(--red)':rowBorder}">
         <div style="position:relative;flex-shrink:0">
           ${avatarHtml}
           ${unread>0?`<div style="position:absolute;bottom:0;right:0;width:12px;height:12px;background:var(--red);border-radius:50%;border:2px solid #fff"></div>`:''}
@@ -7369,7 +7369,7 @@ async function _showCounterpartProfile(type) {
   const avatarBig = cp.photoUrl
     ? `<img src="${cp.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--line)" onerror="this.style.display='none'">`
     : `<div style="width:80px;height:80px;border-radius:50%;background:${ac.bg};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:${ac.fg}">${(cp.name||'?').charAt(0)}</div>`;
-  const _row = (label, val) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink-400);font-size:13px;flex-shrink:0">${label}</span><span style="font-size:13px;font-weight:500;color:var(--ink-900);text-align:right;max-width:65%">${val}</span></div>`;
+  const _row = (label, val) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)"><span style="color:var(--ink-400);font-size:13px;flex-shrink:0">${label}</span><span style="font-size:13px;font-weight:500;color:var(--ink-900);text-align:right;max-width:65%">${val}</span></div>`;
   const rows = [];
   if (isWorker) {
     // 평점/실적 (가장 중요한 정보 최상단)
@@ -7452,7 +7452,7 @@ function _chatMsgRow(m, isMine, time, cp, type) {
     <div style="display:flex;align-items:flex-end;gap:8px;max-width:85%;min-width:0;width:100%">
       ${avatar}
       <div style="flex:1;min-width:0">
-        ${cp ? `<div style="font-size:11px;font-weight:500;color:#777;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cp.name}</div>` : ''}
+        ${cp ? `<div style="font-size:11px;font-weight:500;color:#777;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cp.name}</div>` : ''}
         ${bubble}
       </div>
     </div>
@@ -8746,7 +8746,7 @@ function renderAiRecommendations() {
     el.style.display = 'block';
     el.innerHTML = `
       <div style="padding:12px 0 8px;display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:7px">
+        <div style="display:flex;align-items:center;gap:6px">
           <div style="width:22px;height:22px;background:linear-gradient(135deg,#FF6B6B,var(--red));border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;flex-shrink:0">✦</div>
           <span style="font-size:13px;font-weight:700;color:var(--ink-900)">${t('ai_rec_title')}</span>
         </div>
@@ -8827,7 +8827,7 @@ function renderSwipeStack() {
       </div>
       <div style="font-size:18px;font-weight:700;color:var(--ink-900)">주변 알바 다 봤어요!</div>
       <div style="font-size:13px;color:var(--ink-400);line-height:1.6">반경을 넓히거나<br>내일 다시 확인해보세요</div>
-      <button onclick="initSwipe()" style="margin-top:12px;padding:13px 32px;background:var(--red);color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:-0.3px">다시 보기</button>
+      <button onclick="initSwipe()" style="margin-top:12px;padding:12px 32px;background:var(--red);color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:-0.3px">다시 보기</button>
     </div>`;
     return;
   }
@@ -8876,8 +8876,8 @@ function makeSwipeCard(job, isTop) {
   const _swLangFlag = {ko:'&#127472;&#127479;',en:'&#127482;&#127480;',zh:'&#127464;&#127475;',ja:'&#127471;&#127477;',vi:'&#127483;&#127475;',ru:'&#127479;&#127482;',mn:'&#127474;&#127475;'};
   const _swLangName = {ko:'한국어',en:'영어',zh:'중국어',ja:'일본어',vi:'베트남어',ru:'러시아어',mn:'몽골어'};
   const swLangBadge = (job.preferred_languages && job.preferred_languages.length)
-    ? '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">' +
-      job.preferred_languages.map(l => `<span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-weight:500;padding:2px 7px;border-radius:var(--r-sm);font-size:11px">${_swLangFlag[l]||''} ${_swLangName[l]||l} 우대</span>`).join('') +
+    ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">' +
+      job.preferred_languages.map(l => `<span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;font-weight:500;padding:2px 6px;border-radius:var(--r-sm);font-size:11px">${_swLangFlag[l]||''} ${_swLangName[l]||l} 우대</span>`).join('') +
       '</div>'
     : '';
 
@@ -8912,15 +8912,15 @@ function makeSwipeCard(job, isTop) {
             <span style="font-size:32px;line-height:1">${emoji}</span>
             <div>
               <div style="font-size:11px;font-weight:600;color:var(--ink-600)">${job.category}</div>
-              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
                 <div style="font-size:15px;font-weight:700;color:var(--ink-900)">${job.biz_name || ''}</div>
                 ${job.biz_rating ? `<span style="background:#FEF3C7;color:#D97706;font-size:10px;font-weight:700;padding:1px 6px;border-radius:var(--r-xl)">${icon('star')}${job.biz_rating}</span>` : ''}
-                ${isUrgent ? '<span style="background:var(--red);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-xl)">\u{1F525} 급구</span>' : ''}
+                ${isUrgent ? '<span style="background:var(--red);color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:var(--r-xl)">\u{1F525} 급구</span>' : ''}
               </div>
             </div>
           </div>
           <div style="font-size:18px;font-weight:700;color:var(--ink-900);line-height:1.3;margin-bottom:4px">${job.title}</div>
-          <div style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,0.07);border-radius:var(--r-xl);padding:3px 8px">
+          <div style="display:inline-flex;align-items:center;gap:2px;background:rgba(0,0,0,0.07);border-radius:var(--r-xl);padding:2px 8px">
             <span style="font-size:12px">\u{1F4CD}</span>
             <span style="font-size:12px;font-weight:600;color:var(--ink-600)">${dist}</span>
           </div>
@@ -8940,7 +8940,7 @@ function makeSwipeCard(job, isTop) {
         <div style="display:flex;align-items:baseline;gap:6px">
           <span style="font-size:36px;font-weight:700;color:var(--red)">${job.current_wage.toLocaleString()}</span>
           <span style="font-size:16px;font-weight:500;color:var(--red)">원/시간</span>
-          ${hasSurge ? `<span style="font-size:12px;font-weight:600;color:#FF9500;background:#FFF3E0;padding:3px 8px;border-radius:var(--r-sm);margin-left:4px">↑ ${job.wage_delta.toLocaleString()}원</span>` : ''}
+          ${hasSurge ? `<span style="font-size:12px;font-weight:600;color:#FF9500;background:#FFF3E0;padding:2px 8px;border-radius:var(--r-sm);margin-left:4px">↑ ${job.wage_delta.toLocaleString()}원</span>` : ''}
         </div>
         ${job.duration_hours ? `<div style="font-size:13px;color:var(--ink-400);font-weight:500;margin-top:4px">${t('est_total_wage_fmt').replace('{n}', Math.round(job.current_wage * job.duration_hours).toLocaleString())}</div>` : ''}
       </div>
@@ -8948,19 +8948,19 @@ function makeSwipeCard(job, isTop) {
       <!-- 날짜/시간/거리/인원 그리드 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:var(--surface-1);border-radius:var(--r);padding:10px 12px">
-          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:3px">\u{1F4C5} 근무일</div>
+          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:2px">\u{1F4C5} 근무일</div>
           <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${dateStr}</div>
         </div>
         <div style="background:var(--surface-1);border-radius:var(--r);padding:10px 12px">
-          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:3px">⏰ 근무시간</div>
+          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:2px">⏰ 근무시간</div>
           <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${timeRange}</div>
         </div>
         <div style="background:var(--surface-1);border-radius:var(--r);padding:10px 12px">
-          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:3px">\u{1F4CD} 거리</div>
+          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:2px">\u{1F4CD} 거리</div>
           <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${dist}</div>
         </div>
         <div style="background:var(--surface-1);border-radius:var(--r);padding:10px 12px">
-          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:3px">\u{1F465} 모집인원</div>
+          <div style="font-size:10px;color:var(--ink-400);font-weight:500;margin-bottom:2px">\u{1F465} 모집인원</div>
           <div style="font-size:13px;font-weight:600;color:${neededLeft<=1?'var(--red)':'#222'}">${neededLeft > 0 ? neededLeft + '명 남음' : '마감임박'}</div>
         </div>
       </div>
@@ -9217,19 +9217,19 @@ function openProfile() {
     document.getElementById('profile-role').style.display = 'none';
     const providerMap = {
       email:  {
-        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;background:var(--surface-1);color:var(--ink-600);padding:3px 9px;border-radius:var(--r-xl)">
+        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;background:var(--surface-1);color:var(--ink-600);padding:2px 8px;border-radius:var(--r-xl)">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>이메일</span>`
       },
       kakao: {
-        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:#FEE500;color:#3C1E1E;padding:3px 9px;border-radius:var(--r-xl)">
+        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:#FEE500;color:#3C1E1E;padding:2px 8px;border-radius:var(--r-xl)">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.477 2 10.875c0 2.73 1.69 5.13 4.25 6.57L5.2 21l5.18-2.34C10.76 18.88 11.37 19 12 19c5.523 0 10-3.477 10-7.875C22 6.477 17.523 3 12 3z"/></svg>카카오</span>`
       },
       naver: {
-        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:#03C75A;color:#fff;padding:3px 9px;border-radius:var(--r-xl)">
+        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:#03C75A;color:#fff;padding:2px 8px;border-radius:var(--r-xl)">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M16 3v7.5L8 3H3v18h5v-7.5L16 21h5V3z"/></svg>네이버</span>`
       },
       google: {
-        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;background:#fff;color:#444;padding:3px 9px;border-radius:var(--r-xl);border:1.5px solid #e0e0e0">
+        html: `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;background:#fff;color:#444;padding:2px 8px;border-radius:var(--r-xl);border:1.5px solid #e0e0e0">
           <svg width="13" height="13" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Google</span>`
       }
     };
@@ -10127,10 +10127,10 @@ function renderOtherCertItem(filename, displayName, signedUrl) {
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:15px;flex-shrink:0">📎</span>
       <a href="${signedUrl||'#'}" target="_blank" style="flex:1;font-size:13px;font-weight:500;color:var(--ink-900);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${displayName}">${displayName}</a>
-      <div style="display:flex;gap:5px;flex-shrink:0">
-        <button type="button" onclick="renameOtherCert('${fn}')" style="font-size:11px;color:#fff;background:var(--red);border:none;border-radius:var(--r-sm);padding:5px 10px;cursor:pointer;white-space:nowrap">수정</button>
-        <label style="font-size:11px;color:#fff;background:var(--red);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer;white-space:nowrap;display:inline-block">파일<input type="file" accept="image/*,application/pdf" style="display:none" onchange="reuploadOtherCert('${fn}',this)"></label>
-        <button type="button" onclick="deleteOtherCert('${fn}')" style="font-size:11px;color:var(--red);background:#fee2e2;border:none;border-radius:var(--r-sm);padding:5px 10px;cursor:pointer;white-space:nowrap">삭제</button>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button type="button" onclick="renameOtherCert('${fn}')" style="font-size:11px;color:#fff;background:var(--red);border:none;border-radius:var(--r-sm);padding:4px 10px;cursor:pointer;white-space:nowrap">수정</button>
+        <label style="font-size:11px;color:#fff;background:var(--red);border-radius:var(--r-sm);padding:4px 10px;cursor:pointer;white-space:nowrap;display:inline-block">파일<input type="file" accept="image/*,application/pdf" style="display:none" onchange="reuploadOtherCert('${fn}',this)"></label>
+        <button type="button" onclick="deleteOtherCert('${fn}')" style="font-size:11px;color:var(--red);background:#fee2e2;border:none;border-radius:var(--r-sm);padding:4px 10px;cursor:pointer;white-space:nowrap">삭제</button>
       </div>
     </div>`;
   listEl.appendChild(item);
@@ -10692,7 +10692,7 @@ function renderSkillTags() {
   const el = document.getElementById('skill-tags');
   if (!el) return;
   el.innerHTML = _workerSkills.map((s, i) =>
-    `<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--line);padding:5px 10px;border-radius:var(--r-xl);font-size:12px;font-weight:500;color:#444">
+    `<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--line);padding:4px 10px;border-radius:var(--r-xl);font-size:12px;font-weight:500;color:#444">
       ${s}
       <button onclick="removeSkillTag(${i})" style="background:none;border:none;color:var(--ink-400);cursor:pointer;font-size:14px;line-height:1;padding:0">×</button>
     </span>`
@@ -10947,7 +10947,7 @@ function showDisclaimerSheet(onConfirm) {
         <div style="background:var(--surface-1);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--ink-600);font-weight:400;line-height:1.6">&#128683; 주류·담배·의약품 대리 구매 등 불법 매칭 시 즉시 계정 정지</div>
         <div style="background:var(--surface-1);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--ink-600);font-weight:400;line-height:1.6">&#128274; 타인 개인정보 유출 및 사기 행위 금지</div>
       </div>
-      <button id="disclaimer-ok-btn" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:var(--r-lg);font-size:15px;font-weight:600;cursor:pointer">동의하고 저장하기</button>
+      <button id="disclaimer-ok-btn" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:var(--r-lg);font-size:15px;font-weight:600;cursor:pointer">동의하고 저장하기</button>
     </div>`;
   document.body.appendChild(el);
   el.querySelector('#disclaimer-ok-btn').onclick = () => { el.remove(); if (onConfirm) onConfirm(); };
@@ -11801,7 +11801,7 @@ function _buildCommTabs() {
   // flex:1과 flex-shrink:0을 같이 주면 flex-shrink가 나중에 덮어써서 각 탭이
   // 내용 길이만큼 제각각 폭을 갖던 버그(짧은 라벨은 좁고 긴 라벨은 넓게) - 5개 탭이
   // 스크롤 없이 균등 분할되도록 min-width:0으로 강제
-  const btnBase = 'padding:11px 2px;background:none;border:none;font-size:12.5px;cursor:pointer;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:center';
+  const btnBase = 'padding:10px 2px;background:none;border:none;font-size:12.5px;cursor:pointer;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:center';
   el.innerHTML = `<div style="display:flex;width:100%;align-items:stretch">` +
     tabs.map((t, i) => {
       const active = i === 0;
@@ -12003,8 +12003,8 @@ async function openCommunityPost(postId) {
   // 좋아요는 왼쪽, 수정/삭제는 오른쪽으로 한 줄에 나란히 배치
   const myPostBtns = isMyPost ? `
     <div style="display:flex;gap:8px">
-      <button onclick="openEditCommPost()" style="padding:7px 14px;border:1.5px solid #ddd;border-radius:var(--r-xl);background:#fff;font-size:12px;font-weight:500;color:var(--ink-600);cursor:pointer">${icon('edit')} ${t('edit_btn')}</button>
-      <button onclick="deleteCommPost()" style="padding:7px 14px;border:1.5px solid #fca5a5;border-radius:var(--r-xl);background:#fff3f3;font-size:12px;font-weight:500;color:#c53030;cursor:pointer">${icon('trash')} ${t('delete')}</button>
+      <button onclick="openEditCommPost()" style="padding:6px 14px;border:1.5px solid #ddd;border-radius:var(--r-xl);background:#fff;font-size:12px;font-weight:500;color:var(--ink-600);cursor:pointer">${icon('edit')} ${t('edit_btn')}</button>
+      <button onclick="deleteCommPost()" style="padding:6px 14px;border:1.5px solid #fca5a5;border-radius:var(--r-xl);background:#fff3f3;font-size:12px;font-weight:500;color:#c53030;cursor:pointer">${icon('trash')} ${t('delete')}</button>
     </div>` : '';
 
   const commentsHtml = comments?.length
@@ -12015,7 +12015,7 @@ async function openCommunityPost(postId) {
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
             <span style="font-size:12px;font-weight:500;color:var(--ink-600)">${ca}</span>
             <span style="font-size:11px;color:#ccc">${fmtRel(c.created_at)}</span>
-            ${isMyComment ? `<button onclick="deleteCommComment('${c.id}')" style="margin-left:auto;padding:3px 8px;border:none;background:none;font-size:11px;color:#ccc;cursor:pointer">${t('delete')}</button>` : ''}
+            ${isMyComment ? `<button onclick="deleteCommComment('${c.id}')" style="margin-left:auto;padding:2px 8px;border:none;background:none;font-size:11px;color:#ccc;cursor:pointer">${t('delete')}</button>` : ''}
           </div>
           <div style="font-size:13px;color:var(--ink-600);line-height:1.6">${c.content}</div>
         </div>`;
@@ -12341,17 +12341,17 @@ function renderPostings() {
 
     const WT = { errand:{bg:'#F3E8FF',color:'var(--purple)',label:t('job_type_errand')}, short:{bg:'#EFF6FF',color:'var(--blue)',label:t('work_type_short')}, regular:{bg:'#F0FFF4',color:'var(--green)',label:t('work_type_regular')}, spot:{bg:'#FFF7ED',color:'#F59E0B',label:t('work_type_spot')} };
     const wtStyle = WT[p.work_type] || null;
-    const workTypeBadge = wtStyle ? `<span style="font-size:10px;font-weight:500;background:${wtStyle.bg};color:${wtStyle.color};padding:2px 7px;border-radius:var(--r-sm)">${wtStyle.label}</span>` : '';
+    const workTypeBadge = wtStyle ? `<span style="font-size:10px;font-weight:500;background:${wtStyle.bg};color:${wtStyle.color};padding:2px 6px;border-radius:var(--r-sm)">${wtStyle.label}</span>` : '';
     const timeInfo = workTimeStr ? workTimeStr : workRangeStr ? `~${workRangeStr}` : createdStr;
     return `
     <div class="posting-card ${p.status === 'urgent' ? 'urgent-card' : ''} ${!isOpen ? 'closed-card' : ''}" id="card-${p.id}" onclick="openPostingDetail('${p.id}')">
       <!-- 상단: 카테고리 + 태그 + 토글 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span style="font-size:11px;color:var(--ink-400);font-weight:500">${p.category}</span>
           ${workTypeBadge}
           ${jobTypeBadge}
-          ${p.surge_enabled ? `<span style="font-size:10px;font-weight:600;background:#FFF3E0;color:#FF9500;padding:2px 7px;border-radius:var(--r-sm)">${t('grade_quick_short')}</span>` : ''}
+          ${p.surge_enabled ? `<span style="font-size:10px;font-weight:600;background:#FFF3E0;color:#FF9500;padding:2px 6px;border-radius:var(--r-sm)">${t('grade_quick_short')}</span>` : ''}
           ${p.is_premium ? `<span style="${NEUTRAL_CHIP}">PRO</span>` : ''}
           ${p.age_limit ? `<span style="${NEUTRAL_CHIP}">18+</span>` : ''}
           ${p.senior_welcome === true ? `<span style="${NEUTRAL_CHIP}">${t('senior_welcome_badge')}</span>` : ''}
@@ -12519,7 +12519,7 @@ function openPostingDetail(jobId) {
       <!-- 액션 버튼 -->
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="display:flex;gap:8px">
-          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#fff;color:var(--ink-600);border:1.5px solid #e0e0e0;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${t('edit_btn')}</button>
+          <button onclick="openEditForm('${p.id}')" style="flex:1;padding:14px;background:#fff;color:var(--ink-600);border:1.5px solid #e0e0e0;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>${t('edit_btn')}</button>
           <button onclick="${isOpen ? `toggleStatus('${p.id}','${p.status}')` : `reopenWithEdit('${p.id}')`}" style="flex:1;padding:14px;background:${isOpen?'#FFF0F0':'var(--red)'};color:${isOpen?'#EF4444':'#fff'};border:${isOpen?'1.5px solid #EF4444':'none'};border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer">${isOpen ? t('status_closed_label') : t('reopen_posting_title')}</button>
         </div>
         <div style="display:flex;gap:8px">
@@ -12738,7 +12738,7 @@ function makeApplicantCardHtml(a, opts = {}) {
   const trustBadge = total >= 2 ? trustBadgeHtml(w) : '';
   const phone = w?.phone ? w.phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3') : '';
   const b = _STATUS_BADGE[a.status] || _STATUS_BADGE.pending;
-  const badge = `<span style="background:${b.bg};color:${b.color};padding:3px 10px;border-radius:var(--r-xl);font-size:11px;font-weight:600;white-space:nowrap">${b.label}</span>`;
+  const badge = `<span style="background:${b.bg};color:${b.color};padding:2px 10px;border-radius:var(--r-xl);font-size:11px;font-weight:600;white-space:nowrap">${b.label}</span>`;
   const avatarSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF9999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 
   // 관심(reviewing)은 업주만 보는 표시라 상태를 바꿔도 알바생 화면·푸시엔 변화가 없다.
@@ -12796,16 +12796,16 @@ function makeApplicantCardHtml(a, opts = {}) {
       </div>
       ${starBtn}${badge}
     </div>
-    ${a.apply_message ? `<div style="margin:0 14px 10px;padding:9px 12px;background:#F8F9FA;border-radius:var(--r);border-left:3px solid #d4d4d8;font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    ${a.apply_message ? `<div style="margin:0 14px 10px;padding:8px 12px;background:#F8F9FA;border-radius:var(--r);border-left:3px solid #d4d4d8;font-size:12px;color:#444;line-height:1.5">${a.apply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     ${a.status === 'completed' && a.worker_review ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#FFF7ED;border-radius:var(--r);border-left:3px solid #F59E0B">
-      <div style="font-size:10px;font-weight:500;color:#92400E;margin-bottom:3px">${icon('star')} ${t('review_of_name_label').replace('{name}', name)}</div>
+      <div style="font-size:10px;font-weight:500;color:#92400E;margin-bottom:2px">${icon('star')} ${t('review_of_name_label').replace('{name}', name)}</div>
       <div style="font-size:12px;color:#78350F;line-height:1.5">"${a.worker_review.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
       ${a.review_reply ? `<div style="margin-top:6px;padding:6px 8px;background:#FEF3C7;border-radius:var(--r-sm);font-size:11px;color:#92400E"><span style="font-weight:600">${t('ownr_biz_reply_label')}</span> ${a.review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
     </div>` : ''}
     ${a.status === 'completed' && a.worker_rating && a.worker_review_reply ? `
     <div style="margin:0 14px 10px;padding:10px 12px;background:#EFF6FF;border-radius:var(--r);border-left:3px solid var(--blue)">
-      <div style="font-size:10px;font-weight:500;color:#1e40af;margin-bottom:3px">${icon('chat')} ${t('review_reply_of_name_label').replace('{name}', name)}</div>
+      <div style="font-size:10px;font-weight:500;color:#1e40af;margin-bottom:2px">${icon('chat')} ${t('review_reply_of_name_label').replace('{name}', name)}</div>
       <div style="font-size:12px;color:#1e3a8a;line-height:1.5">"${a.worker_review_reply.replace(/</g,'&lt;').replace(/>/g,'&gt;')}"</div>
     </div>` : ''}
     <div class="ac-actions" onclick="${sp}">${actions}</div>
@@ -13039,9 +13039,9 @@ async function loadMyLessonInquiries() {
             <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${seeker.name || t('student_default_name')}</div>
             <div style="font-size:11px;color:var(--ink-400);margin-top:1px">${tLessonMain(prof.main_category||'레슨')} · ${prof.subject ? tLessonSub(prof.subject) : ''} · ${dateStr}</div>
           </div>
-          <span style="font-size:11px;font-weight:600;color:${stColor};background:${stColor}22;padding:3px 9px;border-radius:var(--r-sm)">${stLabel}</span>
+          <span style="font-size:11px;font-weight:600;color:${stColor};background:${stColor}22;padding:2px 8px;border-radius:var(--r-sm)">${stLabel}</span>
         </div>
-        ${inq.message ? `<div style="font-size:12px;color:var(--ink-600);background:#f9fafb;border-radius:var(--r-sm);padding:9px 11px;margin-bottom:8px;line-height:1.6">"${inq.message}"</div>` : ''}
+        ${inq.message ? `<div style="font-size:12px;color:var(--ink-600);background:#f9fafb;border-radius:var(--r-sm);padding:8px 10px;margin-bottom:8px;line-height:1.6">"${inq.message}"</div>` : ''}
         ${inq.proposed_price ? `<div style="font-size:12px;color:var(--red);font-weight:500;margin-bottom:8px">${t('proposed_price_prefix')}${Number(inq.proposed_price).toLocaleString()}${t('price_per_session_unit')}</div>` : ''}
         <div style="display:flex;gap:6px">
           <button onclick="openLessonInquiryChat('${inq.id}')" style="flex:1;padding:8px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer">${icon('chat')} ${t('chat_title')}</button>
@@ -13087,7 +13087,7 @@ function _renderLessonMarkers(data) {
     const onAir = p.is_available_now;
     const glow = onAir ? 'box-shadow:0 0 0 3px #22c55e,0 2px 12px rgba(34,197,94,0.5);' : 'box-shadow:var(--shadow-md);';
     const onAirDot = onAir ? '<span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;margin-right:4px"></span>' : '';
-    const content = `<div onclick="openLessonDetail('${p.id}')" style="background:${catColor};color:#fff;font-size:11px;font-weight:600;padding:5px 9px;border-radius:var(--r-xl);white-space:nowrap;cursor:pointer;${glow}display:flex;align-items:center">${onAirDot}${p.subject ? tLessonSub(p.subject) : ''} ${price}${t('won_suffix')}</div>`;
+    const content = `<div onclick="openLessonDetail('${p.id}')" style="background:${catColor};color:#fff;font-size:11px;font-weight:600;padding:4px 8px;border-radius:var(--r-xl);white-space:nowrap;cursor:pointer;${glow}display:flex;align-items:center">${onAirDot}${p.subject ? tLessonSub(p.subject) : ''} ${price}${t('won_suffix')}</div>`;
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
       content, yAnchor: 1.2
@@ -13105,13 +13105,13 @@ function makeLessonCardHtml(p) {
   const days = p.available_days?.join(' · ') || '';
   const locTypeMap = {방문레슨:'🚗 '+t('lesson_type_visit_short'), 센터방문:'🏫 '+t('lesson_type_center_short'), 비대면:'💻 '+t('lesson_type_online_short')};
   const locTypeBadge = p.location_type ? `<span style="font-size:10px;background:#f0f9ff;color:#0891b2;padding:2px 6px;border-radius:var(--r-sm)">${locTypeMap[p.location_type]||p.location_type}</span>` : '';
-  const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:600;background:#dcfce7;color:var(--green);padding:2px 7px;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block"></span>${t('available_now_badge')}</span>` : '';
-  const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:600;background:#fef3c7;color:#d97706;padding:2px 7px;border-radius:var(--r-sm)">${icon('check')} ${t('cert_badge_short')}</span>` : '';
+  const onAirBadge = p.is_available_now ? `<span style="font-size:10px;font-weight:600;background:#dcfce7;color:var(--green);padding:2px 6px;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:2px"><span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block"></span>${t('available_now_badge')}</span>` : '';
+  const certBadge = p.cert_status === 'verified' ? `<span style="font-size:10px;font-weight:600;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:var(--r-sm)">${icon('check')} ${t('cert_badge_short')}</span>` : '';
   const retentionBadge = p._retention ? `<span style="font-size:10px;background:#f0fdf4;color:var(--green);padding:2px 6px;border-radius:var(--r-sm)">${t('retention_badge').replace('{n}', p._retention)}</span>` : '';
   const titleText = `${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}`;
   return `
   <div class="lesson-card" onclick="openLessonDetail('${p.id}')">
-    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px">${onAirBadge}${certBadge}${locTypeBadge}</div>
+    <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:4px">${onAirBadge}${certBadge}${locTypeBadge}</div>
     <div class="lesson-name">${titleText}</div>
     ${p.subject_detail ? `<div style="font-size:12px;color:#777;margin-top:2px;margin-bottom:2px;line-height:1.4">${p.subject_detail}</div>` : ''}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
@@ -13151,19 +13151,19 @@ async function openLessonDetail(profileId) {
 
   // 인증 배지
   const certHtml = p.cert_status === 'verified'
-    ? `<span style="font-size:11px;font-weight:600;background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:var(--r-sm);margin-left:6px">${icon('check')} ${t('cert_verified_full')}</span>`
+    ? `<span style="font-size:11px;font-weight:600;background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:var(--r-sm);margin-left:6px">${icon('check')} ${t('cert_verified_full')}</span>`
     : p.cert_status === 'pending'
-    ? `<span style="font-size:11px;background:#f1f5f9;color:#94a3b8;padding:3px 8px;border-radius:var(--r-sm);margin-left:6px">${t('cert_pending')}</span>` : '';
+    ? `<span style="font-size:11px;background:#f1f5f9;color:#94a3b8;padding:2px 8px;border-radius:var(--r-sm);margin-left:6px">${t('cert_pending')}</span>` : '';
 
   // 온에어 배지
   const onAirHtml = p.is_available_now
-    ? `<div style="background:#dcfce7;color:var(--green);font-size:12px;font-weight:600;padding:6px 14px;border-radius:var(--r-xl);display:inline-flex;align-items:center;gap:5px;margin-bottom:10px"><span style="width:7px;height:7px;background:var(--green);border-radius:50%"></span>${t('available_now_full')}</div>` : '';
+    ? `<div style="background:#dcfce7;color:var(--green);font-size:12px;font-weight:600;padding:6px 14px;border-radius:var(--r-xl);display:inline-flex;align-items:center;gap:4px;margin-bottom:10px"><span style="width:7px;height:7px;background:var(--green);border-radius:50%"></span>${t('available_now_full')}</div>` : '';
 
   document.getElementById('lesson-detail-body').innerHTML = `
     ${onAirHtml}
     <div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:600;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'var(--purple)':'#0891b2'};padding:3px 8px;border-radius:var(--r-sm)">${tLessonMain(p.main_category||'레슨')}</span>
+        <span style="font-size:11px;font-weight:600;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'var(--purple)':'#0891b2'};padding:2px 8px;border-radius:var(--r-sm)">${tLessonMain(p.main_category||'레슨')}</span>
         <span class="lesson-subject-tag">${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</span>${certHtml}
       </div>
       <div style="font-size:19px;font-weight:700;color:var(--ink-900);margin-bottom:4px">${tLessonMain(p.main_category||'레슨')} · ${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</div>
@@ -13176,10 +13176,10 @@ async function openLessonDetail(profileId) {
     </div>
     <div style="background:#f8fafc;border-radius:var(--r-lg);padding:14px;margin-bottom:16px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('price_per_session_label')}</div><div style="font-size:16px;font-weight:600;color:var(--red);margin-top:3px">${price}원</div></div>
-        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('duration_label')}</div><div style="font-size:16px;font-weight:600;color:var(--ink-900);margin-top:3px">${p.session_duration||60}분</div></div>
-        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('lesson_days_label')}</div><div style="font-size:13px;font-weight:500;color:var(--ink-900);margin-top:3px">${days}</div></div>
-        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('class_type_label_plain')}</div><div style="font-size:13px;font-weight:500;color:var(--ink-900);margin-top:3px">${locTypeMap[p.location_type]||t('negotiable_label')}</div></div>
+        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('price_per_session_label')}</div><div style="font-size:16px;font-weight:600;color:var(--red);margin-top:2px">${price}원</div></div>
+        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('duration_label')}</div><div style="font-size:16px;font-weight:600;color:var(--ink-900);margin-top:2px">${p.session_duration||60}분</div></div>
+        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('lesson_days_label')}</div><div style="font-size:13px;font-weight:500;color:var(--ink-900);margin-top:2px">${days}</div></div>
+        <div><div style="font-size:11px;color:var(--ink-400);font-weight:500">${t('class_type_label_plain')}</div><div style="font-size:13px;font-weight:500;color:var(--ink-900);margin-top:2px">${locTypeMap[p.location_type]||t('negotiable_label')}</div></div>
       </div>
       ${p.location_name ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:12px;color:var(--ink-400)">${icon('pin')} ${p.location_name}</div>` : ''}
       ${p.available_times ? `<div style="margin-top:6px;font-size:12px;color:var(--ink-400)">${icon('clock')} ${(()=>{try{return JSON.parse(p.available_times).join(' · ')}catch{return p.available_times}})()}</div>` : ''}
@@ -13373,11 +13373,11 @@ function addPackageRow(sessions, price) {
   row.id = `pkg-row-${idx}`;
   row.style.cssText = 'display:grid;grid-template-columns:100px 1fr auto auto;align-items:center;gap:6px';
   row.innerHTML = `
-    <select style="padding:9px 6px;border:1.5px solid #e0e0e0;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--ink-600);background:#fff;cursor:pointer;width:100%">
+    <select style="padding:8px 6px;border:1.5px solid #e0e0e0;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--ink-600);background:#fff;cursor:pointer;width:100%">
       ${opts}
     </select>
     <input type="number" inputmode="numeric" placeholder="${t('total_price_ph')}" value="${price||''}"
-      style="padding:9px 10px;border:1.5px solid #e0e0e0;border-radius:var(--r);font-size:13px;outline:none;width:100%;box-sizing:border-box">
+      style="padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:var(--r);font-size:13px;outline:none;width:100%;box-sizing:border-box">
     <span style="font-size:11px;color:var(--ink-400);white-space:nowrap">원</span>
     <button type="button" onclick="document.getElementById('pkg-row-${idx}').remove()"
       style="background:none;border:none;color:#ccc;font-size:20px;cursor:pointer;padding:0 2px;line-height:1">✕</button>`;
@@ -13567,7 +13567,7 @@ async function loadMyLessons() {
     <div class="lesson-card" style="border-left:3px solid ${p.is_active ? 'var(--blue)' : '#ddd'}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:10px;font-weight:600;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'var(--purple)':'#0891b2'};padding:2px 7px;border-radius:var(--r-sm)">${tLessonMain(p.main_category||'레슨')}</span>
+          <span style="font-size:10px;font-weight:600;background:${p.main_category==='과외'?'#f5f3ff':'#e0f7fa'};color:${p.main_category==='과외'?'var(--purple)':'#0891b2'};padding:2px 6px;border-radius:var(--r-sm)">${tLessonMain(p.main_category||'레슨')}</span>
           <span class="lesson-subject-tag">${p.subject ? tLessonSub(p.subject) : t('cat_etc')}</span>
           ${p.cert_status==='verified'?`<span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:var(--r-sm)">${icon('check')}${t('cert_badge_short')}</span>`:''}
         </div>
@@ -14254,8 +14254,8 @@ function showConfirmDialog(title, msg, okLabel, cancelLabel) {
       <div style="font-size:16px;font-weight:700;color:var(--ink-900);margin-bottom:12px">${title}</div>
       <div style="font-size:13px;color:var(--ink-600);line-height:1.7;margin-bottom:20px;white-space:pre-line">${msg}</div>
       <div style="display:flex;gap:10px">
-        <button style="flex:1;padding:13px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
-        <button style="flex:1;padding:13px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
+        <button style="flex:1;padding:12px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
+        <button style="flex:1;padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer" onclick="this.closest('[style]').remove();"></button>
       </div>
     </div>`;
     document.body.appendChild(el);
@@ -14678,7 +14678,7 @@ function renderJobImgPreview() {
       ${img.file ? `<button onclick="event.stopPropagation();editJobImg(${i})" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('edit')}</button>` : ''}
       <!-- 순서 번호 뱃지 -->
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i === 0 ? 'var(--red)' : 'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;pointer-events:none">${i + 1}</div>
-      ${i === 0 ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:600;text-align:center;padding:3px;pointer-events:none">${t('ownr_main_photo_badge')}</div>` : ''}
+      ${i === 0 ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(200,16,46,0.85);color:#fff;font-size:9px;font-weight:600;text-align:center;padding:2px;pointer-events:none">${t('ownr_main_photo_badge')}</div>` : ''}
       <button onclick="event.stopPropagation();removeJobImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('close')}</button>
     </div>`).join('');
   const addBtn = document.getElementById('job-img-add-btn');
@@ -14720,7 +14720,7 @@ function renderMoimImgPreview() {
     <div style="position:relative;aspect-ratio:1;border-radius:var(--r);overflow:hidden;border:${i===0?'3px solid var(--purple)':'2px solid #eee'}">
       <img src="${img.src}" onclick="openImgViewer('${img.src}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer">
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i===0?'var(--purple)':'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;pointer-events:none">${i+1}</div>
-      ${i===0?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:600;text-align:center;padding:3px;pointer-events:none">${t('ownr_main_photo_badge')}</div>`:''}
+      ${i===0?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:600;text-align:center;padding:2px;pointer-events:none">${t('ownr_main_photo_badge')}</div>`:''}
       <button onclick="event.stopPropagation();removeMoimImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('close')}</button>
     </div>`).join('');
   const addBtn = document.getElementById('moim-img-add-btn');
@@ -14938,17 +14938,17 @@ function renderPlaceResults(items, usedQuery, start = 1, total = 0) {
   const pageBar = (hasPrev || hasNext) ? `
     <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-top:1px solid var(--line);background:#fafafa">
       ${hasPrev
-        ? `<button onclick="searchNaverPlace(${Math.max(1, start - 5)})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:var(--r-sm);font-size:12px;font-weight:500;cursor:pointer;background:#fff">${t('prev_page_btn')}</button>`
+        ? `<button onclick="searchNaverPlace(${Math.max(1, start - 5)})" style="flex:1;padding:6px;border:1.5px solid #ddd;border-radius:var(--r-sm);font-size:12px;font-weight:500;cursor:pointer;background:#fff">${t('prev_page_btn')}</button>`
         : `<div style="flex:1"></div>`}
       <span style="font-size:11px;color:var(--ink-400);flex-shrink:0">${Math.ceil(start/5)} / ${Math.ceil(total/5)}p</span>
       ${hasNext
-        ? `<button onclick="searchNaverPlace(${start + 5})" style="flex:1;padding:7px;border:1.5px solid #ddd;border-radius:var(--r-sm);font-size:12px;font-weight:500;cursor:pointer;background:#fff">${t('next_page_btn')}</button>`
+        ? `<button onclick="searchNaverPlace(${start + 5})" style="flex:1;padding:6px;border:1.5px solid #ddd;border-radius:var(--r-sm);font-size:12px;font-weight:500;cursor:pointer;background:#fff">${t('next_page_btn')}</button>`
         : `<div style="flex:1"></div>`}
     </div>` : '';
 
   box.innerHTML = header + tip + items.map((item, i) => `
     <div onclick="selectPlace(${i})" data-idx="${i}" style="padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
         <span style="font-size:13px;font-weight:600;color:var(--ink-900)">${item.title}</span>
         ${item.link ? `<span style="font-size:10px;font-weight:500;background:#E6F4EA;color:#1a7d3b;padding:2px 6px;border-radius:var(--r-sm)">${t('ownr_n_place_badge')}</span>` : ''}
       </div>
@@ -15718,7 +15718,7 @@ async function loadOwnerChatList() {
     <div onclick="openChat('${a.id}','${workerName}')" style="background:#fff;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:8px;box-shadow:var(--shadow-md);cursor:pointer;display:flex;align-items:center;gap:12px">
       ${avatarHtml}
       <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
           <div style="font-size:14px;font-weight:600;color:var(--ink-900)">${workerName}</div>
           <div style="font-size:11px;color:var(--ink-400)">${time}</div>
         </div>
@@ -16041,7 +16041,7 @@ async function loadBarotouipList() {
     const ratingStr = w.rating ? `★${parseFloat(w.rating).toFixed(1)}` : '';
     const content = `<div style="text-align:center;cursor:pointer" onclick="showBarotouipContact('${w.kakao_uid}','${(w.name||'').replace(/'/g,"\\'")}','${w.phone||''}')">
       <div style="width:46px;height:46px;border-radius:50%;border:2.5px solid var(--red);overflow:hidden;box-shadow:0 2px 10px rgba(200,16,46,0.4)">${avatar}</div>
-      <div style="margin-top:3px;background:rgba(0,0,0,0.72);color:#fff;font-size:9px;font-weight:600;padding:1px 5px;border-radius:var(--r-sm);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nameShort}${ratingStr ? ' '+ratingStr : ''}</div>
+      <div style="margin-top:2px;background:rgba(0,0,0,0.72);color:#fff;font-size:9px;font-weight:600;padding:1px 4px;border-radius:var(--r-sm);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nameShort}${ratingStr ? ' '+ratingStr : ''}</div>
     </div>`;
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(w.activity_lat, w.activity_lng),
@@ -16066,7 +16066,7 @@ function showBarotouipContact(kakaoUid, name, phone) {
       <div style="font-size:13px;color:var(--ink-400);margin-bottom:18px">직접 연락하거나 스카우트 제안을 보내세요</div>
       <button onclick="showScoutModal('${kakaoUid}','${name.replace(/'/g,"\\'")}');this.closest('div[style*=fixed]').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--red),#e53935);color:#fff;border:none;border-radius:var(--r-lg);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px">\u{1F3AF} 스카우트 제안 보내기</button>
       ${phone ? `<button onclick="window.location.href='tel:${phone}'" style="width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--r-lg);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px">&#128222; 전화하기 (${phone})</button>` : `<div style="padding:14px;background:var(--surface-1);border-radius:var(--r-lg);font-size:13px;color:var(--ink-400);text-align:center;margin-bottom:10px">연락처 미공개</div>`}
-      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:13px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:14px;font-weight:500;cursor:pointer">닫기</button>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:12px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:14px;font-weight:500;cursor:pointer">닫기</button>
     </div>`;
   document.body.appendChild(el);
 }
@@ -16091,7 +16091,7 @@ function showScoutModal(workerKakaoUid, workerName) {
       </select>` : `<div style="padding:12px;background:#fff5f5;border-radius:var(--r);color:var(--red);font-size:13px;font-weight:500;margin-bottom:12px;text-align:center">먼저 공고를 등록해주세요</div>`}
       <textarea id="scout-msg-text" placeholder="추가 메시지 (선택)" style="width:100%;padding:12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;resize:none;height:72px;box-sizing:border-box;margin-bottom:12px;outline:none;font-family:inherit"></textarea>
       ${activePostings.length ? `<button onclick="sendScoutProposal('${workerKakaoUid}','${workerName.replace(/'/g,"\\'")}',this)" style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:var(--r-lg);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px">\u{1F4E8} 제안 보내기</button>` : ''}
-      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:13px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:14px;font-weight:500;cursor:pointer">취소</button>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:12px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:14px;font-weight:500;cursor:pointer">취소</button>
     </div>`;
   document.body.appendChild(el);
 }
@@ -16233,7 +16233,7 @@ function renderOwnerSheetJobs(jobs) {
     const dist = j.distance_m < 1000 ? Math.round(j.distance_m) + 'm' : (j.distance_m / 1000).toFixed(1) + 'km';
     return `<div onclick="ownerMapInfo('${j.id}')" style="background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:8px;cursor:pointer">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-        <span style="font-size:10px;font-weight:500;color:var(--ink-400);background:var(--surface-1);padding:2px 7px;border-radius:var(--r-sm)">${j.category || ''}</span>
+        <span style="font-size:10px;font-weight:500;color:var(--ink-400);background:var(--surface-1);padding:2px 6px;border-radius:var(--r-sm)">${j.category || ''}</span>
         ${isUrgent ? '<span style="font-size:10px;font-weight:600;color:#fff;background:var(--red);padding:2px 6px;border-radius:var(--r-sm)">🔥 급구</span>' : ''}
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -16316,9 +16316,9 @@ async function openWorkerProfile() {
       <div style="flex:1">
         <div style="font-size:20px;font-weight:700;color:var(--ink-900)">${w.name || '이름없음'}</div>
         <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-          ${w.age ? `<span style="background:#FFF0F0;color:var(--red);font-size:12px;font-weight:600;padding:3px 10px;border-radius:var(--r-xl)">만 ${w.age}세</span>` : '<span style="background:var(--surface-1);color:var(--ink-400);font-size:12px;font-weight:500;padding:3px 10px;border-radius:var(--r-xl)">나이 미입력</span>'}
-          ${w.gender ? `<span style="background:#EFF6FF;color:var(--blue);font-size:12px;font-weight:600;padding:3px 10px;border-radius:var(--r-xl)">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
-          <span style="background:var(--surface-1);color:var(--ink-400);font-size:12px;font-weight:500;padding:3px 10px;border-radius:var(--r-xl)">${icon('star')} ${w.rating || '-'} · ${w.review_count || 0}건</span>
+          ${w.age ? `<span style="background:#FFF0F0;color:var(--red);font-size:12px;font-weight:600;padding:2px 10px;border-radius:var(--r-xl)">만 ${w.age}세</span>` : '<span style="background:var(--surface-1);color:var(--ink-400);font-size:12px;font-weight:500;padding:2px 10px;border-radius:var(--r-xl)">나이 미입력</span>'}
+          ${w.gender ? `<span style="background:#EFF6FF;color:var(--blue);font-size:12px;font-weight:600;padding:2px 10px;border-radius:var(--r-xl)">${w.gender==='male'?'남성':w.gender==='female'?'여성':w.gender}</span>` : ''}
+          <span style="background:var(--surface-1);color:var(--ink-400);font-size:12px;font-weight:500;padding:2px 10px;border-radius:var(--r-xl)">${icon('star')} ${w.rating || '-'} · ${w.review_count || 0}건</span>
         </div>
       </div>
     </div>
@@ -16350,11 +16350,11 @@ async function openWorkerProfile() {
 
     <!-- 액션 버튼 -->
     ${['pending','reviewing','on_hold'].includes(app.status) ? `<div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1.5;padding:13px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">${t('ownr_status_final_pass')}</button>
+      <button onclick="updateApplicationFromProfile('${app.id}','accepted')" style="flex:1.5;padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">${t('ownr_status_final_pass')}</button>
       ${app.status === 'on_hold'
-        ? `<button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:13px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_pass_first_round_btn')}</button>`
-        : `<button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:13px;background:#EFF6FF;color:var(--blue);border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_hold_action_btn')}</button>`}
-      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:13px;background:var(--surface-1);color:var(--ink-400);border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('ownr_reject_btn')}</button>
+        ? `<button onclick="updateApplicationFromProfile('${app.id}','reviewing')" style="flex:1;padding:12px;background:#FFF7ED;color:#D97706;border:1.5px solid #FDE68A;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_pass_first_round_btn')}</button>`
+        : `<button onclick="updateApplicationFromProfile('${app.id}','on_hold')" style="flex:1;padding:12px;background:#EFF6FF;color:var(--blue);border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('ownr_hold_action_btn')}</button>`}
+      <button onclick="updateApplicationFromProfile('${app.id}','rejected')" style="flex:1;padding:12px;background:var(--surface-1);color:var(--ink-400);border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer">${t('ownr_reject_btn')}</button>
     </div>` : ''}
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
@@ -16972,8 +16972,8 @@ async function renderAdminSection() {
     <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:6px">${icon('shield')} 어드민 계정 관리</div>
     <div id="admin-email-list">${adminRows}</div>
     <div style="display:flex;gap:6px;margin-top:8px">
-      <input id="new-admin-email" type="email" placeholder="추가할 이메일" style="flex:1;padding:9px 12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit">
-      <button onclick="addAdminEmail()" style="padding:9px 14px;background:#1e3a8a;color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">+ 추가</button>
+      <input id="new-admin-email" type="email" placeholder="추가할 이메일" style="flex:1;padding:8px 12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit">
+      <button onclick="addAdminEmail()" style="padding:8px 14px;background:#1e3a8a;color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">+ 추가</button>
     </div>
 
     <div style="height:1px;background:var(--surface-1);margin:16px 0"></div>
@@ -16981,9 +16981,9 @@ async function renderAdminSection() {
     <div style="font-size:12px;font-weight:600;color:var(--purple);margin-bottom:10px">📂 카테고리 관리 (${categories.length}개)</div>
     <div id="admin-cat-list">${catRows || '<div style="font-size:13px;color:var(--ink-400);padding:8px 0">카테고리 없음 — 아래에서 추가하세요</div>'}</div>
     <div style="display:flex;gap:6px;margin-top:8px">
-      <input id="admin-cat-icon" placeholder="🍕" style="width:44px;text-align:center;padding:9px 6px;border:1.5px solid var(--line);border-radius:var(--r);font-size:16px;outline:none;font-family:inherit">
-      <input id="admin-cat-name" placeholder="카테고리명" style="flex:1;padding:9px 12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit">
-      <button onclick="addCategory()" style="padding:9px 14px;background:var(--purple);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">+ 추가</button>
+      <input id="admin-cat-icon" placeholder="🍕" style="width:44px;text-align:center;padding:8px 6px;border:1.5px solid var(--line);border-radius:var(--r);font-size:16px;outline:none;font-family:inherit">
+      <input id="admin-cat-name" placeholder="카테고리명" style="flex:1;padding:8px 12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit">
+      <button onclick="addCategory()" style="padding:8px 14px;background:var(--purple);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">+ 추가</button>
     </div>`;
 
   // 키보드가 올라올 때 입력창 가림 방지 — visualViewport 기반
@@ -17232,15 +17232,15 @@ function showOwnerAvatarTip(inputId) {
         <div style="font-size:13px;color:#9ca3af">신뢰도 높은 사진이 지원자를 끌어모아요</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:var(--r)">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border-radius:var(--r)">
           <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           <span style="font-size:14px;color:#374151;font-weight:500">업체·매장 로고 또는 외관 사진</span>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:var(--r)">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border-radius:var(--r)">
           <div style="width:24px;height:24px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           <span style="font-size:14px;color:#374151;font-weight:500">대표자·직원 사진 (활기찬 분위기)</span>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#f9fafb;border-radius:var(--r)">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border-radius:var(--r)">
           <div style="width:24px;height:24px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
           <span style="font-size:14px;color:#6b7280;font-weight:400">저작권 위반 이미지 · 타업체 사진</span>
         </div>
@@ -17407,7 +17407,7 @@ function renderMyPlacesQuick() {
       : p.is_default;
     return `
     <button type="button" onclick="applyPlaceToForm('${p.id}')"
-      style="width:100%;text-align:left;padding:9px 12px;background:${isActive?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${isActive?'var(--red)':'#eee'};border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:8px">
+      style="width:100%;text-align:left;padding:8px 12px;background:${isActive?'#FFF0F0':'#f8f8f8'};border:1.5px solid ${isActive?'var(--red)':'#eee'};border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:8px">
       <span style="font-size:16px">\u{1F4CD}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${p.name}${p.is_default?' <span style="font-size:10px;color:var(--red)">(기본)</span>':''}${isActive?' <span style="font-size:10px;color:var(--red)">' + icon('check') + ' 선택됨</span>':''}</div>
@@ -17512,7 +17512,7 @@ function renderMyPlacesList() {
         <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${p.name}</div>
         <div style="font-size:11px;color:var(--ink-400);margin-top:2px">${p.address||''}</div>
       </div>
-      ${p.is_default ? '<span style="font-size:10px;font-weight:600;color:var(--red);background:#FFF0F0;padding:2px 6px;border-radius:var(--r-sm);white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:var(--ink-400);background:var(--surface-1);border:none;border-radius:var(--r-sm);padding:3px 7px;cursor:pointer">기본 설정</button>`}
+      ${p.is_default ? '<span style="font-size:10px;font-weight:600;color:var(--red);background:#FFF0F0;padding:2px 6px;border-radius:var(--r-sm);white-space:nowrap">기본</span>' : `<button onclick="setDefaultPlace('${p.id}')" style="font-size:10px;color:var(--ink-400);background:var(--surface-1);border:none;border-radius:var(--r-sm);padding:2px 6px;cursor:pointer">기본 설정</button>`}
       <button onclick="deletePlace('${p.id}')" style="font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;line-height:1;flex-shrink:0">${icon('close')}</button>
     </div>`).join('');
 }
@@ -17558,9 +17558,9 @@ function renderPlaceAddResults(items, query, start = 1, total = 0) {
   const end = start + items.length - 1;
   const hasPrev = start > 1;
   const hasNext = total > end;
-  const header = `<div style="padding:7px 12px;font-size:11px;color:var(--ink-400);border-bottom:1px solid var(--line)">"${query}" ${total}개 · ${start}~${end}번째</div>`;
+  const header = `<div style="padding:6px 12px;font-size:11px;color:var(--ink-400);border-bottom:1px solid var(--line)">"${query}" ${total}개 · ${start}~${end}번째</div>`;
   const pageBar = (hasPrev || hasNext) ? `
-    <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-top:1px solid var(--line);background:#fafafa">
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-top:1px solid var(--line);background:#fafafa">
       ${hasPrev ? `<button onclick="searchNaverPlaceForAdd(${Math.max(1,start-5)})" style="flex:1;padding:6px;border:1.5px solid #ddd;border-radius:var(--r-sm);font-size:11px;font-weight:500;cursor:pointer;background:#fff">◀ 이전</button>` : `<div style="flex:1"></div>`}
       <span style="font-size:10px;color:var(--ink-400)">${Math.ceil(start/5)}/${Math.ceil(total/5)}p</span>
       ${hasNext ? `<button onclick="searchNaverPlaceForAdd(${start+5})" style="flex:1;padding:6px;border:1.5px solid #ddd;border-radius:var(--r-sm);font-size:11px;font-weight:500;cursor:pointer;background:#fff">다음 ▶</button>` : `<div style="flex:1"></div>`}
@@ -17569,7 +17569,7 @@ function renderPlaceAddResults(items, query, start = 1, total = 0) {
     <div onclick="selectPlaceForAdd(${i})" style="padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer" onmouseover="this.style.background='#fff'" onmouseout="this.style.background=''">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
         <span style="font-size:13px;font-weight:600;color:var(--ink-900)">${item.title}</span>
-        ${item.link ? '<span style="font-size:10px;font-weight:500;background:#E6F4EA;color:#1a7d3b;padding:2px 5px;border-radius:var(--r-sm)">N</span>' : ''}
+        ${item.link ? '<span style="font-size:10px;font-weight:500;background:#E6F4EA;color:#1a7d3b;padding:2px 4px;border-radius:var(--r-sm)">N</span>' : ''}
       </div>
       <div style="font-size:11px;color:var(--ink-400)">${item.roadAddress || item.address || ''}</div>
     </div>`).join('') + pageBar;
@@ -17764,7 +17764,7 @@ function renderPlanDetails(plan) {
       <div style="background:${d.color}11;padding:10px 14px;border-bottom:1px solid ${d.color}22">
         <span style="font-size:12px;font-weight:600;color:${d.color}">${d.badge} 플랜 혜택</span>
       </div>
-      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:7px">
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px">
         ${d.features.map(f => `<div style="font-size:12px;color:var(--ink-600);line-height:1.4">${f}</div>`).join('')}
       </div>
     </div>`;
@@ -18344,7 +18344,7 @@ function _renderBizPhotos() {
       onclick="openImgViewer('${p.photo_url}')"
       style="position:relative;aspect-ratio:1;border-radius:var(--r);overflow:hidden;border:2px solid var(--line);cursor:pointer;transition:outline 0.1s">
       <img src="${p.photo_url}" style="width:100%;height:100%;object-fit:cover;pointer-events:none">
-      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;font-weight:600;padding:1px 5px;border-radius:var(--r-sm);pointer-events:none">${i+1}</span>
+      <span style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.45);color:#fff;font-size:9px;font-weight:600;padding:1px 4px;border-radius:var(--r-sm);pointer-events:none">${i+1}</span>
       <button onclick="event.stopPropagation();deleteBizPhoto('${p.id}')" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
     </div>`
   ).join('');
@@ -19021,7 +19021,7 @@ function _renderBaromeetCard(m, myStatus) {
   return `<div onclick="openBaromeetDetail('${m.id}')" style="background:#fff;border-radius:var(--r-lg);padding:16px;margin-bottom:12px;border:1px solid var(--line);cursor:pointer">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
       <div style="flex:1">
-        <div style="font-size:15px;font-weight:700;color:var(--ink-900);margin-bottom:3px">${m.title||'바로미팅'}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--ink-900);margin-bottom:2px">${m.title||'바로미팅'}</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-400)">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 12-8 12S4 15.25 4 10a8 8 0 0 1 8-8z"/></svg>${m.location_name||m.location_address||'장소 확인 후 안내'}
         </div>
@@ -19048,7 +19048,7 @@ function _renderBaromeetCard(m, myStatus) {
         <div style="font-size:10px;color:var(--ink-400);margin-top:2px">${maleLeft>0?t('moim_slots_left').replace('{n}',maleLeft):t('moim_closed')}</div>
       </div>
     </div>
-    ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:var(--surface-1);color:var(--ink-400);padding:3px 8px;border-radius:var(--r-sm)">#${t}</span>`).join('')}</div>` : ''}
+    ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${tags.map(t=>`<span style="font-size:10px;background:var(--surface-1);color:var(--ink-400);padding:2px 8px;border-radius:var(--r-sm)">#${t}</span>`).join('')}</div>` : ''}
     ${myStatus === 'approved'
       ? `<button onclick="event.stopPropagation();openBaromeetChat('${m.id}','${(m.title||'바로미팅').replace(/'/g,"\\'")}')" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">${icon('chat')} 익명 단체채팅방 입장</button>`
       : myStatus === 'pending'
@@ -19098,7 +19098,7 @@ function openBaromeetDetail(id) {
         <div style="font-size:11px;color:var(--ink-400)">${maleLeft>0?maleLeft+'자리 남음':'마감'}</div>
       </div>
     </div>
-    ${tags.length ? `<div style="margin:0 20px 16px;display:flex;flex-wrap:wrap;gap:4px">${tags.map(t=>`<span style="font-size:11px;background:var(--surface-1);color:var(--ink-400);padding:4px 9px;border-radius:var(--r-sm)">#${t}</span>`).join('')}</div>` : ''}
+    ${tags.length ? `<div style="margin:0 20px 16px;display:flex;flex-wrap:wrap;gap:4px">${tags.map(t=>`<span style="font-size:11px;background:var(--surface-1);color:var(--ink-400);padding:4px 8px;border-radius:var(--r-sm)">#${t}</span>`).join('')}</div>` : ''}
     ${m.description ? `<div style="margin:0 20px 16px;background:#f9fafb;border-radius:var(--r);padding:14px"><div style="font-size:12px;font-weight:500;color:var(--ink-400);margin-bottom:6px">📝 소개</div><div style="font-size:13px;color:var(--ink-600);line-height:1.7;white-space:pre-wrap">${m.description}</div></div>` : ''}
     <div style="margin:0 20px 20px;background:#F5F3FF;border-radius:var(--r);padding:16px">
       <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:10px">🤝 어떻게 진행되나요?</div>
@@ -19118,7 +19118,7 @@ function openBaromeetDetail(id) {
         : `<button onclick="closeBaromeetDetail();applyBaromeet('${m.id}',${maleLeft},${femaleLeft})" style="width:100%;padding:14px;background:${isFull?'#f5f5f5':'var(--purple)'};color:${isFull?'#bbb':'#fff'};border:none;border-radius:var(--r-lg);font-size:15px;font-weight:600;cursor:pointer" ${isFull?'disabled':''}>${isFull?'모집 마감':'참가 신청하기 →'}</button>`}
     </div>
     <div style="padding:0 20px 24px;text-align:center">
-      <button onclick="openReportModal('gathering','${m.id}')" style="display:inline-flex;align-items:center;gap:3px;background:none;border:none;font-size:11px;color:var(--ink-400);cursor:pointer;padding:6px 0;font-weight:500">🚨 이 바로미팅 신고하기</button>
+      <button onclick="openReportModal('gathering','${m.id}')" style="display:inline-flex;align-items:center;gap:2px;background:none;border:none;font-size:11px;color:var(--ink-400);cursor:pointer;padding:6px 0;font-weight:500">🚨 이 바로미팅 신고하기</button>
     </div>
   `;
   overlay.style.display = 'flex';
@@ -19521,7 +19521,7 @@ async function openBaroPass() {
 
   const dateStr = pick?.gathering_date ? new Date(pick.gathering_date).toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }) : null;
   const genderLabel = w?.gender === 'male' ? t('gender_male') : w?.gender === 'female' ? t('gender_female') : null;
-  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:600;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px">${icon('check')} ${t('workverify_completed_title')}</span>` : '';
+  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:600;background:#dcfce7;color:#14532d;padding:2px 10px;border-radius:100px">${icon('check')} ${t('workverify_completed_title')}</span>` : '';
 
   const qrPayload = `BAROPASS|${currentUser.id}|${pick?.id || ''}|${Date.now()}`;
   const qrSvg = _renderQrSvg(qrPayload, 160);
@@ -19533,7 +19533,7 @@ async function openBaroPass() {
         ${avatarHtml}
         <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:4px">${nick}</div>
         <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px;flex-wrap:wrap">
-          ${genderLabel ? `<span style="font-size:11px;font-weight:500;background:var(--surface-1);color:var(--ink-400);padding:3px 10px;border-radius:100px">${genderLabel}</span>` : ''}
+          ${genderLabel ? `<span style="font-size:11px;font-weight:500;background:var(--surface-1);color:var(--ink-400);padding:2px 10px;border-radius:100px">${genderLabel}</span>` : ''}
           ${verifiedBadge}
         </div>
         <div style="background:#fff;border-radius:var(--r-lg);padding:16px;margin-bottom:16px">${qrSvg}</div>
@@ -19544,7 +19544,7 @@ async function openBaroPass() {
         ` : `<div style="font-size:12px;color:var(--ink-400);line-height:1.6">${t('baropass_no_schedule_line1')}<br>${t('baropass_no_schedule_line2')}</div>`}
       </div>
       <div style="font-size:11px;color:var(--ink-400);margin:14px 0 16px;line-height:1.6">${t('baropass_show_hint_line1')}<br>${t('baropass_show_hint_line2')}</div>
-      <button onclick="closeBottomSheet();openQrScanner()" style="width:100%;padding:13px;background:var(--purple);color:#fff;border:none;border-radius:var(--r-lg);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <button onclick="closeBottomSheet();openQrScanner()" style="width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:var(--r-lg);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><rect x="7" y="7" width="4" height="4"/><rect x="13" y="7" width="4" height="4"/><rect x="7" y="13" width="4" height="4"/><rect x="13" y="13" width="4" height="4"/></svg>
         ${t('baropass_scan_btn')}
       </button>
@@ -19641,7 +19641,7 @@ async function _handleBaroPassScan(payload) {
 
   const nick = w?.baromeet_nick || w?.name || t('unknown_label');
   const genderLabel = w?.gender === 'male' ? t('gender_male') : w?.gender === 'female' ? t('gender_female') : '';
-  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:600;background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:100px;margin-left:4px">${icon('check')} ${t('workverify_completed_title')}</span>` : '';
+  const verifiedBadge = w?.workplace_verify_status === 'verified' ? `<span style="font-size:11px;font-weight:600;background:#dcfce7;color:#14532d;padding:2px 10px;border-radius:100px;margin-left:4px">${icon('check')} ${t('workverify_completed_title')}</span>` : '';
 
   if (approved) {
     resultBody.innerHTML = `
@@ -20030,7 +20030,7 @@ function switchBasicTab(tab) {
 function _renderMannamProfilePanel() {
   const sel = _mpDatingProfile;
   const bodyTypes = sel.gender === 'male' ? DATING_BODY_TYPES_MALE : DATING_BODY_TYPES_FEMALE;
-  const chip = (label, active, onclick) => `<button type="button" onclick="${onclick}" style="padding:7px 13px;border-radius:var(--r-xl);border:1.5px solid ${active?'var(--purple)':'#eee'};font-size:12.5px;font-weight:500;background:${active?'#F5F3FF':'#fff'};color:${active?'var(--purple)':'#888'};cursor:pointer">${label}</button>`;
+  const chip = (label, active, onclick) => `<button type="button" onclick="${onclick}" style="padding:6px 12px;border-radius:var(--r-xl);border:1.5px solid ${active?'var(--purple)':'#eee'};font-size:12.5px;font-weight:500;background:${active?'#F5F3FF':'#fff'};color:${active?'var(--purple)':'#888'};cursor:pointer">${label}</button>`;
   document.getElementById('mp-dating-job-chips').innerHTML = DATING_JOB_CATEGORIES.map(v => chip(tDatingJob(v), sel.job_category===v, `_mpSelectDatingJob('${v.replace(/'/g,"\\'")}')`)).join('');
   document.getElementById('mp-dating-body-chips').innerHTML = bodyTypes.map(v => chip(tDatingBody(v), sel.body_type===v, `_mpSelectDatingBody('${v}')`)).join('');
   document.getElementById('mp-dating-interest-chips').innerHTML = DATING_INTERESTS.map(v => chip(tDatingInterest(v), sel.interests.includes(v), `_mpToggleDatingInterest('${v}')`)).join('');
@@ -20039,8 +20039,8 @@ function _renderMannamProfilePanel() {
   const pairs = [['E','I'],['S','N'],['T','F'],['J','P']];
   document.getElementById('mp-dating-mbti').innerHTML = pairs.map(([a,b], i) => `
     <div style="flex:1;display:flex;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--line)">
-      <button type="button" onclick="_mpSetMbtiPart(${i},'${a}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===a?'var(--purple)':'#fff'};color:${_mpMbtiParts[i]===a?'#fff':'#888'};font-size:13px;font-weight:600;cursor:pointer">${a}</button>
-      <button type="button" onclick="_mpSetMbtiPart(${i},'${b}')" style="flex:1;padding:9px 0;border:none;background:${_mpMbtiParts[i]===b?'var(--purple)':'#fff'};color:${_mpMbtiParts[i]===b?'#fff':'#888'};font-size:13px;font-weight:600;cursor:pointer">${b}</button>
+      <button type="button" onclick="_mpSetMbtiPart(${i},'${a}')" style="flex:1;padding:8px 0;border:none;background:${_mpMbtiParts[i]===a?'var(--purple)':'#fff'};color:${_mpMbtiParts[i]===a?'#fff':'#888'};font-size:13px;font-weight:600;cursor:pointer">${a}</button>
+      <button type="button" onclick="_mpSetMbtiPart(${i},'${b}')" style="flex:1;padding:8px 0;border:none;background:${_mpMbtiParts[i]===b?'var(--purple)':'#fff'};color:${_mpMbtiParts[i]===b?'#fff':'#888'};font-size:13px;font-weight:600;cursor:pointer">${b}</button>
     </div>`).join('');
 
   const preview = document.getElementById('mp-photo-preview');
@@ -20129,15 +20129,15 @@ async function openSpotPassSheet(gender) {
       <div onclick="selectSpotPass('${p.id}')" id="ssp-${p.id}" style="border:2px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
         <div>
           <span style="font-size:14px;font-weight:600;color:var(--ink-900)">${p.label}</span>
-          ${p.discount ? `<span style="font-size:11px;background:${bgColor};color:${color};padding:2px 7px;border-radius:var(--r-sm);margin-left:7px;font-weight:500">${p.discount}${t('discount_suffix')}</span>` : ''}
-          <div style="font-size:11px;color:var(--ink-400);margin-top:3px">${Math.round(p.price/p.qty).toLocaleString()}${t('won_per_use_suffix')}</div>
+          ${p.discount ? `<span style="font-size:11px;background:${bgColor};color:${color};padding:2px 6px;border-radius:var(--r-sm);margin-left:6px;font-weight:500">${p.discount}${t('discount_suffix')}</span>` : ''}
+          <div style="font-size:11px;color:var(--ink-400);margin-top:2px">${Math.round(p.price/p.qty).toLocaleString()}${t('won_per_use_suffix')}</div>
         </div>
         <div style="font-size:16px;font-weight:700;color:var(--ink-900)">${p.price.toLocaleString()}<span style="font-size:11px;color:var(--ink-400)">${t('won_suffix')}</span></div>
       </div>`).join('')}
   </div>
   <div style="padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;border-top:1px solid #ebebeb;background:var(--surface-1);flex-shrink:0">
-    <button onclick="closeBottomSheet()" style="flex:1;padding:13px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer">${t('cancel')}</button>
-    <button id="ssp-buy-btn" onclick="buySpotPass('${gender}')" style="flex:2;padding:13px;background:${color};color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;opacity:0.4" disabled>${t('pay_btn')}</button>
+    <button onclick="closeBottomSheet()" style="flex:1;padding:12px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer">${t('cancel')}</button>
+    <button id="ssp-buy-btn" onclick="buySpotPass('${gender}')" style="flex:2;padding:12px;background:${color};color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;opacity:0.4" disabled>${t('pay_btn')}</button>
   </div>`;
   _selectedSpotPass = null;
   openBottomSheet(html);
@@ -20326,17 +20326,17 @@ async function _loadFemaleApplications() {
     return `<div style="background:#fff;border-radius:var(--r);padding:14px 16px;margin-bottom:10px;border:1px solid var(--line);${(canPick||canTrack) ? 'cursor:pointer' : ''}" ${clickAttr}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
         <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${t('barospot_app_number')} #${a.id.slice(-6).toUpperCase()}</div>
-        <div style="font-size:11px;font-weight:500;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:3px 8px;border-radius:var(--r-sm)">${statusLabel[st]||st}</div>
+        <div style="font-size:11px;font-weight:500;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:2px 8px;border-radius:var(--r-sm)">${statusLabel[st]||st}</div>
       </div>
       ${ev ? `<div style="font-size:12px;color:var(--ink-400)">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')} · ${whenText}</div>` : ''}
       ${canPick ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
         <div style="font-size:11px;color:var(--purple);font-weight:500">${t('tap_to_pick_candidate_hint')}${maleAppCount[a.event_id] ? t('male_applicants_count_suffix').replace('{n}', maleAppCount[a.event_id]) : ''}</div>
-        <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:500;color:var(--blue);background:#eff6ff;border:none;border-radius:var(--r-sm);padding:5px 10px;cursor:pointer">${t('share_short_btn')}</button>
+        <button onclick="event.stopPropagation();shareBarospotEventForApplicant('${a.event_id}')" style="font-size:11px;font-weight:500;color:var(--blue);background:#eff6ff;border:none;border-radius:var(--r-sm);padding:4px 10px;cursor:pointer">${t('share_short_btn')}</button>
       </div>` : ''}
       ${canTrack ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
         <div style="font-size:11px;color:var(--purple);font-weight:500">${t('location_distance_hint')}</div>
         ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
-          ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:500;color:#ef4444;background:#fef2f2;border:none;border-radius:var(--r-sm);padding:5px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
+          ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:500;color:#ef4444;background:#fef2f2;border:none;border-radius:var(--r-sm);padding:4px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
           : `<span style="font-size:10.5px;color:var(--ink-400)">${t('cancel_deadline_passed_notice')}</span>`}
       </div>` : ''}
     </div>`;
@@ -20441,9 +20441,9 @@ async function openBarospotCandidates(applicationId) {
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${[c.age ? t('age_full_years').replace('{n}', c.age) : null, c.height_cm?c.height_cm+'cm':null, tDatingJob(c.job_category), tDatingBody(c.body_type), c.mbti].filter(Boolean).join(' · ') || t('age_unknown_label')}${c.noshow_count > 0 ? ` <span style="color:#DC2626;font-size:11px">${t('noshow_count_suffix').replace('{n}', c.noshow_count)}</span>` : ''}</div>
               ${c.interests?.length ? `<div style="font-size:11px;color:var(--blue);margin-top:2px">${c.interests.slice(0,5).map(tag=>'#'+tDatingInterest(tag)).join(' ')}</div>` : ''}
-              <div style="font-size:12px;color:var(--ink-400);margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.bio ? c.bio.replace(/</g,'&lt;') : t('bio_empty_notice')}</div>
+              <div style="font-size:12px;color:var(--ink-400);margin-top:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.bio ? c.bio.replace(/</g,'&lt;') : t('bio_empty_notice')}</div>
             </div>
-            <button onclick="selectBarospotCandidate('${applicationId}','${c.application_id}')" style="flex-shrink:0;padding:9px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer">${t('select_btn')}</button>
+            <button onclick="selectBarospotCandidate('${applicationId}','${c.application_id}')" style="flex-shrink:0;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer">${t('select_btn')}</button>
           </div>
         `).join('')}
       </div>
@@ -20537,11 +20537,11 @@ async function loadNearbyBarospotOffers() {
       const whenText = ev.event_date ? new Date(ev.event_date).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : t('schedule_tbd_short');
       return `<div style="background:#fff;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px;border:1.5px solid #fbcfe8;display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div style="min-width:0">
-          <span style="font-size:9.5px;font-weight:600;color:#fff;background:#f43f5e;padding:2px 7px;border-radius:var(--r-sm);margin-bottom:4px;display:inline-block">${t('claimable_badge')}</span>
+          <span style="font-size:9.5px;font-weight:600;color:#fff;background:#f43f5e;padding:2px 6px;border-radius:var(--r-sm);margin-bottom:4px;display:inline-block">${t('claimable_badge')}</span>
           <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')}</div>
           <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · ${ev.distKm.toFixed(1)}km</div>
         </div>
-        <button onclick="claimBarospotEvent('${ev.id}', this)" style="flex-shrink:0;padding:9px 14px;background:#f43f5e;color:#fff;border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer">${t('claim_btn')}</button>
+        <button onclick="claimBarospotEvent('${ev.id}', this)" style="flex-shrink:0;padding:8px 14px;background:#f43f5e;color:#fff;border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer">${t('claim_btn')}</button>
       </div>`;
     }).join('');
   }, () => { wrap.style.display = 'none'; }, { enableHighAccuracy: true, maximumAge: 60000, timeout: 10000 });
@@ -20632,11 +20632,11 @@ async function loadUpcomingBarospotOffers() {
     const booked = bookedIds.has(ev.id);
     return `<div style="background:#fff;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px;border:1px solid #dbeafe;display:flex;align-items:center;justify-content:space-between;gap:10px">
       <div style="min-width:0">
-        <span style="font-size:9.5px;font-weight:600;color:var(--blue);background:#eff6ff;padding:2px 7px;border-radius:var(--r-sm);margin-bottom:4px;display:inline-block">${t('upcoming_badge')}</span>
+        <span style="font-size:9.5px;font-weight:600;color:var(--blue);background:#eff6ff;padding:2px 6px;border-radius:var(--r-sm);margin-bottom:4px;display:inline-block">${t('upcoming_badge')}</span>
         <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')}</div>
         <div style="font-size:11px;color:#999;margin-top:2px">${whenText} · ${t('female_assign_waiting_short')}</div>
       </div>
-      <button onclick="toggleBarospotPrebook('${ev.id}', this)" data-booked="${booked}" style="flex-shrink:0;padding:9px 14px;background:${booked ? '#eef2ff' : 'var(--blue)'};color:${booked ? '#6366f1' : '#fff'};border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer">${booked ? t('prebooked_btn_label') : t('prebook_btn_label')}</button>
+      <button onclick="toggleBarospotPrebook('${ev.id}', this)" data-booked="${booked}" style="flex-shrink:0;padding:8px 14px;background:${booked ? '#eef2ff' : 'var(--blue)'};color:${booked ? '#6366f1' : '#fff'};border:none;border-radius:var(--r);font-size:12.5px;font-weight:600;cursor:pointer">${booked ? t('prebooked_btn_label') : t('prebook_btn_label')}</button>
     </div>`;
   }).join('');
 }
@@ -20712,14 +20712,14 @@ async function _loadMaleApplications() {
     return `<div style="background:#fff;border-radius:var(--r);padding:14px 16px;margin-bottom:10px;border:1px solid var(--line);${canTrack ? 'cursor:pointer' : ''}" ${clickAttr}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${ev?'8px':'0'}">
         <div style="font-size:13px;font-weight:600;color:var(--ink-900)">${t('barospot_app_number')} #${a.id.slice(-6).toUpperCase()}</div>
-        <div style="font-size:11px;font-weight:500;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:3px 8px;border-radius:var(--r-sm)">${statusLabel[st]||st}</div>
+        <div style="font-size:11px;font-weight:500;color:${statusColor[st]||'#aaa'};background:${statusColor[st]||'#aaa'}18;padding:2px 8px;border-radius:var(--r-sm)">${statusLabel[st]||st}</div>
       </div>
       ${ev ? `<div style="font-size:12px;color:var(--ink-400)">${ev.barospot_restaurants?.name || t('restaurant_info_confirming')} · ${whenText}</div>` : ''}
       ${previewHtml}
       ${canTrack ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
         <div style="font-size:11px;color:var(--blue);font-weight:500">${t('location_distance_hint')}</div>
         ${(ev?.event_date && (new Date(ev.event_date).getTime() - Date.now()) / 3600000 >= 24)
-          ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:500;color:#ef4444;background:#fef2f2;border:none;border-radius:var(--r-sm);padding:5px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
+          ? `<button onclick="event.stopPropagation();cancelBarospotApplication('${a.id}')" style="font-size:11px;font-weight:500;color:#ef4444;background:#fef2f2;border:none;border-radius:var(--r-sm);padding:4px 10px;cursor:pointer">${t('cancel_action_btn')}</button>`
           : `<span style="font-size:10.5px;color:var(--ink-400)">${t('cancel_deadline_passed_notice')}</span>`}
       </div>` : ''}
     </div>`;
@@ -20841,8 +20841,8 @@ function _renderSpotEventCard(ev, preview) {
     : '';
   return `<div style="background:#fff;border-radius:var(--r-lg);padding:16px;margin-bottom:12px;border:1.5px solid #bfdbfe;overflow:hidden">
     <div style="margin-bottom:10px">
-      <span style="font-size:9.5px;font-weight:600;color:#fff;background:var(--blue);padding:2px 7px;border-radius:var(--r-sm);margin-bottom:5px;display:inline-block">${t('recruiting_apply_available_badge')}</span>
-      <div style="font-size:15px;font-weight:700;color:var(--ink-900);margin-bottom:3px">${r.name || t('restaurant_info_confirming')}</div>
+      <span style="font-size:9.5px;font-weight:600;color:#fff;background:var(--blue);padding:2px 6px;border-radius:var(--r-sm);margin-bottom:4px;display:inline-block">${t('recruiting_apply_available_badge')}</span>
+      <div style="font-size:15px;font-weight:700;color:var(--ink-900);margin-bottom:2px">${r.name || t('restaurant_info_confirming')}</div>
       <div style="font-size:12px;color:var(--ink-400)">${whenText}</div>
       ${ev.address ? `<div style="font-size:11.5px;color:#999;margin-top:2px">${icon('pin')} ${ev.address}</div>` : ''}
     </div>
@@ -20852,7 +20852,7 @@ function _renderSpotEventCard(ev, preview) {
     ${r.menu_description ? `<div style="font-size:12px;color:var(--ink-400);background:#f8f9fa;border-radius:var(--r-sm);padding:8px 10px;margin-bottom:10px">${r.menu_description}</div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:13px;font-weight:600;color:var(--blue)">${(r.base_price||0).toLocaleString()}${t('won_suffix')} <span style="font-size:11px;color:var(--ink-400);font-weight:400">${t('meal_included_suffix')}</span></div>
-      <button onclick="applySpotEvent('${ev.id}', this)" style="padding:9px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('barospot_apply_btn')}</button>
+      <button onclick="applySpotEvent('${ev.id}', this)" style="padding:8px 18px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer">${t('barospot_apply_btn')}</button>
     </div>
   </div>`;
 }
@@ -21483,7 +21483,7 @@ function _buildChargeAmtGrid() {
   // 티어 버튼
   const tierHtml = CHARGE_TIERS.map((t, i) => {
     const bonusLabel = t.promo
-      ? `<div style="font-size:9px;font-weight:700;color:#fff;background:#f43f5e;border-radius:var(--r-sm);padding:1px 5px;display:inline-block;margin-top:2px">🎉 런칭 이벤트!</div>`
+      ? `<div style="font-size:9px;font-weight:700;color:#fff;background:#f43f5e;border-radius:var(--r-sm);padding:1px 4px;display:inline-block;margin-top:2px">🎉 런칭 이벤트!</div>`
       : (t.bonus > 0
         ? `<div style="font-size:9px;font-weight:600;color:#f43f5e;margin-top:2px">+${t.bonus.toLocaleString()}P 보너스</div>`
         : `<div style="font-size:9px;color:transparent;margin-top:2px">ㅡ</div>`);
@@ -21498,14 +21498,14 @@ function _buildChargeAmtGrid() {
   }).join('');
   // 기타금액 (10% + 2만원당 1,000P 보너스 자동 계산)
   const customHtml = `<div style="grid-column:1/-1;margin-top:4px">
-    <div style="font-size:11px;color:var(--ink-400);margin-bottom:5px;font-weight:500">${t('topup_other_amount_hint')}</div>
+    <div style="font-size:11px;color:var(--ink-400);margin-bottom:4px;font-weight:500">${t('topup_other_amount_hint')}</div>
     <div style="display:flex;gap:8px;align-items:center">
       <input id="pc-custom-amt" type="number" min="5000" max="500000" step="1000" placeholder="직접 입력"
         oninput="onCustomAmtInput(this)"
         style="flex:1;border:1.5px solid #e0e0e0;border-radius:var(--r);padding:10px 12px;font-size:13px;font-weight:500;outline:none">
       <span style="font-size:12px;color:var(--ink-400);flex-shrink:0">원</span>
     </div>
-    <div id="pc-custom-preview" style="font-size:11px;color:var(--purple);font-weight:500;margin-top:5px;min-height:16px"></div>
+    <div id="pc-custom-preview" style="font-size:11px;color:var(--purple);font-weight:500;margin-top:4px;min-height:16px"></div>
   </div>`;
   grid.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">${tierHtml}</div>${customHtml}`;
 
