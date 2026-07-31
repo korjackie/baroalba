@@ -14302,12 +14302,7 @@ function selectLang(lang) {
 function saveLang() {
   currentLang = _pendingLang;
   localStorage.setItem('baroalba_lang', currentLang);
-  applyLang();
-  const names = { ko:'한국어', en:'English', zh:'中文', ja:'日本語', vi:'Tiếng Việt', ru:'Русский', mn:'Монгол', np:'नेपाली' };
-  ['mp-lang-val','owner-mp-lang-val'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = names[currentLang] || currentLang;
-  });
+  applyLang(); // 라벨 갱신은 applyLang() 안의 _syncLangLabels() 가 처리한다
   if (typeof showToast === 'function') showToast('✅ ' + (t('lang_desc') || currentLang));
   if (typeof closeMpSub === 'function') closeMpSub('lang');
 }
@@ -14330,8 +14325,28 @@ function cancelLang() {
 // ── 전체 UI 번역 적용 (두 앱 공통 ID 모두 처리) ──────────────
 const _LANGS = ['ko','en','zh','ja','vi','ru','mn','np'];
 
+// 언어 표시 컨트롤 3종을 현재 언어에 맞춰 동기화 (2026-07-31 신설)
+// 이전엔 saveLang() 안에서만 라벨을 갱신해서, 저장된 언어로 앱을 켜면
+// 화면은 네팔어인데 마이페이지 "앱 언어" 값만 '한국어'로 남아 있었다.
+// applyLang() 은 초기 로드·언어 변경 양쪽에서 불리므로 여기로 옮긴다.
+const _LANG_NAMES = { ko:'한국어', en:'English', zh:'中文', ja:'日本語',
+                      vi:'Tiếng Việt', ru:'Русский', mn:'Монгол', np:'नेपाली' };
+function _syncLangLabels() {
+  // 헤더 지구본 select (게스트) — 한쪽만 갱신하면 두 컨트롤이 서로 다른 언어를
+  // 가리키는 상태가 생긴다(랜딩에서 이미 겪은 유형)
+  const sel = document.getElementById('header-lang-select');
+  if (sel && sel.value !== currentLang) sel.value = currentLang;
+  // 마이페이지·업주·게스트의 "앱 언어" 행 값
+  ['mp-lang-val', 'owner-mp-lang-val', 'guest-lang-val'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = _LANG_NAMES[currentLang] || currentLang;
+  });
+}
+
 function applyLang() {
   _pendingLang = currentLang;
+
+  _syncLangLabels();
 
   // 언어 버튼 활성 상태
   _LANGS.forEach(l => {

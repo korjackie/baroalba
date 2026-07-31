@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '599';
+  const _APP_V = '600';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -706,6 +706,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     profileNav.querySelector('.nav-icon').textContent = '\u{1F511}';
     profileNav.querySelector('.nav-label').textContent = t('login_nav_label');
     profileNav.querySelector('.nav-label').style.color = 'var(--red)';
+    // 헤더 언어 선택기 노출 (2026-07-31) — 게스트는 마이페이지 진입로가 없어
+    // 언어를 되돌릴 방법이 아예 없었다. 랜딩엔 있는 컨트롤을 앱에도 둔다.
+    const _hlw = document.getElementById('header-lang-wrap');
+    if (_hlw) {
+      _hlw.style.display = 'flex';
+      const _hls = document.getElementById('header-lang-select');
+      if (_hls) _hls.value = currentLang;
+    }
   } else {
     goToLogin();
     return;

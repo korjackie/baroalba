@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=599"></script>
+  <script src="./shared-lang.js?v=600"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=599">
+  <link rel="stylesheet" href="./assets/css/style.css?v=600">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -89,6 +89,26 @@
     <span>바로알바</span>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
+    <!-- 게스트 전용 언어 선택 (2026-07-31)
+         게스트는 하단 5번째 탭이 "로그인"으로 바뀌고 profile-guest 블록엔 로그인 버튼밖에
+         없어서, 언어가 한번 잘못 잡히면 되돌릴 방법이 아예 없었다. 랜딩(index.html)에는
+         있는 컨트롤이 정작 앱에는 없던 것 — 외국인 특화 서비스에서 치명적.
+         랜딩과 같은 지구본+select 형태로 통일. 로그인 사용자는 이 자리에 알림 종이 오고
+         마이페이지 → 앱 언어 경로가 따로 있으므로 게스트일 때만 노출한다. -->
+    <div id="header-lang-wrap" style="display:none;align-items:center;gap:4px;background:var(--surface-1);border:1px solid var(--line);border-radius:20px;padding:4px 7px 4px 9px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4E5661" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      <select id="header-lang-select" aria-label="Language" onchange="selectLang(this.value);saveLang()"
+        style="border:none;background:none;font-family:inherit;font-size:12px;font-weight:500;color:var(--ink-900);cursor:pointer;outline:none;padding:0;max-width:94px">
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+        <option value="ja">日本語</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="ru">Русский</option>
+        <option value="mn">Монгол</option>
+        <option value="np">नेपाली</option>
+      </select>
+    </div>
     <!-- 브라우저 접속 시 앱 설치 유도 버튼 (standalone/네이티브 앱에서는 숨김) -->
     <button id="header-install-btn" onclick="headerInstallClick()" class="pulse-ring"
       style="display:none;background:#C8102E;color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:600;padding:6px 13px;cursor:pointer;white-space:nowrap;letter-spacing:-0.2px">
@@ -1844,6 +1864,13 @@
         <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:6px" data-i18n="login_cta_title">로그인하고 바로 지원하세요</div>
         <div style="font-size:13px;color:var(--ink-400);margin-bottom:28px" data-i18n="login_cta_desc">카카오, 네이버, 구글로 3초 로그인</div>
         <button onclick="goToLogin()" style="width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer" data-i18n="login_signup">로그인 / 회원가입</button>
+        <!-- 게스트 언어 설정 (2026-07-31) — 로그인해야만 언어를 바꿀 수 있으면
+             자기 언어를 못 읽는 사람은 로그인 화면조차 통과 못 한다. 로그인 없이도 바꾸게 둔다.
+             헤더 지구본과 같은 경로(openMpSub('lang'))를 쓴다. -->
+        <div class="mp-row" onclick="openMpSub('lang')" style="margin-top:20px;border-top:1px solid var(--line);border-radius:0;text-align:left">
+          <div class="mp-row-left"><span class="mp-row-icon">🌐</span><span data-i18n="row_app_lang">앱 언어</span></div>
+          <div class="mp-row-right"><span id="guest-lang-val" style="font-size:13px;color:var(--ink-400);font-weight:500">한국어</span><span class="mp-row-arrow">›</span></div>
+        </div>
       </div>
     </div>
 
@@ -4402,7 +4429,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=599"></script>
+<script src="./assets/js/app.js?v=600"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4560,7 +4587,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=599"></script>
+<script src="./assets/js/app_ui.js?v=600"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
