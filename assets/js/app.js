@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '601';
+  const _APP_V = '602';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -7326,6 +7326,17 @@ async function _showCounterpartProfile(type) {
     if (cp.vehicles && cp.vehicles.length) rows.push(_row('이동수단', Array.isArray(cp.vehicles) ? cp.vehicles.join(', ') : cp.vehicles));
     if (cp.languages && cp.languages.length) rows.push(_row('언어', Array.isArray(cp.languages) ? cp.languages.join(', ') : cp.languages));
     if (cp.selfIntro) rows.push(`<div style="padding:12px 0;border-bottom:1px solid var(--line)"><div style="color:var(--ink-400);font-size:13px;margin-bottom:6px">자기소개</div><div style="font-size:13px;color:var(--ink-600);line-height:1.6">${cp.selfIntro}</div></div>`);
+    // 빈 프로필 안내 (2026-07-31)
+    // 실측: 알바생 40명 중 나이 13%·지역 13%·경력 8%·자기소개 10%·스킬 5%만 입력.
+    // 9개 항목 평균 1.0개라 대부분 "완료 건수 0건" 한 줄만 남는다. 그러면 업주는
+    // 정보가 없는 건지 화면이 덜 그려진 건지 구분을 못 한다 — 비어있음을 명시한다.
+    // rows 에는 '완료 건수'가 항상 들어가므로 2줄 이하 = 사실상 빈 프로필.
+    if (rows.length <= 2) {
+      rows.push(`<div style="padding:16px 14px;margin-top:8px;background:var(--surface-1);border-radius:var(--r);text-align:center">
+        <div style="font-size:13px;font-weight:600;color:var(--ink-600);margin-bottom:4px">아직 등록한 프로필 정보가 거의 없어요</div>
+        <div style="font-size:12px;color:var(--ink-400);line-height:1.6">경력·스킬·자기소개가 비어 있습니다.<br>채팅으로 직접 물어보시는 게 빠릅니다.</div>
+      </div>`);
+    }
   } else {
     const bizRatingNum = cp.rating ? parseFloat(cp.rating).toFixed(1) : null;
     if (bizRatingNum) {

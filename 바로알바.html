@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=601"></script>
+  <script src="./shared-lang.js?v=602"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=601">
+  <link rel="stylesheet" href="./assets/css/style.css?v=602">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -160,13 +160,18 @@
       <button class="filter-drop-btn" id="flt-cat-btn" onclick="toggleFilterSheet('cat')" style="flex-shrink:0" data-i18n-btn="filter_cat">카테고리 ▾</button>
       <button class="filter-drop-btn" id="flt-type-btn" onclick="toggleFilterSheet('type')" style="flex-shrink:0" data-i18n-btn="filter_work_type">근무타입 ▾</button>
       <div class="chip" id="chip-urgent" data-urgent="true" onclick="toggleUrgent(this)" style="flex-shrink:0">급구</div>
+      <!-- 외국인·시니어 환영 (2026-07-31)
+           ⚠️ 처음엔 아래 .filter-bar-actions 에 넣었는데, 거기는 flex-shrink:0 이라 절대
+              안 줄어든다. 그래서 스크롤 영역인 .filter-bar(flex:1;min-width:0)가 짓눌려
+              근무타입·레슨/과외·전문기술이 화면 밖으로 밀려나고 "카테고리" 라벨까지 잘렸다.
+              칩을 늘릴 자리는 actions 가 아니라 여기(스크롤 영역)다. -->
+      <div class="chip" id="chip-foreigner" onclick="toggleForeignerWelcomeFilter(this)" style="flex-shrink:0">&#127759; <span data-i18n="filter_foreign">외국인 환영</span></div>
+      <div class="chip" id="chip-senior" onclick="toggleSeniorWelcomeFilter(this)" style="flex-shrink:0">&#129492; <span data-i18n="filter_senior">시니어 환영</span></div>
       <button class="filter-drop-btn" id="flt-lang-btn" onclick="toggleLangFilter()" style="flex-shrink:0;display:none">&#127760; 내 언어</button>
       <button class="filter-drop-btn" id="flt-lesson-btn" onclick="toggleFilterSheet('lesson')" style="flex-shrink:0" data-i18n-btn="filter_lesson">레슨/과외 ▾</button>
       <button class="filter-drop-btn" id="flt-technical-btn" onclick="toggleFilterSheet('technical')" style="flex-shrink:0" data-i18n-btn="filter_technical">전문기술 ▾</button>
     </div>
     <div class="filter-bar-actions">
-      <div class="chip" id="chip-foreigner" onclick="toggleForeignerWelcomeFilter(this)" style="flex-shrink:0;font-size:11px;padding:6px 9px">🌏 <span data-i18n="filter_foreign">외국인 환영</span></div>
-      <div class="chip" id="chip-senior" onclick="toggleSeniorWelcomeFilter(this)" style="flex-shrink:0;font-size:11px;padding:6px 9px">🧓 <span data-i18n="filter_senior">시니어 환영</span></div>
       <div class="chip" id="chip-remote" onclick="toggleRemoteFilter(this)" style="flex-shrink:0;font-size:11px;padding:6px 9px">🖥️ <span data-i18n="remote_work_label">비대면</span></div>
       <div class="chip" id="chip-adv-filter" onclick="openAdvFilter()" style="flex-shrink:0;font-size:11px;padding:6px 9px">🎚️ <span data-i18n="filter_more">시급·시간</span></div>
     </div>
@@ -4429,7 +4434,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=601"></script>
+<script src="./assets/js/app.js?v=602"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4587,7 +4592,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=601"></script>
+<script src="./assets/js/app_ui.js?v=602"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
