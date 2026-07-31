@@ -918,7 +918,9 @@
       background: #222; color: #fff;
       font-size: 13px; font-weight: 500;
       padding: 10px 18px; border-radius: var(--r-xl);
-      z-index: 1000; white-space: pre-line;
+      /* 20000 — track-overlay(8700) 등 오버레이 위에 떠야 한다.
+         아래쪽에 있던 중복 .toast 규칙에서 가져옴(2026-08-01 통합) */
+      z-index: 20000; white-space: pre-line;
       max-width: 80vw; text-align: center;
       transition: opacity 0.3s;
       pointer-events: none;
@@ -1316,8 +1318,13 @@
     @keyframes spin { to{transform:rotate(360deg)} }
 
     /* ── 토스트 ── */
-    .toast { position:fixed; bottom:calc(var(--nav-h)+20px); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:500; padding:10px 18px; border-radius:var(--r-xl); z-index:20000; white-space:nowrap; transition:opacity 0.3s; pointer-events:none; }
-    .toast.hidden { opacity:0; }
+    /* 2026-08-01: 여기 있던 .toast 중복 규칙을 제거했다. 위쪽(914줄) 규칙과 같은
+       선택자인데 나중에 선언돼 이기면서 두 가지를 망가뜨리고 있었다.
+       ① bottom:calc(var(--nav-h)+20px) — calc 는 +/- 양쪽에 공백이 필수라 이 선언은
+          무효였고(헤드리스 크롬 실측: 84px 이 아니라 auto 로 해석), 토스트가 네비 위가
+          아니라 정적 위치에 떴다. ② white-space:nowrap 이 위 규칙의 pre-line/max-width
+          를 덮어써서 `\n` 이 든 여러 줄 토스트(toast_premium_pro_only 등)가 한 줄로
+          화면 밖까지 흘렀다. z-index:20000 만 위 규칙으로 옮겨 살렸다. */
 
     /* ── 당일정산 토글 ── */
     @keyframes payday-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0.35);} 50%{box-shadow:0 0 0 5px rgba(22,163,74,0);} }

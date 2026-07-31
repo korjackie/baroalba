@@ -2,9 +2,12 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="var(--red)">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="color-scheme" content="light">
+  <!-- meta content 에는 CSS var() 가 통하지 않는다(파싱 실패로 무시됨). 리터럴로 둘 것 -->
+  <meta name="theme-color" content="#C8102E">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>바로알바 — 내 활동</title>
   <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -18,13 +21,15 @@
       --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8;
       --r:12px; --r-sm:8px; --r-lg:16px; --r-xl:20px;
       --shadow-xs:0 1px 2px rgba(21,24,30,.16); --shadow-sm:0 1px 3px rgba(21,24,30,.06);
-      --shadow-md:0 2px 8px rgba(21,24,30,.08); --shadow-lg:0 8px 24px rgba(21,24,30,.12); --red:#C8102E; --nav-h:64px; }
+      --shadow-md:0 2px 8px rgba(21,24,30,.08); --shadow-lg:0 8px 24px rgba(21,24,30,.12); --red:#C8102E; --nav-h:64px;
+      --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); }
     body { font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:var(--surface-1); min-height:100vh; }
 
     /* ── 헤더 ── */
     .header {
       position:sticky; top:0; z-index:100;
       background:#fff; padding:14px 16px 12px;
+      padding-top: calc(var(--sat) + 14px);   /* 상태표시줄 침범 방지 (admin.html 과 동일 패턴) */
       border-bottom:1px solid var(--line);
       box-shadow:var(--shadow-md);
       display:flex; align-items:center; justify-content:space-between;
@@ -57,7 +62,9 @@
     .ftab.active { background:var(--red); border-color:var(--red); color:#fff; }
 
     /* ── 지원 카드 ── */
-    .content { padding:0 16px; padding-bottom:calc(var(--nav-h)+16px); }
+    /* calc 는 +/- 양쪽에 공백이 필수다. 공백이 없으면 선언 전체가 무효가 되어
+       (실측: padding-bottom 이 0px) 마지막 카드가 하단 네비에 가린다 */
+    .content { padding:0 16px; padding-bottom:calc(var(--nav-h) + 16px + var(--sab)); }
     .app-card {
       background:#fff; border-radius:var(--r-lg); padding:16px;
       margin-bottom:12px; box-shadow:var(--shadow-md);
@@ -116,11 +123,11 @@
     @keyframes spin { to{transform:rotate(360deg)} }
 
     /* ── 토스트 ── */
-    .toast { position:fixed; bottom:calc(var(--nav-h)+16px); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:500; padding:10px 18px; border-radius:var(--r-xl); z-index:9999; white-space:nowrap; transition:opacity 0.3s; pointer-events:none; }
+    .toast { position:fixed; bottom:calc(var(--nav-h) + 16px + var(--sab)); left:50%; transform:translateX(-50%); background:#222; color:#fff; font-size:13px; font-weight:500; padding:10px 18px; border-radius:var(--r-xl); z-index:9999; white-space:pre-line; max-width:80vw; text-align:center; transition:opacity 0.3s; pointer-events:none; }
     .toast.hidden { opacity:0; }
 
     /* ── 하단 내비 ── */
-    .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:#fff; border-top:1px solid var(--line); display:flex; z-index:400; box-shadow:var(--shadow-md); }
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; height:calc(var(--nav-h) + var(--sab)); padding-bottom:var(--sab); background:#fff; border-top:1px solid var(--line); display:flex; z-index:400; box-shadow:var(--shadow-md); }
     .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border:none; background:none; }
     .nav-icon { font-size:22px; }
     .nav-label { font-size:10px; font-weight:500; color:var(--ink-400); }
