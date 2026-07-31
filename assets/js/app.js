@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '602';
+  const _APP_V = '603';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -4813,11 +4813,76 @@ async function submitApplyWithMsg(skipMsg) {
       _track('job_apply', { job_id: selectedJobId, re_apply: false });
       // 업주에게 새 지원자 Push 알림
       _notifyOwnerNewApplicant(selectedJobId);
+      _promptFillProfileAfterApply();
     }
   } catch(e) {
     showToast(t('toast_error_prefix') + e.message);
     btn.textContent = '⚡ ' + t('apply_now'); btn.disabled = false;
   }
+}
+
+// ── 지원 직후 프로필 채우기 유도 (2026-07-31) ──────────────────
+// 왜 필요한가: 실측(알바생 40명) 결과 업주가 채팅에서 볼 수 있는 9개 항목 중
+// 평균 1.0개만 채워져 있고 34/40명이 0~1개뿐이다. 업주는 "완료 건수 0건" 한 줄만
+// 보고 뽑아야 한다. 시니어·외국인 특화를 내걸었는데 나이 13%·언어 3%라 그 필터가
+// 걸러낼 데이터 자체가 없다.
+//
+// 왜 지원을 막지 않는가: 라이브 공고가 0건이고 지원 활동 자체가 적은 상황에서
+// 필수 게이트를 걸면 남은 활동마저 죽는다. 지원은 이미 끝난 뒤에 띄운다 —
+// 방금 지원했으니 "뽑히고 싶은 동기"가 최고조인 타이밍이기도 하다.
+async function _promptFillProfileAfterApply() {
+  try {
+    if (isGuest || !currentUser) return;
+    // 하루 한 번만. 지원할 때마다 뜨면 그때부터는 그냥 닫는 버튼이 된다.
+    const key = 'baro_profile_nudge_at';
+    const last = parseInt(localStorage.getItem(key) || '0', 10);
+    if (Date.now() - last < 86400000) return;
+
+    const wid = await _getWorkerId();
+    if (!wid) return;
+    const { data: w } = await db.from('workers')
+      .select('age, region, experience, bio, skills, strengths, vehicles, languages')
+      .eq('id', wid).single();
+    if (!w) return;
+
+    const has = v => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
+    const items = [
+      { k: 'age',        label: t('nudge_item_age') },
+      { k: 'experience', label: t('nudge_item_exp') },
+      { k: 'skills',     label: t('nudge_item_skill') },
+      { k: 'bio',        label: t('nudge_item_bio') },
+      { k: 'region',     label: t('nudge_item_region') },
+      { k: 'languages',  label: t('nudge_item_lang') },
+    ];
+    const missing = items.filter(i => !has(w[i.k]));
+    // 대부분 채운 사람은 귀찮게 하지 않는다
+    if (missing.length < 3) return;
+
+    localStorage.setItem(key, String(Date.now()));
+
+    const ov = document.createElement('div');
+    ov.id = 'profile-nudge-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9200;display:flex;align-items:flex-end;background:rgba(0,0,0,.4)';
+    ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+    ov.innerHTML = `
+      <div style="width:100%;background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:22px 22px 34px" onclick="event.stopPropagation()">
+        <div style="width:40px;height:4px;background:var(--line);border-radius:var(--r-sm);margin:0 auto 18px"></div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink-900);margin-bottom:6px">${t('nudge_title')}</div>
+        <div style="font-size:13px;color:var(--ink-600);line-height:1.7;margin-bottom:16px">${t('nudge_desc').replace('{n}', missing.length)}</div>
+        <div style="background:var(--surface-1);border-radius:var(--r);padding:14px;margin-bottom:18px">
+          <div style="font-size:11px;font-weight:600;color:var(--ink-400);margin-bottom:9px">${t('nudge_missing_label')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${missing.map(m => `<span style="font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:#fff;border:1px solid var(--line);color:var(--ink-600)">+ ${m.label}</span>`).join('')}
+          </div>
+        </div>
+        <button onclick="document.getElementById('profile-nudge-overlay').remove();openMannamProfilePanel()"
+          style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px">${t('nudge_cta')}</button>
+        <button onclick="document.getElementById('profile-nudge-overlay').remove()"
+          style="width:100%;padding:12px;background:none;color:var(--ink-400);border:none;font-size:13px;font-weight:500;cursor:pointer">${t('nudge_later')}</button>
+      </div>`;
+    // 토스트가 먼저 보이도록 살짝 늦춘다
+    setTimeout(() => document.body.appendChild(ov), 900);
+  } catch (e) { /* 유도는 부가기능이라 실패해도 지원 플로우를 방해하지 않는다 */ }
 }
 
 function showAppliedState(applicationId) {
