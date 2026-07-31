@@ -45,6 +45,9 @@
          ⚠️ style.css 의 :root 값이 바뀌면 여기도 같이 고칠 것 (Phase 68-B 유형) */
       --ink-900:#15181E; --ink-600:#4E5661; --ink-400:#838C98;
       --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8;
+      --r:12px; --r-sm:8px; --r-lg:16px; --r-xl:20px;
+      --shadow-xs:0 1px 2px rgba(21,24,30,.16); --shadow-sm:0 1px 3px rgba(21,24,30,.06);
+      --shadow-md:0 2px 8px rgba(21,24,30,.08); --shadow-lg:0 8px 24px rgba(21,24,30,.12);
       --red: #C8102E;
       --kakao: #FEE500;
       --naver: #03C75A;
@@ -92,7 +95,7 @@
       transition: opacity 0.5s ease, visibility 0.5s;
     }
     #splash.hidden { opacity: 0; visibility: hidden; }
-    .splash-logo { width:88px; height:88px; border-radius:24px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.25); }
+    .splash-logo { width:88px; height:88px; border-radius:var(--r-xl); overflow:hidden; box-shadow:var(--shadow-lg); }
     .splash-logo img { width:100%; height:100%; object-fit:cover; display:block; }
     .splash-name { font-size:34px; font-weight:700; color:#fff; letter-spacing:-1.5px; margin-top:18px; }
     .splash-sub { font-size:14px; color:rgba(255,255,255,0.85); margin-top:8px; }
@@ -101,8 +104,8 @@
     .splash-slogan-line { font-size:22px; font-weight:400; color:#fff; line-height:1.6; letter-spacing:-0.3px; }
     .type-cursor { display:inline-block; color:rgba(255,255,255,0.7); animation:blink 0.7s step-end infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-    .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:32px; overflow:hidden; }
-    .splash-bar { height:100%; width:40%; background:#fff; border-radius:2px; animation:splash-slide 1.4s ease-in-out infinite; }
+    .splash-bar-wrap { width:56px; height:3px; background:rgba(255,255,255,0.2); border-radius:var(--r-sm); margin-top:32px; overflow:hidden; }
+    .splash-bar { height:100%; width:40%; background:#fff; border-radius:var(--r-sm); animation:splash-slide 1.4s ease-in-out infinite; }
     @keyframes splash-slide { 0%{transform:translateX(-150%)} 100%{transform:translateX(350%)} }
 
     /* ── 메인 레이아웃 ── */
@@ -144,19 +147,19 @@
     /* ── 카드 ── */
     .card {
       background: #fff;
-      border-radius: 28px 28px 0 0;
+      border-radius: var(--r-xl) var(--r-xl) 0 0;
       /* 하단 제스처 바(--sab-safe)가 이메일 입력창·푸터를 덮던 것 보정 */
       padding: 28px 24px calc(32px + var(--sab-safe));
       flex: 1;
       overflow-y: auto;
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.08);
+      box-shadow: var(--shadow-lg);
     }
 
     /* ── 탭 ── */
     .tabs {
       display: flex;
       background: var(--surface-1);
-      border-radius: 12px;
+      border-radius: var(--r);
       padding: 3px;
       margin-bottom: 24px;
     }
@@ -167,11 +170,11 @@
       font-size: 14px;
       font-weight: 500;
       color: #999;
-      border-radius: 10px;
+      border-radius: var(--r);
       cursor: pointer;
       transition: all 0.2s;
     }
-    .tab.active { background: #fff; color: var(--ink-900); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .tab.active { background: #fff; color: var(--ink-900); box-shadow: var(--shadow-sm); }
 
     /* ── SNS 버튼 ── */
     .sns-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
@@ -182,7 +185,7 @@
       gap: 10px;
       width: 100%;
       padding: 14px;
-      border-radius: 14px;
+      border-radius: var(--r-lg);
       border: none;
       font-size: 15px;
       font-weight: 500;
@@ -228,7 +231,7 @@
       width: 100%;
       padding: 13px 14px;
       border: 1.5px solid var(--line);
-      border-radius: 12px;
+      border-radius: var(--r);
       font-size: 15px;
       color: var(--ink-900);
       outline: none;
@@ -247,7 +250,7 @@
       flex: 1;
       padding: 14px 10px;
       border: 2px solid var(--line);
-      border-radius: 14px;
+      border-radius: var(--r-lg);
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
@@ -264,7 +267,7 @@
       background: var(--red);
       color: #fff;
       border: none;
-      border-radius: 14px;
+      border-radius: var(--r-lg);
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
@@ -296,18 +299,18 @@
     .find-links { display:flex; gap:16px; justify-content:center; margin-top:4px; }
     .find-link { font-size:12px; color:var(--ink-400); cursor:pointer; text-decoration:underline; background:none; border:none; padding:0; }
     .find-panel {
-      display:none; background:#f8fafc; border-radius:14px; padding:16px;
+      display:none; background:#f8fafc; border-radius:var(--r-lg); padding:16px;
       margin-top:12px; border:1px solid #e2e8f0;
     }
     .find-panel.open { display:block; }
     .find-panel-title { font-size:14px; font-weight:600; color:#1e293b; margin-bottom:12px; }
-    .find-result { font-size:14px; color:#1e293b; background:#fff; border-radius:10px; padding:12px; text-align:center; font-weight:500; margin-top:10px; display:none; }
+    .find-result { font-size:14px; color:#1e293b; background:#fff; border-radius:var(--r); padding:12px; text-align:center; font-weight:500; margin-top:10px; display:none; }
 
     /* ── 에러 메시지 ── */
     .error-msg {
       background: #FFF0F0;
       color: var(--red);
-      border-radius: 10px;
+      border-radius: var(--r);
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 500;
@@ -328,13 +331,13 @@
     .modal-overlay.open { display: flex; }
     .modal {
       background: #fff;
-      border-radius: 28px 28px 0 0;
+      border-radius: var(--r-xl) var(--r-xl) 0 0;
       width: 100%;
       padding: 28px 24px 40px;
       animation: slideUp 0.3s ease;
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .modal-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 20px; }
+    .modal-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: var(--r-sm); margin: 0 auto 20px; }
     .modal-title { font-size: 20px; font-weight: 600; color: var(--ink-900); text-align: center; margin-bottom: 6px; }
     .modal-sub   { font-size: 14px; color: var(--ink-400); text-align: center; margin-bottom: 28px; }
 
@@ -343,7 +346,7 @@
       flex: 1;
       padding: 24px 14px;
       border: 2px solid var(--line);
-      border-radius: 18px;
+      border-radius: var(--r-lg);
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
@@ -359,7 +362,7 @@
       background: var(--red);
       color: #fff;
       border: none;
-      border-radius: 14px;
+      border-radius: var(--r-lg);
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
@@ -440,20 +443,20 @@
 <!-- ── 로그인 화면 ── -->
 <div id="screen-login" class="screen">
   <div class="hero">
-    <div class="hero-icon"><img src="./icons/바로알바 최종로고.png" style="width:72px;height:72px;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,0.2)"></div>
+    <div class="hero-icon"><img src="./icons/바로알바 최종로고.png" style="width:72px;height:72px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg)"></div>
     <div class="hero-name">바로알바</div>
     <div class="hero-sub">지금 바로, 사람 구할 때도<br>돈 벌고 싶을 때도<br>사람이 그리울 때도</div>
 
     <!-- 서비스 카테고리 뱃지 -->
     <div style="display:flex;gap:7px;margin-top:14px;width:100%;justify-content:center;flex-wrap:wrap;">
-      <span style="background:rgba(255,255,255,0.93);color:#C8102E;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">⚡ 번개알바</span>
-      <span style="background:rgba(255,255,255,0.93);color:#d97706;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">📅 단기/장기알바</span>
-      <span style="background:rgba(255,255,255,0.93);color:#2563eb;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">📦 운반</span>
-      <span style="background:rgba(255,255,255,0.93);color:#16a34a;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🛵 퀵배달</span>
-      <span style="background:rgba(255,255,255,0.93);color:#0891b2;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🏃 심부름</span>
-      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🎾 레슨/과외</span>
-      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">🤝 바로모임</span>
-      <span style="background:rgba(255,255,255,0.93);color:#e11d48;font-size:11px;font-weight:400;padding:5px 11px;border-radius:20px;white-space:nowrap;">💕 바로만남</span>
+      <span style="background:rgba(255,255,255,0.93);color:#C8102E;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">⚡ 번개알바</span>
+      <span style="background:rgba(255,255,255,0.93);color:#d97706;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">📅 단기/장기알바</span>
+      <span style="background:rgba(255,255,255,0.93);color:#2563eb;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">📦 운반</span>
+      <span style="background:rgba(255,255,255,0.93);color:#16a34a;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">🛵 퀵배달</span>
+      <span style="background:rgba(255,255,255,0.93);color:#0891b2;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">🏃 심부름</span>
+      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">🎾 레슨/과외</span>
+      <span style="background:rgba(255,255,255,0.93);color:#7c3aed;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">🤝 바로모임</span>
+      <span style="background:rgba(255,255,255,0.93);color:#e11d48;font-size:11px;font-weight:400;padding:5px 11px;border-radius:var(--r-xl);white-space:nowrap;">💕 바로만남</span>
     </div>
 
     <!-- 신뢰 숫자 마케팅 -->
@@ -478,11 +481,11 @@
     <div id="install-area" style="margin-top:16px;display:none;flex-direction:column;align-items:center;gap:8px">
       <!-- Android: beforeinstallprompt 버튼 -->
       <button id="install-btn" onclick="triggerInstall()"
-        style="padding:10px 28px;background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.6);border-radius:24px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)">
+        style="padding:10px 28px;background:rgba(255,255,255,0.22);color:#fff;border:1.5px solid rgba(255,255,255,0.6);border-radius:var(--r-xl);font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)">
         📲 앱으로 설치하기
       </button>
       <!-- iOS: 수동 안내 -->
-      <div id="ios-install-guide" style="display:none;background:rgba(255,255,255,0.18);border-radius:16px;padding:12px 16px;text-align:center;backdrop-filter:blur(8px)">
+      <div id="ios-install-guide" style="display:none;background:rgba(255,255,255,0.18);border-radius:var(--r-lg);padding:12px 16px;text-align:center;backdrop-filter:blur(8px)">
         <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:6px">📲 홈 화면에 추가하기</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.6">
           Safari 하단 <strong>공유 버튼(⎙)</strong> 탭 →<br>
@@ -566,7 +569,7 @@
       <div class="find-panel" id="find-pw-panel">
         <div class="find-panel-title">🔑 비밀번호 재설정</div>
         <div style="font-size:12px;color:#64748b;margin-bottom:10px">가입한 이메일로 6자리 인증 코드를 보내드립니다</div>
-        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E;line-height:1.6">
+        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:var(--r);padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400E;line-height:1.6">
           ⚠️ <strong>카카오·네이버·구글</strong>로 가입하신 경우 해당 앱에서 직접 비밀번호를 찾아주세요.<br>
           이메일 재설정은 <strong>이메일로 직접 가입</strong>하신 분만 이용 가능합니다.
         </div>
@@ -609,8 +612,8 @@
       <div class="form-group">
         <label class="form-label">성별 <span style="color:#C8102E;font-weight:500">*</span></label>
         <div style="display:flex;gap:8px">
-          <button type="button" id="signup-gender-male-btn" onclick="setSignupGender('male')" style="flex:1;padding:11px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:var(--surface-1);color:var(--ink-600)">남성</button>
-          <button type="button" id="signup-gender-female-btn" onclick="setSignupGender('female')" style="flex:1;padding:11px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:var(--surface-1);color:var(--ink-600)">여성</button>
+          <button type="button" id="signup-gender-male-btn" onclick="setSignupGender('male')" style="flex:1;padding:11px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;background:var(--surface-1);color:var(--ink-600)">남성</button>
+          <button type="button" id="signup-gender-female-btn" onclick="setSignupGender('female')" style="flex:1;padding:11px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;background:var(--surface-1);color:var(--ink-600)">여성</button>
         </div>
       </div>
 
@@ -654,11 +657,11 @@
           <option value="OTHER">기타</option>
         </select>
         <!-- 비자별 취업가능 업종 안내 -->
-        <div id="signup-visa-info" style="display:none;margin-top:8px;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.6"></div>
+        <div id="signup-visa-info" style="display:none;margin-top:8px;padding:10px 12px;border-radius:var(--r);font-size:12px;line-height:1.6"></div>
       </div>
 
       <!-- 필수 동의 체크박스 -->
-      <div style="background:#f8fafc;border-radius:12px;padding:14px 16px;margin-bottom:14px">
+      <div style="background:#f8fafc;border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:10px">
           <input type="checkbox" id="agree-age" style="width:18px;height:18px;flex-shrink:0;margin-top:1px;accent-color:#C8102E">
           <span style="font-size:13px;color:#444;line-height:1.5">만 19세 이상임을 확인합니다 <span style="color:#C8102E;font-weight:500">*</span></span>
@@ -704,11 +707,11 @@
   <div style="font-size:14px;color:var(--ink-400);margin-bottom:28px">6자 이상 새 비밀번호를 입력하세요</div>
   <div style="width:100%;max-width:360px">
     <input id="new-pw-input" type="password" placeholder="새 비밀번호 (6자 이상)"
-      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;margin-bottom:10px;outline:none;box-sizing:border-box">
+      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);font-size:15px;margin-bottom:10px;outline:none;box-sizing:border-box">
     <input id="new-pw-confirm" type="password" placeholder="비밀번호 확인"
-      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;margin-bottom:16px;outline:none;box-sizing:border-box">
+      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);font-size:15px;margin-bottom:16px;outline:none;box-sizing:border-box">
     <button onclick="submitNewPassword()"
-      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">
+      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer">
       비밀번호 변경
     </button>
     <div id="pw-reset-error" style="color:#EF4444;font-size:13px;text-align:center;margin-top:10px;display:none"></div>
@@ -726,16 +729,16 @@
 
 <!-- 비밀번호 재설정 인라인 화면 (이메일 링크 클릭 후 기존 탭에서 표시) -->
 <div id="screen-inline-reset" style="display:none;position:fixed;inset:0;z-index:3000;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:#C8102E;">
-  <div style="background:#fff;border-radius:24px;padding:36px 24px 40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+  <div style="background:#fff;border-radius:var(--r-xl);padding:36px 24px 40px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);">
     <div style="font-size:48px;text-align:center;margin-bottom:16px">🔑</div>
     <div style="font-size:22px;font-weight:700;color:var(--ink-900);text-align:center;margin-bottom:6px">새 비밀번호 설정</div>
     <div style="font-size:14px;color:var(--ink-400);text-align:center;margin-bottom:28px">6자 이상 새 비밀번호를 입력해주세요</div>
     <input id="inline-pw1" type="password" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password"
-      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;color:var(--ink-900);outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
+      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);font-size:15px;color:var(--ink-900);outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
     <input id="inline-pw2" type="password" placeholder="비밀번호 확인" autocomplete="new-password"
-      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;color:var(--ink-900);outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
+      style="width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);font-size:15px;color:var(--ink-900);outline:none;background:#fafafa;margin-bottom:12px;box-sizing:border-box;">
     <button id="inline-btn" onclick="doInlineReset()"
-      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:4px;">비밀번호 변경</button>
+      style="width:100%;padding:15px;background:#C8102E;color:#fff;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;margin-top:4px;">비밀번호 변경</button>
     <div id="inline-msg" style="font-size:13px;text-align:center;margin-top:14px;display:none;"></div>
   </div>
 </div>
@@ -745,13 +748,13 @@
   <div style="font-size:56px;margin-bottom:20px">📧</div>
   <div style="font-size:22px;font-weight:700;color:var(--ink-900);margin-bottom:10px">이메일을 확인해주세요</div>
   <div style="font-size:14px;color:var(--ink-400);line-height:1.7;margin-bottom:12px">아래 이메일로 가입 확인 메일을 보냈습니다</div>
-  <div id="naver-magic-email" style="font-size:15px;font-weight:600;color:#C8102E;background:#FFF0F0;padding:10px 20px;border-radius:12px;margin-bottom:20px;word-break:break-all;max-width:320px"></div>
+  <div id="naver-magic-email" style="font-size:15px;font-weight:600;color:#C8102E;background:#FFF0F0;padding:10px 20px;border-radius:var(--r);margin-bottom:20px;word-break:break-all;max-width:320px"></div>
   <div style="font-size:13px;color:var(--ink-400);line-height:1.9;margin-bottom:32px;max-width:300px">
     📌 이메일에서 <b>"Confirm your email"</b><br>버튼을 클릭하면 가입 완료됩니다<br>
     이후 네이버 로그인이 정상 작동합니다<br>
     <span style="font-size:12px;color:var(--ink-400)">(스팸함도 확인 · 최초 1회만 필요)</span>
   </div>
-  <button onclick="document.getElementById('screen-naver-magic').style.display='none'" style="width:100%;max-width:320px;padding:14px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer">← 로그인 화면으로 돌아가기</button>
+  <button onclick="document.getElementById('screen-naver-magic').style.display='none'" style="width:100%;max-width:320px;padding:14px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:15px;font-weight:500;cursor:pointer">← 로그인 화면으로 돌아가기</button>
 </div>
 
 <script>
@@ -968,7 +971,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1a1a1a;color:#fff;padding:calc(10px + var(--sat-safe)) 16px 10px;font-size:12px;font-weight:500;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:8px';
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     banner.innerHTML = `<span>더 나은 경험을 위해 ${isIOS ? 'Safari' : 'Chrome'}에서 열어주세요</span>
-      <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:600">${isIOS ? 'Safari' : 'Chrome'}으로 열기</button>`;
+      <button onclick="openInChrome()" style="background:#C8102E;color:#fff;padding:5px 12px;border-radius:var(--r-sm);font-size:11px;white-space:nowrap;border:none;cursor:pointer;font-weight:600">${isIOS ? 'Safari' : 'Chrome'}으로 열기</button>`;
     document.body.prepend(banner);
   }
 
@@ -1224,8 +1227,8 @@ function setSignupGender(val) {
   _signupGender = val;
   const mBtn = document.getElementById('signup-gender-male-btn');
   const fBtn = document.getElementById('signup-gender-female-btn');
-  const activeStyle = 'flex:1;padding:11px;border:1.5px solid #C8102E;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:#C8102E;color:#fff';
-  const idleStyle   = 'flex:1;padding:11px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:var(--surface-1);color:var(--ink-600)';
+  const activeStyle = 'flex:1;padding:11px;border:1.5px solid #C8102E;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;background:#C8102E;color:#fff';
+  const idleStyle   = 'flex:1;padding:11px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;background:var(--surface-1);color:var(--ink-600)';
   mBtn.style.cssText = val === 'male'   ? activeStyle : idleStyle;
   fBtn.style.cssText = val === 'female' ? activeStyle : idleStyle;
 }
@@ -1456,7 +1459,7 @@ function hideLoading()   { document.getElementById('loading').classList.remove('
 
 function showToastMsg(msg) {
   const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;white-space:nowrap;text-align:center;';
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:var(--r-xl);font-size:13px;font-weight:500;z-index:9999;white-space:nowrap;text-align:center;';
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 2500);

@@ -14,26 +14,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
          토큰이 없으면 var() 선언이 통째로 무효가 되어 색이 깨지므로 여기에 사본을 둔다.
          ⚠️ style.css 의 :root 값이 바뀌면 여기도 같이 고칠 것 (Phase 68-B 유형) */
       --ink-900:#15181E; --ink-600:#4E5661; --ink-400:#838C98;
-      --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+      --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8;
+      --r:12px; --r-sm:8px; --r-lg:16px; --r-xl:20px;
+      --shadow-xs:0 1px 2px rgba(21,24,30,.16); --shadow-sm:0 1px 3px rgba(21,24,30,.06);
+      --shadow-md:0 2px 8px rgba(21,24,30,.08); --shadow-lg:0 8px 24px rgba(21,24,30,.12);--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 .hdr{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100}
 .hdr-inner{padding:calc(var(--sat) + 14px) 16px 14px;display:flex;align-items:center;gap:12px}
 .tab-bar{display:flex;border-bottom:1px solid var(--line);background:#fff}
 .tab-btn{flex:1;padding:13px 4px;font-size:13px;font-weight:500;color:var(--ink-400);border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .15s}
 .tab-btn.active{color:#7C3AED;border-bottom-color:#7C3AED}
 .content{padding:14px;padding-bottom:calc(14px + var(--sab))}
-.card{background:#fff;border-radius:16px;border:1px solid var(--line);padding:16px;margin-bottom:12px}
-.btn-primary{width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
-.btn-secondary{padding:8px 16px;background:#f3f4f6;color:var(--ink-600);border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
-.btn-danger{padding:8px 16px;background:#fee2e2;color:#ef4444;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
-.btn-success{padding:8px 16px;background:#d1fae5;color:#059669;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer}
-.status-badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:500}
-input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:14px;outline:none;font-family:inherit}
+.card{background:#fff;border-radius:var(--r-lg);border:1px solid var(--line);padding:16px;margin-bottom:12px}
+.btn-primary{width:100%;padding:13px;background:#7C3AED;color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer}
+.btn-secondary{padding:8px 16px;background:#f3f4f6;color:var(--ink-600);border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer}
+.btn-danger{padding:8px 16px;background:#fee2e2;color:#ef4444;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer}
+.btn-success{padding:8px 16px;background:#d1fae5;color:#059669;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer}
+.status-badge{display:inline-block;padding:3px 9px;border-radius:var(--r-sm);font-size:11px;font-weight:500}
+input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;outline:none;font-family:inherit}
 input:focus,select:focus,textarea:focus{border-color:#7C3AED}
 label{font-size:12px;font-weight:500;color:var(--ink-600);display:block;margin-bottom:5px;margin-top:12px}
 label:first-child{margin-top:0}
 .spinner{width:24px;height:24px;border:3px solid var(--line);border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
+#toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;padding:11px 20px;border-radius:var(--r-xl);font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -61,7 +64,7 @@ label:first-child{margin-top:0}
         <div style="font-size:16px;font-weight:700;color:var(--ink-900)">바로만남 매니저</div>
         <div id="mgr-name" style="font-size:11px;color:var(--ink-400);margin-top:1px"></div>
       </div>
-      <button onclick="doLogout()" style="padding:7px 14px;background:#f3f4f6;color:var(--ink-600);border:none;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer">로그아웃</button>
+      <button onclick="doLogout()" style="padding:7px 14px;background:#f3f4f6;color:var(--ink-600);border:none;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer">로그아웃</button>
     </div>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('restaurants')" id="tab-restaurants">🏪 식당</button>
@@ -96,7 +99,7 @@ label:first-child{margin-top:0}
 
 <!-- 식당 등록/수정 모달 -->
 <div id="restaurant-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);overflow-y:auto">
-  <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:60px;padding:20px 16px 24px;position:relative;max-width:600px;margin-left:auto;margin-right:auto">
+  <div style="background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;margin-top:60px;padding:20px 16px 24px;position:relative;max-width:600px;margin-left:auto;margin-right:auto">
     <div style="font-size:16px;font-weight:700;margin-bottom:16px" id="restaurant-modal-title">식당 등록</div>
     <label>식당명</label><input type="text" id="r-name" placeholder="예) 스시진">
     <label>주소</label><input type="text" id="r-address" placeholder="예) 서울시 강남구 ...">
@@ -115,7 +118,7 @@ label:first-child{margin-top:0}
 
 <!-- 이벤트 등록/수정 모달 -->
 <div id="event-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);overflow-y:auto">
-  <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:60px;padding:20px 16px 24px;max-width:600px;margin-left:auto;margin-right:auto">
+  <div style="background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;margin-top:60px;padding:20px 16px 24px;max-width:600px;margin-left:auto;margin-right:auto">
     <div style="font-size:16px;font-weight:700;margin-bottom:16px" id="event-modal-title">이벤트 개설</div>
     <label>제휴 식당</label>
     <select id="e-restaurant"><option value="">선택하세요</option></select>
@@ -135,7 +138,7 @@ label:first-child{margin-top:0}
 
 <!-- 여성 배정 모달 -->
 <div id="assign-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5)">
-  <div style="background:#fff;border-radius:20px 20px 0 0;margin-top:auto;padding:20px 16px 24px;position:absolute;bottom:0;left:0;right:0;max-width:600px;margin-left:auto;margin-right:auto">
+  <div style="background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;margin-top:auto;padding:20px 16px 24px;position:absolute;bottom:0;left:0;right:0;max-width:600px;margin-left:auto;margin-right:auto">
     <div style="font-size:15px;font-weight:700;margin-bottom:14px">식당·이벤트 배정</div>
     <label>배정할 이벤트</label>
     <select id="assign-event-id"><option value="">선택하세요</option></select>
