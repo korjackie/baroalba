@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FF4B4B">
+  <meta name="theme-color" content="var(--red)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>바로알바 — 내 활동</title>
   <script src="./config.js"></script>
@@ -18,7 +18,7 @@
       --line:#E3E7EC; --surface-0:#FFFFFF; --surface-1:#F4F6F8;
       --r:12px; --r-sm:8px; --r-lg:16px; --r-xl:20px;
       --shadow-xs:0 1px 2px rgba(21,24,30,.16); --shadow-sm:0 1px 3px rgba(21,24,30,.06);
-      --shadow-md:0 2px 8px rgba(21,24,30,.08); --shadow-lg:0 8px 24px rgba(21,24,30,.12); --red:#FF4B4B; --nav-h:64px; }
+      --shadow-md:0 2px 8px rgba(21,24,30,.08); --shadow-lg:0 8px 24px rgba(21,24,30,.12); --red:#C8102E; --nav-h:64px; }
     body { font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background:var(--surface-1); min-height:100vh; }
 
     /* ── 헤더 ── */
@@ -39,7 +39,7 @@
       padding:20px; box-shadow:var(--shadow-md);
       display:flex; align-items:center; gap:16px;
     }
-    .avatar { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#FF4B4B,#ff7b7b); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
+    .avatar { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,var(--red),#ff7b7b); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
     .profile-info .name { font-size:18px; font-weight:700; color:var(--ink-900); }
     .profile-info .sub { font-size:12px; color:var(--ink-400); margin-top:3px; }
     .rating-badge { display:flex; align-items:center; gap:4px; background:#FFF8E1; color:#F59E0B; font-size:13px; font-weight:600; padding:4px 10px; border-radius:var(--r); margin-top:6px; width:fit-content; }
@@ -237,13 +237,13 @@
       <button onclick="showChangePw()" style="width:100%;padding:14px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:15px;font-weight:500;cursor:pointer;text-align:left">🔑 비밀번호 변경</button>
       <button onclick="doLogout()" style="width:100%;padding:14px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:15px;font-weight:500;cursor:pointer;text-align:left">🚪 로그아웃</button>
       <div style="height:1px;background:var(--surface-1);margin:4px 0"></div>
-      <button onclick="deleteAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:#FF4B4B;border:none;border-radius:var(--r-lg);font-size:15px;font-weight:500;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
+      <button onclick="deleteAccount()" style="width:100%;padding:14px;background:#FFF0F0;color:var(--red);border:none;border-radius:var(--r-lg);font-size:15px;font-weight:500;cursor:pointer;text-align:left">⚠️ 회원 탈퇴</button>
       <!-- 비밀번호 변경 폼 (이메일 로그인만) -->
       <div id="change-pw-form" style="display:none;margin-top:4px;padding:14px;background:var(--surface-1);border-radius:var(--r-lg);">
         <div style="font-size:12px;font-weight:500;color:var(--ink-400);margin-bottom:8px">새 비밀번호</div>
         <input id="new-pw" type="password" placeholder="6자 이상" style="width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;margin-bottom:8px;outline:none">
         <input id="new-pw2" type="password" placeholder="비밀번호 확인" style="width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;margin-bottom:10px;outline:none">
-        <button onclick="submitChangePw()" style="width:100%;padding:12px;background:#FF4B4B;color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">변경하기</button>
+        <button onclick="submitChangePw()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer">변경하기</button>
       </div>
     </div>
   </div>
