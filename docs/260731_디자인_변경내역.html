@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>바로알바 — 디자인 변경내역 (2026.07.31)</title>
+<style>
+  :root{
+    --red:#C8102E;
+    --ink-900:#15181E; --ink-600:#4E5661; --ink-400:#838C98; --ink-200:#C3CAD3;
+    --line:#E3E7EC; --surface-0:#fff; --surface-1:#F4F6F8; --surface-2:#FBFCFD;
+    --r:12px; --r-lg:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+       letter-spacing:-0.01em;color:var(--ink-900);background:var(--surface-1);line-height:1.6}
+  nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;
+      padding:0 5%;height:58px}
+  .nav-logo{font-size:17px;font-weight:700;color:var(--red)}
+  .nav-badge{background:#fff0f2;color:var(--red);font-size:12px;font-weight:600;padding:4px 12px;border-radius:100px}
+  main{max-width:940px;margin:0 auto;padding:32px 5% 60px}
+
+  .hero{background:linear-gradient(135deg,#0a0a0a,#1a0008);border-radius:22px;padding:40px 36px;margin-bottom:28px;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 40%,rgba(200,16,46,.28),transparent 62%)}
+  .hero-tag{position:relative;display:inline-block;background:rgba(200,16,46,.25);border:1px solid rgba(200,16,46,.5);
+            color:#ff6b7a;font-size:11px;font-weight:600;padding:4px 13px;border-radius:100px;letter-spacing:1px;margin-bottom:14px}
+  .hero h1{position:relative;font-size:clamp(21px,3.2vw,29px);font-weight:700;color:#fff;letter-spacing:-1px;line-height:1.3;margin-bottom:9px}
+  .hero p{position:relative;font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.85}
+
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:32px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+  .stat-n{font-size:24px;font-weight:700;color:var(--red);line-height:1.1}
+  .stat-l{font-size:11.5px;font-weight:500;color:var(--ink-400);margin-top:5px}
+
+  .section{margin-bottom:40px}
+  .sec-label{font-size:11px;font-weight:600;color:var(--red);letter-spacing:2px;margin-bottom:5px}
+  .sec-title{font-size:clamp(17px,2.3vw,21px);font-weight:700;letter-spacing:-.4px;margin-bottom:6px}
+  .sec-desc{font-size:13.5px;color:var(--ink-600);margin-bottom:18px;line-height:1.8}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 24px;margin-bottom:14px}
+  .card-t{font-size:14.5px;font-weight:700;margin-bottom:12px}
+
+  /* before/after */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.ba{grid-template-columns:1fr}}
+  .ba-col{border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .ba-head{font-size:11px;font-weight:600;letter-spacing:1px;padding:7px 14px}
+  .ba-head.before{background:#FFF1F2;color:#9f1239}
+  .ba-head.after{background:#ECFDF5;color:#065F46}
+  .ba-body{padding:18px 16px;background:#fff}
+
+  /* 굵기 샘플 — before 는 옛 값을 그대로 인라인으로 박아 재현 */
+  .wrow{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .wrow:last-child{border-bottom:none}
+  .wnum{font-size:10.5px;color:var(--ink-400);font-weight:500;width:34px;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .wtxt{font-size:15px}
+
+  /* 색 스와치 */
+  .sw{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .sw:last-child{border-bottom:none}
+  .chip{width:34px;height:34px;border-radius:8px;flex-shrink:0;border:1px solid rgba(0,0,0,.07)}
+  .sw-meta{font-size:11px;color:var(--ink-400);font-family:ui-monospace,'SF Mono',monospace}
+  .sw-name{font-size:13px;font-weight:600}
+
+  /* 공고카드 재현 */
+  .jc{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:#fff}
+  .jc + .jc{margin-top:9px}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{background:var(--surface-1);padding:9px 11px;text-align:left;font-size:10.5px;font-weight:600;color:var(--ink-400);letter-spacing:.4px}
+  td{padding:9px 11px;border-top:1px solid var(--line);color:var(--ink-600)}
+  td.n{font-variant-numeric:tabular-nums;text-align:right;font-weight:600;color:var(--ink-900)}
+  code{font-family:ui-monospace,'SF Mono',monospace;background:var(--surface-1);padding:1px 5px;border-radius:4px;font-size:11.5px;color:var(--red)}
+
+  .callout{border-radius:12px;padding:15px 17px;margin:12px 0;font-size:13px;line-height:1.85}
+  .callout.warn{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+  .callout.crit{background:#FFF1F2;border:1px solid #FECDD3;color:#9f1239}
+  .callout.ok{background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46}
+  .callout b{font-weight:700}
+
+  .todo{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-600)}
+  .todo:last-child{border-bottom:none}
+  .todo-n{width:20px;flex-shrink:0;font-weight:700;color:var(--ink-400)}
+  footer{text-align:center;padding:34px 0 16px;font-size:12px;color:var(--ink-400);border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">바로알바</div>
+  <div class="nav-badge">디자인 변경내역 · 2026.07.31</div>
+</nav>
+<main>
+
+  <div class="hero">
+    <div class="hero-tag">v597 → v599 · 1차 굵기 · 2차 색</div>
+    <h1>디자인 변경내역</h1>
+    <p>화면마다 제각각이던 시각 규칙을 하나로 좁혔습니다.<br>
+       <b style="color:rgba(255,255,255,.8)">기능·문구·레이아웃은 하나도 안 바뀌었습니다</b> — 순수 시각 작업입니다.</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-n">3,800</div><div class="stat-l">총 치환 건수</div></div>
+    <div class="stat"><div class="stat-n">7 → 4</div><div class="stat-l">글자 굵기 종류</div></div>
+    <div class="stat"><div class="stat-n">8 → 4</div><div class="stat-l">회색 단계</div></div>
+    <div class="stat"><div class="stat-n">2건</div><div class="stat-l">막은 사고</div></div>
+  </div>
+
+  <!-- ─────────── 1차 굵기 ─────────── -->
+  <div class="section">
+    <div class="sec-label">1차 · v598</div>
+    <div class="sec-title">글자 굵기 — 7종을 4종으로</div>
+    <div class="sec-desc">
+      800·900이 848회로 <b>전체의 절반 가까이</b>였습니다. 거의 모든 글자가 굵었다는 뜻인데,
+      전부 강조하면 강조가 사라지고 화면이 시끄러워집니다. 상대 순서는 그대로 두고 전체를 한 단계씩 내렸습니다.
+    </div>
+
+    <div class="card">
+      <div class="card-t">같은 문장, 같은 크기 — 굵기만 다릅니다</div>
+      <div class="ba">
+        <div class="ba-col">
+          <div class="ba-head before">BEFORE · 7종</div>
+          <div class="ba-body">
+            <div class="wrow"><span class="wnum">900</span><span class="wtxt" style="font-weight:900">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">800</span><span class="wtxt" style="font-weight:800">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">700</span><span class="wtxt" style="font-weight:700">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">600</span><span class="wtxt" style="font-weight:600">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">500</span><span class="wtxt" style="font-weight:500">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">400</span><span class="wtxt" style="font-weight:400">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">300</span><span class="wtxt" style="font-weight:300">카페 홀서빙 알바</span></div>
+          </div>
+        </div>
+        <div class="ba-col">
+          <div class="ba-head after">AFTER · 4종</div>
+          <div class="ba-body">
+            <div class="wrow"><span class="wnum">700</span><span class="wtxt" style="font-weight:700">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">600</span><span class="wtxt" style="font-weight:600">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">500</span><span class="wtxt" style="font-weight:500">카페 홀서빙 알바</span></div>
+            <div class="wrow"><span class="wnum">400</span><span class="wtxt" style="font-weight:400">카페 홀서빙 알바</span></div>
+            <div class="wrow" style="opacity:.35"><span class="wnum">—</span><span class="wtxt" style="font-weight:400">·</span></div>
+            <div class="wrow" style="opacity:.35"><span class="wnum">—</span><span class="wtxt" style="font-weight:400">·</span></div>
+            <div class="wrow" style="opacity:.35"><span class="wnum">—</span><span class="wtxt" style="font-weight:400">·</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">매핑표</div>
+      <table>
+        <thead><tr><th>기존</th><th style="text-align:right">건수</th><th>→ 변경</th><th>역할</th></tr></thead>
+        <tbody>
+          <tr><td><b>900</b></td><td class="n">326</td><td><b>700</b></td><td>제목 · 시급 · 로고</td></tr>
+          <tr><td><b>800</b></td><td class="n">682</td><td><b>600</b></td><td>부제 · 버튼 · 배지</td></tr>
+          <tr><td><b>700</b></td><td class="n">684</td><td><b>500</b></td><td>메타 · 본문강조</td></tr>
+          <tr><td>600</td><td class="n">130</td><td><b>500</b></td><td>〃</td></tr>
+          <tr><td>500 · 400 · 300</td><td class="n">55</td><td><b>400</b></td><td>본문</td></tr>
+        </tbody>
+      </table>
+      <div class="callout ok" style="margin-bottom:0">
+        총 <b>1,862건 / 9개 파일</b>. 적용 후 굵기는 400·500·600·700 <b>4종만</b> 남았고 검산 일치.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 2차 색 ─────────── -->
+  <div class="section">
+    <div class="sec-label">2차 · v599</div>
+    <div class="sec-title">색 — 회색 8단계를 4단계로</div>
+    <div class="sec-desc">
+      같은 역할(제목·본문·보조)에 매번 다른 회색을 쓰고 있었습니다. 화면마다 규칙이 달라지는 주된 원인이었습니다.
+    </div>
+
+    <div class="card">
+      <div class="card-t">글자색 — 8단계가 4단계로</div>
+      <div class="ba">
+        <div class="ba-col">
+          <div class="ba-head before">BEFORE · 회색 8종</div>
+          <div class="ba-body">
+            <div class="sw"><span class="chip" style="background:#111"></span><span><span class="sw-name" style="color:#111">제목입니다</span><br><span class="sw-meta">#111</span></span></div>
+            <div class="sw"><span class="chip" style="background:#222"></span><span><span class="sw-name" style="color:#222">제목입니다</span><br><span class="sw-meta">#222</span></span></div>
+            <div class="sw"><span class="chip" style="background:#333"></span><span><span class="sw-name" style="color:#333">본문입니다</span><br><span class="sw-meta">#333</span></span></div>
+            <div class="sw"><span class="chip" style="background:#555"></span><span><span class="sw-name" style="color:#555">본문입니다</span><br><span class="sw-meta">#555</span></span></div>
+            <div class="sw"><span class="chip" style="background:#666"></span><span><span class="sw-name" style="color:#666">보조 설명</span><br><span class="sw-meta">#666</span></span></div>
+            <div class="sw"><span class="chip" style="background:#888"></span><span><span class="sw-name" style="color:#888">보조 설명</span><br><span class="sw-meta">#888</span></span></div>
+            <div class="sw"><span class="chip" style="background:#aaa"></span><span><span class="sw-name" style="color:#aaa">보조 설명</span><br><span class="sw-meta">#aaa · 290회</span></span></div>
+            <div class="sw"><span class="chip" style="background:#bbb"></span><span><span class="sw-name" style="color:#bbb">보조 설명</span><br><span class="sw-meta">#bbb · 167회</span></span></div>
+          </div>
+        </div>
+        <div class="ba-col">
+          <div class="ba-head after">AFTER · 회색 4종</div>
+          <div class="ba-body">
+            <div class="sw"><span class="chip" style="background:#15181E"></span><span><span class="sw-name" style="color:#15181E">제목입니다</span><br><span class="sw-meta">--ink-900 · #15181E</span></span></div>
+            <div class="sw"><span class="chip" style="background:#4E5661"></span><span><span class="sw-name" style="color:#4E5661">본문입니다</span><br><span class="sw-meta">--ink-600 · #4E5661</span></span></div>
+            <div class="sw"><span class="chip" style="background:#838C98"></span><span><span class="sw-name" style="color:#838C98">보조 설명</span><br><span class="sw-meta">--ink-400 · #838C98</span></span></div>
+            <div class="sw"><span class="chip" style="background:#C3CAD3"></span><span><span class="sw-name" style="color:#C3CAD3">비활성 · 힌트</span><br><span class="sw-meta">--ink-200 · #C3CAD3</span></span></div>
+            <div class="sw" style="opacity:.3;border-bottom:none"><span class="chip" style="background:transparent;border-style:dashed"></span><span class="sw-meta">—</span></div>
+            <div class="sw" style="opacity:.3;border-bottom:none"><span class="chip" style="background:transparent;border-style:dashed"></span><span class="sw-meta">—</span></div>
+            <div class="sw" style="opacity:.3;border-bottom:none"><span class="chip" style="background:transparent;border-style:dashed"></span><span class="sw-meta">—</span></div>
+            <div class="sw" style="opacity:.3;border-bottom:none"><span class="chip" style="background:transparent;border-style:dashed"></span><span class="sw-meta">—</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="callout warn">
+        <b>가장 큰 변화는 <code>#aaa</code>·<code>#bbb</code> 457건입니다.</b>
+        위 왼쪽에서 <span style="color:#aaa;font-weight:600">이 정도로 흐렸던</span> 글씨가
+        <span style="color:#838C98;font-weight:600">이 정도로 또렷해집니다.</span>
+        새 회색은 살짝 푸른기가 있어 더 정돈돼 보이고, 무엇보다 <b>대비가 올라가 시니어·외국인 가독성이 함께 개선</b>됩니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">선과 면 — 같은 값이 두 역할을 겸하던 것을 분리</div>
+      <table>
+        <thead><tr><th>기존 리터럴</th><th>쓰임</th><th>→ 변경</th><th style="text-align:right">건수</th></tr></thead>
+        <tbody>
+          <tr><td><code>#eee</code> <code>#f0f0f0</code> <code>#e5e7eb</code> <code>#f5f5f5</code> <code>#f8f8f8</code></td>
+              <td>테두리 · 구분선</td><td><code>--line</code> #E3E7EC</td><td class="n">383</td></tr>
+          <tr><td>위와 <b>같은 5종</b></td>
+              <td>배경 · 면</td><td><code>--surface-1</code> #F4F6F8</td><td class="n">271</td></tr>
+        </tbody>
+      </table>
+      <div class="callout crit" style="margin-bottom:0">
+        같은 <code>#f5f5f5</code>가 어떤 곳에선 <b>선</b>, 어떤 곳에선 <b>배경</b>이었습니다.
+        그래서 단순 찾아바꾸기를 하면 안 됐습니다 — 아래 "막은 사고" 참고.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">공고 카드로 보면</div>
+      <div class="ba">
+        <div class="ba-col">
+          <div class="ba-head before">BEFORE</div>
+          <div class="ba-body" style="background:#f5f5f5">
+            <div class="jc" style="border-color:#f0f0f0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                <span style="font-size:14.5px;font-weight:800;color:#222">카페 홀서빙</span>
+                <span style="font-size:16px;font-weight:900;color:#C8102E;white-space:nowrap">12,000원</span>
+              </div>
+              <div style="font-size:12.5px;font-weight:700;color:#888;margin-top:3px">스타벅스 강남점</div>
+              <div style="font-size:11.5px;font-weight:700;color:#aaa;margin-top:5px">도보 5분 · 오늘 18시 · 4시간</div>
+              <div style="display:flex;gap:5px;margin-top:8px">
+                <span style="font-size:10.5px;font-weight:700;background:#f5f5f5;color:#888;padding:2px 7px;border-radius:6px">당일정산</span>
+                <span style="font-size:10.5px;font-weight:700;background:#f5f5f5;color:#888;padding:2px 7px;border-radius:6px">초보OK</span>
+                <span style="font-size:10.5px;font-weight:700;background:#f5f5f5;color:#888;padding:2px 7px;border-radius:6px">시니어환영</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ba-col">
+          <div class="ba-head after">AFTER</div>
+          <div class="ba-body" style="background:var(--surface-1)">
+            <div class="jc" style="border-color:var(--line)">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                <span style="font-size:14.5px;font-weight:600;color:var(--ink-900)">카페 홀서빙</span>
+                <span style="font-size:16px;font-weight:700;color:var(--red);white-space:nowrap">12,000원</span>
+              </div>
+              <div style="font-size:12.5px;font-weight:500;color:var(--ink-400);margin-top:3px">스타벅스 강남점</div>
+              <div style="font-size:11.5px;font-weight:500;color:var(--ink-400);margin-top:5px">도보 5분 · 오늘 18시 · 4시간</div>
+              <div style="display:flex;gap:5px;margin-top:8px">
+                <span style="font-size:10.5px;font-weight:500;background:var(--surface-1);color:var(--ink-400);padding:2px 7px;border-radius:6px">당일정산</span>
+                <span style="font-size:10.5px;font-weight:500;background:var(--surface-1);color:var(--ink-400);padding:2px 7px;border-radius:6px">초보OK</span>
+                <span style="font-size:10.5px;font-weight:500;background:var(--surface-1);color:var(--ink-400);padding:2px 7px;border-radius:6px">시니어환영</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout ok" style="margin-bottom:0">
+        <b>글자 크기·정보량은 하나도 안 줄였습니다.</b> 굵기와 색만 정리했는데 위계가 생깁니다 —
+        제목과 시급이 먼저 읽히고 나머지는 뒤로 물러납니다. 외국인·시니어 특화 방향이라
+        여백을 늘리고 글자를 줄이는 "미니멀"은 일부러 피했습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── 막은 사고 ─────────── -->
+  <div class="section">
+    <div class="sec-label">Near Miss</div>
+    <div class="sec-title">작업 중 막은 사고 2건</div>
+    <div class="sec-desc">둘 다 그냥 찾아바꾸기를 했으면 화면이 깨졌을 건들입니다.</div>
+
+    <div class="card">
+      <div class="card-t">① 테두리 39개가 사라질 뻔했습니다</div>
+      <p style="font-size:13.5px;color:var(--ink-600);line-height:1.85">
+        설계 단계에선 <code>#f5f5f5</code>를 "배경색"으로만 분류했습니다. 그런데 실제로 세어보니
+        <b>테두리로도 39건</b> 쓰이고 있었습니다. 그대로 배경 토큰으로 바꿨다면 그 선들이
+        배경색이 되어 <b>보이지 않게</b> 됩니다.
+      </p>
+      <div class="ba" style="margin-top:12px">
+        <div class="ba-col"><div class="ba-head before">그대로 치환했다면</div>
+          <div class="ba-body"><div style="border:1px solid #F4F6F8;border-radius:10px;padding:14px;background:#fff;font-size:12.5px;color:var(--ink-400)">테두리가 거의 안 보입니다</div></div></div>
+        <div class="ba-col"><div class="ba-head after">문맥 분기 후</div>
+          <div class="ba-body"><div style="border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;font-size:12.5px;color:var(--ink-600)">테두리가 제대로 보입니다</div></div></div>
+      </div>
+      <p style="font-size:13px;color:var(--ink-600);margin-top:12px">
+        → 속성명(<code>border-</code>인지 <code>background-</code>인지)을 같이 읽어서 갈랐습니다.
+        문맥 분기가 필요한 게 한 종이 아니라 <b>5종 전부</b>였습니다.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-t">② 로그인·관리자·업주 화면의 글자색이 통째로 깨질 뻔했습니다</div>
+      <p style="font-size:13.5px;color:var(--ink-600);line-height:1.85">
+        <code>login.html</code> · <code>admin.html</code> · <code>worker.html</code> · <code>mannnam.html</code>
+        4개는 앱 공통 CSS를 <b>불러오지 않습니다.</b> 그래서 색 이름(<code>--ink-400</code> 등)이
+        이 파일들엔 정의된 적이 없습니다. 그대로 이름 참조로 바꿨다면 브라우저가
+        <b>색 지정 자체를 무시</b>해서 글자색이 사라집니다.
+      </p>
+      <div class="callout crit">
+        1차(굵기)는 <code>600</code>·<code>700</code> 같은 <b>숫자를 직접</b> 쓰는 거라 안전했지만,
+        2차(색)는 <b>이름으로 참조</b>하는 방식이라 정의가 없으면 그대로 깨집니다. 같은 함정이라도
+        색에서 훨씬 치명적입니다.
+      </div>
+      <p style="font-size:13px;color:var(--ink-600)">
+        → 각 파일에 색 정의를 <b>먼저 넣고</b> 치환했습니다.
+        <b>앞으로 앱의 색 값을 바꾸면 이 4개 파일도 같이 고쳐야 합니다</b> — 문서에 적어뒀습니다.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-t">건드리지 않은 것들</div>
+      <table>
+        <thead><tr><th>대상</th><th style="text-align:right">건수</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr><td>아이콘 안의 색 지정</td><td class="n">101</td><td>이름 참조가 작동하지 않는 자리</td></tr>
+          <tr><td>브라우저 테마색 설정</td><td class="n">5</td><td>〃</td></tr>
+          <tr><td>그라디언트 색</td><td class="n">3</td><td>선인지 면인지 판정 불가 — 눈으로 확인 후 처리</td></tr>
+          <tr><td>브랜드 레드 <code>#C8102E</code></td><td class="n">92+</td><td>브랜드 정체성</td></tr>
+          <tr><td>카카오 · 네이버 · 구글 색</td><td class="n">16</td><td>각 사 브랜드 규정</td></tr>
+          <tr><td>on/off 초록</td><td class="n">45</td><td>켜짐/꺼짐 관례 — 이전에 유지하기로 판단</td></tr>
+          <tr><td>지도 마커 카테고리색</td><td class="n">—</td><td>정보를 구분하는 색</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─────────── 다음 ─────────── -->
+  <div class="section">
+    <div class="sec-label">Next</div>
+    <div class="sec-title">남은 작업</div>
+    <div class="card">
+      <div class="todo"><span class="todo-n">3차</span><span><b>모서리 23종 → 4종 · 그림자 82종 → 3종.</b>
+        지금 그림자가 <span style="text-shadow:0 1px 2px rgba(0,0,0,.5)">순검정</span>이라 화면이 탁해 보이는데,
+        잉크색 기반으로 바꾸면 눈에 띄게 맑아집니다.</span></div>
+      <div class="todo"><span class="todo-n">4차</span><span>간격(4/8 그리드) — 레이아웃이 실제로 움직이는 축이라 별도로 분리했습니다.</span></div>
+      <div class="todo"><span class="todo-n">별건</span><span><code>index.html</code>(랜딩)은 이번 치환이 <b>0건</b>, <code>admin.html</code>은 <b>2건</b>이었습니다.
+        앱과 <b>아예 다른 색 팔레트</b>를 쓰고 있다는 뜻입니다. <code>worker.html</code>은 빨강도
+        <code>#FF4B4B</code>로 브랜드 레드(<code>#C8102E</code>)와 다릅니다.</span></div>
+      <div class="todo"><span class="todo-n">확인</span><span>실기기 5화면 + <b>로그인 화면</b>(위 ②번 때문에 가장 위험했던 곳)</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Reference</div>
+    <div class="sec-title">관련 문서</div>
+    <div class="card">
+      <table>
+        <tbody>
+          <tr><td><b>설계·매핑표 (읽기용)</b></td><td><code>docs/260731_디자인시스템.html</code></td></tr>
+          <tr><td>설계 정본</td><td><code>docs/superpowers/specs/2026-07-31-premium-design-system-design.md</code></td></tr>
+          <tr><td>진행 상태</td><td><code>docs/PROGRESS.md</code> · Phase 75</td></tr>
+          <tr><td>치환 스크립트</td><td><code>tools/design/weight-sweep.js</code> · <code>color-sweep.js</code></td></tr>
+          <tr><td>커밋</td><td><code>3218b2c</code> (1차) · <code>6f8f1d8</code> (2차)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+<footer>바로알바 by MultiMOVE · 디자인 변경내역 · 2026.07.31 (v597 → v599)</footer>
+</body>
+</html>
