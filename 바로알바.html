@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=606"></script>
+  <script src="./shared-lang.js?v=607"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=606">
+  <link rel="stylesheet" href="./assets/css/style.css?v=607">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -86,7 +86,7 @@
     <div style="width:28px;height:28px;border-radius:var(--r-sm);overflow:hidden;flex-shrink:0">
       <img src="./icons/바로알바 최종로고.png" style="width:28px;height:auto;object-fit:cover">
     </div>
-    <span>바로알바</span>
+    <span data-i18n="brand_alba">바로알바</span>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <!-- 게스트 전용 언어 선택 (2026-07-31)
@@ -1132,7 +1132,7 @@
       <div style="width:26px;height:26px;border-radius:var(--r-sm);overflow:hidden;flex-shrink:0">
         <img src="./icons/바로알바 최종로고.png" style="width:26px;height:auto;object-fit:cover">
       </div>
-      <span style="font-size:17px;font-weight:700;color:var(--ink-900)">바로알바</span>
+      <span style="font-size:17px;font-weight:700;color:var(--ink-900)" data-i18n="brand_alba">바로알바</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
       <!-- 커뮤니티 진입 버튼 삭제 (2026-07-28).
@@ -1269,7 +1269,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <div style="flex:1">
-              <div style="font-size:14px;font-weight:700;color:#5B21B6">바로모임</div>
+              <div style="font-size:14px;font-weight:700;color:#5B21B6" data-i18n="brand_moim">바로모임</div>
               <div style="font-size:10px;color:#a78bfa;margin-top:1px" data-i18n="moim_subtitle">스포츠 · 취미 · 친목 모임</div>
             </div>
             <span style="font-size:9px;font-weight:700;background:#7C3AED;color:#fff;padding:2px 8px;border-radius:var(--r)">NEW</span>
@@ -1288,7 +1288,7 @@
           <div onclick="openMannnamPanel()" style="background:#FFF1F2;padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #fecdd3;cursor:pointer">
             <div style="width:30px;height:30px;background:#DB2777;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
             <div style="flex:1">
-              <div style="font-size:14px;font-weight:700;color:#be123c">바로만남</div>
+              <div style="font-size:14px;font-weight:700;color:#be123c" data-i18n="brand_mannam">바로만남</div>
               <div style="font-size:10px;color:#fda4af;margin-top:1px" data-i18n="mannam_desc">바로스팟 · 바로미팅 — 새로운 인연 만들기</div>
             </div>
             <span style="font-size:9px;font-weight:700;background:#DB2777;color:#fff;padding:2px 8px;border-radius:var(--r)">NEW</span>
@@ -1345,7 +1345,7 @@
       <a href="https://barobranding.multimove.co.kr/" target="_blank" rel="noopener" style="margin:8px 12px 16px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:var(--r-lg);padding:10px 14px;display:flex;align-items:center;gap:8px;text-decoration:none;-webkit-tap-highlight-color:rgba(37,99,235,0.05)">
         <div style="width:30px;height:30px;background:#2563EB;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/><path d="M19 8h-3.5"/><path d="M19 8v3.5"/></svg></div>
         <div style="flex:1">
-          <div style="font-size:14px;font-weight:700;color:#1e3a8a">바로브랜딩</div>
+          <div style="font-size:14px;font-weight:700;color:#1e3a8a" data-i18n="brand_branding">바로브랜딩</div>
           <div style="font-size:10px;color:#60a5fa;margin-top:1px" data-i18n="brand_subtitle">우리 매장 온라인 순위, 무료로 확인하기</div>
         </div>
         <span style="font-size:12px;color:#93c5fd;font-weight:500">›</span>
@@ -1464,7 +1464,7 @@
       <div style="width:28px;height:28px;border-radius:var(--r-sm);overflow:hidden;flex-shrink:0">
         <img src="./icons/바로알바 최종로고.png" style="width:28px;height:auto;object-fit:cover">
       </div>
-      <span>바로알바</span>
+      <span data-i18n="brand_alba">바로알바</span>
     </div>
     <button onclick="openNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px 2px;line-height:1">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -4453,7 +4453,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=606"></script>
+<script src="./assets/js/app.js?v=607"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4611,7 +4611,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=606"></script>
+<script src="./assets/js/app_ui.js?v=607"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
@@ -4785,7 +4785,7 @@
       <button onclick="closeMannnamPanel()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <div style="font-size:16px;font-weight:700;color:var(--ink-900);flex:1">바로만남</div>
+      <div style="font-size:16px;font-weight:700;color:var(--ink-900);flex:1" data-i18n="brand_mannam">바로만남</div>
       <button onclick="openMannamProfilePanel('mannam')" style="background:#F5F3FF;color:#7C3AED;border:none;border-radius:var(--r);padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;flex-shrink:0">👤 <span data-i18n="section_profile">내 프로필</span></button>
       <span style="font-size:9px;font-weight:700;background:#f43f5e;color:#fff;padding:2px 10px;border-radius:var(--r);letter-spacing:0.3px;flex-shrink:0">BETA</span>
     </div>
