@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=605"></script>
+  <script src="./shared-lang.js?v=606"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=605">
+  <link rel="stylesheet" href="./assets/css/style.css?v=606">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1145,6 +1145,25 @@
            (#noti-badge)에만 있었고 홈 패널 종에는 아예 없어서, 앱을 열면 제일 먼저 보는
            이 화면에서는 새 알림이 있어도 아무 표시가 안 났다. updateNotiBadge()가
            두 뱃지를 같이 갱신한다. -->
+      <!-- 게스트 전용 언어 선택 (2026-08-01, Phase 82)
+           Phase 76 에서 `.app-header` 에 지구본을 넣었는데, 그건 **지도 화면 헤더**다.
+           홈(`#panel-home`)은 .full-panel 이라 그 위를 덮고 자체 헤더(로고+종)를 쓰므로,
+           기본 진입 화면인 홈에서는 게스트가 여전히 언어를 되돌릴 수 없었다.
+           같은 컨트롤을 홈 헤더에도 둔다. 값 동기화는 shared-lang.js 의 _syncLangLabels(). -->
+      <div id="home-lang-wrap" style="display:none;align-items:center;gap:4px;background:var(--surface-1);border:1px solid var(--line);border-radius:var(--r-xl);padding:3px 6px 3px 8px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4E5661" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        <select id="home-lang-select" aria-label="Language" onchange="selectLang(this.value);saveLang()"
+          style="border:none;background:none;font-family:inherit;font-size:12px;font-weight:500;color:var(--ink-900);cursor:pointer;outline:none;padding:0;max-width:88px">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+          <option value="vi">Tiếng Việt</option>
+          <option value="ru">Русский</option>
+          <option value="mn">Монгол</option>
+          <option value="np">नेपाली</option>
+        </select>
+      </div>
       <button onclick="openNotifications()" style="position:relative;background:none;border:none;cursor:pointer;padding:4px;line-height:1">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span id="home-noti-badge" style="display:none;position:absolute;top:-1px;right:-1px;min-width:15px;height:15px;background:#C8102E;border-radius:var(--r-sm);font-size:9px;font-weight:700;color:#fff;align-items:center;justify-content:center;padding:0 2px;line-height:1">0</span>
@@ -4434,7 +4453,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=605"></script>
+<script src="./assets/js/app.js?v=606"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4592,7 +4611,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=605"></script>
+<script src="./assets/js/app_ui.js?v=606"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">

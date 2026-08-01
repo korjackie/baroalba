@@ -14422,8 +14422,11 @@ const _LANG_NAMES = { ko:'한국어', en:'English', zh:'中文', ja:'日本語',
 function _syncLangLabels() {
   // 헤더 지구본 select (게스트) — 한쪽만 갱신하면 두 컨트롤이 서로 다른 언어를
   // 가리키는 상태가 생긴다(랜딩에서 이미 겪은 유형)
-  const sel = document.getElementById('header-lang-select');
-  if (sel && sel.value !== currentLang) sel.value = currentLang;
+  // 2026-08-01(Phase 82): 홈 헤더에도 같은 select 가 생겨서 둘 다 맞춘다
+  ['header-lang-select', 'home-lang-select'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel && sel.value !== currentLang) sel.value = currentLang;
+  });
   // 마이페이지·업주·게스트의 "앱 언어" 행 값
   ['mp-lang-val', 'owner-mp-lang-val', 'guest-lang-val'].forEach(id => {
     const el = document.getElementById(id);
