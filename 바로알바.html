@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=607"></script>
+  <script src="./shared-lang.js?v=608"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=607">
+  <link rel="stylesheet" href="./assets/css/style.css?v=608">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -555,7 +555,10 @@
 </div>
 
 <!-- PWA 설치 배너 -->
-<div id="install-banner" style="display:none;position:fixed;top:var(--header-h);left:0;right:0;background:#1a1a1a;color:#fff;padding:10px 16px;align-items:center;gap:12px;z-index:300;box-shadow:var(--shadow-md)">
+<!-- 2026-08-01(Phase 84): left:0;right:0 이라 이 배너만 화면 끝에서 끝까지였다.
+     아래 카드들은 전부 좌우 12px 안쪽(margin:8px 12px)이라 배너만 양옆으로 12px씩
+     더 나와 보였다 — 화면이 넓을수록 도드라진다. 카드와 같은 여백·모서리로 맞춘다. -->
+<div id="install-banner" style="display:none;position:fixed;top:var(--header-h);left:12px;right:12px;background:#1a1a1a;color:#fff;padding:10px 16px;border-radius:var(--r-lg);align-items:center;gap:12px;z-index:300;box-shadow:var(--shadow-md)">
   <span style="font-size:20px">⚡</span>
   <div style="flex:1">
     <div style="font-size:13px;font-weight:600">앱으로 설치하기</div>
@@ -1171,7 +1174,9 @@
     </div>
   </div>
 
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <!-- id 는 설치배너가 뜰 때 위쪽을 밀어주기 위한 것 (Phase 84).
+       기존엔 지도 화면의 .top-bar 만 밀어줘서 홈에서는 배너가 히어로 카드를 덮었다. -->
+  <div id="home-scroll" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
     <!-- 검색바 -->
     <div style="padding:8px 12px 0">
@@ -4453,7 +4458,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=607"></script>
+<script src="./assets/js/app.js?v=608"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4611,7 +4616,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=607"></script>
+<script src="./assets/js/app_ui.js?v=608"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">

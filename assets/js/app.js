@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '607';
+  const _APP_V = '608';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -638,14 +638,24 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (navigator.serviceWorker?.controller) {
       navigator.serviceWorker.controller.postMessage({ type: 'SET_AUTH', token: session.access_token, userId: session.user.id });
     }
-    // 어드민 여부 로드 (app_admins 테이블) — Naver 등 일부 OAuth는 email이 user_metadata에만 존재
+    // 어드민 여부 로드.
+    // 2026-08-01(Phase 84): 예전엔 app_admins 테이블을 직접 읽었는데, 그 테이블은
+    // RLS 가 없어 공개 anon 키로 명단 조회·INSERT·DELETE 가 전부 뚫려 있었다.
+    // 같은 날 잠갔고(docs/260728_fix_app_admins_rls.sql), 그 순간 이 조회가 401 이 되어
+    // **마이페이지 관리자 배너가 사라졌다.** 이제 명단 대신 is_app_admin() 함수에
+    // "내가 관리자인가" boolean 하나만 물어본다. admin.html:1046 과 같은 방식이다.
+    // 함수가 없는 환경(SQL 미적용)에서는 예전처럼 테이블 조회로 폴백한다.
     const _authEmail = session.user.email || session.user.user_metadata?.email || '';
-    db.from('app_admins').select('email').eq('email', _authEmail).maybeSingle()
-      .then(({ data: ad }) => {
-        _isAdmin = !!ad;
-        const ab = document.getElementById('admin-banner');
-        if (ab) ab.style.display = _isAdmin ? 'flex' : 'none';
-      });
+    const _applyAdmin = (isAdmin) => {
+      _isAdmin = !!isAdmin;
+      const ab = document.getElementById('admin-banner');
+      if (ab) ab.style.display = _isAdmin ? 'flex' : 'none';
+    };
+    db.rpc('is_app_admin').then(({ data: ok, error }) => {
+      if (!error) { _applyAdmin(ok === true); return; }
+      db.from('app_admins').select('email').eq('email', _authEmail).maybeSingle()
+        .then(({ data: ad }) => _applyAdmin(!!ad));
+    });
     // 나이·언어 미리 로드 + workers 행 자동 생성
     // (예전엔 "기본정보 저장하기"를 눌러야만 workers 행이 생겨서, 아무 것도 안 건드린
     // 신규가입자는 게시글 작성 등에서 "프로필 등록 후 이용 가능"에 계속 막혔음 -
@@ -1074,12 +1084,19 @@ function _showInstallBanner() {
   if (!banner) return;
   banner.style.display = 'flex';
   document.querySelector('.top-bar').style.top = 'calc(var(--header-h) + ' + banner.offsetHeight + 'px)';
+  // 2026-08-01(Phase 84): 지금까지 지도 화면의 .top-bar 만 밀어줬다. 홈은 그대로라
+  // position:fixed 인 이 배너가 히어로 카드 위를 덮고 배지가 잘려 있었다.
+  // .top-bar 와 같은 방식으로 홈 스크롤 영역도 배너 높이만큼 내린다.
+  const hs = document.getElementById('home-scroll');
+  if (hs) hs.style.paddingTop = (banner.offsetHeight + 8) + 'px';
 }
 function _hideInstallBanner() {
   const banner = document.getElementById('install-banner');
   if (!banner) return;
   banner.style.display = 'none';
   document.querySelector('.top-bar').style.top = 'var(--header-h)';
+  const hs = document.getElementById('home-scroll');
+  if (hs) hs.style.paddingTop = '';
 }
 
 window.addEventListener('beforeinstallprompt', e => {
