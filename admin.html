@@ -2057,16 +2057,13 @@ async function assignMannnamManager(bizId) {
   loadMannnamManagers();
   searchBizForMannnam(document.getElementById('mannnam-mgr-search').value);
   // 알림 발송 (push + 인앱, 이메일 컬럼 없으므로 생략)
-  let pushSubs = [];
-  if (biz.kakao_uid) {
-    const { data: subs } = await db.from('push_subscriptions')
-      .select('endpoint, p256dh, auth, fcm_token').eq('user_id', biz.kakao_uid).limit(3);
-    pushSubs = subs || [];
-  }
+  // 2026-08-01(Phase 81): 여기서 push_subscriptions 의 endpoint/p256dh/auth/fcm_token 을
+  // 읽어 넘겼는데 그 컬럼들은 실재하지 않아 쿼리가 매번 400 이었다. 이제 서버(role-notify)가
+  // userId 로 /api/send-push 를 호출하므로 클라이언트가 구독을 조회할 필요가 없다.
   fetch('/api/role-notify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'mannnam_manager', email: '', name: biz.name, pushSubs, userId: biz.kakao_uid }),
+    body: JSON.stringify({ role: 'mannnam_manager', email: '', name: biz.name, userId: biz.kakao_uid }),
   }).catch(() => {});
 }
 
@@ -3426,25 +3423,22 @@ async function addAdmin() {
   input.value = '';
   loadAdminList();
   showToast('✅ 관리자가 추가됐습니다');
-  // businesses/workers에서 이름·user_id 조회 후 알림 발송
-  const [{ data: w }, { data: b }] = await Promise.all([
-    db.from('workers').select('name, user_id').ilike('email', email).maybeSingle(),
-    db.from('businesses').select('name, user_id').ilike('email', email).maybeSingle(),
-  ]);
-  const name = w?.name || b?.name || '';
-  const uid = w?.user_id || b?.user_id || null;
+  // workers에서 이름·uid 조회 후 알림 발송
+  // 2026-08-01(Phase 81) 정정 3가지:
+  //  ① workers 의 uid 컬럼은 user_id 가 아니라 kakao_uid 다(코드 전체에서 이 줄만 틀렸었다).
+  //  ② businesses 에는 email·user_id 컬럼이 아예 없어(라이브 확인) 그 조회는 항상 400 이었다 → 제거.
+  //  ③ push_subscriptions 구독 조회도 없는 컬럼이라 제거 — 서버가 userId 로 알아서 보낸다.
+  // ⚠️ workers.email 자체의 존재 여부는 anon 키로 확인 불가(테이블 권한 401)라 미검증이다.
+  //    없다면 예전과 똑같이 이름 없이 진행될 뿐이라 이 변경으로 나빠지는 건 없다.
+  const { data: w } = await db.from('workers').select('name, kakao_uid').ilike('email', email).maybeSingle();
+  const name = w?.name || '';
+  const uid = w?.kakao_uid || null;
   // app_admins에 user_id 저장 (컬럼 있을 경우)
   if (uid) db.from('app_admins').update({ user_id: uid }).eq('email', email).then(() => {});
-  let pushSubs = [];
-  if (uid) {
-    const { data: subs } = await db.from('push_subscriptions')
-      .select('endpoint, p256dh, auth, fcm_token').eq('user_id', uid).limit(3);
-    pushSubs = subs || [];
-  }
   fetch('/api/role-notify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'admin', email, name, pushSubs, userId: uid }),
+    body: JSON.stringify({ role: 'admin', email, name, userId: uid }),
   }).catch(() => {});
 }
 

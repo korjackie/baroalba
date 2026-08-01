@@ -8,14 +8,11 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { role, email, name, pushSubs, userId } = req.body || {};
+  const { role, email, name, userId } = req.body || {};
   // role: 'admin' | 'mannnam_manager'
   if (!email || !role) return res.status(400).json({ error: 'email and role required' });
 
   const RESEND_KEY = process.env.RESEND_API_KEY;
-  const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
-  const VAPID_PUBLIC  = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const FCM_SERVER_KEY = process.env.FCM_SERVER_KEY;
 
   const isAdmin   = role === 'admin';
   const isMannnam = role === 'mannnam_manager';
@@ -101,44 +98,33 @@ module.exports = async function handler(req, res) {
   }
 
   // ── 앱 푸시 ──────────────────────────────────────────────
-  // pushSubs: [{ endpoint, p256dh, auth, fcm_token }]
-  if (pushSubs?.length) {
-    const pushTitle = `🎉 ${roleLabel} 지정 안내`;
-    const pushBody  = `${displayName}님이 ${roleLabel}로 지정되었습니다. 탭하여 접속하세요.`;
-    const pushResults = await Promise.allSettled(pushSubs.map(async sub => {
-      // FCM (Android / 크롬)
-      if (sub.fcm_token && FCM_SERVER_KEY) {
-        const r = await fetch('https://fcm.googleapis.com/fcm/send', {
-          method: 'POST',
-          headers: { 'Authorization': `key=${FCM_SERVER_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: sub.fcm_token,
-            notification: { title: pushTitle, body: pushBody, click_action: loginUrl },
-          }),
-        });
-        return r.ok ? 'fcm-ok' : 'fcm-fail';
-      }
-      // Web Push (VAPID)
-      if (sub.endpoint && VAPID_PRIVATE && VAPID_PUBLIC) {
-        // webpush 라이브러리 없이 직접 처리하기 어려우므로 내부 send-push API 재활용
-        const r = await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/send-push`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            title: pushTitle,
-            body: pushBody,
-            url: loginUrl,
-            tag: 'role-assign',
-          }),
-        });
-        return r.ok ? 'webpush-ok' : 'webpush-fail';
-      }
-      return 'skip: no token';
-    }));
-    results.push = pushResults.map(r => r.status === 'fulfilled' ? r.value : r.reason?.message);
+  // 2026-08-01 (Phase 81): 예전엔 클라이언트가 push_subscriptions 에서
+  // endpoint/p256dh/auth/fcm_token 을 읽어 pushSubs 로 넘겨줬다. 그런데 그 4개 컬럼은
+  // 실재하지 않아(실제 스키마는 subscription JSON 하나) 그 쿼리가 매번 400 이었고,
+  // pushSubs 는 항상 빈 배열이라 **이 푸시는 한 번도 발송된 적이 없다**.
+  // 게다가 여기서 쓰던 legacy FCM(fcm.googleapis.com/fcm/send)은 구글이 종료했다.
+  // → 앱의 다른 알림과 똑같이 /api/send-push 에 user_id 만 넘기고, 토큰 조회(fcm_tokens)와
+  //   FCM v1 발송은 서버가 하도록 통일한다.
+  if (userId) {
+    const base = process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000';
+    try {
+      const r = await fetch(`${base}/api/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          title: `🎉 ${roleLabel} 지정 안내`,
+          body: `${displayName}님이 ${roleLabel}로 지정되었습니다. 탭하여 접속하세요.`,
+          url: loginUrl,
+          type: role,
+        }),
+      });
+      results.push = r.ok ? 'ok' : await r.text();
+    } catch (e) {
+      results.push = 'error: ' + e.message;
+    }
   } else {
-    results.push = 'skip: no pushSubs';
+    results.push = 'skip: no userId';
   }
 
   // ── 인앱 알림 (notifications 테이블) ────────────────────

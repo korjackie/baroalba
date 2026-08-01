@@ -105,9 +105,9 @@ label:first-child{margin-top:0}
     <label>주소</label><input type="text" id="r-address" placeholder="예) 서울시 강남구 ...">
     <label>전화번호</label><input type="tel" id="r-phone" placeholder="예) 02-1234-5678">
     <label>메뉴 설명</label><textarea id="r-menu" rows="3" placeholder="예) 오마카세 런치 코스 (9가지)"></textarea>
-    <label>여성 식사비 (원)</label><input type="number" id="r-female-price" placeholder="예) 18000">
-    <label>남성 식사비 (원)</label><input type="number" id="r-male-price" placeholder="예) 30000">
-    <label>할인율 (%)</label><input type="number" id="r-discount" placeholder="예) 5" value="5">
+    <!-- 2026-08-01: 여성/남성 식사비·할인율 3개는 barospot_restaurants 에 없는 컬럼이라
+         저장이 매번 실패하고 있었다. 실제 가격 컬럼은 base_price 하나다. -->
+    <label>기본 식사비 (원)</label><input type="number" id="r-base-price" placeholder="예) 30000">
     <input type="hidden" id="r-id">
     <div style="display:flex;gap:10px;margin-top:20px">
       <button onclick="closeModal('restaurant-modal')" class="btn-secondary" style="flex:1">취소</button>
@@ -124,10 +124,10 @@ label:first-child{margin-top:0}
     <select id="e-restaurant"><option value="">선택하세요</option></select>
     <label>이벤트 날짜</label><input type="date" id="e-date">
     <label>시간</label><input type="time" id="e-time">
-    <label>여성 슬롯 수</label><input type="number" id="e-female-slots" value="3" min="1">
-    <label>남성 슬롯 수</label><input type="number" id="e-male-slots" value="3" min="1">
-    <label>메뉴 설명</label><textarea id="e-menu" rows="2" placeholder="이벤트용 특별 메뉴"></textarea>
-    <label>남성 결제 금액 (원)</label><input type="number" id="e-male-price" placeholder="식사비 1.5배 기준">
+    <label>여성 정원</label><input type="number" id="e-female-slots" value="4" min="1">
+    <label>남성 정원</label><input type="number" id="e-male-slots" value="4" min="1">
+    <!-- 2026-08-01: 메뉴·가격 입력을 뺐다. barospot_events 에 그런 컬럼이 없고,
+         메뉴/식사비는 위 "제휴 식당" 폼이 barospot_restaurants 에 이미 저장한다(중복 입력이었다). -->
     <input type="hidden" id="e-id">
     <div style="display:flex;gap:10px;margin-top:20px">
       <button onclick="closeModal('event-modal')" class="btn-secondary" style="flex:1">취소</button>
@@ -181,8 +181,12 @@ async function doLogin() {
 
 async function checkManagerAccess() {
   if (!currentUser) return;
+  // 🔴 2026-08-01(Phase 81): 여기가 businesses.user_id 로 조회하고 있었다. 그런 컬럼은 없고
+  // (라이브 확인) 실제로는 kakao_uid 다. 400 → biz 가 null → 아래 분기에서 무조건 signOut 되어
+  // **매니저 전원이 이 페이지에 아예 들어올 수 없었다.** 안쪽 기능들의 버그가 여태 보고되지
+  // 않은 것도 이 관문을 아무도 통과하지 못했기 때문으로 보인다.
   const { data: biz } = await db.from('businesses')
-    .select('id, name, mannnam_role').eq('user_id', currentUser.id).maybeSingle();
+    .select('id, name, mannnam_role').eq('kakao_uid', currentUser.id).maybeSingle();
   if (!biz || biz.mannnam_role !== 'manager') {
     await db.auth.signOut();
     const errEl = document.getElementById('login-error');
@@ -233,11 +237,7 @@ async function loadRestaurants() {
       </div>
       <div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">${r.menu_description||''}</div>
       <div style="display:flex;gap:6px;font-size:12px;color:var(--ink-400);margin-bottom:12px">
-        <span>여성 ${r.female_price?.toLocaleString()}원</span>
-        <span>·</span>
-        <span>남성 ${r.male_price?.toLocaleString()}원</span>
-        <span>·</span>
-        <span>할인 ${r.discount_pct||0}%</span>
+        <span>기본 식사비 ${(r.base_price||0).toLocaleString()}원</span>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="toggleRestaurant('${r.id}',${r.is_active})" class="${r.is_active?'btn-danger':'btn-success'}">${r.is_active?'비활성화':'활성화'}</button>
@@ -248,8 +248,7 @@ async function loadRestaurants() {
 
 function openRestaurantForm(id) {
   document.getElementById('restaurant-modal-title').textContent = id ? '식당 수정' : '식당 등록';
-  ['r-name','r-address','r-phone','r-menu','r-female-price','r-male-price'].forEach(k => document.getElementById(k).value = '');
-  document.getElementById('r-discount').value = '5';
+  ['r-name','r-address','r-phone','r-menu','r-base-price'].forEach(k => document.getElementById(k).value = '');
   document.getElementById('r-id').value = id || '';
   if (id) {
     db.from('barospot_restaurants').select('*').eq('id', id).single().then(({ data: r }) => {
@@ -258,9 +257,7 @@ function openRestaurantForm(id) {
       document.getElementById('r-address').value = r.address || '';
       document.getElementById('r-phone').value = r.phone || '';
       document.getElementById('r-menu').value = r.menu_description || '';
-      document.getElementById('r-female-price').value = r.female_price || '';
-      document.getElementById('r-male-price').value = r.male_price || '';
-      document.getElementById('r-discount').value = r.discount_pct || 5;
+      document.getElementById('r-base-price').value = r.base_price || '';
     });
   }
   document.getElementById('restaurant-modal').style.display = 'block';
@@ -273,9 +270,9 @@ async function saveRestaurant() {
     address: document.getElementById('r-address').value.trim(),
     phone: document.getElementById('r-phone').value.trim(),
     menu_description: document.getElementById('r-menu').value.trim(),
-    female_price: parseInt(document.getElementById('r-female-price').value) || 0,
-    male_price: parseInt(document.getElementById('r-male-price').value) || 0,
-    discount_pct: parseInt(document.getElementById('r-discount').value) || 5,
+    // 실제 스키마의 가격 컬럼은 base_price 하나뿐이다.
+    // female_price/male_price/discount_pct 는 존재한 적이 없어 저장이 매번 400 이었다.
+    base_price: parseInt(document.getElementById('r-base-price').value) || 0,
     is_active: true,
   };
   if (!payload.name) { showToast('식당명을 입력하세요'); return; }
@@ -305,24 +302,25 @@ async function loadEvents() {
     .select('*, barospot_restaurants(name)').order('event_date', { ascending: false }).limit(50);
   if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
   if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:14px">이벤트가 없어요</div>'; return; }
-  const statusLabel = { open:'모집중', full:'마감', confirmed:'확정', cancelled:'취소' };
-  const statusColor = { open:'#10b981', full:'#f59e0b', confirmed:'#7C3AED', cancelled:'#9ca3af' };
+  // 2026-08-01: 실제 DB 의 status 값은 recruiting_female / recruiting_male / confirmed 다.
+  // 여기 있던 open·full 은 존재하지 않는 값이라 라벨이 원문 그대로 노출되고 있었다.
+  const statusLabel = { recruiting_female:'여성 모집중', recruiting_male:'남성 모집중', confirmed:'확정', cancelled:'취소', done:'완료' };
+  const statusColor = { recruiting_female:'#DB2777', recruiting_male:'#3B82F6', confirmed:'#7C3AED', cancelled:'#9ca3af', done:'#9ca3af' };
   el.innerHTML = data.map(ev => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
           <div style="font-size:15px;font-weight:700">${ev.barospot_restaurants?.name||'식당 미지정'}</div>
-          <div style="font-size:12px;color:var(--ink-400);margin-top:2px">${ev.event_date} ${ev.event_time}</div>
+          <div style="font-size:12px;color:var(--ink-400);margin-top:2px">${_fmtWhen(ev.event_date)}</div>
         </div>
         <span class="status-badge" style="background:${statusColor[ev.status]||'#ccc'}22;color:${statusColor[ev.status]||'#ccc'}">${statusLabel[ev.status]||ev.status}</span>
       </div>
       <div style="display:flex;gap:12px;font-size:12px;color:var(--ink-400);margin-bottom:12px">
-        <span>여성 ${ev.female_remaining}/${ev.female_slots}</span>
-        <span>남성 ${ev.male_remaining}/${ev.male_slots}</span>
-        <span>남성결제 ${ev.male_price?.toLocaleString()}원</span>
+        <span>여성 ${ev.female_cur||0}/${ev.female_max||0}</span>
+        <span>남성 ${ev.male_cur||0}/${ev.male_max||0}</span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${ev.status === 'open' ? `<button onclick="changeEventStatus('${ev.id}','confirmed')" class="btn-success">확정</button><button onclick="changeEventStatus('${ev.id}','cancelled')" class="btn-danger">취소</button>` : ''}
+        ${(ev.status === 'recruiting_female' || ev.status === 'recruiting_male') ? `<button onclick="changeEventStatus('${ev.id}','confirmed')" class="btn-success">확정</button><button onclick="changeEventStatus('${ev.id}','cancelled')" class="btn-danger">취소</button>` : ''}
         <button onclick="openEventForm('${ev.id}')" class="btn-secondary">수정</button>
       </div>
     </div>`).join('');
@@ -333,20 +331,24 @@ async function openEventForm(id) {
   const rSel = document.getElementById('e-restaurant');
   rSel.innerHTML = '<option value="">식당 선택</option>' + (restaurants||[]).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
   document.getElementById('event-modal-title').textContent = id ? '이벤트 수정' : '이벤트 개설';
-  ['e-date','e-time','e-menu','e-male-price'].forEach(k => document.getElementById(k).value = '');
-  document.getElementById('e-female-slots').value = '3';
-  document.getElementById('e-male-slots').value = '3';
+  ['e-date','e-time'].forEach(k => document.getElementById(k).value = '');
+  document.getElementById('e-female-slots').value = '4';
+  document.getElementById('e-male-slots').value = '4';
   document.getElementById('e-id').value = id || '';
   if (id) {
     const { data: ev } = await db.from('barospot_events').select('*').eq('id',id).single();
     if (ev) {
       rSel.value = ev.restaurant_id || '';
-      document.getElementById('e-date').value = ev.event_date || '';
-      document.getElementById('e-time').value = ev.event_time || '';
-      document.getElementById('e-female-slots').value = ev.female_slots || 3;
-      document.getElementById('e-male-slots').value = ev.male_slots || 3;
-      document.getElementById('e-menu').value = ev.menu_description || '';
-      document.getElementById('e-male-price').value = ev.male_price || '';
+      // event_date 는 날짜+시각을 함께 담은 타임스탬프라 두 입력으로 쪼개 넣는다
+      // (admin.html 의 바로스팟 개설 폼과 동일한 방식)
+      const d = ev.event_date ? new Date(ev.event_date) : null;
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('e-date').value = d && !isNaN(d.getTime())
+        ? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` : '';
+      document.getElementById('e-time').value = d && !isNaN(d.getTime())
+        ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : '';
+      document.getElementById('e-female-slots').value = ev.female_max || 4;
+      document.getElementById('e-male-slots').value = ev.male_max || 4;
     }
   }
   document.getElementById('event-modal').style.display = 'block';
@@ -354,20 +356,23 @@ async function openEventForm(id) {
 
 async function saveEvent() {
   const id = document.getElementById('e-id').value;
+  // 2026-08-01: 예전 payload 10개 필드 중 7개가 실재하지 않는 컬럼이라 개설이 매번 400 이었다.
+  // 실제 스키마(restaurant_id/event_date/female_max/male_max/female_cur/male_cur/status)에 맞추고,
+  // 날짜+시간은 admin.html 과 같이 event_date 하나의 타임스탬프로 합친다.
+  const dateVal = document.getElementById('e-date').value;
+  const timeVal = document.getElementById('e-time').value || '00:00';
+  if (!dateVal) { showToast('날짜를 선택하세요'); return; }
   const payload = {
     restaurant_id: document.getElementById('e-restaurant').value || null,
-    event_date: document.getElementById('e-date').value,
-    event_time: document.getElementById('e-time').value,
-    female_slots: parseInt(document.getElementById('e-female-slots').value) || 3,
-    male_slots: parseInt(document.getElementById('e-male-slots').value) || 3,
-    menu_description: document.getElementById('e-menu').value.trim(),
-    male_price: parseInt(document.getElementById('e-male-price').value) || 0,
-    status: 'open',
+    event_date: new Date(`${dateVal}T${timeVal}`).toISOString(),
+    female_max: parseInt(document.getElementById('e-female-slots').value) || 4,
+    male_max: parseInt(document.getElementById('e-male-slots').value) || 4,
   };
-  if (!payload.event_date) { showToast('날짜를 선택하세요'); return; }
   if (!id) {
-    payload.female_remaining = payload.female_slots;
-    payload.male_remaining = payload.male_slots;
+    // 신규는 여성부터 모집한다 (admin.html 개설 흐름과 동일한 시작 상태)
+    payload.status = 'recruiting_female';
+    payload.female_cur = 0;
+    payload.male_cur = 0;
   }
   let err;
   if (id) {
@@ -388,19 +393,47 @@ async function changeEventStatus(id, status) {
   loadEvents();
 }
 
+// ── 신청자 공용 헬퍼 (2026-08-01 Phase 81) ───────────────
+// barospot_applications 와 workers 사이에는 FK 가 없어서 `workers(name, phone)`
+// 임베딩이 불가능하다(PostgREST PGRST200). Phase 59 에서 모임 신청자 목록을 고친
+// 것과 같은 방식으로, user_id(=workers.kakao_uid)로 한 번에 조회해 채운다.
+async function _fetchApplicantMap(rows) {
+  const uids = [...new Set((rows || []).map(r => r.user_id).filter(Boolean))];
+  if (!uids.length) return {};
+  const { data } = await db.from('workers').select('kakao_uid, name, phone').in('kakao_uid', uids);
+  const map = {};
+  (data || []).forEach(w => { map[w.kakao_uid] = w; });
+  return map;
+}
+
+// barospot_events 에 event_time 컬럼은 없다 — event_date 가 시각까지 담는
+// 타임스탬프다(app.js 의 바로스팟 화면도 event_date 하나만 쓴다).
+function _fmtWhen(d) {
+  if (!d) return '';
+  const t = new Date(d);
+  return isNaN(t.getTime()) ? String(d)
+    : t.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+// 여성 잔여 인원 = female_max - female_cur (female_remaining 이라는 컬럼은 없다)
+function _femaleLeft(ev) {
+  return Math.max(0, (ev?.female_max || 0) - (ev?.female_cur || 0));
+}
+
 // ── 여성 신청자 관리 ─────────────────────────────────────
 async function loadFemaleApps() {
   const el = document.getElementById('female-app-list');
   const { data, error } = await db.from('barospot_applications')
-    .select('*, workers(name, phone), barospot_events(event_date, event_time, barospot_restaurants(name))')
+    .select('*, barospot_events(event_date, barospot_restaurants(name))')
     .eq('gender', 'female')
-    .order('created_at', { ascending: false }).limit(50);
+    .order('applied_at', { ascending: false }).limit(50);
   if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
   if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:14px">여성 신청자가 없어요</div>'; return; }
+  const wmap = await _fetchApplicantMap(data);
   const statusLabel = { pending:'검토중', matched:'배정완료', confirmed:'확정', cancelled:'취소', rejected:'거절' };
   const statusColor = { pending:'#f59e0b', matched:'#8b5cf6', confirmed:'#10b981', cancelled:'#9ca3af', rejected:'#ef4444' };
   el.innerHTML = data.map(a => {
-    const w = a.workers;
+    const w = wmap[a.user_id];
     const ev = a.barospot_events;
     const rest = ev?.barospot_restaurants;
     return `<div class="card">
@@ -411,7 +444,7 @@ async function loadFemaleApps() {
         </div>
         <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>
       </div>
-      ${ev ? `<div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">배정: ${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
+      ${ev ? `<div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">배정: ${rest?.name||''} · ${_fmtWhen(ev.event_date)}</div>` : ''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${a.status === 'pending' ? `<button onclick="openAssignModal('${a.id}')" class="btn-success">식당 배정</button><button onclick="updateAppStatus('${a.id}','rejected','female')" class="btn-danger">거절</button>` : ''}
         ${a.status === 'matched' ? `<button onclick="updateAppStatus('${a.id}','confirmed','female')" class="btn-success">확정</button><button onclick="updateAppStatus('${a.id}','cancelled','female')" class="btn-danger">취소</button>` : ''}
@@ -422,12 +455,14 @@ async function loadFemaleApps() {
 
 async function openAssignModal(appId) {
   document.getElementById('assign-app-id').value = appId;
+  // 잔여는 저장된 컬럼이 아니라 max-cur 계산값이라 서버에서 .gt() 로 못 거른다 → 받아서 거른다
   const { data: events } = await db.from('barospot_events')
-    .select('id, event_date, event_time, female_remaining, barospot_restaurants(name)')
-    .eq('status', 'open').gt('female_remaining', 0);
+    .select('id, event_date, female_cur, female_max, barospot_restaurants(name)')
+    .in('status', ['recruiting_female', 'recruiting_male']);
   const sel = document.getElementById('assign-event-id');
   sel.innerHTML = '<option value="">이벤트 선택</option>' +
-    (events||[]).map(ev => `<option value="${ev.id}">${ev.barospot_restaurants?.name} · ${ev.event_date} ${ev.event_time} (잔여${ev.female_remaining})</option>`).join('');
+    (events||[]).filter(ev => _femaleLeft(ev) > 0)
+      .map(ev => `<option value="${ev.id}">${ev.barospot_restaurants?.name} · ${_fmtWhen(ev.event_date)} (잔여${_femaleLeft(ev)})</option>`).join('');
   document.getElementById('assign-modal').style.display = 'block';
 }
 
@@ -437,8 +472,12 @@ async function confirmAssign() {
   if (!eventId) { showToast('이벤트를 선택하세요'); return; }
   const { error: ae } = await db.from('barospot_applications').update({ event_id: eventId, status: 'matched' }).eq('id', appId);
   if (ae) { showToast('오류: '+ae.message); return; }
-  const { data: ev } = await db.from('barospot_events').select('female_remaining').eq('id', eventId).single();
-  if (ev) await db.from('barospot_events').update({ female_remaining: Math.max(0, ev.female_remaining - 1) }).eq('id', eventId);
+  // "잔여 -1" 은 이 스키마에선 "현재인원 +1" 이다 (female_remaining 컬럼은 존재하지 않았다)
+  const { data: ev } = await db.from('barospot_events').select('female_cur, female_max').eq('id', eventId).single();
+  if (ev) {
+    const next = Math.min(ev.female_max ?? Number.MAX_SAFE_INTEGER, (ev.female_cur || 0) + 1);
+    await db.from('barospot_events').update({ female_cur: next }).eq('id', eventId);
+  }
   closeModal('assign-modal');
   showToast('배정 완료');
   loadFemaleApps();
@@ -448,15 +487,16 @@ async function confirmAssign() {
 async function loadMaleApps() {
   const el = document.getElementById('male-app-list');
   const { data, error } = await db.from('barospot_applications')
-    .select('*, workers(name, phone), barospot_events(event_date, event_time, barospot_restaurants(name))')
+    .select('*, barospot_events(event_date, barospot_restaurants(name))')
     .eq('gender', 'male')
-    .order('created_at', { ascending: false }).limit(50);
+    .order('applied_at', { ascending: false }).limit(50);
   if (error) { el.innerHTML = '<div style="color:#ef4444;padding:20px">오류: '+error.message+'</div>'; return; }
   if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-400);font-size:14px">남성 신청자가 없어요</div>'; return; }
+  const wmap = await _fetchApplicantMap(data);
   const statusLabel = { pending:'검토중', confirmed:'확정', cancelled:'취소', rejected:'거절' };
   const statusColor = { pending:'#f59e0b', confirmed:'#10b981', cancelled:'#9ca3af', rejected:'#ef4444' };
   el.innerHTML = data.map(a => {
-    const w = a.workers;
+    const w = wmap[a.user_id];
     const ev = a.barospot_events;
     const rest = ev?.barospot_restaurants;
     return `<div class="card">
@@ -467,7 +507,7 @@ async function loadMaleApps() {
         </div>
         <span class="status-badge" style="background:${statusColor[a.status]||'#ccc'}22;color:${statusColor[a.status]||'#ccc'}">${statusLabel[a.status]||a.status}</span>
       </div>
-      ${ev ? `<div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">${rest?.name||''} · ${ev.event_date} ${ev.event_time}</div>` : ''}
+      ${ev ? `<div style="font-size:12px;color:var(--ink-400);margin-bottom:10px">${rest?.name||''} · ${_fmtWhen(ev.event_date)}</div>` : ''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${a.status === 'pending' ? `<button onclick="updateAppStatus('${a.id}','confirmed','male')" class="btn-success">확정</button><button onclick="updateAppStatus('${a.id}','rejected','male')" class="btn-danger">거절</button>` : ''}
         ${a.status === 'confirmed' ? `<button onclick="updateAppStatus('${a.id}','cancelled','male')" class="btn-danger">취소</button>` : ''}
