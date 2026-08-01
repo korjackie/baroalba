@@ -1706,6 +1706,41 @@ module.exports = async function handler(req, res) {
       return res.json(Array.isArray(data) ? data : []);
     }
 
+    // ── 가입 회원(auth) 목록 — 관리자 지정 화면용 (2026-08-01) ──
+    // ⚠️ 반드시 auth 계정 기준이어야 한다. 관리자 판정이 auth.jwt()->>'email' 로 이뤄지므로
+    //    (is_app_admin() / 이 파일의 게이트 둘 다) 다른 출처의 이메일을 쓰면 목록에서 고른
+    //    사람과 실제로 권한이 생기는 사람이 어긋날 수 있다.
+    //    workers 에 email 이 있는지는 불확실하고 businesses 에는 아예 없다(Phase 81 확인).
+    if (action === 'auth_users') {
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=1000`, {
+        headers: { 'apikey': svcKey, 'Authorization': `Bearer ${svcKey}` }
+      });
+      if (!r.ok) return res.status(502).json({ error: 'auth 목록 조회 실패: ' + (await r.text()).slice(0, 200) });
+      const j = await r.json().catch(() => ({}));
+      const users = (j.users || []).filter(u => u && u.email);
+      const uids = users.map(u => u.id).slice(0, 2000);
+      const inList = uids.join(',');
+      const [adminRows, wRows, bRows] = await Promise.all([
+        sb('app_admins?select=email', svcKey).then(x => x.json()).catch(() => []),
+        uids.length ? sb(`workers?kakao_uid=in.(${inList})&select=kakao_uid,name`, svcKey).then(x => x.json()).catch(() => []) : [],
+        uids.length ? sb(`businesses?kakao_uid=in.(${inList})&select=kakao_uid,name,biz_name`, svcKey).then(x => x.json()).catch(() => []) : [],
+      ]);
+      const adminSet = new Set((Array.isArray(adminRows) ? adminRows : []).map(a => String(a.email || '').toLowerCase()));
+      const wMap = {}, bMap = {};
+      (Array.isArray(wRows) ? wRows : []).forEach(w => { if (w.name) wMap[w.kakao_uid] = w.name; });
+      (Array.isArray(bRows) ? bRows : []).forEach(b => { bMap[b.kakao_uid] = b.biz_name || b.name || ''; });
+      const out = users.map(u => ({
+        email: u.email,
+        name: bMap[u.id] || wMap[u.id] || '',
+        role: bMap[u.id] ? 'business' : (wMap[u.id] ? 'worker' : ''),
+        provider: (u.app_metadata && u.app_metadata.provider) || '',
+        created_at: u.created_at,
+        is_admin: adminSet.has(String(u.email).toLowerCase()),
+      }));
+      out.sort((a, b2) => (a.name || a.email).localeCompare(b2.name || b2.email, 'ko'));
+      return res.json(out);
+    }
+
     // ── 노쇼 초기화 ────────────────────────────────────
     if (action === 'reset_noshow' && req.method === 'PATCH') {
       const { id } = req.body || {};

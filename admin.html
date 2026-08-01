@@ -743,8 +743,20 @@
   <div class="tab-content" id="tab-admins">
     <div style="font-size:12px;color:var(--ink-400);margin-bottom:12px">admin.html 접근이 허용된 관리자 이메일 목록입니다.</div>
     <div id="settings-admin-list"><div class="loading">로딩 중...</div></div>
+    <!-- 가입 회원에서 골라 지정 (2026-08-01) — 이메일을 손으로 적는 것보다 안전하다.
+         오타로 엉뚱한 주소를 넣으면 그 주소로 가입하는 사람이 관리자가 되어버린다. -->
     <div style="margin-top:20px;background:#fff;border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-sm)">
-      <div style="font-size:13px;font-weight:600;color:var(--ink-900);margin-bottom:10px">관리자 추가</div>
+      <div style="font-size:13px;font-weight:600;color:var(--ink-900);margin-bottom:4px">가입 회원에서 지정</div>
+      <div style="font-size:11px;color:var(--ink-400);margin-bottom:10px">이름이나 이메일로 찾은 뒤 눌러서 권한을 줍니다.</div>
+      <input id="admin-member-search" type="search" placeholder="이름 · 이메일 검색"
+        style="width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;outline:none;margin-bottom:10px"
+        oninput="renderAdminMemberList()">
+      <div id="admin-member-list" style="max-height:360px;overflow-y:auto;margin:0 -4px"><div class="loading">로딩 중...</div></div>
+    </div>
+
+    <div style="margin-top:16px;background:#fff;border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow-sm)">
+      <div style="font-size:13px;font-weight:600;color:var(--ink-900);margin-bottom:4px">이메일 직접 입력</div>
+      <div style="font-size:11px;color:var(--ink-400);margin-bottom:10px">아직 가입하지 않은 사람을 미리 등록할 때만 쓰세요.</div>
       <div style="display:flex;gap:8px">
         <input id="new-admin-email" type="email" placeholder="이메일 주소 입력"
           style="flex:1;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;outline:none"
@@ -1266,7 +1278,7 @@ function switchTab(name) {
   if (name === 'postings'    && document.getElementById('postings-list').innerHTML.includes('로딩')) loadPostings();
   if (name === 'users'       && document.getElementById('users-list').innerHTML.includes('로딩')) loadUsers();
   if (name === 'moims'       && document.getElementById('moims-list').innerHTML.includes('로딩')) loadMoims();
-  if (name === 'admins'      && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) loadAdminList();
+  if (name === 'admins'      && document.getElementById('settings-admin-list').innerHTML.includes('로딩')) { loadAdminList(); loadAdminMembers(); }
   if (name === 'baroalba' || name === 'baromoim' || name === 'lesson') loadCategoryList(name);
   if (name === 'mannnam')    { loadMannnamManagers(); searchBizForMannnam(''); }
   if (name === 'restaurants' && document.getElementById('restaurants-list').innerHTML.includes('로딩')) loadRestaurants();
@@ -3418,9 +3430,66 @@ async function addAdmin() {
   const input = document.getElementById('new-admin-email');
   const email = input.value.trim().toLowerCase();
   if (!email || !email.includes('@')) { showToast('올바른 이메일을 입력하세요'); return; }
+  if (await _addAdminEmail(email)) input.value = '';
+}
+
+// ── 가입 회원에서 관리자 지정 (2026-08-01) ────────────────
+// 목록은 서버의 auth_users 액션에서 받는다. 관리자 판정이 auth.jwt()->>'email' 기준이라
+// 목록도 auth 계정이어야 "고른 사람"과 "권한이 생기는 사람"이 어긋나지 않는다.
+let _adminMembers = null;
+
+async function loadAdminMembers() {
+  const el = document.getElementById('admin-member-list');
+  if (!el) return;
+  el.innerHTML = '<div class="loading">로딩 중...</div>';
+  const rows = await adminApi('auth_users');
+  if (!Array.isArray(rows)) {
+    el.innerHTML = '<div class="empty" style="padding:16px 0">불러오기 실패' +
+      (rows?.error ? ' — ' + String(rows.error).slice(0, 80) : '') + '</div>';
+    return;
+  }
+  _adminMembers = rows;
+  renderAdminMemberList();
+}
+
+function renderAdminMemberList() {
+  const el = document.getElementById('admin-member-list');
+  if (!el || !_adminMembers) return;
+  const q = (document.getElementById('admin-member-search')?.value || '').trim().toLowerCase();
+  const list = q
+    ? _adminMembers.filter(m => (m.name || '').toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+    : _adminMembers;
+  if (!list.length) {
+    el.innerHTML = '<div class="empty" style="padding:16px 0">' + (q ? '검색 결과 없음' : '가입 회원 없음') + '</div>';
+    return;
+  }
+  const roleLabel = { worker: '알바생', business: '업주' };
+  el.innerHTML = list.slice(0, 200).map(m => {
+    const nm = m.name || '(이름 없음)';
+    const tag = roleLabel[m.role] || '미등록';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--ink-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}
+          <span style="font-size:10px;font-weight:500;color:var(--ink-400);margin-left:4px">${tag}</span></div>
+        <div style="font-size:11px;color:var(--ink-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.email}</div>
+      </div>
+      ${m.is_admin
+        ? '<span style="font-size:11px;font-weight:600;color:var(--ink-400);flex-shrink:0">이미 관리자</span>'
+        : `<button onclick="grantAdminTo('${m.email.replace(/'/g, "\\'")}')" style="flex-shrink:0;padding:7px 12px;background:var(--ink-900);color:#fff;border:none;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer">권한 부여</button>`}
+    </div>`;
+  }).join('') + (list.length > 200
+    ? '<div style="font-size:11px;color:var(--ink-400);padding:10px 4px">200명까지만 표시됩니다. 검색해서 좁혀주세요.</div>' : '');
+}
+
+async function grantAdminTo(email) {
+  if (!confirm(`${email}\n\n이 계정에 관리자 권한을 부여할까요?\n관리자는 회원·공고·신고·결제 설정을 모두 볼 수 있습니다.`)) return;
+  if (await _addAdminEmail(email)) loadAdminMembers();
+}
+
+// 목록에서 고르든 직접 입력하든 뒤 처리는 같다 (규칙 7 — 같은 기능은 한 벌로)
+async function _addAdminEmail(email) {
   const { error } = await db.from('app_admins').insert({ email });
-  if (error) { showToast('추가 실패: ' + (error.message || '이미 등록된 이메일일 수 있습니다')); return; }
-  input.value = '';
+  if (error) { showToast('추가 실패: ' + (error.message || '이미 등록된 이메일일 수 있습니다')); return false; }
   loadAdminList();
   showToast('✅ 관리자가 추가됐습니다');
   // workers에서 이름·uid 조회 후 알림 발송
@@ -3440,6 +3509,7 @@ async function addAdmin() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role: 'admin', email, name, userId: uid }),
   }).catch(() => {});
+  return true;
 }
 
 // ── 카테고리 관리 (서비스별) ──────────────────────────────
