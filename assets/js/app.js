@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '611';
+  const _APP_V = '612';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -623,6 +623,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (_refCode && !localStorage.getItem('referral_processed')) {
     localStorage.setItem('pending_ref_code', _refCode);
   }
+
+  // 프로모션 쿠폰 링크·QR(?coupon=CODE) 캐치 - 위 ?ref= 와 같은 이유로 먼저 잡아둔다.
+  // ?ref= 와 달리 "가입 후 5분 이내" 조건이 없다: 매장 부착 QR·전단지로 뿌리는 용도라
+  // 기존 회원이 찍어도 받아야 한다(1인 1회 제한은 서버의 max_uses_per_user 가 건다).
+  const _couponCode = new URLSearchParams(location.search).get('coupon');
+  if (_couponCode) localStorage.setItem('pending_coupon_code', _couponCode.trim().toUpperCase());
 
   // 카카오 공유 SDK 초기화 (지도 SDK kakao.maps와 별개)
   if (window.Kakao && !Kakao.isInitialized()) Kakao.init(APP_CONFIG.KAKAO_JS_KEY);
@@ -690,6 +696,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     // 추천인 링크로 유입된 신규가입자 처리 (가입 후 5분 이내인 진짜 신규가입에만 적용)
     if (_createdAgo < 5 * 60 * 1000) _processReferralSignup(session.user.id);
+    // 프로모션 쿠폰 링크·QR 처리 - 가입 시점과 무관하게 로그인한 사람이면 누구나
+    _processPendingCoupon();
     // 알림 배지 초기화
     setTimeout(updateNotiBadge, 1500);
     setTimeout(checkPushPermission, 3000); // 알림 배너 표시
@@ -971,15 +979,51 @@ async function _processReferralSignup(newUserId) {
       const couponResult = await couponRes.json();
       if (couponRes.ok && couponResult?.granted) {
         showToast(t('toast_coupon_granted_fmt').replace('{n}', couponResult.granted));
-      } else if (couponRes.status !== 404) {
-        // 404 = 아예 존재하지 않는 코드라 다시 시도해도 소용없다. 그 외(성별 미설정 400,
-        // 서버 오류 등)는 조건이 갖춰지면 성공할 수 있으므로 되살려서 다음번에 재시도한다
+      } else if (couponResult?.retryable || couponRes.status >= 500) {
+        // 서버가 retryable 로 표시한 실패(성별 미설정)와 서버 오류만 되살린다.
+        // "이미 사용함"·"소진됨"·"없는 코드"는 다시 시도해도 결과가 같아서 매 진입마다
+        // 헛호출만 하게 된다 - 그런 건 그대로 버린다.
         _restorePendingRefCode(code);
       }
     }
   } catch (e) {
     // 네트워크 실패로 가입 축하 코드가 사라지면 안 된다 - 되살려서 다음 진입 때 재시도
     _restorePendingRefCode(code);
+  }
+}
+
+// ── 프로모션 쿠폰 링크·QR(?coupon=CODE) 자동 등록 ──────────────────────
+// 매장 부착 QR·전단지·단톡 공유로 들어온 사람이 코드를 손으로 치지 않아도 되게 한다.
+// 추천코드(_processReferralSignup)와 달리 가입 시점을 따지지 않는다 - 기존 회원도 대상.
+// 실패 처리 규칙은 추천코드 쪽과 동일: 조건만 갖춰지면 성공할 수 있는 실패(성별 미설정,
+// 서버 오류)만 코드를 남겨 다음 진입 때 재시도하고, 결과가 바뀌지 않는 실패는 버린다.
+async function _processPendingCoupon() {
+  const code = localStorage.getItem('pending_coupon_code');
+  if (!code) return;
+  localStorage.removeItem('pending_coupon_code');
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { localStorage.setItem('pending_coupon_code', code); return; } // 아직 로그인 전
+    const res = await fetch('/api/coupon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ code })
+    });
+    const result = await res.json();
+    if (res.ok && result?.granted) {
+      showToast('🎫 ' + t('toast_coupon_granted_fmt').replace('{n}', result.granted));
+      // 바로스팟·바로미팅 화면이 이미 떠 있으면 이용권 숫자가 옛값으로 남으므로 새로고침
+      if (typeof _loadBarospotList === 'function') _loadBarospotList().catch(() => {});
+      return;
+    }
+    if (result?.retryable || res.status >= 500) {
+      localStorage.setItem('pending_coupon_code', code);
+      return;
+    }
+    // 여기까지 왔으면 없는 코드·이미 사용·소진·만료 - 이유를 알려주고 코드는 버린다
+    if (result?.error) showToast(result.error);
+  } catch (e) {
+    localStorage.setItem('pending_coupon_code', code); // 네트워크 실패 - 다음 진입 때 재시도
   }
 }
 

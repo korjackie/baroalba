@@ -174,7 +174,10 @@ module.exports = async function handler(req, res) {
       const wRows = await sb(`workers?kakao_uid=eq.${userId}&select=gender`, svcKey).then(r => r.json());
       const passGender = coupon.gender || (Array.isArray(wRows) ? wRows[0]?.gender : null);
       if (!passGender) {
-        return res.status(400).json({ error: '성별을 먼저 설정한 뒤 쿠폰을 등록해주세요' });
+        // retryable: 조건(성별 입력)만 갖춰지면 성공할 수 있는 실패라는 표시.
+        // 클라이언트가 코드를 버리지 않고 다음 진입 때 다시 시도한다. 한국어 에러 문구를
+        // 클라이언트가 문자열 비교하는 것보다 안전하다(문구를 고치면 조용히 깨진다).
+        return res.status(400).json({ error: '성별을 먼저 설정한 뒤 쿠폰을 등록해주세요', retryable: true });
       }
 
       const insertRes = await sb('coupon_redemptions', svcKey, {
