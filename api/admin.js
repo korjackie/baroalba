@@ -1212,16 +1212,21 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 쿠폰 생성 ──────────────────────────────────────
+    // ⚠️ 실제 컬럼은 pass_qty / uses_count 다(2026-08-02 라이브 확인).
+    //    ticket_count·used_count·max_uses_per_user 라는 컬럼은 존재하지 않는다 —
+    //    Phase 59-B 가 쓰는 쪽(coupon.js)만 고치고 만드는 쪽인 여기를 놓쳐서,
+    //    그 뒤로 관리자 화면의 쿠폰 생성이 400 으로 계속 실패하고 있었다.
+    //    1인당 사용 제한은 컬럼 자체가 없어 coupon.js 가 `|| 1` 로 방어 중이다(항상 1회).
+    //    진짜로 열려면 DDL 이 필요하므로 여기서는 보내지 않는다.
     if (action === 'create_coupon' && req.method === 'POST') {
-      const { code, ticket_count, max_uses, max_uses_per_user, expires_at } = req.body || {};
+      const { code, pass_qty, ticket_count, max_uses, expires_at } = req.body || {};
       if (!code || !code.trim()) return res.status(400).json({ error: '쿠폰 코드를 입력해주세요' });
       const r = await sb('coupons', svcKey, {
         method: 'POST',
         body: JSON.stringify({
           code: code.trim().toUpperCase(),
-          ticket_count: parseInt(ticket_count) || 1,
+          pass_qty: parseInt(pass_qty ?? ticket_count) || 1,   // 옛 키로 오는 호출도 받아준다
           max_uses: max_uses ? parseInt(max_uses) : null,
-          max_uses_per_user: parseInt(max_uses_per_user) || 1,
           expires_at: expires_at || null,
         })
       });
@@ -1617,22 +1622,36 @@ module.exports = async function handler(req, res) {
       if (!Array.isArray(reports)) return res.json([]);
 
       // 대상 공고/모임/바로미팅/사용자 이름 조회
+      // ⚠️ reports 의 사람 식별자는 workers.id 가 아니라 kakao_uid(=auth uid) 다.
+      //    app.js 가 `reporter_id: currentUser.id` 로 넣고, 신고 대상도
+      //    openReportModal('user', uid) / openOwnerReport('worker', w.kakao_uid) 로 넣는다.
+      //    예전엔 workers.id 로 조인해서 신고자·대상 이름이 항상 UUID 앞 8자리로만 보였다
+      //    (Phase 59-B 의 모임 주최자 버그와 같은 유형 — 컬럼은 다 존재해서 스키마 대조로는
+      //    안 잡히고, 저장되는 "값의 의미"를 역추적해야 발견된다).
+      //    'worker' 타입은 조회 대상에서 아예 빠져 있기도 했다.
+      //    옛 데이터에 workers.id 가 들어간 행이 있을 수 있어 두 키 모두로 찾는다.
       const jobIds = [...new Set(reports.filter(r => r.target_type === 'job').map(r => r.target_id))];
-      const userIds = [...new Set(reports.filter(r => r.target_type === 'user').map(r => r.target_id))];
+      const userIds = [...new Set(reports.filter(r => r.target_type === 'user' || r.target_type === 'worker').map(r => r.target_id).filter(Boolean))];
       const gatheringIds = [...new Set(reports.filter(r => r.target_type === 'moim' || r.target_type === 'gathering').map(r => r.target_id))];
       const reporterIds = [...new Set(reports.map(r => r.reporter_id).filter(Boolean))];
+      const personIds = [...new Set([...userIds, ...reporterIds])];
 
-      const [jobs, targets, gatherings, reporters] = await Promise.all([
+      const [jobs, byUid, byId, gatherings] = await Promise.all([
         jobIds.length ? sb(`job_postings?id=in.(${jobIds.join(',')})&select=id,title,biz_name`, svcKey).then(r => r.json()) : [],
-        userIds.length ? sb(`workers?id=in.(${userIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json()) : [],
+        personIds.length ? sb(`workers?kakao_uid=in.(${personIds.join(',')})&select=id,kakao_uid,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
+        personIds.length ? sb(`workers?id=in.(${personIds.join(',')})&select=id,kakao_uid,name,phone`, svcKey).then(r => r.json()).catch(() => []) : [],
         gatheringIds.length ? sb(`gatherings?id=in.(${gatheringIds.join(',')})&select=id,title,category`, svcKey).then(r => r.json()) : [],
-        reporterIds.length ? sb(`workers?id=in.(${reporterIds.join(',')})&select=id,name,phone`, svcKey).then(r => r.json()) : [],
       ]);
 
       const jobMap = Object.fromEntries((Array.isArray(jobs) ? jobs : []).map(j => [j.id, j]));
-      const userMap = Object.fromEntries((Array.isArray(targets) ? targets : []).map(u => [u.id, u]));
       const gatheringMap = Object.fromEntries((Array.isArray(gatherings) ? gatherings : []).map(g => [g.id, g]));
-      const repMap = Object.fromEntries((Array.isArray(reporters) ? reporters : []).map(u => [u.id, u]));
+      // 한 사람을 kakao_uid·id 두 키 모두에 등록해 어느 쪽으로 저장돼 있든 찾히게 한다
+      const personMap = {};
+      for (const w of [...(Array.isArray(byUid) ? byUid : []), ...(Array.isArray(byId) ? byId : [])]) {
+        if (w.kakao_uid) personMap[w.kakao_uid] = w;
+        if (w.id) personMap[w.id] = w;
+      }
+      const userMap = personMap, repMap = personMap;
 
       const enriched = reports.map(r => ({
         ...r,

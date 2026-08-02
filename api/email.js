@@ -135,6 +135,13 @@ async function handleWelcome(req, res, RESEND_KEY) {
 // ══════════════════════════════════════════════════════════════
 //  신고 접수 알림 (구 /api/report-notify)
 // ══════════════════════════════════════════════════════════════
+// reports 의 reporter_id·target_id 는 workers.id 가 아니라 kakao_uid(=auth uid) 다.
+// app.js 가 `reporter_id: currentUser.id` / openReportModal('user', uid) 로 넣기 때문.
+// 예전엔 id 로만 찾아서 신고 메일의 신고자·대상이 항상 "ID: <uuid>" 로만 나갔다.
+// (Phase 59-B 모임 주최자 · Phase 87 관리자 신고목록과 같은 유형의 사본)
+// 옛 데이터에 workers.id 가 들어간 행이 있을 수 있어 두 키 모두로 찾는다.
+const personFilter = uid => `or=(kakao_uid.eq.${uid},id.eq.${uid})`;
+
 async function handleReport(req, res, RESEND_KEY) {
   const { target_type, target_id, reason, detail, reporter_id } = req.body || {};
   if (!reason) return res.status(400).json({ error: 'reason required' });
@@ -153,15 +160,18 @@ async function handleReport(req, res, RESEND_KEY) {
           const j = jobs[0];
           targetLabel = `${j.title || '(제목없음)'}${j.biz_name ? ' · ' + j.biz_name : ''} (${target_id.slice(0, 8)}…)`;
         }
-      } else if (target_type === 'user' && target_id) {
-        const users = await sbGet(`workers?id=eq.${target_id}&select=name,phone&limit=1`, SVC_KEY);
+      } else if ((target_type === 'user' || target_type === 'worker') && target_id) {
+        const users = await sbGet(`workers?${personFilter(target_id)}&select=name,phone&limit=1`, SVC_KEY);
         if (users?.[0]) {
           const u = users[0];
           targetLabel = `${u.name || '(이름없음)'}${u.phone ? ' · ' + u.phone : ''} (${target_id.slice(0, 8)}…)`;
         }
+      } else if ((target_type === 'moim' || target_type === 'gathering') && target_id) {
+        const gs = await sbGet(`gatherings?id=eq.${target_id}&select=title,category&limit=1`, SVC_KEY);
+        if (gs?.[0]) targetLabel = `${gs[0].title || '(제목없음)'} (${target_id.slice(0, 8)}…)`;
       }
       if (reporter_id) {
-        const reporters = await sbGet(`workers?id=eq.${reporter_id}&select=name,phone&limit=1`, SVC_KEY);
+        const reporters = await sbGet(`workers?${personFilter(reporter_id)}&select=name,phone&limit=1`, SVC_KEY);
         if (reporters?.[0]) {
           const r = reporters[0];
           reporterLabel = `${r.name || '(이름없음)'}${r.phone ? ' · ' + r.phone : ''} (${reporter_id.slice(0, 8)}…)`;
@@ -172,7 +182,8 @@ async function handleReport(req, res, RESEND_KEY) {
     }
   }
 
-  const typeLabel = target_type === 'job' ? '공고' : '사용자';
+  const typeLabel = target_type === 'job' ? '공고'
+    : (target_type === 'moim' || target_type === 'gathering') ? '모임' : '사용자';
   const html = `
     <h2 style="color:#FF4B4B">바로알바 신고 접수</h2>
     <table style="border-collapse:collapse;width:100%;font-family:sans-serif;font-size:14px">

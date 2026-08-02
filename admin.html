@@ -3262,7 +3262,9 @@ async function loadCoupons() {
             <span class="status-badge ${c.is_active ? 'sb-done' : 'sb-dismissed'}">${c.is_active ? '활성' : '비활성'}</span>
           </div>
           <div style="font-size:12px;color:var(--ink-600);margin-bottom:10px">
-            이용권 ${c.ticket_count ?? 1}장 지급 · 사용 ${c.used_count || 0}${c.max_uses ? ' / ' + c.max_uses : ''}회
+            <!-- 실제 컬럼은 pass_qty / uses_count. ticket_count·used_count 로 읽던 탓에
+                 지급 장수는 항상 1장, 사용 횟수는 항상 0회로 보이고 있었다(2026-08-02 수정) -->
+            이용권 ${c.pass_qty ?? 1}장 지급 · 사용 ${c.uses_count || 0}${c.max_uses ? ' / ' + c.max_uses : ''}회
             ${c.expires_at ? ' · ~' + c.expires_at.slice(0,10) : ''}
           </div>
           <div style="display:flex;gap:6px">
@@ -3275,12 +3277,12 @@ async function loadCoupons() {
 
 async function createCoupon() {
   const code = document.getElementById('new-coupon-code').value.trim();
-  const ticket_count = document.getElementById('new-coupon-tickets').value;
+  const pass_qty = document.getElementById('new-coupon-tickets').value;
   const max_uses = document.getElementById('new-coupon-maxuses').value;
   const expires_at = document.getElementById('new-coupon-expires').value;
   if (!code) { showToast('쿠폰 코드를 입력해주세요'); return; }
   const result = await adminApi('create_coupon', 'POST', {
-    code, ticket_count, max_uses: max_uses || null, expires_at: expires_at || null,
+    code, pass_qty, max_uses: max_uses || null, expires_at: expires_at || null,
   });
   if (result?.error) { showToast('생성 실패: ' + result.error); return; }
   document.getElementById('new-coupon-code').value = '';
