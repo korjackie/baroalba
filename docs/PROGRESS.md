@@ -3,7 +3,7 @@
 > **새 세션은 이 문서를 먼저 끝까지 읽으세요.** 맥락을 이어가기 위한 살아있는 작업 로그입니다.
 > 의미 있는 작업을 끝낼 때마다 **요청 없이도** 이 문서를 갱신할 것.
 > 개발 규칙·시스템 구조는 [`../CLAUDE.md`](../CLAUDE.md), 옛 이력은 [`WORK_LOG.md`](WORK_LOG.md)
-> 최종 갱신: **2026-08-01** (sw.js **v609** / Phase 80~86 — CSS 문법 감사 · 스키마 드리프트 2차 · 홈 게스트 언어선택기 · 브랜드명 로마자 · **app_admins 보안 적용** · 관리자 지정 UI · 중복 ID. 앞서 Phase 75~79)
+> 최종 갱신: **2026-08-02** (sw.js **v609** / Phase 80~87 — CSS 문법 감사 · 스키마 드리프트 2차 · 홈 게스트 언어선택기 · 브랜드명 로마자 · **app_admins 보안 적용** · 관리자 지정 UI · 중복 ID · **`api/*.js` 전수 대조**. 앞서 Phase 75~79)
 
 ---
 
@@ -29,6 +29,11 @@
   거의 전부 다른 스키마를 향하고 있었다. 전부 수정·배포 완료.
   **관리자·매니저 지정 푸시도 한 번도 나간 적이 없었다**(Phase 59가 app.js에서 고친
   버그의 세 번째 사본). 코드로 고칠 수 있는 드리프트는 재대조로 0건 확인.
+- **Phase 87 (8/2)**: `api/*.js` 12개를 전수 스키마 대조했다(스크립트를
+  `tools/schema-audit/audit_api.py` 로 저장소에 남김). **관리자 쿠폰 생성이 없는 컬럼
+  2개로 계속 400** 이었고(59-B 가 쓰는 쪽만 고친 사본), **신고 목록·신고 메일이
+  `kakao_uid` 를 `workers.id` 로 조인**해 사람 이름이 항상 UUID 로 보이고 있었다.
+  나머지 10개 서버함수는 깨끗. 배포·라이브 반영 확인 완료.
 - 치환 스크립트는 `tools/design/` 에 남겨뒀다
   (`weight-sweep` `color-sweep` `shape-sweep` `palette-align` `space-sweep` `admin-icons`).
   **전부 드라이런이 기본이고 `--apply` 를 줘야 파일을 쓴다.** 다시 돌릴 일이 있으면 그대로 쓸 것.
@@ -677,6 +682,52 @@ DB 컬럼 → 업주 폼 토글 → 저장 → 카드/상세 배지 → 홈 필�
 
 락스텝 v589→v590. `node --check` 통과. **실기기 확인 완료**(2026-07-29) — 급구·비대면
 옆에 🌏외국인 환영/🧓시니어 환영 칩이 정상 노출됨.
+
+---
+
+### Phase 87 ✅ `api/*.js` 전수 스키마 대조 3차 — 쿠폰 생성 400 + 신고 조인 (2026-08-02, 커밋 `3ac2ac8`)
+
+Phase 59-B 가 *"남은 권장 작업"* 으로 남긴 서버함수 전수 대조를 **12개 파일 전부**에 수행했다.
+감사 스크립트를 [`tools/schema-audit/audit_api.py`](../tools/schema-audit/audit_api.py) 로
+저장소에 남겼다(`sb()` 헬퍼와 `fetch(.../rest/v1/...)` 직접호출 양쪽을 파싱, URL 컬럼 +
+INSERT/PATCH 바디 키를 함께 대조). **컬럼참조 193건 존재확인, 드리프트 2건.**
+
+**① 관리자 화면의 쿠폰 생성이 계속 400 이었다 (드리프트)**
+실제 컬럼은 `pass_qty`/`uses_count` 인데 `admin.js` 의 `create_coupon` 은 `ticket_count` 와
+**아예 없는 컬럼 `max_uses_per_user`** 로 INSERT 하고 있었다. **Phase 59-B 가 쓰는 쪽
+(`coupon.js`)만 고치고 만드는 쪽을 놓친 사본**이다. `admin.html` 의 목록 표시도 같은 옛
+이름(`c.ticket_count`/`c.used_count`)이라 **지급 장수는 항상 "1장", 사용 횟수는 항상 "0회"**
+로 보이고 있었다. 1인당 사용 제한은 컬럼 자체가 없어 `coupon.js` 가 `|| 1` 로 방어 중이다
+(=항상 1회). 진짜로 열려면 DDL 이 필요해서 이번엔 보내지 않는 쪽으로 정리했다.
+
+**② 신고 목록·신고 메일의 사람 이름이 항상 UUID 앞 8자리 (조인 의미버그, 세·네 번째 사본)**
+`reports.reporter_id`/`target_id` 는 `workers.id` 가 아니라 **kakao_uid(=auth uid)** 다
+(`app.js` 가 `reporter_id: currentUser.id`, `openReportModal('user', uid)`,
+`openOwnerReport('worker', w.kakao_uid)` 로 넣는다). 그런데 `api/admin.js` 의 신고목록과
+`api/email.js` 의 신고 알림 메일이 **둘 다 `workers.id` 로 조인**하고 있었다.
+`target_type='worker'` 는 조회 대상에서 아예 빠져 있기도 했다. 옛 데이터 대비로
+`kakao_uid`·`id` 두 키 모두로 찾도록 고쳤다(`or=(kakao_uid.eq.X,id.eq.X)` — 라이브 검증함).
+신고 메일은 모임 신고도 `사용자` 로 표기하던 것까지 함께 정리.
+
+⚠️ **이 유형은 스키마 대조로 절대 안 잡힌다** — 컬럼이 양쪽 다 존재하므로 감사는 무조건
+통과한다. 저장하는 쪽 코드에서 **그 값이 무엇인지 역추적**해야 발견된다. **전례가 이미
+네 번**(Phase 59-B 모임 주최자, 이번 2건 포함)이라 CLAUDE.md 13-9 에 별도 항목으로 박았다.
+
+**③ 감사 방법론 정정 — 401을 "판정 불가"로 넘기면 안 된다**
+`workers` 에 anon **컬럼 단위 grant** 가 걸려 있다(name·age·bio·rating 등 공개 필드만 허용,
+`kakao_uid`·`phone`·`last_lat`·`referral_code` 등은 401). 처음엔 `select=*` 이 401 이라
+`workers`·`applications`·`chat_rooms` 를 통째로 "판정 불가"로 건너뛰었다. 그런데
+**PostgreSQL 은 이름 해석을 권한 검사보다 먼저** 하므로 없는 컬럼은 권한과 무관하게
+42703(400)이 온다 — 즉 **401/42501 도 "컬럼 존재 확정"** 이다. 이걸 바로잡고 나서야
+26건이 감사 범위에 들어왔다. 판정표는 CLAUDE.md 13-9 참고.
+
+**나머지 10개 서버함수는 깨끗했다.** `node --check` 통과, 라이브 반영 확인.
+admin 전용 파일 + 서버함수라 **락스텝 버전 밖**(Phase 85 선례 — `sw.js` 는 문서를
+network-first 로 가져오고 `admin.html` 은 `?v=` 대상이 아니다).
+
+**아직 안 한 것**: 앱 본체(`assets/js/*.js`)의 `.rpc()` 호출과 `admin.html`·`mannnam.html`
+의 인라인 쿼리는 이번 스크립트 범위 밖이다. 다만 `admin.html`·`mannnam.html` 은
+Phase 81 에서 별도로 대조했다.
 
 ---
 

@@ -767,17 +767,33 @@ DB에 참조하는 45개 테이블 × 모든 컬럼을 전부 쿼리해서 대�
 아래를 습관처럼 돌려라:**
 
 ```bash
-# 코드가 참조하는 테이블 전부 뽑기
+python tools/schema-audit/audit_api.py     # api/*.js 는 이걸로 끝난다 (Phase 87에 만듦)
+
+# 앱 코드(assets/js/*.js)는 아직 수동이다. 참조 테이블 뽑기:
 grep -roE "\.from\(['\"][a-z_]+['\"]" assets/js/*.js | grep -oE "['\"][a-z_]+['\"]" | tr -d "\"'" | sort -u
-# 각 테이블 실제 컬럼 확인 (anon key, 값 노출 없이 존재만 확인)
 KEY=<sw.js의 SB_ANON>; B=https://onwvbmllpycgswfzywjv.supabase.co/rest/v1
 curl -s "$B/<table>?select=<col>&limit=1" -H "apikey:$KEY" -H "Authorization:Bearer $KEY"
-#  → 200이면 컬럼 있음, 400이면 없음(= 그 쿼리 전체가 조용히 실패 중)
-#  → 임베딩은 "?select=*,관계(...)"로 테스트, PGRST200 에러면 관계 없음
 ```
-(Phase 59에 쓴 전수 대조 스크립트는 `.from()` 참조 + select/eq/order/insert 컬럼을
-자동 추출해 일괄 대조한다. 재사용 권장. 아직 `api/*.js` 서버 SQL·`.rpc()`·admin.html은
-전수 대조 안 했으니 다음 차례.)
+
+**판정 규칙 — 401을 "판정 불가"로 넘기지 말 것 (2026-08-02 Phase 87 정정)**
+
+| 응답 | 뜻 |
+|------|-----|
+| 200 | 컬럼 있음 |
+| **401 / 42501** | **컬럼 있음** (권한만 없음). PostgreSQL 은 이름 해석을 권한 검사보다 **먼저** 하므로 이것도 존재 확정이다 |
+| 400 / 42703 | 컬럼 없음 ← **이것만 버그** |
+| 404 / PGRST205 | 테이블 자체가 없음 |
+
+`workers` 에는 anon **컬럼 단위 grant** 가 걸려 있다(name·age·bio·rating 등 공개
+필드만 허용, `kakao_uid`·`phone`·`last_lat`·`referral_code` 등은 401). 그래서
+`select=*` 은 401 이고, 401을 "판정 불가"로 처리하면 `workers`·`applications`·
+`chat_rooms` 가 통째로 감사에서 빠진다. 서버함수는 service_role 로 도니 401 자체는 버그가 아니다.
+
+**이 방법으로 절대 못 잡는 것: 잘못된 키로 조인.** 컬럼은 양쪽 다 존재하니
+스키마 대조는 무조건 통과한다(`reports.reporter_id` 는 kakao_uid 인데 `workers.id`
+로 조인 → 이름이 항상 공란). 저장하는 쪽 코드에서 **그 값이 무엇인지 역추적**해야
+발견된다. 전례가 이미 네 번이다 — Phase 59-B 모임 주최자, Phase 87 신고목록·신고메일.
+`?<컬럼>=eq.${...}` 형태를 grep 해서 좌변 컬럼과 우변 값의 출처가 맞는지 대조할 것.
 
 **한 줄 요약: "안 된다/안 보인다" 보고를 받으면, 코드를 읽기 전에 그 화면이 건드리는
 테이블·컬럼이 실제 DB에 있는지부터 쿼리로 확인하라. 스키마 드리프트는 코드로 못 잡는다.**
