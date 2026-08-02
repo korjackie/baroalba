@@ -324,7 +324,12 @@ module.exports = async function handler(req, res) {
     const { code } = req.body || {};
     if (!code) return res.status(400).json({ error: 'code required' });
 
-    const REFERRAL_REWARD_POINTS = 3000;
+    // 2026-08-02 하향(3,000 → 1,000) + 추천인 누적 상한 신설. 계정당 1회 제한만으로는
+    // 계정을 여러 개 만들어 서로 추천하는 것을 못 막고, 추천인 쪽은 상한이 아예 없었다.
+    // ⚠️ 같은 값이 api/coupon.js 에도 복제돼 있다(서버리스 함수가 달라 헬퍼 공유 불가).
+    // 한쪽만 고치면 가입 직후 경로와 쿠폰 입력창 경로의 지급액이 갈린다 - 반드시 같이 바꿀 것.
+    const REFERRAL_REWARD_POINTS = 1000;
+    const REFERRAL_MAX_PER_REFERRER = 10;
     const meRows = await sb(`workers?kakao_uid=eq.${newUserId}&select=id,referred_by`, svcKey).then(r => r.json());
     const me = Array.isArray(meRows) ? meRows[0] : null;
     if (me?.referred_by) return res.json({ ok: true, already: true }); // 이미 처리됨 - 중복 지급 방지
@@ -332,6 +337,11 @@ module.exports = async function handler(req, res) {
     const refRows = await sb(`workers?referral_code=eq.${encodeURIComponent(code)}&select=kakao_uid`, svcKey).then(r => r.json());
     const referrer = Array.isArray(refRows) ? refRows[0] : null;
     if (!referrer || referrer.kakao_uid === newUserId) return res.json({ ok: true, skipped: true });
+
+    // referred_by 를 쓰기 전에 세어야 방금 이 사람이 포함되지 않는다.
+    // 상한에 걸리면 신규 가입자에게는 그대로 주되 추천인 쪽 지급만 멈춘다.
+    const priorRefRows = await sb(`workers?referred_by=eq.${referrer.kakao_uid}&select=id`, svcKey).then(r => r.json());
+    const referrerCapped = (Array.isArray(priorRefRows) ? priorRefRows.length : 0) >= REFERRAL_MAX_PER_REFERRER;
 
     if (me) {
       await sb(`workers?id=eq.${me.id}`, svcKey, { method: 'PATCH', body: JSON.stringify({ referred_by: referrer.kakao_uid }) });
@@ -355,14 +365,16 @@ module.exports = async function handler(req, res) {
       }
     }
     await creditPointsServer(newUserId, REFERRAL_REWARD_POINTS);
-    await creditPointsServer(referrer.kakao_uid, REFERRAL_REWARD_POINTS);
 
     // 추천인은 지금 앱을 보고 있지 않을 가능성이 높아 알림/푸시로 알려줘야 함
     // (신규가입자 본인은 클라이언트에서 즉시 토스트로도 뜨지만, 기록용으로 동일하게 남김)
     await notifyPointsGranted(newUserId, REFERRAL_REWARD_POINTS, '추천코드로 가입해서 포인트를 받았어요! 🎉', svcKey, req);
-    await notifyPointsGranted(referrer.kakao_uid, REFERRAL_REWARD_POINTS, '내 추천코드로 친구가 가입해서 포인트를 받았어요! 🎉', svcKey, req);
+    if (!referrerCapped) {
+      await creditPointsServer(referrer.kakao_uid, REFERRAL_REWARD_POINTS);
+      await notifyPointsGranted(referrer.kakao_uid, REFERRAL_REWARD_POINTS, '내 추천코드로 친구가 가입해서 포인트를 받았어요! 🎉', svcKey, req);
+    }
 
-    return res.json({ ok: true, credited: true, points: REFERRAL_REWARD_POINTS });
+    return res.json({ ok: true, credited: true, points: REFERRAL_REWARD_POINTS, referrerCapped });
   }
 
   // ── 실시간 위치공유 - 다른 참가자 위치 조회 (관리자 아님, 로그인한 본인 세션) ──

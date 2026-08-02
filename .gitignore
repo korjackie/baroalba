@@ -3,3 +3,4 @@ node_modules/
 android/app/*firebase-adminsdk*.json
 android/.gradle/
 backup/
+__pycache__/

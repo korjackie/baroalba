@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '609';
+  const _APP_V = '610';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -925,7 +925,9 @@ async function _sendWelcomeEmail(user) {
 }
 
 // ── 추천인 초대 시스템 ────────────────────────────────────
-const REFERRAL_REWARD_POINTS = 3000;
+// ⚠️ 실제 지급은 서버(api/admin.js·api/coupon.js)가 하고 이 값은 안내 문구용 사본이다 -
+// 서버 상수를 바꾸면 여기도 같이 바꿔야 화면에 적힌 금액과 실제 지급액이 어긋나지 않는다.
+const REFERRAL_REWARD_POINTS = 1000;
 
 // 가입 시 pending_ref_code(로그인 전 캐치해둔 추천코드)가 있으면 서버(api/admin.js의
 // process_referral)에 위임해 추천인/피추천인 양쪽에 포인트 지급 - 최대 1회만 처리(중복 지급 방지).
@@ -19228,12 +19230,23 @@ const BAROMEET_TRIAL_EVENT = {
   start: '2026-07-11T00:00:00+09:00',
   end: '2026-08-10T23:59:59+09:00',
 };
+// 바로스팟과 같은 날(8/10) 끝나므로 신규가입 웰컴도 동일하게 적용한다 - 자세한 취지는
+// BAROSPOT_WELCOME_TRIAL 주석 참고. 두 프로모션의 판정 규칙이 갈라지지 않게 같이 고칠 것.
+const BAROMEET_WELCOME_TRIAL = {
+  enabled: true,
+  withinDays: 30,
+};
 async function _isBaromeetTrialEligible(userId) {
-  if (!BAROMEET_TRIAL_EVENT.enabled || !userId) return false;
+  if (!userId) return false;
   const now = Date.now();
-  const start = new Date(BAROMEET_TRIAL_EVENT.start).getTime();
-  const end = new Date(BAROMEET_TRIAL_EVENT.end).getTime();
-  if (now < start || now > end) return false;
+  const inEvent = BAROMEET_TRIAL_EVENT.enabled
+    && now >= new Date(BAROMEET_TRIAL_EVENT.start).getTime()
+    && now <= new Date(BAROMEET_TRIAL_EVENT.end).getTime();
+  const signedUpAt = currentUser?.created_at ? new Date(currentUser.created_at).getTime() : NaN;
+  const inWelcome = BAROMEET_WELCOME_TRIAL.enabled
+    && Number.isFinite(signedUpAt)
+    && (now - signedUpAt) <= BAROMEET_WELCOME_TRIAL.withinDays * 86400000;
+  if (!inEvent && !inWelcome) return false;
   // 이 유저가 신청한 gathering_id 목록 중 바로미팅 카테고리가 하나라도 있으면 이미 이용한 것
   const { data: myApps } = await db.from('gathering_applications').select('gathering_id').eq('applicant_id', userId);
   const gatheringIds = (myApps || []).map(a => a.gathering_id);
@@ -20213,12 +20226,25 @@ const BAROSPOT_TRIAL_EVENT = {
   start: '2026-07-11T00:00:00+09:00',
   end: '2026-08-10T23:59:59+09:00',
 };
+// 위 오픈 프로모션이 8/10에 끝나도 신규 가입자에게는 첫 1회를 계속 무료로 준다(2026-08-02 결정).
+// 전역 기간이 아니라 "가입 시각 기준"이라 종료일을 매번 늘려줄 필요가 없고, 기존 회원에게
+// 무료가 무기한 열리지도 않는다(= 결제 동기는 유지). 중단하려면 enabled만 false로.
+// 가입 시각은 auth 유저 객체가 이미 들고 있어서 추가 조회가 필요 없다(환영 이메일과 같은 방식).
+const BAROSPOT_WELCOME_TRIAL = {
+  enabled: true,
+  withinDays: 30,
+};
 async function _isBarospotTrialEligible(userId) {
-  if (!BAROSPOT_TRIAL_EVENT.enabled || !userId) return false;
+  if (!userId) return false;
   const now = Date.now();
-  const start = new Date(BAROSPOT_TRIAL_EVENT.start).getTime();
-  const end = new Date(BAROSPOT_TRIAL_EVENT.end).getTime();
-  if (now < start || now > end) return false;
+  const inEvent = BAROSPOT_TRIAL_EVENT.enabled
+    && now >= new Date(BAROSPOT_TRIAL_EVENT.start).getTime()
+    && now <= new Date(BAROSPOT_TRIAL_EVENT.end).getTime();
+  const signedUpAt = currentUser?.created_at ? new Date(currentUser.created_at).getTime() : NaN;
+  const inWelcome = BAROSPOT_WELCOME_TRIAL.enabled
+    && Number.isFinite(signedUpAt)
+    && (now - signedUpAt) <= BAROSPOT_WELCOME_TRIAL.withinDays * 86400000;
+  if (!inEvent && !inWelcome) return false;
   const { count } = await db.from('barospot_applications')
     .select('id', { count: 'exact', head: true }).eq('user_id', userId);
   return (count || 0) === 0;

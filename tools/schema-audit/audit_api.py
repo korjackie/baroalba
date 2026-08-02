@@ -35,6 +35,15 @@
 import re, os, sys, urllib.request, urllib.error
 from collections import defaultdict
 
+# 이 스크립트의 출력은 한글 + em dash 라, 기본 콘솔 코드페이지가 cp949 인 윈도우에서는
+# 판정을 다 찍고 나서 마지막 print 가 UnicodeEncodeError 로 죽는다(2026-08-02 실측).
+# 결과가 멀쩡한데 트레이스백만 보고 "감사 실패"로 오해하게 되므로 출력 인코딩을 고정한다.
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding='utf-8', errors='replace')
+    except AttributeError:
+        pass
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 API = os.path.join(ROOT, 'api')
 # 공개 anon 키 (sw.js 의 SB_ANON 과 동일 — 존재 확인용이라 값은 읽지 않는다)
