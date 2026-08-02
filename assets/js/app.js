@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '610';
+  const _APP_V = '611';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -934,6 +934,14 @@ const REFERRAL_REWARD_POINTS = 1000;
 // 반드시 서버(서비스 롤 키)에서 처리해야 함: 추천인의 point_accounts는 신규가입자 세션
 // 기준으론 "남의 행"이라 클라이언트에서 직접 update()하면 RLS가 조용히 막아 추천인
 // 몫만 누락됨(신규가입자 본인 몫은 자기 행이라 성공하는 것처럼 보여서 발견이 늦어짐).
+// ⚠️ 이 함수는 로그인 직후 발사되는데(위 692줄), SNS 가입은 그 시점에 workers.gender 가
+// 아직 없다(성별 게이트가 이제 막 뜬 참). 쿠폰 적립은 성별이 있어야 하므로 여기서 실패할
+// 수 있는데, 코드를 시도 *전에* 지우고 처리완료 플래그를 박으면 그대로 영구 소실된다 -
+// 실패하면 되돌려놓고 다음 앱 진입(=성별 입력 후) 때 다시 시도하게 한다.
+function _restorePendingRefCode(code) {
+  localStorage.setItem('pending_ref_code', code);
+  localStorage.removeItem('referral_processed');
+}
 async function _processReferralSignup(newUserId) {
   const code = localStorage.getItem('pending_ref_code');
   if (!code || localStorage.getItem('referral_processed')) return;
@@ -963,9 +971,16 @@ async function _processReferralSignup(newUserId) {
       const couponResult = await couponRes.json();
       if (couponRes.ok && couponResult?.granted) {
         showToast(t('toast_coupon_granted_fmt').replace('{n}', couponResult.granted));
+      } else if (couponRes.status !== 404) {
+        // 404 = 아예 존재하지 않는 코드라 다시 시도해도 소용없다. 그 외(성별 미설정 400,
+        // 서버 오류 등)는 조건이 갖춰지면 성공할 수 있으므로 되살려서 다음번에 재시도한다
+        _restorePendingRefCode(code);
       }
     }
-  } catch (e) { /* 추천 처리 실패는 조용히 무시 - 가입 자체를 막으면 안 됨 */ }
+  } catch (e) {
+    // 네트워크 실패로 가입 축하 코드가 사라지면 안 된다 - 되살려서 다음 진입 때 재시도
+    _restorePendingRefCode(code);
+  }
 }
 
 function _genReferralCode() {
