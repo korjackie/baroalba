@@ -145,20 +145,28 @@ def scan(path):
         hits.append((m.start(), m.group(1), m.group(2) or ''))
     for m in re.finditer(r"/rest/v1/([A-Za-z_][A-Za-z0-9_]*)(\?[^`'\"\s]*)?", src):
         hits.append((m.start(), m.group(1), m.group(2) or ''))
-    for pos, table, qs in hits:
+    hits.sort()
+    for i, (pos, table, qs) in enumerate(hits):
         where = f'{fn}:{src[:pos].count(chr(10)) + 1}'
         refs[table]
         if qs:
             add_query(table, qs.lstrip('?'), where)
-        seg = src[pos: pos + 600]          # 같은 호출 안의 쓰기 바디
-        bi = seg.find('JSON.stringify(')
-        if bi >= 0:
-            ob = seg.find('{', bi)
-            if 0 <= ob < bi + 4:
-                oe = match_brace(seg, ob)
-                if oe > 0:
-                    for k in top_keys(seg[ob:oe + 1]):
-                        refs[table][k].add(where + '(body)')
+        # 같은 호출 안의 쓰기 바디 (INSERT/PATCH).
+        #  · 다음 호출 위치에서 잘라야 한다. 안 그러면 GET 뒤에 이어지는 다른 테이블의
+        #    INSERT 바디를 이 테이블 컬럼으로 오인한다(workers GET 뒤의 notifications INSERT 등).
+        #  · method 가 POST/PATCH/PUT 인 호출에만 바디가 있다.
+        #  · `JSON.stringify(payload)` 처럼 객체가 변수로 빠진 경우는 못 잡으니 눈으로 볼 것.
+        end = min(pos + 600, hits[i + 1][0] if i + 1 < len(hits) else len(src))
+        seg = src[pos:end]
+        if not re.search(r"method:\s*'(POST|PATCH|PUT)'", seg):
+            continue
+        bm = re.search(r'JSON\.stringify\(\s*\{', seg)
+        if bm:
+            ob = seg.index('{', bm.start())
+            oe = match_brace(seg, ob)
+            if oe > 0:
+                for k in top_keys(seg[ob:oe + 1]):
+                    refs[table][k].add(where + '(body)')
 
 
 def q(p):

@@ -1213,13 +1213,12 @@ module.exports = async function handler(req, res) {
 
     // ── 쿠폰 생성 ──────────────────────────────────────
     // ⚠️ 실제 컬럼은 pass_qty / uses_count 다(2026-08-02 라이브 확인).
-    //    ticket_count·used_count·max_uses_per_user 라는 컬럼은 존재하지 않는다 —
-    //    Phase 59-B 가 쓰는 쪽(coupon.js)만 고치고 만드는 쪽인 여기를 놓쳐서,
-    //    그 뒤로 관리자 화면의 쿠폰 생성이 400 으로 계속 실패하고 있었다.
-    //    1인당 사용 제한은 컬럼 자체가 없어 coupon.js 가 `|| 1` 로 방어 중이다(항상 1회).
-    //    진짜로 열려면 DDL 이 필요하므로 여기서는 보내지 않는다.
+    //    ticket_count·used_count 라는 컬럼은 존재하지 않는다 — Phase 59-B 가 쓰는 쪽
+    //    (coupon.js)만 고치고 만드는 쪽인 여기를 놓쳐서, 그 뒤로 관리자 화면의
+    //    쿠폰 생성이 400 으로 계속 실패하고 있었다.
+    //    max_uses_per_user 는 2026-08-02 DDL 로 추가됐다(coupon.js 가 이미 읽고 있던 컬럼).
     if (action === 'create_coupon' && req.method === 'POST') {
-      const { code, pass_qty, ticket_count, max_uses, expires_at } = req.body || {};
+      const { code, pass_qty, ticket_count, max_uses, max_uses_per_user, expires_at } = req.body || {};
       if (!code || !code.trim()) return res.status(400).json({ error: '쿠폰 코드를 입력해주세요' });
       const r = await sb('coupons', svcKey, {
         method: 'POST',
@@ -1227,6 +1226,7 @@ module.exports = async function handler(req, res) {
           code: code.trim().toUpperCase(),
           pass_qty: parseInt(pass_qty ?? ticket_count) || 1,   // 옛 키로 오는 호출도 받아준다
           max_uses: max_uses ? parseInt(max_uses) : null,
+          max_uses_per_user: parseInt(max_uses_per_user) || 1,
           expires_at: expires_at || null,
         })
       });
