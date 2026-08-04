@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '613';
+  const _APP_V = '614';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -2127,7 +2127,11 @@ function _renderMoimCards(container, list) {
     const pct = Math.min(100, Math.round((m.current_count || 0) / (m.max_count || 10) * 100));
     return `<div class="moim-card" onclick="openMoimDetail('${m.id}')" style="margin-bottom:12px">
       <div style="display:flex;gap:12px;padding:14px">
-        <div style="width:52px;height:52px;border-radius:var(--r-lg);background:linear-gradient(135deg,#EDE9FE,#DDD6FE);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${emoji}</div>
+        <!-- 사진을 올렸으면 카테고리 이모지 대신 대표 사진을 보여준다. 그동안 gatherings.images 는
+             저장만 되고 목록·상세 어디에도 그려지지 않아 올린 사람도 볼 수 없었다(2026-08-04) -->
+        <div style="width:52px;height:52px;border-radius:var(--r-lg);background:linear-gradient(135deg,#EDE9FE,#DDD6FE);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden">${
+          m.images?.[0] ? `<img src="${m.images[0]}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.replaceWith(document.createTextNode('${emoji}'))">` : emoji
+        }</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
             <div style="font-size:15px;font-weight:700;color:var(--ink-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${m.title}${_isAdmin ? _adminBtn('gatherings',m.id,'title',m.title,'모임 제목') : ''}</div>
@@ -2201,8 +2205,13 @@ async function openMoimDetail(moimId) {
   const canChat = isHost || myApp?.status === 'approved';
 
   document.getElementById('moim-detail-body').innerHTML = `
+    ${m.images?.length ? `
+    <!-- 올린 모임 사진. 여러 장이면 가로 스크롤로 전부 보여준다(누르면 기존 뷰어로 확대) -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding:0;background:#000;-webkit-overflow-scrolling:touch">
+      ${m.images.map(u => `<img src="${u}" alt="" loading="lazy" onclick="openImgViewer('${u}')" style="width:${m.images.length > 1 ? '78%' : '100%'};aspect-ratio:1;object-fit:cover;flex-shrink:0;cursor:pointer">`).join('')}
+    </div>` : ''}
     <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:24px 20px 20px;text-align:center">
-      <div style="font-size:56px;margin-bottom:8px">${emoji}</div>
+      ${m.images?.length ? '' : `<div style="font-size:56px;margin-bottom:8px">${emoji}</div>`}
       <div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px">${tMoimCat(m.category)} ${m.sub_category ? '· '+tMoimSubcat(m.sub_category) : ''}</div>
       <div style="font-size:20px;font-weight:700;color:var(--ink-900);line-height:1.3">${m.title}</div>
     </div>
@@ -9813,8 +9822,13 @@ async function _loadIncomeChart(selY, selM) {
 // ── 크롭 모달 ────────────────────────────────────────
 let _cropper = null;
 let _cropCallback = null;
+// 여러 장을 한 장씩 이어서 크롭할 때(모임 사진) 취소를 알아야 다음 장으로 넘어갈 수 있다.
+// _cropApplying 이 없으면 applyCrop() 이 내부에서 closeCropModal() 을 부르는 순간
+// "취소"로 잘못 잡힌다 - 적용 중임을 표시해 그 오탐을 막는다.
+let _cropOnCancel = null;
+let _cropApplying = false;
 
-function openCropModal(file, callback, aspectRatio = 1) {
+function openCropModal(file, callback, aspectRatio = 1, onCancel = null) {
   if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다', 5000); return; }
   const reader = new FileReader();
   // 예전엔 onerror가 없어서 파일 읽기가 실패하면(포맷·용량·일부 Android 갤러리 앱의
@@ -9856,6 +9870,7 @@ function openCropModal(file, callback, aspectRatio = 1) {
       closeCropModal();
     };
     _cropCallback = callback;
+    _cropOnCancel = onCancel;
   };
   reader.readAsDataURL(file);
 }
@@ -9864,13 +9879,18 @@ function closeCropModal() {
   document.getElementById('crop-modal').style.display = 'none';
   if (_cropper) { _cropper.destroy(); _cropper = null; }
   _cropCallback = null;
+  const oc = _cropOnCancel;
+  _cropOnCancel = null;
+  if (oc && !_cropApplying) oc();
 }
 
 function applyCrop() {
   if (!_cropper || !_cropCallback) return;
   const cb = _cropCallback;
   const d = _cropper.getData(true);
+  _cropApplying = true;
   closeCropModal();
+  _cropApplying = false;
   const src = window._cropSourceUrl;
   if (!src) { showToast(t('toast_no_original_image')); return; }
   const img2 = new Image();
@@ -14796,13 +14816,27 @@ function addMoimImages(input) {
   const remaining = 3 - moimImgs.length;
   if (remaining <= 0) { showToast(t('ownr_max_3_photos_notice')); return; }
   const files = Array.from(fileList).slice(0, remaining);
-  let added = 0;
-  files.forEach(f => {
-    try { moimImgs.push({ src: URL.createObjectURL(f), file: f }); added++; }
-    catch(e) { showToast(t('ownr_photo_error_prefix') + (f.name || f.type || t('unknown_label'))); }
-  });
   setTimeout(() => { try { input.value = ''; } catch(e) {} }, 200);
-  if (added > 0) { renderMoimImgPreview(); showToast(t('ownr_photos_added_toast').replace('{n}', added)); }
+  // 고른 사진을 한 장씩 크롭 모달에 태운다(프로필 사진 addProfilePhoto 와 같은 흐름).
+  // 미리보기·카드·상세가 전부 정사각이라 1:1 로 자른다 - applyCrop 이 400x400 으로
+  // 뽑기 때문에 다른 비율을 주면 결과물이 눌린다(공고 사진이 NaN 을 쓰는 이유는 별도 확인 필요).
+  // 취소하면 그 장만 건너뛰고 다음 장으로 이어간다.
+  let added = 0;
+  const nextFile = i => {
+    if (i >= files.length) {
+      if (added > 0) showToast(t('ownr_photos_added_toast').replace('{n}', added));
+      return;
+    }
+    openCropModal(files[i], blob => {
+      try {
+        moimImgs.push({ src: URL.createObjectURL(blob), file: new File([blob], 'moim.jpg', { type: 'image/jpeg' }) });
+        added++;
+        renderMoimImgPreview();
+      } catch(e) { showToast(t('ownr_photo_error_prefix') + (files[i].name || files[i].type || t('unknown_label'))); }
+      nextFile(i + 1);
+    }, 1, () => nextFile(i + 1));
+  };
+  nextFile(0);
 }
 function renderMoimImgPreview() {
   const container = document.getElementById('moim-img-preview');
@@ -14810,12 +14844,23 @@ function renderMoimImgPreview() {
   container.innerHTML = moimImgs.map((img, i) => `
     <div style="position:relative;aspect-ratio:1;border-radius:var(--r);overflow:hidden;border:${i===0?'3px solid var(--purple)':'2px solid #eee'}">
       <img src="${img.src}" onclick="openImgViewer('${img.src}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer">
+      ${img.file ? `<button onclick="event.stopPropagation();editMoimImg(${i})" style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('edit')}</button>` : ''}
       <div style="position:absolute;top:3px;left:4px;width:18px;height:18px;border-radius:50%;background:${i===0?'var(--purple)':'rgba(0,0,0,0.55)'};color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;pointer-events:none">${i+1}</div>
       ${i===0?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(124,58,237,0.85);color:#fff;font-size:9px;font-weight:600;text-align:center;padding:2px;pointer-events:none">${t('ownr_main_photo_badge')}</div>`:''}
       <button onclick="event.stopPropagation();removeMoimImg(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">${icon('close')}</button>
     </div>`).join('');
   const addBtn = document.getElementById('moim-img-add-btn');
   if (addBtn) addBtn.style.display = moimImgs.length >= 3 ? 'none' : 'flex';
+}
+// 올린 뒤에 다시 자르기 (공고 사진 editJobImg 와 동일. 기존 URL 이미지는 원본이 없어 불가)
+function editMoimImg(idx) {
+  const img = moimImgs[idx];
+  if (!img || !img.file) return;
+  openCropModal(img.file, blob => {
+    URL.revokeObjectURL(img.src);
+    moimImgs[idx] = { src: URL.createObjectURL(blob), file: new File([blob], 'moim.jpg', { type: 'image/jpeg' }) };
+    renderMoimImgPreview();
+  }, 1);
 }
 function removeMoimImg(idx) {
   if (moimImgs[idx]?.src.startsWith('blob:')) URL.revokeObjectURL(moimImgs[idx].src);
