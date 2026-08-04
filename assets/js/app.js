@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '616';
+  const _APP_V = '617';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1100,7 +1100,7 @@ async function shareReferralLink(code) {
         content: {
           title: shareTitle,
           description: shareDesc,
-          imageUrl: `${location.origin}/icons/og-share.png`,
+          imageUrl: `${location.origin}/icons/og-card-260804.jpg`,
           link: { mobileWebUrl: link, webUrl: link }
         },
         buttons: [{ title: '지금 가입하기', link: { mobileWebUrl: link, webUrl: link } }]
@@ -2721,7 +2721,7 @@ async function shareMoim() {
         content: {
           title: shareTitle,
           description: descLine,
-          imageUrl: `${location.origin}/icons/og-share.png`,
+          imageUrl: `${location.origin}/icons/og-card-260804.jpg`,
           link: { mobileWebUrl: link, webUrl: link }
         },
         buttons: [{ title: t('moim_join_btn'), link: { mobileWebUrl: link, webUrl: link } }]
@@ -8305,7 +8305,7 @@ function shareJobKakao() {
       content: {
         title: job.title || '알바 공고',
         description: `\u{1F4CD} ${job.address?.split('\n')[0] || ''} | \u{1F4B0} ${wage ? wage.toLocaleString()+'원' : ''}`,
-        imageUrl: `${location.origin}/icons/logo-share.png`,
+        imageUrl: `${location.origin}/icons/og-card-260804.jpg`,
         link: { mobileWebUrl: url, webUrl: url }
       },
       buttons: [{ title: '공고 보러 가기', link: { mobileWebUrl: url, webUrl: url } }]
@@ -12017,7 +12017,7 @@ async function shareCommunityPost() {
         content: {
           title: shareTitle,
           description: t('comm_share_desc'),
-          imageUrl: `${location.origin}/icons/og-share.png`,
+          imageUrl: `${location.origin}/icons/og-card-260804.jpg`,
           link: { mobileWebUrl: link, webUrl: link }
         },
         buttons: [{ title: t('view_post_btn'), link: { mobileWebUrl: link, webUrl: link } }]
@@ -16941,7 +16941,7 @@ function shareKakao() {
       content: {
         title: '바로알바 — 지금 바로 지원하세요!',
         description: '실시간 지도 기반 알바 매칭. 지금 공고를 확인해보세요.',
-        imageUrl: 'https://baroalba.multimove.co.kr/icons/og-share.png',
+        imageUrl: 'https://baroalba.multimove.co.kr/icons/og-card-260804.jpg',
         link: { mobileWebUrl: url, webUrl: url },
       },
       buttons: [{ title: '공고 보기', link: { mobileWebUrl: url, webUrl: url } }],
@@ -19357,7 +19357,7 @@ async function shareBaromeet(id, title) {
         content: {
           title: shareTitle,
           description: descLine,
-          imageUrl: `${location.origin}/icons/og-share.png`,
+          imageUrl: `${location.origin}/icons/og-card-260804.jpg`,
           link: { mobileWebUrl: link, webUrl: link }
         },
         buttons: [{ title: '바로미팅 참가하기', link: { mobileWebUrl: link, webUrl: link } }]
@@ -20621,7 +20621,7 @@ async function shareBarospotEventForApplicant(eventId) {
         content: {
           title: shareTitle,
           description: descLine,
-          imageUrl: `${location.origin}/icons/og-share.png`,
+          imageUrl: `${location.origin}/icons/og-card-260804.jpg`,
           link: { mobileWebUrl: link, webUrl: link }
         },
         buttons: [{ title: t('barospot_view_link_btn'), link: { mobileWebUrl: link, webUrl: link } }]
