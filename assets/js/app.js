@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '612';
+  const _APP_V = '613';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -1929,6 +1929,16 @@ async function autoCloseExpiredGatherings() {
     .eq('host_id', currentUser.id)
     .not('gathering_date', 'is', null)
     .lt('gathering_date', now);
+  // 번개모임은 모임 날짜가 아니라 quick_expires_at(설정 분 뒤)으로 마감된다 - 이게 없으면
+  // 개설 폼의 "설정 시간 후 자동 마감" 문구가 거짓말이 된다(2026-08-04 추가).
+  // ⚠️ quick_expires_at 컬럼은 docs/260804_add_gatherings_quick.sql 실행이 선행돼야 한다.
+  //    실행 전에는 이 쿼리만 400 으로 조용히 실패하고 위 마감은 그대로 동작한다.
+  await db.from('gatherings')
+    .update({ status: 'closed' })
+    .eq('status', 'open')
+    .eq('host_id', currentUser.id)
+    .not('quick_expires_at', 'is', null)
+    .lt('quick_expires_at', now);
 }
 
 function openMoimPanel(showCreate = false) {
