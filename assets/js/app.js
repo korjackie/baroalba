@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '614';
+  const _APP_V = '615';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -2206,9 +2206,12 @@ async function openMoimDetail(moimId) {
 
   document.getElementById('moim-detail-body').innerHTML = `
     ${m.images?.length ? `
-    <!-- 올린 모임 사진. 여러 장이면 가로 스크롤로 전부 보여준다(누르면 기존 뷰어로 확대) -->
-    <div style="display:flex;gap:6px;overflow-x:auto;padding:0;background:#000;-webkit-overflow-scrolling:touch">
-      ${m.images.map(u => `<img src="${u}" alt="" loading="lazy" onclick="openImgViewer('${u}')" style="width:${m.images.length > 1 ? '78%' : '100%'};aspect-ratio:1;object-fit:cover;flex-shrink:0;cursor:pointer">`).join('')}
+    <!-- 올린 모임 사진. 여러 장이면 가로 스크롤로 전부 보여준다(누르면 기존 뷰어로 확대).
+         ⚠️ aspect-ratio 를 고정하지 않는다 - 가로로 긴 단체사진을 정사각 틀에 넣으면
+         양쪽 사람이 잘린다. 원본 비율 그대로 두고 높이만 상한을 건다(세로로 긴 사진이
+         화면을 다 먹지 않게). object-fit:contain 이라 어떤 비율이든 전체가 보인다. -->
+    <div style="display:flex;gap:6px;overflow-x:auto;background:#000;-webkit-overflow-scrolling:touch">
+      ${m.images.map(u => `<img src="${u}" alt="" loading="lazy" onclick="openImgViewer('${u}')" style="width:${m.images.length > 1 ? '88%' : '100%'};max-height:52vh;object-fit:contain;flex-shrink:0;cursor:pointer">`).join('')}
     </div>` : ''}
     <div style="background:linear-gradient(135deg,#EDE9FE,#F5F3FF);padding:24px 20px 20px;text-align:center">
       ${m.images?.length ? '' : `<div style="font-size:56px;margin-bottom:8px">${emoji}</div>`}
@@ -9827,8 +9830,11 @@ let _cropCallback = null;
 // "취소"로 잘못 잡힌다 - 적용 중임을 표시해 그 오탐을 막는다.
 let _cropOnCancel = null;
 let _cropApplying = false;
+// 결과물의 긴 변 최대 픽셀. 기존 호출부(프로필·공고·만남)는 400 그대로라 동작이 변하지 않는다.
+// 모임 사진처럼 상세에서 크게 보여주는 곳만 큰 값을 넘긴다.
+let _cropMaxSize = 400;
 
-function openCropModal(file, callback, aspectRatio = 1, onCancel = null) {
+function openCropModal(file, callback, aspectRatio = 1, onCancel = null, maxSize = 400) {
   if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다', 5000); return; }
   const reader = new FileReader();
   // 예전엔 onerror가 없어서 파일 읽기가 실패하면(포맷·용량·일부 Android 갤러리 앱의
@@ -9844,13 +9850,20 @@ function openCropModal(file, callback, aspectRatio = 1, onCancel = null) {
     img.src = e.target.result;
     document.getElementById('crop-modal').style.display = 'flex';
     if (_cropper) { _cropper.destroy(); _cropper = null; }
+    _cropMaxSize = maxSize;
+    // 비율이 자유로울 때만 "전체 사진 그대로 쓰기"가 의미가 있다.
+    // 1:1 같은 고정 비율에서는 전체를 담을 수 없으므로 버튼을 숨긴다.
+    const _fullBtn = document.getElementById('crop-full-btn');
+    if (_fullBtn) _fullBtn.style.display = Number.isFinite(aspectRatio) ? 'none' : 'block';
     img.onload = () => {
       try {
         _cropper = new Cropper(img, {
           aspectRatio: aspectRatio,
           viewMode: 1,
           dragMode: 'move',
-          autoCropArea: 0.85,
+          // 자유 비율이면 처음부터 사진 전체를 잡아준다 - 가로로 긴 단체사진에서
+          // 기본값(0.85)이면 열자마자 양쪽이 잘려 있어 "왜 잘리지?"가 된다
+          autoCropArea: Number.isFinite(aspectRatio) ? 0.85 : 1,
           guides: false,
           center: true,
           highlight: false,
@@ -9884,6 +9897,16 @@ function closeCropModal() {
   if (oc && !_cropApplying) oc();
 }
 
+// "전체 사진 그대로 쓰기" — 크롭 박스를 원본 전체로 넓힌 뒤 그대로 적용한다.
+// 파일을 원본째 올리지 않는 이유: 휴대폰 사진은 5~15MB 라 업로드가 느려지고 목록도
+// 무거워진다. 화각은 그대로 두고 긴 변만 줄여서 내보낸다.
+function cropSelectAll() {
+  if (!_cropper) return;
+  const d = _cropper.getImageData();
+  _cropper.setData({ x: 0, y: 0, width: d.naturalWidth, height: d.naturalHeight });
+  applyCrop();
+}
+
 function applyCrop() {
   if (!_cropper || !_cropCallback) return;
   const cb = _cropCallback;
@@ -9898,9 +9921,18 @@ function applyCrop() {
   img2.onload = () => {
     try {
       console.log('[crop] 이미지 로드됨, 크기:', img2.naturalWidth, 'x', img2.naturalHeight, '크롭:', d);
+      // ⚠️ 예전엔 무조건 400x400 으로 그렸다. 1:1 로 자르는 화면(프로필 등)은 맞았지만
+      //    자유 비율을 쓰는 화면(공고 사진)은 잘라낸 영역이 정사각으로 **눌려서** 나왔다.
+      //    잘라낸 비율을 그대로 유지하고 긴 변만 _cropMaxSize 로 맞춘다.
+      //    원본보다 키우지는 않는다(작은 사진을 확대하면 흐려지기만 한다).
+      const ratio = d.height > 0 ? d.width / d.height : 1;
+      const longEdge = Math.min(_cropMaxSize, Math.max(d.width, d.height)) || _cropMaxSize;
+      let outW = ratio >= 1 ? longEdge : Math.round(longEdge * ratio);
+      let outH = ratio >= 1 ? Math.round(longEdge / ratio) : longEdge;
+      outW = Math.max(1, outW); outH = Math.max(1, outH);
       const c = document.createElement('canvas');
-      c.width = 400; c.height = 400;
-      c.getContext('2d').drawImage(img2, d.x, d.y, d.width, d.height, 0, 0, 400, 400);
+      c.width = outW; c.height = outH;
+      c.getContext('2d').drawImage(img2, d.x, d.y, d.width, d.height, 0, 0, outW, outH);
       c.toBlob(blob => {
         if (!blob) { console.error('[crop] toBlob 결과 null'); showToast(t('toast_image_convert_failed'), 5000); return; }
         console.log('[crop] blob 생성 성공, 크기:', blob.size);
@@ -14818,8 +14850,9 @@ function addMoimImages(input) {
   const files = Array.from(fileList).slice(0, remaining);
   setTimeout(() => { try { input.value = ''; } catch(e) {} }, 200);
   // 고른 사진을 한 장씩 크롭 모달에 태운다(프로필 사진 addProfilePhoto 와 같은 흐름).
-  // 미리보기·카드·상세가 전부 정사각이라 1:1 로 자른다 - applyCrop 이 400x400 으로
-  // 뽑기 때문에 다른 비율을 주면 결과물이 눌린다(공고 사진이 NaN 을 쓰는 이유는 별도 확인 필요).
+  // **자유 비율(NaN)** 이다 - 가로로 긴 단체사진을 1:1 로 강제하면 양쪽 사람이 잘려나간다.
+  // 모달이 열릴 때 사진 전체가 이미 선택돼 있고, "전체 사진 그대로 쓰기" 버튼도 뜬다.
+  // 긴 변 1080px 로 내보낸다(상세에서 크게 보여주므로 400 은 흐리다).
   // 취소하면 그 장만 건너뛰고 다음 장으로 이어간다.
   let added = 0;
   const nextFile = i => {
@@ -14834,7 +14867,7 @@ function addMoimImages(input) {
         renderMoimImgPreview();
       } catch(e) { showToast(t('ownr_photo_error_prefix') + (files[i].name || files[i].type || t('unknown_label'))); }
       nextFile(i + 1);
-    }, 1, () => nextFile(i + 1));
+    }, NaN, () => nextFile(i + 1), 1080);
   };
   nextFile(0);
 }
@@ -14860,7 +14893,7 @@ function editMoimImg(idx) {
     URL.revokeObjectURL(img.src);
     moimImgs[idx] = { src: URL.createObjectURL(blob), file: new File([blob], 'moim.jpg', { type: 'image/jpeg' }) };
     renderMoimImgPreview();
-  }, 1);
+  }, NaN, null, 1080);
 }
 function removeMoimImg(idx) {
   if (moimImgs[idx]?.src.startsWith('blob:')) URL.revokeObjectURL(moimImgs[idx].src);
