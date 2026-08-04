@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '615';
+  const _APP_V = '616';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -9834,7 +9834,9 @@ let _cropApplying = false;
 // 모임 사진처럼 상세에서 크게 보여주는 곳만 큰 값을 넘긴다.
 let _cropMaxSize = 400;
 
-function openCropModal(file, callback, aspectRatio = 1, onCancel = null, maxSize = 400) {
+// 기본값이 NaN = 자유 비율이다(2026-08-04). 예전엔 1(정사각) 이라 프로필·만남 사진이
+// 무조건 정사각으로 잘렸다. 특정 화면만 정사각으로 묶고 싶으면 aspectRatio 에 1 을 넘길 것.
+function openCropModal(file, callback, aspectRatio = NaN, onCancel = null, maxSize = 400) {
   if (file.size > 15 * 1024 * 1024) { showToast('15MB 이하 이미지만 업로드 가능합니다', 5000); return; }
   const reader = new FileReader();
   // 예전엔 onerror가 없어서 파일 읽기가 실패하면(포맷·용량·일부 Android 갤러리 앱의
@@ -9860,13 +9862,17 @@ function openCropModal(file, callback, aspectRatio = 1, onCancel = null, maxSize
         _cropper = new Cropper(img, {
           aspectRatio: aspectRatio,
           viewMode: 1,
-          dragMode: 'move',
-          // 자유 비율이면 처음부터 사진 전체를 잡아준다 - 가로로 긴 단체사진에서
-          // 기본값(0.85)이면 열자마자 양쪽이 잘려 있어 "왜 잘리지?"가 된다
-          autoCropArea: Number.isFinite(aspectRatio) ? 0.85 : 1,
-          guides: false,
+          // ⚠️ 'move' 는 드래그가 **이미지를 미는** 동작이라, 마우스에는 자를 방법이 없다.
+          //    'crop' 이어야 사진 위를 끌어 영역을 새로 그릴 수 있다(데스크톱 필수).
+          dragMode: 'crop',
+          // 박스를 사진 100% 로 열면 줄일 여백도, 잡을 손잡이도 없다(2026-08-04 실제로 그랬다).
+          // 0.8 로 조금 안쪽에서 시작해야 점선 박스와 네 모서리 손잡이가 바로 보인다.
+          // 전체를 그대로 쓰고 싶으면 "전체 사진 그대로 쓰기" 버튼이 따로 있다.
+          autoCropArea: 0.8,
+          guides: true,     // 3x3 격자 - 이게 크롭 영역임을 한눈에 알게 해준다
+          modal: true,      // 잘려나갈 바깥 영역을 어둡게
+          highlight: true,
           center: true,
-          highlight: false,
           cropBoxMovable: true,
           cropBoxResizable: true,
           toggleDragModeOnDblclick: false,
@@ -14783,16 +14789,26 @@ function addJobImages(input) {
   const remaining = 3 - jobImgs.length;
   if (remaining <= 0) { showToast(t('ownr_max_3_photos_notice')); return; }
   const files = Array.from(fileList).slice(0, remaining);
-  let added = 0;
-  files.forEach(f => {
-    try {
-      jobImgs.push({ src: URL.createObjectURL(f), file: f });
-      added++;
-    } catch(e) { showToast(t('ownr_photo_error_prefix') + (f.name || f.type || t('unknown_label'))); }
-  });
   // iOS WebKit: value 초기화는 항상 비동기로
   setTimeout(() => { try { input.value = ''; } catch(e) {} }, 200);
-  if (added > 0) { renderJobImgPreview(); showToast(t('ownr_photos_added_toast').replace('{n}', added)); }
+  // 예전엔 고른 파일을 크롭 없이 그대로 담았다(원본 그대로 업로드 = 휴대폰 사진 5~15MB).
+  // 모임 사진과 동일하게 한 장씩 크롭 모달에 태운다. 취소하면 그 장만 건너뛴다.
+  let added = 0;
+  const nextFile = i => {
+    if (i >= files.length) {
+      if (added > 0) showToast(t('ownr_photos_added_toast').replace('{n}', added));
+      return;
+    }
+    openCropModal(files[i], blob => {
+      try {
+        jobImgs.push({ src: URL.createObjectURL(blob), file: new File([blob], 'job.jpg', { type: 'image/jpeg' }) });
+        added++;
+        renderJobImgPreview();
+      } catch(e) { showToast(t('ownr_photo_error_prefix') + (files[i].name || files[i].type || t('unknown_label'))); }
+      nextFile(i + 1);
+    }, NaN, () => nextFile(i + 1), 1080);
+  };
+  nextFile(0);
 }
 
 
@@ -14803,7 +14819,7 @@ function editJobImg(idx) {
     URL.revokeObjectURL(img.src);
     jobImgs[idx] = { src: URL.createObjectURL(blob), file: new File([blob], 'job.jpg', { type: 'image/jpeg' }) };
     renderJobImgPreview();
-  }, NaN);
+  }, NaN, null, 1080);
 }
 
 function renderJobImgPreview() {
@@ -18470,7 +18486,19 @@ function openBizCropModal(file, callback) {
     img.src = e.target.result;
     if (_bizCropper) { _bizCropper.destroy(); _bizCropper = null; }
     img.onload = () => {
-      _bizCropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.9 });
+      // 공용 크롭 모달(openCropModal)과 동작을 맞춘다 - 자유 비율 + 끌어서 그리는 크롭.
+      // aspectRatio 를 주지 않으면 자유 비율이다.
+      _bizCropper = new Cropper(img, {
+        viewMode: 1,
+        dragMode: 'crop',
+        autoCropArea: 0.8,
+        guides: true,
+        modal: true,
+        highlight: true,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+      });
     };
   };
   reader.readAsDataURL(file);
@@ -18483,7 +18511,14 @@ function closeBizCropModal() {
 
 function applyBizCrop() {
   if (!_bizCropper || !_bizCropCallback) return;
-  _bizCropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(blob => {
+  // ⚠️ 예전엔 800x800 고정이라 정사각이 아닌 크롭은 눌려서 저장됐다(applyCrop 과 같은 결함).
+  //    잘라낸 비율을 유지하고 긴 변만 800 으로 맞춘다. 원본보다 키우지는 않는다.
+  const d = _bizCropper.getData(true);
+  const ratio = d.height > 0 ? d.width / d.height : 1;
+  const longEdge = Math.min(800, Math.max(d.width, d.height)) || 800;
+  const w = Math.max(1, ratio >= 1 ? longEdge : Math.round(longEdge * ratio));
+  const h = Math.max(1, ratio >= 1 ? Math.round(longEdge / ratio) : longEdge);
+  _bizCropper.getCroppedCanvas({ width: w, height: h }).toBlob(blob => {
     closeBizCropModal();
     _bizCropCallback(blob);
   }, 'image/jpeg', 0.88);
