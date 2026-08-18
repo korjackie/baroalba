@@ -226,6 +226,162 @@ async function recomputeBaromeetCounts(gatheringId, svcKey) {
   });
 }
 
+// ── 캘린더 자동등록 — 알바/모임(바로미팅 포함)/바로만남 확정 일정을 하나의 iCalendar로 합침 ──
+const ICS_DAY_ABBR = { '일':'SU', '월':'MO', '화':'TU', '수':'WE', '목':'TH', '금':'FR', '토':'SA' };
+const ICS_DAY_IDX  = { '일':0, '월':1, '화':2, '수':3, '목':4, '금':5, '토':6 };
+
+// KST 는 서머타임이 없어 고정 +0900 한 덩어리면 된다. DTSTART 를 UTC(Z)로 내보내면
+// RRULE 의 BYDAY 가 UTC 요일로 해석돼, KST 09시 이전 근무가 전날 요일로 밀린다.
+const ICS_TZ_BLOCK = ['BEGIN:VTIMEZONE', 'TZID:Asia/Seoul', 'BEGIN:STANDARD',
+  'DTSTART:19700101T000000', 'TZOFFSETFROM:+0900', 'TZOFFSETTO:+0900', 'TZNAME:KST',
+  'END:STANDARD', 'END:VTIMEZONE'];
+
+function icsEscape(text) {
+  return String(text || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+
+function icsFold(line) {
+  if (line.length <= 75) return line;
+  let out = line.slice(0, 75);
+  let rest = line.slice(75);
+  while (rest.length) { out += '\r\n ' + rest.slice(0, 74); rest = rest.slice(74); }
+  return out;
+}
+
+// job_postings.start_time 은 timestamp 가 아니라 text 컬럼이라 "즉시"·"오늘 14:00" 같은
+// 자유 입력이 실제로 들어있다(2026-08-18 라이브 확인: 26건 중 3건). Invalid Date 를 그대로
+// 쓰면 toISOString() 이 예외를 던져 피드 전체가 500 이 되므로 여기서 걸러 건너뛴다.
+function icsParseDate(v) {
+  if (!v) return null;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function icsDateUTC(d) {
+  return new Date(d).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+// TZID=Asia/Seoul 과 짝이 되는 KST 벽시계 문자열
+function icsLocalKST(d) {
+  const k = new Date(d.getTime() + 9 * 3600 * 1000);
+  const p = n => String(n).padStart(2, '0');
+  return `${k.getUTCFullYear()}${p(k.getUTCMonth() + 1)}${p(k.getUTCDate())}T${p(k.getUTCHours())}${p(k.getUTCMinutes())}00`;
+}
+
+function icsKstDayIdx(d) {
+  return new Date(d.getTime() + 9 * 3600 * 1000).getUTCDay();
+}
+
+// 정기근무의 start_time 날짜는 첫 근무일이 아니라 등록 시점이라 work_days 요일과 어긋난다
+// (라이브 확인: "현장매니저" 는 start_time 이 화요일인데 work_days 는 월·수·금).
+// 앱 안의 내 일정 캘린더(assets/js/app.js 의 work_days 전개)와 같은 규칙으로,
+// start_time 이후 첫 해당 요일을 DTSTART 로 쓴다. 시각은 start_time 것을 유지한다.
+function icsFirstOccurrence(startD, dayIdxs) {
+  for (let i = 0; i < 7; i++) {
+    const c = new Date(startD.getTime() + i * 86400000);
+    if (dayIdxs.includes(icsKstDayIdx(c))) return c;
+  }
+  return startD;
+}
+
+function icsEvent(uid, dtStart, dtEnd, summary, location, extra) {
+  const out = ['BEGIN:VEVENT', `UID:${uid}`, `DTSTAMP:${icsDateUTC(new Date())}`,
+    `DTSTART;TZID=Asia/Seoul:${icsLocalKST(dtStart)}`,
+    `DTEND;TZID=Asia/Seoul:${icsLocalKST(dtEnd)}`];
+  if (extra) out.push(extra);
+  out.push(icsFold(`SUMMARY:${icsEscape(summary)}`));
+  if (location) out.push(icsFold(`LOCATION:${icsEscape(location)}`));
+  out.push('END:VEVENT');
+  return out;
+}
+
+async function buildCalendarFeed(uid, svcKey) {
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//baroalba//calendar-feed//KO',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:바로알바 내 일정',
+    'X-WR-TIMEZONE:Asia/Seoul', ...ICS_TZ_BLOCK];
+  const now = new Date();
+  const plus3mo = new Date(now.getTime() + 90 * 24 * 3600 * 1000);
+
+  // 세 도메인 중 하나가 실패해도 나머지는 정상 응답에 포함한다(설계 7장 — 부분 실패 허용)
+  const jsonOr = (p, fallback) => p.then(r => r.json()).catch(() => fallback);
+
+  // 1) 바로알바 — 확정 근무 (accepted)
+  const workerRows = await jsonOr(sb(`workers?kakao_uid=eq.${uid}&select=id`, svcKey), []);
+  const workerId = Array.isArray(workerRows) ? workerRows[0]?.id : null;
+  if (workerId) {
+    const apps = await jsonOr(sb(
+      `applications?worker_id=eq.${workerId}&status=eq.accepted&select=id,job_postings(title,address,start_time,work_type,work_end_date,work_days,duration_hours)`,
+      svcKey), []);
+    (Array.isArray(apps) ? apps : []).forEach(a => {
+      const job = a.job_postings;
+      const dtStartRaw = icsParseDate(job?.start_time);
+      if (!dtStartRaw) return;
+      const title = `[바로알바] ${job.title || ''}`;
+      const evUid = `app-${a.id}@baroalba.multimove.co.kr`;
+      const durMs = (Number(job.duration_hours) > 0 ? Number(job.duration_hours) : 4) * 3600 * 1000;
+      const dayIdxs = String(job.work_days || '').split(',')
+        .map(d => ICS_DAY_IDX[d.trim()]).filter(x => x !== undefined);
+
+      if (job.work_type === 'regular' && dayIdxs.length) {
+        const byday = String(job.work_days).split(',')
+          .map(d => ICS_DAY_ABBR[d.trim()]).filter(Boolean).join(',');
+        const dtStart = icsFirstOccurrence(dtStartRaw, dayIdxs);
+        const endRaw = icsParseDate(job.work_end_date);
+        const until = endRaw ? new Date(endRaw.getTime() + 86400000) : plus3mo;
+        lines.push(...icsEvent(evUid, dtStart, new Date(dtStart.getTime() + durMs), title,
+          job.address || '', icsFold(`RRULE:FREQ=WEEKLY;BYDAY=${byday};UNTIL=${icsDateUTC(until)}`)));
+      } else {
+        lines.push(...icsEvent(evUid, dtStartRaw, new Date(dtStartRaw.getTime() + durMs), title,
+          job.address || '', null));
+      }
+    });
+  }
+
+  // 2) 바로모임/바로미팅 — 승인된 참가 (approved)
+  const gApps = await jsonOr(sb(
+    `gathering_applications?applicant_id=eq.${uid}&status=eq.approved&select=id,gathering_id,gatherings(id,title,gathering_date,lat,lng,category)`,
+    svcKey), []);
+  (Array.isArray(gApps) ? gApps : []).forEach(a => {
+    const g = a.gatherings;
+    const dtStart = icsParseDate(g?.gathering_date);
+    if (!dtStart) return;
+    const prefix = g.category === 'baromeeting' ? '바로미팅' : '바로모임';
+    // gatherings 엔 주소 텍스트 컬럼이 없어 좌표가 유일한 위치 정보다(설계 4장).
+    // 좌표만으론 부족하니 DESCRIPTION 에 앱 상세페이지 딥링크를 같이 넣는다.
+    const loc = (g.lat && g.lng) ? `${g.lat},${g.lng}` : '';
+    const deepLink = encodeURI(`https://baroalba.multimove.co.kr/바로알바.html?moim=${g.id}`);
+    lines.push(...icsEvent(`gathering-${a.id}@baroalba.multimove.co.kr`, dtStart,
+      new Date(dtStart.getTime() + 2 * 3600 * 1000), `[${prefix}] ${g.title || ''}`, loc,
+      icsFold(`DESCRIPTION:${icsEscape(deepLink)}`)));
+  });
+
+  // 3) 바로만남 — 매칭 확정 (matched 또는 confirmed)
+  const bApps = await jsonOr(sb(
+    `barospot_applications?user_id=eq.${uid}&status=in.(matched,confirmed)&select=id,event_id`,
+    svcKey), []);
+  const eventIds = [...new Set((Array.isArray(bApps) ? bApps : []).map(a => a.event_id).filter(Boolean))];
+  if (eventIds.length) {
+    const events = await jsonOr(sb(`barospot_events?id=in.(${eventIds.join(',')})&select=id,event_date,restaurant_id`, svcKey), []);
+    const restIds = [...new Set((Array.isArray(events) ? events : []).map(e => e.restaurant_id).filter(Boolean))];
+    const rests = restIds.length
+      ? await jsonOr(sb(`barospot_restaurants?id=in.(${restIds.join(',')})&select=id,name`, svcKey), [])
+      : [];
+    const restById = {}; (Array.isArray(rests) ? rests : []).forEach(r => { restById[r.id] = r.name; });
+    const eventById = {}; (Array.isArray(events) ? events : []).forEach(e => { eventById[e.id] = e; });
+    (Array.isArray(bApps) ? bApps : []).forEach(a => {
+      const ev = eventById[a.event_id];
+      const dtStart = icsParseDate(ev?.event_date);
+      if (!dtStart) return;
+      lines.push(...icsEvent(`barospot-${a.id}@baroalba.multimove.co.kr`, dtStart,
+        new Date(dtStart.getTime() + 2 * 3600 * 1000), '[바로만남] 매칭 확정',
+        restById[ev.restaurant_id] || '', null));
+    });
+  }
+
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
@@ -835,6 +991,44 @@ module.exports = async function handler(req, res) {
       };
     });
     return res.json({ ok: true, profiles: result });
+  }
+
+  // ── 캘린더 자동등록 피드용 토큰 발급 (관리자 아님, 로그인한 본인 uid 것만 반환) ──
+  if (req.method === 'GET' && earlyAction === 'get_calendar_token') {
+    const ctJwt = (req.headers.authorization || '').replace('Bearer ', '');
+    const ctUid = getSubFromJWT(ctJwt);
+    if (!ctUid) return res.status(401).json({ error: '로그인이 필요합니다' });
+    const feedSecret = process.env.CALENDAR_FEED_SECRET;
+    if (!feedSecret) return res.status(500).json({ error: 'CALENDAR_FEED_SECRET not set' });
+    const ctToken = require('crypto').createHmac('sha256', feedSecret).update(ctUid).digest('hex').slice(0, 32);
+    const ctHost = req.headers['x-forwarded-host'] || req.headers.host;
+    const feedPath = `/api/admin?action=ics_feed&uid=${ctUid}&token=${ctToken}`;
+    return res.status(200).json({ ok: true, https_url: `https://${ctHost}${feedPath}`, webcal_url: `webcal://${ctHost}${feedPath}` });
+  }
+
+  // ── 캘린더 구독 피드 (관리자 아님, 서명 토큰만으로 인증 — 캘린더 앱은 쿠키/세션 없이 주기적으로 GET 한다) ──
+  if (req.method === 'GET' && earlyAction === 'ics_feed') {
+    const feedUid = req.query.uid;
+    const feedToken = req.query.token;
+    const feedSecret = process.env.CALENDAR_FEED_SECRET;
+    if (!feedUid || !feedToken || !feedSecret) return res.status(400).send('');
+    const expected = require('crypto').createHmac('sha256', feedSecret).update(String(feedUid)).digest('hex').slice(0, 32);
+    // 길이를 먼저 봐야 한다 — timingSafeEqual 은 길이가 다르면 예외를 던진다
+    if (String(feedToken).length !== expected.length ||
+        !require('crypto').timingSafeEqual(Buffer.from(String(feedToken)), Buffer.from(expected))) {
+      return res.status(401).send('');
+    }
+    let icsBody;
+    try {
+      icsBody = await buildCalendarFeed(feedUid, svcKey);
+    } catch (e) {
+      // 캘린더 앱은 5xx 를 받으면 재시도를 반복한다. 빈 달력이라도 200 으로 돌려준다(설계 7장)
+      console.error('[ics_feed] 생성 실패:', e.message);
+      icsBody = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//baroalba//calendar-feed//KO', 'END:VCALENDAR'].join('\r\n');
+    }
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).send(icsBody);
   }
 
   // 관리자 인증 — app_admins 테이블 기준 (하드코딩 불필요, Supabase에서 직접 관리)
