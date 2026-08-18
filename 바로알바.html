@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=617"></script>
+  <script src="./shared-lang.js?v=618"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=617">
+  <link rel="stylesheet" href="./assets/css/style.css?v=618">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1963,6 +1963,10 @@
         <div class="mp-row-left"><span class="mp-row-icon">💴</span><span data-i18n="row_wage_history">급여 수령 확인</span></div>
         <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
       </div>
+      <div class="mp-row" onclick="openMpSub('calendar')">
+        <div class="mp-row-left"><span class="mp-row-icon">📅</span><span data-i18n="row_calendar_sync">캘린더 연동</span></div>
+        <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1998,6 +2002,22 @@
           <div id="income-cumulative" style="font-size:15px;font-weight:700;color:#15803d">-</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="mpsub-panel" id="mpsub-calendar">
+  <div class="mpsub-hdr">
+    <button class="mpsub-back" onclick="closeMpSub('calendar')">‹</button>
+    <div class="mpsub-ttl" data-i18n="mp_calendar_ttl">내 일정 캘린더 연동</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+    <div style="font-size:13px;color:var(--ink-600);line-height:1.6;margin-bottom:16px" data-i18n="mp_calendar_desc">확정된 알바 근무·모임·바로만남 일정이 자동으로 캘린더에 추가돼요.</div>
+    <a id="calendar-webcal-link" href="#" style="display:block;text-align:center;padding:14px;background:var(--red);color:#fff;text-decoration:none;border-radius:var(--r-lg);font-size:14px;font-weight:700;margin-bottom:10px" data-i18n="mp_calendar_subscribe_btn">캘린더에 구독하기</a>
+    <button onclick="copyCalendarFeedUrl()" style="width:100%;padding:14px;background:var(--surface-1);color:var(--ink-600);border:none;border-radius:var(--r-lg);font-size:14px;font-weight:500;cursor:pointer">🔗 <span data-i18n="mp_calendar_copy_btn">링크 복사하기</span></button>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-400);line-height:1.6">
+      <div style="margin-bottom:8px" data-i18n="mp_calendar_ios_hint">아이폰/맥: 위 버튼을 누르면 캘린더 앱이 바로 구독을 물어봐요.</div>
+      <div data-i18n="mp_calendar_android_hint">안드로이드: 링크를 복사한 뒤, PC 구글 캘린더에서 [다른 캘린더] → [URL로 추가]에 붙여넣으세요.</div>
     </div>
   </div>
 </div>
@@ -4469,7 +4489,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=617"></script>
+<script src="./assets/js/app.js?v=618"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4627,7 +4647,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=617"></script>
+<script src="./assets/js/app_ui.js?v=618"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">

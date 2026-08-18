@@ -591,7 +591,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 예전엔 <head> 인라인 스크립트가 URL에 ?_v= 를 붙여 리다이렉트하고 여기서 그 값을 검사했는데,
   // head 스크립트의 버전 상수가 이 _APP_V와 따로 놀아서(수동 동기화 필요) 어긋난 뒤로
   // 캐시 초기화 자체가 계속 실행되지 않던 버그가 있었음. localStorage 하나만 기준으로 삼아 단순화.
-  const _APP_V = '617';
+  const _APP_V = '618';
   // 마이페이지 하단 버전 표기가 'v1.4.1'로 하드코딩돼 실제 배포본과 3버전 넘게
   // 어긋나 있었음(2026-07-22) - 락스텝 버전을 그대로 따라가게 한다
   window._BARO_APP_V = _APP_V;
@@ -6033,6 +6033,34 @@ function openMpSub(name) {
   if (name === 'foreigner')     loadVisaProfile();
   if (name === 'wage-history')  loadWageHistory();
   if (name === 'gatherings')    loadMyGatheringActivity();
+  if (name === 'calendar')      loadCalendarFeedUrl();
+}
+
+// 마이페이지 - 캘린더 자동등록 구독 URL 발급 (확정 일정을 구글/애플/삼성 캘린더로 내보냄)
+let _calendarFeedHttpsUrl = '';
+
+async function loadCalendarFeedUrl() {
+  const linkEl = document.getElementById('calendar-webcal-link');
+  if (!currentUser || !linkEl) return;
+  const { data: { session } } = await db.auth.getSession();
+  if (!session?.access_token) return;
+  try {
+    const r = await fetch('/api/admin?action=get_calendar_token', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    });
+    const result = await r.json();
+    if (!result.ok) { console.error('[loadCalendarFeedUrl] 발급 실패:', result.error); return; }
+    linkEl.href = result.webcal_url;
+    _calendarFeedHttpsUrl = result.https_url;
+  } catch (e) { console.error('[loadCalendarFeedUrl] 실패:', e.message); }
+}
+
+function copyCalendarFeedUrl() {
+  if (!_calendarFeedHttpsUrl) { showToast(t('toast_request_failed_prefix') || '잠시 후 다시 시도해주세요'); return; }
+  // 클립보드 API 가 막힌 환경(구형 웹뷰 등)에선 URL 을 토스트로 띄워주는 게 이 저장소 관행
+  navigator.clipboard?.writeText(_calendarFeedHttpsUrl)
+    .then(() => showToast(t('toast_calendar_link_copied')))
+    .catch(() => showToast(_calendarFeedHttpsUrl));
 }
 
 // 마이페이지 - 내가 신청한 바로모임/바로미팅 현황 + 공지사항 (둘 다 흩어져 있어 한 곳에서 확인 불가하던 문제)
