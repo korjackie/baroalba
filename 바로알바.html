@@ -64,7 +64,7 @@
   // _APP_V를 올릴 때마다 매번 같이 안 바꿔서 값이 어긋나 캐시 초기화가 계속 안 되던 버그가 있었음)
   </script>
   <script src="./config.js"></script>
-  <script src="./shared-lang.js?v=618"></script>
+  <script src="./shared-lang.js?v=619"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- 카카오맵 SDK: config.js 로드 직후 동기 삽입 (document.write 필수) -->
   <script>document.write('<scr'+'ipt src="//dapi.kakao.com/v2/maps/sdk.js?appkey='+APP_CONFIG.KAKAO_JS_KEY+'&libraries=services,clusterer"><\/scr'+'ipt>');</script>
@@ -73,7 +73,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-  <link rel="stylesheet" href="./assets/css/style.css?v=618">
+  <link rel="stylesheet" href="./assets/css/style.css?v=619">
   <script src="https://js.tosspayments.com/v1"></script>
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 </head>
@@ -1842,6 +1842,10 @@
             <div class="mp-row-left"><span class="mp-row-icon">🔔</span><span data-i18n="noti_section">알림 설정</span></div>
             <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
           </div>
+          <div class="mp-row" onclick="openMpSub('calendar')">
+            <div class="mp-row-left"><span class="mp-row-icon">📅</span><span data-i18n="row_calendar_sync">캘린더 연동</span></div>
+            <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
+          </div>
           <div class="mp-row" onclick="openMpSub('lang')">
             <div class="mp-row-left"><span class="mp-row-icon">🌐</span><span data-i18n="row_app_lang">앱 언어</span></div>
             <div class="mp-row-right"><span id="mp-lang-val" style="font-size:13px;color:var(--ink-400);font-weight:500">한국어</span><span class="mp-row-arrow">›</span></div>
@@ -1961,10 +1965,6 @@
       </div>
       <div class="mp-row" onclick="openMpSub('wage-history')">
         <div class="mp-row-left"><span class="mp-row-icon">💴</span><span data-i18n="row_wage_history">급여 수령 확인</span></div>
-        <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
-      </div>
-      <div class="mp-row" onclick="openMpSub('calendar')">
-        <div class="mp-row-left"><span class="mp-row-icon">📅</span><span data-i18n="row_calendar_sync">캘린더 연동</span></div>
         <div class="mp-row-right"><span class="mp-row-arrow">›</span></div>
       </div>
     </div>
@@ -4489,7 +4489,7 @@
 
 <script src="./assets/js/qrcode.min.js?v=463"></script>
 <script src="./assets/js/jsqr.min.js?v=463"></script>
-<script src="./assets/js/app.js?v=618"></script>
+<script src="./assets/js/app.js?v=619"></script>
 
 <!-- 토스페이먼츠 결제 오버레이 -->
 <div id="payment-overlay" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff">
@@ -4647,7 +4647,7 @@
   </div>
 </div>
 
-<script src="./assets/js/app_ui.js?v=618"></script>
+<script src="./assets/js/app_ui.js?v=619"></script>
 
 <!-- ── 당일정산 송금 모달 ── -->
 <div id="wage-transfer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:820;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeWageTransferModal()">
